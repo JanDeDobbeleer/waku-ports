@@ -69,23 +69,36 @@ Singleton {
             focusWorkspace(Number(m[1]));
     }
 
+    // Relative step on the focused monitor, clamped to its first and last workspace.
     function stepWorkspace(delta: int): void {
         const mon = focusedMonitor;
-        if (!mon)
+        const current = mon?.activeWorkspace;
+        if (!current)
             return;
-        if (delta > 0)
-            S.Workspaces.focusNext(mon.handle);
-        else
-            S.Workspaces.focusPrevious(mon.handle);
+        runFocus(mon, current.id - 1 + delta);
     }
 
+    // `ws` is a workspace id (its 1-based position on the monitor) or its name.
     function focusWorkspace(ws: var): void {
         const mon = focusedMonitor;
         if (!mon)
             return;
         const target = workspaceList.values.find(w => w.monitor === mon && (w.id === Number(ws) || w.name === String(ws)));
         if (target)
-            S.Workspaces.focus(mon.handle, target.key);
+            runFocus(mon, target.id - 1);
+    }
+
+    // The only command this shell sends to komorebi: `komorebic focus-workspace <index>`, an
+    // index (0-based) of an existing workspace on the focused monitor. Anything else is dropped.
+    function runFocus(mon: var, index: int): void {
+        if (!komorebi || mon !== focusedMonitor || !Number.isInteger(index))
+            return;
+        const count = workspaceList.values.filter(w => w.monitor === mon).length;
+        if (index < 0 || index >= count)
+            return;
+        focusProc.pending = ["komorebic", "focus-workspace", String(index)];
+        if (!focusProc.running)
+            focusProc.start();
     }
 
     // wabar gap: komorebi and GlazeWM have no special workspaces.
@@ -125,6 +138,18 @@ Singleton {
         return (exe ?? "").replace(/\.exe$/i, "").toLowerCase();
     }
 
+    // `image://appicon/...` of the installed app that `name` matches, or "" when none does.
+    function appIconUrl(name: string): string {
+        // The exe name first, then without a vendor prefix ("ms-teams") and without separators.
+        for (const n of [name, name.replace(/^ms-/, ""), name.replace(/[-_. ]/g, "")]) {
+            const icon = n ? DesktopEntries.heuristicLookup(n)?.icon : "";
+            const url = icon ? String(Quickshell.iconPath(icon, true)) : "";
+            if (url)
+                return url;
+        }
+        return "";
+    }
+
     // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order.
     function windowsOf(monIdx: int, wsIdx: int): var {
         const out = [];
@@ -137,12 +162,15 @@ Singleton {
                     iconUrl: ""
                 });
             const name = appName(h.exe || row.exe);
+            // The window's own icon when the taskbar lists it, else the desktop entry's icon.
+            const icon = row.iconUrl || appIconUrl(name);
             out.push({
                 title: row.title,
                 address: String(h.hwnd),
                 workspace: null,
                 wayland: null,
                 iconUrl: row.iconUrl,
+                icon: icon,
                 lastIpcObject: {
                     address: String(h.hwnd),
                     class: name,
@@ -334,6 +362,25 @@ Singleton {
         command: ["komorebic", "state"]
         stdout: StdioCollector {
             onStreamFinished: root.parseState(text)
+        }
+    }
+
+    // Runs the one allowed focus command (see runFocus); a request made while it runs waits and
+    // replaces any earlier waiting one.
+    Process {
+        id: focusProc
+
+        property var pending: []
+
+        function start(): void {
+            command = pending;
+            pending = [];
+            running = true;
+        }
+
+        onRunningChanged: {
+            if (!running && pending.length > 0)
+                start();
         }
     }
 
