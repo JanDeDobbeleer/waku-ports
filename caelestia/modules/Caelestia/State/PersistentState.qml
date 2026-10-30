@@ -11,6 +11,11 @@ QtObject {
 
     property alias wallpaperPlaying: adapter.wallpaperPlaying
     property alias doNotDisturb: adapter.doNotDisturb
+    // Port: the colour choice of the launcher (Colours restores it at startup).
+    property alias colourScheme: adapter.colourScheme
+    property alias colourSeed: adapter.colourSeed
+    property alias colourVariant: adapter.colourVariant
+    property alias colourMode: adapter.colourMode
 
     property FileView file: FileView {
         path: Quickshell.shellPath("state/persistent.json")
@@ -24,6 +29,10 @@ QtObject {
 
             property bool wallpaperPlaying: true
             property bool doNotDisturb: false
+            property string colourScheme: "dynamic" // dynamic or material
+            property string colourSeed: "wallpaper" // wallpaper, or a key of Colours.seeds
+            property string colourVariant: "tonalspot"
+            property string colourMode: "dark" // dark or light
         }
     }
 }

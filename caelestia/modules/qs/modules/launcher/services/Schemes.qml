@@ -3,7 +3,9 @@ pragma Singleton
 import ".."
 import QtQuick
 import Quickshell
+import Caelestia
 import Caelestia.Config
+import Caelestia.I18n
 import wabar.services as S
 import qs.services
 import qs.utils
@@ -11,21 +13,12 @@ import qs.utils
 // The colour schemes the launcher offers. Upstream lists the schemes of the `caelestia scheme`
 // CLI. Here "dynamic" follows the wallpaper (Colours does the work through ColorScheme.fromImage)
 // and the "material" flavours are fixed seed colours run through ColorScheme.fromColor.
-// wabar gap: the choice is not persisted, and a wallpaper change in a fixed scheme re-applies
-// Colours' fallback seed.
+// The choice lives in Colours, which persists it and restores it at startup.
 Searcher {
     id: root
 
-    readonly property var seeds: ({
-            "purple": "#6750A4",
-            "rose": "#A8627B",
-            "teal": "#006A6A",
-            "blue": "#1B5EA8",
-            "green": "#3B6A3B",
-            "orange": "#9C4A00"
-        })
-
-    property string currentFlavour: "wallpaper"
+    readonly property var seeds: Colours.seeds
+    readonly property string currentFlavour: Colours.seed
     readonly property string currentScheme: `${Colours.scheme} ${currentFlavour}`
     readonly property string currentVariant: Colours.flavour
 
@@ -72,17 +65,14 @@ Searcher {
 
     // Applies the current scheme and variant to Colours.
     function apply(): void {
-        const seed = seeds[currentFlavour];
-        if (Colours.scheme === "dynamic" || !seed)
-            Colours.regenerate(false);
-        else
-            Colours.applyScheme(S.ColorScheme.fromColor(seed, Colours.flavour, !Colours.currentLight), false);
+        Colours.regenerate(false);
     }
 
     function select(name: string, flavour: string): void {
         Colours.scheme = name;
-        currentFlavour = flavour;
+        Colours.seed = name === "dynamic" ? "wallpaper" : flavour;
         apply();
+        Toaster.toast(Tr.tr("Colour scheme changed"), `${name} ${flavour}`, "palette", Toast.Success, 2500);
     }
 
     list: schemes.instances

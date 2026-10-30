@@ -3,6 +3,7 @@ pragma Singleton
 import ".."
 import QtQuick
 import Quickshell
+import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.services
@@ -83,6 +84,7 @@ Searcher {
             list.screenState.launcher = false;
             Colours.flavour = variant;
             Schemes.apply();
+            Toaster.toast(Tr.tr("Scheme variant changed"), name, "colors", Toast.Success, 2500);
         }
     }
 }

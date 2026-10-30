@@ -6,6 +6,7 @@ import Quickshell
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
+import Caelestia.State
 import wabar.services as S
 import qs.services
 import qs.compat
@@ -16,7 +17,8 @@ import qs.utils
 // (`ColorScheme.fromImage`) or from a fixed seed colour, and the role names get the `m3` prefix
 // that caelestia's QML expects (`ColorScheme.colors.primary` becomes `palette.m3primary`).
 // wabar gap: ColorScheme has no success roles and no terminal colours, so `m3success*` and
-// `term*` keep the defaults of the M3Palette below. The chosen mode is not persisted.
+// `term*` keep the defaults of the M3Palette below. The scheme, seed, variant and mode are kept in
+// PersistentState (state/persistent.json in the config home) and restored at startup.
 Singleton {
     id: root
 
@@ -24,6 +26,18 @@ Singleton {
     property string scheme: "dynamic"
     // The ColorScheme variant (one of S.ColorScheme.variants).
     property string flavour: "tonalspot"
+    // "wallpaper" for the dynamic scheme, else a key of `seeds` (the material scheme).
+    property string seed: "wallpaper"
+    readonly property var seeds: ({
+            "purple": "#6750A4",
+            "rose": "#A8627B",
+            "teal": "#006A6A",
+            "blue": "#1B5EA8",
+            "green": "#3B6A3B",
+            "orange": "#9C4A00"
+        })
+    // False until the saved choice is read, so the defaults never overwrite it.
+    property bool restored
     readonly property bool light: showPreview ? previewLight : currentLight
     property bool currentLight
     property bool previewLight
@@ -104,7 +118,7 @@ Singleton {
                 pendingCurrent = path;
             S.ColorScheme.fromImage(path, flavour, dark);
         } else {
-            applyScheme(S.ColorScheme.fromColor(fallbackSeed, flavour, dark), isPreview);
+            applyScheme(S.ColorScheme.fromColor(seeds[seed] ?? fallbackSeed, flavour, dark), isPreview);
         }
 
         if (!isPreview) {
@@ -159,6 +173,38 @@ Singleton {
         Toaster.toast(mode === "light" ? Tr.tr("Light mode") : Tr.tr("Dark mode"), Tr.tr("Colour scheme and Windows theme"), mode === "light" ? "light_mode" : "dark_mode", Toast.Success, 2500);
     }
 
+    function persist(): void {
+        if (!restored)
+            return;
+        PersistentState.colourScheme = scheme;
+        PersistentState.colourSeed = seed;
+        PersistentState.colourVariant = flavour;
+        PersistentState.colourMode = currentLight ? "light" : "dark";
+    }
+
+    // Reads the saved choice once (the file loads asynchronously) and rebuilds the palette.
+    // The Windows theme is not touched: only a Light or Dark command changes it.
+    function restore(): void {
+        if (restored)
+            return;
+        const saved = PersistentState;
+        if (saved.colourScheme === "dynamic" || (saved.colourScheme === "material" && seeds[saved.colourSeed])) {
+            scheme = saved.colourScheme;
+            seed = scheme === "dynamic" ? "wallpaper" : saved.colourSeed;
+        }
+        if (S.ColorScheme.variants.includes(saved.colourVariant))
+            flavour = saved.colourVariant;
+        currentLight = saved.colourMode === "light";
+        previewLight = currentLight;
+        restored = true;
+        regenerate(false);
+    }
+
+    onSchemeChanged: persist()
+    onSeedChanged: persist()
+    onFlavourChanged: persist()
+    onCurrentLightChanged: persist()
+
     readonly property string wallpaperPath: WallpaperService.actualCurrent
     readonly property string previewWallpaperPath: WallpaperService.previewPath
 
@@ -168,7 +214,25 @@ Singleton {
             regenerate(true);
     }
 
-    Component.onCompleted: regenerate(false)
+    Component.onCompleted: {
+        if (PersistentState.file.loaded)
+            restore();
+        else
+            regenerate(false);
+    }
+
+    Connections {
+        function onLoaded(): void {
+            root.restore();
+        }
+
+        function onLoadFailed(): void {
+            // No saved choice yet: keep the defaults and start saving.
+            root.restored = true;
+        }
+
+        target: PersistentState.file
+    }
 
     Connections {
         function onFromImageFinished(path: string, scheme: var): void {
