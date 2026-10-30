@@ -4,6 +4,9 @@ import Caelestia.Config
 import qs.components
 import qs.modules.bar as Bar
 import qs.modules.bar.popouts as BarPopouts
+import qs.modules.launcher as Launcher
+import qs.modules.osd as Osd
+import qs.modules.session as Session
 
 Item {
     id: root
@@ -41,7 +44,7 @@ Item {
         implicitWidth: osd.implicitWidth * (1 - osd.offsetScale)
         implicitHeight: osd.implicitHeight
 
-        StubPanel {
+        Osd.Wrapper {
             id: osd
 
             screen: root.screen
@@ -77,7 +80,7 @@ Item {
         implicitWidth: session.implicitWidth * (1 - session.offsetScale)
         implicitHeight: session.implicitHeight
 
-        StubPanel {
+        Session.Wrapper {
             id: session
 
             screenState: root.screenState
@@ -88,7 +91,7 @@ Item {
         }
     }
 
-    StubPanel {
+    Launcher.Wrapper {
         id: launcher
 
         screen: root.screen
