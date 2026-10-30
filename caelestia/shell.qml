@@ -31,7 +31,7 @@ ShellRoot {
     // Upstream expects Material Symbols Rounded to be installed. Windows has none, so the port ships it
     // (Apache-2.0, google/material-design-icons).
     FontLoader {
-        source: Qt.resolvedUrl("assets/material-symbols/MaterialSymbolsRounded.ttf")
+        source: Qt.resolvedUrl("assets/fonts/MaterialSymbolsRounded.ttf")
     }
 
     Binding {
