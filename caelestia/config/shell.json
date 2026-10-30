@@ -9,9 +9,6 @@
       "dynamic": true
     }
   },
-  "dashboard": {
-    "showOnHover": false
-  },
   "launcher": {
     "enableDangerousActions": false
   },
