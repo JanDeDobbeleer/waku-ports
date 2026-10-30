@@ -20,7 +20,8 @@ ClipRect {
     readonly property bool onSpecial: monitor?.lastIpcObject.specialWorkspace?.name !== ""
     readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
     readonly property int activeWsIdx: workspaceIndex(activeWsId)
-    readonly property int shown: Math.max(1, Config.bar.workspaces.shown)
+    // Port: komorebi workspaces are real, so show all of them when there are more than `shown`.
+    readonly property int shown: Math.max(1, Config.bar.workspaces.shown, Hypr.workspaces.values.filter(w => w.monitor === monitor).length)
 
     readonly property var wsIds: {
         if (Config.bar.workspaces.showUnoccupied)

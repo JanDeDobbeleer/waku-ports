@@ -129,9 +129,13 @@ Singleton {
     function windowsOf(monIdx: int, wsIdx: int): var {
         const out = [];
         for (const h of wsWindows[monIdx + ":" + wsIdx] ?? []) {
-            const row = taskbarWindows[h.hwnd];
-            if (!row)
-                continue;
+            // The taskbar row adds the icon; komorebi's own title and exe stand in without it
+            // (the model has no window to attach to here, so it can stay empty).
+            const row = taskbarWindows[h.hwnd] ?? ({
+                    title: h.title,
+                    exe: h.exe,
+                    iconUrl: ""
+                });
             const name = appName(h.exe || row.exe);
             out.push({
                 title: row.title,
@@ -169,6 +173,7 @@ Singleton {
         const one = (w, floating) => ({
                 hwnd: w.hwnd,
                 exe: w.exe ?? "",
+                title: w.title ?? "",
                 windowClass: w.class ?? "",
                 floating: floating
             });
@@ -201,7 +206,12 @@ Singleton {
 
         for (let i = 0; i < screens.length; i++) {
             const screen = screens[i];
-            const wm = wabarMons.find(m => m.name === screen.name) ?? (wabarMons.length === screens.length ? wabarMons[i] : null);
+            // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1,
+            // so `komorebic state` windows (keyed by monitor index) were never found.
+            let wmi = wabarMons.findIndex(m => m.name === screen.name);
+            if (wmi < 0 && wabarMons.length === screens.length)
+                wmi = i;
+            const wm = wmi >= 0 ? wabarMons[wmi] : null;
             const mon = monComp.createObject(root, {
                 name: screen.name,
                 id: i,
@@ -211,7 +221,7 @@ Singleton {
             const list = wm?.workspaces ?? [];
             for (let j = 0; j < list.length; j++) {
                 const src = list[j];
-                const windows = windowsOf(wabarMons.indexOf(wm), j);
+                const windows = windowsOf(wmi, j);
                 const ws = wsComp.createObject(root, {
                     id: j + 1,
                     key: String(src.id),
