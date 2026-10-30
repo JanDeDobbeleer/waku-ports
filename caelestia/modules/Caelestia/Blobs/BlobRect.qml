@@ -19,9 +19,17 @@ Item {
     property real bottomRightRadius: radius
     property matrix4x4 deformMatrix
     property matrix4x4 rawDeformMatrix
+    // Port: the C++ shape fuses with the frame by SDF blending. A plain rectangle abutting the
+    // frame leaves an antialiasing seam, so a panel can grow into the frame by these amounts.
+    property real bleedTop: 0
+    property real bleedRight: 0
+    property real bleedBottom: 0
 
     Rectangle {
         anchors.fill: parent
+        anchors.topMargin: -root.bleedTop
+        anchors.rightMargin: -root.bleedRight
+        anchors.bottomMargin: -root.bleedBottom
         visible: root.group !== null
         // The group colour's alpha is applied through the item opacity, as the C++ shape does.
         color: root.group ? Qt.rgba(root.group.color.r, root.group.color.g, root.group.color.b, 1) : "transparent"

@@ -180,6 +180,7 @@ StyledWindow {
         PanelBg {
             id: dashBg
 
+            attachTop: true
             panel: panels.dashboard
             deformAmount: 0.1
         }
@@ -187,6 +188,7 @@ StyledWindow {
         PanelBg {
             id: launcherBg
 
+            attachBottom: true
             panel: panels.launcher
             deformAmount: 0.1
         }
@@ -194,6 +196,7 @@ StyledWindow {
         PanelBg {
             id: sessionBg
 
+            attachRight: true
             panel: panels.sessionWrapper
             deformAmount: 0.2
             x: panels.sessionWrapper.x + panels.session.x + bar.implicitWidth
@@ -203,6 +206,7 @@ StyledWindow {
         PanelBg {
             id: sidebarBg
 
+            attachRight: true
             panel: panels.sidebar
             deformAmount: 0.03
             implicitHeight: panel.height * (1 / rawDeformMatrix.m22) + 2
@@ -213,6 +217,7 @@ StyledWindow {
         PanelBg {
             id: osdBg
 
+            attachRight: true
             panel: panels.osdWrapper
             deformAmount: 0.25
             x: panels.osdWrapper.x + panels.osd.x + bar.implicitWidth
@@ -222,12 +227,16 @@ StyledWindow {
         PanelBg {
             id: notifsBg
 
+            attachTop: true
+            attachRight: true
             panel: panels.notifications
         }
 
         PanelBg {
             id: utilsBg
 
+            attachBottom: true
+            attachRight: true
             panel: panels.utilities
             deformAmount: panels.sidebar.visible ? 0.1 : 0.15
             exclude: panels.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
@@ -340,6 +349,11 @@ StyledWindow {
     component PanelBg: BlobRect {
         required property Item panel
         property real deformAmount: 0.15
+        // Port: edges the panel is flush with. The wabar blob stub does not fuse shapes, so a
+        // flush edge is square and overlaps the frame instead of leaving a seam and a wedge.
+        property bool attachTop: false
+        property bool attachRight: false
+        property bool attachBottom: false
 
         group: blobGroup
         x: panel.x + bar.implicitWidth
@@ -347,6 +361,12 @@ StyledWindow {
         implicitWidth: panel.width
         implicitHeight: panel.height
         radius: Tokens.rounding.extraLarge
+        topLeftRadius: attachTop ? 0 : radius
+        topRightRadius: attachTop || attachRight ? 0 : radius
+        bottomRightRadius: attachBottom || attachRight ? 0 : radius
+        bleedTop: attachTop ? root.borderThickness : 0
+        bleedRight: attachRight ? root.borderThickness : 0
+        bleedBottom: attachBottom ? root.borderThickness : 0
         deformScale: (deformAmount * Config.appearance.deformScale) / 10000
     }
 }
