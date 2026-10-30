@@ -11,7 +11,11 @@ QtObject {
     property int backend: 0
     property int preferredBackend: 0
     property var lyricCandidates: []
-    property var selectedCandidate
+    property var selectedCandidate: ({
+            title: "",
+            artist: "",
+            album: ""
+        })
     readonly property bool loading: false
     readonly property bool hasLyrics: lyrics.length > 0
     property real offset: 0

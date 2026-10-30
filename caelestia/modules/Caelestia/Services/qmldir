@@ -1,3 +1,9 @@
 module Caelestia.Services
+singleton Cpu 1.0 Cpu.qml
+singleton Gpu 1.0 Gpu.qml
 singleton Lyrics 1.0 Lyrics.qml
+singleton Memory 1.0 Memory.qml
+singleton NetworkUsage 1.0 NetworkUsage.qml
+ServiceRef 1.0 ServiceRef.qml
 singleton SessionManager 1.0 SessionManager.qml
+singleton Storage 1.0 Storage.qml

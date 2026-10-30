@@ -7,6 +7,7 @@ import qs.modules.bar.popouts as BarPopouts
 import qs.modules.launcher as Launcher
 import qs.modules.osd as Osd
 import qs.modules.session as Session
+import qs.modules.dashboard as Dashboard
 
 Item {
     id: root
@@ -102,7 +103,7 @@ Item {
         anchors.bottom: parent.bottom
     }
 
-    StubPanel {
+    Dashboard.Wrapper {
         id: dashboard
 
         screenState: root.screenState
