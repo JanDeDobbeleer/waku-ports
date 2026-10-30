@@ -664,6 +664,10 @@ QtObject {
                 property real brightnessIncrement: 0.1
                 property real maxVolume: 1.0
                 property bool smartScheme: true
+                // Port: false blocks every session action (lock, sleep, shutdown, ...) in the launcher and the session menu.
+                property bool allowSystemActions: true
+                // Port: the animation wabar plays when the wallpaper changes: circle, slide_top, diamond, split, fade or none. Empty is wabar's default.
+                property string wallpaperAnimation: ""
                 property string defaultPlayer: "Spotify"
                 property var playerAliases: CL.list([
                     {

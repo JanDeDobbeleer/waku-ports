@@ -4,6 +4,7 @@ import Quickshell.Services.UPower
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
+import Caelestia.Services
 import wabar.services as S
 import qs.utils
 
@@ -81,12 +82,7 @@ Scope {
         id: hibernateTimer
 
         interval: 5000
-        // Hibernates only when actions are enabled (Paths.actionsEnabled); otherwise it logs.
-        onTriggered: {
-            if (Paths.actionsEnabled)
-                S.ControlCenter.requestAction("hibernate");
-            else
-                console.warn("BatteryMonitor: critical battery, hibernate is disabled (CAELESTIA_ALLOW_ACTIONS)");
-        }
+        // SessionManager hibernates, or only logs under CAELESTIA_DRYRUN=1 or services.allowSystemActions=false.
+        onTriggered: SessionManager.exec(["hibernate"])
     }
 }

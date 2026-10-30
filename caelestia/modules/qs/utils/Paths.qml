@@ -27,8 +27,9 @@ Singleton {
     readonly property string recsdir: slash(Quickshell.env("CAELESTIA_RECORDINGS_DIR")) || `${videos}/Recordings`
     readonly property string libdir: ""
 
-    // Actions that change the machine (wallpaper, sessions) run only when this is set.
-    readonly property bool actionsEnabled: Quickshell.env("CAELESTIA_ALLOW_ACTIONS") === "1"
+    // Test switch: CAELESTIA_DRYRUN=1 makes every action that changes the machine (wallpaper,
+    // light/dark theme, lock, sleep, shutdown) log a `DRYRUN ...` line and do nothing else.
+    readonly property bool dryRun: Quickshell.env("CAELESTIA_DRYRUN") === "1"
 
     function slash(path: var): string {
         return String(path ?? "").split("\\").join("/");
