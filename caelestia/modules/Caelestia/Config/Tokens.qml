@@ -67,4 +67,9 @@ QtObject {
     readonly property FontLoader googleSansFlex: FontLoader {
         source: Qt.resolvedUrl("../../../assets/google-sans-flex/GoogleSansFlex-VariableFont_GRAD,ROND,opsz,slnt,wdth,wght.ttf")
     }
+
+    // Material Symbols Rounded (Apache-2.0, google/material-design-icons) for every MaterialIcon.
+    readonly property FontLoader materialSymbols: FontLoader {
+        source: Qt.resolvedUrl("../../../assets/fonts/MaterialSymbolsRounded.ttf")
+    }
 }
