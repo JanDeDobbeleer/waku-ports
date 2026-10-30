@@ -12,6 +12,9 @@
   "launcher": {
     "enableDangerousActions": false
   },
+  "paths": {
+    "wallpaperDir": "~/.config/wallpapers"
+  },
   "services": {
     "allowSystemActions": true,
     "wallpaperAnimation": "",

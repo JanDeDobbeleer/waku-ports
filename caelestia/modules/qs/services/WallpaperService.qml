@@ -116,7 +116,27 @@ Searcher {
             o.destroy();
     }
 
-    Component.onCompleted: configureEngine()
+    // Lists the wallpaper folder again. The folder can change after start: the config that names
+    // it loads after this singleton, and a run of the lister does not repeat by itself.
+    function rescan(): void {
+        if (Paths.wallsdir.length === 0)
+            return;
+        lister.running = false;
+        Qt.callLater(() => lister.running = true);
+    }
+
+    Component.onCompleted: {
+        configureEngine();
+        rescan();
+    }
+
+    Connections {
+        function onWallsdirChanged(): void {
+            root.rescan();
+        }
+
+        target: Paths
+    }
 
     // Both the shell and the engine (wabarc wallpaper next/random, the gallery) use one folder.
     Binding {
@@ -175,7 +195,6 @@ Searcher {
     Process {
         id: lister
 
-        running: Paths.wallsdir.length > 0
         command: ["cmd.exe", "/c", "dir", "/s", "/b", "/a-d", Paths.wallsdir.split("/").join("\\")]
         stdout: StdioCollector {
             onStreamFinished: root.setEntries(text)

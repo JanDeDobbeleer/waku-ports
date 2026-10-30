@@ -32,7 +32,8 @@ Singleton {
     readonly property bool dryRun: Quickshell.env("CAELESTIA_DRYRUN") === "1"
 
     function slash(path: var): string {
-        return String(path ?? "").split("\\").join("/");
+        // The drive letter is upper case, so two spellings of one path compare equal.
+        return String(path ?? "").split("\\").join("/").replace(/^[a-z]:/, m => m.toUpperCase());
     }
 
     function toLocalFile(path: url): string {
