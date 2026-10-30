@@ -198,8 +198,15 @@ ColumnLayout {
             const specialWs = mon?.lastIpcObject.specialWorkspace.name;
             if (specialWs?.length > 0)
                 Hypr.dispatch(Hypr.usingLua ? `hl.dsp.workspace.toggle_special("${specialWs.slice(8)}")` : `togglespecialworkspace ${specialWs.slice(8)}`);
-            else if (angleDelta.y < 0 || mon.activeWorkspace?.id > 1)
-                Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ workspace = "r${angleDelta.y > 0 ? "-" : "+"}1" })` : `workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
+            else if (ch.item?.wsIds?.length > 0) {
+                // Port: step through the dots that are shown, and wrap at both ends. The
+                // dynamic dots hide empty desktops, so a step over all of them would leave the
+                // dots unchanged.
+                const ids = ch.item.wsIds;
+                const at = Math.max(0, ids.indexOf(mon?.activeWorkspace?.id));
+                const next = ids[(at + (angleDelta.y > 0 ? -1 : 1) + ids.length) % ids.length];
+                Hypr.dispatch(`workspace ${next}`);
+            }
         } else if (y < screen.height / 2 && Config.bar.scrollActions.volume) {
             // Volume scroll on top half
             if (angleDelta.y > 0)
