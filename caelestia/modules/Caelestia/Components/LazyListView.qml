@@ -21,7 +21,10 @@ ListView {
     property int removeDuration: 300
     property int readyDelay: 0
     // ListView has cacheBuffer, contentY and count already.
-    readonly property bool itemsDirty: false
+    // Bumped after the delegates change, so bindings that read itemAtIndex() run again.
+    property int itemsDirty
+
+    onCountChanged: Qt.callLater(() => itemsDirty++)
 
     function itemAt(x: real, y: real): Item {
         return itemAtIndex(indexAt(x, y));

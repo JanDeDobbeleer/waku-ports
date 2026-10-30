@@ -1,8 +1,7 @@
-# Crops a screenshot: crop.ps1 -In shots\a.png -Out shots\b.png -Rect x,y,w,h (physical pixels).
-param([Parameter(Mandatory)][string]$In, [Parameter(Mandatory)][string]$Out, [Parameter(Mandatory)][string]$Rect)
+# Crops a region out of a saved shot: crop.ps1 in.png out.png x y w h [scale]
+param([string]$In, [string]$Out, [int]$X, [int]$Y, [int]$W, [int]$H, [double]$Scale = 1)
 Add-Type -AssemblyName System.Drawing
-$src = [Drawing.Bitmap]::FromFile((Resolve-Path $In).Path)
-$c = $Rect -split "," | ForEach-Object { [int]$_ }
-$r = New-Object Drawing.Rectangle $c[0], $c[1], $c[2], $c[3]
-$dst = $src.Clone($r, $src.PixelFormat); $src.Dispose()
-$dst.Save((Join-Path (Get-Location) $Out), [Drawing.Imaging.ImageFormat]::Png); $dst.Dispose()
+$im = [Drawing.Bitmap]::FromFile($In)
+$c = $im.Clone((New-Object Drawing.Rectangle $X, $Y, $W, $H), $im.PixelFormat)
+if ($Scale -ne 1) { $c = New-Object Drawing.Bitmap $c, ([int]($W * $Scale)), ([int]($H * $Scale)) }
+$c.Save($Out); $im.Dispose()
