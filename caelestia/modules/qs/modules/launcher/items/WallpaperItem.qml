@@ -28,6 +28,8 @@ Item {
     StateLayer {
         id: stateLayer
 
+        objectName: "rowClick"
+
         radius: Tokens.rounding.large
         onClicked: {
             WallpaperService.setWallpaper(root.modelData?.path);

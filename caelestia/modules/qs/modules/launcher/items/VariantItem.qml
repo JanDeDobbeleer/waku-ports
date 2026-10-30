@@ -16,6 +16,8 @@ Item {
     anchors.right: parent?.right
 
     StateLayer {
+        objectName: "rowClick"
+
         radius: Tokens.rounding.large
         onClicked: root.modelData?.onClicked(root.list)
     }

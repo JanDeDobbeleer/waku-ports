@@ -6,6 +6,7 @@ import wabar.services as S
 import qs.services
 import qs.utils
 import Caelestia.Services
+import Caelestia.Config
 import qs.modules.launcher.services
 
 // TEST ONLY. Opens and closes the bar flyouts without a cursor, so a capture run (no input allowed)
@@ -13,6 +14,33 @@ import qs.modules.launcher.services
 // hover handler sets (Wrapper.currentName, hasCurrent, currentCenter). Remove once a person has
 // checked the hover path on a real desktop.
 Scope {
+    id: scope
+
+    property var savedFg: 0
+
+    function search_(): var {
+        return ShellState.componentsFor(Screens.screens[0])?.find("launcherSearch");
+    }
+
+    // The list the search drives: the wallpaper PathView or the app/action ListView.
+    function list_(): var {
+        const c = ShellState.componentsFor(Screens.screens[0]);
+        const s = scope.search_();
+        if (!c || !s)
+            return null;
+        const wall = s.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `);
+        return c.find(wall ? "launcherWallpaperList" : "launcherAppList");
+    }
+
+    function rows_(): var {
+        const l = scope.list_();
+        return l?.model?.values ?? [];
+    }
+
+    function name_(v: var): string {
+        return v ? (v.relativePath ?? v.name ?? String(v)) : "null";
+    }
+
     IpcHandler {
         function popout(name: string): string {
             const c = ShellState.componentsFor(Screens.screens[0]);
@@ -140,6 +168,30 @@ Scope {
             }
         }
 
+        // TEST ONLY. The drawers window: active (QWindow::active), the item with active focus, the
+        // keyboardFocus property (0 none, 1 exclusive, 2 on demand), the real foreground HWND, the
+        // launcher/session flags and the input mask grab flag.
+        function winState(): string {
+            const c = ShellState.componentsFor(Screens.screens[0]);
+            const w = c?.rootWindow;
+            if (!w)
+                return "no window";
+            const bw = w.backingWindow;
+            const s = ShellState.forScreen(Screens.screens[0]);
+            return `active=${bw.active} visible=${bw.visible} focusItem=${bw.activeFocusItem} keyboardFocus=${w.keyboardFocus} fg=${S.WindowControl.foreground()} launcher=${s.launcher} session=${s.session} lightDismiss=${c.panels ? "yes" : "no"}`;
+        }
+
+        // TEST ONLY. Remembers the foreground window, and gives it back. A test that activates the
+        // shell window uses these so the owner's focus returns.
+        function saveFg(): string {
+            scope.savedFg = S.WindowControl.foreground();
+            return String(scope.savedFg);
+        }
+
+        function restoreFg(): string {
+            return String(S.WindowControl.activate(scope.savedFg)) + " fg=" + S.WindowControl.foreground();
+        }
+
         target: "bar"
     }
 
@@ -159,9 +211,78 @@ Scope {
             return names.join(", ");
         }
 
-        // The colour choice and the last session action that was logged or refused.
+        // Opens or closes the launcher the way the shortcut does (the screen state flag).
+        function open(): string {
+            ShellState.forScreen(Screens.screens[0]).launcher = true;
+            return "ok";
+        }
+
+        function close(): string {
+            ShellState.forScreen(Screens.screens[0]).launcher = false;
+            return "ok";
+        }
+
+        // Types `text` into the search field (replacing what is there).
+        function search(text: string): string {
+            const s = scope.search_();
+            if (!s)
+                return "no search field (open the launcher first)";
+            s.text = text;
+            return "ok";
+        }
+
+        // Names of the rows the list holds, one per line, with the current one marked "*".
+        function list(): string {
+            const l = scope.list_();
+            if (!l)
+                return "no list";
+            return scope.rows_().map((v, i) => `${i === l.currentIndex ? "*" : " "}${i} ${scope.name_(v)}`).join("
+");
+        }
+
+        // Selects row `i` and runs the handler that Enter runs (SearchBar.accepted).
+        function select(i: int): string {
+            const l = scope.list_();
+            const s = scope.search_();
+            if (!l || !s)
+                return "no list";
+            if (!scope.search_().text.startsWith(GlobalConfig.launcher.actionPrefix))
+                return "refused: only the > lists (an app row would start the app)";
+            if (i < 0 || i >= scope.rows_().length)
+                return `no row ${i}`;
+            l.currentIndex = i;
+            s.accepted();
+            return `ok ${scope.name_(scope.rows_()[i])}`;
+        }
+
+        // Runs the click handler of row `i`'s delegate (the StateLayer onClicked of the item).
+        function click(i: int): string {
+            const l = scope.list_();
+            if (!l)
+                return "no list";
+            if (!scope.search_().text.startsWith(GlobalConfig.launcher.actionPrefix))
+                return "refused: only the > lists (an app row would start the app)";
+            const item = l.itemAtIndex(i);
+            if (!item)
+                return `row ${i} has no item`;
+            let layer = null;
+            for (let k = 0; k < item.children.length; k++)
+                if (item.children[k].objectName === "rowClick")
+                    layer = item.children[k];
+            if (!layer)
+                return `row ${i} has no click target`;
+            layer.clicked(null);
+            return "ok";
+        }
+
+        // The colour choice, the last session action, then the launcher: open, search text, row
+        // count, mode (apps, actions or wallpapers) and the current index.
         function state(): string {
-            return `scheme=${Colours.scheme} seed=${Colours.seed} variant=${Colours.flavour} light=${Colours.currentLight} wallpaper=${WallpaperService.actualCurrent.slice(WallpaperService.actualCurrent.lastIndexOf("/") + 1)} session=${SessionManager.lastLogged}`;
+            const s = scope.search_();
+            const l = scope.list_();
+            const open = ShellState.forScreen(Screens.screens[0]).launcher;
+            const mode = !s ? "-" : s.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `) ? "wallpapers" : s.text.startsWith(GlobalConfig.launcher.actionPrefix) ? "actions" : "apps";
+            return `scheme=${Colours.scheme} seed=${Colours.seed} variant=${Colours.flavour} light=${Colours.currentLight} wallpaper=${WallpaperService.actualCurrent.slice(WallpaperService.actualCurrent.lastIndexOf("/") + 1)} session=${SessionManager.lastLogged} | open=${open} search=[${s?.text ?? ""}] rows=${l ? scope.rows_().length : -1} count=${l?.count ?? -1} mode=${mode} index=${l?.currentIndex ?? -1} walls=${WallpaperService.list.length} dir=${Paths.wallsdir}`;
         }
 
         target: "launcher"
