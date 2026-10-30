@@ -461,9 +461,15 @@ StyledWindow {
             strokeColor: fillColor
             strokeWidth: 1.5
 
+            // The piece runs `n` under the frame (against b) and under the panel (against a), so
+            // the arc's thin tip, where it turns tangent to the frame, always sits on solid colour.
             PathSvg {
-                path: `M${px},${py} L${px + ax * r},${py + ay * r}`
-                    + ` A${r},${r} 0 0 ${sweep} ${px + bx * r},${py + by * r} Z`
+                readonly property real n: 3
+                path: `M${px - (ax + bx) * n},${py - (ay + by) * n}`
+                    + ` L${px + ax * r - bx * n},${py + ay * r - by * n}`
+                    + ` L${px + ax * r},${py + ay * r}`
+                    + ` A${r},${r} 0 0 ${sweep} ${px + bx * r},${py + by * r}`
+                    + ` L${px + bx * r - ax * n},${py + by * r - ay * n} Z`
             }
         }
     }
