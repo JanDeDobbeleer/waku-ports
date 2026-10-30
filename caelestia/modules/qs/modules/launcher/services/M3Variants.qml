@@ -80,7 +80,7 @@ Searcher {
         required property string name
         required property string description
 
-        function onClicked(list: AppList): void {
+        function onClicked(list: var): void {
             list.screenState.launcher = false;
             Colours.flavour = variant;
             Schemes.apply();

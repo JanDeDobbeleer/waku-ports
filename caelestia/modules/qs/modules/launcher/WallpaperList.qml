@@ -18,7 +18,7 @@ PathView {
     readonly property int itemWidth: Tokens.sizes.launcher.wallpaperWidth * 0.8 + Tokens.padding.medium * 2
 
     readonly property int numItems: {
-        const screen = (QsWindow.window as QsWindow)?.screen;
+        const screen = QsWindow.window?.screen;
         if (!screen)
             return 0;
 
@@ -58,7 +58,7 @@ PathView {
     Component.onDestruction: WallpaperService.stopPreview()
 
     onCurrentItemChanged: {
-        const path = (currentItem as WallpaperItem)?.modelData?.path;
+        const path = currentItem?.modelData?.path;
         if (path)
             WallpaperService.preview(path);
     }

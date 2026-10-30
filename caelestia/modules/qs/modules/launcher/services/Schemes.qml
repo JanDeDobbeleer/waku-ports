@@ -94,7 +94,7 @@ Searcher {
         readonly property string flavour: modelData?.flavour ?? ""
         readonly property var colours: modelData?.colours ?? ({})
 
-        function onClicked(list: AppList): void {
+        function onClicked(list: var): void {
             list.screenState.launcher = false;
             root.select(name, flavour);
         }

@@ -58,7 +58,7 @@ Searcher {
         readonly property bool enabled: modelData.enabled ?? true
         readonly property bool dangerous: modelData.dangerous ?? false
 
-        function onClicked(list: AppList): void {
+        function onClicked(list: var): void {
             run(list.screenState, list.search);
         }
 
