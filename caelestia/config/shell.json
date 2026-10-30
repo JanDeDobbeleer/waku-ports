@@ -5,7 +5,8 @@
   },
   "bar": {
     "workspaces": {
-      "occupiedBg": true
+      "occupiedBg": true,
+      "dynamic": true
     }
   },
   "services": {

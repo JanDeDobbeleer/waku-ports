@@ -31,6 +31,22 @@ Item {
     readonly property bool isOccupied: toplevels.length > 0
     readonly property bool hasWindows: isOccupied && showWindows && Config.bar.workspaces.maxWindowIcons > 0
     readonly property bool focused: activeWsId === ws
+    // Port: the komorebi layout of this workspace, shown under the active dot as a glyph.
+    readonly property string layoutName: Hypr.workspaces.values.find(w => w.id === ws && w.monitor === monitor)?.layoutName ?? ""
+    readonly property bool hasLayout: focused && Hypr.komorebi && layoutName !== ""
+    readonly property var layoutInfo: ({
+            "BSP": {"icon": "view_quilt", "mirror": false},
+            "Columns": {"icon": "view_column", "mirror": false},
+            "Rows": {"icon": "table_rows", "mirror": false},
+            "VerticalStack": {"icon": "view_sidebar", "mirror": false},
+            "HorizontalStack": {"icon": "view_agenda", "mirror": false},
+            "UltrawideVerticalStack": {"icon": "view_week", "mirror": false},
+            "Grid": {"icon": "grid_view", "mirror": false},
+            "RightMainVerticalStack": {"icon": "view_sidebar", "mirror": true}
+        })
+    readonly property string layoutGlyph: layoutInfo[layoutName]?.icon ?? "dashboard"
+    readonly property real layoutHeight: layoutGlyphItem.implicitHeight
+    readonly property real layoutTop: layoutGlyphItem.y + layout.y
     readonly property list<int> focusedShapeList: [MaterialShape.Slanted, MaterialShape.Oval, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Arrow, MaterialShape.Diamond, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.VerySunny, MaterialShape.Sunny, MaterialShape.Cookie4Sided, MaterialShape.Cookie6Sided, MaterialShape.Cookie7Sided, MaterialShape.Cookie9Sided, MaterialShape.Cookie12Sided, MaterialShape.Clover4Leaf, MaterialShape.SoftBurst, MaterialShape.Ghostish]
 
     property color offMonitorColour: Colours.palette.m3outlineVariant
@@ -194,6 +210,30 @@ Item {
             }
 
             onItemChanged: root.updateShape()
+        }
+
+        // Port: the layout switcher. It sits in the active dot's pill, under the dot.
+        MaterialIcon {
+            id: layoutGlyphItem
+
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+            Layout.preferredHeight: root.hasLayout ? implicitHeight : 0
+            visible: root.hasLayout || opacity > 0
+            opacity: root.hasLayout ? 1 : 0
+            text: root.layoutGlyph
+            fill: 1
+            grade: 25
+            color: root.fgColour
+            transform: Scale {
+                origin.x: layoutGlyphItem.width / 2
+                xScale: root.layoutInfo[root.layoutName]?.mirror ? -1 : 1
+            }
+
+            Behavior on opacity {
+                Anim {
+                    type: Anim.DefaultEffects
+                }
+            }
         }
 
         Loader {

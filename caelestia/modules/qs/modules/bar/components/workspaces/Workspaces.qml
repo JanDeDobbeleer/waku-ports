@@ -23,7 +23,25 @@ ClipRect {
     // Port: komorebi workspaces are real, so show all of them when there are more than `shown`.
     readonly property int shown: Math.max(1, Config.bar.workspaces.shown, Hypr.workspaces.values.filter(w => w.monitor === monitor).length)
 
+    readonly property bool dynamic: Config.bar.workspaces.dynamic
+
+    // Port, dynamic: every occupied workspace, the active one and the first empty one after the
+    // last of those (a slot to move to an empty desktop), in workspace order.
+    readonly property var dynamicIds: {
+        const mine = Hypr.workspaces.values.filter(w => w.monitor === monitor);
+        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
+        const used = w => w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags));
+        const ids = mine.filter(used).map(w => w.id);
+        const last = ids.length > 0 ? Math.max(...ids) : 0;
+        const spare = mine.find(w => w.id > last);
+        if (spare)
+            ids.push(spare.id);
+        return ids;
+    }
+
     readonly property var wsIds: {
+        if (dynamic)
+            return dynamicIds;
         if (Config.bar.workspaces.showUnoccupied)
             return Array.from({
                 length: shown
@@ -49,7 +67,7 @@ ClipRect {
 
     // Only relevant for when showUnoccupied is true
     readonly property int groupOffset: {
-        if (!Config.bar.workspaces.showUnoccupied)
+        if (dynamic || !Config.bar.workspaces.showUnoccupied)
             return 0;
         return Math.floor((activeWsId - 1) / shown) * shown;
     }
@@ -59,6 +77,8 @@ ClipRect {
     // Port: no `as Workspace` cast. On wabar a cast to a type of the same module came back null
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
+        if (layoutAt(workspaces.mapToItem(root, x, y).y))
+            return cycleLayout("next");
         return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
     }
 
@@ -74,8 +94,38 @@ ClipRect {
         return "focus";
     }
 
+    // The layout glyph under the active dot, when `y` (local to this item) is over it.
+    function layoutAt(y: real): var {
+        const w = workspaces.itemAtIndex(activeWsIdx);
+        if (!w || !w.hasLayout)
+            return null;
+        const p = w.mapToItem(root, 0, w.layoutTop);
+        return y >= p.y && y <= p.y + w.layoutHeight ? w : null;
+    }
+
+    // Vertical centre of the layout glyph, local to this item.
+    function layoutCentre(): real {
+        const w = workspaces.itemAtIndex(activeWsIdx);
+        return w ? w.mapToItem(root, 0, w.layoutTop + w.layoutHeight / 2).y : 0;
+    }
+
+    // Test and click handler of the layout switcher: `next` or `previous`. `dry` logs the command
+    // and does not run it.
+    function cycleLayout(direction: string, dry = false): string {
+        const w = workspaces.itemAtIndex(activeWsIdx);
+        if (!w || !w.hasLayout)
+            return "none";
+        return Hypr.cycleLayout(direction, dry) ? "cycle-layout " + direction : "none";
+    }
+
+    // The ids of the dots and the layout under the active one, for the test IPC.
+    function debugDots(): string {
+        const w = workspaces.itemAtIndex(activeWsIdx);
+        return "dots=" + wsIds.join(",") + " active=" + activeWsId + " layout=" + (w?.layoutName ?? "") + " glyph=" + (w?.layoutGlyph ?? "");
+    }
+
     function workspaceIndex(id: int): int {
-        if (!Config.bar.workspaces.showUnoccupied)
+        if (dynamic || !Config.bar.workspaces.showUnoccupied)
             return wsIds.indexOf(id);
 
         let index = id - 1;
@@ -141,7 +191,7 @@ ClipRect {
 
             delegate: Workspace {
                 activeWsId: root.activeWsId
-                ws: Config.bar.workspaces.showUnoccupied ? root.groupOffset + index + 1 : modelData
+                ws: !root.dynamic && Config.bar.workspaces.showUnoccupied ? root.groupOffset + index + 1 : modelData
                 monitor: root.monitor
 
                 displayType: Config.bar.workspaces.displayType
@@ -155,7 +205,7 @@ ClipRect {
 
         Loader {
             asynchronous: true
-            opacity: Config.bar.workspaces.showUnoccupied ? 0 : 1
+            opacity: !root.dynamic && Config.bar.workspaces.showUnoccupied ? 0 : 1
             active: opacity > 0
 
             anchors.fill: parent
