@@ -36,6 +36,26 @@ StyledWindow {
         return hasFullscreenOnNormalWs;
     }
 
+    // Port: the panels that close when the user presses Escape, clicks outside them, switches to
+    // another window, or toggles them again. Upstream gets the click and focus part from
+    // HyprlandFocusGrab; wabar's shim of it ends for good after its first clear (it writes `active`,
+    // which removes this binding), so the window does it itself.
+    readonly property bool lightDismissOpen: {
+        const s = screenState;
+        const conf = contentItem.Config;
+        if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
+            return true;
+        if (!conf.dashboard.showOnHover && s.dashboard && conf.dashboard.enabled)
+            return true;
+        if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current?.depth ?? 0) > 1)
+            return true;
+        return false;
+    }
+    // The panels that take the keyboard (WlrKeyboardFocus.OnDemand below).
+    readonly property bool keyboardPanelOpen: screenState.launcher || screenState.session
+    property double lightDismissSince: 0
+    property bool hadFocus: false
+
     property real fsTransitionProg: hasFullscreen ? 1 : 0
     readonly property real sdfBorderOffset: 2 * fsTransitionProg // SDFs joins are not exact, so offset by 2px to ensure nothing shows
     readonly property real borderThickness: Config.border.thickness * (1 - fsTransitionProg)
@@ -46,7 +66,7 @@ StyledWindow {
     property color surfaceColour: Colours.tPalette.m3surface
 
     readonly property int dragMaskPadding: {
-        if (focusGrab.active || panels.popouts.isDetached)
+        if (lightDismissOpen || panels.popouts.isDetached)
             return 0;
 
         if (monitor?.lastIpcObject.specialWorkspace?.name || monitor?.activeWorkspace?.toplevels.values.length > 0)
@@ -71,7 +91,9 @@ StyledWindow {
     WlrLayershell.layer: (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (hasSpecialWorkspace && hasFullscreenOnNormalWs) ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.keyboardFocus: screenState.launcher || screenState.session ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    mask: hasFullscreen ? emptyRegion : regions
+    // Port: a panel that closes on a click elsewhere takes input over the whole window, so the
+    // click lands here (Interactions) instead of on the window below.
+    mask: hasFullscreen ? emptyRegion : lightDismissOpen ? dismissRegion : regions
 
     anchors.top: true
     anchors.bottom: true
@@ -113,29 +135,71 @@ StyledWindow {
         win: root
     }
 
-    HyprlandFocusGrab {
-        id: focusGrab
+    Region {
+        id: dismissRegion
 
-        active: {
-            const s = root.screenState;
-            const conf = root.contentItem.Config;
-            if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
-                return true;
-            if (!conf.dashboard.showOnHover && s.dashboard && conf.dashboard.enabled)
-                return true;
-            if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current as StackView)?.depth > 1)
-                return true;
-            return false;
+        x: 0
+        y: 0
+        width: root.width
+        height: root.height
+    }
+
+    function dismiss(): void {
+        screenState.launcher = false;
+        screenState.session = false;
+        screenState.sidebar = false;
+        screenState.dashboard = false;
+        panels.popouts.hasCurrent = false;
+        bar.closeTray();
+    }
+
+    // Port: the engine activates a panel window when it is shown, not when keyboardFocus flips at
+    // run time, so a launcher opened by a shortcut would not receive keys or notice a focus loss.
+    onKeyboardPanelOpenChanged: {
+        hadFocus = false;
+        if (keyboardPanelOpen) {
+            lightDismissSince = Date.now();
+            activateTimer.restart();
+        } else {
+            activateTimer.stop();
         }
-        windows: [root]
-        onCleared: {
-            root.screenState.launcher = false;
-            root.screenState.session = false;
-            root.screenState.sidebar = false;
-            root.screenState.dashboard = false;
-            panels.popouts.hasCurrent = false;
-            bar.closeTray();
+    }
+
+    Timer {
+        id: activateTimer
+
+        interval: 30
+        onTriggered: {
+            if (!root.keyboardPanelOpen)
+                return;
+            if (root.backingWindow.active)
+                root.hadFocus = true;
+            else
+                root.backingWindow.requestActivate();
         }
+    }
+
+    // Focus loss: the user switched to another window while a panel was open. Activation is
+    // asynchronous, so a loss in the first 400 ms after opening is not the user's.
+    Connections {
+        function onActiveChanged(): void {
+            if (root.backingWindow.active) {
+                root.hadFocus = true;
+            } else if (root.hadFocus && root.lightDismissOpen) {
+                root.hadFocus = false;
+                if (Date.now() - root.lightDismissSince > 400)
+                    root.dismiss();
+            }
+        }
+
+        target: root.backingWindow
+    }
+
+    // Escape closes the open panel even when no field has the focus.
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.lightDismissOpen
+        onActivated: root.dismiss()
     }
 
     StyledRect {
@@ -272,6 +336,8 @@ StyledWindow {
         bar: bar
         borderThickness: root.borderLayoutThickness
         fullscreen: root.hasFullscreen
+        lightDismiss: root.lightDismissOpen
+        onDismissRequested: root.dismiss()
 
         Panels {
             id: panels

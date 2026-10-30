@@ -17,6 +17,10 @@ CustomMouseArea {
     required property Bar.BarWrapper bar
     required property real borderThickness
     required property bool fullscreen
+    // True while a panel that closes when the user clicks elsewhere is open.
+    required property bool lightDismiss
+
+    signal dismissRequested
 
     property point dragStart
     property bool dashboardShortcutActive
@@ -52,6 +56,31 @@ CustomMouseArea {
         return y > height - Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y);
     }
 
+    // Port: whether the point is on a visible panel. A click anywhere else, off the bar, closes
+    // the light-dismiss panels (the window has no compositor grab here; see ContentWindow).
+    function onVisiblePanel(x: real, y: real): bool {
+        const list = [panels.dashboard, panels.launcher, panels.sessionWrapper, panels.sidebar, panels.utilities, panels.popoutsWrapper, panels.notifications, panels.osdWrapper];
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            if (!p.visible || p.width <= 0 || p.height <= 0)
+                continue;
+            const left = bar.implicitWidth + p.x;
+            const top = borderThickness + p.y;
+            if (x >= left && x <= left + p.width && y >= top && y <= top + p.height)
+                return true;
+        }
+        return false;
+    }
+
+    // A press at (x, y): closes the light-dismiss panels when it is off the bar and off the panels.
+    // Returns whether it did (the press is then used up, not passed to anything).
+    function dismissOnPress(x: real, y: real): bool {
+        if (!lightDismiss || x < bar.implicitWidth || onVisiblePanel(x, y))
+            return false;
+        dismissRequested();
+        return true;
+    }
+
     function onWheel(event: WheelEvent): void {
         if (fullscreen)
             return;
@@ -64,7 +93,11 @@ CustomMouseArea {
     acceptedButtons: fullscreen ? Qt.NoButton : Qt.AllButtons
     hoverEnabled: true
 
-    onPressed: event => dragStart = Qt.point(event.x, event.y)
+    onPressed: event => {
+        dragStart = Qt.point(event.x, event.y);
+        if (dismissOnPress(event.x, event.y))
+            event.accepted = true;
+    }
     onContainsMouseChanged: {
         if (!containsMouse) {
             // Only hide if not activated by shortcut
@@ -79,7 +112,7 @@ CustomMouseArea {
             if (!utilitiesShortcutActive)
                 screenState.utilities = false;
 
-            if (!popouts.currentName.startsWith("traymenu") || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
+            if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;
                 bar.closeTray();
             }
@@ -244,7 +277,7 @@ CustomMouseArea {
         // Show popouts on hover
         if (x < bar.implicitWidth) {
             bar.checkPopout(y);
-        } else if ((!popouts.currentName.startsWith("traymenu") || ((popouts.current as StackView)?.depth ?? 0) <= 1) && !inLeftPanel(panels.popoutsWrapper, x, y)) {
+        } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inLeftPanel(panels.popoutsWrapper, x, y)) {
             popouts.hasCurrent = false;
             bar.closeTray();
         }

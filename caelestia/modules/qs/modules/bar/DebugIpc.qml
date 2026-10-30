@@ -211,6 +211,12 @@ Scope {
             return names.join(", ");
         }
 
+        // A press at (x, y) of the drawers window, through the same handler a mouse press runs.
+        function pressAt(x: int, y: int): string {
+            const w = ShellState.componentsFor(Screens.screens[0])?.interactionWrapper;
+            return w ? String(w.dismissOnPress(x, y)) : "no window";
+        }
+
         // Opens or closes the launcher the way the shortcut does (the screen state flag).
         function open(): string {
             ShellState.forScreen(Screens.screens[0]).launcher = true;
@@ -282,7 +288,7 @@ Scope {
             const l = scope.list_();
             const open = ShellState.forScreen(Screens.screens[0]).launcher;
             const mode = !s ? "-" : s.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `) ? "wallpapers" : s.text.startsWith(GlobalConfig.launcher.actionPrefix) ? "actions" : "apps";
-            return `scheme=${Colours.scheme} seed=${Colours.seed} variant=${Colours.flavour} light=${Colours.currentLight} wallpaper=${WallpaperService.actualCurrent.slice(WallpaperService.actualCurrent.lastIndexOf("/") + 1)} session=${SessionManager.lastLogged} | open=${open} search=[${s?.text ?? ""}] rows=${l ? scope.rows_().length : -1} count=${l?.count ?? -1} mode=${mode} index=${l?.currentIndex ?? -1} walls=${WallpaperService.list.length} dir=${Paths.wallsdir}`;
+            return `scheme=${Colours.scheme} seed=${Colours.seed} variant=${Colours.flavour} light=${Colours.currentLight} wallpaper=${WallpaperService.actualCurrent.slice(WallpaperService.actualCurrent.lastIndexOf("/") + 1)} session=${SessionManager.lastLogged} | open=${open} search=[${s?.text ?? ""}] rows=${l ? scope.rows_().length : -1} count=${l?.count ?? -1} mode=${mode} index=${l?.currentIndex ?? -1} shown=${l?.pathItemCount ?? l?.count ?? -1} walls=${WallpaperService.list.length} dir=${Paths.wallsdir}`;
         }
 
         target: "launcher"
