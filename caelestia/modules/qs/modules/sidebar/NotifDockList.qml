@@ -23,12 +23,7 @@ LazyListView {
     cacheBuffer: 400
     asynchronous: true
 
-    onViewportAdjustNeeded: d => {
-        if (contentYAnim.running)
-            contentYAnim.complete();
-        contentYAnim.to = Math.max(0, container.contentY + d);
-        contentYAnim.start();
-    }
+    // Port: the ListView stand-in never asks for a viewport adjustment (onViewportAdjustNeeded).
 
     useCustomViewport: true
     viewport: Qt.rect(0, container.contentY, width, container.height)
@@ -60,13 +55,20 @@ LazyListView {
                 clearTimer.start();
             }
 
-            LazyListView.trackViewport: !notifInner.expanded && notifInner.nonAnimHeight < notifInner.implicitHeight
-            LazyListView.preferredHeight: closed ? 0 : notifInner.nonAnimHeight
-            LazyListView.visibleHeight: notifInner.implicitHeight
+            // Port: LazyListView's attached layout properties are plain properties here, and the
+            // list is a ListView, so the delegate sets its own height. Adding and removing do not
+            // animate beyond the height and the fade.
+            readonly property real preferredHeight: closed ? 0 : notifInner.nonAnimHeight
+            readonly property real visibleHeight: closed ? 0 : notifInner.implicitHeight
+            readonly property bool removing: false
+            readonly property bool adding: false
+            readonly property bool ready: true
             implicitHeight: notifInner.implicitHeight
+            width: ListView.view?.width ?? 0
+            height: visibleHeight
 
-            opacity: LazyListView.removing || closed || LazyListView.adding ? 0 : 1
-            scale: LazyListView.removing || closed ? 0.6 : LazyListView.adding ? 0 : 1
+            opacity: closed ? 0 : 1
+            scale: closed ? 0.6 : 1
 
             hoverEnabled: true
             cursorShape: pressed ? Qt.ClosedHandCursor : undefined
@@ -126,7 +128,7 @@ LazyListView {
             }
 
             Behavior on y {
-                enabled: notif.LazyListView.ready
+                enabled: notif.ready
 
                 Anim {}
             }

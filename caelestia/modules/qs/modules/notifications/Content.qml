@@ -9,7 +9,6 @@ import qs.components
 import qs.components.containers
 import qs.components.widgets
 import qs.services
-import qs.modules.utilities as Utilities
 
 Item {
     id: root
@@ -48,7 +47,7 @@ Item {
         }
 
         if (screenState.utilities) {
-            const h = ((QsWindow.window as QsWindow)?.screen.height ?? 0) - (utilitiesPanel as Utilities.Wrapper).nonAnimHeight - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
+            const h = ((QsWindow.window as QsWindow)?.screen.height ?? 0) - (utilitiesPanel.nonAnimHeight ?? 0) - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
             if (height > h)
                 height = h;
         }

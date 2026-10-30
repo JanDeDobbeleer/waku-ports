@@ -5,6 +5,7 @@ param(
   [int]$Seconds = 8,
   [string]$Shortcut,
   [string]$Shot,
+  [int]$Toast = 0, # raise this many test toasts (tools	oast.ps1) before the shortcut and shot
   [string]$Bin = 'D:\wabar\build\arm64-debug'
 )
 $ErrorActionPreference = 'Stop'
@@ -23,6 +24,7 @@ try {
   Start-Sleep -Seconds $Seconds
   Write-Host "== status (pid $($p.Id), exited: $($p.HasExited))"
   & $wabarc --config-home $ConfigHome status
+  if ($Toast -gt 0) { & (Join-Path $PSScriptRoot 'toast.ps1') -Count $Toast; Start-Sleep -Seconds 2 }
   if ($Shortcut) {
     Write-Host "== shortcut $Shortcut"
     & $wabarc --config-home $ConfigHome shortcut $Shortcut

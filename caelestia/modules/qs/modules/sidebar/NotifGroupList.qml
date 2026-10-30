@@ -66,12 +66,17 @@ LazyListView {
             Component.onCompleted: modelData?.lock(this)
             Component.onDestruction: modelData?.unlock(this)
 
-            LazyListView.preferredHeight: modelData?.closed || LazyListView.removing ? 0 : notifInner.nonAnimHeight
-            LazyListView.visibleHeight: modelData?.closed || LazyListView.removing ? 0 : notifInner.implicitHeight
+            // Port: LazyListView's attached layout properties are plain properties here, and the
+            // list is a ListView, so the delegate sets its own height.
+            readonly property real preferredHeight: modelData?.closed ? 0 : notifInner.nonAnimHeight
+            readonly property real visibleHeight: modelData?.closed ? 0 : notifInner.implicitHeight
+            readonly property bool ready: true
             implicitHeight: notifInner.implicitHeight
+            width: ListView.view?.width ?? 0
+            height: visibleHeight
 
-            opacity: LazyListView.removing || LazyListView.adding ? 0 : 1
-            scale: LazyListView.removing || LazyListView.adding ? 0.7 : 1
+            opacity: modelData?.closed ? 0 : 1
+            scale: modelData?.closed ? 0.7 : 1
 
             hoverEnabled: true
             cursorShape: notifInner.body?.hoveredLink ? Qt.PointingHandCursor : pressed ? Qt.ClosedHandCursor : undefined
@@ -131,7 +136,7 @@ LazyListView {
             }
 
             Behavior on y {
-                enabled: notif.LazyListView.ready
+                enabled: notif.ready
 
                 Anim {}
             }
