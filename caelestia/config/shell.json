@@ -7,7 +7,7 @@
     "workspaces": {
       "occupiedBg": false,
       "activeTrail": false,
-      "dynamic": true
+      "dynamic": false
     }
   },
   "launcher": {
