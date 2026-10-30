@@ -80,6 +80,14 @@ Item {
         }
     }
 
+    // Port: a DWM thumbnail is not clipped by the slide-in clip, so previews wait until the
+    // flyout is open and its size has settled, and go as soon as it starts to close.
+    Binding {
+        target: popoutState
+        property: "settled"
+        value: root.hasCurrent && root.offsetScale < 0.01 && root.implicitWidth === root.nonAnimWidth && root.implicitHeight === root.nonAnimHeight
+    }
+
     PopoutState {
         id: popoutState
 

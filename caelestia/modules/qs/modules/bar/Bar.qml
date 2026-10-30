@@ -103,13 +103,9 @@ ColumnLayout {
             const app = ch.item.appAt(ch.item.mapFromItem(root, 0, y).y);
             if (app) {
                 const group = app.modelData;
-                if (group.windows.length > 1) {
-                    Hypr.hoverGroupKey = group.key;
-                    popouts.currentName = "appgroup";
-                } else {
-                    Hypr.hoverToplevel = group.windows[0];
-                    popouts.currentName = id.toLowerCase();
-                }
+                // Port: one window or several, the flyout shows preview cards.
+                Hypr.hoverGroupKey = group.key;
+                popouts.currentName = "appgroup";
                 popouts.currentCenter = app.mapToItem(root, 0, app.height / 2).y;
                 popouts.hasCurrent = true;
             } else {

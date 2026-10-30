@@ -570,6 +570,7 @@ Singleton {
         for (let i = 0; i < debugCopies && real.length > 0; i++)
             all.push(Object.assign({}, real[0], {
                 address: "fake" + i,
+                srcHwnd: real[0].address,
                 title: "Fake window " + (i + 1),
                 wsId: ((real[0].wsId + i) % 7) + 1
             }));

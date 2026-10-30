@@ -129,10 +129,22 @@ Scope {
             return clickApp(i);
         }
 
-        // One line per group: executable, window count, workspaces of its windows (roman numerals)
-        // and a "*" on the group with the focused window.
+        // One line per group: executable, window count, workspaces of its windows (roman numerals),
+        // the windows' hwnds in brackets and a "*" on the group with the focused window.
         function appGroups(): string {
-            return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")}${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
+            return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")} [${g.windows.map(t => t.srcHwnd ?? t.address).join(",")}]${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
+        }
+
+        // The open group flyout, per card: "hwnd available sourceWidth sourceHeight x,y,w,h" (the
+        // thumbnail rectangle in logical window coordinates). Empty when no group flyout is open.
+        function thumbState(): string {
+            try {
+                const p = ShellState.componentsFor(Screens.screens[0])?.panels?.popouts;
+                const g = p?.current ?? p?.content?.item?.currentPopout?.item ?? p?.content?.item?.current;
+                return g && typeof g.thumbState === "function" ? g.thumbState() : `no group flyout (${p?.currentName} ${p?.hasCurrent} current=${g} type=${typeof g?.thumbState})`;
+            } catch (e) {
+                return "error " + e;
+            }
         }
 
         // TEST ONLY: fake extra windows for the first application, to try the group badge.
