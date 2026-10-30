@@ -60,7 +60,11 @@ Column {
             playing: visible
             asynchronous: true
             speed: Config.general.sessionGifSpeed
-            source: Paths.absolutePath(Config.paths.sessionGif)
+            // wabar: `root:/` is the shell folder, and a drive path needs a file: scheme here.
+            source: {
+                const path = Paths.absolutePath(Config.paths.sessionGif.replace(/^root:\//, `${Quickshell.shellDir}/`));
+                return /^[A-Za-z]:\//.test(path) ? `file:///${path}` : path;
+            }
             fillMode: AnimatedImage.PreserveAspectFit
         }
     }
@@ -90,8 +94,8 @@ Column {
         required property list<string> command
 
         function exec(): void {
-            if (!SessionManager.exec(command))
-                Quickshell.execDetached(command);
+            // Gated: SessionManager only logs unless CAELESTIA_ALLOW_ACTIONS=1.
+            SessionManager.exec(command);
         }
 
         implicitWidth: Tokens.sizes.session.button

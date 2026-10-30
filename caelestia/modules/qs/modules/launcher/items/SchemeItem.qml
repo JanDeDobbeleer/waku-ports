@@ -7,7 +7,7 @@ import qs.modules.launcher.services
 Item {
     id: root
 
-    required property Schemes.Scheme modelData
+    required property var modelData
     required property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
@@ -32,9 +32,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             border.width: 1
-            border.color: Qt.alpha(`#${root.modelData?.colours?.outline}`, 0.5)
+            border.color: Qt.alpha(root.modelData?.colours?.outline ?? "transparent", 0.5)
 
-            color: `#${root.modelData?.colours?.surface}`
+            color: root.modelData?.colours?.surface ?? "transparent"
             radius: Tokens.rounding.full
             implicitWidth: parent.height * 0.8
             implicitHeight: parent.height * 0.8
@@ -53,7 +53,7 @@ Item {
                     anchors.right: parent.right
 
                     implicitWidth: preview.implicitWidth
-                    color: `#${root.modelData?.colours?.primary}`
+                    color: root.modelData?.colours?.primary ?? "transparent"
                     radius: Tokens.rounding.full
                 }
             }

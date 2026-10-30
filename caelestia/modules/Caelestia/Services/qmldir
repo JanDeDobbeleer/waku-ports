@@ -1,2 +1,3 @@
 module Caelestia.Services
 singleton Lyrics 1.0 Lyrics.qml
+singleton SessionManager 1.0 SessionManager.qml

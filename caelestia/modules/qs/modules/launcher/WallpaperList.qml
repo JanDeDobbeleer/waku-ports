@@ -49,16 +49,18 @@ PathView {
 
         readonly property string search: root.search.text.split(" ").slice(1).join(" ")
 
-        values: Wallpapers.query(search)
-        onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === Wallpapers.actualCurrent)
+        // wabar: entries of an earlier directory scan are destroyed, so drop the nulls.
+        values: WallpaperService.query(search).filter(w => w)
+        onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === WallpaperService.actualCurrent)
     }
 
-    Component.onCompleted: currentIndex = Wallpapers.list.findIndex(w => w.path === Wallpapers.actualCurrent)
-    Component.onDestruction: Wallpapers.stopPreview()
+    Component.onCompleted: currentIndex = WallpaperService.list.findIndex(w => w?.path === WallpaperService.actualCurrent)
+    Component.onDestruction: WallpaperService.stopPreview()
 
     onCurrentItemChanged: {
-        if (currentItem)
-            Wallpapers.preview((currentItem as WallpaperItem).modelData.path);
+        const path = (currentItem as WallpaperItem)?.modelData?.path;
+        if (path)
+            WallpaperService.preview(path);
     }
 
     implicitWidth: Math.min(numItems, count) * itemWidth

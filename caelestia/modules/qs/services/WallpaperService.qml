@@ -70,7 +70,7 @@ Searcher {
     // Parses the output of `dir /s /b /a-d` into entries.
     function setEntries(text: string): void {
         const base = Paths.wallsdir;
-        const old = entries;
+        const old = [...entries]; // a copy: a list property read is live
         const next = [];
         for (const line of text.split(/\r?\n/)) {
             const path = Paths.slash(line.trim());

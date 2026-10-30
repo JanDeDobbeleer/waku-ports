@@ -10,7 +10,7 @@ import qs.services
 Item {
     id: root
 
-    required property FileSystemEntry modelData
+    required property var modelData
     required property ScreenState screenState
 
     scale: 0.5
@@ -30,7 +30,7 @@ Item {
 
         radius: Tokens.rounding.large
         onClicked: {
-            Wallpapers.setWallpaper(root.modelData.path);
+            WallpaperService.setWallpaper(root.modelData?.path);
             root.screenState.launcher = false;
         }
     }
@@ -68,7 +68,7 @@ Item {
 
         Visual {
             anchors.fill: parent
-            source: root.modelData.path
+            source: root.modelData?.path
             playing: (root.PathView.isCurrentItem && PersistentState.wallpaperPlaying) || stateLayer.containsMouse
         }
     }
@@ -84,7 +84,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
         renderType: Text.QtRendering
-        text: root.modelData.relativePath
+        text: root.modelData?.relativePath
         font: Tokens.font.label.medium
     }
 

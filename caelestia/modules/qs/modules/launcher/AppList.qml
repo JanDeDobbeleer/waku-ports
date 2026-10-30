@@ -187,8 +187,15 @@ StyledListView {
         }
     }
 
-    StyledScrollBar.vertical: StyledScrollBar {
+    // wabar: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+    StyledScrollBar {
+        parent: root
         flickable: root
+        z: 2
+
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
     }
 
     add: Transition {

@@ -14,7 +14,7 @@ Item {
     readonly property string math: list.search.text.slice(`${GlobalConfig.launcher.actionPrefix}calc `.length)
 
     function onClicked(): void {
-        Quickshell.execDetached(["wl-copy", Qalculator.rawResult]);
+        Quickshell.clipboardText = Qalculator.rawResult;
         root.list.screenState.launcher = false;
     }
 
@@ -78,8 +78,9 @@ Item {
             StateLayer {
                 id: stateLayer
 
+                // wabar gap: there is no qalc terminal; the button copies the expression instead.
                 onClicked: {
-                    Quickshell.execDetached([...GlobalConfig.general.apps.terminal, "fish", "-C", `exec qalc -i '${root.math}'`]);
+                    Quickshell.clipboardText = root.math;
                     root.list.screenState.launcher = false;
                 }
 
@@ -93,7 +94,7 @@ Item {
                 anchors.right: icon.left
                 anchors.rightMargin: Tokens.spacing.small
 
-                text: Tr.tr("Open in calculator")
+                text: Tr.tr("Copy expression")
                 color: Colours.palette.m3onTertiary
                 font: Tokens.font.label.medium
 
@@ -113,7 +114,7 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: Tokens.padding.medium
 
-                text: "open_in_new"
+                text: "content_copy"
                 color: Colours.palette.m3onTertiary
                 fontStyle: Tokens.font.icon.large
             }

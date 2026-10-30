@@ -24,7 +24,8 @@ Searcher {
 
         model: {
             const enableDangerous = GlobalConfig.launcher.enableDangerousActions;
-            return GlobalConfig.launcher.actions.values.filter(a => a.enabled && (enableDangerous || !a.dangerous));
+            // wabar gap: the nexus settings window is not ported; its action is hidden.
+            return GlobalConfig.launcher.actions.values.filter(a => a.enabled && (enableDangerous || !a.dangerous) && !(a.command ?? []).includes("nexus"));
         }
 
         Action {}
@@ -50,8 +51,13 @@ Searcher {
                 Colours.setMode(command[1]);
             } else {
                 list.screenState.launcher = false;
-                if (!SessionManager.exec(command))
-                    Quickshell.execDetached(command);
+                if (SessionManager.exec(command))
+                    return;
+                // wabar gap: the other commands call Linux tools; only the random wallpaper has a counterpart.
+                if (command[0] === "caelestia" && command[1] === "wallpaper" && command[2] === "-r")
+                    WallpaperService.setRandom();
+                else
+                    console.warn("Launcher: no Windows counterpart for", command.join(" "));
             }
         }
     }

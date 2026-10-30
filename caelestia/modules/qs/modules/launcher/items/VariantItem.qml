@@ -7,7 +7,7 @@ import qs.modules.launcher.services
 Item {
     id: root
 
-    required property M3Variants.Variant modelData
+    required property var modelData
     required property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight

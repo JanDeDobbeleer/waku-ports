@@ -10,14 +10,8 @@ Searcher {
 
     function launch(entry: DesktopEntry): void {
         appDb.incrementFrequency(entry.id);
-
-        if (entry.runInTerminal)
-            Quickshell.execDetached({
-                command: [...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command],
-                workingDirectory: entry.workingDirectory
-            });
-        else
-            entry.execute();
+        // wabar: DesktopEntry.execute starts the shortcut or Store app; there is no terminal wrapper.
+        entry.execute();
     }
 
     function search(search: string): var {

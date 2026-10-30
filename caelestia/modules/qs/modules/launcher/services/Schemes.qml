@@ -3,15 +3,31 @@ pragma Singleton
 import ".."
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Caelestia.Config
+import wabar.services as S
+import qs.services
 import qs.utils
 
+// The colour schemes the launcher offers. Upstream lists the schemes of the `caelestia scheme`
+// CLI. Here "dynamic" follows the wallpaper (Colours does the work through ColorScheme.fromImage)
+// and the "material" flavours are fixed seed colours run through ColorScheme.fromColor.
+// wabar gap: the choice is not persisted, and a wallpaper change in a fixed scheme re-applies
+// Colours' fallback seed.
 Searcher {
     id: root
 
-    property string currentScheme
-    property string currentVariant
+    readonly property var seeds: ({
+            "purple": "#6750A4",
+            "rose": "#A8627B",
+            "teal": "#006A6A",
+            "blue": "#1B5EA8",
+            "green": "#3B6A3B",
+            "orange": "#9C4A00"
+        })
+
+    property string currentFlavour: "wallpaper"
+    readonly property string currentScheme: `${Colours.scheme} ${currentFlavour}`
+    readonly property string currentVariant: Colours.flavour
 
     function transformSearch(search: string): string {
         return search.slice(`${GlobalConfig.launcher.actionPrefix}scheme `.length);
@@ -22,7 +38,51 @@ Searcher {
     }
 
     function reload(): void {
-        getCurrent.running = true;
+        build();
+    }
+
+    function coloursOf(scheme: var): var {
+        const out = {};
+        for (const k of ["surface", "primary", "outline"])
+            out[k] = scheme?.colors?.[k] ?? "transparent";
+        return out;
+    }
+
+    function build(): void {
+        const flat = [
+            {
+                name: "dynamic",
+                flavour: "wallpaper",
+                colours: {
+                    surface: Colours.current.m3surface,
+                    primary: Colours.current.m3primary,
+                    outline: Colours.current.m3outline
+                }
+            }
+        ];
+        for (const [flavour, seed] of Object.entries(seeds))
+            flat.push({
+                name: "material",
+                flavour,
+                seed,
+                colours: coloursOf(S.ColorScheme.fromColor(seed, Colours.flavour, !Colours.currentLight))
+            });
+        schemes.model = flat;
+    }
+
+    // Applies the current scheme and variant to Colours.
+    function apply(): void {
+        const seed = seeds[currentFlavour];
+        if (Colours.scheme === "dynamic" || !seed)
+            Colours.regenerate(false);
+        else
+            Colours.applyScheme(S.ColorScheme.fromColor(seed, Colours.flavour, !Colours.currentLight), false);
+    }
+
+    function select(name: string, flavour: string): void {
+        Colours.scheme = name;
+        currentFlavour = flavour;
+        apply();
     }
 
     list: schemes.instances
@@ -30,59 +90,23 @@ Searcher {
     keys: ["name", "flavour"]
     weights: [0.9, 0.1]
 
+    Component.onCompleted: build()
+
     Variants {
         id: schemes
 
         Scheme {}
     }
 
-    Process {
-        id: getSchemes
-
-        running: true
-        command: ["caelestia", "scheme", "list"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const schemeData = JSON.parse(text);
-                const list = Object.entries(schemeData).map(([name, f]) => Object.entries(f).map(([flavour, colours]) => ({
-                                name,
-                                flavour,
-                                colours
-                            })));
-
-                const flat = [];
-                for (const s of list)
-                    for (const f of s)
-                        flat.push(f);
-
-                schemes.model = flat.sort((a, b) => String(a.name + a.flavour).localeCompare((b.name + b.flavour)));
-            }
-        }
-    }
-
-    Process {
-        id: getCurrent
-
-        running: true
-        command: ["caelestia", "scheme", "get", "-nfv"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const [name, flavour, variant] = text.trim().split("\n");
-                root.currentScheme = `${name} ${flavour}`;
-                root.currentVariant = variant;
-            }
-        }
-    }
-
     component Scheme: QtObject {
         required property var modelData
-        readonly property string name: modelData.name
-        readonly property string flavour: modelData.flavour
-        readonly property var colours: modelData.colours
+        readonly property string name: modelData?.name ?? ""
+        readonly property string flavour: modelData?.flavour ?? ""
+        readonly property var colours: modelData?.colours ?? ({})
 
         function onClicked(list: AppList): void {
             list.screenState.launcher = false;
-            Quickshell.execDetached(["caelestia", "scheme", "set", "-n", name, "-f", flavour]);
+            root.select(name, flavour);
         }
     }
 }
