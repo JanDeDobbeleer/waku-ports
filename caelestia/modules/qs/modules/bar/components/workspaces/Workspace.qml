@@ -221,19 +221,52 @@ Item {
                     }
                 }
 
-                delegate: MaterialIcon {
+                // Port: the delegate is as wide as the list, so its icon sits on the same centre
+                // line as the dot (a ListView does not size its delegates, and a bare icon sat at
+                // x = 0). Upstream shows a Material category glyph; here a window's own icon or
+                // its app's icon is shown, and the category glyph stays as the fallback.
+                delegate: Item {
                     id: win
 
                     required property var modelData
                     required property int index // Needed, LazyListView will fail to set it if it doesn't exist
 
-                    grade: 0
-                    horizontalAlignment: Text.AlignHCenter
-                    text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "desktop_windows")
-                    color: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
+                    readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
+                    readonly property color tint: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
+
+                    width: ListView.view?.width ?? 0
+                    height: glyph.implicitHeight
+
+                    opacity: root.onOtherMonitor ? 0.5 : 1
 
                     Behavior on y {
                         Anim {}
+                    }
+
+                    MaterialIcon {
+                        id: glyph
+
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: !win.hasImage
+                        grade: 0
+                        text: Icons.getAppCategoryIcon(win.modelData.lastIpcObject.class, "desktop_windows")
+                        color: win.tint
+                    }
+
+                    Image {
+                        id: image
+
+                        // A square the height of the glyph, centred.
+                        anchors.centerIn: parent
+                        width: Math.round(glyph.implicitHeight * 0.9)
+                        height: width
+                        visible: win.hasImage
+                        source: win.modelData.icon ?? ""
+                        sourceSize: Qt.size(width * 2, height * 2)
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        smooth: true
+                        mipmap: true
                     }
                 }
             }
