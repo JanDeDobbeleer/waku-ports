@@ -31,6 +31,18 @@ Item {
         }
 
         Popout {
+            name: "layout"
+            sourceComponent: LayoutHint {}
+        }
+
+        Popout {
+            name: "appgroup"
+            sourceComponent: AppGroup {
+                popouts: root.popouts
+            }
+        }
+
+        Popout {
             id: networkPopout
 
             name: "network"

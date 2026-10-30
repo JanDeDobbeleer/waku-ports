@@ -450,13 +450,30 @@ Singleton {
         return t.lastIpcObject?.class || t.lastIpcObject?.windowClass || t.address;
     }
 
-    function updateGroups(all: var): void {
+    // TEST ONLY (DebugIpc): adds this many fake windows to the first application, to try the group
+    // badge and flyout when no application has several windows. They are never focusable.
+    property int debugCopies: 0
+    property var lastAll: []
+
+    onDebugCopiesChanged: updateGroups(lastAll)
+
+    function updateGroups(real: var): void {
+        lastAll = real;
+        const all = real.slice();
+        for (let i = 0; i < debugCopies && real.length > 0; i++)
+            all.push(Object.assign({}, real[0], {
+                address: "fake" + i,
+                title: "Fake window " + (i + 1),
+                wsId: ((real[0].wsId + i) % 7) + 1
+            }));
         const by = {};
         for (const t of all) {
             if (!t.address)
                 continue;
             const k = groupKey(t);
-            (by[k] ??= []).push(t);
+            if (!by[k])
+                by[k] = [];
+            by[k].push(t);
         }
         const order = groupOrder.filter(k => by[k]);
         for (const k of Object.keys(by))

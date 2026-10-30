@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
+import wabar.services as S
 import qs.services
 import qs.utils
 
@@ -63,9 +64,53 @@ Scope {
             const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
             if (!l)
                 return "no apps list";
-            if (l.shown[i]?.address !== l.focusedAddress)
-                return "refused: not the focused window";
+            const g = l.shown[i];
+            if (!g || g.windows.length !== 1 || g.windows[0].address !== l.focusedAddress)
+                return "refused: not a single focused window";
             return l.clickApp(i);
+        }
+
+        // Same handler as a click on a row of the group flyout, for window `i` of the group of
+        // executable `exe`, but only when it is already the focused window (a no-op).
+        function activateGroupWindow(exe: string, i: int): string {
+            const g = Hypr.appGroups.find(x => x.key === exe);
+            if (!g?.windows[i])
+                return "none";
+            if (g.windows[i].address !== Hypr.focusedHwnd)
+                return "refused: not the focused window";
+            return Hypr.activateGroupWindow(exe, i);
+        }
+
+        // Same handler as a click on a group icon (cycle), refused unless the group has one window
+        // that is already focused, which is a no-op.
+        function activateApp(i: int): string {
+            return clickApp(i);
+        }
+
+        // One line per group: executable, window count, workspaces of its windows (roman numerals)
+        // and a "*" on the group with the focused window.
+        function appGroups(): string {
+            return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")}${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
+        }
+
+        // TEST ONLY: fake extra windows for the first application, to try the group badge.
+        function fakeCopies(n: int): string {
+            Hypr.debugCopies = n;
+            return "fake windows: " + n;
+        }
+
+        // The dots of the workspaces entry (ids), the active one and the layout name and glyph
+        // under it, plus the last komorebic command (a dry run in tests).
+        function dots(): string {
+            const w = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("workspaces");
+            return w ? w.debugDots() + " last=[" + Hypr.lastCommand + "]" : "no workspaces";
+        }
+
+        // The layout switcher's click (`next`) or wheel (`previous`) handler. Always a dry run:
+        // the command is logged and returned, never sent to komorebi.
+        function layoutDry(direction: string): string {
+            const w = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("workspaces");
+            return w ? w.cycleLayout(direction, true) + " last=[" + Hypr.lastCommand + "]" : "no workspaces";
         }
 
         // count of windows, icons shown, cell size, focused index, then per icon: "wsId:focused".
@@ -74,8 +119,8 @@ Scope {
                 const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
                 if (!l)
                     return "no apps list";
-                const marks = l.shown.map(t => String(t.wsId) + (t.address === l.focusedAddress ? "*" : ""));
-                return [l.count, l.shown.length, l.cell, l.focusedIndex(), "fg=" + l.focusedAddress, "avail=" + Hypr.taskbarAvailable, "win=" + Hypr.barWindow, "model=" + Hypr.taskbarCount, "rows=" + Object.keys(Hypr.taskbarRows).length, "addr=" + l.shown.map(t => t.address).join("/"), marks.join(",")].join(" ");
+                const marks = l.shown.map(g => g.windows.map(t => String(t.wsId)).join("+") + (g.windows.some(t => t.address === l.focusedAddress) ? "*" : ""));
+                return [l.count, l.shown.length, l.cell, l.focusedIndex(), "fg=" + l.focusedAddress, "avail=" + Hypr.taskbarAvailable, "win=" + Hypr.barWindow, "model=" + Hypr.taskbarCount, "rows=" + Object.keys(Hypr.taskbarRows).length, "wc=" + (typeof S.WindowControl !== "undefined"), marks.join(",")].join(" ");
             } catch (e) {
                 return "error " + e;
             }

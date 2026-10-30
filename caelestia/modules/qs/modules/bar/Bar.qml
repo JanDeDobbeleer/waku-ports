@@ -44,7 +44,16 @@ ColumnLayout {
         const id = ch.entryId;
         const top = ch.y;
 
-        if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
+        if (id === "workspaces") {
+            // Port: hovering the layout glyph under the active dot opens its hint.
+            if (ch.item.layoutAt(ch.item.mapFromItem(root, 0, y).y)) {
+                popouts.currentName = "layout";
+                popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.layoutCentre()).y;
+                popouts.hasCurrent = true;
+            } else if (popouts.currentName === "layout") {
+                popouts.hasCurrent = false;
+            }
+        } else if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
             const items = ch.item.items;
             const icon = items.childAt(items.width / 2, mapToItem(items, 0, y).y);
             if (icon) {
@@ -62,11 +71,18 @@ ColumnLayout {
                 tray.expanded = true;
             }
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
-            // Port: the popout shows the window under the cursor (see AppsList).
+            // Port: the popout shows the window under the cursor (see AppsList), or the windows of
+            // an application with several (the "appgroup" popout).
             const app = ch.item.appAt(ch.item.mapFromItem(root, 0, y).y);
             if (app) {
-                Hypr.hoverToplevel = app.modelData;
-                popouts.currentName = id.toLowerCase();
+                const group = app.modelData;
+                if (group.windows.length > 1) {
+                    Hypr.hoverGroupKey = group.key;
+                    popouts.currentName = "appgroup";
+                } else {
+                    Hypr.hoverToplevel = group.windows[0];
+                    popouts.currentName = id.toLowerCase();
+                }
                 popouts.currentCenter = app.mapToItem(root, 0, app.height / 2).y;
                 popouts.hasCurrent = true;
             } else {
@@ -95,7 +111,23 @@ ColumnLayout {
             const ch = repeater.itemAt(i);
             if (!ch)
                 continue;
-            if (ch.entryId === "statusIcons") {
+            if (ch.entryId === "workspaces" && name === "layout") {
+                popouts.currentName = name;
+                popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.layoutCentre()).y;
+                popouts.hasCurrent = true;
+                return true;
+            } else if (ch.entryId === "activeWindow" && name.toLowerCase().startsWith("appgroup:")) {
+                // "appGroup:<exe>": the flyout of that application's group.
+                const key = name.slice("appgroup:".length);
+                const app = ch.item.appForKey(key);
+                if (!app)
+                    return false;
+                Hypr.hoverGroupKey = key;
+                popouts.currentName = "appgroup";
+                popouts.currentCenter = app.mapToItem(root, 0, app.height / 2).y;
+                popouts.hasCurrent = true;
+                return true;
+            } else if (ch.entryId === "statusIcons") {
                 const items = ch.item.items;
                 for (let j = 0; j < items.children.length; j++) {
                     const icon = items.children[j];
@@ -129,7 +161,10 @@ ColumnLayout {
 
     function handleWheel(y: real, angleDelta: point): void {
         const ch = childAt(width / 2, y);
-        if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
+        if (ch?.entryId === "workspaces" && ch.item.layoutAt(ch.item.mapFromItem(root, 0, y).y)) {
+            // Port: the wheel over the layout glyph cycles the layout (wheel up: previous).
+            ch.item.cycleLayout(angleDelta.y > 0 ? "previous" : "next");
+        } else if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
             // Workspace scroll
             const mon = Hypr.monitorFor(screen);
             const specialWs = mon?.lastIpcObject.specialWorkspace.name;

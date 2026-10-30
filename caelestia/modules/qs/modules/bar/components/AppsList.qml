@@ -9,11 +9,14 @@ import qs.utils
 
 // Port: the running-applications list. It replaces upstream's rotated active-window label (the
 // bar entry keeps the id "activeWindow", so the layout and the config stay as they were) and
-// shows one icon per window komorebi manages, on every workspace, plus floating ones: the
-// `Hypr.toplevels` join. The focused window sits on a rounded primary pill, like the active
-// workspace. A window of another workspace is dimmed. A click raises the window
-// (`Hypr.activateToplevel`), switching to its workspace first when needed. Hovering an icon
-// opens upstream's "activewindow" popout for that window (`Hypr.hoverToplevel`).
+// shows one icon per application (`Hypr.appGroups`: the windows komorebi manages, on every
+// workspace, plus floating ones, grouped by executable, in first-seen order). The application
+// with the focused window sits on a rounded primary pill, like the active workspace. An
+// application with several windows has a count badge. An application with windows on other
+// workspaces only is dimmed. A click raises the window (`Hypr.clickGroup`: for a group the
+// focused window's next sibling, else the last focused one), switching to its workspace first
+// when needed. Hovering an icon opens upstream's "activewindow" popout for a single window
+// (`Hypr.hoverToplevel`), or the "appgroup" popout that lists the windows of a group.
 //
 // Long lists: the cell shrinks from the full bar width to 70% of it. Beyond that, the list shows
 // as many windows as fit (the focused one always among them) and a "+N" cell for the rest. It
@@ -23,7 +26,7 @@ Item {
 
     required property var bar
 
-    readonly property var all: Hypr.toplevels.values.filter(t => !!t.address)
+    readonly property var all: Hypr.appGroups
     readonly property string focusedAddress: Hypr.focusedHwnd
 
     readonly property real fullCell: Tokens.sizes.bar.innerWidth
@@ -46,7 +49,7 @@ Item {
             return all;
         const keep = Math.max(1, capacity - 1);
         const out = all.slice(0, keep);
-        const f = all.find(t => t.address === focusedAddress);
+        const f = all.find(g => g.windows.some(t => t.address === focusedAddress));
         if (f && !out.includes(f))
             out[keep - 1] = f;
         return out;
@@ -54,13 +57,23 @@ Item {
 
     // The click handler of every icon (the test IPC calls it too). Returns what happened.
     function clickApp(i: int): string {
-        const t = shown[i];
-        return t ? Hypr.activateToplevel(t) : "none";
+        const g = shown[i];
+        return g ? Hypr.clickGroup(g) : "none";
     }
 
-    // Index in `shown` of the focused window, or -1.
+    // Index in `shown` of the group with the focused window, or -1.
     function focusedIndex(): int {
-        return shown.findIndex(t => t.address === focusedAddress);
+        return shown.findIndex(g => g.windows.some(t => t.address === focusedAddress));
+    }
+
+    // The icon of the group with this key, or null.
+    function appForKey(key: string): var {
+        for (let i = 0; i < column.children.length; i++) {
+            const c = column.children[i];
+            if (c.isApp && c.modelData?.key === key)
+                return c;
+        }
+        return null;
     }
 
     // The icon under local y, or null.
@@ -92,13 +105,25 @@ Item {
                 required property int index
 
                 readonly property bool isApp: true
-                readonly property bool focused: modelData.address === root.focusedAddress
-                readonly property bool onActiveWs: modelData.wsActive !== false
+                readonly property int windowCount: modelData.windows.length
+                readonly property bool focused: modelData.windows.some(t => t.address === root.focusedAddress)
+                readonly property bool onActiveWs: modelData.windows.some(t => t.wsActive !== false)
                 readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
                 width: root.fullCell
                 height: root.cell
                 opacity: onActiveWs || focused ? 1 : 0.55
+
+                // A second card behind the icon marks a group.
+                StyledRect {
+                    anchors.fill: parent
+                    anchors.leftMargin: Tokens.px(3)
+                    anchors.rightMargin: -Tokens.px(3)
+                    visible: app.windowCount > 1 && !app.focused
+                    radius: Tokens.rounding.full
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    opacity: 0.6
+                }
 
                 StyledRect {
                     anchors.fill: parent
@@ -110,7 +135,7 @@ Item {
                     anchors.centerIn: parent
                     visible: !app.hasImage
                     grade: 0
-                    text: Icons.getAppCategoryIcon(app.modelData.lastIpcObject.class, "desktop_windows")
+                    text: Icons.getAppCategoryIcon(app.modelData.exe, "desktop_windows")
                     color: app.focused ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
                 }
 
@@ -127,6 +152,27 @@ Item {
                     asynchronous: true
                     smooth: true
                     mipmap: true
+                }
+
+                // The count of windows, at the icon's top-right corner.
+                StyledRect {
+                    visible: app.windowCount > 1
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.rightMargin: -Tokens.px(2)
+                    implicitWidth: Math.max(implicitHeight, badge.implicitWidth + Tokens.px(6))
+                    implicitHeight: badge.implicitHeight + Tokens.px(2)
+                    radius: Tokens.rounding.full
+                    color: Colours.palette.m3tertiary
+
+                    StyledText {
+                        id: badge
+
+                        anchors.centerIn: parent
+                        text: app.windowCount
+                        color: Colours.palette.m3onTertiary
+                        font: Tokens.font.label.small
+                    }
                 }
 
                 MouseArea {

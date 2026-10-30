@@ -34,3 +34,24 @@ Animation durations are not scaled; `appearance.anim.durations.scale` in `config
 still controls them. The per-scale multipliers in `config/shell.json`
 (`appearance.rounding.scale`, `spacing.scale`, `padding.scale`, `font.scale`) still work and
 multiply with the settings above.
+
+## Bar: workspaces, layouts and running apps
+
+- `bar.workspaces.dynamic` (default `true`, in `config/shell.json`): the dots are every occupied
+  workspace of the monitor, the active one, and the first empty workspace after the last of those
+  (a slot to move to an empty desktop), in workspace order. `false` shows every komorebi workspace
+  (at least `bar.workspaces.shown`).
+- Layout switcher: the active dot shows a glyph for its komorebi layout. Click or wheel down runs
+  `komorebic cycle-layout next`, wheel up `previous`. Hovering shows the layout name.
+  BSP `view_quilt`, Columns `view_column`, Rows `table_rows`, VerticalStack `view_sidebar`,
+  HorizontalStack `view_agenda`, UltrawideVerticalStack `view_week`, Grid `grid_view`,
+  RightMainVerticalStack `view_sidebar` mirrored.
+- Running apps: one icon per application (grouped by executable, first-seen order). A count badge
+  marks an application with several windows; hovering it lists them (title, workspace numeral) and a
+  click on a row jumps there. A click on the icon raises the focused window's next sibling, or the
+  window that had focus last. A click raises a window through the engine's `WindowControl` when the
+  engine has it, else through `komorebic eager-focus`; the highlight moves at once.
+- Test IPC (`wabarc --config-home <home> call bar ...`): `dots`, `layoutDry next|previous` (logs the
+  command, never runs it), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
+  `activateApp <i>`, `activateGroupWindow <exe> <i>` (refuse unless the target is already focused),
+  `fakeCopies <n>` (fake windows for the badge).
