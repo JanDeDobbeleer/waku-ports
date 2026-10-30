@@ -10,6 +10,7 @@ import qs.modules.session as Session
 import qs.modules.dashboard as Dashboard
 import qs.modules.notifications as Notifications
 import qs.modules.sidebar as Sidebar
+import qs.modules.utilities as Utilities
 import qs.modules.utilities.toasts as Toasts
 
 Item {
@@ -122,7 +123,7 @@ Item {
         borderThickness: root.borderThickness
     }
 
-    StubPanel {
+    Utilities.Wrapper {
         id: utilities
 
         screenState: root.screenState
@@ -150,30 +151,5 @@ Item {
         anchors.bottom: utilities.top
         anchors.right: parent.right
         anchors.topMargin: -notifications.anchors.topMargin
-    }
-
-    // Port: the launcher, osd, session, notifications, sidebar, utilities, toasts and dashboard
-    // wrappers are other work packages. Until they land, each is an empty closed panel with the
-    // properties the drawers read. Swap a StubPanel for the real Wrapper when its package merges.
-    component StubPanel: Item {
-        property real offsetScale: 1
-        property bool hovered
-        property bool sidebarOrSessionVisible
-        property bool sidebarVisible
-        property var screen
-        property var screenState
-        property var panels
-        property var sidebarPanel
-        property var osdPanel
-        property var sessionPanel
-        property var utilitiesPanel
-        property var sidebar
-        property var popouts
-        property real horizontalStretch: 1
-        property var deformMatrix
-
-        visible: false
-        implicitWidth: 0
-        implicitHeight: 0
     }
 }
