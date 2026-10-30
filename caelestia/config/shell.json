@@ -1,1 +1,6 @@
-{}
+{
+  "border": {
+    "thickness": 8,
+    "rounding": 8
+  }
+}
