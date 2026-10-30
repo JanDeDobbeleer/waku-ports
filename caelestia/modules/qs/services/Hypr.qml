@@ -363,20 +363,43 @@ Singleton {
             optimisticHwnd = "";
             optimisticTimer.stop();
         }
+        const stateSig = JSON.stringify([layouts, map]);
+        if (stateSig === lastStateSig)
+            return;
+        lastStateSig = stateSig;
         wsLayouts = layouts;
         wsWindows = map;
         rebuild();
     }
 
+    // What the last rebuild was made from. An identical input does nothing: the objects below are
+    // kept, so a delegate bound to one never sees it replaced.
+    property string rebuildSig: ""
+    // The Mon and Ws objects by key: screen name, and screen name + engine workspace id.
+    property var monObjs: ({})
+    property var wsObjs: ({})
+    // key -> signature of the windows last given to that workspace.
+    property var wsWinSigs: ({})
+
+    function sameList(a: var, b: var): bool {
+        if (a.length !== b.length)
+            return false;
+        for (let i = 0; i < a.length; i++)
+            if (a[i] !== b[i])
+                return false;
+        return true;
+    }
+
+    // Brings monitors, workspaces and windows up to date with the engine's workspaces, the
+    // `komorebic state` windows and the screens. Objects are kept by identity: a property is set
+    // only when it differs, an object is created or destroyed only for a real addition or removal,
+    // and a list is assigned only when its members changed.
     function rebuild(): void {
-        const oldMons = monitorList.values;
-        const oldWs = workspaceList.values;
-        const mons = [];
-        const wss = [];
         const wabarMons = S.Workspaces.monitors;
         const screens = Quickshell.screens;
-        let focusedMon = null;
 
+        // 1. Plan: plain data only, so the signature can tell whether anything changed.
+        const plan = [];
         for (let i = 0; i < screens.length; i++) {
             const screen = screens[i];
             // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1,
@@ -385,56 +408,140 @@ Singleton {
             if (wmi < 0 && wabarMons.length === screens.length)
                 wmi = i;
             const wm = wmi >= 0 ? wabarMons[wmi] : null;
-            const mon = monComp.createObject(root, {
-                name: screen.name,
-                id: i,
-                handle: wm?.handle ?? 0
-            });
-            mons.push(mon);
+            const wsPlan = [];
             const list = wm?.workspaces ?? [];
             for (let j = 0; j < list.length; j++) {
                 const src = list[j];
-                const windows = windowsOf(wmi, j, src.active);
-                const ws = wsComp.createObject(root, {
-                    id: j + 1,
-                    key: String(src.id),
-                    layoutName: wsLayouts[wmi + ":" + j] ?? "",
-                    name: src.label || String(j + 1),
-                    monitor: mon,
-                    active: src.active,
-                    focused: src.focused,
-                    toplevels: {
-                        values: windows
-                    },
-                    lastIpcObject: {
-                        windows: windows.length
-                    }
+                wsPlan.push({
+                    key: screen.name + "|" + src.id,
+                    srcId: String(src.id),
+                    index: j,
+                    label: src.label || String(j + 1),
+                    active: !!src.active,
+                    focused: !!src.focused,
+                    layout: wsLayouts[wmi + ":" + j] ?? "",
+                    windows: windowsOf(wmi, j, !!src.active)
                 });
+            }
+            plan.push({
+                name: screen.name,
+                id: i,
+                handle: wm?.handle ?? 0,
+                workspaces: wsPlan
+            });
+        }
+        const sig = JSON.stringify(plan);
+        if (sig === rebuildSig)
+            return;
+        rebuildSig = sig;
+
+        // 2. Apply, in place.
+        const mons = [];
+        const wss = [];
+        const newMonObjs = {};
+        const newWsObjs = {};
+        const newWinSigs = {};
+        let focusedMon = null;
+        let windowsChanged = false;
+        let created = 0;
+
+        for (const mp of plan) {
+            let mon = monObjs[mp.name];
+            if (!mon) {
+                mon = monComp.createObject(root, {
+                    name: mp.name,
+                    id: mp.id,
+                    handle: mp.handle
+                });
+                created++;
+            } else {
+                if (mon.id !== mp.id)
+                    mon.id = mp.id;
+                if (mon.handle !== mp.handle)
+                    mon.handle = mp.handle;
+            }
+            newMonObjs[mp.name] = mon;
+            mons.push(mon);
+            let activeWs = null;
+            for (const wp of mp.workspaces) {
+                const winSig = JSON.stringify(wp.windows);
+                let ws = wsObjs[wp.key];
+                const isNew = !ws;
+                if (isNew) {
+                    ws = wsComp.createObject(root, {
+                        key: wp.srcId,
+                        monitor: mon
+                    });
+                    created++;
+                }
+                if (ws.id !== wp.index + 1)
+                    ws.id = wp.index + 1;
+                if (ws.layoutName !== wp.layout)
+                    ws.layoutName = wp.layout;
+                if (ws.name !== wp.label)
+                    ws.name = wp.label;
+                if (ws.monitor !== mon)
+                    ws.monitor = mon;
+                if (ws.active !== wp.active)
+                    ws.active = wp.active;
+                if (ws.focused !== wp.focused)
+                    ws.focused = wp.focused;
+                if (isNew || wsWinSigs[wp.key] !== winSig) {
+                    windowsChanged = true;
+                    ws.toplevels = {
+                        values: wp.windows
+                    };
+                    ws.lastIpcObject = {
+                        windows: wp.windows.length
+                    };
+                    for (const w of wp.windows)
+                        w.workspace = ws;
+                }
+                newWinSigs[wp.key] = winSig;
+                newWsObjs[wp.key] = ws;
                 wss.push(ws);
-                for (const w of windows)
-                    w.workspace = ws;
-                if (src.active)
-                    mon.activeWorkspace = ws;
-                if (src.focused)
+                if (wp.active)
+                    activeWs = ws;
+                if (wp.focused)
                     focusedMon = mon;
             }
+            if (activeWs && mon.activeWorkspace !== activeWs)
+                mon.activeWorkspace = activeWs;
         }
-        if (focusedMon)
-            focusedMon.focused = true;
-        else if (mons.length > 0)
-            mons[0].focused = true;
+        if (!focusedMon && mons.length > 0)
+            focusedMon = mons[0];
+        for (const m of mons)
+            if (m.focused !== (m === focusedMon))
+                m.focused = m === focusedMon;
 
-        monitorList.values = mons;
-        workspaceList.values = wss;
-        const all = [];
-        for (const w of workspaceList.values)
-            for (const t of w.toplevels.values)
-                all.push(t);
-        toplevelList.values = all;
-        updateGroups(all);
-        for (const o of oldMons)
-            o.destroy();
-        for (const o of oldWs)
+        // Objects that are gone, for the destroy below.
+        const oldObjs = [];
+        for (const k of Object.keys(monObjs))
+            if (!newMonObjs[k])
+                oldObjs.push(monObjs[k]);
+        for (const k of Object.keys(wsObjs))
+            if (!newWsObjs[k])
+                oldObjs.push(wsObjs[k]);
+        if (oldObjs.length > 0)
+            windowsChanged = true;
+        monObjs = newMonObjs;
+        wsObjs = newWsObjs;
+        wsWinSigs = newWinSigs;
+
+        // 3. Publish. A list that did not change is not assigned, so nothing downstream re-evaluates.
+        if (!sameList(monitorList.values, mons))
+            monitorList.values = mons;
+        if (!sameList(workspaceList.values, wss))
+            workspaceList.values = wss;
+        if (windowsChanged) {
+            const all = [];
+            for (const w of wss)
+                for (const t of w.toplevels.values)
+                    all.push(t);
+            toplevelList.values = all;
+            updateGroups(all);
+        }
+        for (const o of oldObjs)
             o.destroy();
     }
 
@@ -493,8 +600,13 @@ Singleton {
 
     Connections {
         function onChanged(): void {
+            // The engine emits `changed` for events that leave the workspaces as they were.
+            const sig = JSON.stringify([S.Workspaces.provider, S.Workspaces.connected, S.Workspaces.monitors]);
+            if (sig === root.engineSig)
+                return;
+            root.engineSig = sig;
             root.rebuild();
-            stateTimer.restart();
+            root.queue();
         }
 
         target: S.Workspaces
@@ -561,7 +673,26 @@ Singleton {
 
     readonly property bool komorebi: S.Workspaces.provider === "komorebi"
 
-    onKomorebiChanged: stateTimer.restart()
+    property string lastStateSig: ""
+    property string engineSig: ""
+    property string knownSig: ""
+    property string knownKeys: ""
+    property string rowsSig: ""
+    property string foregroundSig: ""
+    function queue(): void {
+        if (!stateTimer.running)
+            stateTimer.start();
+    }
+    onKomorebiChanged: queue()
+
+    // komorebi events that change no workspace (a layout set by a hotkey) do not show in the
+    // engine's data, so the state is read now and then anyway. An unchanged answer does nothing.
+    Timer {
+        interval: 10000
+        repeat: true
+        running: root.komorebi
+        onTriggered: root.queue()
+    }
 
     // Read only: `komorebic state` prints the state and changes nothing.
     Timer {
@@ -570,12 +701,14 @@ Singleton {
         interval: 150
         onTriggered: {
             if (!root.komorebi) {
+                root.lastStateSig = "";
                 root.wsWindows = {};
+                root.wsLayouts = {};
                 root.rebuild();
             } else if (statePoll.running) {
                 stateTimer.restart();
             } else {
-                statePoll.running = true;
+                        statePoll.running = true;
             }
         }
     }
@@ -616,7 +749,7 @@ Singleton {
         id: settleTimer
 
         interval: 400
-        onTriggered: stateTimer.restart()
+        onTriggered: root.queue()
     }
 
     // Runs the allowed komorebic commands (see sendKomorebic); a request made while it runs waits
@@ -665,12 +798,31 @@ Singleton {
                         iconUrl: o.iconUrl
                     };
             }
-            root.taskbarWindows = known;
-            root.taskbarRows = idx;
-            stateTimer.restart();
+            const knownSig = JSON.stringify(known);
+            if (knownSig !== root.knownSig) {
+                const keys = Object.keys(known).sort().join(",");
+                root.knownSig = knownSig;
+                root.taskbarWindows = known;
+                // A title or an icon needs no new state, only a new join. A window that came or
+                // went does.
+                if (keys !== root.knownKeys) {
+                    root.knownKeys = keys;
+                    root.queue();
+                }
+                root.rebuild();
+            }
+            const idxSig = JSON.stringify(idx);
+            if (idxSig !== root.rowsSig) {
+                root.rowsSig = idxSig;
+                root.taskbarRows = idx;
+            }
             for (let i = 0; i < count; i++) {
                 const o = objectAt(i);
                 if (o && o.active) {
+                    const fgSig = o.key + "|" + o.title + "|" + o.exe;
+                    if (fgSig === root.foregroundSig && root.foreground)
+                        return;
+                    root.foregroundSig = fgSig;
                     root.foreground = {
                         title: o.title,
                         workspace: null,
@@ -686,6 +838,7 @@ Singleton {
                     return;
                 }
             }
+            root.foregroundSig = "";
             root.foreground = null;
         }
 

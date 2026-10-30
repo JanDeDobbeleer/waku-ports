@@ -39,7 +39,16 @@ ClipRect {
         return ids;
     }
 
-    readonly property var wsIds: {
+    // Port: the dots' ids, replaced only when the set of dots changes. A recomputation that gives
+    // the same ids (a window title changed, a state refresh) hands the dot model nothing new.
+    property var wsIds: []
+    onWsIdsRawChanged: {
+        if (wsIds.join(",") !== wsIdsRaw.join(","))
+            wsIds = wsIdsRaw;
+    }
+    Component.onCompleted: wsIds = wsIdsRaw
+
+    readonly property var wsIdsRaw: {
         if (dynamic)
             return dynamicIds;
         if (Config.bar.workspaces.showUnoccupied)
