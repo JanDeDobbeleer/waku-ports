@@ -5,6 +5,8 @@ import Quickshell.Bluetooth
 import wabar.services as S
 import qs.services
 import qs.utils
+import Caelestia.Services
+import qs.modules.launcher.services
 
 // TEST ONLY. Opens and closes the bar flyouts without a cursor, so a capture run (no input allowed)
 // can check them: `wabarc --config-home <home> call bar popout network`. It sets the same state the
@@ -139,5 +141,26 @@ Scope {
         }
 
         target: "bar"
+    }
+
+    // TEST ONLY. `wabarc --config-home <home> call launcher action <name>` runs the handler of the
+    // launcher row with that name (Light, Dark, Random, Lock, Sleep, Shutdown, ...), the same code a
+    // click runs. Run it with CAELESTIA_DRYRUN=1: the actions then only log.
+    IpcHandler {
+        function action(name: string): string {
+            return Actions.invoke(name);
+        }
+
+        // Rows the `>` list shows, comma separated.
+        function actions(): string {
+            return Actions.list.map(a => a.name).join(", ");
+        }
+
+        // The colour choice and the last session action that was logged or refused.
+        function state(): string {
+            return `scheme=${Colours.scheme} seed=${Colours.seed} variant=${Colours.flavour} light=${Colours.currentLight} wallpaper=${WallpaperService.actualCurrent.slice(WallpaperService.actualCurrent.lastIndexOf("/") + 1)} session=${SessionManager.lastLogged}`;
+        }
+
+        target: "launcher"
     }
 }
