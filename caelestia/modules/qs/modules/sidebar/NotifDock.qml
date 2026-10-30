@@ -99,7 +99,12 @@ Item {
                     asynchronous: true
                     source: "file:///" + Paths.absolutePath(Config.paths.noNotifsPic) // Port: Qt reads "D:/" as a URL scheme
                     fillMode: Image.PreserveAspectFit
+                    // Port: decode at device pixels for sharpness, but lay out at 80% of the panel.
+                    // Qt takes sourceSize as the logical size, so at a display scale above 1 the
+                    // upstream line made the image wider than the panel and clipped it.
                     sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                    Layout.preferredWidth: clipRect.width * 0.8
+                    Layout.preferredHeight: implicitWidth > 0 ? Layout.preferredWidth * implicitHeight / implicitWidth : 0
 
                     layer.enabled: true
                     layer.effect: Colouriser {
