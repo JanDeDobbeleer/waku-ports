@@ -456,7 +456,10 @@ StyledWindow {
 
         ShapePath {
             fillColor: Qt.rgba(blobGroup.color.r, blobGroup.color.g, blobGroup.color.b, 1)
-            strokeWidth: -1
+            // A thin edge in the same colour overdraws the anti-aliased seam against the frame and
+            // the panel, so no hairline of background shows through at the join.
+            strokeColor: fillColor
+            strokeWidth: 1.5
 
             PathSvg {
                 path: `M${px},${py} L${px + ax * r},${py + ay * r}`
