@@ -2,5 +2,10 @@
   "border": {
     "thickness": 8,
     "rounding": 8
+  },
+  "bar": {
+    "workspaces": {
+      "occupiedBg": true
+    }
   }
 }
