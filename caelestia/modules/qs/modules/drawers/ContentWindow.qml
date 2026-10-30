@@ -247,6 +247,7 @@ StyledWindow {
 
             attachTop: true
             panel: panels.dashboard
+            gapTop: panels.dashboard.anchors.topMargin
             deformAmount: 0.1
         }
 
@@ -255,6 +256,7 @@ StyledWindow {
 
             attachBottom: true
             panel: panels.launcher
+            gapBottom: panels.launcher.anchors.bottomMargin
             deformAmount: 0.1
         }
 
@@ -263,6 +265,7 @@ StyledWindow {
 
             attachRight: true
             panel: panels.sessionWrapper
+            gapRight: panels.session.anchors.rightMargin
             deformAmount: 0.2
             x: panels.sessionWrapper.x + panels.session.x + bar.implicitWidth
             implicitWidth: panels.session.width
@@ -273,6 +276,7 @@ StyledWindow {
 
             attachRight: true
             panel: panels.sidebar
+            gapRight: panels.sidebar.anchors.rightMargin
             deformAmount: 0.03
             implicitHeight: panel.height * (1 / rawDeformMatrix.m22) + 2
             exclude: panels.sidebar.offsetScale > 0.08 ? [] : [utilsBg]
@@ -284,6 +288,7 @@ StyledWindow {
 
             attachRight: true
             panel: panels.osdWrapper
+            gapRight: panels.osd.anchors.rightMargin
             deformAmount: 0.25
             x: panels.osdWrapper.x + panels.osd.x + bar.implicitWidth
             implicitWidth: panels.osd.width
@@ -303,6 +308,7 @@ StyledWindow {
             attachBottom: true
             attachRight: true
             panel: panels.utilities
+            gapBottom: panels.utilities.anchors.bottomMargin
             deformAmount: panels.sidebar.visible ? 0.1 : 0.15
             exclude: panels.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
             topLeftRadius: Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius
@@ -423,6 +429,16 @@ StyledWindow {
         property bool attachRight: false
         property bool attachBottom: false
         property bool attachLeft: false
+        // Port: how far the panel has moved off its attached edge. The expressive slide curves
+        // overshoot, so the wrapper's margin goes positive for a few frames and the panel leaves
+        // the frame. The upstream SDF union keeps the shape fused to the frame; the stub extends
+        // the rectangle to the frame by the same amount so no wallpaper shows in the gap.
+        property real gapTop: 0
+        property real gapRight: 0
+        property real gapBottom: 0
+        readonly property real coverTop: attachTop ? Math.max(0, gapTop) : 0
+        readonly property real coverRight: attachRight ? Math.max(0, gapRight) : 0
+        readonly property real coverBottom: attachBottom ? Math.max(0, gapBottom) : 0
 
         // Port: concave junction fillets. Upstream fuses a flush panel with the frame by a circular
         // smooth-min whose blend arc has radius `smoothing`; the stub draws separate shapes, so each
@@ -447,12 +463,12 @@ StyledWindow {
         Fillet {
             r: parent.filletRight
             active: parent.attachRight && !parent.attachTop
-            px: parent.width; py: 0; ax: 0; ay: -1; bx: -1; by: 0
+            px: parent.width + parent.coverRight; py: 0; ax: 0; ay: -1; bx: -1; by: 0
         }
         Fillet {
             r: parent.filletRight
             active: parent.attachRight && !parent.attachBottom
-            px: parent.width; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
+            px: parent.width + parent.coverRight; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
         }
         Fillet {
             r: parent.filletLeft
@@ -494,9 +510,9 @@ StyledWindow {
         topLeftRadius: attachTop ? 0 : radius
         topRightRadius: attachTop || attachRight ? 0 : radius
         bottomRightRadius: attachBottom || attachRight ? 0 : radius
-        bleedTop: attachTop ? root.borderThickness : 0
-        bleedRight: attachRight ? root.borderThickness : 0
-        bleedBottom: attachBottom ? root.borderThickness : 0
+        bleedTop: attachTop ? root.borderThickness + coverTop : 0
+        bleedRight: attachRight ? root.borderThickness + coverRight : 0
+        bleedBottom: attachBottom ? root.borderThickness + coverBottom : 0
         deformScale: (deformAmount * Config.appearance.deformScale) / 10000
     }
 
