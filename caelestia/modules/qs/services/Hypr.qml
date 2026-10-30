@@ -88,17 +88,15 @@ Singleton {
             runFocus(mon, target.id - 1);
     }
 
-    // The only command this shell sends to komorebi: `komorebic focus-workspace <index>`, an
-    // index (0-based) of an existing workspace on the focused monitor. Anything else is dropped.
+    // `komorebic focus-workspace <index>`, an index (0-based) of an existing workspace on the
+    // focused monitor. Anything else is dropped.
     function runFocus(mon: var, index: int): void {
         if (!komorebi || mon !== focusedMonitor || !Number.isInteger(index))
             return;
         const count = workspaceList.values.filter(w => w.monitor === mon).length;
         if (index < 0 || index >= count)
             return;
-        focusProc.pending = ["komorebic", "focus-workspace", String(index)];
-        if (!focusProc.running)
-            focusProc.start();
+        sendKomorebic(["focus-workspace", String(index)]);
     }
 
     // The window the bar's running-apps list points at, for the hover popout (null: show the
@@ -106,17 +104,22 @@ Singleton {
     property var hoverToplevel: null
 
     // Brings a toplevel from `toplevels` to the front and returns what it did, for the test IPC:
-    // "focused" (already the foreground window: nothing happens, a taskbar click would minimise
-    // it), "activate" (hwnd raised through the engine's TaskbarModel), "switch+activate" (its
-    // workspace is focused first with `komorebic focus-workspace`, then the hwnd is raised after
-    // komorebi has uncloaked it), "eager-focus" (the taskbar has no row for it: `komorebic
-    // eager-focus <exe>`), or "none".
+    // "focused" (already the focused window: nothing happens, a taskbar click would minimise it),
+    // "switch+activate" (its workspace is focused first with `komorebic focus-workspace`, then,
+    // after komorebi has uncloaked it, the window is raised), "window-control" (raised through the
+    // engine's `WindowControl`), "activate" (raised through a TaskbarModel row), "eager-focus"
+    // (`komorebic eager-focus <exe>`: the last resort, it may pick another window of that exe) or
+    // "none". The highlight moves at once (`optimisticHwnd`) and settles on komorebi's state.
     function activateToplevel(t: var): string {
         if (!t || !t.address)
             return "none";
         if (focusedHwnd === t.address)
             return "focused";
+        optimisticHwnd = String(t.address);
+        optimisticAt = Date.now();
+        optimisticTimer.restart();
         const exe = t.lastIpcObject?.class ?? "";
+        let result;
         if (komorebi && t.monId === focusedMonitor?.id && !t.wsActive) {
             pendingActivate = {
                 hwnd: t.address,
@@ -124,25 +127,93 @@ Singleton {
             };
             runFocus(focusedMonitor, t.wsId - 1);
             activateTimer.restart();
-            return "switch+activate";
+            result = "switch+activate";
+        } else {
+            result = activateHwnd(t.address, exe);
         }
-        return activateHwnd(t.address, exe);
+        settleTimer.restart();
+        return result;
     }
 
     function activateHwnd(hwnd: string, exe: string): string {
+        // The engine's WindowControl (absent on an older engine).
+        if (typeof S.WindowControl !== "undefined" && S.WindowControl) {
+            if (S.WindowControl.activate(Number(hwnd)))
+                return "window-control";
+        }
         const row = taskbarRows[hwnd];
         if (row !== undefined) {
             taskbar.activate(row);
             return "activate";
         }
-        // The only other command besides focus-workspace: focus a window by its executable name.
+        // Focus a window by its executable name.
         if (komorebi && /^[A-Za-z0-9_.\- ]+$/.test(exe)) {
-            focusProc.pending = ["komorebic", "eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"];
-            if (!focusProc.running)
-                focusProc.start();
+            sendKomorebic(["eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"]);
             return "eager-focus";
         }
         return "none";
+    }
+
+    // What a click on a group icon activates: the next window of the group when one of them has
+    // focus, else the one that had focus last (or the first). Returns what activateToplevel did.
+    function clickGroup(g: var): string {
+        const ws = g?.windows ?? [];
+        if (ws.length === 0)
+            return "none";
+        const fi = ws.findIndex(t => t.address === focusedHwnd);
+        let target;
+        if (fi >= 0)
+            target = ws.length > 1 ? ws[(fi + 1) % ws.length] : ws[0];
+        else
+            target = ws.find(t => t.address === groupLastFocused[g.key]) ?? ws[0];
+        return activateToplevel(target);
+    }
+
+    // Window `i` of group `key`, activated like a click on a single icon.
+    function activateGroupWindow(key: string, i: int): string {
+        const g = appGroups.find(x => x.key === key);
+        return g?.windows[i] ? activateToplevel(g.windows[i]) : "none";
+    }
+
+    // The workspace name (a roman numeral) of the workspace a toplevel is on.
+    function workspaceLabel(t: var): string {
+        const w = workspaceList.values.find(x => x.monitor?.id === t?.monId && x.id === t?.wsId);
+        return w?.name ?? String(t?.wsId ?? "");
+    }
+
+    // The only komorebic commands this shell sends: focus-workspace, eager-focus, cycle-layout and
+    // change-layout. With `dry` the command is logged and not run (tests). A refresh of the state
+    // follows.
+    readonly property var allowedCommands: ["focus-workspace", "eager-focus", "cycle-layout", "change-layout"]
+    readonly property var layoutNames: ["BSP", "Columns", "Rows", "VerticalStack", "HorizontalStack", "UltrawideVerticalStack", "Grid", "RightMainVerticalStack"]
+    property string lastCommand: ""
+
+    function sendKomorebic(args: var, dry = false): bool {
+        if (!komorebi || !allowedCommands.includes(args[0]))
+            return false;
+        if (args[0] === "change-layout" && !layoutNames.includes(args[1]))
+            return false;
+        if (args[0] === "cycle-layout" && args[1] !== "next" && args[1] !== "previous")
+            return false;
+        lastCommand = "komorebic " + args.join(" ");
+        settleTimer.restart();
+        if (dry) {
+            console.log("dry run: " + lastCommand);
+            return true;
+        }
+        focusProc.pending = ["komorebic"].concat(args);
+        if (!focusProc.running)
+            focusProc.start();
+        return true;
+    }
+
+    // Cycles the layout of the focused workspace (`next` or `previous`).
+    function cycleLayout(direction: string, dry = false): bool {
+        return sendKomorebic(["cycle-layout", direction], dry);
+    }
+
+    function setLayout(name: string, dry = false): bool {
+        return sendKomorebic(["change-layout", name], dry);
     }
 
     // wabar gap: komorebi and GlazeWM have no special workspaces.
@@ -254,6 +325,7 @@ Singleton {
                 floating: floating
             });
         const map = {};
+        const layouts = {};
         list(state?.monitors).forEach((mon, mi) => list(mon.workspaces).forEach((ws, wi) => {
             const out = [];
             for (const c of list(ws.containers))
@@ -266,6 +338,9 @@ Singleton {
             for (const w of list(ws.floating_windows))
                 out.push(one(w, true));
             map[mi + ":" + wi] = out;
+            // `layout` is { "Default": "BSP" }, { "Custom": [...] } or a bare name.
+            const l = ws.layout;
+            layouts[mi + ":" + wi] = typeof l === "string" ? l : (l?.Default ?? (l?.Custom ? "Custom" : ""));
         }));
         // komorebi's focused window: focused monitor, workspace, container, window.
         let focusedHwnd = "";
@@ -283,6 +358,12 @@ Singleton {
         } catch (e) {
         }
         komorebiFocused = focusedHwnd;
+        // komorebi's answer replaces the guess, unless the guess is too fresh to be in the state.
+        if (optimisticHwnd && Date.now() - optimisticAt > 300) {
+            optimisticHwnd = "";
+            optimisticTimer.stop();
+        }
+        wsLayouts = layouts;
         wsWindows = map;
         rebuild();
     }
@@ -317,6 +398,7 @@ Singleton {
                 const ws = wsComp.createObject(root, {
                     id: j + 1,
                     key: String(src.id),
+                    layoutName: wsLayouts[wmi + ":" + j] ?? "",
                     name: src.label || String(j + 1),
                     monitor: mon,
                     active: src.active,
@@ -349,10 +431,45 @@ Singleton {
             for (const t of w.toplevels.values)
                 all.push(t);
         toplevelList.values = all;
+        updateGroups(all);
         for (const o of oldMons)
             o.destroy();
         for (const o of oldWs)
             o.destroy();
+    }
+
+    // The apps list groups windows by application: the executable name (`lastIpcObject.class`),
+    // else the window class, else the window itself. `groupOrder` keeps first-seen order, so the
+    // icons do not move when the focus changes.
+    property var appGroups: []
+    property var groupOrder: []
+    // The group the hover popout lists.
+    property string hoverGroupKey: ""
+
+    function groupKey(t: var): string {
+        return t.lastIpcObject?.class || t.lastIpcObject?.windowClass || t.address;
+    }
+
+    function updateGroups(all: var): void {
+        const by = {};
+        for (const t of all) {
+            if (!t.address)
+                continue;
+            const k = groupKey(t);
+            (by[k] ??= []).push(t);
+        }
+        const order = groupOrder.filter(k => by[k]);
+        for (const k of Object.keys(by))
+            if (!order.includes(k))
+                order.push(k);
+        groupOrder = order;
+        appGroups = order.map(k => ({
+                    key: k,
+                    exe: k,
+                    windows: by[k],
+                    icon: by[k][0].icon,
+                    iconUrl: by[k][0].iconUrl
+                }));
     }
 
     Component.onCompleted: rebuild()
@@ -398,13 +515,28 @@ Singleton {
     // hwnd -> { title, exe, iconUrl } for every taskbar row, and the komorebi windows per workspace.
     property var taskbarWindows: ({})
     property var wsWindows: ({})
+    // "<monitor>:<workspace>" -> komorebi layout name.
+    property var wsLayouts: ({})
     // hwnd -> row of the ungrouped TaskbarModel, for `taskbar.activate(row)`.
     property var taskbarRows: ({})
     property var pendingActivate: null
     property string komorebiFocused: ""
     // The window with focus: the foreground taskbar row when the engine lists it, else the one
     // komorebi has focused.
-    readonly property string focusedHwnd: foreground?.address || komorebiFocused
+    // `optimisticHwnd` leads for a moment after a click, so the highlight moves at once.
+    readonly property string focusedHwnd: optimisticHwnd || foreground?.address || komorebiFocused
+    property string optimisticHwnd: ""
+    property real optimisticAt: 0
+    // key (the app's executable) -> hwnd of the group's window that had focus last.
+    property var groupLastFocused: ({})
+    onFocusedHwndChanged: {
+        const t = toplevelList.values.find(x => x.address === focusedHwnd);
+        if (t) {
+            const k = groupKey(t);
+            if (groupLastFocused[k] !== t.address)
+                groupLastFocused[k] = t.address;
+        }
+    }
     // Set by the bar: a window for the taskbar model (see the model below).
     property var barWindow: null
     readonly property int taskbarCount: taskbar.count
@@ -453,9 +585,25 @@ Singleton {
         }
     }
 
-    // Runs the allowed komorebic commands (focus-workspace from runFocus, eager-focus from
-    // activateHwnd); a request made while it runs waits and
-    // replaces any earlier waiting one.
+    // The optimistic highlight lasts 1.5 s at most.
+    Timer {
+        id: optimisticTimer
+
+        interval: 1500
+        onTriggered: root.optimisticHwnd = ""
+    }
+
+    // Refreshes the state a moment after a command or an activation, so the highlight settles on
+    // what komorebi reports.
+    Timer {
+        id: settleTimer
+
+        interval: 400
+        onTriggered: stateTimer.restart()
+    }
+
+    // Runs the allowed komorebic commands (see sendKomorebic); a request made while it runs waits
+    // and replaces any earlier waiting one.
     Process {
         id: focusProc
 
@@ -596,6 +744,7 @@ Singleton {
         property int id
         property string key
         property string name
+        property string layoutName
         property var monitor: null
         property bool active
         property bool focused
