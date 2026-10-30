@@ -49,8 +49,10 @@ ColumnLayout {
         if (ch?.entryId !== "tray")
             closeTray();
 
-        // Port: leaving the clock closes its popout.
+        // Port: leaving the clock closes its popout, and so does leaving the layout button.
         if (ch?.entryId !== "clock" && popouts.currentName === "clock")
+            popouts.hasCurrent = false;
+        if (ch?.entryId !== "layout" && popouts.currentName === "layout")
             popouts.hasCurrent = false;
 
         if (!ch) {
@@ -71,14 +73,12 @@ ColumnLayout {
                 popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
                 popouts.hasCurrent = true;
             }
-        } else if (id === "workspaces") {
-            // Port: hovering the layout glyph under the active dot opens its hint.
-            if (ch.item.layoutAt(ch.item.mapFromItem(root, 0, y).y)) {
+        } else if (id === "layout") {
+            // Port: hovering the layout button opens its hint.
+            if (ch.item.active) {
                 popouts.currentName = "layout";
-                popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.layoutCentre()).y;
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
                 popouts.hasCurrent = true;
-            } else if (popouts.currentName === "layout") {
-                popouts.hasCurrent = false;
             }
         } else if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
             const items = ch.item.items;
@@ -139,9 +139,9 @@ ColumnLayout {
                 popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
                 popouts.hasCurrent = true;
                 return true;
-            } else if (ch.entryId === "workspaces" && name === "layout") {
+            } else if (ch.entryId === "layout" && name === "layout") {
                 popouts.currentName = name;
-                popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.layoutCentre()).y;
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
                 popouts.hasCurrent = true;
                 return true;
             } else if (ch.entryId === "activeWindow" && name.toLowerCase().startsWith("appgroup:")) {
@@ -189,9 +189,9 @@ ColumnLayout {
 
     function handleWheel(y: real, angleDelta: point): void {
         const ch = childAt(width / 2, y);
-        if (ch?.entryId === "workspaces" && ch.item.layoutAt(ch.item.mapFromItem(root, 0, y).y)) {
-            // Port: the wheel over the layout glyph cycles the layout (wheel up: previous).
-            ch.item.cycleLayout(angleDelta.y > 0 ? "previous" : "next");
+        if (ch?.entryId === "layout") {
+            // Port: the wheel over the layout button cycles the layout (wheel up: previous).
+            ch.item.cycle(angleDelta.y > 0 ? "previous" : "next");
         } else if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
             // Workspace scroll
             const mon = Hypr.monitorFor(screen);
@@ -249,6 +249,18 @@ ColumnLayout {
                         objectName: "taskbarWorkspaces"
                         screen: root.screen
                         fullscreen: root.fullscreen
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "layout"
+                delegate: EntryWrapper {
+                    visible: btn.active
+
+                    LayoutButton {
+                        id: btn
+
+                        objectName: "taskbarLayoutButton"
                     }
                 }
             }

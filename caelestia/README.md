@@ -41,8 +41,11 @@ multiply with the settings above.
   workspace of the monitor, the active one, and the first empty workspace after the last of those
   (a slot to move to an empty desktop), in workspace order. `false` shows every komorebi workspace
   (at least `bar.workspaces.shown`).
-- Layout switcher: the active dot shows a glyph for its komorebi layout. Click or wheel down runs
-  `komorebic cycle-layout next`, wheel up `previous`. Hovering shows the layout name.
+- Layout button: one button (bar entry `layout`) right below the dots shows the glyph of the
+  layout of the active workspace; each workspace keeps its own layout. Click runs
+  `komorebic cycle-layout next` for the workspace that is active now, wheel up `previous`, wheel
+  down `next`. Hovering shows the layout name and a hint. The button is hidden without a komorebi
+  workspace. The glyph changes at once and settles on komorebi's state.
   BSP `view_quilt`, Columns `view_column`, Rows `table_rows`, VerticalStack `view_sidebar`,
   HorizontalStack `view_agenda`, UltrawideVerticalStack `view_week`, Grid `grid_view`,
   RightMainVerticalStack `view_sidebar` mirrored.
@@ -52,7 +55,8 @@ multiply with the settings above.
   window that had focus last. A click raises a window through the engine's `WindowControl` when the
   engine has it, else through `komorebic eager-focus`; the highlight moves at once.
 - Test IPC (`wabarc --config-home <home> call bar ...`): `dots`, `layoutDry next|previous` (logs the
-  command, never runs it), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
+  command, never runs it), `clickLayout` (the click handler; only with `CAELESTIA_DRYRUN=1`),
+  `layoutButton` (glyph, workspace, layout, visibility), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
   `activateApp <i>`, `activateGroupWindow <exe> <i>` (refuse unless the target is already focused),
   `fakeCopies <n>` (fake windows for the badge).
 ## Launcher commands and session actions

@@ -4,7 +4,7 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-// Port: the hint of the layout glyph under the active workspace dot.
+// Port: the hint of the layout button below the workspace dots.
 Item {
     id: root
 
@@ -25,7 +25,7 @@ Item {
         }
 
         StyledText {
-            text: "Click or scroll to change"
+            text: "click: next layout, scroll: change"
             color: Colours.palette.m3onSurfaceVariant
             font: Tokens.font.label.small
         }

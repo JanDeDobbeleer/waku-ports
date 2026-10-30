@@ -425,6 +425,10 @@ QtObject {
                         enabled: true
                     },
                     {
+                        id: "layout",
+                        enabled: true
+                    },
+                    {
                         id: "spacer",
                         enabled: true
                     },

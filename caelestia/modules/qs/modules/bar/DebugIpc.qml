@@ -153,18 +153,35 @@ Scope {
             return "fake windows: " + n;
         }
 
-        // The dots of the workspaces entry (ids), the active one and the layout name and glyph
-        // under it, plus the last komorebic command (a dry run in tests).
+        // The dots of the workspaces entry (ids) and the active one, plus the last komorebic
+        // command (a dry run in tests).
         function dots(): string {
             const w = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("workspaces");
             return w ? w.debugDots() + " last=[" + Hypr.lastCommand + "]" : "no workspaces";
         }
 
-        // The layout switcher's click (`next`) or wheel (`previous`) handler. Always a dry run:
-        // the command is logged and returned, never sent to komorebi.
+        // The layout button's wheel (`previous`) or click (`next`) handler. Always a dry run: the
+        // command is logged and returned, never sent to komorebi.
         function layoutDry(direction: string): string {
-            const w = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("workspaces");
-            return w ? w.cycleLayout(direction, true) + " last=[" + Hypr.lastCommand + "]" : "no workspaces";
+            const b = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("layout");
+            return b ? b.cycle(direction, true) + " last=[" + Hypr.lastCommand + "]" : "no layout button";
+        }
+
+        // The layout button's click handler, the one a real click runs. Refused unless
+        // CAELESTIA_DRYRUN=1, so a test never sends `cycle-layout`.
+        function clickLayout(): string {
+            const b = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("layout");
+            if (!b)
+                return "no layout button";
+            if (!Paths.dryRun)
+                return "refused: not a dry run";
+            return b.click() + " last=[" + Hypr.lastCommand + "]";
+        }
+
+        // The layout button: glyph, active workspace, layout (shown and from komorebi), visibility.
+        function layoutButton(): string {
+            const b = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("layout");
+            return b ? b.debugState() : "no layout button";
         }
 
         // count of windows, icons shown, cell size, focused index, then per icon: "wsId:focused".

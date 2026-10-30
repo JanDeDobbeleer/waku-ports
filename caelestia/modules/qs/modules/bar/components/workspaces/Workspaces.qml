@@ -86,8 +86,6 @@ ClipRect {
     // Port: no `as Workspace` cast. On wabar a cast to a type of the same module came back null
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
-        if (layoutAt(workspaces.mapToItem(root, x, y).y))
-            return cycleLayout("next");
         return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
     }
 
@@ -103,34 +101,9 @@ ClipRect {
         return "focus";
     }
 
-    // The layout glyph under the active dot, when `y` (local to this item) is over it.
-    function layoutAt(y: real): var {
-        const w = workspaces.itemAtIndex(activeWsIdx);
-        if (!w || !w.hasLayout)
-            return null;
-        const p = w.mapToItem(root, 0, w.layoutTop);
-        return y >= p.y && y <= p.y + w.layoutHeight ? w : null;
-    }
-
-    // Vertical centre of the layout glyph, local to this item.
-    function layoutCentre(): real {
-        const w = workspaces.itemAtIndex(activeWsIdx);
-        return w ? w.mapToItem(root, 0, w.layoutTop + w.layoutHeight / 2).y : 0;
-    }
-
-    // Test and click handler of the layout switcher: `next` or `previous`. `dry` logs the command
-    // and does not run it.
-    function cycleLayout(direction: string, dry = false): string {
-        const w = workspaces.itemAtIndex(activeWsIdx);
-        if (!w || !w.hasLayout)
-            return "none";
-        return Hypr.cycleLayout(direction, dry) ? "cycle-layout " + direction : "none";
-    }
-
-    // The ids of the dots and the layout under the active one, for the test IPC.
+    // The ids of the dots and the active one, for the test IPC.
     function debugDots(): string {
-        const w = workspaces.itemAtIndex(activeWsIdx);
-        return "dots=" + wsIds.join(",") + " active=" + activeWsId + " layout=" + (w?.layoutName ?? "") + " glyph=" + (w?.layoutGlyph ?? "");
+        return "dots=" + wsIds.join(",") + " active=" + activeWsId;
     }
 
     function workspaceIndex(id: int): int {

@@ -2,6 +2,7 @@ module qs.modules.bar.components
 ActiveWindow 1.0 ActiveWindow.qml
 AppsList 1.0 AppsList.qml
 Clock 1.0 Clock.qml
+LayoutButton 1.0 LayoutButton.qml
 OsIcon 1.0 OsIcon.qml
 Power 1.0 Power.qml
 StatusIcons 1.0 StatusIcons.qml
