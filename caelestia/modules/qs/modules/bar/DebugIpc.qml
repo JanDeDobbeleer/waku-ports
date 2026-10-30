@@ -73,6 +73,33 @@ Scope {
             return Bluetooth.devices.values.map(d => `${d.connected} ${d.row?.type} ${Icons.getBluetoothIcon(d.icon)}`).join("; ");
         }
 
+        // TEST ONLY: `n` fake tray items replace the real ones (0 restores them). Clicks on them only
+        // record themselves; see trayState.
+        function fakeTray(n: int): string {
+            TrayItems.debugFake = n;
+            return `fake tray items: ${n}`;
+        }
+
+        // "<items> <shown in the strip> <strip height> <last action>"
+        function trayState(): string {
+            const t = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("tray");
+            return `${TrayItems.count} ${t ? t.shown : "no strip"} ${t ? t.height : 0} [${TrayItems.lastAction}]`;
+        }
+
+        // Calls the click handler of fake item `i` with `button` (left, middle, right).
+        function trayClick(i: int, button: string): string {
+            const it = TrayItems.debugFake > 0 ? TrayItems.items[i] : null;
+            if (!it)
+                return "none";
+            if (button === "left")
+                it.activate();
+            else if (button === "middle")
+                it.secondaryActivate();
+            else
+                it.display(null, 0, 0);
+            return TrayItems.lastAction;
+        }
+
         function entries(): string {
             return ShellState.componentsFor(Screens.screens[0])?.bar?.debugEntries() ?? "none";
         }

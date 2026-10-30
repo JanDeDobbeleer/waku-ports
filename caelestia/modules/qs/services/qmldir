@@ -11,6 +11,7 @@ singleton Recorder 1.0 Recorder.qml
 singleton Screens 1.0 Screens.qml
 singleton ShellState 1.0 ShellState.qml
 singleton Time 1.0 Time.qml
+singleton TrayItems 1.0 TrayItems.qml
 singleton VPN 1.0 VPN.qml
 singleton WallpaperService 1.0 WallpaperService.qml
 singleton Weather 1.0 Weather.qml

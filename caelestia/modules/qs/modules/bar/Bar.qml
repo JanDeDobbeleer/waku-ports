@@ -54,6 +54,8 @@ ColumnLayout {
             popouts.hasCurrent = false;
         if (ch?.entryId !== "layout" && popouts.currentName === "layout")
             popouts.hasCurrent = false;
+        if (ch?.entryId !== "tray" && popouts.currentName === "tray")
+            popouts.hasCurrent = false;
 
         if (!ch) {
             popouts.hasCurrent = false;
@@ -89,13 +91,11 @@ ColumnLayout {
                 popouts.hasCurrent = true;
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {
-            const tray = ch.item;
-            if (!Config.bar.tray.compact || (tray.expanded && !tray.expandIcon.contains(mapToItem(tray.expandIcon, tray.implicitWidth / 2, y)))) {
-                // Port: no tray menu popout (the menu is null on Windows).
-                popouts.hasCurrent = false;
-            } else {
-                popouts.hasCurrent = false;
-                tray.expanded = true;
+            // Port: hovering the tray strip opens the flyout with every icon.
+            if (ch.visible && ch.item.active) {
+                popouts.currentName = "tray";
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
+                popouts.hasCurrent = true;
             }
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             // Port: the popout shows the window under the cursor (see AppsList), or the windows of
@@ -135,6 +135,13 @@ ColumnLayout {
             if (!ch)
                 continue;
             if (ch.entryId === "clock" && name === "clock") {
+                popouts.currentName = name;
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
+                popouts.hasCurrent = true;
+                return true;
+            } else if (ch.entryId === "tray" && name === "tray") {
+                if (!ch.visible || !ch.item.active)
+                    return false;
                 popouts.currentName = name;
                 popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
                 popouts.hasCurrent = true;
@@ -283,7 +290,11 @@ ColumnLayout {
             DelegateChoice {
                 roleValue: "tray"
                 delegate: EntryWrapper {
+                    visible: trayStrip.active
+
                     Tray {
+                        id: trayStrip
+
                         objectName: "taskbarTray"
                     }
                 }

@@ -1,40 +1,30 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
-import Quickshell.Services.SystemTray
 import Caelestia.Config
 import qs.components
 import qs.services
 
+// Port: the tray strip under the status icons. Shows up to Config.bar.tray.maxShown icons and a
+// "+n" badge for the rest; the flyout (popouts/TrayFlyout) lists them all. Zero height, and
+// hidden, when there are no icons.
 StyledRect {
     id: root
 
     readonly property alias layout: layout
-    readonly property alias items: items
-    readonly property alias expandIcon: expandIcon
+    readonly property bool active: TrayItems.count > 0
+    readonly property int shown: Math.min(TrayItems.count, Math.max(1, Config.bar.tray.maxShown))
+    readonly property int extra: TrayItems.count - shown
 
     readonly property int padding: Config.bar.tray.background ? Tokens.padding.medium : Tokens.padding.extraSmall
-    readonly property int spacing: Config.bar.tray.background ? Tokens.spacing.medium : Tokens.spacing.extraSmall
-
-    property bool expanded
-
-    readonly property real nonAnimHeight: {
-        if (!Config.bar.tray.compact)
-            return layout.implicitHeight + padding * 2;
-        const pad = (Config.bar.tray.background ? Tokens.padding.extraSmall : 0) + padding;
-        if (expanded)
-            return expandIcon.implicitHeight + layout.implicitHeight + spacing + pad;
-        return Math.max(Config.bar.tray.background ? width : 0, expandIcon.implicitHeight + pad);
-    }
 
     clip: true
-    visible: height > 0
+    visible: active
 
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: nonAnimHeight
+    implicitHeight: active ? layout.implicitHeight + padding * 2 : 0
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (Config.bar.tray.background && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
+    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.tray.background ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full
 
     Column {
@@ -45,82 +35,18 @@ StyledRect {
         anchors.topMargin: root.padding
         spacing: Tokens.spacing.small
 
-        opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
-
-        add: Transition {
-            Anim {
-                properties: "scale"
-                from: 0
-                to: 1
-                easing: Tokens.anim.standardDecel
-            }
-        }
-
-        move: Transition {
-            Anim {
-                properties: "scale"
-                to: 1
-                easing: Tokens.anim.standardDecel
-            }
-            Anim {
-                properties: "x,y"
-            }
-        }
-
         Repeater {
-            id: items
-
-            model: ScriptModel {
-                values: SystemTray.items.values.filter(i => i.status !== Status.Passive && !GlobalConfig.bar.tray.hiddenIcons.includes(i.id))
-            }
+            model: TrayItems.items.slice(0, root.shown)
 
             TrayItem {}
         }
 
-        Behavior on opacity {
-            Anim {
-                type: Anim.DefaultEffects
-            }
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: root.extra > 0
+            text: `+${root.extra}`
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.body.small
         }
-    }
-
-    Loader {
-        id: expandIcon
-
-        asynchronous: true
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-
-        active: Config.bar.tray.compact && items.count > 0
-
-        sourceComponent: Item {
-            implicitWidth: expandIconInner.implicitWidth
-            implicitHeight: expandIconInner.implicitHeight - Tokens.padding.small
-
-            MaterialIcon {
-                id: expandIconInner
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: Config.bar.tray.background ? Tokens.padding.extraSmall : -Tokens.padding.small
-                text: "expand_less"
-                color: Colours.palette.m3onSurfaceVariant
-                fontStyle: Tokens.font.icon.medium
-                rotation: root.expanded ? 180 : 0
-
-                Behavior on rotation {
-                    Anim {}
-                }
-
-                Behavior on anchors.bottomMargin {
-                    Anim {}
-                }
-            }
-        }
-    }
-
-    Behavior on implicitHeight {
-        Anim {}
     }
 }

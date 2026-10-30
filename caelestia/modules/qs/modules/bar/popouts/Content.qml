@@ -138,7 +138,10 @@ Item {
             sourceComponent: LockStatus {}
         }
 
-        // Port: no tray menu popout. SystemTrayItem.menu is null on Windows (left click activates).
+        Popout {
+            name: "tray"
+            sourceComponent: TrayFlyout {}
+        }
     }
 
     component Popout: Loader {

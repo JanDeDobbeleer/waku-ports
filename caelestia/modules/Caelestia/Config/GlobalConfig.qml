@@ -374,6 +374,8 @@ QtObject {
                     property bool background: false
                     property bool recolour: false
                     property bool compact: false
+                    // Port: icons shown in the bar strip; the rest are behind a "+n" badge and in the flyout.
+                    property int maxShown: 4
                     property var iconSubs: CL.list([])
                     onIconSubsChanged: CL.list(iconSubs)
                     property list<string> hiddenIcons: []
@@ -441,15 +443,15 @@ QtObject {
                         enabled: true
                     },
                     {
-                        id: "tray",
-                        enabled: true
-                    },
-                    {
                         id: "clock",
                         enabled: true
                     },
                     {
                         id: "statusIcons",
+                        enabled: true
+                    },
+                    {
+                        id: "tray",
                         enabled: true
                     },
                     {
