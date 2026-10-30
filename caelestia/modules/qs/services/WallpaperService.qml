@@ -6,6 +6,7 @@ import Quickshell.Io
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
+import wabar as W
 import wabar.services as S
 import qs.services
 import qs.utils
@@ -32,6 +33,9 @@ Searcher {
 
     property list<QtObject> entries: []
 
+    // The width of the picker's thumbnails; Visual's `thumbnailWidth` default must match.
+    readonly property int thumbnailWidth: 640
+
     function fromWabar(path: string): string {
         return Paths.slash(path) || fallback;
     }
@@ -47,6 +51,35 @@ Searcher {
     function configureEngine(): void {
         const name = GlobalConfig.services.wallpaperAnimation;
         S.Wallpapers.configureEngine(name !== "none", name === "none" ? "" : name);
+    }
+
+    // Fills wabar's thumbnail cache in the background, current wallpaper first, then its neighbours
+    // outward (the picker opens on the current one), so the first open shows images at once.
+    function prewarmThumbnails(): void {
+        const all = entries;
+        const n = all.length;
+        if (n === 0)
+            return;
+        let start = 0;
+        for (let i = 0; i < n; i++) {
+            if (all[i].path === actualCurrent) {
+                start = i;
+                break;
+            }
+        }
+        const paths = [];
+        for (let d = 0; paths.length < n; d++) {
+            if (d === 0) {
+                paths.push(all[start].path);
+                continue;
+            }
+            if (d <= n - 1 && paths.length < n)
+                paths.push(all[(start + d) % n].path);
+            if (paths.length < n && 2 * d < n)
+                paths.push(all[(start - d + n) % n].path);
+        }
+        W.Thumbnails.cancelPrewarm();
+        W.Thumbnails.prewarm(paths, thumbnailWidth);
     }
 
     function setRandom(): void {
@@ -114,6 +147,7 @@ Searcher {
         entries = next;
         for (const o of old)
             o.destroy();
+        prewarmTimer.restart();
     }
 
     // Lists the wallpaper folder again. The folder can change after start: the config that names
@@ -129,6 +163,17 @@ Searcher {
         configureEngine();
         rescan();
     }
+
+    // Waits so the warm-up never competes with the start-up; a new list or a new current wallpaper
+    // starts it over with the right order.
+    Timer {
+        id: prewarmTimer
+
+        interval: 3000
+        onTriggered: root.prewarmThumbnails()
+    }
+
+    onActualCurrentChanged: prewarmTimer.restart()
 
     Connections {
         function onWallsdirChanged(): void {

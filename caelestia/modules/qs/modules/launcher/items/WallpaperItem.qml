@@ -71,6 +71,7 @@ Item {
         Visual {
             anchors.fill: parent
             source: root.modelData?.path
+            thumbnail: true
             playing: (root.PathView.isCurrentItem && PersistentState.wallpaperPlaying) || stateLayer.containsMouse
         }
     }

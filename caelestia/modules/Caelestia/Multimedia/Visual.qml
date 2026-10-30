@@ -1,8 +1,13 @@
 import QtQuick
 import Caelestia.Config
+import wabar as W
 
 // Shows an image, an animated image or (not yet) a video, picked by file suffix. Same properties
 // as caelestia's Visual. The numeric values of VisualSource.FillMode equal Image.FillMode.
+// `thumbnail: true` shows a still image through wabar's `image://thumb` provider: a downscaled copy
+// (`thumbnailWidth` pixels wide) from a memory and disk cache, decoded off the GUI thread, instead of
+// decoding the full file on every load. Use it for lists of large images (the wallpaper picker); only
+// local still images are affected.
 // wabar gap: video files (mp4, webm, mkv...) are not decoded; they show nothing and `type` is Live.
 Item {
     id: root
@@ -12,6 +17,8 @@ Item {
     property bool playing: true
     readonly property int type: kind === "video" ? VisualSource.Live : source ? VisualSource.Still : VisualSource.Unknown
     property bool animate: true
+    property bool thumbnail: false
+    property int thumbnailWidth: 640
     readonly property bool ready: kind === "animated" ? animated.status === Image.Ready : kind === "still" && still.status === Image.Ready
 
     readonly property string suffix: {
@@ -36,6 +43,8 @@ Item {
         return "file:///" + source.replace(/\\/g, "/").replace(/^\/+/, "");
     }
 
+    readonly property bool useThumbnail: thumbnail && kind === "still" && !/^(qrc|data|https?):/i.test(source)
+
     opacity: !animate || ready ? 1 : 0
 
     Behavior on opacity {
@@ -50,8 +59,9 @@ Item {
 
         anchors.fill: parent
         visible: root.kind === "still"
-        source: root.kind === "still" ? root.resolvedSource : ""
-        sourceSize: Qt.size(root.width, root.height)
+        source: root.kind !== "still" ? "" : root.useThumbnail ? W.Thumbnails.url(root.source, root.thumbnailWidth) : root.resolvedSource
+        // The thumbnail is already small; the full image is decoded at the item's size.
+        sourceSize: root.useThumbnail ? Qt.size(0, 0) : Qt.size(root.width, root.height)
         asynchronous: true
         fillMode: root.fillMode
     }
