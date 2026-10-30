@@ -1,0 +1,12 @@
+This directory is a port of the Caelestia shell to wabar.
+
+Upstream: https://github.com/caelestia-dots/shell
+Upstream commit: b51fdb3 (2026-10-29)
+
+The port is a derivative work of Caelestia and is licensed under the GPL-3.0 (see LICENSE).
+Nothing from this port, not even a snippet, may be added to the MIT-licensed wabar repository.
+wabar loads the port at run time as a config home only.
+
+upstream\ holds the unmodified baseline. Everything outside upstream\ is modified or new.
+Assets from upstream: google-sans-flex (SIL OFL, see its LICENSE), bongocat.gif, dino.png,
+logo.svg, wallpaper.webp.
