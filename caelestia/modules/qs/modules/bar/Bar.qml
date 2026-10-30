@@ -30,11 +30,28 @@ ColumnLayout {
         }
     }
 
+    // Port: the click on the clock opens the dashboard on its first tab and closes the clock
+    // popout; with the dashboard open it closes it. Returns what happened (test IPC too).
+    function clickClock(): string {
+        popouts.hasCurrent = false;
+        if (screenState.dashboard) {
+            screenState.dashboard = false;
+            return "dashboard closed";
+        }
+        screenState.dashboardTab = 0;
+        screenState.dashboard = true;
+        return "dashboard opened";
+    }
+
     function checkPopout(y: real): void {
         const ch = childAt(width / 2, y);
 
         if (ch?.entryId !== "tray")
             closeTray();
+
+        // Port: leaving the clock closes its popout.
+        if (ch?.entryId !== "clock" && popouts.currentName === "clock")
+            popouts.hasCurrent = false;
 
         if (!ch) {
             popouts.hasCurrent = false;
@@ -44,7 +61,17 @@ ColumnLayout {
         const id = ch.entryId;
         const top = ch.y;
 
-        if (id === "workspaces") {
+        if (id === "clock") {
+            // Port: hovering the clock opens the calendar, unless the dashboard is open.
+            if (screenState.dashboard) {
+                if (popouts.currentName === "clock")
+                    popouts.hasCurrent = false;
+            } else {
+                popouts.currentName = "clock";
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
+                popouts.hasCurrent = true;
+            }
+        } else if (id === "workspaces") {
             // Port: hovering the layout glyph under the active dot opens its hint.
             if (ch.item.layoutAt(ch.item.mapFromItem(root, 0, y).y)) {
                 popouts.currentName = "layout";
@@ -111,7 +138,12 @@ ColumnLayout {
             const ch = repeater.itemAt(i);
             if (!ch)
                 continue;
-            if (ch.entryId === "workspaces" && name === "layout") {
+            if (ch.entryId === "clock" && name === "clock") {
+                popouts.currentName = name;
+                popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
+                popouts.hasCurrent = true;
+                return true;
+            } else if (ch.entryId === "workspaces" && name === "layout") {
                 popouts.currentName = name;
                 popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.layoutCentre()).y;
                 popouts.hasCurrent = true;
@@ -246,6 +278,7 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     Clock {
                         objectName: "taskbarClock"
+                        onClicked: root.clickClock()
                     }
                 }
             }

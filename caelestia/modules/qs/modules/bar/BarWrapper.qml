@@ -46,6 +46,10 @@ Item {
         return content.item ? content.item.entryItem(id) : null;
     }
 
+    function clickClock(): string {
+        return content.item ? content.item.clickClock() : "no content";
+    }
+
     function handleWheel(y: real, angleDelta: point): void {
         content.item?.handleWheel(y, angleDelta);
     }

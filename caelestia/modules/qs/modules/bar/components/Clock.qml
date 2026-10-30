@@ -20,8 +20,16 @@ StyledRect {
         return root.font.width(scale * 100).letterSpacing(scale).build();
     }
 
+    // Port: a click opens the dashboard (handled in Bar.qml; no cast in the click path).
+    signal clicked
+
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: layout.implicitHeight + root.padding * 2
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: root.clicked()
+    }
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.clock.background ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full

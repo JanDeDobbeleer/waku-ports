@@ -58,6 +58,18 @@ Scope {
             return w.clickWorkspace(n);
         }
 
+        // Runs the click handler of the clock: toggles the dashboard (first tab). Returns what it did.
+        function clickClock(): string {
+            const b = ShellState.componentsFor(Screens.screens[0])?.bar;
+            return b ? b.clickClock() : "no bar";
+        }
+
+        // "<dashboard> <tab> <yyyy-mm>" of the first screen's state.
+        function dashState(): string {
+            const s = ShellState.forScreen(Screens.screens[0]);
+            return `${s.dashboard} ${s.dashboardTab} ${s.dashboardDate.getFullYear()}-${s.dashboardDate.getMonth() + 1}`;
+        }
+
         // Runs the click handler of apps-list icon `i` (0-based), but only when it is the focused
         // window, which makes it a no-op. Returns what the handler did.
         function clickApp(i: int): string {

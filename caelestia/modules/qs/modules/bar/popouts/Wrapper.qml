@@ -109,6 +109,7 @@ Item {
 
         sourceComponent: Content {
             popouts: popoutState
+            screenState: ShellState.forScreen(root.screen)
         }
     }
 

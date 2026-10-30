@@ -6,6 +6,7 @@ Battery 1.0 Battery.qml
 Bluetooth 1.0 Bluetooth.qml
 LayoutHint 1.0 LayoutHint.qml
 ClipWrapper 1.0 ClipWrapper.qml
+ClockPopout 1.0 ClockPopout.qml
 Content 1.0 Content.qml
 LockStatus 1.0 LockStatus.qml
 Network 1.0 Network.qml
