@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.services
@@ -23,7 +24,7 @@ Item {
     required property var bar
 
     readonly property var all: Hypr.toplevels.values.filter(t => !!t.address)
-    readonly property string focusedAddress: Hypr.activeToplevel?.address ?? ""
+    readonly property string focusedAddress: Hypr.focusedHwnd
 
     readonly property real fullCell: Tokens.sizes.bar.innerWidth
     readonly property real minCell: Math.round(fullCell * 0.7)
@@ -68,6 +69,8 @@ Item {
         return c?.isApp ? c : null;
     }
 
+    Component.onCompleted: Hypr.barWindow = Window.window
+
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: column.implicitHeight
 
@@ -90,7 +93,7 @@ Item {
 
                 readonly property bool isApp: true
                 readonly property bool focused: modelData.address === root.focusedAddress
-                readonly property bool onActiveWs: !modelData.workspace || modelData.workspace.active
+                readonly property bool onActiveWs: modelData.wsActive !== false
                 readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
                 width: root.fullCell

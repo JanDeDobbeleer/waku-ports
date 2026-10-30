@@ -114,16 +114,15 @@ Singleton {
     function activateToplevel(t: var): string {
         if (!t || !t.address)
             return "none";
-        if (foreground?.address === t.address)
+        if (focusedHwnd === t.address)
             return "focused";
-        const ws = t.workspace;
         const exe = t.lastIpcObject?.class ?? "";
-        if (komorebi && ws && ws.monitor === focusedMonitor && !ws.active) {
+        if (komorebi && t.monId === focusedMonitor?.id && !t.wsActive) {
             pendingActivate = {
                 hwnd: t.address,
                 exe: exe
             };
-            runFocus(ws.monitor, ws.id - 1);
+            runFocus(focusedMonitor, t.wsId - 1);
             activateTimer.restart();
             return "switch+activate";
         }
@@ -196,7 +195,7 @@ Singleton {
     }
 
     // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order.
-    function windowsOf(monIdx: int, wsIdx: int): var {
+    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool): var {
         const out = [];
         for (const h of wsWindows[monIdx + ":" + wsIdx] ?? []) {
             // The taskbar row adds the icon; komorebi's own title and exe stand in without it
@@ -212,6 +211,10 @@ Singleton {
             out.push({
                 title: row.title,
                 address: String(h.hwnd),
+                // Plain values: the object is copied into a `var` list, so a link set later is lost.
+                wsId: wsIdx + 1,
+                monId: monIdx,
+                wsActive: wsActive,
                 workspace: null,
                 wayland: null,
                 iconUrl: row.iconUrl,
@@ -264,6 +267,22 @@ Singleton {
                 out.push(one(w, true));
             map[mi + ":" + wi] = out;
         }));
+        // komorebi's focused window: focused monitor, workspace, container, window.
+        let focusedHwnd = "";
+        try {
+            const mons = state?.monitors;
+            const monObj = list(mons)[mons?.focused ?? 0];
+            const wsList = monObj?.workspaces;
+            const wsObj = list(wsList)[wsList?.focused ?? 0];
+            const conts = wsObj?.containers;
+            const c = list(conts)[conts?.focused ?? 0];
+            const wins = c?.windows;
+            const w = list(wins)[wins?.focused ?? 0];
+            if (w?.hwnd)
+                focusedHwnd = String(w.hwnd);
+        } catch (e) {
+        }
+        komorebiFocused = focusedHwnd;
         wsWindows = map;
         rebuild();
     }
@@ -294,7 +313,7 @@ Singleton {
             const list = wm?.workspaces ?? [];
             for (let j = 0; j < list.length; j++) {
                 const src = list[j];
-                const windows = windowsOf(wmi, j);
+                const windows = windowsOf(wmi, j, src.active);
                 const ws = wsComp.createObject(root, {
                     id: j + 1,
                     key: String(src.id),
@@ -382,6 +401,14 @@ Singleton {
     // hwnd -> row of the ungrouped TaskbarModel, for `taskbar.activate(row)`.
     property var taskbarRows: ({})
     property var pendingActivate: null
+    property string komorebiFocused: ""
+    // The window with focus: the foreground taskbar row when the engine lists it, else the one
+    // komorebi has focused.
+    readonly property string focusedHwnd: foreground?.address || komorebiFocused
+    // Set by the bar: a window for the taskbar model (see the model below).
+    property var barWindow: null
+    readonly property int taskbarCount: taskbar.count
+    readonly property bool taskbarAvailable: S.TaskbarService.available
 
     readonly property bool komorebi: S.Workspaces.provider === "komorebi"
 
@@ -450,6 +477,10 @@ Singleton {
         id: taskbar
 
         grouping: false
+        // The engine starts its window tracker only for a model that has a bar window; the apps
+        // list hands it its own (see AppsList). showOnlyVisible stays false: komorebi cloaks the
+        // windows of the other workspaces and they must stay in the list.
+        window: root.barWindow
     }
 
     Instantiator {

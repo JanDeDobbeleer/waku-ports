@@ -70,10 +70,15 @@ Scope {
 
         // count of windows, icons shown, cell size, focused index, then per icon: "wsId:focused".
         function apps(): string {
-            const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
-            if (!l)
-                return "no apps list";
-            return `${l.count} ${l.shown.length} ${l.cell} ${l.focusedIndex()} ` + l.shown.map(t => `${t.workspace?.id}${t.address === l.focusedAddress ? "*" : ""}`).join(",");
+            try {
+                const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
+                if (!l)
+                    return "no apps list";
+                const marks = l.shown.map(t => String(t.wsId) + (t.address === l.focusedAddress ? "*" : ""));
+                return [l.count, l.shown.length, l.cell, l.focusedIndex(), "fg=" + l.focusedAddress, "avail=" + Hypr.taskbarAvailable, "win=" + Hypr.barWindow, "model=" + Hypr.taskbarCount, "rows=" + Object.keys(Hypr.taskbarRows).length, "addr=" + l.shown.map(t => t.address).join("/"), marks.join(",")].join(" ");
+            } catch (e) {
+                return "error " + e;
+            }
         }
 
         target: "bar"
