@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
+import wabar as W
 import wabar.services as S
 import qs.services
 import qs.utils
@@ -30,6 +31,20 @@ Scope {
             return null;
         const wall = s.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `);
         return c.find(wall ? "launcherWallpaperList" : "launcherAppList");
+    }
+
+    // The Visual (the item with `kind` and `ready`) below `o`, at most 6 levels down.
+    function visualIn_(o: var, depth: int): var {
+        if (o.kind !== undefined && o.ready !== undefined)
+            return o;
+        if (depth > 6)
+            return null;
+        for (let i = 0; i < o.children.length; i++) {
+            const r = scope.visualIn_(o.children[i], depth + 1);
+            if (r)
+                return r;
+        }
+        return null;
     }
 
     function rows_(): var {
@@ -302,6 +317,29 @@ Scope {
 ");
         }
 
+        // How many of the wallpaper items the list shows have their picture loaded: "ready=R shown=S
+        // items=N". A timing probe for the thumbnails; reads only.
+        function walls(): string {
+            const l = scope.list_();
+            if (!l)
+                return "no list";
+            let ready = 0, shown = 0, items = 0;
+            for (let i = 0; i < l.count; i++) {
+                const item = l.itemAtIndex(i);
+                if (!item)
+                    continue;
+                items++;
+                if (item.opacity < 0.01)
+                    continue;
+                shown++;
+                const v = scope.visualIn_(item, 0);
+                const done = v ? v.ready === true : false;
+                if (done)
+                    ready++;
+            }
+            return `ready=${ready} shown=${shown} items=${items}`;
+        }
+
         // Selects row `i` and runs the handler that Enter runs (SearchBar.accepted).
         function select(i: int): string {
             const l = scope.list_();
@@ -348,5 +386,55 @@ Scope {
         }
 
         target: "launcher"
+    }
+
+    // TEST ONLY. Times the pictures of the wallpaper picker without the launcher: loads the first
+    // `count` wallpapers into plain Images set up like the picker's (`full`: the file at the item's
+    // size; `thumb`: image://thumb) and reports when each became ready. `wabarc call thumbprobe
+    // start thumb 7`, then `result` until all are ready.
+    property var probes: []
+
+    Component {
+        id: probeComp
+
+        Image {
+            property double t0: Date.now()
+            property double ms: -1
+
+            asynchronous: true
+            cache: false
+            onStatusChanged: {
+                if (status === Image.Ready || status === Image.Error)
+                    ms = status === Image.Ready ? Date.now() - t0 : -2;
+            }
+        }
+    }
+
+    IpcHandler {
+        function start(mode: string, count: int): string {
+            for (const o of scope.probes)
+                o.destroy();
+            const next = [];
+            const list = WallpaperService.list;
+            for (let i = 0; i < count && i < list.length; i++) {
+                const path = list[i].path;
+                next.push(probeComp.createObject(scope, mode === "thumb" ? {
+                    source: W.Thumbnails.url(path, 640)
+                } : {
+                    source: "file:///" + path,
+                    sourceSize: Qt.size(280, 158)
+                }));
+            }
+            scope.probes = next;
+            return `started ${next.length}`;
+        }
+
+        function result(): string {
+            const ms = scope.probes.map(o => o.ms);
+            const ok = ms.filter(m => m >= 0);
+            return `n=${ms.length} ready=${ok.length} error=${ms.filter(m => m === -2).length} first=${ok.length ? Math.min(...ok) : -1} last=${ok.length ? Math.max(...ok) : -1}`;
+        }
+
+        target: "thumbprobe"
     }
 }
