@@ -376,15 +376,17 @@ StyledWindow {
         readonly property real filletBottom: Math.max(0, Math.min(filletMax, frameB, width / 2))
 
         // Right edge: ends at the top and bottom of the panel (a top or bottom attachment is the frame).
+        // The junction is the panel's own right edge, which is the neighbouring panel's left edge
+        // for session and osd when the sidebar is open, and the frame otherwise.
         Fillet {
             r: parent.filletRight
             active: parent.attachRight && !parent.attachTop
-            px: parent.frameR; py: 0; ax: 0; ay: -1; bx: -1; by: 0
+            px: parent.width; py: 0; ax: 0; ay: -1; bx: -1; by: 0
         }
         Fillet {
             r: parent.filletRight
             active: parent.attachRight && !parent.attachBottom
-            px: parent.frameR; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
+            px: parent.width; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
         }
         Fillet {
             r: parent.filletLeft
