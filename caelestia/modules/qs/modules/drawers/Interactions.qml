@@ -24,6 +24,16 @@ CustomMouseArea {
 
     property point dragStart
     property bool dashboardShortcutActive
+
+    Timer {
+        id: dashboardHoverTimer
+
+        interval: 1000
+        onTriggered: {
+            if (!root.dashboardShortcutActive && Config.dashboard.showOnHover && root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY))
+                root.screenState.dashboard = true;
+        }
+    }
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
     property bool sidebarShortcutActive
@@ -248,8 +258,15 @@ CustomMouseArea {
         const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y);
 
         // Always update visibility based on hover if not in shortcut mode
+        // Port: opening needs a dwell, so passing over the top edge (a window's own toolbar, for
+        // instance) does not pop it; closing is immediate.
         if (!dashboardShortcutActive) {
-            screenState.dashboard = showDashboard;
+            if (!showDashboard) {
+                dashboardHoverTimer.stop();
+                screenState.dashboard = false;
+            } else if (!screenState.dashboard && !dashboardHoverTimer.running) {
+                dashboardHoverTimer.restart();
+            }
         } else if (showDashboard) {
             // If hovering over dashboard area while in shortcut mode, transition to hover control
             dashboardShortcutActive = false;
