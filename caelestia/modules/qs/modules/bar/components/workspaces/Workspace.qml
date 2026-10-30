@@ -229,7 +229,7 @@ Item {
 
                     grade: 0
                     horizontalAlignment: Text.AlignHCenter
-                    text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+                    text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "desktop_windows")
                     color: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
 
                     Behavior on y {

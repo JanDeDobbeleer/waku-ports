@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Caelestia.I18n
 import wabar.services as S
 import qs.compat
@@ -15,6 +16,13 @@ import qs.compat
 // monitor, `Hypr.activeWsId` counts from 1), the foreground window through `TaskbarModel`, and
 // the lock keys and keyboard layout through `DesktopState`. With no tiling window manager running
 // `workspaces.values` is empty and `hasWm` is false, so a bar can show a "no WM" pill.
+//
+// wabar gap: `Workspaces` gives a window count per workspace, not the windows. With komorebi the
+// windows of each workspace come from a read-only `komorebic state` (hwnd lists per monitor and
+// workspace, in the same order as `Workspaces`), joined by hwnd with the ungrouped TaskbarModel
+// rows (key `w:<hwnd>`: title, executable, icon). A window the taskbar does not list (tool
+// windows, overlays) is not shown. With GlazeWM, or before the first state, a workspace has no
+// windows.
 Singleton {
     id: root
 
@@ -112,6 +120,76 @@ Singleton {
     function reloadDynamicConfs(): void {
     }
 
+    // Executable name without ".exe", lower case: what a desktop entry or an icon rule matches.
+    function appName(exe: string): string {
+        return (exe ?? "").replace(/\.exe$/i, "").toLowerCase();
+    }
+
+    // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order.
+    function windowsOf(monIdx: int, wsIdx: int): var {
+        const out = [];
+        for (const h of wsWindows[monIdx + ":" + wsIdx] ?? []) {
+            const row = taskbarWindows[h.hwnd];
+            if (!row)
+                continue;
+            const name = appName(h.exe || row.exe);
+            out.push({
+                title: row.title,
+                address: String(h.hwnd),
+                workspace: null,
+                wayland: null,
+                iconUrl: row.iconUrl,
+                lastIpcObject: {
+                    address: String(h.hwnd),
+                    class: name,
+                    initialClass: name,
+                    title: row.title,
+                    initialTitle: row.title,
+                    windowClass: h.windowClass,
+                    mapped: true,
+                    hidden: false,
+                    fullscreen: 0,
+                    floating: h.floating,
+                    tags: []
+                }
+            });
+        }
+        return out;
+    }
+
+    // Reads the JSON of `komorebic state` into { "<monitor>:<workspace>": [{hwnd, exe, ...}] }.
+    function parseState(text: string): void {
+        let state;
+        try {
+            state = JSON.parse(text);
+        } catch (e) {
+            return;
+        }
+        const list = o => Array.isArray(o) ? o : (o?.elements ?? []);
+        const one = (w, floating) => ({
+                hwnd: w.hwnd,
+                exe: w.exe ?? "",
+                windowClass: w.class ?? "",
+                floating: floating
+            });
+        const map = {};
+        list(state?.monitors).forEach((mon, mi) => list(mon.workspaces).forEach((ws, wi) => {
+            const out = [];
+            for (const c of list(ws.containers))
+                for (const w of list(c.windows))
+                    out.push(one(w, false));
+            for (const w of list(ws.monocle_container?.windows))
+                out.push(one(w, false));
+            if (ws.maximized_window)
+                out.push(one(ws.maximized_window, false));
+            for (const w of list(ws.floating_windows))
+                out.push(one(w, true));
+            map[mi + ":" + wi] = out;
+        }));
+        wsWindows = map;
+        rebuild();
+    }
+
     function rebuild(): void {
         const oldMons = monitorList.values;
         const oldWs = workspaceList.values;
@@ -133,18 +211,7 @@ Singleton {
             const list = wm?.workspaces ?? [];
             for (let j = 0; j < list.length; j++) {
                 const src = list[j];
-                const windows = [];
-                for (let k = 0; k < (src.windowCount ?? 0); k++)
-                    windows.push({
-                        title: "",
-                        workspace: null,
-                        lastIpcObject: {
-                            class: "window",
-                            mapped: true,
-                            fullscreen: 0,
-                            tags: []
-                        }
-                    });
+                const windows = windowsOf(wabarMons.indexOf(wm), j);
                 const ws = wsComp.createObject(root, {
                     id: j + 1,
                     key: String(src.id),
@@ -156,10 +223,12 @@ Singleton {
                         values: windows
                     },
                     lastIpcObject: {
-                        windows: src.windowCount ?? 0
+                        windows: windows.length
                     }
                 });
                 wss.push(ws);
+                for (const w of windows)
+                    w.workspace = ws;
                 if (src.active)
                     mon.activeWorkspace = ws;
                 if (src.focused)
@@ -173,6 +242,11 @@ Singleton {
 
         monitorList.values = mons;
         workspaceList.values = wss;
+        const all = [];
+        for (const w of workspaceList.values)
+            for (const t of w.toplevels.values)
+                all.push(t);
+        toplevelList.values = all;
         for (const o of oldMons)
             o.destroy();
         for (const o of oldWs)
@@ -184,6 +258,7 @@ Singleton {
     Connections {
         function onChanged(): void {
             root.rebuild();
+            stateTimer.restart();
         }
 
         target: S.Workspaces
@@ -212,12 +287,45 @@ Singleton {
     QtObject {
         id: toplevelList
 
-        // wabar gap: the window list is not exposed in Hyprland's shape.
-        readonly property var values: []
+        // The windows of all workspaces that komorebi and the taskbar both know.
+        property var values: []
     }
 
     // Foreground window from the taskbar rows.
     property var foreground: null
+    // hwnd -> { title, exe, iconUrl } for every taskbar row, and the komorebi windows per workspace.
+    property var taskbarWindows: ({})
+    property var wsWindows: ({})
+
+    readonly property bool komorebi: S.Workspaces.provider === "komorebi"
+
+    onKomorebiChanged: stateTimer.restart()
+
+    // Read only: `komorebic state` prints the state and changes nothing.
+    Timer {
+        id: stateTimer
+
+        interval: 150
+        onTriggered: {
+            if (!root.komorebi) {
+                root.wsWindows = {};
+                root.rebuild();
+            } else if (statePoll.running) {
+                stateTimer.restart();
+            } else {
+                statePoll.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: statePoll
+
+        command: ["komorebic", "state"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseState(text)
+        }
+    }
 
     S.TaskbarModel {
         id: taskbar
@@ -229,6 +337,18 @@ Singleton {
         id: rows
 
         function update(): void {
+            const known = {};
+            for (let i = 0; i < count; i++) {
+                const o = objectAt(i);
+                if (o && o.key.startsWith("w:"))
+                    known[o.key.slice(2)] = {
+                        title: o.title,
+                        exe: o.exe,
+                        iconUrl: o.iconUrl
+                    };
+            }
+            root.taskbarWindows = known;
+            stateTimer.restart();
             for (let i = 0; i < count; i++) {
                 const o = objectAt(i);
                 if (o && o.active) {
@@ -254,11 +374,14 @@ Singleton {
         delegate: QtObject {
             required property string title
             required property bool active
+            required property string key
+            required property string iconUrl
             required property string uniqueId
             readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
 
             onActiveChanged: rows.update()
             onTitleChanged: rows.update()
+            onIconUrlChanged: rows.update()
         }
         onObjectAdded: update()
         onObjectRemoved: update()
