@@ -1,0 +1,6 @@
+module Caelestia
+CircularBuffer 1.0 CircularBuffer.qml
+singleton CUtils 1.0 CUtils.qml
+singleton Requests 1.0 Requests.qml
+Toast 1.0 Toast.qml
+singleton Toaster 1.0 Toaster.qml

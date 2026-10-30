@@ -8,12 +8,15 @@ param(
   [string]$Bin = 'D:\wabar\build\arm64-debug'
 )
 $ErrorActionPreference = 'Stop'
+$env:QT_FORCE_STDERR_LOGGING = '1' # Qt writes qml: messages to stderr only with this
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $logs = Join-Path $port 'logs'
 New-Item -ItemType Directory -Force $logs | Out-Null
 $err = Join-Path $logs 'run.err.txt'; $out = Join-Path $logs 'run.out.txt'
 $wabar = Join-Path $Bin 'wabar.exe'; $wabarc = Join-Path $Bin 'wabarc.exe'
 $launch = @('--config-home', $ConfigHome, '--no-tray', '--font-engine=directwrite')
+# A smoke shell has its own config home; the port's modules still resolve through --import-path.
+if ((Resolve-Path $ConfigHome).Path.TrimEnd([char]92) -ne $port.TrimEnd([char]92)) { $launch += @('--import-path', (Join-Path $port 'modules')) }
 $p = Start-Process -FilePath $wabar -ArgumentList $launch -RedirectStandardError $err `
   -RedirectStandardOutput $out -PassThru -WindowStyle Hidden
 try {
