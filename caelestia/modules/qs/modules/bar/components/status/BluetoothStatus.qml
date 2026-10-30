@@ -84,7 +84,8 @@ Item {
                 animate: true
                 text: Icons.getBluetoothIcon(root.iconNameFor(modelData))
                 color: root.colour
-                fill: 1
+                // Port: outlined, not filled. A filled phone is a solid block at this size.
+                fill: 0
 
                 SequentialAnimation on opacity {
                     running: device.modelData?.state !== BluetoothDeviceState.Connected
