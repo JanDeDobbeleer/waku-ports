@@ -6,6 +6,7 @@
   "bar": {
     "workspaces": {
       "occupiedBg": false,
+      "activeTrail": false,
       "dynamic": true
     }
   },
