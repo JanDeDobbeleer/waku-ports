@@ -78,8 +78,9 @@ QtObject {
         return "";
     }
 
+    // NaN (0/0 in the ripple gradient) becomes min: the debug Qt build asserts on a NaN stop position.
     function clamp(value: real, min: real, max: real): real {
-        return Math.min(Math.max(value, min), max);
+        return isNaN(value) ? min : Math.min(Math.max(value, min), max);
     }
 
     // Enumerator names by setting name. The QML enums cannot be enumerated, so the names are listed here.

@@ -1,0 +1,12 @@
+module QtQuick.Templates
+AbstractButton 1.0 AbstractButton.qml
+BusyIndicator 1.0 BusyIndicator.qml
+Control 1.0 Control.qml
+DoubleSpinBox 1.0 DoubleSpinBox.qml
+ProgressBar 1.0 ProgressBar.qml
+RadioButton 1.0 RadioButton.qml
+ScrollBar 1.0 ScrollBar.qml
+Slider 1.0 Slider.qml
+SpinButton 1.0 SpinButton.qml
+Switch 1.0 Switch.qml
+TextField 1.0 TextField.qml

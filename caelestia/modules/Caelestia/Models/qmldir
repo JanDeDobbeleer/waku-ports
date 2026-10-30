@@ -1,0 +1,5 @@
+module Caelestia.Models
+AppDb 1.0 AppDb.qml
+AppEntry 1.0 AppEntry.qml
+FileSystemEntry 1.0 FileSystemEntry.qml
+FileSystemModel 1.0 FileSystemModel.qml
