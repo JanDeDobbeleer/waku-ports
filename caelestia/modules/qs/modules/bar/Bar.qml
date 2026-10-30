@@ -62,9 +62,16 @@ ColumnLayout {
                 tray.expanded = true;
             }
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
-            popouts.currentName = id.toLowerCase();
-            popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.implicitHeight / 2).y ?? 0;
-            popouts.hasCurrent = true;
+            // Port: the popout shows the window under the cursor (see AppsList).
+            const app = ch.item.appAt(ch.item.mapFromItem(root, 0, y).y);
+            if (app) {
+                Hypr.hoverToplevel = app.modelData;
+                popouts.currentName = id.toLowerCase();
+                popouts.currentCenter = app.mapToItem(root, 0, app.height / 2).y;
+                popouts.hasCurrent = true;
+            } else {
+                popouts.hasCurrent = false;
+            }
         }
     }
 
@@ -100,6 +107,7 @@ ColumnLayout {
                     }
                 }
             } else if (ch.entryId === "activeWindow" && name === "activewindow") {
+                Hypr.hoverToplevel = null;
                 popouts.currentName = name;
                 popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.implicitHeight / 2).y;
                 popouts.hasCurrent = true;
@@ -107,6 +115,16 @@ ColumnLayout {
             }
         }
         return false;
+    }
+
+    // Port, test only (DebugIpc): the item of the entry with this id, or null.
+    function entryItem(id: string): var {
+        for (let i = 0; i < repeater.count; i++) {
+            const ch = repeater.itemAt(i);
+            if (ch?.entryId === id)
+                return ch.item;
+        }
+        return null;
     }
 
     function handleWheel(y: real, angleDelta: point): void {
@@ -174,10 +192,9 @@ ColumnLayout {
             DelegateChoice {
                 roleValue: "activeWindow"
                 delegate: EntryWrapper {
-                    ActiveWindow {
-                        objectName: "taskbarActiveWindow"
+                    AppsList {
+                        objectName: "taskbarAppsList"
                         bar: root
-                        monitor: Brightness.getMonitorForScreen(root.screen)
                     }
                 }
             }

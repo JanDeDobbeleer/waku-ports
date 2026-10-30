@@ -56,6 +56,24 @@ ClipRect {
 
     property real blur: onSpecial ? 1 : 0
 
+    // Port: no `as Workspace` cast. On wabar a cast to a type of the same module came back null
+    // (like the Loader casts in the hover path), so the click never found a workspace.
+    function clickWorkspaceAt(x: real, y: real): string {
+        return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
+    }
+
+    // The click handler of the dots (the test IPC calls it too). Returns what happened.
+    function clickWorkspace(ws: int): string {
+        if (!ws)
+            return "none";
+        if (Hypr.activeWsId === ws) {
+            Hypr.toggleSpecial("special");
+            return "focused";
+        }
+        Hypr.focusWorkspace(ws);
+        return "focus";
+    }
+
     function workspaceIndex(id: int): int {
         if (!Config.bar.workspaces.showUnoccupied)
             return wsIds.indexOf(id);
@@ -127,7 +145,7 @@ ClipRect {
                 monitor: root.monitor
 
                 displayType: Config.bar.workspaces.displayType
-                showWindows: Config.bar.workspaces.showWindows
+                showWindows: false // Port: windows are listed in AppsList, not in the pills
                 iconRules: GlobalConfig.bar.workspaces.workspaceIcons
                 activeLabel: Config.bar.workspaces.activeLabel
                 occupiedLabel: Config.bar.workspaces.occupiedLabel
@@ -172,15 +190,7 @@ ClipRect {
 
         MouseArea {
             anchors.fill: workspaces
-            onClicked: event => {
-                const ws = (workspaces.itemAt(event.x, event.y) as Workspace)?.ws;
-                if (!ws)
-                    return;
-                if (Hypr.activeWsId !== ws)
-                    Hypr.focusWorkspace(ws);
-                else
-                    Hypr.toggleSpecial("special");
-            }
+            onClicked: event => root.clickWorkspaceAt(event.x, event.y)
         }
 
         Behavior on scale {

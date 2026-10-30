@@ -42,6 +42,10 @@ Item {
         return content.item ? content.item.openPopoutNamed(name) : false;
     }
 
+    function entryItem(id: string): var {
+        return content.item ? content.item.entryItem(id) : null;
+    }
+
     function handleWheel(y: real, angleDelta: point): void {
         content.item?.handleWheel(y, angleDelta);
     }

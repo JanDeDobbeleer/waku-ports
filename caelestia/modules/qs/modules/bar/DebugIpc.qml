@@ -46,6 +46,36 @@ Scope {
             return ShellState.componentsFor(Screens.screens[0])?.bar?.debugEntries() ?? "none";
         }
 
+        // Runs the click handler of the workspace dot `n` (1-based), but only when `n` is the
+        // focused workspace, which makes it a no-op. Returns what the handler did.
+        function clickWorkspace(n: int): string {
+            const w = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("workspaces");
+            if (!w)
+                return "no workspaces";
+            if (Hypr.activeWsId !== n)
+                return "refused: not the focused workspace";
+            return w.clickWorkspace(n);
+        }
+
+        // Runs the click handler of apps-list icon `i` (0-based), but only when it is the focused
+        // window, which makes it a no-op. Returns what the handler did.
+        function clickApp(i: int): string {
+            const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
+            if (!l)
+                return "no apps list";
+            if (l.shown[i]?.address !== l.focusedAddress)
+                return "refused: not the focused window";
+            return l.clickApp(i);
+        }
+
+        // count of windows, icons shown, cell size, focused index, then per icon: "wsId:focused".
+        function apps(): string {
+            const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
+            if (!l)
+                return "no apps list";
+            return `${l.count} ${l.shown.length} ${l.cell} ${l.focusedIndex()} ` + l.shown.map(t => `${t.workspace?.id}${t.address === l.focusedAddress ? "*" : ""}`).join(",");
+        }
+
         target: "bar"
     }
 }

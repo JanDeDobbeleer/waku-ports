@@ -101,6 +101,51 @@ Singleton {
             focusProc.start();
     }
 
+    // The window the bar's running-apps list points at, for the hover popout (null: show the
+    // focused one).
+    property var hoverToplevel: null
+
+    // Brings a toplevel from `toplevels` to the front and returns what it did, for the test IPC:
+    // "focused" (already the foreground window: nothing happens, a taskbar click would minimise
+    // it), "activate" (hwnd raised through the engine's TaskbarModel), "switch+activate" (its
+    // workspace is focused first with `komorebic focus-workspace`, then the hwnd is raised after
+    // komorebi has uncloaked it), "eager-focus" (the taskbar has no row for it: `komorebic
+    // eager-focus <exe>`), or "none".
+    function activateToplevel(t: var): string {
+        if (!t || !t.address)
+            return "none";
+        if (foreground?.address === t.address)
+            return "focused";
+        const ws = t.workspace;
+        const exe = t.lastIpcObject?.class ?? "";
+        if (komorebi && ws && ws.monitor === focusedMonitor && !ws.active) {
+            pendingActivate = {
+                hwnd: t.address,
+                exe: exe
+            };
+            runFocus(ws.monitor, ws.id - 1);
+            activateTimer.restart();
+            return "switch+activate";
+        }
+        return activateHwnd(t.address, exe);
+    }
+
+    function activateHwnd(hwnd: string, exe: string): string {
+        const row = taskbarRows[hwnd];
+        if (row !== undefined) {
+            taskbar.activate(row);
+            return "activate";
+        }
+        // The only other command besides focus-workspace: focus a window by its executable name.
+        if (komorebi && /^[A-Za-z0-9_.\- ]+$/.test(exe)) {
+            focusProc.pending = ["komorebic", "eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"];
+            if (!focusProc.running)
+                focusProc.start();
+            return "eager-focus";
+        }
+        return "none";
+    }
+
     // wabar gap: komorebi and GlazeWM have no special workspaces.
     function toggleSpecial(name: string): void {
     }
@@ -334,6 +379,9 @@ Singleton {
     // hwnd -> { title, exe, iconUrl } for every taskbar row, and the komorebi windows per workspace.
     property var taskbarWindows: ({})
     property var wsWindows: ({})
+    // hwnd -> row of the ungrouped TaskbarModel, for `taskbar.activate(row)`.
+    property var taskbarRows: ({})
+    property var pendingActivate: null
 
     readonly property bool komorebi: S.Workspaces.provider === "komorebi"
 
@@ -365,7 +413,21 @@ Singleton {
         }
     }
 
-    // Runs the one allowed focus command (see runFocus); a request made while it runs waits and
+    // Waits for komorebi to uncloak the windows of the workspace just focused, then raises one.
+    Timer {
+        id: activateTimer
+
+        interval: 350
+        onTriggered: {
+            const p = root.pendingActivate;
+            root.pendingActivate = null;
+            if (p)
+                root.activateHwnd(p.hwnd, p.exe);
+        }
+    }
+
+    // Runs the allowed komorebic commands (focus-workspace from runFocus, eager-focus from
+    // activateHwnd); a request made while it runs waits and
     // replaces any earlier waiting one.
     Process {
         id: focusProc
@@ -395,8 +457,11 @@ Singleton {
 
         function update(): void {
             const known = {};
+            const idx = {};
             for (let i = 0; i < count; i++) {
                 const o = objectAt(i);
+                if (o && o.key.startsWith("w:"))
+                    idx[o.key.slice(2)] = i;
                 if (o && o.key.startsWith("w:"))
                     known[o.key.slice(2)] = {
                         title: o.title,
@@ -405,6 +470,7 @@ Singleton {
                     };
             }
             root.taskbarWindows = known;
+            root.taskbarRows = idx;
             stateTimer.restart();
             for (let i = 0; i < count; i++) {
                 const o = objectAt(i);
@@ -413,7 +479,7 @@ Singleton {
                         title: o.title,
                         workspace: null,
                         wayland: null,
-                        address: "",
+                        address: o.key.startsWith("w:") ? o.key.slice(2) : "",
                         lastIpcObject: {
                             class: o.exe,
                             mapped: true,
