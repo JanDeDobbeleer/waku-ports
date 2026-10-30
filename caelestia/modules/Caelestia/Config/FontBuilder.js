@@ -95,7 +95,7 @@ function make(family, pointSize, weight, italic, axes) {
 // FontStyleBase::buildFont: the size is scaled and capped at 1, the opsz and wght axes follow the
 // size and weight, then the configured axes apply on top.
 function fromConfig(cfg, fallbackFamily, scale) {
-    const scaled = Math.trunc(cfg.size * scale);
+    const scaled = Math.round(cfg.size * scale);
     const size = scaled > 0 ? scaled : 1;
     const axes = {
         opsz: size,

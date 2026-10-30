@@ -1,4 +1,5 @@
 import QtQuick
+import Caelestia.Config
 import qs.components
 
 Item {
@@ -11,7 +12,7 @@ Item {
     property alias utilitiesPanel: content.utilitiesPanel
 
     visible: height > 0
-    anchors.topMargin: -5
+    anchors.topMargin: -Tokens.px(5)
     implicitWidth: Math.max(sidebarPanel.width, content.implicitWidth)
     implicitHeight: content.implicitHeight
 

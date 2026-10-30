@@ -49,7 +49,7 @@ DoubleSpinBox {
         leftPadding: Tokens.padding.medium
         rightPadding: Tokens.padding.medium
 
-        implicitWidth: 65
+        implicitWidth: Tokens.px(65)
         horizontalAlignment: TextField.AlignHCenter
 
         background: StyledRect {

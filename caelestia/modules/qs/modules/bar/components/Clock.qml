@@ -71,7 +71,7 @@ StyledRect {
                     Layout.fillWidth: true
                     Layout.leftMargin: -Tokens.padding.extraSmall
                     Layout.rightMargin: -Tokens.padding.extraSmall
-                    Layout.topMargin: 4
+                    Layout.topMargin: Tokens.px(4)
                     Layout.bottomMargin: Tokens.padding.extraSmall / 2
                     implicitHeight: 1
                     color: Colours.palette.m3outlineVariant

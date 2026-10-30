@@ -20,6 +20,9 @@ QtObject {
 
     property alias appearance: adapter.appearance
     property alias sizes: adapter.sizes
+    property alias scale: adapter.scale
+    property alias fontScale: adapter.fontScale
+    property alias roundingScale: adapter.roundingScale
 
     property FileView file: FileView {
         id: file
@@ -31,6 +34,14 @@ QtObject {
 
         adapter: JsonAdapter {
             id: adapter
+
+            // UI scale. `scale` multiplies every size token (spacing, padding, rounding, fonts,
+            // panel sizes); a number, or "auto" to derive it from the screen's devicePixelRatio.
+            // `fontScale` is an extra factor for text only, `roundingScale` one for corner radii only.
+            // The caelestia tokens are designed for about 1x; 0.75 suits a 150% Windows display.
+            property var scale: 0.75
+            property real fontScale: 1.0
+            property real roundingScale: 1.0
 
             property JsonObject appearance: JsonObject {
                 // Cubic bezier segments for Easing.BezierSpline: c1x, c1y, c2x, c2y, endX, endY per segment

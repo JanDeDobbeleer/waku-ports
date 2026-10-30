@@ -190,7 +190,7 @@ CustomMouseArea {
 
                 anchors.fill: parent
 
-                spacing: 3
+                spacing: Tokens.px(3)
                 locale: Tr.locale
 
                 delegate: Item {

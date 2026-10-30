@@ -1,4 +1,5 @@
 import QtQuick
+import Caelestia.Config
 import Quickshell
 import M3Shapes
 import qs.components
@@ -52,7 +53,7 @@ MaterialShape {
         return [pos, vel];
     }
 
-    implicitSize: 38
+    implicitSize: Tokens.px(38)
     color: Colours.palette.m3primary
     toShape: shapes[0]
 

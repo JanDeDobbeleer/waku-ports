@@ -29,8 +29,8 @@ Slider {
 
     Component.onCompleted: filledWidth = Qt.binding(() => (width - handle.implicitWidth - handle.anchors.leftMargin) * pos)
 
-    implicitWidth: 200
-    implicitHeight: 12
+    implicitWidth: Tokens.px(200)
+    implicitHeight: Tokens.px(12)
 
     contentItem: Item {
         anchors.fill: parent
@@ -72,7 +72,7 @@ Slider {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
 
-            implicitWidth: 4
+            implicitWidth: Tokens.px(4)
             implicitHeight: {
                 const t = CUtils.clamp((parent.height - 12) / 16, 0, 1);
                 const lerp = (a, b) => a + (b - a) * t;

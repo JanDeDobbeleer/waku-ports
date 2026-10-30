@@ -15,8 +15,8 @@ RadioButton {
     indicator: Rectangle {
         id: outerCircle
 
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: Tokens.px(20)
+        implicitHeight: Tokens.px(20)
         radius: Tokens.rounding.full
         color: "transparent"
         border.color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
@@ -32,8 +32,8 @@ RadioButton {
 
         StyledRect {
             anchors.centerIn: parent
-            implicitWidth: 8
-            implicitHeight: 8
+            implicitWidth: Tokens.px(8)
+            implicitHeight: Tokens.px(8)
 
             radius: Tokens.rounding.full
             color: Qt.alpha(Colours.palette.m3primary, root.checked ? 1 : 0)

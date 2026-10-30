@@ -219,8 +219,8 @@ Item {
         anchors.leftMargin: Tokens.spacing.small
         anchors.topMargin: -Tokens.spacing.extraSmall
 
-        implicitWidth: 10
-        implicitHeight: 10
+        implicitWidth: Tokens.px(10)
+        implicitHeight: Tokens.px(10)
         radius: Tokens.rounding.full
         color: Colours.palette.m3secondaryContainer
     }
@@ -232,8 +232,8 @@ Item {
         anchors.verticalCenter: wmContainer.bottom
         anchors.leftMargin: Tokens.spacing.extraSmall
 
-        implicitWidth: 15
-        implicitHeight: 15
+        implicitWidth: Tokens.px(15)
+        implicitHeight: Tokens.px(15)
         radius: Tokens.rounding.full
         color: Colours.palette.m3secondaryContainer
     }

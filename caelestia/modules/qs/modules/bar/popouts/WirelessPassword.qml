@@ -71,7 +71,7 @@ ColumnLayout {
     }
 
     spacing: Tokens.spacing.medium
-    implicitWidth: 400
+    implicitWidth: Tokens.px(400)
     implicitHeight: content.implicitHeight + Tokens.padding.extraLargeIncreased
     visible: shouldBeVisible || isClosing
     enabled: shouldBeVisible && !isClosing
@@ -128,7 +128,7 @@ ColumnLayout {
 
     StyledRect {
         Layout.fillWidth: true
-        Layout.preferredWidth: 400
+        Layout.preferredWidth: Tokens.px(400)
         implicitHeight: content.implicitHeight + Tokens.padding.extraLargeIncreased
         radius: Tokens.rounding.large
         color: Colours.tPalette.m3surfaceContainer

@@ -55,8 +55,8 @@ ProgressBar {
     onIndeterminateChanged: updateIAnimState()
     Component.onCompleted: updateIAnimState()
 
-    implicitWidth: 200
-    implicitHeight: 4
+    implicitWidth: Tokens.px(200)
+    implicitHeight: Tokens.px(4)
 
     contentItem: Loader {
         anchors.fill: parent
