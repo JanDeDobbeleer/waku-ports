@@ -5,6 +5,7 @@ import Quickshell
 import Caelestia
 import qs.components
 import qs.services
+import qs.compat
 
 Singleton {
     property ShellRoot shellRoot

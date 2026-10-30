@@ -4,7 +4,8 @@ import Quickshell.Services.UPower
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
-import Caelestia.Services
+import wabar.services as S
+import qs.utils
 
 Scope {
     id: root
@@ -80,6 +81,12 @@ Scope {
         id: hibernateTimer
 
         interval: 5000
-        onTriggered: SessionManager.hibernate()
+        // Hibernates only when actions are enabled (Paths.actionsEnabled); otherwise it logs.
+        onTriggered: {
+            if (Paths.actionsEnabled)
+                S.ControlCenter.requestAction("hibernate");
+            else
+                console.warn("BatteryMonitor: critical battery, hibernate is disabled (CAELESTIA_ALLOW_ACTIONS)");
+        }
     }
 }

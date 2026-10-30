@@ -10,28 +10,20 @@ import qs.services
 Scope {
     id: root
 
+    // wabar gap: nothing to switch off. Windows has no compositor effects to disable, so game
+    // mode is a flag other modules can read.
     function applyGameMode(): void {
-        Hypr.extras.applyOptions({
-            "animations:enabled": 0,
-            "decoration:shadow:enabled": 0,
-            "decoration:blur:enabled": 0,
-            "general:gaps_in": 0,
-            "general:gaps_out": 0,
-            "general:border_size": 1,
-            "decoration:rounding": 0,
-            "general:allow_tearing": 1
-        });
+        Hypr.extras.applyOptions({});
     }
 
     function syncState(enableDisable: bool): void {
         if (RuntimeState.gameMode) {
             root.applyGameMode();
             if (GlobalConfig.utilities.toasts.gameModeChanged)
-                Toaster.toast(Tr.tr("Game mode enabled"), Tr.tr("Disabled Hyprland animations, blur, gaps and shadows"), "gamepad");
+                Toaster.toast(Tr.tr("Game mode enabled"), Tr.tr("No window effects to disable on Windows"), "gamepad");
         } else if (enableDisable) {
-            Hypr.extras.message("reload");
             if (GlobalConfig.utilities.toasts.gameModeChanged)
-                Toaster.toast(Tr.tr("Game mode disabled"), Tr.tr("Hyprland settings restored"), "gamepad");
+                Toaster.toast(Tr.tr("Game mode disabled"), Tr.tr("Window effects unchanged"), "gamepad");
         }
     }
 

@@ -5,7 +5,6 @@ import Caelestia
 import Caelestia.Config
 import qs.components.misc
 import qs.services
-import qs.modules.nexus
 
 Scope {
     id: root
@@ -13,13 +12,7 @@ Scope {
     property bool launcherInterrupted
     readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false
 
-    // qmllint disable unresolved-type
-    CustomShortcut {
-        // qmllint enable unresolved-type
-        name: "nexus"
-        description: "Open nexus"
-        onPressed: WindowFactory.create()
-    }
+    // The nexus window (shortcut "nexus", IPC target "nexus") is not ported yet.
 
     // qmllint disable unresolved-type
     CustomShortcut {
@@ -134,14 +127,6 @@ Scope {
         }
 
         target: "drawers"
-    }
-
-    IpcHandler {
-        function open(): void {
-            WindowFactory.create();
-        }
-
-        target: "nexus"
     }
 
     IpcHandler {

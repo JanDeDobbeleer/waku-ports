@@ -2,17 +2,21 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
-import Quickshell.Services.UPower
 import Caelestia.Config
-import Caelestia.Services
+import Caelestia.State
+import Quickshell.Services.UPower
+import wabar.services as S
 import qs.services
-import qs.modules.lock
+import qs.utils
 
+// Idle timeouts over DesktopState.idleSeconds (upstream uses Wayland's IdleMonitor). `lock` is the
+// lock screen, which is not ported yet: while it is null, "lock" actions are ignored. Other string
+// actions were Hyprland dispatches and are ignored too; command lists run only when actions are
+// enabled (Paths.actionsEnabled).
 Scope {
     id: root
 
-    required property Lock lock
+    property var lock: null
     readonly property bool hasPlayer: Players.list.some(p => p.isPlaying)
     readonly property bool isCharging: !UPower.onBattery
     readonly property bool enabled: {
@@ -20,47 +24,34 @@ Scope {
             return false;
         if (GlobalConfig.general.idle.inhibitWhenCharging && isCharging)
             return false;
-        return true;
+        return !RuntimeState.inhibitIdle;
     }
+    readonly property int idleSeconds: S.DesktopState.idleSeconds
 
     function handleIdleAction(action: var): void {
         if (!action)
             return;
 
-        if (action === "lock")
-            lock.lock.locked = true;
-        else if (action === "unlock")
-            lock.lock.locked = false;
-        else if (typeof action === "string")
-            Hypr.dispatch(Hypr.usingLua && ["dpms off", "dpms on"].includes(action) ? `hl.dsp.dpms({ action = "${action === "dpms off" ? "disable" : "enable"}" })` : action);
-        else if (!SessionManager.exec(action))
+        if (action === "lock") {
+            if (lock)
+                lock.lock.locked = true;
+        } else if (action === "unlock") {
+            if (lock)
+                lock.lock.locked = false;
+        } else if (typeof action !== "string" && Paths.actionsEnabled) {
             Quickshell.execDetached(action);
-    }
-
-    Connections {
-        function onAboutToSleep(): void {
-            if (GlobalConfig.general.idle.lockBeforeSleep)
-                root.lock.lock.locked = true;
         }
-
-        function onLockRequested(): void {
-            root.lock.lock.locked = true;
-        }
-
-        function onUnlockRequested(): void {
-            root.lock.lock.unlock();
-        }
-
-        target: SessionManager
     }
 
     Variants {
         model: GlobalConfig.general.idle.timeouts.values
 
-        IdleMonitor {
+        QtObject {
+            id: monitor
+
             required property var modelData
 
-            enabled: {
+            readonly property bool monitored: {
                 if (!root.enabled || !(modelData.enabled ?? true))
                     return false;
                 if (modelData.inhibitWhenAudio && root.hasPlayer)
@@ -69,8 +60,8 @@ Scope {
                     return false;
                 return true;
             }
-            timeout: modelData.timeout
-            respectInhibitors: modelData.respectInhibitors ?? true
+            readonly property bool isIdle: monitored && root.idleSeconds >= modelData.timeout
+
             onIsIdleChanged: root.handleIdleAction(isIdle ? modelData.idleAction : modelData.returnAction)
         }
     }

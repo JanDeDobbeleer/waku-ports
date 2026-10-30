@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import Caelestia.State
 
 Scope {
@@ -16,14 +15,9 @@ Scope {
         target: RuntimeState
     }
 
+    // wabar's IdleInhibitor holds SetThreadExecutionState; it ignores `window`.
     IdleInhibitor {
         enabled: RuntimeState.inhibitIdle
-        window: PanelWindow {
-            implicitWidth: 0
-            implicitHeight: 0
-            color: "transparent"
-            mask: Region {}
-        }
     }
 
     IpcHandler {

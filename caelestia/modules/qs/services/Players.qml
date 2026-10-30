@@ -8,6 +8,7 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components.misc
+import qs.compat
 
 Singleton {
     id: root

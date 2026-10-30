@@ -7,7 +7,6 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.services
-import qs.utils
 
 QtObject {
     id: notif
@@ -53,15 +52,8 @@ QtObject {
     property bool hasActionIcons
     property list<var> actions
 
-    readonly property bool hasFullscreen: {
-        const monitor = Hypr.focusedMonitor;
-        const specialName = monitor?.lastIpcObject.specialWorkspace?.name;
-        if (specialName) {
-            const specialWs = Hypr.workspaces.values.find(ws => ws.name === specialName);
-            return specialWs?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false;
-        }
-        return monitor?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false;
-    }
+    // wabar gap: no fullscreen detection (upstream asks Hyprland).
+    readonly property bool hasFullscreen: false
 
     readonly property Timer timer: Timer {
         running: true
@@ -70,56 +62,6 @@ QtObject {
             // Always expire if the active workspace has a fullscreen window
             if (GlobalConfig.notifs.expire || notif.hasFullscreen)
                 notif.popup = false;
-        }
-    }
-
-    readonly property LazyLoader dummyImageLoader: LazyLoader {
-        active: false
-
-        // qmllint disable uncreatable-type
-        PanelWindow {
-            // qmllint enable uncreatable-type
-            implicitWidth: TokenConfig.sizes.notifs.image
-            implicitHeight: TokenConfig.sizes.notifs.image
-            color: "transparent"
-            mask: Region {}
-
-            Image {
-                function tryCache(): void {
-                    if (status !== Image.Ready || width != TokenConfig.sizes.notifs.image || height != TokenConfig.sizes.notifs.image)
-                        return;
-
-                    const cacheKey = notif.appName + notif.summary + notif.notificationId + notif.image;
-                    let h1 = 0xdeadbeef, h2 = 0x41c6ce57, ch;
-                    for (let i = 0; i < cacheKey.length; i++) {
-                        ch = cacheKey.charCodeAt(i);
-                        h1 = Math.imul(h1 ^ ch, 2654435761);
-                        h2 = Math.imul(h2 ^ ch, 1597334677);
-                    }
-                    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-                    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-                    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-                    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-                    const hash = (h2 >>> 0).toString(16).padStart(8, 0) + (h1 >>> 0).toString(16).padStart(8, 0);
-
-                    const cache = `${Paths.notifimagecache}/${hash}.png`;
-                    CUtils.saveItem(this, Qt.resolvedUrl(cache), () => {
-                        notif.image = cache;
-                        notif.dummyImageLoader.active = false;
-                    });
-                }
-
-                anchors.fill: parent
-                source: Qt.resolvedUrl(notif.image)
-                fillMode: Image.PreserveAspectCrop
-                cache: false
-                asynchronous: true
-                opacity: 0
-
-                onStatusChanged: tryCache()
-                onWidthChanged: tryCache()
-                onHeightChanged: tryCache()
-            }
         }
     }
 
@@ -146,7 +88,6 @@ QtObject {
 
         function onImageChanged(): void {
             notif.image = notif.notification.image;
-            notif.maybeTriggerDummyImageLoader();
         }
 
         function onExpireTimeoutChanged(): void {
@@ -200,11 +141,6 @@ QtObject {
         }
     }
 
-    function maybeTriggerDummyImageLoader(): void {
-        if (image && !image.startsWith("image://icon/") && !image.startsWith(Paths.notifimagecache))
-            dummyImageLoader.active = true;
-    }
-
     function lock(item: Item): void {
         locks.add(item);
     }
@@ -234,7 +170,6 @@ QtObject {
         appIcon = notification.appIcon;
         appName = notification.appName;
         image = notification.image;
-        maybeTriggerDummyImageLoader();
         expireTimeout = notification.expireTimeout;
         hints = notification.hints;
         urgency = notification.urgency;

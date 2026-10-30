@@ -2,6 +2,7 @@ pragma Singleton
 
 import Quickshell
 import Caelestia.Config
+import qs.compat
 
 Singleton {
     id: root

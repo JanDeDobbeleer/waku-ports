@@ -7,7 +7,7 @@ import Quickshell.Services.Pipewire
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
-import Caelestia.Services
+import qs.compat
 
 Singleton {
     id: root
@@ -28,6 +28,7 @@ Singleton {
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
+    // wabar gap: no audio capture. cava and the beat tracker keep upstream's names and stay silent.
     readonly property alias cava: cava
     readonly property alias beatTracker: beatTracker
 
@@ -173,14 +174,19 @@ Singleton {
         objects: [root.sink, root.source, ...root.sinks, ...root.sources, ...root.streams].filter(n => n)
     }
 
-    CavaProvider {
+    QtObject {
         id: cava
 
-        bars: GlobalConfig.services.visualiserBars
+        readonly property int bars: GlobalConfig.services.visualiserBars
+        readonly property var values: Array.from({
+            length: bars
+        }, () => 0)
     }
 
-    BeatTracker {
+    QtObject {
         id: beatTracker
+
+        readonly property real bpm: 0
     }
 
     IpcHandler {

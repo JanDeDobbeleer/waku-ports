@@ -1,3 +1,5 @@
 logs/
 shots/
 /state/
+smoke/*/state/
+smoke/loadcheck/

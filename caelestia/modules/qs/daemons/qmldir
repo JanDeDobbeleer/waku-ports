@@ -1,0 +1,6 @@
+module qs.daemons
+BatteryMonitor 1.0 BatteryMonitor.qml
+GameMode 1.0 GameMode.qml
+IdleInhibit 1.0 IdleInhibit.qml
+IdleMonitors 1.0 IdleMonitors.qml
+Shortcuts 1.0 Shortcuts.qml

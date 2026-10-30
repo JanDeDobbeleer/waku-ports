@@ -6,26 +6,29 @@ import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
 import qs.utils
+import qs.compat
 
+// System facts for the dashboard. Windows has no /proc or /etc/os-release, so the values come from
+// the environment, Windows registry values read through `reg query`, and a timer for uptime.
 Singleton {
     id: root
 
-    property string osName
-    property string osPrettyName
-    property string osId
-    property list<string> osIdLike
+    property string osName: "Windows"
+    property string osPrettyName: "Windows"
+    property string osId: "windows"
+    property list<string> osIdLike: []
     property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
     property bool isDefaultLogo: true
 
     property string uptime
     // Uptime trimmed to its two largest components
     property string uptimeShort
-    readonly property string user: Quickshell.env("USER")
-    readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || Quickshell.env("XDG_SESSION_DESKTOP")
-    readonly property string shell: Quickshell.env("SHELL").split("/").pop()
+    readonly property string user: Quickshell.env("USERNAME")
+    readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || "Explorer" // wabar gap: no compositor name on Windows
+    readonly property string shell: "wabar"
 
     property string kernel
-    property string hostname
+    property string hostname: Quickshell.env("COMPUTERNAME")
     property string firmware
 
     // DMI vendor/model, combined into a single human-readable device name
@@ -39,6 +42,8 @@ Singleton {
         return `${boardVendor} ${boardName}`;
     }
 
+    property double bootTime: Date.now() // until the boot time arrives, count from shell start
+
     // Strips the placeholder strings OEMs commonly leave in DMI fields
     function sanitiseDmi(s: string): string {
         const t = s.trim();
@@ -46,101 +51,81 @@ Singleton {
         return junk.includes(t.toLowerCase()) ? "" : t;
     }
 
-    FileView {
-        id: osRelease
+    function regValue(text: string, name: string): string {
+        const m = text.match(new RegExp(name + "\\s+REG_\\w+\\s+(.+)"));
+        return m ? m[1].trim() : "";
+    }
 
-        path: "/etc/os-release"
-        onLoaded: {
-            const lines = text().split("\n");
+    function formatUptime(up: real): void {
+        const days = Math.floor(up / 86400);
+        const hours = Math.floor((up % 86400) / 3600);
+        const minutes = Math.floor((up % 3600) / 60);
 
-            const fd = key => lines.find(l => l.startsWith(`${key}=`))?.split("=")[1].replace(/"/g, "") ?? "";
+        // TRANSLATORS: joins uptime components, e.g. "2 days, 3 hours"
+        const sep = Tr.trCtx(", ", "uptime component separator");
 
-            root.osName = fd("NAME");
-            root.osPrettyName = fd("PRETTY_NAME");
-            root.osId = fd("ID");
-            root.osIdLike = fd("ID_LIKE").split(" ");
+        const parts = [];
+        if (days > 0)
+            parts.push(Tr.trN("%n day", "%n days", days));
+        if (hours > 0)
+            parts.push(Tr.trN("%n hour", "%n hours", hours));
+        if (minutes > 0 || parts.length === 0)
+            parts.push(Tr.trN("%n minute", "%n minutes", minutes));
 
-            const logo = Quickshell.iconPath(fd("LOGO"), true);
-            if (GlobalConfig.general.logo === "caelestia") {
-                root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
-                root.isDefaultLogo = true;
-            } else if (GlobalConfig.general.logo) {
-                root.osLogo = Quickshell.iconPath(GlobalConfig.general.logo, true) || "file://" + Paths.absolutePath(GlobalConfig.general.logo);
-                root.isDefaultLogo = false;
-            } else if (logo) {
-                root.osLogo = logo;
-                root.isDefaultLogo = false;
+        root.uptime = parts.join(sep);
+        root.uptimeShort = parts.slice(0, 2).join(sep);
+    }
+
+    // Read only: HKLM\...\CurrentVersion and HKLM\HARDWARE\DESCRIPTION\System\BIOS.
+    Process {
+        running: true
+        command: ["reg", "query", "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const product = root.regValue(text, "ProductName");
+                const build = root.regValue(text, "CurrentBuildNumber");
+                const display = root.regValue(text, "DisplayVersion");
+                if (product) {
+                    // ProductName still says "Windows 10" on Windows 11; the build number tells them apart.
+                    root.osName = parseInt(build) >= 22000 ? product.replace("Windows 10", "Windows 11") : product;
+                    root.osPrettyName = display ? `${root.osName} ${display}` : root.osName;
+                }
+                root.kernel = build ? `NT ${root.regValue(text, "CurrentMajorVersionNumber") || "10"}.0.${build}` : "";
             }
         }
     }
 
-    Connections {
-        function onLogoChanged(): void {
-            osRelease.reload();
+    Process {
+        running: true
+        command: ["reg", "query", "HKLM\\HARDWARE\\DESCRIPTION\\System\\BIOS"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.boardVendor = root.sanitiseDmi(root.regValue(text, "SystemManufacturer"));
+                root.boardName = root.sanitiseDmi(root.regValue(text, "SystemProductName"));
+                root.firmware = root.sanitiseDmi(root.regValue(text, "BIOSVersion"));
+            }
         }
-
-        target: GlobalConfig.general
     }
 
-    FileView {
-        path: "/proc/sys/kernel/osrelease"
-        onLoaded: root.kernel = text().trim()
-    }
-
-    FileView {
-        path: "/proc/sys/kernel/hostname"
-        onLoaded: root.hostname = text().trim()
-    }
-
-    FileView {
-        path: "/sys/class/dmi/id/sys_vendor"
-        printErrors: false
-        onLoaded: root.boardVendor = root.sanitiseDmi(text())
-    }
-
-    FileView {
-        path: "/sys/class/dmi/id/product_name"
-        printErrors: false
-        onLoaded: root.boardName = root.sanitiseDmi(text())
-    }
-
-    FileView {
-        path: "/sys/class/dmi/id/bios_version"
-        printErrors: false
-        onLoaded: root.firmware = root.sanitiseDmi(text())
+    // Read only: the boot time from CIM, once. wabar has no uptime service.
+    Process {
+        running: true
+        command: ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "[DateTimeOffset]::new((Get-CimInstance Win32_OperatingSystem).LastBootUpTime).ToUnixTimeMilliseconds()"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const ms = Number(text.trim());
+                if (Number.isFinite(ms) && ms > 0)
+                    root.bootTime = ms;
+                root.formatUptime((Date.now() - root.bootTime) / 1000);
+            }
+        }
     }
 
     Timer {
         running: true
         repeat: true
+        triggeredOnStart: true
         interval: 15000
-        onTriggered: fileUptime.reload()
-    }
-
-    FileView {
-        id: fileUptime
-
-        path: "/proc/uptime"
-        onLoaded: {
-            const up = parseInt(text().split(" ")[0] ?? 0);
-
-            const days = Math.floor(up / 86400);
-            const hours = Math.floor((up % 86400) / 3600);
-            const minutes = Math.floor((up % 3600) / 60);
-
-            // TRANSLATORS: joins uptime components, e.g. "2 days, 3 hours"
-            const sep = Tr.trCtx(", ", "uptime component separator");
-
-            const parts = [];
-            if (days > 0)
-                parts.push(Tr.trN("%n day", "%n days", days));
-            if (hours > 0)
-                parts.push(Tr.trN("%n hour", "%n hours", hours));
-            if (minutes > 0 || parts.length === 0)
-                parts.push(Tr.trN("%n minute", "%n minutes", minutes));
-
-            root.uptime = parts.join(sep);
-            root.uptimeShort = parts.slice(0, 2).join(sep);
-        }
+        onTriggered: root.formatUptime((Date.now() - root.bootTime) / 1000)
     }
 }

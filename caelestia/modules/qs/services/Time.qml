@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Caelestia.I18n
+import qs.compat
 
 Singleton {
     property alias enabled: clock.enabled

@@ -3,18 +3,24 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Caelestia.Config
-import Caelestia.Images
+import wabar.services as S
 import qs.services
-import qs.utils
+import qs.compat
 
+// Caelestia's colour service over wabar's ColorScheme. Upstream reads a scheme.json written by the
+// `caelestia scheme` CLI. Here the scheme is generated in process from the wallpaper
+// (`ColorScheme.fromImage`) or from a fixed seed colour, and the role names get the `m3` prefix
+// that caelestia's QML expects (`ColorScheme.colors.primary` becomes `palette.m3primary`).
+// wabar gap: ColorScheme has no success roles and no terminal colours, so `m3success*` and
+// `term*` keep the defaults of the M3Palette below. The chosen mode is not persisted.
 Singleton {
     id: root
 
     property bool showPreview
-    property string scheme
-    property string flavour
+    property string scheme: "dynamic"
+    // The ColorScheme variant (one of S.ColorScheme.variants).
+    property string flavour: "tonalspot"
     readonly property bool light: showPreview ? previewLight : currentLight
     property bool currentLight
     property bool previewLight
@@ -23,10 +29,13 @@ Singleton {
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
     readonly property Transparency transparency: Transparency {}
-    readonly property alias wallLuminance: analyser.luminance
+    property real wallLuminance
 
-    property bool cooldownPending
-    property real lastBaseTransparency
+    // Used when the wallpaper cannot be read, or the scheme is not "dynamic".
+    readonly property color fallbackSeed: "#a8627b"
+
+    property string pendingCurrent
+    property string pendingPreview
 
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)
@@ -59,6 +68,49 @@ Singleton {
         return Qt.hsla(c.hslHue, c.hslSaturation, 0.1, 1);
     }
 
+    // Copies a name -> colour map (ColorScheme.colors, or the `colours` of a scheme.json with
+    // hex strings) onto a palette, adding the `m3` prefix.
+    function applyColours(colours: var, target: var): void {
+        for (const [name, colour] of Object.entries(colours)) {
+            const propName = name.startsWith("term") ? name : `m3${name}`;
+            if (target.hasOwnProperty(propName))
+                target[propName] = colour;
+        }
+    }
+
+    function applyScheme(scheme: var, isPreview: bool): void {
+        if (!scheme?.valid)
+            return;
+        applyColours(scheme.colors, isPreview ? preview : current);
+    }
+
+    function samePath(a: string, b: string): bool {
+        return a.split("\\").join("/") === b.split("\\").join("/");
+    }
+
+    // Builds the palette of the current (or the preview) wallpaper. Image schemes arrive
+    // through fromImageFinished.
+    function regenerate(isPreview: bool): void {
+        const path = isPreview ? WallpaperService.previewPath : WallpaperService.actualCurrent;
+        const dark = !(isPreview ? previewLight : currentLight);
+
+        if (scheme === "dynamic" && path) {
+            if (isPreview)
+                pendingPreview = path;
+            else
+                pendingCurrent = path;
+            S.ColorScheme.fromImage(path, flavour, dark);
+        } else {
+            applyScheme(S.ColorScheme.fromColor(fallbackSeed, flavour, dark), isPreview);
+        }
+
+        if (!isPreview) {
+            const lum = path ? S.ColorScheme.luminance(path) : -1;
+            wallLuminance = lum < 0 ? 0 : lum;
+        }
+    }
+
+    // Loads a scheme.json as the `caelestia scheme` CLI writes it.
     function load(data: string, isPreview: bool): void {
         const colours = isPreview ? preview : current;
         const scheme = JSON.parse(data);
@@ -71,99 +123,52 @@ Singleton {
             previewLight = scheme.mode === "light";
         }
 
-        for (const [name, colour] of Object.entries(scheme.colours)) {
-            const propName = name.startsWith("term") ? name : `m3${name}`;
-            if (colours.hasOwnProperty(propName))
-                colours[propName] = `#${colour}`;
-        }
+        const mapped = {};
+        for (const [name, colour] of Object.entries(scheme.colours))
+            mapped[name] = `#${colour}`;
+        applyColours(mapped, colours);
     }
 
     function setMode(mode: string): void {
-        Quickshell.execDetached(["caelestia", "scheme", "set", "--notify", "-m", mode]);
+        currentLight = mode === "light";
+        previewLight = currentLight;
+        regenerate(false);
     }
 
-    function reloadHyprRules(): void {
-        let rule, trEnabled;
-        if (Hypr.usingLua) {
-            rule = `eval hl.layer_rule({ match = { namespace = "caelestia-drawers" }, %1 = %2 })`;
-            trEnabled = transparency.enabled;
-        } else {
-            rule = "keyword layerrule %1 %2, match:namespace caelestia-drawers";
-            trEnabled = transparency.enabled ? 1 : 0;
-        }
-        Hypr.extras.batchMessage([rule.arg("blur").arg(trEnabled), rule.arg("ignore_alpha").arg(Math.max(0, transparency.base - 0.03))]);
+    readonly property string wallpaperPath: WallpaperService.actualCurrent
+    readonly property string previewWallpaperPath: WallpaperService.previewPath
+
+    onWallpaperPathChanged: regenerate(false)
+    onPreviewWallpaperPathChanged: {
+        if (WallpaperService.showPreview)
+            regenerate(true);
     }
 
-    function requestReloadHyprRules(): void {
-        if (cooldownTimer.running) {
-            root.cooldownPending = true;
-        } else {
-            root.reloadHyprRules();
-            cooldownTimer.restart();
-        }
-    }
-
-    Component.onCompleted: root.requestReloadHyprRules()
+    Component.onCompleted: regenerate(false)
 
     Connections {
-        function onConfigReloaded(): void {
-            root.reloadHyprRules();
-        }
-
-        target: Hypr
-    }
-
-    FileView {
-        path: `${Paths.state}/scheme.json`
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.load(text(), false)
-    }
-
-    ImageAnalyser {
-        id: analyser
-
-        source: Wallpapers.current
-    }
-
-    Timer {
-        id: cooldownTimer
-
-        interval: 30
-        onTriggered: {
-            if (root.cooldownPending) {
-                root.cooldownPending = false;
-                root.reloadHyprRules();
-                restart();
+        function onFromImageFinished(path: string, scheme: var): void {
+            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent))
+                root.applyScheme(scheme, false);
+            if (root.pendingPreview && root.samePath(path, root.pendingPreview)) {
+                root.applyScheme(scheme, true);
+                root.showPreview = WallpaperService.showPreview;
             }
         }
-    }
 
-    Timer {
-        id: cAnimCompleteTimer
+        function onFromImageFailed(path: string, error: string): void {
+            console.warn("Colours: no scheme for", path, error);
+            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent))
+                root.applyScheme(S.ColorScheme.fromColor(root.fallbackSeed, root.flavour, !root.currentLight), false);
+        }
 
-        interval: Tokens.anim.durations.expressiveSlowEffects
-        onTriggered: root.requestReloadHyprRules()
+        target: S.ColorScheme
     }
 
     component Transparency: QtObject {
         readonly property bool enabled: Tokens.transparency.enabled
         readonly property real base: Math.max(0, Math.min(1, Tokens.transparency.base - (root.light ? 0.1 : 0)))
         readonly property real layers: Math.max(0, Math.min(1, Tokens.transparency.layers))
-
-        onEnabledChanged: {
-            if (enabled)
-                root.requestReloadHyprRules();
-            else
-                cAnimCompleteTimer.start();
-        }
-        onBaseChanged: {
-            if (root.lastBaseTransparency > base)
-                root.requestReloadHyprRules();
-            else
-                cAnimCompleteTimer.start();
-            root.lastBaseTransparency = base;
-        }
     }
 
     component M3TPalette: QtObject {

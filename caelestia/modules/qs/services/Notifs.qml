@@ -12,6 +12,7 @@ import Caelestia.State
 import qs.components.misc
 import qs.services
 import qs.utils
+import qs.compat
 
 Singleton {
     id: root
@@ -22,11 +23,8 @@ Singleton {
 
     property bool loaded
 
+    // wabar gap: no fullscreen detection (upstream asks Hyprland).
     function hasFullscreen(): bool {
-        for (const monitor of Hypr.monitors.values) {
-            if (monitor?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1))
-                return true;
-        }
         return false;
     }
 
@@ -119,11 +117,11 @@ Singleton {
             root.list.sort((a, b) => b.time - a.time);
             root.loaded = true;
         }
+        // Upstream creates an empty file here. The config home watcher reloads the shell on
+        // every write under it, so the file appears with the first notification instead.
         onLoadFailed: err => {
-            if (err === FileViewError.FileNotFound) {
+            if (err === FileViewError.FileNotFound)
                 root.loaded = true;
-                Qt.callLater(() => setText("[]"));
-            }
         }
     }
 

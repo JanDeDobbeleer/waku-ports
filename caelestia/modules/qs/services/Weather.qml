@@ -7,6 +7,7 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.utils
+import qs.compat
 
 Singleton {
     id: root
@@ -404,9 +405,7 @@ Singleton {
         }
         onLoadFailed: err => {
             root.citiesLoaded = true;
-            if (err === FileViewError.FileNotFound)
-                Qt.callLater(() => setText("{}"));
-            else
+            if (err !== FileViewError.FileNotFound)
                 console.warn(lc, `Unable to load cached cities: ${err}`);
         }
     }
