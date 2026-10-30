@@ -65,6 +65,7 @@ QtObject {
         }
     }
 
+    // wabar: Notification has no expireTimeoutChanged, residentChanged or hasActionIconsChanged signals.
     readonly property Connections conn: Connections {
         function onClosed(): void {
             notif.close();
@@ -90,20 +91,8 @@ QtObject {
             notif.image = notif.notification.image;
         }
 
-        function onExpireTimeoutChanged(): void {
-            notif.expireTimeout = notif.notification.expireTimeout;
-        }
-
         function onUrgencyChanged(): void {
             notif.urgency = notif.notification.urgency;
-        }
-
-        function onResidentChanged(): void {
-            notif.resident = notif.notification.resident;
-        }
-
-        function onHasActionIconsChanged(): void {
-            notif.hasActionIcons = notif.notification.hasActionIcons;
         }
 
         function onActionsChanged(): void {

@@ -205,9 +205,9 @@ StyledRect {
                     PathAngleArc {
                         id: progressArc
 
-                        radiusX: progressIndicator.width / 2 - root.Tokens.padding.extraSmall / 2
+                        radiusX: progressIndicator.width / 2 - Tokens.padding.extraSmall / 2
                         centerX: progressIndicator.width / 2
-                        radiusY: progressIndicator.height / 2 - root.Tokens.padding.extraSmall / 2
+                        radiusY: progressIndicator.height / 2 - Tokens.padding.extraSmall / 2
                         centerY: progressIndicator.height / 2
 
                         startAngle: -90
@@ -250,7 +250,7 @@ StyledRect {
                 text: root.modelData.appName
                 font: appName.font
                 elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - Tokens.spacing.small * 3
             }
 
             StyledText {
@@ -271,9 +271,9 @@ StyledRect {
 
                     PropertyChanges {
                         summary.maximumLineCount: undefined
-                        summary.anchors.topMargin: root.Tokens.spacing.extraSmall
-                        bodyPreview.anchors.topMargin: root.Tokens.spacing.extraSmall
-                        body.anchors.topMargin: root.Tokens.spacing.extraSmall
+                        summary.anchors.topMargin: Tokens.spacing.extraSmall
+                        bodyPreview.anchors.topMargin: Tokens.spacing.extraSmall
+                        body.anchors.topMargin: Tokens.spacing.extraSmall
                     }
 
                     AnchorChanges {
@@ -304,7 +304,7 @@ StyledRect {
                 text: root.modelData.summary
                 font: summary.font
                 elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - root.Tokens.spacing.small * 3
+                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - Tokens.spacing.small * 3
             }
 
             StyledText {

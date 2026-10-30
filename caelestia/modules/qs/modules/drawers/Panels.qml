@@ -4,10 +4,9 @@ import Caelestia.Config
 import qs.components
 import qs.modules.bar as Bar
 import qs.modules.bar.popouts as BarPopouts
-import qs.modules.launcher as Launcher
-import qs.modules.osd as Osd
-import qs.modules.session as Session
-import qs.modules.dashboard as Dashboard
+import qs.modules.notifications as Notifications
+import qs.modules.sidebar as Sidebar
+import qs.modules.utilities.toasts as Toasts
 
 Item {
     id: root
@@ -57,7 +56,7 @@ Item {
         }
     }
 
-    StubPanel {
+    Notifications.Wrapper {
         id: notifications
 
         screenState: root.screenState
@@ -130,7 +129,7 @@ Item {
         anchors.right: parent.right
     }
 
-    StubPanel {
+    Toasts.Toasts {
         id: toasts
 
         anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
@@ -138,7 +137,7 @@ Item {
         anchors.margins: Tokens.padding.medium
     }
 
-    StubPanel {
+    Sidebar.Wrapper {
         id: sidebar
 
         screenState: root.screenState
