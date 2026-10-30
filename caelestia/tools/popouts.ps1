@@ -27,7 +27,7 @@ try {
   Write-Host "bt: $(& $wabarc --config-home $ConfigHome call bar btDevices 2>&1 | Out-String)"
   foreach ($n in $Names) {
     Write-Host "== $n : $(& $wabarc --config-home $ConfigHome call bar popout $n 2>&1 | Out-String)"
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 5
     $st = (& $wabarc --config-home $ConfigHome call bar popoutState 2>&1 | Out-String).Trim()
     Write-Host "state: $st"
     $f = $st -split '\s+'

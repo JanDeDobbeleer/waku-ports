@@ -16,8 +16,8 @@ Singleton {
     readonly property bool connecting: pendingConnection !== null
     property string activeInterface: S.Network.kind === "wifi" ? "Wi-Fi" : S.Network.kind === "ethernet" ? "Ethernet" : ""
     property string activeConnection: S.Network.kind === "wifi" ? S.Network.ssid : ""
-    // wabar gap: no radio switch. True while wabar sees a Wi-Fi link or a scan result.
-    property bool wifiEnabled: S.Network.kind === "wifi" || networks.length > 0
+    // The radio state Windows reports; before it is known, a Wi-Fi link or a scan result counts.
+    property bool wifiEnabled: S.Network.wifiAvailable ? S.Network.wifiEnabled : (S.Network.kind === "wifi" || networks.length > 0)
     readonly property bool scanning: S.Network.scanning
 
     property list<AccessPoint> networks: []
@@ -313,6 +313,8 @@ Singleton {
     Component.onCompleted: {
         rebuild();
         rebuildEthernet();
+        // S.Network.networks stays empty until the first refresh() (a read-only WlanScan).
+        S.Network.refresh();
     }
 
     Connections {
