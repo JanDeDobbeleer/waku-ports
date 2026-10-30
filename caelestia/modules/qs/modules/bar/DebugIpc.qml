@@ -153,7 +153,10 @@ Scope {
 
         // Rows the `>` list shows, comma separated.
         function actions(): string {
-            return Actions.list.map(a => a.name).join(", ");
+            const names = [];
+            for (let i = 0; i < Actions.list.length; i++)
+                names.push(Actions.list[i].name);
+            return names.join(", ");
         }
 
         // The colour choice and the last session action that was logged or refused.
