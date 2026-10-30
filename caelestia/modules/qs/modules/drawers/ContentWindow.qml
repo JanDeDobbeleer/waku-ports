@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
@@ -246,6 +247,7 @@ StyledWindow {
         PanelBg {
             id: popoutBg
 
+            attachLeft: !panels.popouts.isDetached
             // Extra width to prevent vertical movement deformation partially detaching panel from bar
             property real extraWidth: panels.popouts.isDetached ? 0 : 0.2
 
@@ -354,6 +356,66 @@ StyledWindow {
         property bool attachTop: false
         property bool attachRight: false
         property bool attachBottom: false
+        property bool attachLeft: false
+
+        // Port: concave junction fillets. Upstream fuses a flush panel with the frame by a circular
+        // smooth-min whose blend arc has radius `smoothing`; the stub draws separate shapes, so each
+        // end of an attached edge gets a fillet piece (the square minus a quarter circle) in the
+        // group colour. The radius is the frame's own, in logical px, not scaled by the UI scale.
+        // Fillets lie in free space beside the panel, outside the open-panel mask regions.
+        readonly property real filletMax: root.Config.border.smoothing * (1 - root.fsTransitionProg)
+        // Inner edges of the frame in this item's coordinates.
+        readonly property real frameL: bar.implicitWidth - x
+        readonly property real frameR: root.width - root.borderThickness - x
+        readonly property real frameT: root.borderThickness - y
+        readonly property real frameB: root.height - root.borderThickness - y
+        // How far the panel reaches out of each frame edge; the radius grows with it as it slides.
+        readonly property real filletRight: Math.max(0, Math.min(filletMax, frameR, height / 2))
+        readonly property real filletLeft: Math.max(0, Math.min(filletMax, width - frameL, height / 2))
+        readonly property real filletTop: Math.max(0, Math.min(filletMax, height - frameT, width / 2))
+        readonly property real filletBottom: Math.max(0, Math.min(filletMax, frameB, width / 2))
+
+        // Right edge: ends at the top and bottom of the panel (a top or bottom attachment is the frame).
+        Fillet {
+            r: parent.filletRight
+            active: parent.attachRight && !parent.attachTop
+            px: parent.frameR; py: 0; ax: 0; ay: -1; bx: -1; by: 0
+        }
+        Fillet {
+            r: parent.filletRight
+            active: parent.attachRight && !parent.attachBottom
+            px: parent.frameR; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
+        }
+        Fillet {
+            r: parent.filletLeft
+            active: parent.attachLeft
+            px: parent.frameL; py: 0; ax: 0; ay: -1; bx: 1; by: 0
+        }
+        Fillet {
+            r: parent.filletLeft
+            active: parent.attachLeft
+            px: parent.frameL; py: parent.height; ax: 0; ay: 1; bx: 1; by: 0
+        }
+        Fillet {
+            r: parent.filletTop
+            active: parent.attachTop && !parent.attachLeft
+            px: 0; py: parent.frameT; ax: -1; ay: 0; bx: 0; by: 1
+        }
+        Fillet {
+            r: parent.filletTop
+            active: parent.attachTop && !parent.attachRight
+            px: parent.width; py: parent.frameT; ax: 1; ay: 0; bx: 0; by: 1
+        }
+        Fillet {
+            r: parent.filletBottom
+            active: parent.attachBottom && !parent.attachLeft
+            px: 0; py: parent.frameB; ax: -1; ay: 0; bx: 0; by: -1
+        }
+        Fillet {
+            r: parent.filletBottom
+            active: parent.attachBottom && !parent.attachRight
+            px: parent.width; py: parent.frameB; ax: 1; ay: 0; bx: 0; by: -1
+        }
 
         group: blobGroup
         x: panel.x + bar.implicitWidth
@@ -368,5 +430,36 @@ StyledWindow {
         bleedRight: attachRight ? root.borderThickness : 0
         bleedBottom: attachBottom ? root.borderThickness : 0
         deformScale: (deformAmount * Config.appearance.deformScale) / 10000
+    }
+
+    // A concave fillet at the junction point (px, py) of a panel edge and a frame edge. (ax, ay)
+    // runs along the frame edge into free space, (bx, by) along the panel edge into free space.
+    // The piece is the square of side r at the junction minus the quarter circle centred on the
+    // square's far corner.
+    component Fillet: Shape {
+        property real r: 0
+        property real px: 0
+        property real py: 0
+        property real ax: 0
+        property real ay: 0
+        property real bx: 0
+        property real by: 0
+
+        readonly property int sweep: (bx * ay - by * ax) > 0 ? 1 : 0
+
+        property bool active: true
+
+        visible: active && r > 0.5
+        preferredRendererType: Shape.CurveRenderer
+
+        ShapePath {
+            fillColor: Qt.rgba(blobGroup.color.r, blobGroup.color.g, blobGroup.color.b, 1)
+            strokeWidth: -1
+
+            PathSvg {
+                path: `M${px},${py} L${px + ax * r},${py + ay * r}`
+                    + ` A${r},${r} 0 0 ${sweep} ${px + bx * r},${py + by * r} Z`
+            }
+        }
     }
 }
