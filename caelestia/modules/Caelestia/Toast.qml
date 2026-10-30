@@ -34,7 +34,7 @@ QtObject {
         if (_locks.includes(sender))
             return;
         _locks = [..._locks, sender];
-        sender.destroyed.connect(() => unlock(sender));
+        sender.destroyed?.connect(() => unlock(sender)); // Port: QML objects expose no destroyed signal here
     }
 
     function unlock(sender: QtObject): void {

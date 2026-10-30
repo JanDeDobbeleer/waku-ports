@@ -44,6 +44,9 @@ Singleton {
     }
 
     function absolutePath(path: string): string {
+        // Port: caelestia's "root:/" means the shell root, which is the config home here.
+        if (path.startsWith("root:/"))
+            return toLocalFile(Qt.resolvedUrl("../../../" + path.substring(6)));
         const expanded = slash(path).replace(/^~/, home).replace("${HOME}", home).replace("$HOME", home);
         return toLocalFile(expanded);
     }

@@ -3,7 +3,7 @@
 param(
   [Alias('Home')][string]$ConfigHome = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [int]$Seconds = 8,
-  [string]$Shortcut,
+  [string[]]$Shortcut, # one or more, fired in order, 2 s apart
   [string]$Shot,
   [int]$Toast = 0, # raise this many test toasts (tools	oast.ps1) before the shortcut and shot
   [string]$Bin = 'D:\wabar\build\arm64-debug'
@@ -25,9 +25,9 @@ try {
   Write-Host "== status (pid $($p.Id), exited: $($p.HasExited))"
   & $wabarc --config-home $ConfigHome status
   if ($Toast -gt 0) { & (Join-Path $PSScriptRoot 'toast.ps1') -Count $Toast; Start-Sleep -Seconds 2 }
-  if ($Shortcut) {
-    Write-Host "== shortcut $Shortcut"
-    & $wabarc --config-home $ConfigHome shortcut $Shortcut
+  foreach ($sc in ($Shortcut -split ",")) {
+    Write-Host "== shortcut $sc"
+    & $wabarc --config-home $ConfigHome shortcut $sc
     Start-Sleep -Seconds 2
   }
   if ($Shot) { & (Join-Path $PSScriptRoot 'shot.ps1') -Out $Shot }

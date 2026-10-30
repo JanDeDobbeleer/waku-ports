@@ -97,7 +97,7 @@ Item {
 
                 Image {
                     asynchronous: true
-                    source: Paths.absolutePath(Config.paths.noNotifsPic)
+                    source: "file:///" + Paths.absolutePath(Config.paths.noNotifsPic) // Port: Qt reads "D:/" as a URL scheme
                     fillMode: Image.PreserveAspectFit
                     sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
 
