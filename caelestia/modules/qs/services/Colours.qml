@@ -3,10 +3,13 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Caelestia
 import Caelestia.Config
+import Caelestia.I18n
 import wabar.services as S
 import qs.services
 import qs.compat
+import qs.utils
 
 // Caelestia's colour service over wabar's ColorScheme. Upstream reads a scheme.json written by the
 // `caelestia scheme` CLI. Here the scheme is generated in process from the wallpaper
@@ -129,10 +132,31 @@ Singleton {
         applyColours(mapped, colours);
     }
 
-    function setMode(mode: string): void {
+    // Sets the palette's mode and regenerates the palette for it.
+    function applyMode(mode: string): void {
         currentLight = mode === "light";
         previewLight = currentLight;
         regenerate(false);
+    }
+
+    // Switches the Windows app and system light/dark theme through wabar's ControlCenter, which
+    // only has a toggle: it is toggled when the theme is not the wanted one already.
+    function setWindowsTheme(mode: string): void {
+        if (Paths.dryRun) {
+            console.warn(`DRYRUN theme ${mode} (windows is ${S.ControlCenter.darkMode ? "dark" : "light"})`);
+            return;
+        }
+        if (!S.ControlCenter.available)
+            return;
+        if (S.ControlCenter.darkMode !== (mode === "dark"))
+            S.ControlCenter.toggleTheme();
+    }
+
+    // The launcher's Light and Dark: the palette and the Windows theme.
+    function setMode(mode: string): void {
+        applyMode(mode);
+        setWindowsTheme(mode);
+        Toaster.toast(mode === "light" ? Tr.tr("Light mode") : Tr.tr("Dark mode"), Tr.tr("Colour scheme and Windows theme"), mode === "light" ? "light_mode" : "dark_mode", Toast.Success, 2500);
     }
 
     readonly property string wallpaperPath: WallpaperService.actualCurrent
