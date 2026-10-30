@@ -3,6 +3,7 @@ import Quickshell
 import Caelestia.Config
 import qs.services
 import qs.modules.drawers
+import qs.modules.bar
 import qs.daemons
 
 // Trimmed from upstream: no Background (WlrLayer.Background is not behind the icons), AreaPicker,
@@ -42,6 +43,7 @@ ShellRoot {
 
     // Modules
     Drawers {}
+    DebugIpc {}
 
     // Daemons
     Shortcuts {}

@@ -13,6 +13,36 @@ Item {
 
     required property color colour
 
+    // Port: the wabar shim reports every device as plain "bluetooth", so the icon name comes from the
+    // service's device type (row.type) and, for "Generic", from the device name. The result is a
+    // freedesktop-style name that Icons.getBluetoothIcon understands.
+    function iconNameFor(device: var): string {
+        const type = String(device?.row?.type ?? "").toLowerCase();
+        const byType = {
+            headphones: "audio-headphones",
+            headset: "audio-headset",
+            speaker: "audio-speakers",
+            phone: "phone",
+            tablet: "tablet",
+            laptop: "computer",
+            computer: "computer",
+            keyboard: "input-keyboard",
+            mouse: "input-mouse",
+            controller: "input-gaming",
+            watch: "watch",
+            camera: "camera"
+        };
+        if (byType[type])
+            return byType[type];
+
+        const name = String(device?.name ?? "").toLowerCase();
+        const byName = [[/headphone|buds|airpods|wh-|wf-|earbud|headset/, "audio-headset"], [/speaker|soundbar|boom|echo/, "audio-speakers"], [/mouse|mx master|pebble|trackpad/, "input-mouse"], [/keyboard|keys/, "input-keyboard"], [/phone|iphone|pixel|galaxy/, "phone"], [/watch/, "watch"], [/controller|gamepad|xbox|dualsense/, "input-gaming"]];
+        for (const [re, icon] of byName)
+            if (re.test(name))
+                return icon;
+        return "bluetooth";
+    }
+
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
@@ -52,7 +82,7 @@ Item {
                 required property BluetoothDevice modelData
 
                 animate: true
-                text: Icons.getBluetoothIcon(modelData?.icon)
+                text: Icons.getBluetoothIcon(root.iconNameFor(modelData))
                 color: root.colour
                 fill: 1
 

@@ -24,16 +24,26 @@ Item {
     readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
     property bool isHovered
 
+    // Port: no `as Bar` casts here. On wabar the cast of a Loader item to a type of the same module came
+    // back null, so the hover path (Interactions -> checkPopout) did nothing. The item is called untyped.
     function closeTray(): void {
-        (content.item as Bar)?.closeTray();
+        content.item?.closeTray();
     }
 
     function checkPopout(y: real): void {
-        (content.item as Bar)?.checkPopout(y);
+        content.item?.checkPopout(y);
+    }
+
+    function debugEntries(): string {
+        return content.item ? content.item.debugEntries() : "no content";
+    }
+
+    function openPopoutNamed(name: string): bool {
+        return content.item ? content.item.openPopoutNamed(name) : false;
     }
 
     function handleWheel(y: real, angleDelta: point): void {
-        (content.item as Bar)?.handleWheel(y, angleDelta);
+        content.item?.handleWheel(y, angleDelta);
     }
 
     clip: true

@@ -94,7 +94,13 @@ Singleton {
         [["audio"], "speaker"],
         [["phone"], "smartphone"],
         [["mouse"], "mouse"],
-        [["keyboard"], "keyboard"]
+        [["keyboard"], "keyboard"],
+        // Port additions: device types wabar reports that upstream's rules do not know.
+        [["watch"], "watch"],
+        [["computer"], "computer"],
+        [["tablet"], "tablet"],
+        [["gaming"], "sports_esports"],
+        [["camera"], "photo_camera"]
     ]
 
     readonly property var notifIconRules: [

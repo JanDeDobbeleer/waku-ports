@@ -24,14 +24,14 @@ ColumnLayout {
             return;
 
         for (let i = 0; i < repeater.count; i++) {
-            const tray = (repeater.itemAt(i) as EntryWrapper)?.item as Tray;
-            if (tray)
+            const tray = repeater.itemAt(i)?.item;
+            if (tray && tray.expanded !== undefined)
                 tray.expanded = false;
         }
     }
 
     function checkPopout(y: real): void {
-        const ch = childAt(width / 2, y) as EntryWrapper;
+        const ch = childAt(width / 2, y);
 
         if (ch?.entryId !== "tray")
             closeTray();
@@ -45,7 +45,7 @@ ColumnLayout {
         const top = ch.y;
 
         if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
-            const items = (ch.item as StatusIcons).items;
+            const items = ch.item.items;
             const icon = items.childAt(items.width / 2, mapToItem(items, 0, y).y);
             if (icon) {
                 popouts.currentName = icon.name;
@@ -53,7 +53,7 @@ ColumnLayout {
                 popouts.hasCurrent = true;
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {
-            const tray = ch.item as Tray;
+            const tray = ch.item;
             if (!Config.bar.tray.compact || (tray.expanded && !tray.expandIcon.contains(mapToItem(tray.expandIcon, tray.implicitWidth / 2, y)))) {
                 // Port: no tray menu popout (the menu is null on Windows).
                 popouts.hasCurrent = false;
@@ -63,13 +63,54 @@ ColumnLayout {
             }
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
-            popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
+            popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.implicitHeight / 2).y ?? 0;
             popouts.hasCurrent = true;
         }
     }
 
+    // Port, test only (DebugIpc): sets the state checkPopout sets when the cursor is over the entry
+    // named `name` ("network", "bluetooth", "battery", "audio", "kblayout", "lockstatus",
+    // "activewindow"). Returns false when no such entry is in the bar.
+    function debugEntries(): string {
+        const out = [];
+        for (let i = 0; i < repeater.count; i++) {
+            const ch = repeater.itemAt(i);
+            let extra = "";
+            if (ch?.entryId === "statusIcons")
+                extra = "[" + Array.from({length: ch.item.items.children.length}, (_, j) => ch.item.items.children[j].name).join(",") + "]";
+            out.push(`${ch?.entryId}${extra}`);
+        }
+        return out.join(" ");
+    }
+
+    function openPopoutNamed(name: string): bool {
+        for (let i = 0; i < repeater.count; i++) {
+            const ch = repeater.itemAt(i);
+            if (!ch)
+                continue;
+            if (ch.entryId === "statusIcons") {
+                const items = ch.item.items;
+                for (let j = 0; j < items.children.length; j++) {
+                    const icon = items.children[j];
+                    if (icon.name === name) {
+                        popouts.currentName = icon.name;
+                        popouts.currentCenter = Qt.binding(() => icon.mapToItem(root, 0, icon.implicitHeight / 2).y);
+                        popouts.hasCurrent = true;
+                        return true;
+                    }
+                }
+            } else if (ch.entryId === "activeWindow" && name === "activewindow") {
+                popouts.currentName = name;
+                popouts.currentCenter = ch.item.mapToItem(root, 0, ch.item.implicitHeight / 2).y;
+                popouts.hasCurrent = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
     function handleWheel(y: real, angleDelta: point): void {
-        const ch = childAt(width / 2, y) as EntryWrapper;
+        const ch = childAt(width / 2, y);
         if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
             // Workspace scroll
             const mon = Hypr.monitorFor(screen);
