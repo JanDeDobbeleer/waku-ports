@@ -94,8 +94,8 @@ Column {
         required property list<string> command
 
         function exec(): void {
-            // Gated: SessionManager only logs unless CAELESTIA_ALLOW_ACTIONS=1.
-            SessionManager.exec(command);
+            // Real Windows actions through ControlCenter; sign out, restart and shutdown need a second press.
+            SessionManager.exec(command, false);
         }
 
         implicitWidth: Tokens.sizes.session.button

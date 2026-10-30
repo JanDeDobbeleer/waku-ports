@@ -83,6 +83,6 @@ Scope {
 
         interval: 5000
         // SessionManager hibernates, or only logs under CAELESTIA_DRYRUN=1 or services.allowSystemActions=false.
-        onTriggered: SessionManager.exec(["hibernate"])
+        onTriggered: SessionManager.exec(["hibernate"], true)
     }
 }

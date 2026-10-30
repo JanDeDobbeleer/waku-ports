@@ -11,8 +11,8 @@ import qs.utils
 
 // Idle timeouts over DesktopState.idleSeconds (upstream uses Wayland's IdleMonitor). `lock` is the
 // lock screen, which is not ported yet: while it is null, "lock" actions are ignored. Other string
-// actions were Hyprland dispatches and are ignored too; command lists run only when actions are
-// enabled (Paths.actionsEnabled).
+// actions were Hyprland dispatches and are ignored too; command lists are Linux commands and are
+// ignored (idle timeouts never lock, sleep or shut down the machine).
 Scope {
     id: root
 
@@ -38,8 +38,6 @@ Scope {
         } else if (action === "unlock") {
             if (lock)
                 lock.lock.locked = false;
-        } else if (typeof action !== "string" && Paths.actionsEnabled) {
-            Quickshell.execDetached(action);
         }
     }
 

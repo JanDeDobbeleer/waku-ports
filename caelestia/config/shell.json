@@ -9,7 +9,12 @@
       "dynamic": true
     }
   },
+  "launcher": {
+    "enableDangerousActions": false
+  },
   "services": {
+    "allowSystemActions": true,
+    "wallpaperAnimation": "",
     "weatherUnits": 1
   }
 }

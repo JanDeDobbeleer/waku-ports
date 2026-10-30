@@ -2,20 +2,28 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Caelestia
+import Caelestia.Config
+import Caelestia.I18n
 import wabar.services as S
 
 // Port of caelestia's C++ SessionManager (logind over DBus). Here the session actions go through
-// wabar's ControlCenter.requestAction. Every action is blocked unless CAELESTIA_ALLOW_ACTIONS=1 is
-// set in the environment: a blocked action only logs and records `lastBlocked`.
-// `exec(command)` returns true when the command was a session command (blocked or sent), so the
-// caller must not run it as a process; it returns false for any other command.
-// wabar gap: ControlCenter asks for a second call to confirm sign out, restart and shutdown; the
-// second `exec` of the same command inside the confirm window runs it.
+// wabar's ControlCenter.requestAction: lock (LockWorkStation), sleep, hibernate, signOut, restart
+// and shutdown. One gate: GlobalConfig.services.allowSystemActions (default true) blocks them all;
+// the environment variable CAELESTIA_DRYRUN=1 makes a call log `DRYRUN session <action>` and do
+// nothing else. A refused or dry-run call is recorded in `lastLogged`.
+// `exec(command, confirmed)` returns true when the command was a session command (handled,
+// refused or logged), so the caller must not run it as a process; false for any other command.
+// wabar's ControlCenter asks for a second call within a few seconds to confirm signOut, restart and
+// shutdown. `confirmed` (the launcher, which hides those rows until the user opts in) makes the
+// second call itself; the session menu leaves it false, so its button needs a second press and a
+// toast says so.
 QtObject {
     id: root
 
-    readonly property bool allowed: Quickshell.env("CAELESTIA_ALLOW_ACTIONS") === "1"
-    property string lastBlocked
+    readonly property bool dryRun: Quickshell.env("CAELESTIA_DRYRUN") === "1"
+    readonly property bool allowed: GlobalConfig.services.allowSystemActions
+    property string lastLogged
 
     readonly property var actions: ({
             "logout": "signOut",
@@ -28,6 +36,24 @@ QtObject {
             "lock": "lock"
         })
 
+    readonly property var labels: ({
+            "lock": "Locking the session",
+            "sleep": "Going to sleep",
+            "hibernate": "Hibernating",
+            "signOut": "Signing out",
+            "restart": "Restarting",
+            "shutdown": "Shutting down"
+        })
+
+    readonly property var icons: ({
+            "lock": "lock",
+            "sleep": "bedtime",
+            "hibernate": "downloading",
+            "signOut": "logout",
+            "restart": "cached",
+            "shutdown": "power_settings_new"
+        })
+
     function actionFor(command: var): string {
         if (!command || command.length === 0)
             return "";
@@ -38,16 +64,27 @@ QtObject {
         return "";
     }
 
-    function exec(command: var): bool {
+    function exec(command: var, confirmed: bool): bool {
         const action = actionFor(command);
         if (!action)
             return false;
         if (!allowed) {
-            lastBlocked = action;
-            console.warn(`SessionManager: blocked session action "${action}" (CAELESTIA_ALLOW_ACTIONS is not set)`);
+            lastLogged = `REFUSED session ${action}`;
+            console.warn(`REFUSED session ${action}: services.allowSystemActions is false`);
             return true;
         }
-        S.ControlCenter.requestAction(action);
+        if (dryRun) {
+            lastLogged = `DRYRUN session ${action}`;
+            console.warn(lastLogged);
+            return true;
+        }
+        let ran = S.ControlCenter.requestAction(action);
+        if (!ran && confirmed)
+            ran = S.ControlCenter.requestAction(action);
+        if (ran)
+            Toaster.toast(Tr.tr(labels[action]), "", icons[action], Toast.Info, 2500);
+        else if (S.ControlCenter.pendingAction === action)
+            Toaster.toast(Tr.tr(labels[action]), Tr.tr("Press again to confirm"), icons[action], Toast.Warning, 3500);
         return true;
     }
 }
