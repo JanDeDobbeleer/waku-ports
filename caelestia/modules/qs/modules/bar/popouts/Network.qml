@@ -41,6 +41,50 @@ ColumnLayout {
         toggle.onToggled: Nmcli.enableWifi(checked)
     }
 
+    // The current link, shown at once: the scan list below fills only after the first scan.
+    RowLayout {
+        visible: root.view === "wireless"
+        Layout.preferredHeight: visible ? implicitHeight : 0
+        Layout.fillWidth: true
+        Layout.rightMargin: Tokens.padding.extraSmall
+        spacing: Tokens.spacing.small
+
+        MaterialIcon {
+            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+            color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: Nmcli.active ? Tr.tr("Connected to %1").arg(Nmcli.active.ssid) : Tr.tr("Not connected to wireless")
+            elide: Text.ElideRight
+            color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        }
+    }
+
+    // wabar gap: read only. The tunnel is shown beside the Wi-Fi link, not instead of it.
+    RowLayout {
+        visible: root.view === "wireless" && Nmcli.vpnActive
+        Layout.preferredHeight: visible ? implicitHeight : 0
+        Layout.fillWidth: true
+        Layout.rightMargin: Tokens.padding.extraSmall
+        spacing: Tokens.spacing.small
+
+        MaterialIcon {
+            text: "vpn_key"
+            color: Colours.palette.m3tertiary
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: Nmcli.vpnName ? Tr.tr("VPN: %1").arg(Nmcli.vpnName) : Tr.tr("VPN active")
+            elide: Text.ElideRight
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.body.medium
+        }
+    }
+
     StyledText {
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0

@@ -12,12 +12,18 @@ import qs.compat
 Singleton {
     id: root
 
-    property bool isConnected: S.Network.kind === "wifi" || S.Network.kind === "ethernet"
+    // True when the engine sees a Wi-Fi link. A VPN tunnel can become the default route, so `kind`
+    // may read something else while the SSID stays set; the SSID is the better witness.
+    readonly property bool wifiLinked: S.Network.kind === "wifi" || (S.Network.kind !== "ethernet" && S.Network.ssid !== "")
+    readonly property bool vpnActive: S.Network.vpnActive
+    readonly property string vpnName: S.Network.vpnName
+
+    property bool isConnected: wifiLinked || S.Network.kind === "ethernet"
     readonly property bool connecting: pendingConnection !== null
-    property string activeInterface: S.Network.kind === "wifi" ? "Wi-Fi" : S.Network.kind === "ethernet" ? "Ethernet" : ""
-    property string activeConnection: S.Network.kind === "wifi" ? S.Network.ssid : ""
+    property string activeInterface: wifiLinked ? "Wi-Fi" : S.Network.kind === "ethernet" ? "Ethernet" : ""
+    property string activeConnection: wifiLinked ? S.Network.ssid : ""
     // The radio state Windows reports; before it is known, a Wi-Fi link or a scan result counts.
-    property bool wifiEnabled: S.Network.wifiAvailable ? S.Network.wifiEnabled : (S.Network.kind === "wifi" || networks.length > 0)
+    property bool wifiEnabled: S.Network.wifiAvailable ? S.Network.wifiEnabled : (wifiLinked || networks.length > 0)
     readonly property bool scanning: S.Network.scanning
 
     property list<AccessPoint> networks: []
@@ -40,7 +46,7 @@ Singleton {
     readonly property alias immediateCheckTimer: immediateCheckTimer
 
     // The link wabar reports when the scan list has no entry for it yet.
-    readonly property AccessPoint syntheticActive: S.Network.kind === "wifi" && S.Network.ssid ? synthetic : null
+    readonly property AccessPoint syntheticActive: wifiLinked && S.Network.ssid ? synthetic : null
     readonly property AccessPoint synthetic: AccessPoint {
         lastIpcObject: ({
                 ssid: S.Network.ssid,
@@ -265,7 +271,7 @@ Singleton {
     }
 
     function rebuild(): void {
-        const old = networks;
+        const old = [...networks];
         const next = [];
         const known = [];
         // wabar gap: no BSSID, so the SSID stands in for it and keeps rows distinct.
@@ -291,7 +297,7 @@ Singleton {
     }
 
     function rebuildEthernet(): void {
-        const old = ethernetDevices;
+        const old = [...ethernetDevices];
         const up = S.Network.kind === "ethernet";
         const next = [];
         if (up)

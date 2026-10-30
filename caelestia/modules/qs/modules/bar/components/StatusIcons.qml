@@ -52,7 +52,7 @@ StyledRect {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.top: parent.top
         anchors.bottomMargin: Tokens.padding.medium
 
         spacing: 0
@@ -123,6 +123,18 @@ StyledRect {
                             animate: true
                             text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
                             color: root.colour
+
+                            // wabar gap: upstream has no VPN badge; a small key marks an active tunnel.
+                            MaterialIcon {
+                                visible: Nmcli.vpnActive
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.rightMargin: -7
+                                anchors.topMargin: -5
+                                text: "vpn_key"
+                                color: root.colour
+                                scale: 0.5
+                            }
                         }
                     }
                 }
