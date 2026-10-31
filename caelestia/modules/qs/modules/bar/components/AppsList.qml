@@ -13,7 +13,9 @@ import qs.utils
 // workspace, plus floating ones, grouped by executable, in first-seen order). The application
 // with the focused window sits on a rounded primary pill, like the active workspace. An
 // application with several windows has a count badge. An application with windows on other
-// workspaces only is dimmed. A click raises the window (`Hypr.clickGroup`: for a group the
+// workspaces only is dimmed, and so is one whose windows are all minimized (with a dash below the
+// icon; komorebi drops minimized windows, `Hypr` adds them back from the taskbar rows). A click
+// raises the window, restoring a minimized one (`Hypr.clickGroup`: for a group the
 // focused window's next sibling, else the last focused one), switching to its workspace first
 // when needed. Hovering an icon opens upstream's "activewindow" popout for a single window
 // (`Hypr.hoverToplevel`), or the "appgroup" popout that lists the windows of a group.
@@ -107,12 +109,14 @@ Item {
                 readonly property bool isApp: true
                 readonly property int windowCount: modelData.windows.length
                 readonly property bool focused: modelData.windows.some(t => t.address === root.focusedAddress)
-                readonly property bool onActiveWs: modelData.windows.some(t => t.wsActive !== false)
+                readonly property bool onActiveWs: modelData.windows.some(t => t.wsActive !== false && !t.minimized)
+                // Every window of the application is minimized: dimmed, with a dash below the icon.
+                readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(t => t.minimized)
                 readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
                 width: root.fullCell
                 height: root.cell
-                opacity: onActiveWs || focused ? 1 : 0.55
+                opacity: (onActiveWs || focused) && !allMinimized ? 1 : 0.55
 
                 // A second card behind the icon marks a group.
                 StyledRect {
@@ -152,6 +156,18 @@ Item {
                     asynchronous: true
                     smooth: true
                     mipmap: true
+                }
+
+                // The minimized mark: a short dash below the icon.
+                StyledRect {
+                    visible: app.allMinimized && !app.focused
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: Math.round(root.cell * 0.06)
+                    implicitWidth: Math.round(root.cell * 0.3)
+                    implicitHeight: Math.max(2, Tokens.px(3))
+                    radius: Tokens.rounding.full
+                    color: Colours.palette.m3onSurface
                 }
 
                 // The count of windows, at the icon's top-right corner.

@@ -211,9 +211,149 @@ Scope {
         }
 
         // One line per group: executable, window count, workspaces of its windows (roman numerals),
-        // the windows' hwnds in brackets and a "*" on the group with the focused window.
+        // the windows' hwnds in brackets ("(min)" after a minimized one) and a "*" on the group
+        // with the focused window.
         function appGroups(): string {
-            return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")} [${g.windows.map(t => t.srcHwnd ?? t.address).join(",")}]${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
+            return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")} [${g.windows.map(t => (t.srcHwnd ?? t.address) + (t.minimized ? "(min)" : "")).join(",")}]${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
+        }
+
+        // TEST ONLY. Per minimized taskbar row: hwnd, executable and why it is (or is not) a
+        // minimized toplevel ("ok" when it is). No titles. Then the number of ignore rules read.
+        function minimizedState(): string {
+            const now = Date.now();
+            const out = [];
+            for (const h of Object.keys(Hypr.taskbarWindows)) {
+                const row = Hypr.taskbarWindows[h];
+                if (!row.minimized)
+                    continue;
+                const v = Hypr.minimizedVerdict(h, row, Hypr.managedHwnds, Hypr.seenHwnds, Hypr.ignoreRules, Hypr.restoredAt, now);
+                const s = Hypr.seenHwnds[h];
+                out.push(`${h} ${row.exe} ${v || "ok"} seen=${s ? s.mi + ":" + s.wi : "-"}`);
+            }
+            return `${out.join("; ") || "no minimized rows"} | rules=${Hypr.ignoreRules.length}`;
+        }
+
+        // TEST ONLY. What a click on apps-list icon `i` would do, without doing it (the dry path
+        // of Hypr.activateToplevel on the window clickGroup would pick).
+        function clickAppDry(i: int): string {
+            const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
+            const g = l?.shown[i];
+            if (!g)
+                return "none";
+            const ws = g.windows;
+            const fi = ws.findIndex(t => t.address === Hypr.focusedHwnd);
+            const t = fi >= 0 ? ws[(fi + 1) % ws.length] : (ws.find(x => x.address === Hypr.groupLastFocused[g.key]) ?? ws[0]);
+            return `${g.exe} ${t.address}${t.minimized ? "(min)" : ""} -> ${Hypr.activateToplevel(t, true)}`;
+        }
+
+        // TEST ONLY. Runs Hypr.minimizedVerdict over fake taskbar rows and checks each answer.
+        // Returns "PASS n/n" or the cases that failed.
+        function minimizedFilterTest(): string {
+            const rules = [
+                {
+                    kind: "Exe",
+                    id: "1Password.exe",
+                    matching_strategy: "Equals"
+                },
+                {
+                    kind: "Title",
+                    id: "Picture-in-Picture",
+                    matching_strategy: "Legacy"
+                },
+                [
+                    {
+                        kind: "Class",
+                        id: "SomeClass",
+                        matching_strategy: "Equals"
+                    },
+                    {
+                        kind: "Title",
+                        id: "Composite",
+                        matching_strategy: "Contains"
+                    }
+                ],
+                [
+                    {
+                        kind: "Exe",
+                        id: "tool.exe",
+                        matching_strategy: "Equals"
+                    },
+                    {
+                        kind: "Title",
+                        id: "Main",
+                        matching_strategy: "DoesNotContain"
+                    }
+                ]
+            ];
+            const managed = {
+                "300": true
+            };
+            const seen = {
+                "300": {
+                    mi: 0,
+                    wi: 0,
+                    exe: "Code.exe"
+                },
+                "700": {
+                    mi: 0,
+                    wi: 1,
+                    exe: "Spotify.exe"
+                },
+                "800": {
+                    mi: 0,
+                    wi: 2,
+                    exe: "1Password.exe"
+                }
+            };
+            const restored = {
+                "1300": Date.now() - 200,
+                "1400": Date.now() - 5000
+            };
+            const r = (title, exe, minimized) => ({
+                    title: title,
+                    exe: exe,
+                    minimized: minimized
+                });
+            const cases = [
+                ["100", r("Visible", "notepad", false), "not minimized"],
+                ["200", r("Cloaked on workspace III", "Code", false), "not minimized"],
+                ["300", r("Minimized but listed", "Code", true), "komorebi lists it"],
+                ["400", r("   ", "notepad", true), "empty title"],
+                ["500", r("bar", "wabar", true), "the bar"],
+                ["600", r("Vault", "1Password", true), "komorebi ignores it"],
+                ["650", r("Picture-in-Picture", "firefox", true), "komorebi ignores it"],
+                ["700", r("Spotify Premium", "Spotify", true), ""],
+                ["800", r("Vault", "1Password", true), ""],
+                ["900", r("Untitled - Notepad", "notepad", true), ""],
+                ["1000", r("Composite title", "app", true), ""],
+                ["1100", r("Helper", "tool", true), "komorebi ignores it"],
+                ["1150", r("Main window", "tool", true), ""],
+                ["1200", r("No exe", "", true), "no executable"],
+                ["1300", r("Just restored", "notepad", false), ""],
+                ["1400", r("Restored long ago", "notepad", false), "not minimized"],
+                ["1500", null, "no taskbar row"]
+            ];
+            const fails = [];
+            const now = Date.now();
+            for (const [h, row, want] of cases) {
+                const got = Hypr.minimizedVerdict(h, row, managed, seen, rules, restored, now);
+                if (got !== want)
+                    fails.push(`${h}: want [${want}] got [${got}]`);
+            }
+            // Tags: a toplevel with an ignored tag is ignored, one without is not.
+            const tl = tags => ({
+                    lastIpcObject: {
+                        class: "x",
+                        mapped: true,
+                        tags: tags
+                    }
+                });
+            if (!Hypr.isToplevelIgnored(tl(["hide_in_bar"]), ["hide_in_bar"]))
+                fails.push("tag hide_in_bar not ignored");
+            if (Hypr.isToplevelIgnored(tl([]), ["hide_in_bar"]))
+                fails.push("untagged toplevel ignored");
+            const n = cases.length + 2;
+            return fails.length === 0 ? `PASS ${n}/${n}` : `FAIL ${fails.length}/${n}: ${fails.join("; ")}`;
         }
 
         // The open group flyout, per card: "hwnd available sourceWidth sourceHeight x,y,w,h" (the
@@ -271,7 +411,8 @@ Scope {
                 const l = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("activeWindow");
                 if (!l)
                     return "no apps list";
-                const marks = l.shown.map(g => g.windows.map(t => String(t.wsId)).join("+") + (g.windows.some(t => t.address === l.focusedAddress) ? "*" : ""));
+                // "m" after a workspace id: that window is minimized.
+                const marks = l.shown.map(g => g.windows.map(t => String(t.wsId) + (t.minimized ? "m" : "")).join("+") + (g.windows.some(t => t.address === l.focusedAddress) ? "*" : ""));
                 return [l.count, l.shown.length, l.cell, l.focusedIndex(), "fg=" + l.focusedAddress, "avail=" + Hypr.taskbarAvailable, "win=" + Hypr.barWindow, "model=" + Hypr.taskbarCount, "rows=" + Object.keys(Hypr.taskbarRows).length, "wc=" + (typeof S.WindowControl !== "undefined"), marks.join(",")].join(" ");
             } catch (e) {
                 return "error " + e;

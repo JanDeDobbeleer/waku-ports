@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Caelestia.Config
 import Caelestia.I18n
 import wabar.services as S
 import qs.compat
@@ -23,6 +24,12 @@ import qs.compat
 // rows (key `w:<hwnd>`: title, executable, icon). A window the taskbar does not list (tool
 // windows, overlays) is not shown. With GlazeWM, or before the first state, a workspace has no
 // windows.
+//
+// Minimized windows: komorebi drops a window from its workspace when it is minimized and adds it
+// back to the focused workspace when it is restored, so `komorebic state` never lists one. The
+// taskbar rows still do (`minimized` true). Such a row becomes a toplevel with `minimized: true` on
+// the workspace komorebi last had it on, else on the focused one (see minimizedVerdict for the
+// filter).
 Singleton {
     id: root
 
@@ -110,11 +117,19 @@ Singleton {
     // engine's `WindowControl`), "activate" (raised through a TaskbarModel row), "eager-focus"
     // (`komorebic eager-focus <exe>`: the last resort, it may pick another window of that exe) or
     // "none". The highlight moves at once (`optimisticHwnd`) and settles on komorebi's state.
-    function activateToplevel(t: var): string {
+    // A minimized window is restored by both raise paths (WindowControl and the taskbar row), never
+    // minimized again: it is never the focused window. With `dry` nothing happens; the result
+    // says what would (test IPC).
+    function activateToplevel(t: var, dry = false): string {
         if (!t || !t.address)
             return "none";
         if (focusedHwnd === t.address)
             return "focused";
+        if (dry) {
+            if (komorebi && t.monId === focusedMonitor?.id && !t.wsActive)
+                return "switch+activate";
+            return activateHwnd(t.address, t.lastIpcObject?.class ?? "", true);
+        }
         optimisticHwnd = String(t.address);
         optimisticAt = Date.now();
         optimisticTimer.restart();
@@ -135,20 +150,24 @@ Singleton {
         return result;
     }
 
-    function activateHwnd(hwnd: string, exe: string): string {
+    function activateHwnd(hwnd: string, exe: string, dry = false): string {
         // The engine's WindowControl (absent on an older engine).
         if (typeof S.WindowControl !== "undefined" && S.WindowControl) {
+            if (dry)
+                return "window-control";
             if (S.WindowControl.activate(Number(hwnd)))
                 return "window-control";
         }
         const row = taskbarRows[hwnd];
         if (row !== undefined) {
-            taskbar.activate(row);
+            if (!dry)
+                taskbar.activate(row);
             return "activate";
         }
         // Focus a window by its executable name.
         if (komorebi && /^[A-Za-z0-9_.\- ]+$/.test(exe)) {
-            sendKomorebic(["eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"]);
+            if (!dry)
+                sendKomorebic(["eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"]);
             return "eager-focus";
         }
         return "none";
@@ -242,7 +261,126 @@ Singleton {
 
     function isToplevelIgnored(toplevel: var, ignoredTags = []): bool {
         const ipc = toplevel?.lastIpcObject;
-        return !ipc?.class || !ipc.mapped;
+        return !ipc?.class || !ipc.mapped || (ipc.tags ?? []).some(t => ignoredTags.includes(t));
+    }
+
+    // Why a taskbar row is not a minimized toplevel, or "" when it is one. `row` is a taskbar row
+    // ({ title, exe, minimized }); the engine has already dropped tool windows, owned windows,
+    // hidden and empty-title windows, immersive shell windows and ghost UWP frames from the rows.
+    // `managed`: the hwnds komorebi lists; `seen`: hwnd -> what komorebi last said about it;
+    // `rules`: komorebi's ignore_identifiers; `restored`: hwnd -> when it was restored (a window
+    // restored a moment ago stays until komorebi lists it again, so its icon does not jump).
+    function minimizedVerdict(hwnd: string, row: var, managed: var, seen: var, rules: var, restored: var, now: real): string {
+        if (!row)
+            return "no taskbar row";
+        // A cloaked window (another workspace) is not minimized: komorebi lists it.
+        if (!row.minimized && !(now - (restored?.[hwnd] ?? 0) < 1500))
+            return "not minimized";
+        if (managed?.[hwnd])
+            return "komorebi lists it";
+        if (!(row.title ?? "").trim())
+            return "empty title";
+        const name = appName(seen?.[hwnd]?.exe || row.exe || "");
+        if (!name)
+            return "no executable";
+        if (name === "wabar" || name === "wabarc")
+            return "the bar";
+        // A window komorebi managed before is not one it ignores.
+        if (!seen?.[hwnd] && komorebiIgnores(name + ".exe", row.title, rules))
+            return "komorebi ignores it";
+        return "";
+    }
+
+    // Whether one of komorebi's ignore rules matches a window by executable and title. Rules on the
+    // class or the path cannot be checked (the taskbar rows have neither) and do not match.
+    function komorebiIgnores(exe: string, title: string, rules: var): bool {
+        const one = r => {
+            const id = String(r?.id ?? "");
+            const s = r?.matching_strategy ?? "Legacy";
+            let v;
+            if (r?.kind === "Exe")
+                v = exe.toLowerCase();
+            else if (r?.kind === "Title")
+                v = title;
+            else
+                return false;
+            const i = r.kind === "Exe" ? id.toLowerCase() : id;
+            switch (s) {
+            case "Legacy":
+                return r.kind === "Exe" ? v === i : (v.startsWith(i) || v.endsWith(i));
+            case "Equals":
+                return v === i;
+            case "StartsWith":
+                return v.startsWith(i);
+            case "EndsWith":
+                return v.endsWith(i);
+            case "Contains":
+                return v.includes(i);
+            case "DoesNotEqual":
+                return v !== i;
+            case "DoesNotStartWith":
+                return !v.startsWith(i);
+            case "DoesNotEndWith":
+                return !v.endsWith(i);
+            case "DoesNotContain":
+                return !v.includes(i);
+            case "Regex":
+                try {
+                    return new RegExp(id).test(r.kind === "Exe" ? exe : title);
+                } catch (e) {
+                    return false;
+                }
+            default:
+                return false;
+            }
+        };
+        for (const r of rules ?? []) {
+            if (Array.isArray(r) ? (r.length > 0 && r.every(one)) : one(r))
+                return true;
+        }
+        return false;
+    }
+
+    // The minimized windows per "<monitor>:<workspace>", as komorebi-like entries for windowsOf.
+    // Empty without komorebi or before its first state.
+    function minimizedByWs(): var {
+        const out = {};
+        if (!komorebi || lastStateSig === "")
+            return out;
+        const mons = S.Workspaces.monitors;
+        let active = "";
+        for (let mi = 0; mi < mons.length && !active; mi++) {
+            const wi = (mons[mi].workspaces ?? []).findIndex(w => w.focused);
+            if (wi >= 0)
+                active = mi + ":" + wi;
+        }
+        if (!active && mons.length > 0) {
+            const wi = (mons[0].workspaces ?? []).findIndex(w => w.active);
+            if (wi >= 0)
+                active = "0:" + wi;
+        }
+        const now = Date.now();
+        for (const hwnd of Object.keys(taskbarWindows)) {
+            const row = taskbarWindows[hwnd];
+            if (minimizedVerdict(hwnd, row, managedHwnds, seenHwnds, ignoreRules, restoredAt, now) !== "")
+                continue;
+            const s = seenHwnds[hwnd];
+            const known = s && s.mi < mons.length && s.wi < (mons[s.mi].workspaces ?? []).length;
+            const slot = known ? s.mi + ":" + s.wi : active;
+            if (!slot)
+                continue;
+            if (!out[slot])
+                out[slot] = [];
+            out[slot].push({
+                hwnd: Number(hwnd),
+                exe: s?.exe || row.exe || "",
+                title: row.title,
+                windowClass: s?.windowClass ?? "",
+                floating: s?.floating ?? false,
+                minimized: true
+            });
+        }
+        return out;
     }
 
     function reloadDynamicConfs(): void {
@@ -265,10 +403,13 @@ Singleton {
         return "";
     }
 
-    // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order.
-    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool): var {
+    // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order, then the
+    // minimized windows placed there (`minimized`: from minimizedByWs).
+    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool, minimized = ({})): var {
         const out = [];
-        for (const h of wsWindows[monIdx + ":" + wsIdx] ?? []) {
+        const key = monIdx + ":" + wsIdx;
+        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
+        for (const h of (wsWindows[key] ?? []).concat(minimized[key] ?? [])) {
             // The taskbar row adds the icon; komorebi's own title and exe stand in without it
             // (the model has no window to attach to here, so it can stay empty).
             const row = taskbarWindows[h.hwnd] ?? ({
@@ -279,13 +420,14 @@ Singleton {
             const name = appName(h.exe || row.exe);
             // The window's own icon when the taskbar lists it, else the desktop entry's icon.
             const icon = row.iconUrl || appIconUrl(name);
-            out.push({
+            const t = {
                 title: row.title,
                 address: String(h.hwnd),
                 // Plain values: the object is copied into a `var` list, so a link set later is lost.
                 wsId: wsIdx + 1,
                 monId: monIdx,
                 wsActive: wsActive,
+                minimized: !!h.minimized,
                 workspace: null,
                 wayland: null,
                 iconUrl: row.iconUrl,
@@ -299,11 +441,15 @@ Singleton {
                     windowClass: h.windowClass,
                     mapped: true,
                     hidden: false,
+                    minimized: !!h.minimized,
                     fullscreen: 0,
                     floating: h.floating,
                     tags: []
                 }
-            });
+            };
+            if (h.minimized && isToplevelIgnored(t, ignoredTags))
+                continue;
+            out.push(t);
         }
         return out;
     }
@@ -326,6 +472,14 @@ Singleton {
             });
         const map = {};
         const layouts = {};
+        const managed = {};
+        // What komorebi said about each window last, kept while the taskbar lists the window, so a
+        // minimized one (dropped from the state) goes back to its own workspace.
+        const seen = {};
+        const live = Object.keys(taskbarWindows).length > 0;
+        for (const k of Object.keys(seenHwnds))
+            if (!live || taskbarWindows[k])
+                seen[k] = seenHwnds[k];
         list(state?.monitors).forEach((mon, mi) => list(mon.workspaces).forEach((ws, wi) => {
             const out = [];
             for (const c of list(ws.containers))
@@ -338,6 +492,16 @@ Singleton {
             for (const w of list(ws.floating_windows))
                 out.push(one(w, true));
             map[mi + ":" + wi] = out;
+            for (const w of out) {
+                managed[String(w.hwnd)] = true;
+                seen[String(w.hwnd)] = {
+                    mi: mi,
+                    wi: wi,
+                    exe: w.exe,
+                    windowClass: w.windowClass,
+                    floating: w.floating
+                };
+            }
             // `layout` is { "Default": "BSP" }, { "Custom": [...] } or a bare name.
             const l = ws.layout;
             layouts[mi + ":" + wi] = typeof l === "string" ? l : (l?.Default ?? (l?.Custom ? "Custom" : ""));
@@ -363,10 +527,12 @@ Singleton {
             optimisticHwnd = "";
             optimisticTimer.stop();
         }
+        seenHwnds = seen;
         const stateSig = JSON.stringify([layouts, map]);
         if (stateSig === lastStateSig)
             return;
         lastStateSig = stateSig;
+        managedHwnds = managed;
         wsLayouts = layouts;
         wsWindows = map;
         rebuild();
@@ -400,6 +566,7 @@ Singleton {
 
         // 1. Plan: plain data only, so the signature can tell whether anything changed.
         const plan = [];
+        const minimized = minimizedByWs();
         for (let i = 0; i < screens.length; i++) {
             const screen = screens[i];
             // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1,
@@ -420,7 +587,7 @@ Singleton {
                     active: !!src.active,
                     focused: !!src.focused,
                     layout: wsLayouts[wmi + ":" + j] ?? "",
-                    windows: windowsOf(wmi, j, !!src.active)
+                    windows: windowsOf(wmi, j, !!src.active, minimized)
                 });
             }
             plan.push({
@@ -597,7 +764,11 @@ Singleton {
                 }));
     }
 
-    Component.onCompleted: rebuild()
+    Component.onCompleted: {
+        rebuild();
+        if (komorebi)
+            rulesPoll.running = true;
+    }
 
     Connections {
         function onChanged(): void {
@@ -636,7 +807,8 @@ Singleton {
     QtObject {
         id: toplevelList
 
-        // The windows of all workspaces that komorebi and the taskbar both know.
+        // The windows of all workspaces that komorebi and the taskbar both know, plus the
+        // minimized windows the taskbar lists (`minimized: true`).
         property var values: []
     }
 
@@ -649,6 +821,13 @@ Singleton {
     property var wsLayouts: ({})
     // hwnd -> row of the ungrouped TaskbarModel, for `taskbar.activate(row)`.
     property var taskbarRows: ({})
+    // The hwnds the last komorebi state lists, hwnd -> what komorebi said about a window last
+    // ({ mi, wi, exe, windowClass, floating }), komorebi's ignore rules (`komorebic global-state`)
+    // and hwnd -> when a minimized window was restored. See minimizedVerdict.
+    property var managedHwnds: ({})
+    property var seenHwnds: ({})
+    property var ignoreRules: []
+    property var restoredAt: ({})
     property var pendingActivate: null
     property string komorebiFocused: ""
     // The window with focus: the foreground taskbar row when the engine lists it, else the one
@@ -684,7 +863,39 @@ Singleton {
         if (!stateTimer.running)
             stateTimer.start();
     }
-    onKomorebiChanged: queue()
+    onKomorebiChanged: {
+        queue();
+        if (komorebi && !rulesPoll.running)
+            rulesPoll.running = true;
+    }
+
+    // Read only: `komorebic global-state` prints the configuration komorebi runs with; only the
+    // ignore rules are taken, once per komorebi connection.
+    Process {
+        id: rulesPoll
+
+        command: ["komorebic", "global-state"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const rules = JSON.parse(text)?.ignore_identifiers;
+                    root.ignoreRules = Array.isArray(rules) ? rules : [];
+                } catch (e) {
+                    root.ignoreRules = [];
+                }
+                root.rebuild();
+            }
+        }
+    }
+
+    // A restored window stays in the list for a moment (see minimizedVerdict); then the list is
+    // rebuilt from what komorebi says.
+    Timer {
+        id: restoreTimer
+
+        interval: 1600
+        onTriggered: root.rebuild()
+    }
 
     // komorebi events that change no workspace (a layout set by a hotkey) do not show in the
     // engine's data, so the state is read now and then anyway. An unchanged answer does nothing.
@@ -798,12 +1009,36 @@ Singleton {
                     known[o.key.slice(2)] = {
                         title: o.title,
                         exe: o.exe,
-                        iconUrl: o.iconUrl
+                        iconUrl: o.iconUrl,
+                        minimized: o.minimized
                     };
             }
             const knownSig = JSON.stringify(known);
             if (knownSig !== root.knownSig) {
                 const keys = Object.keys(known).sort().join(",");
+                // A window that was minimized and is not any more: restored a moment ago.
+                const now = Date.now();
+                let restored = false;
+                let flipped = false;
+                const restoredAt = {};
+                for (const h of Object.keys(root.restoredAt))
+                    if (known[h] && now - root.restoredAt[h] < 1500)
+                        restoredAt[h] = root.restoredAt[h];
+                for (const h of Object.keys(known)) {
+                    const was = root.taskbarWindows[h];
+                    if (was && !!was.minimized !== !!known[h].minimized)
+                        flipped = true;
+                    if (was?.minimized && !known[h].minimized) {
+                        restoredAt[h] = now;
+                        restored = true;
+                    }
+                }
+                root.restoredAt = restoredAt;
+                if (restored)
+                    restoreTimer.restart();
+                // komorebi drops a window on minimize and adds it on restore: read its state.
+                if (flipped)
+                    root.queue();
                 root.knownSig = knownSig;
                 root.taskbarWindows = known;
                 // A title or an icon needs no new state, only a new join. A window that came or
@@ -849,12 +1084,14 @@ Singleton {
         delegate: QtObject {
             required property string title
             required property bool active
+            required property bool minimized
             required property string key
             required property string iconUrl
             required property string uniqueId
             readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
 
             onActiveChanged: rows.update()
+            onMinimizedChanged: rows.update()
             onTitleChanged: rows.update()
             onIconUrlChanged: rows.update()
         }
