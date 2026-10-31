@@ -775,6 +775,8 @@ Singleton {
     S.TaskbarModel {
         id: taskbar
 
+        // The model has no service of its own: without this it never has a row.
+        service: S.TaskbarService
         grouping: false
         // The engine starts its window tracker only for a model that has a bar window; the apps
         // list hands it its own (see AppsList). showOnlyVisible stays false: komorebi cloaks the
