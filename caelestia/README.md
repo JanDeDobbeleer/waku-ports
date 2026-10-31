@@ -59,6 +59,16 @@ multiply with the settings above.
   `layoutButton` (glyph, workspace, layout, visibility), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
   `activateApp <i>`, `activateGroupWindow <exe> <i>` (refuse unless the target is already focused),
   `fakeCopies <n>` (fake windows for the badge).
+- komorebi work area: komorebi caches each monitor's work area and can keep one without the bar's
+  strip after a DPI change or a new monitor. At start, after an engine reload and 2.5 s after a
+  screen change (again 6 s later), the shell compares komorebi's `work_area_size` with the OS work
+  area and, only when a monitor differs by more than 4 px, sends `WM_SETTINGCHANGE` +
+  `SPI_SETWORKAREA` to komorebi's hidden window (`modules/qs/services/komorebi-workarea.ps1`), the
+  message Explorer sends when the work area changes. komorebi then re-reads the work area and
+  re-tiles the monitors that changed. With `CAELESTIA_DRYRUN=1` it only logs `DRYRUN komorebi
+  refresh-work-area`. Test IPC: `komorebiAreas` (komorebi vs OS per monitor, and whether a refresh
+  would run), `komorebiRefresh` (always a dry run), `komorebiAreasTest`, `komorebiCycle <px>` (skews
+  the OS reading and runs a cycle; only with `CAELESTIA_DRYRUN=1`).
 ## Launcher commands and session actions
 
 The launcher's `>` commands act on Windows through wabar:

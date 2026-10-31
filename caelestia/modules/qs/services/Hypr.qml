@@ -202,7 +202,7 @@ Singleton {
 
     // The only komorebic commands this shell sends: focus-workspace, eager-focus, cycle-layout and
     // change-layout. With `dry` the command is logged and not run (tests). A refresh of the state
-    // follows.
+    // follows. The only other thing sent to komorebi is the work area message of refreshKomorebi.
     readonly property var allowedCommands: ["focus-workspace", "eager-focus", "cycle-layout", "change-layout"]
     readonly property var layoutNames: ["BSP", "Columns", "Rows", "VerticalStack", "HorizontalStack", "UltrawideVerticalStack", "Grid", "RightMainVerticalStack"]
     property string lastCommand: ""
@@ -224,6 +224,159 @@ Singleton {
         if (!focusProc.running)
             focusProc.start();
         return true;
+    }
+
+    // komorebi's work area. komorebi caches each monitor's work area (`work_area_size` in
+    // `komorebic state`) and refreshes it only on its own display events (WM_DISPLAYCHANGE,
+    // WM_SETTINGCHANGE with SPI_SETWORKAREA, WM_DEVICECHANGE). After a DPI change or a new monitor
+    // it can keep a work area without the bar's strip, and no komorebic command re-reads it:
+    // `retile` tiles against the cache, `reload-configuration` only runs komorebi.ps1/.ahk.
+    //
+    // So once the screens have settled (start, an engine reload, a screen change), the shell
+    // compares the cache with the OS work area (komorebi-workarea.ps1 -Query, read only) and, only
+    // when a monitor differs by more than `areaTolerance` physical pixels, sends komorebi the
+    // message Explorer sends when the work area changes (komorebi-workarea.ps1 -Notify:
+    // WM_SETTINGCHANGE + SPI_SETWORKAREA to komorebi's hidden window alone). komorebi then re-reads
+    // the work area and re-tiles only the monitors whose work area changed. With CAELESTIA_DRYRUN=1
+    // the message is logged and not sent.
+    readonly property bool dryRun: Quickshell.env("CAELESTIA_DRYRUN") === "1"
+    readonly property int areaTolerance: 4
+    // Each monitor komorebi lists: { name, id (HMONITOR), size, work } (komorebi rects: left, top,
+    // width, height), and each OS monitor: { id, name, dpi, monitor, work } (left, top, right,
+    // bottom, physical pixels).
+    property var komorebiMonitors: []
+    property var osMonitors: []
+    property real komorebiHiddenHwnd: 0
+    // The last comparison ("ok", "refresh", "refresh skipped: ...", ...) and when the last
+    // refresh message was sent (or logged).
+    property string lastAreaVerdict: ""
+    property real lastAreaRefresh: 0
+    // A settle cycle: passes left, refreshes sent, and whether the pass in flight may refresh.
+    property int areaPassesLeft: 0
+    property int areaRefreshes: 0
+    property bool areaPassDry: false
+    property bool areaCheckPending: false
+    readonly property string areaScript: {
+        const u = String(Qt.resolvedUrl("komorebi-workarea.ps1"));
+        return u.startsWith("file:///") ? decodeURIComponent(u.slice(8)) : "";
+    }
+    // Geometry and scale of every screen: a change starts a settle cycle.
+    readonly property string screensSig: Quickshell.screens.map(s => [s.name, s.x, s.y, s.width, s.height, s.devicePixelRatio].join(",")).join(";")
+    onScreensSigChanged: startAreaCycle()
+
+    // One row per komorebi monitor: name, id, komorebi's and the OS work area as [left, top,
+    // right, bottom], and `state`: "ok", "differs" (a refresh fixes it), "stale" (komorebi's
+    // HMONITOR is gone, so its WorkAreaChanged handler cannot find the monitor and a refresh does
+    // nothing) or "unknown".
+    function workAreaRows(kMons: var, osMons: var, tolerance = 4): var {
+        const rows = [];
+        for (const k of kMons ?? []) {
+            const w = k.work;
+            const kr = w ? [w.left, w.top, w.left + w.right, w.top + w.bottom] : null;
+            let os = (osMons ?? []).find(o => o.id === k.id);
+            const stale = !os;
+            if (!os)
+                os = (osMons ?? []).find(o => o.name === k.name);
+            const or = os?.work ?? null;
+            let state;
+            if (!kr || !or || or.length !== 4)
+                state = "unknown";
+            else if (kr.every((v, i) => Math.abs(v - or[i]) <= tolerance))
+                state = "ok";
+            else
+                state = stale ? "stale" : "differs";
+            rows.push({
+                name: k.name,
+                id: k.id,
+                komorebi: kr,
+                os: or,
+                state: state
+            });
+        }
+        return rows;
+    }
+
+    // Whether the rows call for a refresh: a monitor that differs and that komorebi can find.
+    function areaNeedsRefresh(rows: var): bool {
+        return rows.some(r => r.state === "differs");
+    }
+
+    // The one message this shell sends komorebi outside komorebic: WM_SETTINGCHANGE with
+    // SPI_SETWORKAREA to its hidden window. With `dry`, or CAELESTIA_DRYRUN=1, it is only logged.
+    // Returns what it did.
+    function refreshKomorebi(dry = false): string {
+        if (!komorebi)
+            return "refused: komorebi is not the window manager";
+        if (!areaScript)
+            return "refused: no helper script";
+        const what = "komorebi refresh-work-area (WM_SETTINGCHANGE SPI_SETWORKAREA to komorebi-hidden)";
+        if (dry || dryRun) {
+            console.log("DRYRUN " + what);
+            return "dry run: " + what;
+        }
+        lastAreaRefresh = Date.now();
+        console.log("komorebi: " + what);
+        areaNotify.running = true;
+        return "sent: " + what;
+    }
+
+    // Starts a settle cycle: a pass 2.5 s after the last screen change (the engine reloads 1.5 s
+    // after the last screen event and registers the app bar after that) and a second one 6 s later
+    // (komorebi's own display handling can overwrite the cache that late). Each pass refreshes on
+    // a difference; a cycle sends two refreshes at most.
+    function startAreaCycle(): void {
+        areaPassesLeft = 2;
+        areaRefreshes = 0;
+        areaTimer.interval = 2500;
+        areaTimer.restart();
+    }
+
+    // One pass: read the OS work area, then a fresh `komorebic state`, then compare
+    // (checkWorkArea). A `dry` pass never refreshes (test IPC).
+    function areaPass(dry: bool): bool {
+        if (!komorebi || !areaScript || areaQuery.running)
+            return false;
+        areaPassDry = dry;
+        areaQuery.running = true;
+        return true;
+    }
+
+    // TEST ONLY (DebugIpc, CAELESTIA_DRYRUN=1 only): pixels added to the left edge of every OS
+    // work area before the comparison, to drive a settle cycle into a (logged) refresh.
+    property int debugAreaSkew: 0
+
+    function checkWorkArea(): void {
+        const skew = debugAreaSkew;
+        const os = skew === 0 ? osMonitors : osMonitors.map(o => Object.assign({}, o, {
+                    work: [o.work[0] + skew, o.work[1], o.work[2], o.work[3]]
+                }));
+        const rows = workAreaRows(komorebiMonitors, os, areaTolerance);
+        const dry = areaPassDry;
+        areaPassDry = false;
+        if (!areaNeedsRefresh(rows)) {
+            const stale = rows.filter(r => r.state === "stale").map(r => r.name);
+            lastAreaVerdict = stale.length > 0 ? "stale monitor " + stale.join(",") + ": a refresh cannot fix it" : "ok";
+            if (stale.length > 0)
+                console.warn("komorebi: work area of " + stale.join(",") + " differs, but komorebi's monitor handle is stale");
+            return;
+        }
+        const diff = rows.filter(r => r.state === "differs").map(r => `${r.name} komorebi=${r.komorebi} os=${r.os}`).join("; ");
+        if (dry) {
+            lastAreaVerdict = "refresh (dry pass): " + diff;
+            return;
+        }
+        if (areaRefreshes >= 2) {
+            lastAreaVerdict = "refresh skipped: two sent this cycle: " + diff;
+            return;
+        }
+        if (Date.now() - lastAreaRefresh < 5000) {
+            lastAreaVerdict = "refresh skipped: one sent less than 5 s ago: " + diff;
+            return;
+        }
+        areaRefreshes++;
+        lastAreaVerdict = "refresh: " + diff;
+        console.log("komorebi: work area differs: " + diff);
+        refreshKomorebi();
     }
 
     // Cycles the layout of the focused workspace (`next` or `previous`).
@@ -463,6 +616,18 @@ Singleton {
             return;
         }
         const list = o => Array.isArray(o) ? o : (o?.elements ?? []);
+        const kMons = list(state?.monitors).map(m => ({
+                    name: String(m?.name ?? ""),
+                    id: Number(m?.id ?? 0),
+                    size: m?.size ?? null,
+                    work: m?.work_area_size ?? null
+                }));
+        if (JSON.stringify(kMons) !== JSON.stringify(komorebiMonitors))
+            komorebiMonitors = kMons;
+        if (areaCheckPending) {
+            areaCheckPending = false;
+            checkWorkArea();
+        }
         const one = (w, floating) => ({
                 hwnd: w.hwnd,
                 exe: w.exe ?? "",
@@ -768,6 +933,8 @@ Singleton {
         rebuild();
         if (komorebi)
             rulesPoll.running = true;
+        // A start or an engine reload: the app bar has just been (re)registered.
+        startAreaCycle();
     }
 
     Connections {
@@ -867,6 +1034,66 @@ Singleton {
         queue();
         if (komorebi && !rulesPoll.running)
             rulesPoll.running = true;
+        if (komorebi)
+            startAreaCycle();
+    }
+
+    // The passes of a settle cycle (see startAreaCycle).
+    Timer {
+        id: areaTimer
+
+        interval: 2500
+        onTriggered: {
+            if (root.areaPassesLeft <= 0)
+                return;
+            root.areaPassesLeft--;
+            if (!root.areaPass(false)) {
+                // komorebi not there yet, or a pass still running: try again shortly.
+                root.areaPassesLeft++;
+                if (root.komorebi && root.areaScript) {
+                    interval = 1000;
+                    restart();
+                }
+                return;
+            }
+            if (root.areaPassesLeft > 0) {
+                interval = 6000;
+                restart();
+            }
+        }
+    }
+
+    // Read only: the OS monitors and work areas, then a fresh `komorebic state` to compare with.
+    Process {
+        id: areaQuery
+
+        command: ["pwsh", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", root.areaScript, "-Query"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let o = null;
+                try {
+                    o = JSON.parse(text);
+                } catch (e) {
+                    root.lastAreaVerdict = "query failed: " + text.trim().slice(0, 200);
+                    root.areaPassDry = false;
+                    return;
+                }
+                root.osMonitors = o?.monitors ?? [];
+                root.komorebiHiddenHwnd = Number(o?.hidden ?? 0);
+                root.areaCheckPending = true;
+                root.queue();
+            }
+        }
+    }
+
+    // Sends the refresh message (see refreshKomorebi); prints "sent <hwnd>" or why not.
+    Process {
+        id: areaNotify
+
+        command: ["pwsh", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", root.areaScript, "-Notify"]
+        stdout: StdioCollector {
+            onStreamFinished: console.log("komorebi: " + text.trim())
+        }
     }
 
     // Read only: `komorebic global-state` prints the configuration komorebi runs with; only the
