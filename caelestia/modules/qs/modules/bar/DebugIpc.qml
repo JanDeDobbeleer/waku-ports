@@ -617,4 +617,29 @@ Scope {
 
         target: "thumbprobe"
     }
+    // TEST ONLY. The colour state, for a capture run without input: `wabarc --config-home <home>
+    // call colours dump` prints the mode, whether the preview palette is shown and a few roles;
+    // `mode light` switches the palette only (never the Windows theme); `step <i>` moves the open
+    // launcher list to row i as the arrow keys do, without accepting it.
+    IpcHandler {
+        function dump(): string {
+            const p = Colours.palette;
+            return `currentLight=${Colours.currentLight} showPreview=${Colours.showPreview} lock=${WallpaperService.previewColourLock} wall=${WallpaperService.actualCurrent} surface=${p.m3surface} primary=${p.m3primary} background=${p.m3background} current.surface=${Colours.current.m3surface} preview.surface=${Colours.preview.m3surface} t.surface=${Colours.tPalette.m3surface}`;
+        }
+
+        function mode(m: string): string {
+            Colours.applyMode(m);
+            return "ok";
+        }
+
+        function step(i: int): string {
+            const l = scope.list_();
+            if (!l)
+                return "no list";
+            l.currentIndex = i;
+            return `ok ${i}`;
+        }
+
+        target: "colours"
+    }
 }
