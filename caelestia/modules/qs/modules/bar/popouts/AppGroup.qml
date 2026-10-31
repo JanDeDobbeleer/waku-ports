@@ -200,7 +200,11 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Hypr.activateToplevel(card.modelData)
+                    onClicked: {
+                        Hypr.activateToplevel(card.modelData);
+                        // Port: the flyout has done its job once the window is chosen.
+                        root.popouts.hasCurrent = false;
+                    }
                 }
             }
         }
