@@ -475,6 +475,8 @@ QtObject {
             property JsonObject dashboard: JsonObject {
                 property bool enabled: true
                 property bool showOnHover: true
+                // Port: milliseconds the pointer must rest at the top edge before the dashboard opens.
+                property int hoverDelay: 400
                 property bool showDashboard: true
                 property bool showMedia: true
                 property bool showPerformance: true

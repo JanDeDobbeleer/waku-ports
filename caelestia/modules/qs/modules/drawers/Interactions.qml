@@ -28,7 +28,7 @@ CustomMouseArea {
     Timer {
         id: dashboardHoverTimer
 
-        interval: 1000
+        interval: Config.dashboard.hoverDelay
         onTriggered: {
             if (!root.dashboardShortcutActive && Config.dashboard.showOnHover && root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY))
                 root.screenState.dashboard = true;
