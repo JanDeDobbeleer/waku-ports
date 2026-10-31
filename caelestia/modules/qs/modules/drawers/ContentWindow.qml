@@ -61,6 +61,13 @@ StyledWindow {
     readonly property real borderThickness: Config.border.thickness * (1 - fsTransitionProg)
     readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
     readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
+
+    // The frame's shadow needs a full-window layer plus the effect's blur textures, which cost about
+    // as much GPU memory as everything else the idle shell holds. The layer exists only while some
+    // panel is on screen; the shadow fades out over `shadowFade` before the layer goes, so closing
+    // the last panel does not make the shadow pop off.
+    readonly property bool anyPanelVisible: panels.dashboard.visible || panels.launcher.visible || panels.session.visible || panels.sidebar.visible || panels.osd.visible || panels.utilities.visible || panels.notifications.visible || panels.popoutsWrapper.visible
+    property real shadowFade: anyPanelVisible ? 1 : 0
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : Config.border.thickness
 
     property color surfaceColour: Colours.tPalette.m3surface
@@ -106,6 +113,12 @@ StyledWindow {
 
     Behavior on surfaceColour {
         CAnim {}
+    }
+
+    Behavior on shadowFade {
+        Anim {
+            type: Anim.DefaultEffects
+        }
     }
 
     Region {
@@ -217,11 +230,11 @@ StyledWindow {
     Item {
         anchors.fill: parent
         opacity: root.surfaceColour.a
-        layer.enabled: true
+        layer.enabled: root.anyPanelVisible || root.shadowFade > 0
         layer.effect: MultiEffect {
             shadowEnabled: true
             blurMax: 15
-            shadowColor: Qt.alpha(Colours.palette.m3shadow, Math.max(0, root.shadowOpacity))
+            shadowColor: Qt.alpha(Colours.palette.m3shadow, Math.max(0, root.shadowOpacity) * root.shadowFade)
         }
 
         BlobGroup {
