@@ -238,7 +238,7 @@ Singleton {
             if (!json.current || !json.daily)
                 return;
 
-            cc = {
+            root.cc = {
                 weatherCode: json.current.weather_code,
                 tempC: json.current.temperature_2m,
                 feelsLikeC: json.current.apparent_temperature,
@@ -258,7 +258,7 @@ Singleton {
                     weatherCode: json.daily.weather_code[i],
                     icon: Icons.getWeatherIcon(json.daily.weather_code[i])
                 });
-            forecast = forecastList;
+            root.forecast = forecastList;
 
             const hourlyList = [];
             const now = new Date();
@@ -277,7 +277,7 @@ Singleton {
                     icon: Icons.getWeatherIcon(json.hourly.weather_code[i])
                 });
             }
-            hourlyForecast = hourlyList;
+            root.hourlyForecast = hourlyList;
         });
     }
 
