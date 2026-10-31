@@ -146,10 +146,13 @@ Singleton {
         applyColours(mapped, colours);
     }
 
-    // Sets the palette's mode and regenerates the palette for it.
+    // Sets the palette's mode and regenerates the palette for it. A preview palette left on screen
+    // after the picker closed would hide the new one, so it goes unless the picker still previews.
     function applyMode(mode: string): void {
         currentLight = mode === "light";
         previewLight = currentLight;
+        if (!WallpaperService.showPreview)
+            showPreview = false;
         regenerate(false);
     }
 
@@ -235,10 +238,12 @@ Singleton {
     }
 
     Connections {
+        // A result asked for before a mode switch arrives with the old mode; it is dropped, so a
+        // late dark scheme never replaces the light one (and the other way round).
         function onFromImageFinished(path: string, scheme: var): void {
-            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent))
+            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent) && scheme.dark === !root.currentLight)
                 root.applyScheme(scheme, false);
-            if (root.pendingPreview && root.samePath(path, root.pendingPreview)) {
+            if (root.pendingPreview && root.samePath(path, root.pendingPreview) && scheme.dark === !root.previewLight) {
                 root.applyScheme(scheme, true);
                 root.showPreview = WallpaperService.showPreview;
             }

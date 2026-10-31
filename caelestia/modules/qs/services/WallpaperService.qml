@@ -102,12 +102,19 @@ Searcher {
         if (Paths.dryRun) {
             console.warn(`DRYRUN wallpaper set ${path}`);
             actualCurrent = path;
+            // No S.Wallpapers.currentChanged follows to end the colour lock.
+            previewColourLock = false;
         } else if (S.Wallpapers.available) {
-            // `actualCurrent` follows S.Wallpapers.current once the change has happened.
+            // `actualCurrent` follows S.Wallpapers.current once the change has happened. A change
+            // Windows never reports (a failed set) would keep the preview palette on screen, so
+            // the lock also ends after a while.
             S.Wallpapers.setWallpaper(path);
+            if (previewColourLock)
+                colourLockTimeout.restart();
         } else {
             console.warn("WallpaperService: the Windows wallpaper service is not available; only the shell changes");
             actualCurrent = path;
+            previewColourLock = false;
         }
         const name = path.slice(path.lastIndexOf("/") + 1);
         Toaster.toast(Tr.tr("Wallpaper changed"), name, "image", Toast.Success, 2500);
@@ -208,9 +215,23 @@ Searcher {
         target: GlobalConfig.services
     }
 
+    // The picker closed while the lock held: show the current palette once the lock ends. The
+    // flag is consumed, so a later picker session starts without it.
     onPreviewColourLockChanged: {
-        if (!previewColourLock && pendingPreviewClear)
+        if (previewColourLock)
+            return;
+        colourLockTimeout.stop();
+        if (pendingPreviewClear) {
+            pendingPreviewClear = false;
             Colours.showPreview = false;
+        }
+    }
+
+    Timer {
+        id: colourLockTimeout
+
+        interval: 10000
+        onTriggered: root.previewColourLock = false
     }
 
     list: entries
