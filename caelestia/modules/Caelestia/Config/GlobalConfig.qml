@@ -374,11 +374,12 @@ QtObject {
                     property bool background: false
                     property bool recolour: false
                     property bool compact: false
-                    // Port: icons shown in the bar strip; the rest are behind a "+n" badge and in the flyout.
-                    property int maxShown: 4
                     property var iconSubs: CL.list([])
                     onIconSubsChanged: CL.list(iconSubs)
                     property list<string> hiddenIcons: []
+                }
+                property JsonObject status: JsonObject {
+                    property bool background: false
                 }
                 property JsonObject clock: JsonObject {
                     property bool background: false

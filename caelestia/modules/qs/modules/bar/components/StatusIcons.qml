@@ -16,6 +16,7 @@ StyledRect {
     readonly property alias items: iconColumn
 
     readonly property int spacing: Tokens.spacing.medium / 2
+    readonly property int padding: Config.bar.status.background ? Tokens.padding.medium : Tokens.padding.extraSmall
 
     // Index of the first/last entry that isn't collapsed, for edge margin gating
     readonly property int firstPresent: {
@@ -40,12 +41,12 @@ StyledRect {
         return false;
     }
 
-    color: Colours.tPalette.m3surfaceContainer
+    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.status.background ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full
 
     clip: true
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: iconColumn.implicitHeight + Tokens.padding.medium * 2
+    implicitHeight: iconColumn.implicitHeight + root.padding * 2
 
     ColumnLayout {
         id: iconColumn
@@ -53,7 +54,7 @@ StyledRect {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.bottomMargin: Tokens.padding.medium
+        anchors.topMargin: root.padding
 
         spacing: 0
 
