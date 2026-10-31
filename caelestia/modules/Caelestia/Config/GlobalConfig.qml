@@ -677,6 +677,8 @@ QtObject {
                 property bool allowSystemActions: true
                 // Port: the animation wabar plays when the wallpaper changes: circle, slide_top, diamond, split, fade or none. Empty is wabar's default.
                 property string wallpaperAnimation: ""
+                // Port: a wallpaper change also sets the Windows lock screen (and sign-in screen) picture.
+                property bool wallpaperLockScreen: true
                 property string defaultPlayer: "Spotify"
                 property var playerAliases: CL.list([
                     {

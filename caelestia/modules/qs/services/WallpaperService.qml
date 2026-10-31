@@ -18,6 +18,8 @@ import qs.utils
 // (GlobalConfig.paths.wallpaperDir), the current wallpaper from wabar's Wallpapers service. That
 // service is pointed at the same folder (so `wabarc wallpaper next` and the port agree) and
 // applies a choice to Windows, with the animation named by GlobalConfig.services.wallpaperAnimation.
+// GlobalConfig.services.wallpaperLockScreen (default true) makes the service also set the Windows
+// lock screen picture after each change.
 // With CAELESTIA_DRYRUN=1 a choice only logs `DRYRUN wallpaper set <path>`.
 Searcher {
     id: root
@@ -189,6 +191,13 @@ Searcher {
         property: "imagePath"
         value: Paths.wallsdir
         when: Paths.wallsdir.length > 0
+    }
+
+    // A change also sets the Windows lock screen picture (GlobalConfig.services.wallpaperLockScreen).
+    Binding {
+        target: S.Wallpapers
+        property: "setLockScreen"
+        value: GlobalConfig.services.wallpaperLockScreen
     }
 
     Connections {
