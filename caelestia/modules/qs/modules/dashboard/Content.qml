@@ -41,6 +41,13 @@ Item {
                 iconName: "cloud",
                 text: Tr.tr("Weather"),
                 enabled: Config.dashboard.showWeather
+            },
+            // Port: quick actions that open Windows UI.
+            {
+                component: utilitiesComponent,
+                iconName: "grid_view",
+                text: Tr.tr("Utilities"),
+                enabled: Config.dashboard.showUtilities
             }
         ];
         return allTabs.filter(tab => tab.enabled);
@@ -213,6 +220,14 @@ Item {
                 id: weatherComponent
 
                 WeatherTab {}
+            }
+
+            Component {
+                id: utilitiesComponent
+
+                UtilitiesTab {
+                    screenState: root.screenState
+                }
             }
 
             Behavior on contentX {

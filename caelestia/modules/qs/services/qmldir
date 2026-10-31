@@ -15,3 +15,4 @@ singleton TrayItems 1.0 TrayItems.qml
 singleton VPN 1.0 VPN.qml
 singleton WallpaperService 1.0 WallpaperService.qml
 singleton Weather 1.0 Weather.qml
+singleton UtilitiesActions 1.0 UtilitiesActions.qml

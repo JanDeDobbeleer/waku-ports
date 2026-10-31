@@ -309,7 +309,7 @@ QtObject {
                     // them; false shows every komorebi workspace of the monitor.
                     property bool dynamic: true
                     property bool perMonitor: true
-                    property bool showWindows: true
+                    property bool showUtilities: true
                     property bool showWindowsOnSpecialWorkspaces: true
                     property int maxWindowIcons: 5
                     property bool activeTrail: true
@@ -479,6 +479,8 @@ QtObject {
                 property bool showMedia: true
                 property bool showPerformance: true
                 property bool showWeather: true
+                // Port: the Utilities tab (quick actions that open Windows UI).
+                property bool showUtilities: true
                 property bool showClockSeconds: false
                 property int mediaUpdateInterval: 500
                 property int resourceUpdateInterval: 1000

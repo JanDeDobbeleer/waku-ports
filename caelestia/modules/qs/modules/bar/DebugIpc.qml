@@ -142,6 +142,45 @@ Scope {
             return `${s.dashboard} ${s.dashboardTab} ${s.dashboardDate.getFullYear()}-${s.dashboardDate.getMonth() + 1}`;
         }
 
+        // Opens the dashboard on tab `i` (0-based), as a click on that tab does. -1 closes it.
+        function dashTab(i: int): string {
+            const s = ShellState.forScreen(Screens.screens[0]);
+            if (i < 0) {
+                s.dashboard = false;
+                return "closed";
+            }
+            s.dashboardTab = i;
+            s.dashboard = true;
+            return `dashboard tab ${i}`;
+        }
+
+        // The dashboard panel rectangle in physical screen pixels: x y w h.
+        function dashRect(): string {
+            const screen = Screens.screens[0];
+            const d = ShellState.componentsFor(screen)?.panels?.dashboard;
+            if (!d)
+                return "none";
+            const pt = d.mapToItem(null, 0, 0);
+            const f = v => Math.round(v * screen.devicePixelRatio);
+            return `${f(pt.x)} ${f(pt.y)} ${f(d.width)} ${f(d.height)}`;
+        }
+
+        // The Utilities tab: buttons shown, buttons known, whether the existence check ran, the
+        // missing probe files, then "id=target" per shown button.
+        function utilitiesTab(): string {
+            const shown = UtilitiesActions.actions;
+            return `${shown.length} of ${UtilitiesActions.all.length} probed=${UtilitiesActions.probed} missing=[${Object.keys(UtilitiesActions.missing).join(",")}] ${shown.map(a => `${a.id}=${a.target}`).join(" ")}`;
+        }
+
+        // Runs Utilities tab action `id` through the click path. Refused unless CAELESTIA_DRYRUN=1, so
+        // a test never opens a window. Returns the target and the logged line.
+        function utilitiesAction(id: string): string {
+            if (!Paths.dryRun)
+                return "refused: not a dry run";
+            const target = UtilitiesActions.launch(id);
+            return target ? `${target} [${UtilitiesActions.lastLogged}]` : `no action ${id}`;
+        }
+
         // Runs the click handler of apps-list icon `i` (0-based), but only when it is the focused
         // window, which makes it a no-op. Returns what the handler did.
         function clickApp(i: int): string {

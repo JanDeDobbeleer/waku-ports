@@ -5,4 +5,5 @@ Media 1.0 Media.qml
 Performance 1.0 Performance.qml
 Tabs 1.0 Tabs.qml
 WeatherTab 1.0 WeatherTab.qml
+UtilitiesTab 1.0 UtilitiesTab.qml
 Wrapper 1.0 Wrapper.qml
