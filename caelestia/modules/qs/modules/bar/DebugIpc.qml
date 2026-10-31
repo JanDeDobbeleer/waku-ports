@@ -95,10 +95,10 @@ Scope {
             return `fake tray items: ${n}`;
         }
 
-        // "<items> <shown in the strip> <strip height> <last action>"
+        // "<items> <button visible> <button height> <last action>"
         function trayState(): string {
             const t = ShellState.componentsFor(Screens.screens[0])?.bar?.entryItem("tray");
-            return `${TrayItems.count} ${t ? t.shown : "no strip"} ${t ? t.height : 0} [${TrayItems.lastAction}]`;
+            return `${TrayItems.count} ${t ? t.active : "no button"} ${t ? t.height : 0} [${TrayItems.lastAction}]`;
         }
 
         // Calls the click handler of fake item `i` with `button` (left, middle, right).

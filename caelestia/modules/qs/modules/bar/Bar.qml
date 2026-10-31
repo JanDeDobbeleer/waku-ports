@@ -91,7 +91,7 @@ ColumnLayout {
                 popouts.hasCurrent = true;
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {
-            // Port: hovering the tray strip opens the flyout with every icon.
+            // Port: hovering the tray button opens the flyout with every icon.
             if (ch.visible && ch.item.active) {
                 popouts.currentName = "tray";
                 popouts.currentCenter = ch.mapToItem(root, 0, ch.height / 2).y;
@@ -296,6 +296,7 @@ ColumnLayout {
                         id: trayStrip
 
                         objectName: "taskbarTray"
+                        onClicked: root.openPopoutNamed("tray")
                     }
                 }
             }
