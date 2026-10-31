@@ -84,6 +84,21 @@ Item {
         Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
         Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
 
+        // Port: the wallpaper strip runs left to right, so the arrows step through it (Enter picks,
+        // see onAccepted). Elsewhere they keep moving the text cursor.
+        Keys.onLeftPressed: event => {
+            if (list.showWallpapers)
+                list.currentList?.decrementCurrentIndex();
+            else
+                event.accepted = false;
+        }
+        Keys.onRightPressed: event => {
+            if (list.showWallpapers)
+                list.currentList?.incrementCurrentIndex();
+            else
+                event.accepted = false;
+        }
+
         Keys.onEscapePressed: root.screenState.launcher = false
 
         Keys.onPressed: event => {
