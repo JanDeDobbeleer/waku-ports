@@ -118,6 +118,11 @@ Singleton {
                 pendingCurrent = path;
             S.ColorScheme.fromImage(path, flavour, dark);
         } else {
+            // A request still in flight for the wallpaper must not replace this palette.
+            if (isPreview)
+                pendingPreview = "";
+            else
+                pendingCurrent = "";
             applyScheme(S.ColorScheme.fromColor(seeds[seed] ?? fallbackSeed, flavour, dark), isPreview);
         }
 
@@ -239,8 +244,11 @@ Singleton {
 
     Connections {
         // A result asked for before a mode switch arrives with the old mode; it is dropped, so a
-        // late dark scheme never replaces the light one (and the other way round).
+        // late dark scheme never replaces the light one (and the other way round). Only the
+        // dynamic scheme takes a wallpaper result, so a late one never replaces a material palette.
         function onFromImageFinished(path: string, scheme: var): void {
+            if (root.scheme !== "dynamic")
+                return;
             if (root.pendingCurrent && root.samePath(path, root.pendingCurrent) && scheme.dark === !root.currentLight)
                 root.applyScheme(scheme, false);
             if (root.pendingPreview && root.samePath(path, root.pendingPreview) && scheme.dark === !root.previewLight) {
