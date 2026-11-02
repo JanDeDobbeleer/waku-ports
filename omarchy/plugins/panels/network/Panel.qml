@@ -925,6 +925,16 @@ Panel {
 
   Component.onCompleted: refresh()
 
+  // Windows port: the engine's Network service reports "none" for its first second, and the details
+  // above were read once at construction. Re-read them whenever the service changes.
+  Connections {
+    target: S.Network
+    function onKindChanged() { root.updateDetails(root.windowsStatus()) }
+    function onSsidChanged() { root.updateDetails(root.windowsStatus()) }
+    function onIpAddressChanged() { root.updateDetails(root.windowsStatus()) }
+    function onWifiChanged() { root.updateDetails(root.windowsStatus()) }
+  }
+
   // Pulls everything we want about the active route's interface in one shot.
   Process {
     id: detailsProc
@@ -1034,7 +1044,7 @@ Panel {
     interval: 1500
     repeat: true
     running: root.opened
-    onTriggered: if (!detailsProc.running) detailsProc.running = true
+    onTriggered: root.updateDetails(root.windowsStatus())
   }
 
   Timer {

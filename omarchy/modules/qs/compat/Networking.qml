@@ -42,18 +42,16 @@ Singleton {
         onObjectRemoved: Qt.callLater(root.collect)
     }
 
-    property var list: []
-    function collect() {
+    // A binding, not a rebuild on a signal: the service reports wifiAvailable=false for the first second
+    // after start, then true, and no signal the shell hears says so. `wired.count` makes it follow the
+    // wired adapters too; collect() stays as the hook the Instantiator calls.
+    readonly property var list: {
         var out = []
         if (S.Network.wifiAvailable) out.push(root.wifi)
         for (var i = 0; i < wired.count; ++i) out.push(wired.objectAt(i))
-        list = out
+        return out
     }
-    Connections {
-        target: S.Network
-        function onWifiChanged() { root.collect() }
-    }
-    Component.onCompleted: collect()
+    function collect() {}
 
     readonly property var devices: ({ values: root.list })
 }

@@ -170,6 +170,7 @@ function parseKeyValue(raw) {
     var line = lines[i]
     if (!line) continue
     var idx = line.indexOf("\t")
+    if (idx === -1) idx = line.indexOf("=") // Windows port: windowsStatus() writes key=value lines
     if (idx === -1) continue
     var key = line.substring(0, idx)
     var value = line.substring(idx + 1)
