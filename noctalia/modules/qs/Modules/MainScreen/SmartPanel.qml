@@ -800,7 +800,7 @@ Item {
     anchors.fill: parent
 
     // Screen-dependent attachment properties
-    // Allow panel content to override allowAttach (e.g., plugin panels)
+    // Allow panel content to override allowAttach (e.g., panel content)
     readonly property bool allowAttach: {
       if (contentLoader.item && contentLoader.item.allowAttach !== undefined) {
         return contentLoader.item.allowAttach;

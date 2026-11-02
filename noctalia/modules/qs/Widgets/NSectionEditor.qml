@@ -39,7 +39,6 @@ NBox {
     return "arrow-right"; // Default fallback icon
   }
 
-  property var pluginSettingsEntryPoints: ["settings"]
   property var widgetRegistry: null
   property string settingsDialogComponent: "invalid-settings-dialog"
   property var screen: null // Screen reference for per-screen widget settings
@@ -118,7 +117,6 @@ NBox {
   signal moveWidget(string fromSection, int index, string toSection)
   signal dragPotentialStarted
   signal dragPotentialEnded
-  signal openPluginSettingsRequested(var pluginManifest, string settingsEntryPoint)
 
   color: Color.mSurface
   Layout.fillWidth: true
@@ -188,27 +186,11 @@ NBox {
 
   // Generate widget color from name checksum
   function getWidgetColor(widget) {
-    if (widget.id.startsWith('plugin:')) {
-      return [Color.mSecondary, Color.mOnSecondary];
-    }
     return [Color.mPrimary, Color.mOnPrimary];
   }
 
-  // Check if widget has settings (either core widget with metadata or plugin with settings entry point)
+  // Check if widget has settings (core widget with metadata)
   function widgetHasSettings(widgetId) {
-    // Check if it's a plugin with settings
-    if (root.widgetRegistry && root.widgetRegistry.isPluginWidget(widgetId)) {
-      var pluginId = widgetId.replace("plugin:", "");
-      var manifest = PluginRegistry.getPluginManifest(pluginId);
-      if (!manifest?.entryPoints)
-        return false;
-      for (var i = 0; i < root.pluginSettingsEntryPoints.length; i++) {
-        if (manifest.entryPoints[root.pluginSettingsEntryPoints[i]] !== undefined)
-          return true;
-      }
-      return false;
-    }
-
     // Check if it's a core widget with user settings
     if (root.widgetRegistry && root.widgetRegistry.widgetHasUserSettings(widgetId)) {
       return true;
@@ -219,37 +201,7 @@ NBox {
 
   // Open settings for a widget
   function openWidgetSettings(index, widgetData) {
-    // Check if this is a plugin widget with a generic "settings" entry point
-    var isPlugin = root.widgetRegistry && root.widgetRegistry.isPluginWidget(widgetData.id);
-
-    if (isPlugin) {
-      var pluginId = widgetData.id.replace("plugin:", "");
-      var manifest = PluginRegistry.getPluginManifest(pluginId);
-
-      var settingsKey = null;
-      if (manifest?.entryPoints) {
-        for (var i = 0; i < root.pluginSettingsEntryPoints.length; i++) {
-          if (manifest.entryPoints[root.pluginSettingsEntryPoints[i]] !== undefined) {
-            settingsKey = root.pluginSettingsEntryPoints[i];
-            break;
-          }
-        }
-      }
-      if (!manifest || !settingsKey) {
-        Logger.e("NSectionEditor", "Plugin settings not found for:", pluginId);
-        return;
-      }
-
-      // "desktopWidgetSettings" is handled by the settingsDialogComponent
-      // (DesktopWidgetSettingsDialog) which passes widgetSettings/save properly.
-      // Only generic "settings" goes through the plugin settings popup.
-      if (settingsKey !== "desktopWidgetSettings") {
-        root.openPluginSettingsRequested(manifest, settingsKey);
-        return;
-      }
-    }
-
-    // Handle core widgets and plugin desktop widget settings
+    // Handle core widget settings
     {
       var component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
 
@@ -574,16 +526,6 @@ NBox {
 
               NText {
                 text: {
-                  // For plugin widgets, get the actual plugin name from manifest
-                  if (root.widgetRegistry && root.widgetRegistry.isPluginWidget(modelData.id)) {
-                    const pluginId = modelData.id.replace("plugin:", "");
-                    const manifest = PluginRegistry.getPluginManifest(pluginId);
-                    if (manifest && manifest.name) {
-                      return manifest.name;
-                    }
-                    // Fallback: just strip the prefix
-                    return pluginId;
-                  }
                   return modelData.id;
                 }
                 pointSize: Style.fontSizeXS
@@ -595,16 +537,6 @@ NBox {
                 rightPadding: Style.marginS
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-              }
-
-              // Plugin indicator icon
-              NIcon {
-                visible: root.widgetRegistry && root.widgetRegistry.isPluginWidget(modelData.id)
-                icon: "plugin"
-                pointSize: Style.fontSizeXXS
-                color: root.getWidgetColor(modelData)[1]
-                Layout.preferredWidth: visible ? Style.baseWidgetSize * 0.5 : 0
-                Layout.preferredHeight: Style.baseWidgetSize * 0.5
               }
 
               // CPU intensive indicator icon

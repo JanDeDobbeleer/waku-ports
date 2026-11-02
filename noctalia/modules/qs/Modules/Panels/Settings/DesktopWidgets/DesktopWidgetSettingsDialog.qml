@@ -208,50 +208,6 @@ Popup {
   }
 
   function loadWidgetSettings() {
-    // Handle plugin widgets
-    if (DesktopWidgetRegistry.isPluginWidget(widgetId)) {
-      var pluginId = widgetId.replace("plugin:", "");
-      var manifest = PluginRegistry.getPluginManifest(pluginId);
-
-      var pluginDir = PluginRegistry.getPluginDir(pluginId);
-      var loadVersion = PluginRegistry.pluginLoadVersions[pluginId] || 0;
-      var api = PluginService.getPluginAPI(pluginId);
-
-      var settingsPath;
-      if (manifest && manifest.entryPoints && manifest.entryPoints.desktopWidgetSettings) {
-        settingsPath = "file://" + pluginDir + "/" + manifest.entryPoints.desktopWidgetSettings;
-
-        var widgetSettings = {};
-        widgetSettings.data = widgetData || {};
-        widgetSettings.metadata = DesktopWidgetRegistry.widgetMetadata[widgetId] || {};
-        widgetSettings.save = function () {
-          var newSettings = Object.assign({}, widgetSettings.data);
-          root.settingsCache = newSettings;
-          saveTimer.start();
-        };
-
-        settingsLoader.setSource(settingsPath + "?v=" + loadVersion, {
-                                   "pluginApi": api,
-                                   "widgetSettings": widgetSettings
-                                 });
-      } else {
-        Logger.w("DesktopWidgetSettingsDialog", "Plugin does not have desktop widget settings:", pluginId);
-
-        // Fallback to the plugin settings
-        if (manifest && manifest.entryPoints && manifest.entryPoints.settings) {
-          settingsPath = "file://" + pluginDir + "/" + manifest.entryPoints.settings;
-
-          settingsLoader.setSource(settingsPath + "?v=" + loadVersion, {
-                                     "pluginApi": api
-                                   });
-        } else {
-          Logger.w("DesktopWidgetSettingsDialog", "Plugin does not have settings:", pluginId);
-        }
-      }
-
-      return;
-    }
-
     // Handle core widgets
     const source = DesktopWidgetRegistry.widgetSettingsMap[widgetId];
     if (source) {

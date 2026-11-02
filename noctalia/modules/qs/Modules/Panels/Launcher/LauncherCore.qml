@@ -36,7 +36,6 @@ Rectangle {
   property var providers: []
   property var activeProvider: null
   property bool resultsReady: false
-  property var pluginProviderInstances: ({})
   property bool ignoreMouseHover: true // Transient flag, should always be true on init
 
   // Global mouse tracking for movement detection across delegates
@@ -143,14 +142,6 @@ Rectangle {
     return provider && provider.wrapNavigation !== undefined ? provider.wrapNavigation : true;
   }
 
-  // Listen for plugin provider registry changes
-  Connections {
-    target: LauncherProviderRegistry
-    function onPluginProviderRegistryUpdated() {
-      root.syncPluginProviders();
-    }
-  }
-
   // Lifecycle
   onIsOpenChanged: {
     if (isOpen) {
@@ -177,7 +168,6 @@ Rectangle {
     focusSearchInput();
 
     Qt.callLater(() => {
-                   syncPluginProviders();
                    for (let provider of providers) {
                      if (provider.onOpened)
                      provider.onOpened();
@@ -250,43 +240,6 @@ Rectangle {
     provider.launcher = root;
     if (provider.init)
       provider.init();
-  }
-
-  function syncPluginProviders() {
-    var registeredIds = LauncherProviderRegistry.getPluginProviders();
-    var changed = false;
-
-    // Remove providers that are no longer registered
-    for (var existingId in pluginProviderInstances) {
-      if (registeredIds.indexOf(existingId) === -1) {
-        var idx = providers.indexOf(pluginProviderInstances[existingId]);
-        if (idx >= 0)
-          providers.splice(idx, 1);
-        delete pluginProviderInstances[existingId];
-        Logger.d("Launcher", "Removed plugin provider:", existingId);
-        changed = true;
-      }
-    }
-
-    // Adopt persistent instances from the registry
-    for (var i = 0; i < registeredIds.length; i++) {
-      var providerId = registeredIds[i];
-      if (!pluginProviderInstances[providerId]) {
-        var instance = LauncherProviderRegistry.getProviderInstance(providerId);
-        if (instance) {
-          pluginProviderInstances[providerId] = instance;
-          providers.push(instance);
-          instance.launcher = root;
-          Logger.d("Launcher", "Adopted plugin provider:", providerId);
-          changed = true;
-        }
-      }
-    }
-
-    // Update results only if providers changed
-    if (changed && root.isOpen) {
-      updateResults();
-    }
   }
 
   // Search handling

@@ -178,9 +178,7 @@ Singleton {
     "filepicker-eye": "eye",
     "filepicker-eye-off": "eye-off",
     "filepicker-folder-current": "checks",
-    "plugin": "plug-connected",
-    "info": "file-description",
-    "official-plugin": "shield-filled"
+    "info": "file-description"
   }
 
   // Fonts Codepoints - do not change!

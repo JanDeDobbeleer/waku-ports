@@ -20,14 +20,6 @@ ColumnLayout {
     id: availableWidgets
   }
 
-  // Listen for plugin widget registration/unregistration
-  Connections {
-    target: DesktopWidgetRegistry
-    function onPluginWidgetRegistryUpdated() {
-      updateAvailableWidgetsModel();
-    }
-  }
-
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.enabled-label")
@@ -35,16 +27,6 @@ ColumnLayout {
     checked: Settings.data.desktopWidgets.enabled
     defaultValue: Settings.getDefaultValue("desktopWidgets.enabled")
     onToggled: checked => Settings.data.desktopWidgets.enabled = checked
-  }
-
-  NToggle {
-    Layout.fillWidth: true
-    enabled: Settings.data.desktopWidgets.enabled
-    label: I18n.tr("panels.desktop-widgets.overview-enabled-label")
-    description: I18n.tr("panels.desktop-widgets.overview-enabled-description")
-    checked: Settings.data.desktopWidgets.overviewEnabled
-    defaultValue: Settings.getDefaultValue("desktopWidgets.overviewEnabled")
-    onToggled: checked => Settings.data.desktopWidgets.overviewEnabled = checked
   }
 
   ColumnLayout {
@@ -110,17 +92,8 @@ ColumnLayout {
         onRemoveWidget: (section, index) => _removeWidgetFromMonitor(modelData.name, index)
         onMoveWidget: (fromSection, index, toSection) => _moveWidgetToMonitor(fromSection, index, toSection)
         onUpdateWidgetSettings: (section, index, settings) => _updateWidgetSettingsForMonitor(modelData.name, index, settings)
-        pluginSettingsEntryPoints: ["desktopWidgetSettings", "settings"]
-        onOpenPluginSettingsRequested: (manifest, entryPoint) => pluginSettingsDialog.openPluginSettings(manifest, entryPoint)
       }
     }
-  }
-
-  // Shared Plugin Settings Popup
-  NPluginSettingsPopup {
-    id: pluginSettingsDialog
-    parent: Overlay.overlay
-    showToastOnSave: false
   }
 
   Component.onCompleted: {
@@ -179,25 +152,7 @@ ColumnLayout {
         var widgetId = widgetIds[i];
         var displayName = widgetId;
 
-        // Get plugin name for plugin widgets
-        var isPlugin = false;
-        if (DesktopWidgetRegistry.isPluginWidget(widgetId)) {
-          isPlugin = true;
-          var pluginId = widgetId.replace("plugin:", "");
-          var manifest = PluginRegistry.getPluginManifest(pluginId);
-          if (manifest && manifest.name) {
-            displayName = manifest.name;
-          }
-        }
-
-        // Add plugin badge first (with custom color)
         const badges = [];
-        if (isPlugin) {
-          badges.push({
-                        "icon": "plugin",
-                        "color": Color.mSecondary
-                      });
-        }
         if (DesktopWidgetRegistry.isCpuIntensive(widgetId)) {
           badges.push({
                         "icon": "cpu-intensive",
@@ -271,14 +226,11 @@ ColumnLayout {
     } else if (widgetId === "MediaPlayer") {
       newWidget.x = 100;
       newWidget.y = 200;
-    } else if (widgetId === "AudioVisualizer") {
-      newWidget.x = 120;
-      newWidget.y = 280;
     } else if (widgetId === "Weather") {
       newWidget.x = 100;
       newWidget.y = 300;
     } else {
-      // Default position for plugin widgets
+      // Default position for other widgets
       newWidget.x = 150;
       newWidget.y = 150;
     }

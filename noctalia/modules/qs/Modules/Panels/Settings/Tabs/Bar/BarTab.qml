@@ -109,14 +109,8 @@ ColumnLayout {
     return Object.keys(locations);
   }
 
-  function createBadges(isPlugin, locations) {
+  function createBadges(locations) {
     const badges = [];
-    if (isPlugin) {
-      badges.push({
-                    "icon": "plugin",
-                    "color": Color.mSecondary
-                  });
-    }
     locations.forEach(function (location) {
       badges.push({
                     "icon": location,
@@ -130,21 +124,11 @@ ColumnLayout {
     availableWidgets.clear();
     const widgets = BarWidgetRegistry.getAvailableWidgets();
     widgets.forEach(entry => {
-                      const isPlugin = BarWidgetRegistry.isPluginWidget(entry);
-                      let displayName = entry;
-                      if (isPlugin) {
-                        const pluginId = entry.replace("plugin:", "");
-                        const manifest = PluginRegistry.getPluginManifest(pluginId);
-                        if (manifest && manifest.name) {
-                          displayName = manifest.name;
-                        } else {
-                          displayName = pluginId;
-                        }
-                      }
+                      const displayName = entry;
                       availableWidgets.append({
                                                 "key": entry,
                                                 "name": displayName,
-                                                "badges": createBadges(isPlugin, getWidgetLocations(entry))
+                                                "badges": createBadges(getWidgetLocations(entry))
                                               });
                     });
   }
@@ -160,13 +144,6 @@ ColumnLayout {
   Connections {
     target: BarService
     function onActiveWidgetsChanged() {
-      updateAvailableWidgetsModel();
-    }
-  }
-
-  Connections {
-    target: BarWidgetRegistry
-    function onPluginWidgetRegistryUpdated() {
       updateAvailableWidgetsModel();
     }
   }
@@ -217,18 +194,11 @@ ColumnLayout {
       reorderWidgetInSection: root._reorderWidgetInSection
       updateWidgetSettingsInSection: root._updateWidgetSettingsInSection
       moveWidgetBetweenSections: root._moveWidgetBetweenSections
-      onOpenPluginSettings: manifest => pluginSettingsDialog.openPluginSettings(manifest)
     }
     BehaviorSubTab {}
     MonitorsSubTab {
       addMonitor: root.addMonitor
       removeMonitor: root.removeMonitor
     }
-  }
-
-  NPluginSettingsPopup {
-    id: pluginSettingsDialog
-    parent: Overlay.overlay
-    showToastOnSave: false
   }
 }

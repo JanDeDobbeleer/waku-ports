@@ -448,32 +448,6 @@ Singleton {
     return false;
   }
 
-  // Unregister all widget instances for a plugin (used during hot reload)
-  // Note: We don't destroy instances here - the Loader manages that when the component is unregistered
-  function destroyPluginWidgetInstances(pluginId) {
-    var widgetId = "plugin:" + pluginId;
-    var keysToRemove = [];
-
-    // Find all instances of this plugin's widget
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (widget && widget.widgetId === widgetId) {
-        keysToRemove.push(key);
-        Logger.d("BarService", "Unregistering plugin widget instance:", key);
-      }
-    }
-
-    // Remove from registry
-    for (var i = 0; i < keysToRemove.length; i++) {
-      delete widgetInstances[keysToRemove[i]];
-    }
-
-    if (keysToRemove.length > 0) {
-      Logger.i("BarService", "Unregistered", keysToRemove.length, "instance(s) of plugin widget:", widgetId);
-      root.activeWidgetsChanged();
-    }
-  }
-
   // Get pill direction for a widget instance
   function getPillDirection(widgetInstance) {
     try {
@@ -588,66 +562,6 @@ Singleton {
           instantiateAndOpen();
         } else if (component.status === Component.Error) {
           Logger.e("BarService", "Error loading widget settings dialog:", component.errorString());
-        }
-      });
-    }
-  }
-
-  // Open plugin settings dialog
-  // Parameters:
-  //   screen: The screen to show the dialog on
-  //   pluginManifest: The plugin's manifest object (must have entryPoints.settings)
-  function openPluginSettings(screen, pluginManifest) {
-    if (!pluginManifest || !pluginManifest.entryPoints || !pluginManifest.entryPoints.settings) {
-      Logger.e("BarService", "Cannot open plugin settings: no settings entry point");
-      return;
-    }
-
-    // Get the popup menu window to use as parent
-    var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-    if (!popupMenuWindow) {
-      Logger.e("BarService", "No popup menu window found for screen");
-      return;
-    }
-
-    // Close any existing dialogs first to prevent stacking
-    closeExistingDialogs(popupMenuWindow);
-
-    var component = Qt.createComponent(ShellUrl.dir + "/modules/qs/Widgets/NPluginSettingsPopup.qml");
-
-    function instantiateAndOpen() {
-      var dialog = component.createObject(popupMenuWindow.dialogParent, {
-                                            "showToastOnSave": true,
-                                            "screen": screen
-                                          });
-
-      if (dialog) {
-        // Enable keyboard focus for the popup menu window when dialog is open
-        popupMenuWindow.hasDialog = true;
-        // Close the popup menu window when dialog closes
-        dialog.closed.connect(() => {
-                                popupMenuWindow.hasDialog = false;
-                                popupMenuWindow.close();
-                                dialog.destroy();
-                              });
-        // Show the popup menu window and open the dialog
-        popupMenuWindow.open();
-        dialog.openPluginSettings(pluginManifest);
-      } else {
-        Logger.e("BarService", "Failed to create plugin settings dialog");
-      }
-    }
-
-    if (component.status === Component.Ready) {
-      instantiateAndOpen();
-    } else if (component.status === Component.Error) {
-      Logger.e("BarService", "Error loading plugin settings dialog:", component.errorString());
-    } else {
-      component.statusChanged.connect(function () {
-        if (component.status === Component.Ready) {
-          instantiateAndOpen();
-        } else if (component.status === Component.Error) {
-          Logger.e("BarService", "Error loading plugin settings dialog:", component.errorString());
         }
       });
     }

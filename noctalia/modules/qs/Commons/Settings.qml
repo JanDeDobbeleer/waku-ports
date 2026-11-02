@@ -463,7 +463,7 @@ Singleton {
       property string position: "center"  // Position: center, top_left, top_right, bottom_left, bottom_right, bottom_center, top_center
       property list<string> pinnedApps: []
       property bool sortByMostUsed: true
-      property string terminalCommand: "alacritty -e"
+      property string terminalCommand: "wt.exe"
       property bool customLaunchPrefixEnabled: false
       property string customLaunchPrefix: ""
       // View mode: "list" or "grid"
@@ -511,9 +511,6 @@ Singleton {
           },
           {
             "id": "KeepAwake"
-          },
-          {
-            "id": "NightLight"
           }
         ]
       }
@@ -567,7 +564,7 @@ Singleton {
       property bool useCustomColors: false
       property string warningColor: ""
       property string criticalColor: ""
-      property string externalMonitor: "resources || missioncenter || jdsystemmonitor || corestats || system-monitoring-center || gnome-system-monitor || plasma-systemmonitor || mate-system-monitor || ukui-system-monitor || deepin-system-monitor || pantheon-system-monitor"
+      property string externalMonitor: "taskmgr"
     }
 
     // performance
@@ -777,12 +774,6 @@ Singleton {
       property string startup: ""
       property string session: ""
       property string colorGeneration: ""
-    }
-
-    // plugins
-    property JsonObject plugins: JsonObject {
-      property bool autoUpdate: false
-      property bool notifyUpdates: true
     }
 
     // idle management
@@ -1149,14 +1140,6 @@ Singleton {
   // If the settings structure has changed, ensure
   // backward compatibility by upgrading the settings
   function upgradeSettings() {
-    // Wait for PluginService to finish loading plugins first
-    // This prevents deleting plugin widgets during reload before plugins are registered
-    if (!PluginService.initialized || !PluginService.pluginsFullyLoaded) {
-      Logger.d("Settings", "Plugins not fully loaded yet, deferring upgrade");
-      Qt.callLater(upgradeSettings);
-      return;
-    }
-
     // Wait for BarWidgetRegistry to be ready
     if (!BarWidgetRegistry.widgets || Object.keys(BarWidgetRegistry.widgets).length === 0) {
       Logger.d("Settings", "BarWidgetRegistry not ready, deferring upgrade");

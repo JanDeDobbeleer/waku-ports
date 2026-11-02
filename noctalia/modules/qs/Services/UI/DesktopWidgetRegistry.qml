@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import qs.Commons
 import qs.Modules.DesktopWidgets.Widgets
-import qs.Services.Noctalia
 import qs.compat
 
 Singleton {
@@ -12,9 +11,6 @@ Singleton {
 
   // Transient state - not persisted, resets on shell restart
   property bool editMode: false
-
-  // Signal emitted when plugin widgets are registered/unregistered
-  signal pluginWidgetRegistryUpdated
 
   // Component definitions
   property Component clockComponent: Component {
@@ -29,9 +25,6 @@ Singleton {
   property Component systemStatComponent: Component {
     DesktopSystemStat {}
   }
-  property Component audioVisualizerComponent: Component {
-    DesktopAudioVisualizer {}
-  }
 
   // Widget registry object mapping widget names to components
   // Created in Component.onCompleted to ensure Components are ready
@@ -39,7 +32,6 @@ Singleton {
 
   // Explicit URLs for core widgets. Inline Component.url returns the parent
   // file's URL, so we need these for Loader.setSource() with initial properties.
-  // Plugin widgets use their Component.url directly (loaded from actual files).
   readonly property string _widgetsDir: ShellUrl.dir + "/modules/qs/Modules/DesktopWidgets/Widgets/"
   property var widgetUrls: ({})
 
@@ -50,7 +42,6 @@ Singleton {
     widgetsObj["MediaPlayer"] = mediaPlayerComponent;
     widgetsObj["Weather"] = weatherComponent;
     widgetsObj["SystemStat"] = systemStatComponent;
-    widgetsObj["AudioVisualizer"] = audioVisualizerComponent;
     widgets = widgetsObj;
 
     var urlsObj = {};
@@ -58,7 +49,6 @@ Singleton {
     urlsObj["MediaPlayer"] = _widgetsDir + "DesktopMediaPlayer.qml";
     urlsObj["Weather"] = _widgetsDir + "DesktopWeather.qml";
     urlsObj["SystemStat"] = _widgetsDir + "DesktopSystemStat.qml";
-    urlsObj["AudioVisualizer"] = _widgetsDir + "DesktopAudioVisualizer.qml";
     widgetUrls = urlsObj;
 
     Logger.i("DesktopWidgetRegistry", "Service started");
@@ -68,8 +58,7 @@ Singleton {
                                      "Clock": "WidgetSettings/ClockSettings.qml",
                                      "MediaPlayer": "WidgetSettings/MediaPlayerSettings.qml",
                                      "Weather": "WidgetSettings/WeatherSettings.qml",
-                                     "SystemStat": "WidgetSettings/SystemStatSettings.qml",
-                                     "AudioVisualizer": "WidgetSettings/AudioVisualizerSettings.qml"
+                                     "SystemStat": "WidgetSettings/SystemStatSettings.qml"
                                    })
 
   property var widgetMetadata: ({
@@ -89,7 +78,7 @@ Singleton {
                                     "hideMode": "visible",
                                     "showButtons": true,
                                     "showAlbumArt": true,
-                                    "showVisualizer": true
+                                    "showVisualizer": false
                                   },
                                   "Weather": {
                                     "showBackground": true,
@@ -101,23 +90,10 @@ Singleton {
                                     "statType": "CPU",
                                     "diskPath": "/",
                                     "layout": "bottom"
-                                  },
-                                  "AudioVisualizer": {
-                                    "showBackground": true,
-                                    "roundedCorners": true,
-                                    "width": 320,
-                                    "height": 72,
-                                    "visualizerType": "linear",
-                                    "hideWhenIdle": false,
-                                    "colorName": "primary"
                                   }
                                 })
 
-  property var cpuIntensiveWidgets: ["SystemStat", "AudioVisualizer"]
-
-  // Plugin widget storage (mirroring BarWidgetRegistry pattern)
-  property var pluginWidgets: ({})
-  property var pluginWidgetMetadata: ({})
+  property var cpuIntensiveWidgets: ["SystemStat"]
 
   function init() {
     Logger.i("DesktopWidgetRegistry", "Service started");
@@ -146,95 +122,13 @@ Singleton {
   }
 
   function isCpuIntensive(id) {
-    if (pluginWidgetMetadata[id]?.cpuIntensive)
-      return true;
     return cpuIntensiveWidgets.indexOf(id) >= 0;
-  }
-
-  // Check if a widget is a plugin widget
-  function isPluginWidget(id) {
-    return id.startsWith("plugin:");
-  }
-
-  // Get list of plugin widget IDs
-  function getPluginWidgets() {
-    return Object.keys(pluginWidgets);
   }
 
   // Get display name for a widget ID
   function getWidgetDisplayName(widgetId) {
-    if (widgetId.startsWith("plugin:")) {
-      var pluginId = widgetId.replace("plugin:", "");
-      var manifest = PluginRegistry.getPluginManifest(pluginId);
-      return manifest ? manifest.name : pluginId;
-    }
-    // Core widgets - return as-is (Clock, MediaPlayer, Weather, SystemStat)
+    // Widgets are returned as-is (Clock, MediaPlayer, Weather, SystemStat)
     return widgetId;
-  }
-
-  // Register a plugin desktop widget
-  function registerPluginWidget(pluginId, component, metadata) {
-    if (!pluginId || !component) {
-      Logger.e("DesktopWidgetRegistry", "Cannot register plugin widget: invalid parameters");
-      return false;
-    }
-
-    var widgetId = "plugin:" + pluginId;
-
-    // Create new objects to trigger QML property change detection
-    var newPluginWidgets = Object.assign({}, pluginWidgets);
-    newPluginWidgets[widgetId] = component;
-    pluginWidgets = newPluginWidgets;
-
-    var newPluginMetadata = Object.assign({}, pluginWidgetMetadata);
-    newPluginMetadata[widgetId] = metadata || {};
-    pluginWidgetMetadata = newPluginMetadata;
-
-    // Also add to main widgets object for unified access - reassign to trigger change
-    var newWidgets = Object.assign({}, widgets);
-    newWidgets[widgetId] = component;
-    widgets = newWidgets;
-
-    var newMetadata = Object.assign({}, widgetMetadata);
-    newMetadata[widgetId] = Object.assign({}, {
-                                            "showBackground": true
-                                          }, metadata || {});
-    widgetMetadata = newMetadata;
-
-    Logger.i("DesktopWidgetRegistry", "Registered plugin widget:", widgetId);
-    root.pluginWidgetRegistryUpdated();
-    return true;
-  }
-
-  // Unregister a plugin desktop widget
-  function unregisterPluginWidget(pluginId) {
-    var widgetId = "plugin:" + pluginId;
-
-    if (!pluginWidgets[widgetId]) {
-      Logger.w("DesktopWidgetRegistry", "Plugin widget not registered:", widgetId);
-      return false;
-    }
-
-    // Create new objects without the widget to trigger QML property change detection
-    var newPluginWidgets = Object.assign({}, pluginWidgets);
-    delete newPluginWidgets[widgetId];
-    pluginWidgets = newPluginWidgets;
-
-    var newPluginMetadata = Object.assign({}, pluginWidgetMetadata);
-    delete newPluginMetadata[widgetId];
-    pluginWidgetMetadata = newPluginMetadata;
-
-    var newWidgets = Object.assign({}, widgets);
-    delete newWidgets[widgetId];
-    widgets = newWidgets;
-
-    var newMetadata = Object.assign({}, widgetMetadata);
-    delete newMetadata[widgetId];
-    widgetMetadata = newMetadata;
-
-    Logger.i("DesktopWidgetRegistry", "Unregistered plugin widget:", widgetId);
-    root.pluginWidgetRegistryUpdated();
-    return true;
   }
 
   function updateWidgetData(monitorName, widgetIndex, properties) {
@@ -273,16 +167,7 @@ Singleton {
       root.currentSettingsDialog = null;
     }
 
-    var hasSettings = false;
-    if (root.isPluginWidget(widgetId)) {
-      var pluginId = widgetId.replace("plugin:", "");
-      var manifest = PluginRegistry.getPluginManifest(pluginId);
-      if (manifest && manifest.entryPoints && (manifest.entryPoints.desktopWidgetSettings || manifest.entryPoints.settings)) {
-        hasSettings = true;
-      }
-    } else {
-      hasSettings = root.widgetSettingsMap[widgetId] !== undefined;
-    }
+    var hasSettings = root.widgetSettingsMap[widgetId] !== undefined;
 
     if (!hasSettings) {
       Logger.w("DesktopWidgetRegistry", "Widget does not have settings:", widgetId);

@@ -30,7 +30,6 @@ NKeybindRecorder 1.0 NKeybindRecorder.qml
 NLabel 1.0 NLabel.qml
 NLinearGauge 1.0 NLinearGauge.qml
 NListView 1.0 NListView.qml
-NPluginSettingsPopup 1.0 NPluginSettingsPopup.qml
 NPopupContextMenu 1.0 NPopupContextMenu.qml
 NRadioButton 1.0 NRadioButton.qml
 NReorderCheckboxes 1.0 NReorderCheckboxes.qml

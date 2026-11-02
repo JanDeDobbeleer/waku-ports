@@ -21,7 +21,6 @@ ColumnLayout {
   signal reorderWidgetInSection(string section, int fromIndex, int toIndex)
   signal updateWidgetSettingsInSection(string section, int index, var settings)
   signal moveWidgetBetweenSections(string fromSection, int index, string toSection)
-  signal openPluginSettingsRequested(var manifest)
 
   function getSectionIcons() {
     return {
@@ -58,7 +57,6 @@ ColumnLayout {
         onReorderWidget: (section, fromIndex, toIndex) => root.reorderWidgetInSection(section, fromIndex, toIndex)
         onUpdateWidgetSettings: (section, index, settings) => root.updateWidgetSettingsInSection(section, index, settings)
         onMoveWidget: (fromSection, index, toSection) => root.moveWidgetBetweenSections(fromSection, index, toSection)
-        onOpenPluginSettingsRequested: manifest => root.openPluginSettingsRequested(manifest)
       }
 
       // Right
@@ -77,7 +75,6 @@ ColumnLayout {
         onReorderWidget: (section, fromIndex, toIndex) => root.reorderWidgetInSection(section, fromIndex, toIndex)
         onUpdateWidgetSettings: (section, index, settings) => root.updateWidgetSettingsInSection(section, index, settings)
         onMoveWidget: (fromSection, index, toSection) => root.moveWidgetBetweenSections(fromSection, index, toSection)
-        onOpenPluginSettingsRequested: manifest => root.openPluginSettingsRequested(manifest)
       }
     }
   }

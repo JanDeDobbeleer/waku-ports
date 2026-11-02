@@ -9,13 +9,10 @@ import qs.compat
 Singleton {
   id: root
 
-  signal pluginWidgetRegistryUpdated
-
   // Widget registry object mapping widget names to components
   property var widgets: ({
                            "ActiveWindow": activeWindowComponent,
                            "AppsList": appsListComponent,
-                           "AudioVisualizer": audioVisualizerComponent,
                            "Battery": batteryComponent,
                            "Bluetooth": bluetoothComponent,
                            "Brightness": brightnessComponent,
@@ -30,7 +27,6 @@ Singleton {
                            "MediaMini": mediaMiniComponent,
                            "Microphone": microphoneComponent,
                            "Network": networkComponent,
-                           "NightLight": nightLightComponent,
                            "NoctaliaPerformance": noctaliaPerformanceComponent,
                            "NotificationHistory": notificationHistoryComponent,
                            "PowerProfile": powerProfileComponent,
@@ -48,7 +44,6 @@ Singleton {
 
   property var widgetSettingsMap: ({
                                      "ActiveWindow": "WidgetSettings/ActiveWindowSettings.qml",
-                                     "AudioVisualizer": "WidgetSettings/AudioVisualizerSettings.qml",
                                      "Battery": "WidgetSettings/BatterySettings.qml",
                                      "Bluetooth": "WidgetSettings/BluetoothSettings.qml",
                                      "Brightness": "WidgetSettings/BrightnessSettings.qml",
@@ -63,7 +58,6 @@ Singleton {
                                      "MediaMini": "WidgetSettings/MediaMiniSettings.qml",
                                      "Microphone": "WidgetSettings/MicrophoneSettings.qml",
                                      "Network": "WidgetSettings/NetworkSettings.qml",
-                                     "NightLight": "WidgetSettings/NightLightSettings.qml",
                                      "NoctaliaPerformance": "WidgetSettings/NoctaliaPerformanceSettings.qml",
                                      "NotificationHistory": "WidgetSettings/NotificationHistorySettings.qml",
                                      "PowerProfile": "WidgetSettings/PowerProfileSettings.qml",
@@ -92,11 +86,6 @@ Singleton {
                                   },
                                   "AppsList": {
                                     "onlySameOutput": false
-                                  },
-                                  "AudioVisualizer": {
-                                    "width": 200,
-                                    "colorName": "primary",
-                                    "hideWhenIdle": false
                                   },
                                   "Battery": {
                                     "displayMode": "graphic-clean",
@@ -212,7 +201,7 @@ Singleton {
                                   },
                                   "Microphone": {
                                     "displayMode": "onhover",
-                                    "middleClickCommand": "pwvucontrol || pavucontrol",
+                                    "middleClickCommand": "start ms-settings:sound",
                                     "iconColor": "none",
                                     "textColor": "none"
                                   },
@@ -243,8 +232,7 @@ Singleton {
                                     "showCpuFreq": false,
                                     "showCpuTemp": true,
                                     "showGpuTemp": false,
-                                    "showLoadAverage": false,
-                                    "showMemoryUsage": true,
+                                                                        "showMemoryUsage": true,
                                     "showMemoryAsPercent": false,
                                     "showSwapUsage": false,
                                     "showNetworkStats": false,
@@ -283,9 +271,6 @@ Singleton {
                                     "iconColor": "none",
                                     "textColor": "none"
                                   },
-                                  "NightLight": {
-                                    "iconColor": "none"
-                                  },
                                   "NoctaliaPerformance": {
                                     "iconColor": "none"
                                   },
@@ -314,7 +299,7 @@ Singleton {
                                   },
                                   "Volume": {
                                     "displayMode": "onhover",
-                                    "middleClickCommand": "pwvucontrol || pavucontrol",
+                                    "middleClickCommand": "start ms-settings:sound",
                                     "iconColor": "none",
                                     "textColor": "none"
                                   },
@@ -329,9 +314,6 @@ Singleton {
   }
   property Component appsListComponent: Component {
     AppsList {}
-  }
-  property Component audioVisualizerComponent: Component {
-    AudioVisualizer {}
   }
   property Component batteryComponent: Component {
     Battery {}
@@ -368,9 +350,6 @@ Singleton {
   }
   property Component microphoneComponent: Component {
     Microphone {}
-  }
-  property Component nightLightComponent: Component {
-    NightLight {}
   }
   property Component noctaliaPerformanceComponent: Component {
     NoctaliaPerformance {}
@@ -442,69 +421,9 @@ Singleton {
     return widgetMetadata[id] !== undefined;
   }
 
-  // ------------------------------
-  // Plugin widget registration
-
-  // Track plugin widgets separately
-  property var pluginWidgets: ({})
-  property var pluginWidgetMetadata: ({})
-
-  // Register a plugin widget
-  function registerPluginWidget(pluginId, component, metadata) {
-    if (!pluginId || !component) {
-      Logger.e("BarWidgetRegistry", "Cannot register plugin widget: invalid parameters");
-      return false;
-    }
-
-    // Add plugin: prefix to avoid conflicts with core widgets
-    var widgetId = "plugin:" + pluginId;
-
-    pluginWidgets[widgetId] = component;
-    pluginWidgetMetadata[widgetId] = metadata || {};
-
-    // Also add to main widgets object for unified access
-    widgets[widgetId] = component;
-    widgetMetadata[widgetId] = metadata || {};
-
-    Logger.i("BarWidgetRegistry", "Registered plugin widget:", widgetId);
-    root.pluginWidgetRegistryUpdated();
-    return true;
-  }
-
-  // Unregister a plugin widget
-  function unregisterPluginWidget(pluginId) {
-    var widgetId = "plugin:" + pluginId;
-
-    if (!pluginWidgets[widgetId]) {
-      Logger.w("BarWidgetRegistry", "Plugin widget not registered:", widgetId);
-      return false;
-    }
-
-    delete pluginWidgets[widgetId];
-    delete pluginWidgetMetadata[widgetId];
-    delete widgets[widgetId];
-    delete widgetMetadata[widgetId];
-
-    Logger.i("BarWidgetRegistry", "Unregistered plugin widget:", widgetId);
-    root.pluginWidgetRegistryUpdated();
-    return true;
-  }
-
-  // Check if a widget is a plugin widget
-  function isPluginWidget(id) {
-    return id.startsWith("plugin:");
-  }
-
-  property var cpuIntensiveWidgets: ["AudioVisualizer"]
+  property var cpuIntensiveWidgets: []
 
   function isCpuIntensive(id) {
-    if (pluginWidgetMetadata[id]?.cpuIntensive)
-      return true;
     return cpuIntensiveWidgets.indexOf(id) >= 0;
-  }
-
-  // Get list of plugin widget IDs
-  function getPluginWidgets() {
-    return Object.keys(pluginWidgets);
   }
 }
