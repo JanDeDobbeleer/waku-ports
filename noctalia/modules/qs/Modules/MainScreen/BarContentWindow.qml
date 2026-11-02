@@ -33,7 +33,11 @@ PanelWindow {
 
   // Wayland layer configuration
   WlrLayershell.namespace: "noctalia-bar-content-" + (barWindow.screen?.name || "unknown")
-  WlrLayershell.layer: WlrLayer.Top
+  // Port: waku raises a Top window each time it is shown or its keyboard focus changes, so the
+  // full-screen MainScreen window (which paints the bar background) ends up above this one after
+  // a panel opens or closes and covers the widgets. Flipping the layer re-raises this window.
+  property bool reraise: false
+  WlrLayershell.layer: reraise ? WlrLayer.Overlay : WlrLayer.Top
   WlrLayershell.exclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone in MainScreen handles that
 
   // Position and size to match bar location (per-screen)
@@ -109,8 +113,18 @@ PanelWindow {
     }
   }
 
+  Timer {
+    id: reraiseTimer
+    interval: 80
+    onTriggered: {
+      barWindow.reraise = true;
+      barWindow.reraise = false;
+    }
+  }
+
   // Don't hide when panel is open
   onPanelOpenChanged: {
+    reraiseTimer.restart();
     if (panelOpen && autoHide) {
       hideTimer.stop();
       BarService.setScreenHidden(barWindow.screen?.name, false);

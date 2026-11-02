@@ -315,9 +315,16 @@ Singleton {
     }
   }
 
-  IpcHandler {
-    target: "launcher"
-    function toggle() {
+  // Port: same key as caelestia's launcher. waku registers it; remove the line to bind
+  // `wakuc shortcut launcher` elsewhere.
+  GlobalShortcut {
+    name: "launcher"
+    description: "Toggle launcher"
+    keys: "alt+space"
+    onPressed: root.toggleLauncher()
+  }
+
+  function toggleLauncher() {
       root.screenDetector.withCurrentScreen(screen => {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInAppMode = !searchText.startsWith(">");
@@ -332,6 +339,12 @@ Singleton {
                                                 PanelService.setLauncherSearchText(screen, "");
                                               }
                                             }, Settings.data.appLauncher.overviewLayer);
+    }
+
+  IpcHandler {
+    target: "launcher"
+    function toggle() {
+      root.toggleLauncher();
     }
     function clipboard() {
       root.screenDetector.withCurrentScreen(screen => {
