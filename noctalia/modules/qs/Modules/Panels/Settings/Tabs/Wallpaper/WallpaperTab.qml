@@ -74,7 +74,7 @@ ColumnLayout {
     id: mainFolderPicker
     selectionMode: "folders"
     title: I18n.tr("setup.wallpaper.dir-select-title")
-    initialPath: Settings.data.wallpaper.directory || Quickshell.env("HOME") + "/Pictures"
+    initialPath: Settings.data.wallpaper.directory || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
                   if (paths.length > 0) {
                     Settings.data.wallpaper.directory = paths[0];
@@ -86,7 +86,7 @@ ColumnLayout {
     id: monitorFolderPicker
     selectionMode: "folders"
     title: I18n.tr("panels.wallpaper.settings-select-monitor-folder")
-    initialPath: WallpaperService.getMonitorDirectory(specificFolderMonitorName) || Quickshell.env("HOME") + "/Pictures"
+    initialPath: WallpaperService.getMonitorDirectory(specificFolderMonitorName) || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
                   if (paths.length > 0) {
                     WallpaperService.setMonitorDirectory(specificFolderMonitorName, paths[0]);

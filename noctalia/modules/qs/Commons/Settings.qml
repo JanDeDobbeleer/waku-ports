@@ -35,7 +35,7 @@ Singleton {
   readonly property string settingsFile: Quickshell.env("NOCTALIA_SETTINGS_FILE") || (configDir + "settings.json")
   readonly property string defaultAvatar: Quickshell.env("HOME") + "/.face"
   readonly property string defaultVideosDirectory: Quickshell.env("HOME") + "/Videos"
-  readonly property string defaultWallpapersDirectory: Quickshell.env("HOME") + "/Pictures/Wallpapers"
+  readonly property string defaultWallpapersDirectory: Quickshell.env("HOME") + "/.config/wallpapers"
 
   signal settingsLoaded
   signal settingsSaved

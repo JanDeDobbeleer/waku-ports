@@ -414,7 +414,7 @@ ColumnLayout {
     if (typeof Settings !== "undefined" && Settings.data && Settings.data.wallpaper && Settings.data.wallpaper.directory) {
       selectedDirectory = Settings.data.wallpaper.directory;
     } else {
-      selectedDirectory = Quickshell.env("HOME") + "/Pictures/Wallpapers";
+      selectedDirectory = Settings.defaultWallpapersDirectory;
     }
     if (typeof WallpaperService !== "undefined" && WallpaperService.currentWallpaper) {
       selectedWallpaper = WallpaperService.currentWallpaper;
@@ -426,7 +426,7 @@ ColumnLayout {
     id: directoryPicker
     selectionMode: "folders"
     title: I18n.tr("setup.wallpaper.dir-select-title")
-    initialPath: selectedDirectory || Quickshell.env("HOME") + "/Pictures"
+    initialPath: selectedDirectory || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
                   if (paths.length > 0) {
                     selectedDirectory = paths[0];
