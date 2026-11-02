@@ -523,6 +523,7 @@ StyledWindow {
         topLeftRadius: attachTop ? 0 : radius
         topRightRadius: attachTop || attachRight ? 0 : radius
         bottomRightRadius: attachBottom || attachRight ? 0 : radius
+        bottomLeftRadius: attachBottom || attachLeft ? 0 : radius
         bleedTop: attachTop ? root.borderThickness + coverTop : 0
         bleedRight: attachRight ? root.borderThickness + coverRight : 0
         bleedBottom: attachBottom ? root.borderThickness + coverBottom : 0
