@@ -87,7 +87,6 @@ SmartPanel {
     Location,
     Connections,
     Notifications,
-    Plugins,
     SessionMenu,
     System,
     UserInterface,

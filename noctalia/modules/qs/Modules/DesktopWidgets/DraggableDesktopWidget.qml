@@ -329,13 +329,7 @@ Item {
     var hasSettings = false;
     if (widgetData && widgetData.id) {
       var widgetId = widgetData.id;
-      if (DesktopWidgetRegistry.isPluginWidget(widgetId)) {
-        var pluginId = widgetId.replace("plugin:", "");
-        var manifest = PluginRegistry.getPluginManifest(pluginId);
-        hasSettings = manifest && manifest.entryPoints && (manifest.entryPoints.settings || manifest.entryPoints.desktopWidgetSettings);
-      } else {
-        hasSettings = DesktopWidgetRegistry.widgetSettingsMap[widgetId] !== undefined;
-      }
+      hasSettings = DesktopWidgetRegistry.widgetSettingsMap[widgetId] !== undefined;
     }
 
     var items = [];

@@ -22,7 +22,6 @@ import qs.Modules.Panels.Launcher
 import qs.Modules.Panels.Media
 import qs.Modules.Panels.Network
 import qs.Modules.Panels.NotificationHistory
-import qs.Modules.Panels.Plugins
 import qs.Modules.Panels.SessionMenu
 import qs.Modules.Panels.Settings
 import qs.Modules.Panels.SetupWizard
@@ -337,23 +336,6 @@ PanelWindow {
       id: staticDockPanel
       objectName: "staticDockPanel-" + (root.screen?.name || "unknown")
       screen: root.screen
-    }
-
-    // ----------------------------------------------
-    // Plugin panel slots
-    // ----------------------------------------------
-    PluginPanelSlot {
-      id: pluginPanel1
-      objectName: "pluginPanel1-" + (root.screen?.name || "unknown")
-      screen: root.screen
-      slotNumber: 1
-    }
-
-    PluginPanelSlot {
-      id: pluginPanel2
-      objectName: "pluginPanel2-" + (root.screen?.name || "unknown")
-      screen: root.screen
-      slotNumber: 2
     }
 
     // ----------------------------------------------

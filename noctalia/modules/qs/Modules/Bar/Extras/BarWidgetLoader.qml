@@ -53,34 +53,9 @@ Item {
     return root.widgetId !== "" && BarWidgetRegistry.hasWidget(root.widgetId);
   }
 
-  // Force reload counter - incremented when plugin widget registry changes
-  property int reloadCounter: 0
-
-  // Listen for plugin widget registry changes to force reload
-  Connections {
-    target: BarWidgetRegistry
-    enabled: BarWidgetRegistry.isPluginWidget(root.widgetId)
-
-    function onPluginWidgetRegistryUpdated() {
-      if (BarWidgetRegistry.hasWidget(root.widgetId)) {
-        root.reloadCounter++;
-        // Plugin widgets use setSource, so also trigger reload directly
-        if (root._isPlugin && loader.active)
-          root._loadWidget();
-        Logger.d("BarWidgetLoader", "Plugin widget registry updated, reloading:", root.widgetId);
-      }
-    }
-  }
-
-  readonly property bool _isPlugin: BarWidgetRegistry.isPluginWidget(widgetId)
-
   // Build initial properties that must be available during Component.onCompleted.
   // This prevents registration-key mismatches in widgets that build IDs from
   // screen.name, section, or sectionWidgetIndex.
-  // All standard bar widget props are passed for both core and plugin widgets.
-  // Plugins that don't define some of these properties will get harmless warnings
-  // but still load correctly — and plugins that DO define them (e.g. for unique
-  // SpectrumService keys with multiple instances) get correct values from the start.
   function _initialProps() {
     return {
       "screen": widgetScreen,
@@ -100,25 +75,14 @@ Item {
 
     var props = _initialProps();
 
-    if (_isPlugin) {
-      var comp = BarWidgetRegistry.getWidget(root.widgetId);
-      if (!comp)
-        return;
-      var pluginId = root.widgetId.replace("plugin:", "");
-      var api = PluginService.getPluginAPI(pluginId);
-      if (api)
-        props.pluginApi = api;
-      loader.setSource(comp.url, props);
-    } else {
-      loader.setSource(_barWidgetsDir + root.widgetId + ".qml", props);
-    }
+    loader.setSource(_barWidgetsDir + root.widgetId + ".qml", props);
   }
 
   Loader {
     id: loader
     anchors.fill: parent
     asynchronous: true
-    active: root.checkWidgetExists() && (root.reloadCounter >= 0)
+    active: root.checkWidgetExists()
 
     // All widgets use setSource() so that screen and widget properties
     // are set as initial properties, available during Component.onCompleted.

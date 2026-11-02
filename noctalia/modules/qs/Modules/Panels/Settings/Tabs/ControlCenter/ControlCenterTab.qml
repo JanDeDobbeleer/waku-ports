@@ -57,22 +57,8 @@ ColumnLayout {
     availableWidgets.clear();
     var sortedEntries = ControlCenterWidgetRegistry.getAvailableWidgets().slice().sort();
     sortedEntries.forEach(entry => {
-                            const isPlugin = ControlCenterWidgetRegistry.isPluginWidget(entry);
-                            let displayName = entry;
-                            let badges = [];
-                            if (isPlugin) {
-                              const pluginId = entry.replace("plugin:", "");
-                              const manifest = PluginRegistry.getPluginManifest(pluginId);
-                              if (manifest && manifest.name) {
-                                displayName = manifest.name;
-                              } else {
-                                displayName = pluginId;
-                              }
-                              badges.push({
-                                            "icon": "plugin",
-                                            "color": Color.mSecondary
-                                          });
-                            }
+                            const displayName = entry;
+                            const badges = [];
                             availableWidgets.append({
                                                       "key": entry,
                                                       "name": displayName,
@@ -169,7 +155,6 @@ ColumnLayout {
       onReorderWidgetInSection: (section, fromIndex, toIndex) => _reorderWidgetInSection(section, fromIndex, toIndex)
       onUpdateWidgetSettingsInSection: (section, index, settings) => _updateWidgetSettingsInSection(section, index, settings)
       onMoveWidgetBetweenSections: (fromSection, index, toSection) => _moveWidgetBetweenSections(fromSection, index, toSection)
-      onOpenPluginSettingsRequested: manifest => pluginSettingsDialog.openPluginSettings(manifest)
     }
   }
 
@@ -241,12 +226,5 @@ ColumnLayout {
   // Base list model for all combo boxes
   ListModel {
     id: availableWidgets
-  }
-
-  // Shared Plugin Settings Popup
-  NPluginSettingsPopup {
-    id: pluginSettingsDialog
-    parent: Overlay.overlay
-    showToastOnSave: false
   }
 }

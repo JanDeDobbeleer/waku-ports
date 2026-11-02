@@ -11,12 +11,10 @@ Singleton {
 
   // Widget registry object mapping widget names to components
   property var widgets: ({
-                           "AirplaneMode": airplaneModeComponent,
                            "Bluetooth": bluetoothComponent,
                            "CustomButton": customButtonComponent,
                            "DarkMode": darkModeComponent,
                            "KeepAwake": keepAwakeComponent,
-                           "NightLight": nightLightComponent,
                            "Notifications": notificationsComponent,
                            "PowerProfile": powerProfileComponent,
                            "WiFi": networkComponent,
@@ -39,9 +37,6 @@ Singleton {
   property var cpuIntensiveWidgets: ["SystemStat"]
 
   // Component definitions - these are loaded once at startup
-  property Component airplaneModeComponent: Component {
-    AirplaneMode {}
-  }
   property Component bluetoothComponent: Component {
     Bluetooth {}
   }
@@ -53,9 +48,6 @@ Singleton {
   }
   property Component keepAwakeComponent: Component {
     KeepAwake {}
-  }
-  property Component nightLightComponent: Component {
-    NightLight {}
   }
   property Component notificationsComponent: Component {
     Notifications {}
@@ -98,65 +90,7 @@ Singleton {
     return widgetMetadata[id] !== undefined;
   }
 
-  // ------------------------------
-  // Plugin widget registration
-
-  // Track plugin widgets separately
-  property var pluginWidgets: ({})
-  property var pluginWidgetMetadata: ({})
-
-  // Register a plugin widget
-  function registerPluginWidget(pluginId, component, metadata) {
-    if (!pluginId || !component) {
-      Logger.e("ControlCenterWidgetRegistry", "Cannot register plugin widget: invalid parameters");
-      return false;
-    }
-
-    // Add plugin: prefix to avoid conflicts with core widgets
-    var widgetId = "plugin:" + pluginId;
-
-    pluginWidgets[widgetId] = component;
-    pluginWidgetMetadata[widgetId] = metadata || {};
-
-    // Also add to main widgets object for unified access
-    widgets[widgetId] = component;
-    widgetMetadata[widgetId] = metadata || {};
-
-    Logger.i("ControlCenterWidgetRegistry", "Registered plugin widget:", widgetId);
-    return true;
-  }
-
-  // Unregister a plugin widget
-  function unregisterPluginWidget(pluginId) {
-    var widgetId = "plugin:" + pluginId;
-
-    if (!pluginWidgets[widgetId]) {
-      Logger.w("ControlCenterWidgetRegistry", "Plugin widget not registered:", widgetId);
-      return false;
-    }
-
-    delete pluginWidgets[widgetId];
-    delete pluginWidgetMetadata[widgetId];
-    delete widgets[widgetId];
-    delete widgetMetadata[widgetId];
-
-    Logger.i("ControlCenterWidgetRegistry", "Unregistered plugin widget:", widgetId);
-    return true;
-  }
-
-  // Check if a widget is a plugin widget
-  function isPluginWidget(id) {
-    return id.startsWith("plugin:");
-  }
-
-  // Get list of plugin widget IDs
-  function getPluginWidgets() {
-    return Object.keys(pluginWidgets);
-  }
-
   function isCpuIntensive(id) {
-    if (pluginWidgetMetadata[id]?.cpuIntensive)
-      return true;
     return cpuIntensiveWidgets.indexOf(id) >= 0;
   }
 }

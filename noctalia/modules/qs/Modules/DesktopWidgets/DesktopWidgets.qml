@@ -18,18 +18,6 @@ Variants {
   // Direct binding to registry's widgets property for reactivity
   readonly property var registeredWidgets: DesktopWidgetRegistry.widgets
 
-  // Force reload counter - incremented when plugin widget registry changes
-  property int pluginReloadCounter: 0
-
-  Connections {
-    target: DesktopWidgetRegistry
-
-    function onPluginWidgetRegistryUpdated() {
-      root.pluginReloadCounter++;
-      Logger.d("DesktopWidgets", "Plugin widget registry updated, reload counter:", root.pluginReloadCounter);
-    }
-  }
-
   delegate: Loader {
     id: screenLoader
     required property ShellScreen modelData
@@ -282,13 +270,11 @@ Variants {
 
           delegate: Loader {
             id: widgetLoader
-            // Bind to registeredWidgets and pluginReloadCounter to re-evaluate when plugins register/unregister
-            active: (modelData.id in root.registeredWidgets) && (root.pluginReloadCounter >= 0)
+            active: modelData.id in root.registeredWidgets
 
             required property var modelData
             required property int index
             property var _maskRegion: null
-            readonly property bool _isPlugin: DesktopWidgetRegistry.isPluginWidget(modelData.id)
 
             // All widgets use setSource() so that screen, widgetData, and
             // widgetIndex are set as initial properties, available during
@@ -313,19 +299,11 @@ Variants {
                 "widgetIndex": index
               };
 
-              if (_isPlugin) {
-                var pluginId = widgetId.replace("plugin:", "");
-                var api = PluginService.getPluginAPI(pluginId);
-                if (api)
-                  props.pluginApi = api;
-                setSource(comp.url, props);
-              } else {
-                // Core widgets: use explicit URL (inline Component.url
-                // returns the registry file, not the widget file)
-                var url = DesktopWidgetRegistry.widgetUrls[widgetId];
-                if (url)
-                  setSource(url, props);
-              }
+              // Use explicit URL (inline Component.url
+              // returns the registry file, not the widget file)
+              var url = DesktopWidgetRegistry.widgetUrls[widgetId];
+              if (url)
+                setSource(url, props);
             }
 
             onLoaded: {

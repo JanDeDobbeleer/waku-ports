@@ -48,9 +48,6 @@ ShellRoot {
   Component.onCompleted: {
     Logger.i("Shell", "---------------------------");
     Logger.i("Shell", "Noctalia Hello!");
-
-    // Initialize plugin system early so Settings can validate plugin widgets
-    PluginRegistry.init();
   }
 
   Connections {
@@ -148,23 +145,12 @@ ShellRoot {
       // Settings window mode (single window across all monitors)
       SettingsPanelWindow {}
 
-      // Shared screen detector for IPC and plugins
+      // Shared screen detector for IPC
       CurrentScreenDetector {
         id: screenDetector
       }
 
       // IPCService is a singleton, initialized via init() in deferred services block
-
-      // Container for plugins Main.qml instances (must be in graphics scene)
-      Item {
-        id: pluginContainer
-        visible: false
-
-        Component.onCompleted: {
-          PluginService.pluginContainer = pluginContainer;
-          PluginService.screenDetector = screenDetector;
-        }
-      }
     }
   }
 

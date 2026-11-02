@@ -119,19 +119,6 @@ NBox {
       var id = widgetIds[i];
       var displayName = id;
       const badges = [];
-      if (BarWidgetRegistry.isPluginWidget(id)) {
-        var pluginId = id.replace("plugin:", "");
-        var manifest = PluginRegistry.getPluginManifest(pluginId);
-        if (manifest && manifest.name) {
-          displayName = manifest.name;
-        } else {
-          displayName = pluginId;
-        }
-        badges.push({
-                      "icon": "plugin",
-                      "color": Color.mSecondary
-                    });
-      }
       if (BarWidgetRegistry.isCpuIntensive(id)) {
         badges.push({
                       "icon": "cpu-intensive",
@@ -182,7 +169,6 @@ NBox {
       onReorderWidget: (section, fromIndex, toIndex) => root._reorderWidgetInSection(section, fromIndex, toIndex)
       onUpdateWidgetSettings: (section, index, settings) => root._updateWidgetSettingsInSection(section, index, settings)
       onMoveWidget: (fromSection, index, toSection) => root._moveWidgetBetweenSections(fromSection, index, toSection)
-      onOpenPluginSettingsRequested: manifest => pluginSettingsDialog.openPluginSettings(manifest)
     }
 
     // Center Section
@@ -200,7 +186,6 @@ NBox {
       onReorderWidget: (section, fromIndex, toIndex) => root._reorderWidgetInSection(section, fromIndex, toIndex)
       onUpdateWidgetSettings: (section, index, settings) => root._updateWidgetSettingsInSection(section, index, settings)
       onMoveWidget: (fromSection, index, toSection) => root._moveWidgetBetweenSections(fromSection, index, toSection)
-      onOpenPluginSettingsRequested: manifest => pluginSettingsDialog.openPluginSettings(manifest)
     }
 
     // Right Section
@@ -218,14 +203,6 @@ NBox {
       onReorderWidget: (section, fromIndex, toIndex) => root._reorderWidgetInSection(section, fromIndex, toIndex)
       onUpdateWidgetSettings: (section, index, settings) => root._updateWidgetSettingsInSection(section, index, settings)
       onMoveWidget: (fromSection, index, toSection) => root._moveWidgetBetweenSections(fromSection, index, toSection)
-      onOpenPluginSettingsRequested: manifest => pluginSettingsDialog.openPluginSettings(manifest)
     }
-  }
-
-  // Plugin settings dialog
-  NPluginSettingsPopup {
-    id: pluginSettingsDialog
-    parent: Overlay.overlay
-    showToastOnSave: false
   }
 }
