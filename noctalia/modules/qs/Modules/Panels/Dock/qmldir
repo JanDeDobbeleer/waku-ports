@@ -1,0 +1,2 @@
+module qs.Modules.Panels.Dock
+StaticDockPanel 1.0 StaticDockPanel.qml

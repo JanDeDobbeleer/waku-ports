@@ -1,0 +1,6 @@
+module qs.Modules.Panels.Settings.Tabs.Bar
+AppearanceSubTab 1.0 AppearanceSubTab.qml
+BarTab 1.0 BarTab.qml
+BehaviorSubTab 1.0 BehaviorSubTab.qml
+MonitorsSubTab 1.0 MonitorsSubTab.qml
+WidgetsSubTab 1.0 WidgetsSubTab.qml

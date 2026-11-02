@@ -1,0 +1,3 @@
+module qs.Modules.Panels.Settings.Tabs
+DesktopWidgetsTab 1.0 DesktopWidgetsTab.qml
+GeneralTab 1.0 GeneralTab.qml

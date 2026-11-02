@@ -1,0 +1,4 @@
+module qs.Services.Power
+singleton IdleInhibitorService 1.0 IdleInhibitorService.qml
+singleton IdleService 1.0 IdleService.qml
+singleton PowerProfileService 1.0 PowerProfileService.qml

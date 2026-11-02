@@ -1,0 +1,2 @@
+module qs.Modules.Panels.Bluetooth
+BluetoothPanel 1.0 BluetoothPanel.qml

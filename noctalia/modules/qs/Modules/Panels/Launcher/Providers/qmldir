@@ -1,0 +1,9 @@
+module qs.Modules.Panels.Launcher.Providers
+ApplicationsProvider 1.0 ApplicationsProvider.qml
+CalculatorProvider 1.0 CalculatorProvider.qml
+ClipboardProvider 1.0 ClipboardProvider.qml
+CommandProvider 1.0 CommandProvider.qml
+EmojiProvider 1.0 EmojiProvider.qml
+SessionProvider 1.0 SessionProvider.qml
+SettingsProvider 1.0 SettingsProvider.qml
+WindowsProvider 1.0 WindowsProvider.qml

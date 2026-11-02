@@ -1,0 +1,6 @@
+module qs.Modules.Panels.Settings.DesktopWidgets.WidgetSettings
+AudioVisualizerSettings 1.0 AudioVisualizerSettings.qml
+ClockSettings 1.0 ClockSettings.qml
+MediaPlayerSettings 1.0 MediaPlayerSettings.qml
+SystemStatSettings 1.0 SystemStatSettings.qml
+WeatherSettings 1.0 WeatherSettings.qml

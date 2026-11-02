@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.SystemMonitor
+GeneralSubTab 1.0 GeneralSubTab.qml
+PerformanceSubTab 1.0 PerformanceSubTab.qml
+SystemMonitorTab 1.0 SystemMonitorTab.qml
+ThresholdsSubTab 1.0 ThresholdsSubTab.qml

@@ -1,0 +1,4 @@
+module qs.Modules.Panels.Settings.Tabs.Osd
+EventsSubTab 1.0 EventsSubTab.qml
+GeneralSubTab 1.0 GeneralSubTab.qml
+OsdTab 1.0 OsdTab.qml

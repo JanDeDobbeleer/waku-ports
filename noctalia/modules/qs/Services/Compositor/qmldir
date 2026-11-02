@@ -1,0 +1,3 @@
+module qs.Services.Compositor
+singleton CompositorService 1.0 CompositorService.qml
+WabarService 1.0 WabarService.qml

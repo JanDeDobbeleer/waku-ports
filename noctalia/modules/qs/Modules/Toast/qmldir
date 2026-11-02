@@ -1,0 +1,4 @@
+module qs.Modules.Toast
+Toast 1.0 Toast.qml
+ToastOverlay 1.0 ToastOverlay.qml
+ToastScreen 1.0 ToastScreen.qml

@@ -1,0 +1,4 @@
+module qs.Modules.Dock
+Dock 1.0 Dock.qml
+DockContent 1.0 DockContent.qml
+DockMenu 1.0 DockMenu.qml

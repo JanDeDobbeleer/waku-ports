@@ -1,0 +1,9 @@
+module qs.Modules.Panels.Settings.Tabs.Notifications
+DurationSubTab 1.0 DurationSubTab.qml
+GeneralSubTab 1.0 GeneralSubTab.qml
+HistorySubTab 1.0 HistorySubTab.qml
+NotificationRuleEditPopup 1.0 NotificationRuleEditPopup.qml
+NotificationsTab 1.0 NotificationsTab.qml
+RulesSubTab 1.0 RulesSubTab.qml
+SoundSubTab 1.0 SoundSubTab.qml
+ToastSubTab 1.0 ToastSubTab.qml

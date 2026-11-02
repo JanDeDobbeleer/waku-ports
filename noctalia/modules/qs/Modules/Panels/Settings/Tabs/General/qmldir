@@ -1,0 +1,3 @@
+module qs.Modules.Panels.Settings.Tabs.General
+BasicsSubTab 1.0 BasicsSubTab.qml
+KeybindsSubTab 1.0 KeybindsSubTab.qml

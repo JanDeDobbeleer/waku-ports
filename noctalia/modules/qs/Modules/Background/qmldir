@@ -1,0 +1,4 @@
+module qs.Modules.Background
+Background 1.0 Background.qml
+FadeOverlay 1.0 FadeOverlay.qml
+Overview 1.0 Overview.qml

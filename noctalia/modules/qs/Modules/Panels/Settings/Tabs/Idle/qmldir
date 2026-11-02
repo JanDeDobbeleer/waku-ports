@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.Idle
+BehaviorSubTab 1.0 BehaviorSubTab.qml
+CustomSubTab 1.0 CustomSubTab.qml
+IdleCommandEditPopup 1.0 IdleCommandEditPopup.qml
+IdleTab 1.0 IdleTab.qml

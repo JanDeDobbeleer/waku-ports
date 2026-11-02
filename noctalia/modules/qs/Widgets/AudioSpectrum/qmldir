@@ -1,0 +1,4 @@
+module qs.Widgets.AudioSpectrum
+NLinearSpectrum 1.0 NLinearSpectrum.qml
+NMirroredSpectrum 1.0 NMirroredSpectrum.qml
+NWaveSpectrum 1.0 NWaveSpectrum.qml

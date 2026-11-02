@@ -1,0 +1,5 @@
+module qs.Services.Control
+CurrentScreenDetector 1.0 CurrentScreenDetector.qml
+singleton CustomButtonIPCService 1.0 CustomButtonIPCService.qml
+singleton HooksService 1.0 HooksService.qml
+singleton IPCService 1.0 IPCService.qml

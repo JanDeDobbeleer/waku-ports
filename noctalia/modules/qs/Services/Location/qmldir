@@ -1,0 +1,5 @@
+module qs.Services.Location
+singleton CalendarService 1.0 CalendarService.qml
+singleton DarkModeService 1.0 DarkModeService.qml
+singleton LocationService 1.0 LocationService.qml
+singleton NightLightService 1.0 NightLightService.qml

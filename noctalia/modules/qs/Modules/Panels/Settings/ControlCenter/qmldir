@@ -1,0 +1,2 @@
+module qs.Modules.Panels.Settings.ControlCenter
+ControlCenterWidgetSettingsDialog 1.0 ControlCenterWidgetSettingsDialog.qml
