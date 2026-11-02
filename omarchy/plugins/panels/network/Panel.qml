@@ -1589,12 +1589,14 @@ Panel {
 
       }
 
-      // DNS provider selection.
+      // DNS provider selection. Windows port: hidden, nothing here can set DNS (no resolvectl).
       PanelSeparator {
+        visible: false
         foreground: root.bar.foreground
       }
 
       Column {
+        visible: false
         width: parent.width
         spacing: Style.space(10)
 
