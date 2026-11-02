@@ -118,18 +118,6 @@ ColumnLayout {
                }
   }
 
-  NToggle {
-    label: I18n.tr("panels.color-scheme.sync-gsettings-label")
-    description: I18n.tr("panels.color-scheme.sync-gsettings-description")
-    checked: Settings.data.colorSchemes.syncGsettings
-    defaultValue: Settings.getDefaultValue("colorSchemes.syncGsettings")
-    onToggled: checked => {
-                 Settings.data.colorSchemes.syncGsettings = checked;
-                 if (checked)
-                 ColorSchemeService.pushSystemColorScheme();
-               }
-  }
-
   NComboBox {
     label: I18n.tr("panels.color-scheme.dark-mode-mode-label")
     description: I18n.tr("panels.color-scheme.dark-mode-mode-description")
@@ -229,33 +217,6 @@ ColumnLayout {
 
   NComboBox {
     Layout.fillWidth: true
-    label: I18n.tr("panels.color-scheme.wallpaper-monitor-source-label")
-    description: I18n.tr("panels.color-scheme.wallpaper-monitor-source-description")
-    enabled: Settings.data.colorSchemes.useWallpaperColors
-    model: {
-      var m = [];
-      if (Quickshell.screens) {
-        for (var i = 0; i < Quickshell.screens.length; i++) {
-          var screen = Quickshell.screens[i];
-          var name = screen.name;
-          var displayName = name + " (" + screen.width + "x" + screen.height + ")";
-          m.push({
-                   "key": name,
-                   "name": displayName
-                 });
-        }
-      }
-      return m;
-    }
-    currentKey: Settings.data.colorSchemes.monitorForColors || (screen ? screen.name : "")
-    onSelected: key => {
-                  Settings.data.colorSchemes.monitorForColors = key;
-                  AppThemeService.generate();
-                }
-  }
-
-  NComboBox {
-    Layout.fillWidth: true
     label: I18n.tr("panels.color-scheme.wallpaper-method-label")
     description: I18n.tr("panels.color-scheme.wallpaper-method-description")
     enabled: Settings.data.colorSchemes.useWallpaperColors
@@ -265,48 +226,6 @@ ColumnLayout {
                   Settings.data.colorSchemes.generationMethod = key;
                   AppThemeService.generate();
                 }
-  }
-
-  NBox {
-    visible: Settings.data.colorSchemes.useWallpaperColors
-    Layout.fillWidth: true
-    implicitHeight: descriptionColumn.implicitHeight + Style.margin2L
-    color: Color.mSurface
-
-    Column {
-      id: descriptionColumn
-      anchors.left: parent.left
-      anchors.right: parent.right
-      anchors.top: parent.top
-      anchors.margins: Style.marginL
-      spacing: Style.marginM
-
-      NText {
-        width: parent.width
-        wrapMode: Text.WordWrap
-        text: I18n.tr("panels.color-scheme.method-description." + Settings.data.colorSchemes.generationMethod)
-        pointSize: Style.fontSizeS
-        color: Color.mOnSurfaceVariant
-      }
-
-      Row {
-        id: colorPreviewRow
-        spacing: Style.marginS
-
-        property int diameter: 16 * Style.uiScaleRatio
-
-        Repeater {
-          model: [Color.mPrimary, Color.mSecondary, Color.mTertiary, Color.mError]
-
-          Rectangle {
-            width: colorPreviewRow.diameter
-            height: colorPreviewRow.diameter
-            radius: width * 0.5
-            color: modelData
-          }
-        }
-      }
-    }
   }
 
   NDivider {
