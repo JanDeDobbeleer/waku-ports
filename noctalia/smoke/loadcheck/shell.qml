@@ -2,11 +2,9 @@ import QtQuick
 import Quickshell
 ShellRoot {
   property var files: [
-"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupAppearanceStep.qml",
-"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupCustomizeStep.qml",
-"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupDockStep.qml",
-"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupWallpaperStep.qml",
-"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupWizard.qml"
+"file:///D:/waku-ports/noctalia/modules/qs/Commons/Settings.qml",
+"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/Settings/Tabs/Wallpaper/WallpaperTab.qml",
+"file:///D:/waku-ports/noctalia/modules/qs/Modules/Panels/SetupWizard/SetupWallpaperStep.qml"
   ]
   Timer { interval: 200; running: true; repeat: false; onTriggered: {
     var bad = 0;
