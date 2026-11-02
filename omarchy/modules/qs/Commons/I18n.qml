@@ -93,8 +93,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 
   property FileView englishCatalogFile: FileView {
@@ -103,8 +103,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 
   property FileView languageCatalogFile: FileView {
@@ -113,8 +113,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 
   property FileView registryFile: FileView {
@@ -123,7 +123,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 }

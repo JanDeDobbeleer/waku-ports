@@ -620,6 +620,7 @@ Panel {
     lines.push("iface=" + iface, "type=" + kind, "ip=" + (S.Network.ipAddress || ""))
     lines.push("rx_bytes=" + Math.round(S.Network.rxBytesTotal || 0), "tx_bytes=" + Math.round(S.Network.txBytesTotal || 0))
     if (kind === "wifi") lines.push("ssid=" + (S.Network.ssid || ""), "signal=" + (S.Network.signalPercent || 0))
+    for (var key in probe) lines.push(key + "=" + probe[key])
     return lines.join("\n")
   }
 
@@ -635,6 +636,9 @@ Panel {
 
     info = next
     updateThroughput(next)
+    // The engine keeps its own per-second rates; use them rather than a second difference.
+    downloadRate = S.Network.rxBytesPerSecond || 0
+    uploadRate = S.Network.txBytesPerSecond || 0
     updatePingLatency(next)
   }
 
@@ -925,6 +929,13 @@ Panel {
 
   Component.onCompleted: refresh()
 
+  // Windows port: the engine samples interface counters only while a binding watches them, and
+  // windowsStatus() reads them from a function. These two keep the sampler running with the panel.
+  readonly property real watchedRxTotal: S.Network.rxBytesTotal
+  readonly property real watchedTxTotal: S.Network.txBytesTotal
+  readonly property real watchedRxRate: S.Network.rxBytesPerSecond
+  readonly property real watchedTxRate: S.Network.txBytesPerSecond
+
   // Windows port: the engine's Network service reports "none" for its first second, and the details
   // above were read once at construction. Re-read them whenever the service changes.
   Connections {
@@ -936,12 +947,17 @@ Panel {
   }
 
   // Pulls everything we want about the active route's interface in one shot.
+  // Windows port: tools/netprobe.ps1 supplies gateway and the router and internet pings.
+  property var probe: ({})
   Process {
     id: detailsProc
-    command: ["omarchy-network-status", "--verbose"]
+    command: ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", String(Quickshell.shellDir) + "/tools/netprobe.ps1"]
     stdout: StdioCollector {
       waitForEnd: true
-      onStreamFinished: root.updateDetails(text)
+      onStreamFinished: {
+        root.probe = Model.parseKeyValue(text)
+        root.updateDetails(root.windowsStatus())
+      }
     }
   }
 
@@ -1044,7 +1060,10 @@ Panel {
     interval: 1500
     repeat: true
     running: root.opened
-    onTriggered: root.updateDetails(root.windowsStatus())
+    onTriggered: {
+      root.updateDetails(root.windowsStatus())
+      if (!detailsProc.running) detailsProc.running = true
+    }
   }
 
   Timer {

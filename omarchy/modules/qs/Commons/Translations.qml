@@ -80,8 +80,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 
   // Only read for a regional code; for "da" the language file covers it.
@@ -91,8 +91,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 
   property FileView languageFile: FileView {
@@ -101,7 +101,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: root.rev++
-    onLoadFailed: root.rev++
+    onLoaded: Qt.callLater(function() { root.rev++ })
+    onLoadFailed: Qt.callLater(function() { root.rev++ })
   }
 }
