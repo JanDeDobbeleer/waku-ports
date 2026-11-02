@@ -13,11 +13,14 @@ ColumnLayout {
   property var screen
 
   function openMainFolderPicker() {
+    // Sync picker with current text box path; currentPath is otherwise stale
+    mainFolderPicker.currentPath = mainFolderPicker.initialPath;
     mainFolderPicker.open();
   }
 
   function openMonitorFolderPicker(monitorName) {
     specificFolderMonitorName = monitorName;
+    monitorFolderPicker.currentPath = monitorFolderPicker.initialPath;
     monitorFolderPicker.open();
   }
 
