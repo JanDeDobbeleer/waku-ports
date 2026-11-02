@@ -949,13 +949,15 @@ Panel {
   // Pulls everything we want about the active route's interface in one shot.
   // Windows port: tools/netprobe.ps1 supplies gateway and the router and internet pings.
   property var probe: ({})
+  // One long-lived process that prints a sample every 2 s while the panel is open; nothing is
+  // spawned per sample, and closing the panel stops it.
   Process {
     id: detailsProc
-    command: ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", String(Quickshell.shellDir) + "/tools/netprobe.ps1"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        root.probe = Model.parseKeyValue(text)
+    running: root.opened
+    command: ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", String(Quickshell.shellDir) + "/tools/netprobe.ps1", "-IntervalMs", "2000"]
+    stdout: SplitParser {
+      onRead: function(line) {
+        root.probe = Model.parseKeyValue(String(line).trim().split(/\s+/).join("\n"))
         root.updateDetails(root.windowsStatus())
       }
     }
@@ -1060,10 +1062,7 @@ Panel {
     interval: 1500
     repeat: true
     running: root.opened
-    onTriggered: {
-      root.updateDetails(root.windowsStatus())
-      if (!detailsProc.running) detailsProc.running = true
-    }
+    onTriggered: root.updateDetails(root.windowsStatus())
   }
 
   Timer {
