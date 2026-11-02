@@ -1,9 +1,9 @@
 # One-off: rewrites Services\System\SystemStatService.qml. Keeps the public properties, history, colours and
 # formatting of the upstream file; replaces the /proc, sysfs and nvidia-smi readers with the engine's
-# wabar.services Cpu, Memory, Disks, Gpu and Network. Run once on the pristine upstream file.
+# waku.services Cpu, Memory, Disks, Gpu and Network. Run once on the pristine upstream file.
 $p = Join-Path $PSScriptRoot '..\modules\qs\Services\System\SystemStatService.qml'
 $t = [IO.File]::ReadAllText($p) -replace "`r`n", "`n"
-if ($t.Contains('wabar.services')) { Write-Host 'already ported'; return }
+if ($t.Contains('waku.services')) { Write-Host 'already ported'; return }
 
 $headEnd = $t.IndexOf("  // Internal state for CPU calculation")
 $fmtStart = $t.IndexOf("  // -------------------------------------------------------`n  // Helper function to format network speeds")
@@ -13,13 +13,13 @@ if ($headEnd -lt 0 -or $fmtStart -lt 0 -or $fmtEnd -lt 0) { throw 'markers not f
 $head = $t.Substring(0, $headEnd)
 $fmt = $t.Substring($fmtStart, $fmtEnd - $fmtStart)
 
-$head = $head.Replace("import QtQuick`nimport Quickshell`nimport Quickshell.Io`nimport qs.Commons", "import QtQuick`nimport Quickshell`nimport wabar.services as S`nimport qs.Commons")
+$head = $head.Replace("import QtQuick`nimport Quickshell`nimport Quickshell.Io`nimport qs.Commons", "import QtQuick`nimport Quickshell`nimport waku.services as S`nimport qs.Commons")
 $head = $head.Replace("import Qt.labs.folderlistmodel`n`n", "")
 $head = $head.Replace("import qs.compat`n", "")
 
 $data = @'
   // ---------------------------------------------------------------------------------------------
-  // Data: the engine's Cpu, Memory, Disks, Gpu and Network (wabar.services) instead of /proc, sysfs,
+  // Data: the engine's Cpu, Memory, Disks, Gpu and Network (waku.services) instead of /proc, sysfs,
   // df and nvidia-smi. The engine's sources sample only while something is bound to them, so the
   // bindings live in a Loader that is active while a component is registered.
   //

@@ -10,12 +10,12 @@ $env:NOCTALIA_CONFIG_DIR = Join-Path $port 'state\config'; $env:NOCTALIA_CACHE_D
 $env:HOME = $env:USERPROFILE
 New-Item -ItemType Directory -Force $env:NOCTALIA_CONFIG_DIR, $env:NOCTALIA_CACHE_DIR | Out-Null
 $home_ = Join-Path $port 'smoke\livecheck2'
-$wc = Join-Path $Bin 'wabarc.exe'
+$wc = Join-Path $Bin 'wakuc.exe'
 $existing = (& $wc --config-home $home_ status 2>&1 | Out-String)
 if ($existing -match 'running; pid=') { throw 'a shell already runs for the livecheck home' }
 Copy-Item -LiteralPath (Join-Path $port 'smoke\livecheck.qml') -Destination (Join-Path $home_ 'shell.qml') -Force
 $err = Join-Path $port 'logs\livecheck.err.txt'
-$p = Start-Process (Join-Path $Bin 'wabar.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput "$err.out" `
+$p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput "$err.out" `
   -ArgumentList @('--config-home', $home_, '--no-tray', '--import-path', (Join-Path $port 'modules'))
 $t0 = Get-Date
 try {

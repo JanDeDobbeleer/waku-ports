@@ -2,12 +2,12 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.Services.UI
 import qs.compat
 
-// Noctalia's VPNService over the engine's Network (wabar.services): the Windows RAS phone book
+// Noctalia's VPNService over the engine's Network (waku.services): the Windows RAS phone book
 // entries, dialled and hung up with `connectVpn` and `disconnectVpn`. A RAS entry has no uuid, so its
 // name is the key ("uuid" in the entries). VPNs of third-party clients are not in the phone book and
 // do not appear.

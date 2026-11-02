@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.Services.UI
 
@@ -242,7 +242,7 @@ Singleton {
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Data: the engine's Cpu, Memory, Disks, Gpu and Network (wabar.services) instead of /proc, sysfs,
+  // Data: the engine's Cpu, Memory, Disks, Gpu and Network (waku.services) instead of /proc, sysfs,
   // df and nvidia-smi. The engine's sources sample only while something is bound to them, so the
   // bindings live in a Loader that is active while a component is registered.
   //

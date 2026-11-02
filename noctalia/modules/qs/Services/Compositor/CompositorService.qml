@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.Services.Control
 import qs.Services.UI
@@ -72,7 +72,7 @@ Singleton {
     isMango = false;
     isLabwc = false;
     isExtWorkspace = false;
-    backendLoader.sourceComponent = wabarComponent;
+    backendLoader.sourceComponent = wakuComponent;
   }
 
   Loader {
@@ -107,11 +107,11 @@ Singleton {
     }
   }
 
-  // wabar backend component
+  // waku backend component
   Component {
-    id: wabarComponent
-    WabarService {
-      id: wabarBackend
+    id: wakuComponent
+    WakuService {
+      id: wakuBackend
     }
   }
 

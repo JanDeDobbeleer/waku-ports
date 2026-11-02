@@ -299,7 +299,7 @@ ShellRoot {
 "file:///D:/wabar-ports/noctalia/modules/qs/Modules/Toast/ToastScreen.qml",
 "file:///D:/wabar-ports/noctalia/modules/qs/Modules/Tooltip/Tooltip.qml",
 "file:///D:/wabar-ports/noctalia/modules/qs/Services/Compositor/CompositorService.qml",
-"file:///D:/wabar-ports/noctalia/modules/qs/Services/Compositor/WabarService.qml",
+"file:///D:/wabar-ports/noctalia/modules/qs/Services/Compositor/WakuService.qml",
 "file:///D:/wabar-ports/noctalia/modules/qs/Services/Control/CurrentScreenDetector.qml",
 "file:///D:/wabar-ports/noctalia/modules/qs/Services/Control/CustomButtonIPCService.qml",
 "file:///D:/wabar-ports/noctalia/modules/qs/Services/Control/HooksService.qml",

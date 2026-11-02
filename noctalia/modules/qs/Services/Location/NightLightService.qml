@@ -5,7 +5,7 @@ import Quickshell
 import qs.Commons
 import qs.compat
 
-// Night light needs wlsunset (Wayland). Windows has its own Night light in its settings, which wabar
+// Night light needs wlsunset (Wayland). Windows has its own Night light in its settings, which waku
 // does not control, so apply() does nothing and the schedule helpers are not kept.
 Singleton {
   id: root

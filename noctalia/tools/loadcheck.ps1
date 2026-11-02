@@ -31,8 +31,8 @@ $urls
 "@
 [IO.File]::WriteAllText((Join-Path $home_ 'shell.qml'), $qml, (New-Object Text.UTF8Encoding $false))
 $err = Join-Path $logs 'loadcheck.err.txt'; $out = Join-Path $logs 'loadcheck.out.txt'
-$wabar = Join-Path $Bin 'wabar.exe'; $wabarc = Join-Path $Bin 'wabarc.exe'
-$p = Start-Process -FilePath $wabar -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
+$waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
+$p = Start-Process -FilePath $waku -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
   -ArgumentList @('--config-home', $home_, '--no-tray', '--import-path', $modules)
 $t0 = Get-Date
 try {
@@ -42,7 +42,7 @@ try {
     if (Select-String -LiteralPath $err -Pattern 'LOADCHK\|DONE' -Quiet -ErrorAction SilentlyContinue) { break }
   }
 } finally {
-  & $wabarc --config-home $home_ quit | Out-Null
+  & $wakuc --config-home $home_ quit | Out-Null
   if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Force }
 }
 $lines = @(Get-Content $err, $out -ErrorAction SilentlyContinue | Where-Object { $_ -match 'LOADCHK\|' })

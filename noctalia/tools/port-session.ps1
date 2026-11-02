@@ -6,7 +6,7 @@ $t = [IO.File]::ReadAllText($p) -replace "`r`n", "`n"
 if ($t.Contains('windowsSession')) { Write-Host 'already ported'; return }
 function Rep($t, $old, $new) { if (-not $t.Contains($old)) { throw "not found: $old" }; $i = $t.IndexOf($old); $t.Remove($i, $old.Length).Insert($i, $new) }
 
-$t = Rep $t "import Quickshell`nimport Quickshell.Io`n" "import Quickshell`nimport Quickshell.Io`nimport wabar.services as S`n"
+$t = Rep $t "import Quickshell`nimport Quickshell.Io`n" "import Quickshell`nimport Quickshell.Io`nimport waku.services as S`n"
 $t = Rep $t 'Quickshell.execDetached(["sh", "-c", customCommand]);' 'Quickshell.execDetached(["cmd", "/c", customCommand]);'
 $t = Rep $t "  // Session management`n" @'
   // Session management, through the engine's ControlCenter: lock, sleep, hibernate, signOut, restart and

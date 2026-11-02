@@ -3,7 +3,7 @@
 # getStatusText, getIcon); the nmcli processes are gone. Run once on the pristine upstream file.
 $p = Join-Path $PSScriptRoot '..\modules\qs\Services\Networking\NetworkService.qml'
 $t = [IO.File]::ReadAllText($p) -replace "`r`n", "`n"
-if ($t.Contains('wabar.services')) { Write-Host 'already ported'; return }
+if ($t.Contains('waku.services')) { Write-Host 'already ported'; return }
 
 function Between($text, $from, $to) {
   $i = $text.IndexOf($from); if ($i -lt 0) { throw "missing: $from" }
@@ -19,12 +19,12 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.Services.UI
 import qs.compat
 
-// Noctalia's NetworkService over the engine's Network (wabar.services): Windows connectivity
+// Noctalia's NetworkService over the engine's Network (waku.services): Windows connectivity
 // profiles, wlanapi scans, the Wi-Fi radio switch and interface counters. Public names are upstream's.
 //
 // What Windows does differently, and so what this adapter does not do:
@@ -134,7 +134,7 @@ $security
   property bool scanPending: false
   readonly property bool scanningActive: S.Network.scanning
 
-  // Airplane mode: Windows has no switch for it that wabar can use
+  // Airplane mode: Windows has no switch for it that waku can use
   property bool airplaneModeEnabled: false
   property bool airplaneModeToggled: false
 
