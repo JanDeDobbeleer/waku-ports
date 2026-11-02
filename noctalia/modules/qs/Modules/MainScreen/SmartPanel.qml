@@ -211,10 +211,9 @@ Item {
     if (buttonItem && typeof buttonItem.mapToItem === "function") {
       try {
         root.buttonItem = buttonItem;
-        // Map button position within its window (BarContentWindow-local coordinates)
+        // Button position in MainScreen's window (the bar widgets live in it now, so this is screen space)
         var buttonLocal = buttonItem.mapToItem(null, 0, 0);
-
-        root.buttonPosition = Qt.point(barWindowX + buttonLocal.x, barWindowY + buttonLocal.y);
+        root.buttonPosition = Qt.point(buttonLocal.x, buttonLocal.y);
         root.buttonWidth = buttonItem.width;
         root.buttonHeight = buttonItem.height;
         root.useButtonPosition = true;

@@ -117,9 +117,19 @@ PanelWindow {
     return monitors.length === 0 || monitors.includes(screenName);
   }
 
-  // Make everything click-through except bar
+  // Click mask, built like Caelestia's drawers: the window is click-through except where a Subtract
+  // child punches the root rectangle (the mask is `window XOR root`). The bar area is punched, so the
+  // bar widgets inside this window take clicks; with a panel open the whole window is punched, so a
+  // click outside the panel reaches the click-to-close area. All children are direct children of the
+  // root, none are nested in a wrapper region (a wrapper's empty shape cancels its Subtract children).
   mask: Region {
     id: clickableMask
+
+    readonly property bool isFramed: Settings.data.bar.barType === "framed"
+    readonly property real barThickness: Style.barHeight
+    readonly property real frameThickness: Settings.data.bar.frameThickness ?? 12
+    readonly property string barPos: Settings.data.bar.position || "top"
+    readonly property bool showBar: root.barShouldShow
 
     // Cover entire window (everything is masked/click-through)
     x: 0
@@ -128,72 +138,54 @@ PanelWindow {
     height: root.height
     intersection: Intersection.Xor
 
-    // Only include regions that are actually needed
-    // panelRegions is handled by PanelService, bar is local to this screen
-    regions: [barMaskRegion, backgroundMaskRegion]
-
-    // Bar region - subtract bar area from mask (only if bar should be shown on this screen)
+    // Mode: Simple or Floating
     Region {
-      id: barMaskRegion
+      x: barPlaceholder.x
+      y: barPlaceholder.y
+      width: (!clickableMask.isFramed && clickableMask.showBar) ? barPlaceholder.width : 0
+      height: (!clickableMask.isFramed && clickableMask.showBar) ? barPlaceholder.height : 0
+      intersection: Intersection.Subtract
+    }
 
-      readonly property bool isFramed: Settings.data.bar.barType === "framed"
-      readonly property real barThickness: Style.barHeight
-      readonly property real frameThickness: Settings.data.bar.frameThickness ?? 12
-      readonly property string barPos: Settings.data.bar.position || "top"
+    // Mode: Framed - top side
+    Region {
+      x: 0
+      y: 0
+      width: (clickableMask.isFramed && clickableMask.showBar) ? root.width : 0
+      height: (clickableMask.isFramed && clickableMask.showBar) ? (clickableMask.barPos === "top" ? clickableMask.barThickness : clickableMask.frameThickness) : 0
+      intersection: Intersection.Subtract
+    }
 
-      // Bar / Frame Mask
-      Region {
-        // Mode: Simple or Floating
-        x: barPlaceholder.x
-        y: barPlaceholder.y
-        width: (!barMaskRegion.isFramed && root.barShouldShow) ? barPlaceholder.width : 0
-        height: (!barMaskRegion.isFramed && root.barShouldShow) ? barPlaceholder.height : 0
-        intersection: Intersection.Subtract
-      }
+    // Framed - bottom side
+    Region {
+      x: 0
+      y: (clickableMask.isFramed && clickableMask.showBar) ? (root.height - (clickableMask.barPos === "bottom" ? clickableMask.barThickness : clickableMask.frameThickness)) : 0
+      width: (clickableMask.isFramed && clickableMask.showBar) ? root.width : 0
+      height: (clickableMask.isFramed && clickableMask.showBar) ? (clickableMask.barPos === "bottom" ? clickableMask.barThickness : clickableMask.frameThickness) : 0
+      intersection: Intersection.Subtract
+    }
 
-      // Mode: Framed - 4 sides
-      Region {
-        // Top side
-        Region {
-          x: 0
-          y: 0
-          width: (barMaskRegion.isFramed && root.barShouldShow) ? root.width : 0
-          height: (barMaskRegion.isFramed && root.barShouldShow) ? (barMaskRegion.barPos === "top" ? barMaskRegion.barThickness : barMaskRegion.frameThickness) : 0
-          intersection: Intersection.Subtract
-        }
+    // Framed - left side
+    Region {
+      x: 0
+      y: 0
+      width: (clickableMask.isFramed && clickableMask.showBar) ? (clickableMask.barPos === "left" ? clickableMask.barThickness : clickableMask.frameThickness) : 0
+      height: (clickableMask.isFramed && clickableMask.showBar) ? root.height : 0
+      intersection: Intersection.Subtract
+    }
 
-        // Bottom side
-        Region {
-          x: 0
-          y: (barMaskRegion.isFramed && root.barShouldShow) ? (root.height - (barMaskRegion.barPos === "bottom" ? barMaskRegion.barThickness : barMaskRegion.frameThickness)) : 0
-          width: (barMaskRegion.isFramed && root.barShouldShow) ? root.width : 0
-          height: (barMaskRegion.isFramed && root.barShouldShow) ? (barMaskRegion.barPos === "bottom" ? barMaskRegion.barThickness : barMaskRegion.frameThickness) : 0
-          intersection: Intersection.Subtract
-        }
-
-        // Left side
-        Region {
-          x: 0
-          y: 0
-          width: (barMaskRegion.isFramed && root.barShouldShow) ? (barMaskRegion.barPos === "left" ? barMaskRegion.barThickness : barMaskRegion.frameThickness) : 0
-          height: (barMaskRegion.isFramed && root.barShouldShow) ? root.height : 0
-          intersection: Intersection.Subtract
-        }
-
-        // Right side
-        Region {
-          x: (barMaskRegion.isFramed && root.barShouldShow) ? (root.width - (barMaskRegion.barPos === "right" ? barMaskRegion.barThickness : barMaskRegion.frameThickness)) : 0
-          width: (barMaskRegion.isFramed && root.barShouldShow) ? (barMaskRegion.barPos === "right" ? barMaskRegion.barThickness : barMaskRegion.frameThickness) : 0
-          height: (barMaskRegion.isFramed && root.barShouldShow) ? root.height : 0
-          intersection: Intersection.Subtract
-        }
-      }
+    // Framed - right side
+    Region {
+      x: (clickableMask.isFramed && clickableMask.showBar) ? (root.width - (clickableMask.barPos === "right" ? clickableMask.barThickness : clickableMask.frameThickness)) : 0
+      y: 0
+      width: (clickableMask.isFramed && clickableMask.showBar) ? (clickableMask.barPos === "right" ? clickableMask.barThickness : clickableMask.frameThickness) : 0
+      height: (clickableMask.isFramed && clickableMask.showBar) ? root.height : 0
+      intersection: Intersection.Subtract
     }
 
     // Background region for click-to-close - reactive sizing
     // Uses isAnyPanelOpen so clicking on any screen's background closes the panel
     Region {
-      id: backgroundMaskRegion
       x: 0
       y: 0
       width: root.isAnyPanelOpen ? root.width : 0
@@ -365,7 +357,7 @@ PanelWindow {
     }
 
     // ----------------------------------------------
-    // Bar background placeholder - just for background positioning (actual bar content is in BarContentWindow)
+    // Bar background placeholder - just for background positioning (the widgets are BarContent, below)
     Item {
       id: barPlaceholder
 
@@ -483,6 +475,14 @@ PanelWindow {
         }
         return -1;
       }
+    }
+
+    // Bar widgets: in this window, above the backgrounds and panels, so nothing can cover them
+    BarContent {
+      id: barContent
+      screen: root.screen
+      placeholder: barPlaceholder
+      z: 100
     }
 
     // Screen Corners

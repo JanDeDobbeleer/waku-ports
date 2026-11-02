@@ -1,6 +1,6 @@
 module qs.Modules.MainScreen
 AllScreens 1.0 AllScreens.qml
-BarContentWindow 1.0 BarContentWindow.qml
+BarContent 1.0 BarContent.qml
 BarExclusionZone 1.0 BarExclusionZone.qml
 BarTriggerZone 1.0 BarTriggerZone.qml
 MainScreen 1.0 MainScreen.qml

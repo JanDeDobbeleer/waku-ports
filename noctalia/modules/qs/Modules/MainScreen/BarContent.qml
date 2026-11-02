@@ -1,44 +1,41 @@
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.Bar
 import qs.Services.UI
 
 /**
-* BarContentWindow - Separate transparent PanelWindow for bar content
+* BarContent - the bar widgets, drawn inside MainScreen's window
 *
-* This window contains only the bar widgets (content), while the background
-* is rendered in MainScreen's unified Shape system. This separation prevents
-* fullscreen redraws when bar widgets redraw.
+* The bar background and the panels are painted by MainScreen. The widgets used to sit in a second
+* window above it, and waku raised whichever Top window was shown or focused last, so MainScreen
+* covered the widgets whenever a panel opened (they flickered or stopped reacting). Drawing them in
+* the same window fixes their stacking by construction, as in Caelestia's drawers.
 *
-* This component should be instantiated once per screen by AllScreens.qml
+* Instantiated once per screen by MainScreen, which gives it the bar's geometry.
 */
-PanelWindow {
+Item {
   id: barWindow
 
-  // Note: screen property is inherited from PanelWindow and should be set by parent
-  color: "transparent" // Transparent - background is in MainScreen below
+  required property ShellScreen screen
 
-  // Window invisible when auto-hidden (blocks input) or toggled off via IPC.
+  // Bar rectangle inside MainScreen's window (same geometry the background is drawn with)
+  required property Item placeholder
+  x: placeholder.x
+  y: placeholder.y
+  width: placeholder.width
+  height: placeholder.height
+
+  // Hidden when auto-hidden (after the fade-out) or toggled off via IPC.
   // windowVisible stays true briefly after isHidden to allow fade-out animation.
   property bool windowVisible: !isHidden
   visible: contentLoaded && windowVisible && BarService.effectivelyVisible
 
   Component.onCompleted: {
-    Logger.d("BarContentWindow", "Bar content window created for screen:", barWindow.screen?.name);
+    Logger.d("BarContent", "Bar content window created for screen:", barWindow.screen?.name);
     if (!isHidden)
       contentLoaded = true;
   }
-
-  // Wayland layer configuration
-  WlrLayershell.namespace: "noctalia-bar-content-" + (barWindow.screen?.name || "unknown")
-  // Port: waku raises a Top window each time it is shown or its keyboard focus changes, so the
-  // full-screen MainScreen window (which paints the bar background) ends up above this one after
-  // a panel opens or closes and covers the widgets. Flipping the layer re-raises this window.
-  property bool reraise: false
-  WlrLayershell.layer: reraise ? WlrLayer.Overlay : WlrLayer.Top
-  WlrLayershell.exclusionMode: ExclusionMode.Ignore // Don't reserve space - BarExclusionZone in MainScreen handles that
 
   // Position and size to match bar location (per-screen)
   readonly property string barPosition: Settings.getBarPositionForScreen(barWindow.screen?.name)
@@ -89,7 +86,7 @@ PanelWindow {
   Connections {
     target: BarService
     function onBarAutoHideStateChanged(screenName, hidden) {
-      Logger.d("BarContentWindow", "onBarAutoHideStateChanged:", screenName, hidden, "my screen:", barWindow.screen?.name);
+      Logger.d("BarContent", "onBarAutoHideStateChanged:", screenName, hidden, "my screen:", barWindow.screen?.name);
       if (screenName === barWindow.screen?.name) {
         barWindow.isHidden = hidden;
       }
@@ -113,18 +110,8 @@ PanelWindow {
     }
   }
 
-  Timer {
-    id: reraiseTimer
-    interval: 80
-    onTriggered: {
-      barWindow.reraise = true;
-      barWindow.reraise = false;
-    }
-  }
-
   // Don't hide when panel is open
   onPanelOpenChanged: {
-    reraiseTimer.restart();
     if (panelOpen && autoHide) {
       hideTimer.stop();
       BarService.setScreenHidden(barWindow.screen?.name, false);
@@ -152,14 +139,6 @@ PanelWindow {
       barWindow.isHidden = false;
     }
     // When auto-hide is enabled, don't immediately hide - wait for mouse to leave
-  }
-
-  // Anchor to the bar's edge
-  anchors {
-    top: barPosition === "top" || barIsVertical
-    bottom: barPosition === "bottom" || barIsVertical
-    left: barPosition === "left" || !barIsVertical
-    right: barPosition === "right" || !barIsVertical
   }
 
   // Content stays loaded once initialized — never unloaded during auto-hide.
@@ -200,18 +179,6 @@ PanelWindow {
       }
     }
   }
-
-  // Handle floating margins and framed mode offsets
-  margins {
-    top: (barPosition === "top") ? barMarginV : (isFramed ? frameThickness : barMarginV)
-    bottom: (barPosition === "bottom") ? barMarginV : (isFramed ? frameThickness : barMarginV)
-    left: (barPosition === "left") ? barMarginH : (isFramed ? frameThickness : barMarginH)
-    right: (barPosition === "right") ? barMarginH : (isFramed ? frameThickness : barMarginH)
-  }
-
-  // Set a tight window size
-  implicitWidth: barIsVertical ? barHeight : barWindow.screen.width
-  implicitHeight: barIsVertical ? barWindow.screen.height : barHeight
 
   // Bar content loader - loaded once, stays active for lifetime
   Loader {

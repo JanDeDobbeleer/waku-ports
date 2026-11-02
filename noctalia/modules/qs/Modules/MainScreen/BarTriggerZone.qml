@@ -62,7 +62,7 @@ PanelWindow {
     onEntered: {
       if (root.isBeingDestroyed)
         return;
-      // Signal hover - BarContentWindow will handle the show delay
+      // Signal hover - BarContent will handle the show delay
       BarService.setScreenHovered(root.screen?.name, true);
     }
 
