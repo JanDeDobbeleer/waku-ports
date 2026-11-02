@@ -1,6 +1,6 @@
 # Emergency stop: quits waku, brings the Windows taskbar back, and kills a stuck waku if it did not quit.
-# Run it from any PowerShell: pwsh -NoProfile -File D:\wabar-ports\caelestia\tools\panic.ps1
-$home_ = 'D:\wabar-ports\caelestia'
+# Run it from any PowerShell: pwsh -NoProfile -File D:\waku-ports\caelestia\tools\panic.ps1
+$home_ = 'D:\waku-ports\caelestia'
 $wakuc = 'D:\waku\dist\waku\wakuc.exe'
 & $wakuc --config-home $home_ quit 2>&1 | Out-Null
 Start-Sleep -Seconds 4
