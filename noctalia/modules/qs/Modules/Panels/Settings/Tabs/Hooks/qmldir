@@ -1,0 +1,6 @@
+module qs.Modules.Panels.Settings.Tabs.Hooks
+GeneralSubTab 1.0 GeneralSubTab.qml
+HookEditPopup 1.0 HookEditPopup.qml
+HookRow 1.0 HookRow.qml
+HooksListSubTab 1.0 HooksListSubTab.qml
+HooksTab 1.0 HooksTab.qml

@@ -1,0 +1,2 @@
+module qs.Modules.Panels.Network
+NetworkPanel 1.0 NetworkPanel.qml

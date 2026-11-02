@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.Plugins
+AvailableSubTab 1.0 AvailableSubTab.qml
+InstalledSubTab 1.0 InstalledSubTab.qml
+PluginsTab 1.0 PluginsTab.qml
+SourcesSubTab 1.0 SourcesSubTab.qml

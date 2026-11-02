@@ -1,0 +1,4 @@
+module qs.Modules.Panels.Settings.Tabs.Dock
+AppearanceSubTab 1.0 AppearanceSubTab.qml
+DockTab 1.0 DockTab.qml
+MonitorsSubTab 1.0 MonitorsSubTab.qml

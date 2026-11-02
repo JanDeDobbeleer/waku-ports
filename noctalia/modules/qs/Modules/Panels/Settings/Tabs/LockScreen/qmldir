@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.LockScreen
+AppearanceSubTab 1.0 AppearanceSubTab.qml
+BehaviorSubTab 1.0 BehaviorSubTab.qml
+LockScreenTab 1.0 LockScreenTab.qml
+MonitorsSubTab 1.0 MonitorsSubTab.qml

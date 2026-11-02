@@ -1,0 +1,3 @@
+module qs.Modules.Panels.Settings.Bar
+BarWidgetSettingsDialog 1.0 BarWidgetSettingsDialog.qml
+MonitorWidgetsConfig 1.0 MonitorWidgetsConfig.qml

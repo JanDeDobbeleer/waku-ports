@@ -1,0 +1,3 @@
+module qs.Modules.Panels.Wallpaper
+WallhavenSettingsPopup 1.0 WallhavenSettingsPopup.qml
+WallpaperPanel 1.0 WallpaperPanel.qml

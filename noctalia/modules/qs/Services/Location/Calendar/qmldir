@@ -1,0 +1,3 @@
+module qs.Services.Location.Calendar
+singleton EvolutionDataServer 1.0 EvolutionDataServer.qml
+singleton Khal 1.0 Khal.qml

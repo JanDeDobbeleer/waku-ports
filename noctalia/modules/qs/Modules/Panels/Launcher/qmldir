@@ -1,0 +1,7 @@
+module qs.Modules.Panels.Launcher
+ClipboardPreview 1.0 ClipboardPreview.qml
+Launcher 1.0 Launcher.qml
+LauncherCore 1.0 LauncherCore.qml
+LauncherGridDelegate 1.0 LauncherGridDelegate.qml
+LauncherListDelegate 1.0 LauncherListDelegate.qml
+LauncherOverlayWindow 1.0 LauncherOverlayWindow.qml

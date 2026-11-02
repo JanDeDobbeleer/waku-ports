@@ -1,0 +1,3 @@
+module qs.Modules.DesktopWidgets
+DesktopWidgets 1.0 DesktopWidgets.qml
+DraggableDesktopWidget 1.0 DraggableDesktopWidget.qml

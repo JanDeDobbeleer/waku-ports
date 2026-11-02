@@ -1,0 +1,5 @@
+module qs.Services.Keyboard
+singleton ClipboardService 1.0 ClipboardService.qml
+singleton EmojiService 1.0 EmojiService.qml
+singleton KeyboardLayoutService 1.0 KeyboardLayoutService.qml
+singleton LockKeysService 1.0 LockKeysService.qml

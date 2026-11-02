@@ -1,0 +1,6 @@
+module qs.Modules.Panels.SetupWizard
+SetupAppearanceStep 1.0 SetupAppearanceStep.qml
+SetupCustomizeStep 1.0 SetupCustomizeStep.qml
+SetupDockStep 1.0 SetupDockStep.qml
+SetupWallpaperStep 1.0 SetupWallpaperStep.qml
+SetupWizard 1.0 SetupWizard.qml

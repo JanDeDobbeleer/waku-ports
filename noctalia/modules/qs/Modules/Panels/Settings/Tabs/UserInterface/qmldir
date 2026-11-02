@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.UserInterface
+AppearanceSubTab 1.0 AppearanceSubTab.qml
+PanelsSubTab 1.0 PanelsSubTab.qml
+ScreenCornersSubTab 1.0 ScreenCornersSubTab.qml
+UserInterfaceTab 1.0 UserInterfaceTab.qml

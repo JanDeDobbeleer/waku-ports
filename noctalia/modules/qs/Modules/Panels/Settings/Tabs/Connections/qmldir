@@ -1,0 +1,4 @@
+module qs.Modules.Panels.Settings.Tabs.Connections
+BluetoothSubTab 1.0 BluetoothSubTab.qml
+ConnectionsTab 1.0 ConnectionsTab.qml
+WifiSubTab 1.0 WifiSubTab.qml

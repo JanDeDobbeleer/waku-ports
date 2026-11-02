@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.ControlCenter
+AppearanceSubTab 1.0 AppearanceSubTab.qml
+CardsSubTab 1.0 CardsSubTab.qml
+ControlCenterTab 1.0 ControlCenterTab.qml
+ShortcutsSubTab 1.0 ShortcutsSubTab.qml

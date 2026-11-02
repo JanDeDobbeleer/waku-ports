@@ -1,0 +1,3 @@
+module qs.Modules.Panels.ControlCenter
+ControlCenterPanel 1.0 ControlCenterPanel.qml
+ControlCenterWidgetLoader 1.0 ControlCenterWidgetLoader.qml

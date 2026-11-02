@@ -1,0 +1,5 @@
+module qs.Modules.MainScreen.Backgrounds
+AllBackgrounds 1.0 AllBackgrounds.qml
+BarBackground 1.0 BarBackground.qml
+PanelBackground 1.0 PanelBackground.qml
+singleton ShapeCornerHelper 1.0 ShapeCornerHelper.qml

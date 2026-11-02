@@ -1,0 +1,2 @@
+module qs.Modules.Panels.Settings.DesktopWidgets
+DesktopWidgetSettingsDialog 1.0 DesktopWidgetSettingsDialog.qml

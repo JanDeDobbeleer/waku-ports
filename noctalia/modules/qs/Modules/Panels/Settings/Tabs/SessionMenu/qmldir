@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.SessionMenu
+ActionsSubTab 1.0 ActionsSubTab.qml
+GeneralSubTab 1.0 GeneralSubTab.qml
+SessionMenuEntrySettingsDialog 1.0 SessionMenuEntrySettingsDialog.qml
+SessionMenuTab 1.0 SessionMenuTab.qml

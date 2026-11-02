@@ -1,0 +1,5 @@
+module qs.Modules.Panels.Settings.Tabs.Region
+ClockPanelSubTab 1.0 ClockPanelSubTab.qml
+DateSubTab 1.0 DateSubTab.qml
+LocationSubTab 1.0 LocationSubTab.qml
+RegionTab 1.0 RegionTab.qml
