@@ -8,6 +8,7 @@ import qs.Services.Power
 import qs.Services.Theming
 import qs.Services.UI
 import qs.compat
+import waku as W
 
 Singleton {
   id: root
@@ -209,6 +210,43 @@ Singleton {
   }
 
   // -------------------------------------------------
+  // Fills the engine's thumbnail cache in the background, current wallpaper first, then its
+  // neighbours outward (the picker opens on the current one), so the first open shows images at once.
+  function prewarmThumbnails() {
+    if (!ImageCacheService.initialized || Quickshell.screens.length === 0)
+      return;
+    var screenName = Quickshell.screens[0].name;
+    var all = wallpaperLists[screenName] || [];
+    var n = all.length;
+    if (n === 0)
+      return;
+    var start = Math.max(0, all.indexOf(getWallpaper(screenName)));
+    var paths = [];
+    for (var d = 0; paths.length < n; d++) {
+      if (d === 0) {
+        paths.push(all[start]);
+        continue;
+      }
+      if (d <= n - 1 && paths.length < n)
+        paths.push(all[(start + d) % n]);
+      if (paths.length < n && 2 * d < n)
+        paths.push(all[(start - d + n) % n]);
+    }
+    W.Thumbnails.cancelPrewarm();
+    W.Thumbnails.prewarm(paths, ImageCacheService.thumbnailWidth);
+  }
+
+  // Waits so the warm-up never competes with the start-up; a new list or a new current wallpaper
+  // starts it over with the right order.
+  Timer {
+    id: prewarmTimer
+    interval: 3000
+    onTriggered: root.prewarmThumbnails()
+  }
+
+  onWallpaperListChanged: prewarmTimer.restart()
+  onWallpaperChanged: prewarmTimer.restart()
+
   function init() {
     Logger.i("Wallpaper", "Service started");
 

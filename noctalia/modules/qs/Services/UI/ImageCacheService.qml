@@ -7,9 +7,14 @@ import Quickshell.Wayland
 import "../../Helpers/sha256.js" as Checksum
 import qs.Commons
 import qs.compat
+import waku as W
 
 Singleton {
   id: root
+
+  // Width of the wallpaper thumbnails. It matches the Caelestia port, so both shells share the
+  // engine's disk cache.
+  readonly property int thumbnailWidth: 640
 
   // -------------------------------------------------
   // Public Properties
@@ -67,7 +72,21 @@ Singleton {
     Logger.i("ImageCache", "Service started");
     createDirectories();
     cleanupOldCache();
-    checkMagickProcess.running = true;
+    // ImageMagick runs through sh, which Windows lacks, so the Qt fallback always applies. The
+    // detection process cannot start here (no sh) and would never report, leaving the service
+    // uninitialized and the wallpaper scan waiting for it.
+    imageMagickAvailable = false;
+    initialized = true;
+    Logger.i("ImageCache", "Using the Qt image fallback (no ImageMagick on Windows)");
+  }
+
+  // Image source URL for a local path; "D:\a\b" becomes "file:///D:/a/b". URLs pass through.
+  function toImageSource(path) {
+    const p = String(path || "");
+    if (/^[a-z][a-z0-9+.-]+:\/\//i.test(p))
+      return p;
+    const s = p.replace(/\\/g, "/");
+    return /^[A-Za-z]:/.test(s) ? "file:///" + s : "file://" + s;
   }
 
   function createDirectories() {
@@ -79,33 +98,31 @@ Singleton {
 
   function cleanupOldCache() {
     const dirs = [wpThumbDir, wpLargeDir, notificationsDir, contributorsDir];
+    // `find` on Windows is the text-search tool, so use PowerShell to delete files older than 15 days.
     dirs.forEach(function (dir) {
-      Quickshell.execDetached(["find", dir, "-type", "f", "-mtime", "+15", "-delete"]);
+      const script = "Get-ChildItem -LiteralPath '" + String(dir).replace(/'/g, "''") + "' -File -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-15) } | Remove-Item -Force -ErrorAction SilentlyContinue";
+      Quickshell.execDetached(["powershell", "-NoProfile", "-NonInteractive", "-Command", script]);
     });
     Logger.d("ImageCache", "Cleanup triggered for files older than 15 days");
   }
 
   // -------------------------------------------------
-  // Public API: Get Thumbnail (384x384)
+  // Public API: Get Thumbnail
   // -------------------------------------------------
+  // The engine's `image://thumb` provider returns a downscaled copy from a memory and disk cache,
+  // decoded off the GUI thread, so the 4K original is not decoded on every open. The URL is
+  // available at once; WallpaperService.prewarmThumbnails fills the cache ahead of the picker.
   function getThumbnail(sourcePath, callback) {
     if (!sourcePath || sourcePath === "") {
       callback("", false);
       return;
     }
-
-    getMtime(sourcePath, function (mtime) {
-      const cacheKey = generateThumbnailKey(sourcePath, mtime);
-      const cachedPath = wpThumbDir + cacheKey + ".png";
-
-      processRequest(cacheKey, cachedPath, sourcePath, callback, function () {
-        if (imageMagickAvailable) {
-          startThumbnailProcessing(sourcePath, cachedPath, cacheKey);
-        } else {
-          queueFallbackProcessing(sourcePath, cachedPath, cacheKey, 384);
-        }
-      });
-    });
+    // Remote and in-memory images are not local files, so the provider does not apply.
+    if (/^(qrc|data|https?|image):/i.test(sourcePath)) {
+      callback(sourcePath, false);
+      return;
+    }
+    callback(W.Thumbnails.url(String(sourcePath).replace(/\\/g, "/"), thumbnailWidth), true);
   }
 
   // -------------------------------------------------
@@ -553,7 +570,7 @@ Singleton {
           cacheKey = next.cacheKey;
           destPath = next.destPath;
           targetSize = next.size;
-          source = next.sourcePath;
+          source = root.toImageSource(next.sourcePath);
         } else {
           fallbackProcessing = false;
         }
@@ -575,7 +592,7 @@ Singleton {
       fallbackImage.cacheKey = item.cacheKey;
       fallbackImage.destPath = item.destPath;
       fallbackImage.targetSize = item.size;
-      fallbackImage.source = item.sourcePath;
+      fallbackImage.source = toImageSource(item.sourcePath);
     }
   }
 
@@ -620,13 +637,15 @@ Singleton {
     }
   }
 
+  // Mtime in Unix seconds. `stat` does not exist on Windows, so PowerShell reads it.
   function getMtime(filePath, callback) {
-    const pathEsc = filePath.replace(/'/g, "'\\''");
+    const script = "[DateTimeOffset]::new((Get-Item -LiteralPath '" + String(filePath).replace(/'/g, "''") + "').LastWriteTimeUtc).ToUnixTimeSeconds()";
+    const cmd = JSON.stringify(["powershell", "-NoProfile", "-NonInteractive", "-Command", script]);
     const processString = `
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["stat", "-c", "%Y", "${pathEsc}"]
+        command: ${cmd}
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
@@ -645,13 +664,15 @@ Singleton {
                         });
   }
 
+  // `test -f` does not exist on Windows; cmd's `if exist` answers through the exit code.
   function checkFileExists(filePath, callback) {
-    const pathEsc = filePath.replace(/'/g, "'\\''");
+    const winPath = String(filePath).replace(/\//g, "\\");
+    const cmd = JSON.stringify(["cmd", "/c", "if exist \"" + winPath + "\" (exit 0) else (exit 1)"]);
     const processString = `
       import QtQuick
       import Quickshell.Io
       Process {
-        command: ["test", "-f", "${pathEsc}"]
+        command: ${cmd}
         stdout: StdioCollector {}
         stderr: StdioCollector {}
       }
