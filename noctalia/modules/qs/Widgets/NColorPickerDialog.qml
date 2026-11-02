@@ -4,7 +4,6 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import "../Helpers/ColorList.js" as ColorList
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 Popup {
@@ -678,15 +677,8 @@ Popup {
                   cursorShape: Qt.PointingHandCursor
                   hoverEnabled: true
 
-                  onEntered: {
-                    TooltipService.show(parent, modelData.name + "\n" + parent.color.toString().toUpperCase());
-                  }
-                  onExited: {
-                    TooltipService.hide();
-                  }
                   onClicked: {
                     root.selectedColor = modelData.color;
-                    TooltipService.hide();
                   }
                 }
               }
@@ -721,15 +713,8 @@ Popup {
                   cursorShape: Qt.PointingHandCursor
                   hoverEnabled: true
 
-                  onEntered: {
-                    TooltipService.show(parent, modelData.name + "\n" + parent.color.toString().toUpperCase(), "auto");
-                  }
-                  onExited: {
-                    TooltipService.hide();
-                  }
                   onClicked: {
                     root.selectedColor = modelData.color;
-                    TooltipService.hide();
                   }
                 }
               }

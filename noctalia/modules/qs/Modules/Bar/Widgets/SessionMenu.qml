@@ -37,13 +37,6 @@ NIconButton {
   applyUiScale: false
   customRadius: Style.radiusL
   icon: "power"
-  tooltipText: {
-    if (PanelService.getPanel("sessionMenuPanel", screen)?.isPanelOpen)
-      return "";
-    else
-      return I18n.tr("tooltips.session-menu");
-  }
-  tooltipDirection: BarService.getTooltipDirection(screenName)
   colorBg: Style.capsuleColor
   colorFg: Color.resolveColorKey(iconColorKey)
   border.color: Style.capsuleBorderColor

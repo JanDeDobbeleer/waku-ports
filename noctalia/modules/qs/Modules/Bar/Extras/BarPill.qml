@@ -13,7 +13,6 @@ Item {
   property string iconPosition: ""
   property string text: ""
   property string suffix: ""
-  property var tooltipText
   property bool autoHide: false
   property bool forceOpen: false
   property bool forceClose: false
@@ -59,7 +58,6 @@ Item {
         iconPosition: root.iconPosition
         text: root.text
         suffix: root.suffix
-        tooltipText: root.tooltipText
         autoHide: root.autoHide
         forceOpen: root.forceOpen
         forceClose: root.forceClose
@@ -89,7 +87,6 @@ Item {
         iconPosition: root.iconPosition
         text: root.text
         suffix: root.suffix
-        tooltipText: root.tooltipText
         autoHide: root.autoHide
         forceOpen: root.forceOpen
         forceClose: root.forceClose

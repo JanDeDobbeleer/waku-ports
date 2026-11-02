@@ -58,67 +58,6 @@ Item {
   readonly property string deviceNativePath: widgetSettings.deviceNativePath !== undefined ? widgetSettings.deviceNativePath : widgetMetadata.deviceNativePath
   readonly property var selectedDevice: BatteryService.isDevicePresent(BatteryService.findDevice(deviceNativePath)) ? BatteryService.findDevice(deviceNativePath) : null
 
-  readonly property var tooltipContent: {
-    if (!isReady || !isPresent) {
-      return I18n.tr("battery.no-battery-detected");
-    }
-
-    let rows = [];
-    const isInternal = selectedDevice.isLaptopBattery;
-    if (isInternal) {
-      // Show charge percentage
-      rows.push([I18n.tr("battery.battery-level"), `${percent}%`]);
-
-      let timeText = BatteryService.getTimeRemainingText(selectedDevice);
-      if (timeText) {
-        const colonIdx = timeText.indexOf(":");
-        if (colonIdx >= 0) {
-          rows.push([timeText.substring(0, colonIdx).trim(), timeText.substring(colonIdx + 1).trim()]);
-        } else {
-          rows.push([timeText, ""]);
-        }
-      }
-
-      let rateText = BatteryService.getRateText(selectedDevice);
-      if (!isPluggedIn && rateText) {
-        const colonIdx = rateText.indexOf(":");
-        if (colonIdx >= 0) {
-          rows.push([rateText.substring(0, colonIdx).trim(), rateText.substring(colonIdx + 1).trim()]);
-        } else {
-          rows.push([rateText, ""]);
-        }
-      }
-
-      // Show battery health if supported (check actual battery, not DisplayDevice)
-      let healthDevice = selectedDevice.healthSupported ? selectedDevice : (BatteryService.laptopBatteries.length > 0 ? BatteryService.laptopBatteries[0] : null);
-      if (healthDevice && healthDevice.healthSupported) {
-        rows.push([I18n.tr("battery.battery-health"), `${Math.round(healthDevice.healthPercentage)}%`]);
-      }
-    } else if (selectedDevice) {
-      // External / Peripheral Device (Phone, Keyboard, Mouse, Gamepad, Headphone etc.)
-      let name = BatteryService.getDeviceName(selectedDevice);
-      rows.push([name, `${percent}%`]);
-    }
-
-    // If we are showing the main laptop battery, append external devices
-    if (isInternal) {
-      var external = BatteryService.bluetoothBatteries;
-      if (external.length > 0) {
-        if (rows.length > 0) {
-          rows.push(["---", "---"]); // Separator
-        }
-        for (var j = 0; j < external.length; j++) {
-          var dev = external[j];
-          var dName = BatteryService.getDeviceName(dev);
-          var dPct = BatteryService.getPercentage(dev);
-          rows.push([dName, `${dPct}%`]);
-        }
-      }
-    }
-
-    return rows;
-  }
-
   visible: shouldShow
   opacity: shouldShow ? 1.0 : 0.0
 
@@ -193,35 +132,13 @@ Item {
     hoverEnabled: true
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     cursorShape: Qt.PointingHandCursor
-    onEntered: {
-      if (!getBatteryPanel()?.isPanelOpen && root.tooltipContent) {
-        TooltipService.show(root, root.tooltipContent, BarService.getTooltipDirection(root.screen?.name));
-        tooltipRefreshTimer.start();
-      }
-    }
-    onExited: {
-      tooltipRefreshTimer.stop();
-      TooltipService.hide();
-    }
     onClicked: mouse => {
-                 TooltipService.hide();
                  if (mouse.button === Qt.RightButton) {
                    PanelService.showContextMenu(contextMenu, nBattery, screen);
                  } else {
                    toggleBatteryPanel();
                  }
                }
-  }
-
-  Timer {
-    id: tooltipRefreshTimer
-    interval: 1000
-    repeat: true
-    onTriggered: {
-      if (graphicMouseArea.containsMouse) {
-        TooltipService.updateText(root.tooltipContent);
-      }
-    }
   }
 
   // ==================== ICON MODE ====================
@@ -239,7 +156,6 @@ Item {
     forceClose: root.displayMode === "icon-only" || !root.isReady
     customBackgroundColor: root.isCharging ? Color.mPrimary : ((root.isLowBattery || root.isCriticalBattery) ? Color.mError : "transparent")
     customTextIconColor: root.isCharging ? Color.mOnPrimary : ((root.isLowBattery || root.isCriticalBattery) ? Color.mOnError : "transparent")
-    tooltipText: !getBatteryPanel()?.isPanelOpen ? root.tooltipContent : ""
     onClicked: toggleBatteryPanel()
     onRightClicked: PanelService.showContextMenu(contextMenu, pill, screen)
   }

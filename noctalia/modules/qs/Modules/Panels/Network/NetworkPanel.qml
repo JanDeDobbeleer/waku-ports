@@ -124,15 +124,11 @@ SmartPanel {
                   if (panelViewMode === "wifi") {
                     if (NetworkService.ethernetAvailable) {
                       panelViewMode = "ethernet";
-                    } else {
-                      TooltipService.show(parent, I18n.tr("wifi.panel.no-ethernet-devices"));
                     }
                   } else {
                     panelViewMode = "wifi";
                   }
                 }
-                onEntered: TooltipService.show(parent, panelViewMode === "wifi" ? I18n.tr("common.wifi") : I18n.tr("common.ethernet"))
-                onExited: TooltipService.hide()
               }
             }
 
@@ -152,14 +148,12 @@ SmartPanel {
 
             NIconButton {
               icon: "settings"
-              tooltipText: I18n.tr("tooltips.open-settings")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 0, screen)
             }
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("common.close")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: root.close()
             }
@@ -573,7 +567,6 @@ SmartPanel {
                           // Info button on the right
                           NIconButton {
                             icon: "info"
-                            tooltipText: I18n.tr("common.info")
                             baseSize: Style.baseWidgetSize * 0.75
                             colorBg: Color.mSurfaceVariant
                             colorFg: Color.mOnSurface
@@ -632,7 +625,6 @@ SmartPanel {
                             anchors.right: parent.right
                             anchors.margins: Style.marginS
                             icon: ethernetDetailsGrid ? "layout-list" : "layout-grid"
-                            tooltipText: ethernetDetailsGrid ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
                             baseSize: Style.baseWidgetSize * 0.65
                             onClicked: {
                               ethernetDetailsGrid = !ethernetDetailsGrid;
@@ -669,12 +661,6 @@ SmartPanel {
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.alignment: Qt.AlignVCenter
-                                MouseArea {
-                                  anchors.fill: parent
-                                  hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, I18n.tr("wifi.panel.interface"))
-                                  onExited: TooltipService.hide()
-                                }
                               }
                               NText {
                                 text: (NetworkService.activeEthernetDetails.ifname && NetworkService.activeEthernetDetails.ifname.length > 0) ? NetworkService.activeEthernetDetails.ifname : (NetworkService.activeEthernetIf || "-")
@@ -694,8 +680,6 @@ SmartPanel {
                                   enabled: ((NetworkService.activeEthernetDetails.ifname || "").length > 0) || ((NetworkService.activeEthernetIf || "").length > 0)
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
-                                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                                  onExited: TooltipService.hide()
                                   onClicked: {
                                     const value = (NetworkService.activeEthernetDetails.ifname && NetworkService.activeEthernetDetails.ifname.length > 0) ? NetworkService.activeEthernetDetails.ifname : (NetworkService.activeEthernetIf || "");
                                     if (value.length > 0) {
@@ -717,12 +701,6 @@ SmartPanel {
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.alignment: Qt.AlignVCenter
-                                MouseArea {
-                                  anchors.fill: parent
-                                  hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, I18n.tr("bluetooth.panel.device-address"))
-                                  onExited: TooltipService.hide()
-                                }
                               }
                               NText {
                                 text: NetworkService.activeEthernetDetails.hwAddr || "-"
@@ -740,8 +718,6 @@ SmartPanel {
                                   enabled: (NetworkService.activeEthernetDetails.hwAddr || "").length > 0
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
-                                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                                  onExited: TooltipService.hide()
                                   onClicked: {
                                     const value = NetworkService.activeEthernetDetails.hwAddr || "";
                                     if (value.length > 0) {
@@ -763,12 +739,6 @@ SmartPanel {
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.alignment: Qt.AlignVCenter
-                                MouseArea {
-                                  anchors.fill: parent
-                                  hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, I18n.tr("wifi.panel.link-speed"))
-                                  onExited: TooltipService.hide()
-                                }
                               }
                               NText {
                                 text: (NetworkService.activeEthernetDetails.speed && NetworkService.activeEthernetDetails.speed.length > 0) ? NetworkService.activeEthernetDetails.speed : "-"
@@ -796,12 +766,7 @@ SmartPanel {
                                 MouseArea {
                                   anchors.fill: parent
                                   hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.ipv4") : I18n.tr("wifi.panel.ipv6"))
-                                  onExited: TooltipService.hide()
-                                  onClicked: {
-                                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.ipv4") : I18n.tr("wifi.panel.ipv6"));
-                                  }
+                                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                                 }
                               }
                               NText {
@@ -821,8 +786,6 @@ SmartPanel {
                                   enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.ipv4 || "").length > 0 : (NetworkService.activeEthernetDetails.ipv6 || []).length > 0
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
-                                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                                  onExited: TooltipService.hide()
                                   onClicked: {
                                     const value = root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.ipv4 || "") : ((NetworkService.activeEthernetDetails.ipv6 || []).join(", ") || "");
                                     if (value.length > 0) {
@@ -847,12 +810,7 @@ SmartPanel {
                                 MouseArea {
                                   anchors.fill: parent
                                   hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv6") + ")")
-                                  onExited: TooltipService.hide()
-                                  onClicked: {
-                                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv6") + ")");
-                                  }
+                                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                                 }
                               }
                               NText {
@@ -872,8 +830,6 @@ SmartPanel {
                                   enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.dns4 || []).length > 0 : (NetworkService.activeEthernetDetails.dns6 || []).length > 0
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
-                                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                                  onExited: TooltipService.hide()
                                   onClicked: {
                                     const value = root.ipVersion === 4 ? ((NetworkService.activeEthernetDetails.dns4 || []).join(", ") || "") : ((NetworkService.activeEthernetDetails.dns6 || []).join(", ") || "");
                                     if (value.length > 0) {
@@ -898,12 +854,7 @@ SmartPanel {
                                 MouseArea {
                                   anchors.fill: parent
                                   hoverEnabled: true
-                                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv6") + ")")
-                                  onExited: TooltipService.hide()
-                                  onClicked: {
-                                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv6") + ")");
-                                  }
+                                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                                 }
                               }
                               NText {
@@ -923,8 +874,6 @@ SmartPanel {
                                   enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.gateway4 || "").length > 0 : (NetworkService.activeEthernetDetails.gateway6 || []).length > 0
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
-                                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                                  onExited: TooltipService.hide()
                                   onClicked: {
                                     const value = root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.gateway4 || "") : ((NetworkService.activeEthernetDetails.gateway6 || []).join(", ") || "");
                                     if (value.length > 0) {

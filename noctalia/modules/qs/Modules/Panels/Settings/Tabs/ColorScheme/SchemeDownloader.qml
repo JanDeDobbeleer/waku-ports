@@ -764,7 +764,6 @@ Popup {
 
       NIconButton {
         icon: "refresh"
-        tooltipText: I18n.tr("common.refresh")
         enabled: !fetching && !downloading
         onClicked: {
           // Force refresh by clearing cache timestamp and fetching directly from API
@@ -781,7 +780,6 @@ Popup {
 
       NIconButton {
         icon: "close"
-        tooltipText: I18n.tr("common.close")
         onClicked: root.close()
       }
     }
@@ -929,7 +927,6 @@ Popup {
                 property bool isDownloaded: root.isSchemeDownloaded(schemeRow.schemeName)
 
                 icon: isDownloading ? "" : (isDownloaded ? "trash" : "download")
-                tooltipText: isDownloading ? I18n.tr("panels.color-scheme.download-downloading") : (isDownloaded ? I18n.tr("common.delete") : I18n.tr("common.download"))
                 enabled: !downloading
                 Layout.alignment: Qt.AlignVCenter
                 visible: !isInstalled || isDownloaded // Show button only if not installed (can download) or if downloaded (can delete)

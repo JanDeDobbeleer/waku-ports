@@ -5,20 +5,12 @@ import Quickshell
 import qs.Commons
 import qs.Services.System
 import qs.Services.Theming
-import qs.Services.UI
 import qs.Widgets
 
 ColumnLayout {
   id: root
   spacing: Style.marginL
   Layout.fillWidth: true
-
-  // Helper to format path description
-  function getDesc(fallbackPath) {
-    return I18n.tr("panels.color-scheme.templates-write-path", {
-                     "filepath": fallbackPath
-                   });
-  }
 
   // Build a combined list of all available templates from TemplateRegistry, sorted alphabetically
   readonly property var allTemplates: {
@@ -30,8 +22,7 @@ ColumnLayout {
       templates.push({
                        "id": t.id,
                        "name": t.name,
-                       "category": "terminal",
-                       "tooltip": getDesc(t.outputPath)
+                       "category": "terminal"
                      });
     }
 
@@ -94,8 +85,7 @@ ColumnLayout {
       templates.push({
                        "id": app.id,
                        "name": app.name,
-                       "category": app.category || "misc",
-                       "tooltip": getDesc(path)
+                       "category": app.category || "misc"
                      });
     }
 
@@ -216,7 +206,6 @@ ColumnLayout {
 
     NIconButton {
       icon: "filter"
-      tooltipText: root.showOnlyActive ? I18n.tr("actions.show-all") : I18n.tr("actions.show-active-only")
 
       colorBg: root.showOnlyActive ? Color.mPrimary : Color.mSurface
       colorFg: root.showOnlyActive ? Color.mOnPrimary : Color.mOnSurface
@@ -277,14 +266,6 @@ ColumnLayout {
           cursorShape: Qt.PointingHandCursor
           hoverEnabled: true
           onClicked: root.toggleTemplate(chip.modelData.id)
-          onEntered: {
-            if (chip.modelData.tooltip) {
-              TooltipService.show(chip, chip.modelData.tooltip, "bottom");
-            }
-          }
-          onExited: {
-            TooltipService.hide();
-          }
         }
       }
     }

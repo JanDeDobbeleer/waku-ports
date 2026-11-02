@@ -110,7 +110,6 @@ SmartPanel {
 
           NIconButton {
             icon: "close"
-            tooltipText: I18n.tr("common.close")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: root.close()
           }
@@ -165,17 +164,6 @@ SmartPanel {
                           color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
                           pointSize: Style.fontSizeS
                         }
-                      }
-
-                      MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: {
-                          if (modelData.healthSupported) {
-                            TooltipService.show(batteryInfoItem, `${I18n.tr("battery.battery-health")}: ${Math.round(modelData.healthPercentage)}%`);
-                          }
-                        }
-                        onExited: TooltipService.hide(batteryInfoItem)
                       }
                     }
 

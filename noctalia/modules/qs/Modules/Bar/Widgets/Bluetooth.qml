@@ -109,14 +109,5 @@ Item {
     onRightClicked: {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }
-    tooltipText: {
-      if (PanelService.getPanel("bluetoothPanel", screen)?.isPanelOpen) {
-        return "";
-      }
-      if (pill.text !== "") {
-        return pill.text;
-      }
-      return I18n.tr("tooltips.bluetooth-devices");
-    }
   }
 }

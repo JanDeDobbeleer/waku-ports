@@ -495,20 +495,6 @@ Singleton {
     return true;
   }
 
-  function getTooltipDirection(screenName) {
-    const position = Settings.getBarPositionForScreen(screenName);
-    switch (position) {
-    case "right":
-      return "left";
-    case "left":
-      return "right";
-    case "bottom":
-      return "top";
-    default:
-      return "bottom";
-    }
-  }
-
   // Helper to close any existing dialogs in a popup menu window
   function closeExistingDialogs(popupMenuWindow) {
     if (!popupMenuWindow || !popupMenuWindow.dialogParent)

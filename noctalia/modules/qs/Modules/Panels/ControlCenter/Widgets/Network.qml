@@ -8,7 +8,6 @@ import qs.Widgets
 NIconButtonHot {
   property ShellScreen screen
   icon: NetworkService.getIcon()
-  tooltipText: NetworkService.getStatusText(true)
   onClicked: {
     var panel = PanelService.getPanel("networkPanel", screen);
     panel?.toggle(this);

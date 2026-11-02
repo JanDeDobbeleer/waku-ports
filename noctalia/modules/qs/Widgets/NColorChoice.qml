@@ -1,25 +1,18 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 
 RowLayout {
   id: root
 
   property string label: I18n.tr("common.select-color")
   property string description: I18n.tr("common.select-color-description")
-  property string tooltip: ""
   property string currentKey: ""
   property var defaultValue: undefined
   property var noneColor: undefined      // color declared as var so we can nullify
   property var noneOnColor: undefined    // color declared as var so we can nullify
 
   readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey !== defaultValue)
-  readonly property string indicatorTooltip: {
-    I18n.tr("panels.indicator.default-value", {
-              "value": defaultValue === "" ? "(empty)" : String(defaultValue)
-            });
-  }
 
   readonly property int diameter: Style.baseWidgetSize * 0.9 * Style.uiScaleRatio
 
@@ -29,7 +22,6 @@ RowLayout {
     label: root.label
     description: root.description
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   RowLayout {
@@ -61,8 +53,6 @@ RowLayout {
           anchors.fill: parent
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
-          onEntered: TooltipService.show(parent, modelData.name)
-          onExited: TooltipService.hide()
           onClicked: {
             root.currentKey = modelData.key;
             root.selected(modelData.key);

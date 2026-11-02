@@ -32,9 +32,7 @@ Singleton {
                                     "onRightClicked": "",
                                     "onMiddleClicked": "",
                                     "stateChecksJson": "[]",
-                                    "generalTooltipText": "",
-                                    "enableOnStateLogic": false,
-                                    "showExecTooltip": true
+                                    "enableOnStateLogic": false
                                   }
                                 })
 

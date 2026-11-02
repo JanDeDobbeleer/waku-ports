@@ -359,7 +359,6 @@ Singleton {
       property string fontFixed: ""
       property real fontDefaultScale: 1.0
       property real fontFixedScale: 1.0
-      property bool tooltipsEnabled: true
       property bool scrollbarAlwaysVisible: true
       property bool boxBorderEnabled: false
       property real panelBackgroundOpacity: 0.93
@@ -873,31 +872,6 @@ Singleton {
 
     // Simple comparison for primitives
     return currentValue !== defaultValue;
-  }
-
-  // -----------------------------------------------------
-  // Format default value for tooltip display
-  // Returns a human-readable string representation of the default value
-  function formatDefaultValueForTooltip(path) {
-    var defaultValue = getDefaultValue(path);
-    if (defaultValue === undefined) {
-      return "";
-    }
-
-    // Format based on type
-    if (typeof defaultValue === "boolean") {
-      return defaultValue ? "true" : "false";
-    } else if (typeof defaultValue === "number") {
-      return defaultValue.toString();
-    } else if (typeof defaultValue === "string") {
-      return defaultValue === "" ? "(empty)" : defaultValue;
-    } else if (Array.isArray(defaultValue)) {
-      return defaultValue.length === 0 ? "(empty)" : "[" + defaultValue.length + " items]";
-    } else if (typeof defaultValue === "object") {
-      return "(object)";
-    }
-
-    return String(defaultValue);
   }
 
   // -----------------------------------------------------

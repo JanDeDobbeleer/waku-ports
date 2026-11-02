@@ -128,8 +128,6 @@ NBox {
           debounceTimer.restart();
         }
         onPressedChanged: localBrightnessChanging = pressed
-        tooltipText: `${Math.round(localBrightness * 100)}%`
-        tooltipDirection: "bottom"
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {

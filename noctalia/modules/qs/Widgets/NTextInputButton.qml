@@ -14,7 +14,6 @@ ColumnLayout {
   property string description: ""
   property string inputIconName: ""
   property alias buttonIcon: button.icon
-  property alias buttonTooltip: button.tooltipText
   property alias buttonEnabled: button.enabled
   property real maximumWidth: 0
 

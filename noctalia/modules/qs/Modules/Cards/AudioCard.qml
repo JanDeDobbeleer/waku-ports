@@ -181,8 +181,6 @@ NBox {
         heightRatio: 0.5
         onMoved: localOutputVolume = value
         onPressedChanged: localOutputVolumeChanging = pressed
-        tooltipText: `${Math.round((outputVolumeGuard ? localOutputVolume : AudioService.volume) * 100)}%`
-        tooltipDirection: "bottom"
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {
@@ -249,8 +247,6 @@ NBox {
         heightRatio: 0.5
         onMoved: localInputVolume = value
         onPressedChanged: localInputVolumeChanging = pressed
-        tooltipText: `${Math.round((inputVolumeGuard ? localInputVolume : AudioService.inputVolume) * 100)}%`
-        tooltipDirection: "bottom"
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {

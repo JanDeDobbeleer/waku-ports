@@ -388,7 +388,6 @@ Item {
     if (item.isImage && Settings.data.appLauncher.screenshotAnnotationTool.trim() !== "") {
       actions.push({
                      "icon": "pencil",
-                     "tooltip": I18n.tr("tooltips.open-annotation-tool"),
                      "action": function () {
                        var tool = Settings.data.appLauncher.screenshotAnnotationTool.trim();
                        Quickshell.execDetached(["sh", "-c", "cliphist decode " + item.clipboardId + " | " + tool]);
@@ -401,7 +400,6 @@ Item {
     // Delete action
     actions.push({
                    "icon": "trash",
-                   "tooltip": I18n.tr("launcher.providers.clipboard-delete"),
                    "action": function () {
                      deleteItem(item);
                    }

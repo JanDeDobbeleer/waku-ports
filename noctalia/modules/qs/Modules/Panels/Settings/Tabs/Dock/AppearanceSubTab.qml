@@ -381,7 +381,6 @@ ColumnLayout {
         icon: (Settings.data.dock.launcherIcon && Settings.data.dock.launcherIcon !== "") ? Settings.data.dock.launcherIcon : "search"
         colorFg: root.launcherPreviewColor
         colorFgHover: root.launcherPreviewColor
-        tooltipText: I18n.tr("bar.control-center.browse-library")
         onClicked: launcherIconPicker.open()
       }
 

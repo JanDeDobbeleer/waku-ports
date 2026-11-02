@@ -140,13 +140,11 @@ ColumnLayout {
 
       NIconButton {
         icon: "settings"
-        tooltipText: I18n.tr("common.edit")
         onClicked: root.openEdit(entryDelegate.index, entryDelegate.name, entryDelegate.timeout, entryDelegate.command, entryDelegate.resumeCommand)
       }
 
       NIconButton {
         icon: "trash"
-        tooltipText: I18n.tr("panels.idle.custom-entry-delete")
         onClicked: root._removeEntry(entryDelegate.index)
       }
     }

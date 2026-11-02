@@ -93,13 +93,11 @@ ColumnLayout {
 
       NIconButton {
         icon: "settings"
-        tooltipText: I18n.tr("common.edit")
         onClicked: root.openEdit(entryDelegate.index, entryDelegate.pattern, entryDelegate.action)
       }
 
       NIconButton {
         icon: "trash"
-        tooltipText: I18n.tr("panels.notifications.rules-delete")
         onClicked: root._removeRule(entryDelegate.index)
       }
     }

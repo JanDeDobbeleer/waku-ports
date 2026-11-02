@@ -154,15 +154,6 @@ Item {
     suffix: text.length > 0 ? "%" : "-"
     forceOpen: displayMode === "alwaysShow"
     forceClose: displayMode === "alwaysHide"
-    tooltipText: {
-      var monitor = brightnessMonitor;
-      var panel = PanelService.getPanel("brightnessPanel", screen);
-      if (panel?.isPanelOpen || !monitor || !monitor.brightnessControlAvailable || isNaN(monitor.brightness))
-        return "";
-      return I18n.tr("tooltips.brightness-at", {
-                       "brightness": Math.round(monitor.brightness * 100)
-                     });
-    }
 
     onWheel: function (angle) {
       var monitor = brightnessMonitor;

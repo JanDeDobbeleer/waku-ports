@@ -89,7 +89,6 @@ Popup {
 
         NIconButton {
           icon: "close"
-          tooltipText: I18n.tr("common.close")
           onClicked: {
             root.save();
             root.close();

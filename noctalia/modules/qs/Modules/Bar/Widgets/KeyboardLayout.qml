@@ -80,7 +80,6 @@ Item {
     icon: root.showIcon ? "keyboard" : ""
     autoHide: false // Important to be false so we can hover as long as we want
     text: isBarVertical ? currentLayout.substring(0, 3).toUpperCase() : currentLayout
-    tooltipText: KeyboardLayoutService.fullLayoutName
     // When icon is disabled, always show the layout text
     forceOpen: !root.showIcon || root.displayMode === "forceOpen"
     forceClose: root.showIcon && root.displayMode === "alwaysHide"

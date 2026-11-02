@@ -234,7 +234,6 @@ Item {
           required property var modelData
           icon: modelData.icon
           baseSize: Style.baseWidgetSize * 0.75
-          tooltipText: modelData.tooltip
           z: 11
           handleWheel: true
           onClicked: {

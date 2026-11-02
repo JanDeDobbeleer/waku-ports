@@ -948,7 +948,6 @@ Item {
                              root.launchPinnedApp(modelData.appId);
                            }
                          } else if (mouse.button === Qt.RightButton) {
-                           TooltipService.hide();
                            // Only show context menu for running apps
                            if (isRunning && modelData.window) {
                              root.selectedWindowId = modelData.id;
@@ -959,11 +958,9 @@ Item {
                        }
             onEntered: {
               root.hoveredWindowId = taskbarItem.modelData.id;
-              TooltipService.show(taskbarItem, taskbarItem.title, BarService.getTooltipDirection(root.screen?.name));
             }
             onExited: {
               root.hoveredWindowId = "";
-              TooltipService.hide();
             }
           }
         }

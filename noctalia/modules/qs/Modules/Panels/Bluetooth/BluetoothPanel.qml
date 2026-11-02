@@ -61,7 +61,6 @@ SmartPanel {
 
           NIconButton {
             icon: Settings.data.network.bluetoothAutoConnect ? "bluetooth-connected" : "bluetooth"
-            tooltipText: Settings.data.network.bluetoothAutoConnect ? I18n.tr("tooltips.bluetooth-auto-connect-on") : I18n.tr("tooltips.bluetooth-auto-connect-off")
             colorFg: Settings.data.network.bluetoothAutoConnect ? Color.mPrimary : Color.mOnSurfaceVariant
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: Settings.data.network.bluetoothAutoConnect = !Settings.data.network.bluetoothAutoConnect
@@ -69,14 +68,12 @@ SmartPanel {
 
           NIconButton {
             icon: "settings"
-            tooltipText: I18n.tr("tooltips.open-settings")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, screen)
           }
 
           NIconButton {
             icon: "close"
-            tooltipText: I18n.tr("common.close")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               root.close();

@@ -79,7 +79,6 @@ ColumnLayout {
 
     NIconButton {
       icon: "refresh"
-      tooltipText: I18n.tr("panels.plugins.refresh-tooltip")
       baseSize: Style.baseWidgetSize * 0.9
       onClicked: {
         PluginService.refreshAvailablePlugins();
@@ -237,7 +236,6 @@ ColumnLayout {
             NIconButton {
               icon: "external-link"
               baseSize: Style.baseWidgetSize * 0.7
-              tooltipText: I18n.tr("panels.plugins.open-plugin-page")
               onClicked: {
                 var sourceUrl = modelData.source?.url || "";
                 Qt.openUrlExternally(sourceUrl && !PluginRegistry.isMainSource(sourceUrl) ? sourceUrl : "https://noctalia.dev/plugins/" + modelData.id + "/");
@@ -257,7 +255,6 @@ ColumnLayout {
               visible: modelData.downloaded === false && !PluginService.installingPlugins[modelData.id]
               icon: "download"
               baseSize: Style.baseWidgetSize * 0.7
-              tooltipText: I18n.tr("common.install")
               onClicked: installPlugin(modelData)
             }
 

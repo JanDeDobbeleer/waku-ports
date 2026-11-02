@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 // Compact circular statistic display using Layout management
@@ -13,8 +12,6 @@ Item {
   property string suffix: "%"
   property real contentScale: 1.0
   property color fillColor: Color.mPrimary
-  property var tooltipText
-  property string tooltipDirection: "top"
 
   // Arc geometry constants
   readonly property real _gaugeSize: 60 * contentScale
@@ -145,20 +142,5 @@ Item {
     pointSize: Style.fontSizeM * root.contentScale
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
-  }
-
-  MouseArea {
-    anchors.fill: parent
-    hoverEnabled: true
-    onEntered: {
-      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-        TooltipService.show(root, root.tooltipText, root.tooltipDirection);
-      }
-    }
-    onExited: {
-      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-        TooltipService.hide();
-      }
-    }
   }
 }

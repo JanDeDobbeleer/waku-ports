@@ -3,7 +3,6 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Window
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 ColumnLayout {
@@ -28,12 +27,9 @@ ColumnLayout {
   property int valueMaxTextLengthVertical: widgetData?.maxTextLength?.vertical ?? widgetMetadata?.maxTextLength?.vertical
   property string valueHideMode: (widgetData.hideMode !== undefined) ? widgetData.hideMode : widgetMetadata.hideMode
   property bool valueShowIcon: (widgetData.showIcon !== undefined) ? widgetData.showIcon : widgetMetadata.showIcon
-  property bool valueShowExecTooltip: widgetData.showExecTooltip !== undefined ? widgetData.showExecTooltip : widgetMetadata.showExecTooltip
-  property bool valueShowTextTooltip: widgetData.showTextTooltip !== undefined ? widgetData.showTextTooltip : widgetMetadata.showTextTooltip
   property string valueColorizeSystemIcon: widgetData.colorizeSystemIcon !== undefined ? widgetData.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
   property string valueColorizeSystemText: widgetData.colorizeSystemText !== undefined ? widgetData.colorizeSystemText : widgetMetadata.colorizeSystemText
   property string valueIpcIdentifier: widgetData.ipcIdentifier !== undefined ? widgetData.ipcIdentifier : widgetMetadata.ipcIdentifier
-  property string valueGeneralTooltipText: widgetData.generalTooltipText !== undefined ? widgetData.generalTooltipText : widgetMetadata.generalTooltipText
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -57,8 +53,6 @@ ColumnLayout {
     settings.textStream = valueTextStream;
     settings.parseJson = valueParseJson;
     settings.showIcon = valueShowIcon;
-    settings.showExecTooltip = valueShowExecTooltip;
-    settings.showTextTooltip = valueShowTextTooltip;
     settings.hideMode = valueHideMode;
     settings.maxTextLength = {
       "horizontal": valueMaxTextLengthHorizontal,
@@ -68,7 +62,6 @@ ColumnLayout {
     settings.colorizeSystemIcon = valueColorizeSystemIcon;
     settings.colorizeSystemText = valueColorizeSystemText;
     settings.ipcIdentifier = valueIpcIdentifier;
-    settings.generalTooltipText = valueGeneralTooltipText;
     settingsChanged(settings);
   }
 
@@ -126,8 +119,6 @@ ColumnLayout {
           enabled: !valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          onEntered: TooltipService.show(leftClickUpdateText, I18n.tr("bar.custom-button.left-click-update-text"))
-          onExited: TooltipService.hide()
           checked: widgetData?.leftClickUpdateText ?? widgetMetadata.leftClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
@@ -156,8 +147,6 @@ ColumnLayout {
           enabled: !valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          onEntered: TooltipService.show(rightClickUpdateText, I18n.tr("bar.custom-button.right-click-update-text"))
-          onExited: TooltipService.hide()
           checked: widgetData?.rightClickUpdateText ?? widgetMetadata.rightClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
@@ -186,8 +175,6 @@ ColumnLayout {
           enabled: !valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          onEntered: TooltipService.show(middleClickUpdateText, I18n.tr("bar.custom-button.middle-click-update-text"))
-          onExited: TooltipService.hide()
           checked: widgetData?.middleClickUpdateText ?? widgetMetadata.middleClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
@@ -235,8 +222,6 @@ ColumnLayout {
             enabled: !valueTextStream
             Layout.alignment: Qt.AlignRight | Qt.AlignBottom
             Layout.bottomMargin: Style.marginS
-            onEntered: TooltipService.show(wheelUpdateText, I18n.tr("bar.custom-button.wheel-update-text"))
-            onExited: TooltipService.hide()
             checked: widgetData?.wheelUpdateText ?? widgetMetadata?.wheelUpdateText
             onToggled: isChecked => {
                          checked = isChecked;
@@ -270,8 +255,6 @@ ColumnLayout {
               enabled: !valueTextStream
               Layout.alignment: Qt.AlignRight | Qt.AlignBottom
               Layout.bottomMargin: Style.marginS
-              onEntered: TooltipService.show(wheelUpUpdateText, I18n.tr("bar.custom-button.wheel-update-text"))
-              onExited: TooltipService.hide()
               checked: widgetData?.wheelUpUpdateText ?? widgetMetadata?.wheelUpUpdateText
               onToggled: isChecked => {
                            checked = isChecked;
@@ -300,8 +283,6 @@ ColumnLayout {
               enabled: !valueTextStream
               Layout.alignment: Qt.AlignRight | Qt.AlignBottom
               Layout.bottomMargin: Style.marginS
-              onEntered: TooltipService.show(wheelDownUpdateText, I18n.tr("bar.custom-button.wheel-update-text"))
-              onExited: TooltipService.hide()
               checked: widgetData?.wheelDownUpdateText ?? widgetMetadata?.wheelDownUpdateText
               onToggled: isChecked => {
                            checked = isChecked;
@@ -403,43 +384,6 @@ ColumnLayout {
                       saveSettings();
                     }
         defaultValue: widgetMetadata.colorizeSystemIcon
-      }
-
-      NTextInput {
-        Layout.fillWidth: true
-        label: I18n.tr("bar.custom-button.general-tooltip-text-label")
-        description: I18n.tr("bar.custom-button.general-tooltip-text-description")
-        placeholderText: I18n.tr("placeholders.enter-tooltip")
-        text: valueGeneralTooltipText
-        onTextChanged: {
-          valueGeneralTooltipText = text;
-          saveSettings();
-        }
-        defaultValue: widgetMetadata.generalTooltipText
-      }
-
-      NToggle {
-        id: showExecTooltipToggle
-        label: I18n.tr("bar.custom-button.show-exec-tooltip-label")
-        description: I18n.tr("bar.custom-button.show-exec-tooltip-description")
-        checked: valueShowExecTooltip
-        onToggled: checked => {
-                     valueShowExecTooltip = checked;
-                     saveSettings();
-                   }
-        defaultValue: widgetMetadata.showExecTooltip
-      }
-
-      NToggle {
-        id: showTextTooltipToggle
-        label: I18n.tr("bar.custom-button.show-text-tooltip-label")
-        description: I18n.tr("bar.custom-button.show-text-tooltip-description")
-        checked: valueShowTextTooltip
-        onToggled: checked => {
-                     valueShowTextTooltip = checked;
-                     saveSettings();
-                   }
-        defaultValue: widgetMetadata.showTextTooltip
       }
 
       NTextInput {

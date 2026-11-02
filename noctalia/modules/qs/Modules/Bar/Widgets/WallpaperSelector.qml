@@ -37,14 +37,6 @@ NIconButton {
   applyUiScale: false
   customRadius: Style.radiusL
   icon: "wallpaper-selector"
-  tooltipText: {
-    if (PanelService.getPanel("wallpaperPanel", screen)?.isPanelOpen) {
-      return "";
-    } else {
-      return I18n.tr("tooltips.wallpaper-selector");
-    }
-  }
-  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   colorBg: Style.capsuleColor
   colorFg: Color.resolveColorKey(iconColorKey)
   border.color: Style.capsuleBorderColor

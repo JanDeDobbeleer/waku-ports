@@ -35,9 +35,6 @@ ColumnLayout {
   spacing: Style.marginS
 
   readonly property bool isValueChanged: (defaultValue !== undefined) && (text !== defaultValue)
-  readonly property string indicatorTooltip: defaultValue !== undefined ? I18n.tr("panels.indicator.default-value", {
-                                                                                    "value": defaultValue === "" ? "(empty)" : String(defaultValue)
-                                                                                  }) : ""
 
   NLabel {
     label: root.label
@@ -47,7 +44,6 @@ ColumnLayout {
     visible: root.label !== "" || root.description !== ""
     Layout.fillWidth: true
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   // An active control that blocks input, to avoid events leakage and dragging stuff in the background.
@@ -213,7 +209,6 @@ ColumnLayout {
           NIconButton {
             id: clearButton
             icon: "x"
-            tooltipText: (input.text.length > 0 && !root.readOnly && root.enabled) ? I18n.tr("common.clear") : ""
 
             Layout.alignment: Qt.AlignVCenter
             border.width: 0

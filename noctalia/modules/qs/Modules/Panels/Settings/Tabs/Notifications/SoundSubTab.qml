@@ -98,7 +98,6 @@ ColumnLayout {
       placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
       text: Settings.data.notifications?.sounds?.normalSoundFile ?? ""
       buttonIcon: "folder-open"
-      buttonTooltip: I18n.tr("panels.notifications.sounds-files-select-file")
       onInputTextChanged: text => {
                             // When separate sounds are enabled, this row is hidden but still
                             // bound to normalSoundFile; user edits to normal still update that
@@ -137,7 +136,6 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.lowSoundFile ?? ""
         buttonIcon: "folder-open"
-        buttonTooltip: I18n.tr("panels.notifications.sounds-files-select-file")
         onInputTextChanged: text => Settings.data.notifications.sounds.lowSoundFile = text
         onButtonClicked: root.openLowPicker()
       }
@@ -159,7 +157,6 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.normalSoundFile ?? ""
         buttonIcon: "folder-open"
-        buttonTooltip: I18n.tr("panels.notifications.sounds-files-select-file")
         onInputTextChanged: text => Settings.data.notifications.sounds.normalSoundFile = text
         onButtonClicked: root.openNormalPicker()
       }
@@ -181,7 +178,6 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.criticalSoundFile ?? ""
         buttonIcon: "folder-open"
-        buttonTooltip: I18n.tr("panels.notifications.sounds-files-select-file")
         onInputTextChanged: text => Settings.data.notifications.sounds.criticalSoundFile = text
         onButtonClicked: root.openCriticalPicker()
       }

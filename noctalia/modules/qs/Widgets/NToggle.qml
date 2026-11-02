@@ -24,9 +24,6 @@ RowLayout {
   spacing: Style.marginM
 
   readonly property bool isValueChanged: (defaultValue !== undefined) && (checked !== defaultValue)
-  readonly property string indicatorTooltip: defaultValue !== undefined ? I18n.tr("panels.indicator.default-value", {
-                                                                                    "value": typeof defaultValue === "boolean" ? (defaultValue ? "true" : "false") : String(defaultValue)
-                                                                                  }) : ""
 
   NLabel {
     Layout.fillWidth: true
@@ -36,7 +33,6 @@ RowLayout {
     iconColor: root.checked ? Color.mPrimary : Color.mOnSurface
     visible: root.label !== "" || root.description !== ""
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   Rectangle {

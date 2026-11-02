@@ -26,9 +26,7 @@ ColumnLayout {
     property string onMiddleClicked: widgetData.onMiddleClicked !== undefined ? widgetData.onMiddleClicked : widgetMetadata.onMiddleClicked
     property ListModel _stateChecksListModel: ListModel {}
     property string stateChecksJson: "[]"
-    property string generalTooltipText: widgetData.generalTooltipText !== undefined ? widgetData.generalTooltipText : widgetMetadata.generalTooltipText
     property bool enableOnStateLogic: widgetData.enableOnStateLogic !== undefined ? widgetData.enableOnStateLogic : widgetMetadata.enableOnStateLogic
-    property bool showExecTooltip: widgetData.showExecTooltip !== undefined ? widgetData.showExecTooltip : widgetMetadata.showExecTooltip
 
     function populateStateChecks() {
       try {
@@ -71,9 +69,7 @@ ColumnLayout {
         "onRightClicked": _settings.onRightClicked,
         "onMiddleClicked": _settings.onMiddleClicked,
         "stateChecksJson": _settings.stateChecksJson,
-        "generalTooltipText": _settings.generalTooltipText,
-        "enableOnStateLogic": _settings.enableOnStateLogic,
-        "showExecTooltip": _settings.showExecTooltip
+        "enableOnStateLogic": _settings.enableOnStateLogic
       };
     }
   }
@@ -131,31 +127,6 @@ ColumnLayout {
       _settings.icon = iconName;
       saveSettings();
     }
-  }
-
-  NTextInput {
-    Layout.fillWidth: true
-    label: I18n.tr("bar.custom-button.general-tooltip-text-label")
-    description: I18n.tr("bar.custom-button.general-tooltip-text-description")
-    placeholderText: I18n.tr("placeholders.enter-tooltip")
-    text: _settings.generalTooltipText
-    onTextChanged: {
-      _settings.generalTooltipText = text;
-      saveSettings();
-    }
-    defaultValue: widgetMetadata.generalTooltipText
-  }
-
-  NToggle {
-    Layout.fillWidth: true
-    label: I18n.tr("bar.custom-button.show-exec-tooltip-label")
-    description: I18n.tr("bar.custom-button.show-exec-tooltip-description")
-    checked: _settings.showExecTooltip
-    onToggled: checked => {
-                 _settings.showExecTooltip = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.showExecTooltip
   }
 
   NTextInput {
@@ -255,14 +226,12 @@ ColumnLayout {
 
             NIconButton {
               icon: "folder"
-              tooltipText: I18n.tr("common.browse")
               baseSize: Style?.buttonSizeS ?? 24
               onClicked: iconPickerDelegate.open()
             }
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("panels.control-center.shortcuts-custom-button-state-checks-remove")
               baseSize: Style?.buttonSizeS ?? 24
               colorBorder: Qt.alpha(Color.mOutline, Style.opacityLight)
               colorBg: Color.mError

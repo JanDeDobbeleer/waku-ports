@@ -34,14 +34,6 @@ NIconButton {
   readonly property color iconColor: Color.resolveColorKey(valueIconColor)
 
   icon: "settings"
-  tooltipText: {
-    if (PanelService.getPanel("settingsPanel", screen)?.isPanelOpen) {
-      return "";
-    } else {
-      return I18n.tr("tooltips.open-settings");
-    }
-  }
-  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
   customRadius: Style.radiusL

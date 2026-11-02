@@ -397,7 +397,6 @@ NBox {
         colorBgHover: Color.mSecondary
         colorFgHover: Color.mOnSecondary
         enabled: comboBox.currentKey !== "" && !root.isAtMaxCapacity
-        tooltipText: root.isAtMaxCapacity ? I18n.tr("tooltips.max-widgets-reached") : I18n.tr("tooltips.add-widget")
         Layout.alignment: Qt.AlignVCenter
         Layout.leftMargin: Style.marginS
         onClicked: {
@@ -627,7 +626,6 @@ NBox {
                   active: root.widgetHasSettings(modelData.id) && root.enabled
                   sourceComponent: NIconButton {
                     icon: "settings"
-                    tooltipText: I18n.tr("actions.widget-settings")
                     baseSize: miniButtonSize
                     colorBorder: Qt.alpha(Color.mOutline, Style.opacityLight)
                     colorBg: Color.mOnSurface

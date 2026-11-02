@@ -188,7 +188,6 @@ SmartPanel {
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("common.close")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
                 root.close();
@@ -303,7 +302,6 @@ SmartPanel {
 
                   NIconButton {
                     icon: AudioService.getOutputIcon()
-                    tooltipText: I18n.tr("tooltips.output-muted")
                     baseSize: Style.baseWidgetSize * 0.7
                     onClicked: {
                       AudioService.suppressOutputOSD();
@@ -379,7 +377,6 @@ SmartPanel {
 
                   NIconButton {
                     icon: AudioService.getInputIcon()
-                    tooltipText: I18n.tr("tooltips.input-muted")
                     baseSize: Style.baseWidgetSize * 0.7
                     onClicked: {
                       AudioService.suppressInputOSD();
@@ -704,7 +701,6 @@ SmartPanel {
                       // Mute Button
                       NIconButton {
                         icon: (appBox.appMuted === true) ? "volume-mute" : "volume-high"
-                        tooltipText: (appBox.appMuted === true) ? I18n.tr("tooltips.unmute") : I18n.tr("tooltips.mute")
                         baseSize: Style.baseWidgetSize * 0.7
                         enabled: !!(appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true)
                         onClicked: {

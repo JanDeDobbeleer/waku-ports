@@ -415,12 +415,6 @@ ColumnLayout {
               anchors.fill: parent
               hoverEnabled: true
               cursorShape: root.commitInfo ? Qt.PointingHandCursor : Qt.ArrowCursor
-              onEntered: {
-                if (root.commitInfo) {
-                  TooltipService.show(commitText, I18n.tr("panels.about.view-commit"));
-                }
-              }
-              onExited: TooltipService.hide()
               onClicked: {
                 if (root.commitInfo) {
                   Os.open("https://github.com/noctalia-dev/noctalia-shell/commit/" + root.commitInfo);
@@ -436,13 +430,6 @@ ColumnLayout {
             icon: "circle-check"
             pointSize: Style.fontSizeM
             color: Color.mPrimary
-
-            MouseArea {
-              anchors.fill: parent
-              hoverEnabled: true
-              onEntered: TooltipService.show(upToDateIcon, I18n.tr("panels.about.up-to-date"))
-              onExited: TooltipService.hide()
-            }
           }
 
           NIcon {
@@ -451,13 +438,6 @@ ColumnLayout {
             icon: "arrow-up-circle"
             pointSize: Style.fontSizeS
             color: Color.mPrimary
-
-            MouseArea {
-              anchors.fill: parent
-              hoverEnabled: true
-              onEntered: TooltipService.show(updateAvailableIcon, I18n.tr("panels.about.update-available"))
-              onExited: TooltipService.hide()
-            }
           }
         }
 
@@ -515,8 +495,6 @@ ColumnLayout {
               anchors.fill: parent
               hoverEnabled: true
               cursorShape: Qt.PointingHandCursor
-              onEntered: TooltipService.show(qsRevisionText, I18n.tr("panels.about.view-commit"))
-              onExited: TooltipService.hide()
               onClicked: {
                 Os.open("https://github.com/noctalia-dev/noctalia-qs/commit/" + root.qsRevision);
               }
@@ -530,13 +508,6 @@ ColumnLayout {
             icon: "circle-check"
             pointSize: Style.fontSizeM
             color: Color.mPrimary
-
-            MouseArea {
-              anchors.fill: parent
-              hoverEnabled: true
-              onEntered: TooltipService.show(qsUpToDateIcon, I18n.tr("panels.about.up-to-date"))
-              onExited: TooltipService.hide()
-            }
           }
 
           NIcon {
@@ -545,13 +516,6 @@ ColumnLayout {
             icon: "arrow-up-circle"
             pointSize: Style.fontSizeS
             color: Color.mPrimary
-
-            MouseArea {
-              anchors.fill: parent
-              hoverEnabled: true
-              onEntered: TooltipService.show(qsUpdateAvailableIcon, I18n.tr("panels.about.update-available"))
-              onExited: TooltipService.hide()
-            }
           }
         }
 

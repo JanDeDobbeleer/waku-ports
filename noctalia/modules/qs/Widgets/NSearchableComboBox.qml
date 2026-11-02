@@ -29,48 +29,6 @@ RowLayout {
   Layout.fillWidth: true
 
   readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey !== defaultValue)
-  readonly property string indicatorTooltip: {
-    if (defaultValue === undefined)
-      return "";
-    var displayValue = "";
-    if (defaultValue === "") {
-      // Try to find the display name for empty key in the model
-      if (model && model.count > 0) {
-        for (var i = 0; i < model.count; i++) {
-          var item = model.get(i);
-          if (item && item.key === "") {
-            displayValue = item.name || I18n.tr("panels.indicator.system-default");
-            break;
-          }
-        }
-        // If not found in model, show "System Default" instead of "(empty)"
-        if (displayValue === "") {
-          displayValue = I18n.tr("panels.indicator.system-default");
-        }
-      } else {
-        displayValue = I18n.tr("panels.indicator.system-default");
-      }
-    } else {
-      // Try to find the display name for the default key in the model
-      if (model && model.count > 0) {
-        for (var i = 0; i < model.count; i++) {
-          var item = model.get(i);
-          if (item && item.key === defaultValue) {
-            displayValue = item.name || String(defaultValue);
-            break;
-          }
-        }
-        if (displayValue === "") {
-          displayValue = String(defaultValue);
-        }
-      } else {
-        displayValue = String(defaultValue);
-      }
-    }
-    return I18n.tr("panels.indicator.default-value", {
-                     "value": displayValue
-                   });
-  }
 
   // Filtered model for search results
   property ListModel filteredModel: ListModel {}
@@ -162,7 +120,6 @@ RowLayout {
     label: root.label
     description: root.description
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   Item {

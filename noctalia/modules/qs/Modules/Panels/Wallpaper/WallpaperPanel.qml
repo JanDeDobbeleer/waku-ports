@@ -299,7 +299,6 @@ SmartPanel {
             NIconButton {
               visible: Settings.data.wallpaper.enabled
               icon: "dark-mode"
-              tooltipText: Settings.data.wallpaper.linkLightAndDarkWallpapers ? I18n.tr("wallpaper.panel.header-separate-light-dark-tooltip") : I18n.tr("wallpaper.panel.header-link-light-dark-tooltip")
               baseSize: Style.baseWidgetSize * 0.8
               colorBg: !Settings.data.wallpaper.linkLightAndDarkWallpapers ? Color.mPrimary : Color.smartAlpha(Color.mSurfaceVariant)
               colorFg: !Settings.data.wallpaper.linkLightAndDarkWallpapers ? Color.mOnPrimary : Color.mPrimary
@@ -309,7 +308,6 @@ SmartPanel {
             NIconButton {
               visible: Settings.data.wallpaper.enabled && panelContent.headerDevicesButtonVisible
               icon: "devices"
-              tooltipText: Settings.data.wallpaper.setWallpaperOnAllMonitors ? I18n.tr("wallpaper.panel.header-devices-apply-all-tooltip") : I18n.tr("wallpaper.panel.header-devices-per-monitor-tooltip")
               baseSize: Style.baseWidgetSize * 0.8
               colorBg: !Settings.data.wallpaper.setWallpaperOnAllMonitors ? Color.mPrimary : Color.smartAlpha(Color.mSurfaceVariant)
               colorFg: !Settings.data.wallpaper.setWallpaperOnAllMonitors ? Color.mOnPrimary : Color.mPrimary
@@ -318,7 +316,6 @@ SmartPanel {
 
             NIconButton {
               icon: "palette"
-              tooltipText: I18n.tr("wallpaper.panel.solid-color-tooltip")
               baseSize: Style.baseWidgetSize * 0.8
               colorBg: Settings.data.wallpaper.useSolidColor ? Color.mPrimary : Color.mSurfaceVariant
               colorFg: Settings.data.wallpaper.useSolidColor ? Color.mOnPrimary : Color.mPrimary
@@ -327,7 +324,6 @@ SmartPanel {
 
             NIconButton {
               icon: "settings"
-              tooltipText: I18n.tr("panels.wallpaper.settings-title")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
                 var settingsPanel = PanelService.getPanel("settingsPanel", screen);
@@ -338,7 +334,6 @@ SmartPanel {
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("common.close")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: root.close()
             }
@@ -484,7 +479,6 @@ SmartPanel {
 
             NIconButton {
               icon: "color-swatch"
-              tooltipText: Settings.data.colorSchemes.useWallpaperColors ? I18n.tr("wallpaper.panel.color-extraction-enabled") : I18n.tr("wallpaper.panel.color-extraction-disabled")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
                 Settings.data.colorSchemes.useWallpaperColors = !Settings.data.colorSchemes.useWallpaperColors;
@@ -615,7 +609,6 @@ SmartPanel {
             NIconButton {
               id: wallhavenSettingsButton
               icon: "settings"
-              tooltipText: I18n.tr("wallpaper.panel.wallhaven-settings-title")
               baseSize: Style.baseWidgetSize * 0.8
               visible: Settings.data.wallpaper.useWallhaven
               onClicked: {
@@ -927,19 +920,6 @@ SmartPanel {
       return "folder-open";
     }
 
-    // Helper function to get tooltip for current view mode
-    function getViewModeTooltip() {
-      var mode = Settings.data.wallpaper.viewMode;
-      var modeName;
-      if (mode === "single")
-        modeName = I18n.tr("panels.wallpaper.view-mode-single");
-      else if (mode === "recursive")
-        modeName = I18n.tr("panels.wallpaper.view-mode-recursive");
-      else
-        modeName = I18n.tr("panels.wallpaper.view-mode-browse");
-      return I18n.tr("panels.wallpaper.view-mode-cycle-tooltip").replace("{mode}", modeName);
-    }
-
     ColumnLayout {
       anchors.fill: parent
       spacing: Style.marginM
@@ -952,7 +932,6 @@ SmartPanel {
         // Left side: navigation (back, home, path)
         NIconButton {
           icon: "arrow-left"
-          tooltipText: I18n.tr("wallpaper.browse.go-up")
           enabled: isBrowseMode && currentBrowsePath !== WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
           onClicked: WallpaperService.navigateUp(targetScreen?.name ?? "")
           baseSize: Style.baseWidgetSize * 0.8
@@ -960,7 +939,6 @@ SmartPanel {
 
         NIconButton {
           icon: "home"
-          tooltipText: I18n.tr("wallpaper.browse.go-root")
           enabled: isBrowseMode && currentBrowsePath !== WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
           onClicked: WallpaperService.navigateToRoot(targetScreen?.name ?? "")
           baseSize: Style.baseWidgetSize * 0.8
@@ -993,17 +971,6 @@ SmartPanel {
               return "arrows-shuffle";
             return "sort-ascending";
           }
-          tooltipText: {
-            if (sortOrder === "date_desc")
-              return I18n.tr("wallpaper.panel.sort-date-desc");
-            if (sortOrder === "date_asc")
-              return I18n.tr("wallpaper.panel.sort-date-asc");
-            if (sortOrder === "name_desc")
-              return I18n.tr("wallpaper.panel.sort-name-desc");
-            if (sortOrder === "random")
-              return I18n.tr("wallpaper.panel.sort-random");
-            return I18n.tr("wallpaper.panel.sort-name-asc");
-          }
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: {
             var next = "name";
@@ -1032,28 +999,24 @@ SmartPanel {
 
         NIconButton {
           icon: getViewModeIcon()
-          tooltipText: getViewModeTooltip()
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: cycleViewMode()
         }
 
         NIconButton {
           icon: Settings.data.wallpaper.hideWallpaperFilenames ? "id-off" : "id"
-          tooltipText: Settings.data.wallpaper.hideWallpaperFilenames ? I18n.tr("panels.wallpaper.settings-hide-wallpaper-filenames-tooltip-show") : I18n.tr("panels.wallpaper.settings-hide-wallpaper-filenames-tooltip-hide")
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: Settings.data.wallpaper.hideWallpaperFilenames = !Settings.data.wallpaper.hideWallpaperFilenames
         }
 
         NIconButton {
           icon: Settings.data.wallpaper.showHiddenFiles ? "eye" : "eye-closed"
-          tooltipText: Settings.data.wallpaper.showHiddenFiles ? I18n.tr("panels.wallpaper.settings-show-hidden-files-tooltip-hide") : I18n.tr("panels.wallpaper.settings-show-hidden-files-tooltip-show")
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: Settings.data.wallpaper.showHiddenFiles = !Settings.data.wallpaper.showHiddenFiles
         }
 
         NIconButton {
           icon: "refresh"
-          tooltipText: I18n.tr("tooltips.refresh-wallpaper-list")
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: {
             if (isBrowseMode) {
