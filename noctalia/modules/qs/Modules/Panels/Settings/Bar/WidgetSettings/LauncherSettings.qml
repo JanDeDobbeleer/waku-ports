@@ -19,7 +19,8 @@ ColumnLayout {
 
   // Local state
   property string valueIcon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
-  property bool valueUseDistroLogo: widgetData.useDistroLogo !== undefined ? widgetData.useDistroLogo : widgetMetadata.useDistroLogo
+  // No distro logo on Windows (HostService.osLogo is empty).
+  readonly property bool valueUseDistroLogo: false
   property string valueCustomIconPath: widgetData.customIconPath !== undefined ? widgetData.customIconPath : widgetMetadata.customIconPath
   property bool valueEnableColorization: widgetData.enableColorization !== undefined ? widgetData.enableColorization : widgetMetadata.enableColorization
   property string valueColorizeSystemIcon: widgetData.colorizeSystemIcon !== undefined ? widgetData.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
@@ -32,17 +33,6 @@ ColumnLayout {
     settings.enableColorization = valueEnableColorization;
     settings.colorizeSystemIcon = valueColorizeSystemIcon;
     settingsChanged(settings);
-  }
-
-  NToggle {
-    label: I18n.tr("bar.control-center.use-distro-logo-label")
-    description: I18n.tr("bar.control-center.use-distro-logo-description")
-    checked: valueUseDistroLogo
-    onToggled: checked => {
-                 valueUseDistroLogo = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.useDistroLogo
   }
 
   NToggle {
@@ -123,7 +113,7 @@ ColumnLayout {
     title: I18n.tr("bar.control-center.select-custom-icon")
     selectionMode: "files"
     nameFilters: ImageCacheService.basicImageFilters.concat(["*.svg"])
-    initialPath: Quickshell.env("HOME")
+    initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     onAccepted: paths => {
                   if (paths.length > 0) {
                     valueCustomIconPath = paths[0];

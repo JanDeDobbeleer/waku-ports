@@ -253,15 +253,8 @@ Item {
                 return launcherMetadata.iconColor;
               return "none";
             }
-            readonly property bool launcherUseDistroLogo: {
-              if (Settings.data.dock.launcherUseDistroLogo !== undefined)
-                return Settings.data.dock.launcherUseDistroLogo;
-              if (launcherWidgetSettings.useDistroLogo !== undefined)
-                return launcherWidgetSettings.useDistroLogo;
-              if (launcherMetadata && launcherMetadata.useDistroLogo !== undefined)
-                return launcherMetadata.useDistroLogo;
-              return false;
-            }
+            // No distro logo on Windows (HostService.osLogo is empty).
+            readonly property bool launcherUseDistroLogo: false
 
             Item {
               id: launcherIconContainer

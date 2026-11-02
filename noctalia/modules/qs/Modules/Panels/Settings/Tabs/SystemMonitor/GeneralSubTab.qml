@@ -11,6 +11,13 @@ ColumnLayout {
 
   property var screen
 
+  // Upstream's default is a list of Linux system monitors; none exist on Windows, so the bar widget
+  // would launch nothing. Swap that list for Task Manager once.
+  Component.onCompleted: {
+    if ((Settings.data.systemMonitor.externalMonitor || "").indexOf("gnome-system-monitor") !== -1)
+      Settings.data.systemMonitor.externalMonitor = "taskmgr";
+  }
+
   NToggle {
     Layout.fillWidth: true
     Layout.topMargin: Style.marginM
@@ -97,9 +104,8 @@ ColumnLayout {
   NTextInput {
     label: I18n.tr("panels.system-monitor.external-monitor-label")
     description: I18n.tr("panels.system-monitor.external-monitor-description")
-    placeholderText: I18n.tr("panels.system-monitor.external-monitor-placeholder")
+    placeholderText: "taskmgr"
     text: Settings.data.systemMonitor.externalMonitor
-    defaultValue: Settings.getDefaultValue("systemMonitor.externalMonitor")
     onTextChanged: Settings.data.systemMonitor.externalMonitor = text
   }
 }

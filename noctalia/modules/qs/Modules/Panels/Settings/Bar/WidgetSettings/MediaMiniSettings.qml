@@ -107,44 +107,6 @@ ColumnLayout {
     defaultValue: widgetMetadata.showArtistFirst
   }
 
-  NToggle {
-    label: I18n.tr("bar.media-mini.show-visualizer-label")
-    description: I18n.tr("bar.media-mini.show-visualizer-description")
-    checked: valueShowVisualizer
-    onToggled: checked => {
-                 valueShowVisualizer = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.showVisualizer
-  }
-
-  NComboBox {
-    visible: valueShowVisualizer
-    label: I18n.tr("bar.media-mini.visualizer-type-label")
-    description: I18n.tr("bar.media-mini.visualizer-type-description")
-    model: [
-      {
-        "key": "linear",
-        "name": I18n.tr("options.visualizer-types.linear")
-      },
-      {
-        "key": "mirrored",
-        "name": I18n.tr("options.visualizer-types.mirrored")
-      },
-      {
-        "key": "wave",
-        "name": I18n.tr("options.visualizer-types.wave")
-      }
-    ]
-    currentKey: valueVisualizerType
-    onSelected: key => {
-                  valueVisualizerType = key;
-                  saveSettings();
-                }
-    minimumWidth: 200
-    defaultValue: widgetMetadata.visualizerType
-  }
-
   NTextInput {
     id: widthInput
     Layout.fillWidth: true

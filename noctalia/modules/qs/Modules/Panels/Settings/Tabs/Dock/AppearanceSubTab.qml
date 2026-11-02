@@ -355,16 +355,6 @@ ColumnLayout {
       onSelected: key => Settings.data.dock.launcherPosition = key
     }
 
-    NToggle {
-      Layout.fillWidth: true
-      visible: Settings.data.dock.showLauncherIcon
-      label: I18n.tr("panels.dock.appearance-launcher-use-distro-logo-label")
-      description: I18n.tr("panels.dock.appearance-launcher-use-distro-logo-description")
-      checked: Settings.data.dock.launcherUseDistroLogo
-      defaultValue: Settings.getDefaultValue("dock.launcherUseDistroLogo")
-      onToggled: checked => Settings.data.dock.launcherUseDistroLogo = checked
-    }
-
     RowLayout {
       visible: Settings.data.dock.showLauncherIcon
       Layout.fillWidth: true
@@ -376,39 +366,10 @@ ColumnLayout {
       }
 
       NIconButton {
-        visible: !Settings.data.dock.launcherUseDistroLogo
-        enabled: !Settings.data.dock.launcherUseDistroLogo
         icon: (Settings.data.dock.launcherIcon && Settings.data.dock.launcherIcon !== "") ? Settings.data.dock.launcherIcon : "search"
         colorFg: root.launcherPreviewColor
         colorFgHover: root.launcherPreviewColor
         onClicked: launcherIconPicker.open()
-      }
-
-      Rectangle {
-        visible: Settings.data.dock.launcherUseDistroLogo
-        width: Style.toOdd(Style.baseWidgetSize * Style.uiScaleRatio)
-        height: width
-        radius: Math.min(Style.iRadiusL, width / 2)
-        color: Color.smartAlpha(Color.mSurfaceVariant)
-        border.color: Color.mOutline
-        border.width: Style.borderS
-
-        Image {
-          anchors.centerIn: parent
-          width: parent.width * 0.62
-          height: width
-          source: HostService.osLogo
-          fillMode: Image.PreserveAspectFit
-          smooth: true
-          asynchronous: true
-          layer.enabled: visible
-          layer.effect: ShaderEffect {
-            property color targetColor: root.launcherPreviewColor
-            property real colorizeMode: 2.0
-
-            fragmentShader: Qt.resolvedUrl(ShellUrl.dir + "/Shaders/qsb/appicon_colorize.frag.qsb")
-          }
-        }
       }
     }
 

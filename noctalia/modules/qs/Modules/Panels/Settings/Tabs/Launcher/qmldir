@@ -1,5 +1,4 @@
 module qs.Modules.Panels.Settings.Tabs.Launcher
-ClipboardSubTab 1.0 ClipboardSubTab.qml
 ExecuteSubTab 1.0 ExecuteSubTab.qml
 GeneralSubTab 1.0 GeneralSubTab.qml
 LauncherTab 1.0 LauncherTab.qml

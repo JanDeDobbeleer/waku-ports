@@ -192,7 +192,7 @@ ColumnLayout {
 
             NText {
               visible: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable && !(brightnessMonitor.method === "internal" && brightnessMonitor.initInProgress)
-              text: !Settings.data.brightness.enableDdcSupport ? I18n.tr("panels.display.monitors-brightness-unavailable-ddc-disabled") : I18n.tr("panels.display.monitors-brightness-unavailable-generic")
+              text: I18n.tr("panels.display.monitors-brightness-unavailable-generic")
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
               Layout.fillWidth: true
@@ -233,17 +233,6 @@ ColumnLayout {
       checked: Settings.data.brightness.enforceMinimum
       onToggled: checked => Settings.data.brightness.enforceMinimum = checked
       defaultValue: Settings.getDefaultValue("brightness.enforceMinimum")
-    }
-
-    NToggle {
-      Layout.fillWidth: true
-      label: I18n.tr("panels.display.monitors-external-brightness-label")
-      description: I18n.tr("panels.display.monitors-external-brightness-description")
-      checked: Settings.data.brightness.enableDdcSupport
-      onToggled: checked => {
-                   Settings.data.brightness.enableDdcSupport = checked;
-                 }
-      defaultValue: Settings.getDefaultValue("brightness.enableDdcSupport")
     }
   }
 }

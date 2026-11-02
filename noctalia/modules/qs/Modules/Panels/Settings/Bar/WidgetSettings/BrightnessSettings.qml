@@ -77,17 +77,4 @@ ColumnLayout {
                 }
     defaultValue: widgetMetadata.textColor
   }
-
-  NToggle {
-    visible: hasMultipleMonitors
-    Layout.fillWidth: true
-    label: I18n.tr("bar.brightness.apply-all-label")
-    description: I18n.tr("bar.brightness.apply-all-description")
-    checked: valueApplyToAllMonitors
-    onToggled: checked => {
-                 valueApplyToAllMonitors = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.applyToAllMonitors
-  }
 }

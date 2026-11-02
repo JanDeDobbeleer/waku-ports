@@ -1,4 +1,3 @@
 module qs.Modules.Panels.Settings.Tabs.Display
 BrightnessSubTab 1.0 BrightnessSubTab.qml
 DisplayTab 1.0 DisplayTab.qml
-NightLightSubTab 1.0 NightLightSubTab.qml

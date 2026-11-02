@@ -34,14 +34,6 @@ ColumnLayout {
   }
 
   NToggle {
-    label: I18n.tr("panels.user-interface.blur-behind-label")
-    description: I18n.tr("panels.user-interface.blur-behind-description")
-    checked: Settings.data.general.enableBlurBehind
-    defaultValue: Settings.getDefaultValue("general.enableBlurBehind")
-    onToggled: checked => Settings.data.general.enableBlurBehind = checked
-  }
-
-  NToggle {
     label: I18n.tr("panels.user-interface.translucent-widgets-label")
     description: I18n.tr("panels.user-interface.translucent-widgets-description")
     checked: Settings.data.ui.translucentWidgets

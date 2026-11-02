@@ -72,20 +72,6 @@ ColumnLayout {
                             })
   }
 
-  // Color Generation Hook
-  HookRow {
-    label: I18n.tr("panels.hooks.color-generation-label")
-    description: I18n.tr("panels.hooks.color-generation-description")
-    value: Settings.data.hooks.colorGeneration
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.color-generation-placeholder"), value, newValue => {
-                              Settings.data.hooks.colorGeneration = newValue;
-                              Settings.saveImmediate();
-                            }, val => {
-                              if (val)
-                              Quickshell.execDetached(["cmd", "/c", val.replace("$1", "dark")]);
-                            })
-  }
-
   // Theme Hook
   HookRow {
     label: I18n.tr("panels.hooks.theme-changed-label")
@@ -97,34 +83,6 @@ ColumnLayout {
                             }, val => {
                               if (val)
                               Quickshell.execDetached(["cmd", "/c", val.replace("$1", "true")]);
-                            })
-  }
-
-  // Screen Lock Hook
-  HookRow {
-    label: I18n.tr("panels.hooks.screen-lock-label")
-    description: I18n.tr("panels.hooks.screen-lock-description")
-    value: Settings.data.hooks.screenLock
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.screen-lock-placeholder"), value, newValue => {
-                              Settings.data.hooks.screenLock = newValue;
-                              Settings.saveImmediate();
-                            }, val => {
-                              if (val)
-                              Quickshell.execDetached(["cmd", "/c", val]);
-                            })
-  }
-
-  // Screen Unlock Hook
-  HookRow {
-    label: I18n.tr("panels.hooks.screen-unlock-label")
-    description: I18n.tr("panels.hooks.screen-unlock-description")
-    value: Settings.data.hooks.screenUnlock
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.screen-unlock-placeholder"), value, newValue => {
-                              Settings.data.hooks.screenUnlock = newValue;
-                              Settings.saveImmediate();
-                            }, val => {
-                              if (val)
-                              Quickshell.execDetached(["cmd", "/c", val]);
                             })
   }
 

@@ -66,39 +66,14 @@ ColumnLayout {
     }
   }
 
-  NTabBar {
-    id: subTabBar
-    Layout.fillWidth: true
-    Layout.bottomMargin: Style.marginM
-    distributeEvenly: true
-    currentIndex: tabView.currentIndex
-
-    NTabButton {
-      text: I18n.tr("common.colors")
-      tabIndex: 0
-      checked: subTabBar.currentIndex === 0
-    }
-    NTabButton {
-      text: I18n.tr("common.templates")
-      tabIndex: 1
-      checked: subTabBar.currentIndex === 1
-    }
-  }
-
-  Item {
-    Layout.fillWidth: true
-    Layout.preferredHeight: Style.marginL
-  }
-
   NTabView {
     id: tabView
-    currentIndex: subTabBar.currentIndex
+    currentIndex: 0
 
     ColorsSubTab {
       screen: root.screen
       timeOptions: timeOptions
       onOpenDownloadPopup: downloadPopupLoader.open()
     }
-    TemplatesSubTab {}
   }
 }

@@ -83,7 +83,6 @@ Item {
     // When icon is disabled, always show the layout text
     forceOpen: !root.showIcon || root.displayMode === "forceOpen"
     forceClose: root.showIcon && root.displayMode === "alwaysHide"
-    onClicked: CompositorService.cycleKeyboardLayout()
     onRightClicked: {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }

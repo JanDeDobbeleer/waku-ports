@@ -28,7 +28,7 @@ ColumnLayout {
 
     NLabel {
       label: I18n.tr("panels.hooks.info-parameters-label")
-      description: I18n.tr("panels.hooks.info-parameters-description")
+      description: "• Wallpaper hook: $1 = wallpaper path, $2 = screen name, $3 = theme (dark/light)<br>• Theme toggle hook: $1 = true/false (Dark Mode state)<br>• Performance mode hooks: No parameters<br>• Session hook: $1 = action (shutdown/reboot)<br>Hooks run through cmd /c."
     }
   }
 }

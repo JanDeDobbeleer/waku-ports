@@ -3,7 +3,6 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
-import qs.Services.Compositor
 import qs.Services.UI
 import qs.Widgets
 
@@ -203,56 +202,6 @@ ColumnLayout {
         ImageCacheService.clearLarge();
         ToastService.showNotice(I18n.tr("panels.wallpaper.settings-clear-cache-toast"));
       }
-    }
-  }
-
-  NDivider {
-    Layout.fillWidth: true
-    visible: CompositorService.isNiri
-  }
-
-  ColumnLayout {
-    visible: CompositorService.isNiri
-    enabled: Settings.data.wallpaper.enabled
-    spacing: Style.marginL
-    Layout.fillWidth: true
-
-    NToggle {
-      label: I18n.tr("panels.wallpaper.settings-enable-overview-label")
-      description: I18n.tr("panels.wallpaper.settings-enable-overview-description")
-      checked: Settings.data.wallpaper.enabled && Settings.data.wallpaper.overviewEnabled
-      onToggled: checked => Settings.data.wallpaper.overviewEnabled = checked
-      defaultValue: Settings.getDefaultValue("wallpaper.overviewEnabled")
-    }
-
-    NValueSlider {
-      Layout.fillWidth: true
-      visible: Settings.data.wallpaper.overviewEnabled
-      label: I18n.tr("panels.wallpaper.settings-overview-blur-strength-label")
-      description: I18n.tr("panels.wallpaper.settings-overview-blur-strength-description")
-      from: 0.0
-      to: 1.0
-      stepSize: 0.01
-      showReset: true
-      value: Settings.data.wallpaper.overviewBlur
-      onMoved: value => Settings.data.wallpaper.overviewBlur = value
-      text: ((Settings.data.wallpaper.overviewBlur) * 100).toFixed(0) + "%"
-      defaultValue: Settings.getDefaultValue("wallpaper.overviewBlur")
-    }
-
-    NValueSlider {
-      Layout.fillWidth: true
-      visible: Settings.data.wallpaper.overviewEnabled
-      label: I18n.tr("panels.wallpaper.settings-overview-tint-label")
-      description: I18n.tr("panels.wallpaper.settings-overview-tint-description")
-      from: 0.0
-      to: 1.0
-      stepSize: 0.01
-      showReset: true
-      value: Settings.data.wallpaper.overviewTint
-      onMoved: value => Settings.data.wallpaper.overviewTint = value
-      text: ((Settings.data.wallpaper.overviewTint) * 100).toFixed(0) + "%"
-      defaultValue: Settings.getDefaultValue("wallpaper.overviewTint")
     }
   }
 }

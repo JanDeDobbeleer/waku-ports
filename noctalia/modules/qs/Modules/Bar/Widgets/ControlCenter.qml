@@ -120,7 +120,7 @@ NIconButton {
       if (useDistroLogo)
         return HostService.osLogo;
       if (customIconPath !== "")
-        return customIconPath.startsWith("file://") ? customIconPath : "file://" + customIconPath;
+        return customIconPath.startsWith("file://") ? customIconPath : "file:///" + customIconPath.replace(/[\\]/g, "/");
       return "";
     }
     visible: source !== ""
