@@ -1,8 +1,14 @@
-# Starts the Omarchy shell and leaves it running (hidden window, no tray).
-#   .\tools\start.ps1          start
-#   .\tools\stop.ps1           stop
-# Uses the port's own home (state\home), so the real user profile is not touched.
-param([string]$Bin = (Join-Path $PSScriptRoot '..\bin'))
+# Starts the Omarchy shell as the bar, the way the other ports start: your deployed waku engine,
+# Windows' tray hooked, the bar registered as an app bar (it reserves the top of the screen) and the
+# Windows taskbar hidden while it runs.
+#   .\tools\start.ps1            start (live)
+#   .\tools\start.ps1 -Dev       the port's bundled engine, hidden, no tray, no app bar, taskbar left alone
+#   .\tools\stop.ps1             stop
+# The shell uses the port's own home (state\home), so your user profile is not touched.
+param(
+  [string]$Waku = 'D:\waku\dist\waku\waku.exe',
+  [switch]$Dev
+)
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $env:HOME = Join-Path $root 'state\home'
@@ -14,7 +20,14 @@ $logs = Join-Path $root 'logs'; New-Item -ItemType Directory -Force $logs | Out-
 # the saved theme (Catppuccin the first time), and the previews the theme switcher lists
 & (Join-Path $PSScriptRoot 'theme-apply.ps1') -Prepare
 & (Join-Path $PSScriptRoot 'theme-apply.ps1') | Out-Null
-$p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden `
-  -ArgumentList @('--config-home', $root, '--no-tray', '--font-engine=directwrite') `
-  -RedirectStandardError (Join-Path $logs 'shell.err.txt') -RedirectStandardOutput (Join-Path $logs 'shell.out.txt')
+
+if ($Dev) {
+  $Waku = Join-Path $root 'bin\waku.exe'
+  $flags = @('--config-home', $root, '--no-tray', '--font-engine=directwrite')
+  $p = Start-Process $Waku -PassThru -WindowStyle Hidden -ArgumentList $flags `
+    -RedirectStandardError (Join-Path $logs 'shell.err.txt') -RedirectStandardOutput (Join-Path $logs 'shell.out.txt')
+} else {
+  $flags = @('--config-home', $root, '--font-engine=directwrite', '--register-app-bar', '--hide-taskbar')
+  $p = Start-Process $Waku -PassThru -WorkingDirectory (Split-Path $Waku) -ArgumentList $flags
+}
 Write-Host "omarchy shell started, pid $($p.Id). Menu: Ctrl+Alt+Space   Apps: Ctrl+Alt+Shift+Space"
