@@ -12,7 +12,7 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 
 | Hotkey | What |
 |---|---|
-| Ctrl+Alt+Space | The Omarchy menu |
+| Alt+Shift+Space | The Omarchy menu (also the Omarchy icon in the bar) |
 | Alt+Space | The app launcher (Apps list) |
 | Ctrl+Alt+T | Theme switcher |
 | Ctrl+Alt+B | Background switcher |

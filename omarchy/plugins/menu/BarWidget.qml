@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs.Ui
 
 BarWidget {
@@ -16,8 +17,10 @@ BarWidget {
     fontFamily: "omarchy"
     onPressed: function(button) {
       if (!root.bar) return
-      if (button === Qt.RightButton) root.bar.run("xdg-terminal-exec")
-      else root.bar.run("omarchy-shell shell toggle omarchy.menu '{\"menu\":\"root\"}'")
+      // Windows port: the shell host is called directly (omarchy-shell and xdg-terminal-exec are Linux
+      // programs), and a right click opens Windows Terminal.
+      if (button === Qt.RightButton) Quickshell.execDetached(["wt.exe"])
+      else if (root.bar.shell) root.bar.shell.toggle("omarchy.menu", "{\"menu\":\"root\"}")
     }
   }
 }

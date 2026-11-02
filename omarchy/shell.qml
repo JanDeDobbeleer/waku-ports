@@ -1664,7 +1664,8 @@ ShellRoot {
     appid: "omarchy"
     name: "omarchy-menu-key"
     description: "Omarchy menu"
-    keys: "Ctrl+Alt+Space"
+    // Ctrl+Alt+Space is Claude's global shortcut, so another program already owns it.
+    keys: "Alt+Shift+Space"
     onPressed: shell.toggle("omarchy.menu", "{\"menu\":\"root\"}")
   }
 

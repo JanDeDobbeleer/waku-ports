@@ -1,7 +1,8 @@
 # Applies this port's komorebi settings: backs up the current komorebi.json, writes the one from this
-# port's komorebi folder with the border colours of the current Omarchy theme, and asks komorebi to
-# reload it. Run it from anywhere, and again after a theme change; -WhatIf shows what it would do,
-# -KeepColours copies the file as shipped (Catppuccin).
+# port's komorebi folder with the border colours of the current Omarchy theme, and sends the border,
+# gap and workspace-name settings to the running komorebi (komorebic reload-configuration does not read
+# komorebi.json; the file is read when komorebi starts). Run it from anywhere, and again after a theme
+# change; -WhatIf shows what it would do, -KeepColours copies the file as shipped (Catppuccin).
 [CmdletBinding(SupportsShouldProcess)]
 param([string]$KomorebiHome = (Join-Path $env:USERPROFILE '.config\komorebi'), [switch]$KeepColours)
 $ErrorActionPreference = 'Stop'
@@ -37,5 +38,27 @@ if (Test-Path -LiteralPath $target) {
 }
 if ($PSCmdlet.ShouldProcess($target, "write the $name settings")) {
   [IO.File]::WriteAllText($target, $text, $utf8)
-  & komorebic.exe reload-configuration
+  # komorebic reload-configuration only reloads the legacy .ahk/.ps1 setups, not komorebi.json, which is
+  # read when komorebi starts. So the settings this port is about are also sent to the running komorebi.
+  $cfg = $text | ConvertFrom-Json
+  if ($cfg.border_width -ne $null) { & komorebic.exe border-width $cfg.border_width }
+  if ($cfg.border_offset -ne $null) { & komorebic.exe border-offset "--" $cfg.border_offset }
+  if ($cfg.border_style) { & komorebic.exe border-style $cfg.border_style.ToLower() }
+  foreach ($kind in 'single', 'stack', 'monocle', 'unfocused', 'floating') {
+    $hex = $cfg.border_colours.$kind
+    if ($hex -match '^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$') {
+      & komorebic.exe border-colour ([Convert]::ToInt32($Matches[1], 16)) ([Convert]::ToInt32($Matches[2], 16)) ([Convert]::ToInt32($Matches[3], 16)) --window-kind $kind
+    }
+  }
+  $hex = $cfg.border_colours.unfocused_locked
+  if ($hex -match '^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$') {
+    & komorebic.exe border-colour ([Convert]::ToInt32($Matches[1], 16)) ([Convert]::ToInt32($Matches[2], 16)) ([Convert]::ToInt32($Matches[3], 16)) --window-kind unfocused-locked
+  }
+  # gaps and workspace names of the first monitor's workspaces
+  $workspaces = @($cfg.monitors[0].workspaces)
+  for ($i = 0; $i -lt $workspaces.Count; $i++) {
+    & komorebic.exe workspace-padding 0 $i $cfg.default_workspace_padding
+    & komorebic.exe container-padding 0 $i $cfg.default_container_padding
+    if ($workspaces[$i].name) { & komorebic.exe workspace-name 0 $i $workspaces[$i].name }
+  }
 }
