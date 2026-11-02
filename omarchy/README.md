@@ -27,7 +27,7 @@ Nerd Font (`Cascadia Mono NF` is the default, see `Style.qml`). No Python. The s
 
 | Part | How it works on Windows |
 |---|---|
-| Bar | menu, workspaces (komorebi), clock, weather, tray, bluetooth, network, audio, power |
+| Bar | menu, workspaces (komorebi), running apps (one icon per program), clock, weather, tray, bluetooth, network, audio, power |
 | Menu | Apps, Appearance (Theme, Background), Trigger (Emoji, Clipboard), Setup (Audio, Bluetooth, Network, Power, Windows Settings), About, System (Lock, Sleep, Sign out, Restart, Shut down) |
 | Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons |
 | Theme switcher | 21 Omarchy themes (`themes\`); `tools\theme-apply.ps1 <name>` rewrites the files the shell watches, so colours change live |

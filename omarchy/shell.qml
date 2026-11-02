@@ -55,7 +55,7 @@ ShellRoot {
       position: "top",
       background: "opaque",
       layout: {
-        left: [{ id: "omarchy.menu" }, { id: "omarchy.workspaces" }],
+        left: [{ id: "omarchy.menu" }, { id: "omarchy.workspaces" }, { id: "omarchy.apps" }],
         centerBegin: [],
         center: [{ id: "omarchy.clock", format: "dddd HH:mm" }],
         centerEnd: [],

@@ -67,7 +67,13 @@ BarWidget {
 
   BarIconButton {
     id: button
-    anchors.fill: parent
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: parent.height
+    // Windows port: the cloud glyph is centred in its slot but the clock text beside it sits lower
+    // (its baseline, not its box, is centred), so the icon read about 3 px high.
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.verticalCenterOffset: Style.space(2)
     bar: root.bar
     text: panelLoader.item ? panelLoader.item.label : ""
     slotSize: Style.bar.statusSlot
