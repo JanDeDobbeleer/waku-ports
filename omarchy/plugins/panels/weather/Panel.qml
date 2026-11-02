@@ -594,7 +594,8 @@ Panel {
             font.family: root.bar.fontFamily
             // Decorative condition emoji; intentionally larger than the
             // Style.font.* scale's displayLarge (28).
-            font.pixelSize: 64
+            // The Nerd Font condition glyphs sit small in their em box, so 64 drew a cloud ~35 px wide.
+            font.pixelSize: 96
           }
 
           Row {
@@ -894,7 +895,7 @@ Panel {
                 text: root.dayIcon(modelData)
                 color: root.bar.foreground
                 font.family: root.bar.fontFamily
-                font.pixelSize: Style.font.display
+                font.pixelSize: Math.round(Style.font.display * 1.7)
               }
 
               Column {
