@@ -63,9 +63,18 @@ ColumnLayout {
 
   NKeybindRecorder {
     Layout.fillWidth: true
+    label: I18n.tr("panels.general.keybinds-enter-new")
+    currentKeybinds: Settings.data.general.keybinds.keyEnterNew
+    defaultKeybind: "Shift+Return"
+    settingsPath: "general.keybinds.keyEnterNew"
+    onKeybindsChanged: newKeybinds => Settings.data.general.keybinds.keyEnterNew = newKeybinds
+  }
+
+  NKeybindRecorder {
+    Layout.fillWidth: true
     label: I18n.tr("panels.general.keybinds-enter-admin")
     currentKeybinds: Settings.data.general.keybinds.keyEnterAdmin
-    defaultKeybind: "Shift+Return"
+    defaultKeybind: "Alt+Shift+Return"
     settingsPath: "general.keybinds.keyEnterAdmin"
     onKeybindsChanged: newKeybinds => Settings.data.general.keybinds.keyEnterAdmin = newKeybinds
   }

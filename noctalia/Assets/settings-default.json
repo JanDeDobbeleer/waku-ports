@@ -134,8 +134,11 @@
         "Return",
         "Enter"
       ],
-      "keyEnterAdmin": [
+      "keyEnterNew": [
         "Shift+Return"
+      ],
+      "keyEnterAdmin": [
+        "Alt+Shift+Return"
       ],
       "keyEscape": [
         "Esc"

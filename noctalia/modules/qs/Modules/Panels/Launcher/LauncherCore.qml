@@ -405,17 +405,18 @@ Rectangle {
     selectedIndex = LauncherNav.selectNextColumn(selectedIndex, results.length, gridColumns);
   }
 
-  // Elevated launch of the selected result; only items with onActivateAdmin support it.
-  function activateAdmin() {
+  // Activates the selected result through the handler `name` ("onActivateAdmin", "onActivateNew");
+  // only items that define it support the variant.
+  function activateVariant(name) {
     if (results.length > 0 && results[selectedIndex]) {
       const item = results[selectedIndex];
       const provider = item.provider || currentProvider;
-      if (!item.onActivateAdmin)
+      if (!item[name])
         return;
       if (Settings.data.appLauncher.sortByMostUsed && provider && provider.trackUsage && item.usageKey) {
         ShellState.recordLauncherUsage(item.usageKey);
       }
-      item.onActivateAdmin();
+      item[name]();
     }
   }
 
@@ -457,9 +458,15 @@ Rectangle {
       return;
     }
 
-    // Checked before 'enter': a user may bind the same key to both, and admin wins.
+    // Checked before 'enter': the variants carry modifiers a user may also have bound to enter.
     if (checkKey(event, 'enterAdmin')) {
-      activateAdmin();
+      activateVariant("onActivateAdmin");
+      event.accepted = true;
+      return;
+    }
+
+    if (checkKey(event, 'enterNew')) {
+      activateVariant("onActivateNew");
       event.accepted = true;
       return;
     }
@@ -926,14 +933,26 @@ Rectangle {
         horizontalAlignment: Text.AlignCenter
       }
 
-      // Hint for the elevated launch, shown while the selected result supports it.
+      // Hint for the new-window and elevated launches, shown for what the selected result supports.
       NText {
+        readonly property var selected: root.results.length > 0 ? root.results[root.selectedIndex] : null
+        readonly property var newKeys: Settings.data.general.keybinds.keyEnterNew
         readonly property var adminKeys: Settings.data.general.keybinds.keyEnterAdmin
-        visible: !!(root.results.length > 0 && root.results[root.selectedIndex] && root.results[root.selectedIndex].onActivateAdmin) && adminKeys && adminKeys.length > 0
+        readonly property var parts: {
+          const out = [];
+          if (selected && selected.onActivateNew && newKeys && newKeys.length > 0)
+            out.push(I18n.tr("launcher.new-window-hint", {
+                               "key": newKeys[0]
+                             }));
+          if (selected && selected.onActivateAdmin && adminKeys && adminKeys.length > 0)
+            out.push(I18n.tr("launcher.admin-hint", {
+                               "key": adminKeys[0]
+                             }));
+          return out;
+        }
+        visible: parts.length > 0
         Layout.fillWidth: true
-        text: I18n.tr("launcher.admin-hint", {
-                        "key": adminKeys && adminKeys.length > 0 ? adminKeys[0] : ""
-                      })
+        text: parts.join("  ·  ")
         pointSize: Style.fontSizeXS
         color: Color.mOnSurfaceVariant
         horizontalAlignment: Text.AlignCenter
