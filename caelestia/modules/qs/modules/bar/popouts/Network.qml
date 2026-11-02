@@ -90,7 +90,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         Layout.topMargin: visible ? Tokens.spacing.small : 0
         Layout.rightMargin: Tokens.padding.extraSmall
-        text: Tr.trN("%n network available", "%n networks available", Nmcli.networks.length)
+        text: Tr.trN("%n network available", "%n networks available", Nmcli.networks.filter(n => !n.active).length)
         color: Colours.palette.m3onSurfaceVariant
         font: Tokens.font.body.small
     }
