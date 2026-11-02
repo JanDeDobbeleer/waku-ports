@@ -202,7 +202,7 @@ ShellRoot {
       if (Settings.shouldOpenSetupWizard) {
         wizardType = "setup";
       } else {
-        // wabar port: no telemetry wizard, no changelog
+        // waku port: no telemetry wizard, no changelog
         return;
       }
     }

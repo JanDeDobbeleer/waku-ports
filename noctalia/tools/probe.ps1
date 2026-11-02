@@ -9,7 +9,7 @@ $home_ = Join-Path $port 'smoke\probe'
 Copy-Item -LiteralPath $Qml -Destination (Join-Path $home_ 'shell.qml') -Force
 $logs = Join-Path $port 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $err = Join-Path $logs 'probe.err.txt'; $out = Join-Path $logs 'probe.out.txt'
-$p = Start-Process -FilePath (Join-Path $Bin 'wabar.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
+$p = Start-Process -FilePath (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
   -ArgumentList @('--config-home', $home_, '--no-tray', '--import-path', (Join-Path $port 'modules'))
 $t0 = Get-Date
 try {
@@ -19,7 +19,7 @@ try {
     if (Select-String -LiteralPath $err -Pattern 'PROBE\|DONE' -Quiet -ErrorAction SilentlyContinue) { break }
   }
 } finally {
-  & (Join-Path $Bin 'wabarc.exe') --config-home $home_ quit | Out-Null
+  & (Join-Path $Bin 'wakuc.exe') --config-home $home_ quit | Out-Null
   if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Force }
 }
-Get-Content $err, $out -ErrorAction SilentlyContinue | Where-Object { $_ -match 'PROBE\||wabar: config errors|unavailable|not a type|not installed' } | ForEach-Object { $_ -replace '^qml: ', '' }
+Get-Content $err, $out -ErrorAction SilentlyContinue | Where-Object { $_ -match 'PROBE\||waku: config errors|unavailable|not a type|not installed' } | ForEach-Object { $_ -replace '^qml: ', '' }

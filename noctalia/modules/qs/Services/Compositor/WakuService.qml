@@ -1,10 +1,10 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 
-// Compositor backend for wabar: komorebi or GlazeWM through the engine's `Workspaces`, windows
+// Compositor backend for waku: komorebi or GlazeWM through the engine's `Workspaces`, windows
 // through `ToplevelManager`. Same contract as the Wayland backends this replaces.
 //
 // A window belongs to the workspace whose `windows` (komorebi) lists its handle. With GlazeWM, or
@@ -25,7 +25,7 @@ Item {
   function initialize() {
     syncWorkspaces();
     syncWindows();
-    Logger.i("WabarService", "Service started (" + (S.Workspaces.provider || "no tiling window manager") + ")");
+    Logger.i("WakuService", "Service started (" + (S.Workspaces.provider || "no tiling window manager") + ")");
   }
 
   Connections {
@@ -148,7 +148,7 @@ Item {
   }
 
   function cycleKeyboardLayout() {
-    Logger.w("WabarService", "Keyboard layout cycling not supported");
+    Logger.w("WakuService", "Keyboard layout cycling not supported");
   }
 
   function queryDisplayScales() {

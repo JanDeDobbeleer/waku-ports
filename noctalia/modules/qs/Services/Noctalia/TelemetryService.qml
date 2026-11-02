@@ -5,7 +5,7 @@ import Quickshell
 import qs.Commons
 import qs.compat
 
-// Telemetry is not part of the wabar port: nothing is collected or sent. The names stay so callers load.
+// Telemetry is not part of the waku port: nothing is collected or sent. The names stay so callers load.
 Singleton {
   id: root
 
@@ -29,6 +29,6 @@ Singleton {
   }
 
   function getCompositorType() {
-    return "wabar";
+    return "waku";
   }
 }

@@ -1,6 +1,6 @@
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 ShellRoot {
   id: root
   Window { id: w; visible: true; width: 10; height: 10 }

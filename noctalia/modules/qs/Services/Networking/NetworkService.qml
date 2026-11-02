@@ -2,12 +2,12 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.Services.UI
 import qs.compat
 
-// Noctalia's NetworkService over the engine's Network (wabar.services): Windows connectivity
+// Noctalia's NetworkService over the engine's Network (waku.services): Windows connectivity
 // profiles, wlanapi scans, the Wi-Fi radio switch and interface counters. Public names are upstream's.
 //
 // What Windows does differently, and so what this adapter does not do:
@@ -151,7 +151,7 @@ Singleton {
   property bool scanPending: false
   readonly property bool scanningActive: S.Network.scanning
 
-  // Airplane mode: Windows has no switch for it that wabar can use
+  // Airplane mode: Windows has no switch for it that waku can use
   property bool airplaneModeEnabled: false
   property bool airplaneModeToggled: false
 

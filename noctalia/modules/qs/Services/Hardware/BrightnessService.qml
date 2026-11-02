@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import wabar.services as S
+import waku.services as S
 import qs.Commons
 import qs.compat
 

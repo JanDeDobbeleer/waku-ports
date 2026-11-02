@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import qs.compat
 
-// Stub. The audio visualiser needs noctalia-qs's PwAudioSpectrum (PipeWire); wabar has no
+// Stub. The audio visualiser needs noctalia-qs's PwAudioSpectrum (PipeWire); waku has no
 // equivalent yet, so the bands stay empty and the visualiser shows nothing.
 Singleton {
   id: root
