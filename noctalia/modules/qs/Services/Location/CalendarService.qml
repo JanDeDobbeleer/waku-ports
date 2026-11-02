@@ -111,7 +111,8 @@ Singleton {
 
   // Core functions
   function checkAvailability() {
-    if (!Settings.data.location.showCalendarEvents) {
+    // Events come from khal or Evolution Data Server, which Windows does not have: never available.
+    if (true || !Settings.data.location.showCalendarEvents) {
       root.available = false;
       return;
     }

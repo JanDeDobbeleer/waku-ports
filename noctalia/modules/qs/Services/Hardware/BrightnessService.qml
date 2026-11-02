@@ -41,7 +41,8 @@ Singleton {
   }
 
   function setBrightness(value: real): void {
-    S.ControlCenter.setBrightness(Math.round(Math.max(0, Math.min(1, value)) * 100));
+    const lo = Settings.data.brightness.enforceMinimum ? 0.01 : 0;
+    S.ControlCenter.setBrightness(Math.round(Math.max(lo, Math.min(1, value)) * 100));
   }
 
   function getDetectedDisplays(): list<var> {

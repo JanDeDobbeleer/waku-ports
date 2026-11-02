@@ -95,7 +95,7 @@ Popup {
         visible: root.showCommand
         Layout.fillWidth: true
         label: I18n.tr("panels.idle.custom-entry-command")
-        placeholderText: "notify-send \"Idle\""
+        placeholderText: "rundll32.exe user32.dll,LockWorkStation"
         fontFamily: Settings.data.ui.fontFixed
       }
 
@@ -103,7 +103,7 @@ Popup {
         id: resumeCommandInput
         Layout.fillWidth: true
         label: I18n.tr("panels.idle.resume-command-label")
-        placeholderText: "notify-send \"Welcome back!\""
+        placeholderText: "echo Welcome back"
         fontFamily: Settings.data.ui.fontFixed
       }
     }

@@ -105,7 +105,7 @@ ColumnLayout {
     id: unifiedSoundFilePicker
     title: I18n.tr("panels.notifications.sounds-files-unified-select-title")
     selectionMode: "files"
-    initialPath: Quickshell.env("HOME")
+    initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
     onAccepted: paths => {
                   if (paths.length > 0) {
@@ -121,7 +121,7 @@ ColumnLayout {
     id: lowSoundFilePicker
     title: I18n.tr("panels.notifications.sounds-files-low-select-title")
     selectionMode: "files"
-    initialPath: Quickshell.env("HOME")
+    initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
     onAccepted: paths => {
                   if (paths.length > 0) {
@@ -134,7 +134,7 @@ ColumnLayout {
     id: normalSoundFilePicker
     title: I18n.tr("panels.notifications.sounds-files-normal-select-title")
     selectionMode: "files"
-    initialPath: Quickshell.env("HOME")
+    initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
     onAccepted: paths => {
                   if (paths.length > 0) {
@@ -147,7 +147,7 @@ ColumnLayout {
     id: criticalSoundFilePicker
     title: I18n.tr("panels.notifications.sounds-files-critical-select-title")
     selectionMode: "files"
-    initialPath: Quickshell.env("HOME")
+    initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
     onAccepted: paths => {
                   if (paths.length > 0) {

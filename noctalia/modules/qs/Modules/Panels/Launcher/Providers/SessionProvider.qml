@@ -47,12 +47,6 @@ Item {
       "keywords": ["reboot", "uefi", "firmware", "bios"]
     },
     {
-      "action": "userspaceReboot",
-      "labelKey": "common.userspace-reboot",
-      "icon": iconMode === "tabler" ? "rotate" : "system-reboot",
-      "keywords": ["reboot", "restart", "soft", "userspace"]
-    },
-    {
       "action": "logout",
       "labelKey": "common.logout",
       "icon": iconMode === "tabler" ? "logout" : "system-log-out",
@@ -158,9 +152,7 @@ Item {
       Qt.callLater(() => {
                      switch (action) {
                        case "lock":
-                       if (PanelService.lockScreen && !PanelService.lockScreen.active) {
-                         PanelService.lockScreen.active = true;
-                       }
+                       CompositorService.lock();
                        break;
                        case "suspend":
                        if (Settings.data.general.lockOnSuspend) {
@@ -177,9 +169,6 @@ Item {
                        break;
                        case "rebootToUefi":
                        CompositorService.rebootToUefi();
-                       break;
-                       case "userspaceReboot":
-                       CompositorService.userspaceReboot();
                        break;
                        case "logout":
                        CompositorService.logout();

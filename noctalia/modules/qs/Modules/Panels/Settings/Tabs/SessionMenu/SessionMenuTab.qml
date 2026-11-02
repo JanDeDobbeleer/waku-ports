@@ -39,12 +39,6 @@ ColumnLayout {
       "required": false
     },
     {
-      "id": "userspaceReboot",
-      "text": I18n.tr("common.userspace-reboot"),
-      "enabled": false,
-      "required": false
-    },
-    {
       "id": "rebootToUefi",
       "text": I18n.tr("common.reboot-to-uefi"),
       "enabled": true,

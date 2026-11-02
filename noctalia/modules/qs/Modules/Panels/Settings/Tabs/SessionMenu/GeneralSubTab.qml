@@ -98,6 +98,15 @@ ColumnLayout {
 
   NToggle {
     Layout.fillWidth: true
+    label: I18n.tr("panels.lock-screen.lock-on-suspend-label")
+    description: I18n.tr("panels.lock-screen.lock-on-suspend-description")
+    checked: Settings.data.general.lockOnSuspend
+    onToggled: checked => Settings.data.general.lockOnSuspend = checked
+    defaultValue: Settings.getDefaultValue("general.lockOnSuspend")
+  }
+
+  NToggle {
+    Layout.fillWidth: true
     label: I18n.tr("panels.session-menu.enable-countdown-label")
     description: I18n.tr("panels.session-menu.enable-countdown-description")
     checked: Settings.data.sessionMenu.enableCountdown

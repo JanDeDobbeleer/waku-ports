@@ -555,7 +555,7 @@ Singleton {
 
     ImageCacheService.getNotificationIcon(path, appName, summary, function (cachedPath, success) {
       if (success && cachedPath) {
-        updateImagePath(notificationId, "file://" + cachedPath);
+        updateImagePath(notificationId, /^[A-Za-z]:/.test(cachedPath) ? "file:///" + cachedPath.replace(/\\/g, "/") : "file://" + cachedPath);
       }
     });
   }
@@ -604,7 +604,7 @@ Singleton {
                    while (historyModel.count > maxHistory) {
                      const old = historyModel.get(historyModel.count - 1);
                      // Only delete cached images that are in our cache directory
-                     const cachedPath = old.cachedImage ? old.cachedImage.replace(/^file:\/\//, "") : "";
+                     const cachedPath = old.cachedImage ? old.cachedImage.replace(/^file:\/\/\/(?=[A-Za-z]:)/, "").replace(/^file:\/\//, "") : "";
                      if (cachedPath && cachedPath.startsWith(ImageCacheService.notificationsDir)) {
                        Os.rm(cachedPath);
                      }
@@ -1017,17 +1017,10 @@ Singleton {
       return false;
     }
 
-    try {
-      // Construct the signal emission using dbus-send
-      // dbus-send --session --type=signal /org/freedesktop/Notifications org.freedesktop.Notifications.ActionInvoked uint32:ID string:"KEY"
-      const args = ["dbus-send", "--session", "--type=signal", "/org/freedesktop/Notifications", "org.freedesktop.Notifications.ActionInvoked", "uint32:" + originalId, "string:" + actionId];
-
-      Quickshell.execDetached(args);
-      return true;
-    } catch (e) {
-      Logger.e("NotificationService", "Manual invoke failed: " + e);
-      return false;
-    }
+    // Linux emitted the D-Bus ActionInvoked signal with dbus-send. Windows has no D-Bus, and a
+    // notification object that is already gone cannot be invoked: report failure.
+    Logger.w("NotificationService", "Cannot invoke action on an expired notification on Windows: " + actionId);
+    return false;
   }
 
   function focusSenderWindow(appName) {
@@ -1058,7 +1051,7 @@ Singleton {
       const notif = historyModel.get(i);
       if (notif.id === notificationId) {
         // Only delete cached images that are in our cache directory
-        const cachedPath = notif.cachedImage ? notif.cachedImage.replace(/^file:\/\//, "") : "";
+        const cachedPath = notif.cachedImage ? notif.cachedImage.replace(/^file:\/\/\/(?=[A-Za-z]:)/, "").replace(/^file:\/\//, "") : "";
         if (cachedPath && cachedPath.startsWith(ImageCacheService.notificationsDir)) {
           Os.rm(cachedPath);
         }
@@ -1074,7 +1067,7 @@ Singleton {
     if (historyModel.count > 0) {
       const oldest = historyModel.get(historyModel.count - 1);
       // Only delete cached images that are in our cache directory
-      const cachedPath = oldest.cachedImage ? oldest.cachedImage.replace(/^file:\/\//, "") : "";
+      const cachedPath = oldest.cachedImage ? oldest.cachedImage.replace(/^file:\/\/\/(?=[A-Za-z]:)/, "").replace(/^file:\/\//, "") : "";
       if (cachedPath && cachedPath.startsWith(ImageCacheService.notificationsDir)) {
         Os.rm(cachedPath);
       }
@@ -1087,7 +1080,8 @@ Singleton {
 
   function clearHistory() {
     try {
-      Quickshell.execDetached(["sh", "-c", `rm -rf "${ImageCacheService.notificationsDir}"*`]);
+      // Delete the cached notification images but keep the folder (cmd's del takes a wildcard)
+      Quickshell.execDetached(["cmd", "/c", "del", "/f", "/q", Os.win(ImageCacheService.notificationsDir) + "\\*"]);
     } catch (e) {
       Logger.e("Notifications", "Failed to clear cache directory:", e);
     }
