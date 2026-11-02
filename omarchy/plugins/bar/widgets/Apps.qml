@@ -69,6 +69,38 @@ BarWidget {
     taskbar.activate(target.index)
   }
 
+  // The preview card of a program with several windows: opens on hover, stays while the pointer is
+  // on the tile or the card, and lists the windows by title. `hoverItem` is the tile it hangs from.
+  property var hoverGroup: null
+  property Item hoverItem: null
+  readonly property bool previewOpen: hoverGroup !== null && hoverItem !== null && hoverGroup.windows.length > 1
+
+  function hoverEnter(group, item) {
+    closeTimer.stop()
+    root.hoverGroup = group
+    root.hoverItem = item
+  }
+  function hoverLeave() { closeTimer.restart() }
+  // PopupCard.close() calls this on its owner.
+  function close() {
+    closeTimer.stop()
+    root.hoverGroup = null
+    root.hoverItem = null
+  }
+
+  // The group as it is now: the preview follows windows opening, closing and changing title.
+  readonly property var previewGroup: {
+    if (!hoverGroup) return null
+    for (var i = 0; i < groups.length; i++) if (groups[i].key === hoverGroup.key) return groups[i]
+    return null
+  }
+
+  Timer {
+    id: closeTimer
+    interval: 220
+    onTriggered: if (!preview.containsMouse) root.close()
+  }
+
   readonly property var shown: groups.length > maxVisible ? groups.slice(0, maxVisible) : groups
   readonly property int hidden: Math.max(0, groups.length - shown.length)
 
@@ -204,7 +236,9 @@ BarWidget {
           hoverEnabled: true
           acceptedButtons: Qt.LeftButton | Qt.MiddleButton
           cursorShape: Qt.PointingHandCursor
-          onClicked: function(mouse) { root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
+          onClicked: function(mouse) { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
+          onEntered: root.hoverEnter(app.modelData, app)
+          onExited: root.hoverLeave()
         }
       }
     }
@@ -219,6 +253,77 @@ BarWidget {
       font.family: root.family
       font.pixelSize: Style.font.bodySmall
       opacity: 0.7
+    }
+  }
+  PopupCard {
+    id: preview
+    anchorItem: root.hoverItem ? root.hoverItem : root
+    owner: root
+    bar: root.bar
+    triggerMode: "hover"
+    open: root.previewOpen && root.previewGroup !== null
+    contentWidth: preview.fittedContentWidth(Style.space(300))
+    contentHeight: preview.fittedContentHeight(list.implicitHeight)
+
+    Column {
+      id: list
+      anchors.fill: parent
+      spacing: Style.space(2)
+
+      Repeater {
+        model: root.previewGroup ? root.previewGroup.windows : []
+
+        delegate: Rectangle {
+          id: item
+          required property var modelData
+
+          width: list.width
+          height: Style.spacing.popupRowHeight
+          radius: Style.cornerRadius
+          color: itemArea.containsMouse ? Style.hoverFill : (item.modelData.active ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.12) : "transparent")
+          opacity: item.modelData.minimized ? 0.6 : 1
+
+          Image {
+            id: itemIcon
+            anchors.left: parent.left
+            anchors.leftMargin: Style.spacing.controlPaddingX
+            anchors.verticalCenter: parent.verticalCenter
+            width: Style.space(16)
+            height: width
+            source: root.previewGroup ? root.previewGroup.iconUrl : ""
+            sourceSize: Qt.size(width * 2, height * 2)
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+            smooth: true
+          }
+
+          Text {
+            anchors.left: itemIcon.right
+            anchors.leftMargin: Style.space(8)
+            anchors.right: parent.right
+            anchors.rightMargin: Style.spacing.controlPaddingX
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.PlainText
+            text: item.modelData.title !== "" ? item.modelData.title : root.previewGroup.exe
+            elide: Text.ElideRight
+            color: Commons.Color.popups.text
+            font.family: Style.font.family
+            font.pixelSize: Style.font.body
+            font.bold: item.modelData.active
+          }
+
+          MouseArea {
+            id: itemArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+              taskbar.activate(item.modelData.index)
+              root.close()
+            }
+          }
+        }
+      }
     }
   }
 }
