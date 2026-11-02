@@ -74,7 +74,7 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.general.keybinds-enter-admin")
     currentKeybinds: Settings.data.general.keybinds.keyEnterAdmin
-    defaultKeybind: "Alt+Shift+Return"
+    defaultKeybind: "Ctrl+Shift+Return"
     settingsPath: "general.keybinds.keyEnterAdmin"
     onKeybindsChanged: newKeybinds => Settings.data.general.keybinds.keyEnterAdmin = newKeybinds
   }
