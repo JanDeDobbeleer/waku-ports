@@ -15,10 +15,8 @@ import qs.Modules.Panels.Settings.Tabs.Dock
 import qs.Modules.Panels.Settings.Tabs.Hooks
 import qs.Modules.Panels.Settings.Tabs.Idle
 import qs.Modules.Panels.Settings.Tabs.Launcher
-import qs.Modules.Panels.Settings.Tabs.LockScreen
 import qs.Modules.Panels.Settings.Tabs.Notifications
 import qs.Modules.Panels.Settings.Tabs.Osd
-import qs.Modules.Panels.Settings.Tabs.Plugins
 import qs.Modules.Panels.Settings.Tabs.Region
 import qs.Modules.Panels.Settings.Tabs.SessionMenu
 import qs.Modules.Panels.Settings.Tabs.SystemMonitor
@@ -479,20 +477,12 @@ Item {
     UserInterfaceTab {}
   }
   Component {
-    id: lockScreenTab
-    LockScreenTab {}
-  }
-  Component {
     id: sessionMenuTab
     SessionMenuTab {}
   }
   Component {
     id: systemMonitorTab
     SystemMonitorTab {}
-  }
-  Component {
-    id: pluginsTab
-    PluginsTab {}
   }
   Component {
     id: desktopWidgetsTab
@@ -568,12 +558,6 @@ Item {
             "source": osdTab
           },
           {
-            "id": SettingsPanel.Tab.LockScreen,
-            "label": "panels.lock-screen.title",
-            "icon": "settings-lock-screen",
-            "source": lockScreenTab
-          },
-          {
             "id": SettingsPanel.Tab.SessionMenu,
             "label": "session-menu.title",
             "icon": "settings-session-menu",
@@ -614,12 +598,6 @@ Item {
             "label": "panels.system.title",
             "icon": "settings-system-monitor",
             "source": systemMonitorTab
-          },
-          {
-            "id": SettingsPanel.Tab.Plugins,
-            "label": "panels.plugins.title",
-            "icon": "plugin",
-            "source": pluginsTab
           },
           {
             "id": SettingsPanel.Tab.Hooks,
