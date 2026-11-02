@@ -51,7 +51,7 @@ wallpaper) and the dock.
 | `tools\menu-state.ps1 -Menu apps -Rows 8` | Opens a menu and prints its state and rows, no screenshot |
 | `tools\winshot.ps1` | Saves each shell window as a PNG (transparency is lost; desktop captures can contain private content) |
 | `tools\theme-apply.ps1 <name>` | Applies a theme (`-Prepare` only refreshes the picker's previews) |
-| `tools\apply-komorebi.ps1` | Applies `komorebi\komorebi.json` (square 2 px border, Omarchy's gaps, the current theme's border colours) to komorebi, with a backup; run it again after a theme change (see `komorebi\README.md`) |
+| `tools\apply-komorebi.ps1` | Applies `komorebi\komorebi.json` (rounded border in the flyout border's colour and thickness, Omarchy's gaps, the current theme's colours) to komorebi, with a backup; run it again after a theme change (see `komorebi\README.md`) |
 | `tools\build-menu.py` | Regenerates the Windows menu from the upstream one |
 | `tools\apply-batchN.py` | The port's mechanical changes, in order; each is idempotent (batch 10 then 16 for Wi-Fi) |
 
