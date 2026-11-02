@@ -310,7 +310,7 @@ Singleton {
       property real radiusRatio: 1.0
       property real iRadiusRatio: 1.0
       property real boxRadiusRatio: 1.0
-      property real screenRadiusRatio: 1.0
+      property real screenRadiusRatio: 0.4 // Port: screenRadius 8, the Windows 11 window radius
       property real animationSpeed: 1.0
       property bool animationDisabled: false
       property bool compactLockScreen: false

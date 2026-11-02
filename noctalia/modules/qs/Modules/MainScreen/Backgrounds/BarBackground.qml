@@ -45,8 +45,9 @@ ShapePath {
     return monitors.length === 0 || monitors.includes(screenName);
   }
 
-  // Corner radius (from Style)
-  readonly property real radius: Style.radiusL
+  // Corner radius. Port: the radius Windows 11 gives a window (8 px), so the bar's inverted corners
+  // and komorebi's rounded windows share one curve.
+  readonly property real radius: Style.radiusXS
 
   // Framed bar properties
   readonly property bool isFramed: Settings.data.bar.barType === "framed"
