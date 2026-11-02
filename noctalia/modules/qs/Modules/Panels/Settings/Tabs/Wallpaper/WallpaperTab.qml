@@ -39,14 +39,9 @@ ColumnLayout {
       checked: subTabBar.currentIndex === 0
     }
     NTabButton {
-      text: I18n.tr("common.look")
+      text: I18n.tr("common.automation")
       tabIndex: 1
       checked: subTabBar.currentIndex === 1
-    }
-    NTabButton {
-      text: I18n.tr("common.automation")
-      tabIndex: 2
-      checked: subTabBar.currentIndex === 2
     }
   }
 
@@ -63,9 +58,6 @@ ColumnLayout {
       screen: root.screen
       onOpenMainFolderPicker: root.openMainFolderPicker()
       onOpenMonitorFolderPicker: monitorName => root.openMonitorFolderPicker(monitorName)
-    }
-    LookAndFeelSubTab {
-      screen: root.screen
     }
     AutomationSubTab {}
   }
