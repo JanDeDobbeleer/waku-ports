@@ -349,14 +349,6 @@ Item {
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    onEntered: {
-      if ((windowTitle !== "") && isVerticalBar || (scrollingMode === "never")) {
-        TooltipService.show(root, windowTitle, BarService.getTooltipDirection(root.screen?.name));
-      }
-    }
-    onExited: {
-      TooltipService.hide();
-    }
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
                    PanelService.showContextMenu(contextMenu, root, screen);

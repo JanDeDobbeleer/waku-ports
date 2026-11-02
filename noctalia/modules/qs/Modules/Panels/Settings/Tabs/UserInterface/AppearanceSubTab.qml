@@ -10,14 +10,6 @@ ColumnLayout {
   Layout.fillWidth: true
 
   NToggle {
-    label: I18n.tr("panels.user-interface.tooltips-label")
-    description: I18n.tr("panels.user-interface.tooltips-description")
-    checked: Settings.data.ui.tooltipsEnabled
-    defaultValue: Settings.getDefaultValue("ui.tooltipsEnabled")
-    onToggled: checked => Settings.data.ui.tooltipsEnabled = checked
-  }
-
-  NToggle {
     label: I18n.tr("panels.user-interface.box-border-label")
     description: I18n.tr("panels.user-interface.box-border-description")
     checked: Settings.data.ui.boxBorderEnabled

@@ -743,7 +743,6 @@ Variants {
               NIconButton {
                 visible: !notifWindow.isCompact
                 icon: "close"
-                tooltipText: I18n.tr("tooltips.dismiss-notification")
                 baseSize: Style.baseWidgetSize * 0.6
                 anchors.top: cardBackground.top
                 anchors.topMargin: Style.marginXL

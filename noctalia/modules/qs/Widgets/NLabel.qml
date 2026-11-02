@@ -13,7 +13,6 @@ ColumnLayout {
   property color descriptionColor: Color.mOnSurfaceVariant
   property color iconColor: Color.mOnSurface
   property bool showIndicator: false
-  property string indicatorTooltip: ""
   property real labelSize: Style.fontSizeL
 
   opacity: enabled ? 1.0 : 0.6
@@ -51,7 +50,6 @@ ColumnLayout {
         anchors.verticalCenter: parent.verticalCenter
         sourceComponent: NSettingsIndicator {
           show: true
-          tooltipText: root.indicatorTooltip || ""
         }
       }
     }

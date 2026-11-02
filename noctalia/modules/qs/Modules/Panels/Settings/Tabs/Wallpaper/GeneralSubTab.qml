@@ -40,7 +40,6 @@ ColumnLayout {
 
       NIconButton {
         icon: "wallpaper-selector"
-        tooltipText: I18n.tr("tooltips.wallpaper-selector")
         onClicked: PanelService.getPanel("wallpaperPanel", root.screen)?.toggle()
       }
     }
@@ -117,7 +116,6 @@ ColumnLayout {
       description: I18n.tr("panels.wallpaper.settings-folder-description")
       text: Settings.data.wallpaper.directory
       buttonIcon: "folder-open"
-      buttonTooltip: I18n.tr("panels.wallpaper.settings-folder-label")
       Layout.fillWidth: true
       onInputTextChanged: text => Settings.data.wallpaper.directory = text
       onButtonClicked: root.openMainFolderPicker()
@@ -163,7 +161,6 @@ ColumnLayout {
               id: monitorDirInput
               text: WallpaperService.getMonitorDirectory(modelData.name)
               buttonIcon: "folder-open"
-              buttonTooltip: I18n.tr("panels.wallpaper.settings-monitor-specific-tooltip")
               Layout.fillWidth: true
               onInputEditingFinished: WallpaperService.setMonitorDirectory(modelData.name, monitorDirInput.text)
               onButtonClicked: root.openMonitorFolderPicker(modelData.name)

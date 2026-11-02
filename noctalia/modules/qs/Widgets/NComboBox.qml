@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 RowLayout {
@@ -13,7 +12,6 @@ RowLayout {
 
   property string label: ""
   property string description: ""
-  property string tooltip: ""
   property var model
   property string currentKey: ""
   property string placeholder: ""
@@ -30,71 +28,6 @@ RowLayout {
 
   // Less strict comparison with != (instead of !==) so it can properly compare int vs string (ex for FPS: 30 and "30")
   readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey != defaultValue)
-
-  readonly property string indicatorTooltip: {
-    if (defaultValue === undefined)
-      return "";
-    var displayValue = "";
-    if (defaultValue === "") {
-      // Try to find the display name for empty key in the model
-      var found = false;
-      if (root.model) {
-        if (Array.isArray(root.model)) {
-          for (var i = 0; i < root.model.length; i++) {
-            var item = root.model[i];
-            if (item && item.key === "") {
-              displayValue = item.name || I18n.tr("panels.indicator.system-default");
-              found = true;
-              break;
-            }
-          }
-        } else if (typeof root.model.get === 'function') {
-          for (var i = 0; i < root.itemCount(); i++) {
-            var item = root.getItem(i);
-            if (item && item.key === "") {
-              displayValue = item.name || I18n.tr("panels.indicator.system-default");
-              found = true;
-              break;
-            }
-          }
-        }
-      }
-      // If not found in model, show "System Default" instead of "(empty)"
-      if (!found) {
-        displayValue = I18n.tr("panels.indicator.system-default");
-      }
-    } else {
-      // Try to find the display name for the default key in the model
-      var found = false;
-      if (root.model) {
-        if (Array.isArray(root.model)) {
-          for (var i = 0; i < root.model.length; i++) {
-            var item = root.model[i];
-            if (item && item.key === defaultValue) {
-              displayValue = item.name || String(defaultValue);
-              found = true;
-              break;
-            }
-          }
-        } else if (typeof root.model.get === 'function') {
-          for (var i = 0; i < root.itemCount(); i++) {
-            var item = root.getItem(i);
-            if (item && item.key === defaultValue) {
-              displayValue = item.name || String(defaultValue);
-              found = true;
-              break;
-            }
-          }
-        }
-      }
-      if (!found) {
-        displayValue = String(defaultValue);
-      }
-    }
-    return I18n.tr("panels.indicator.default-value", {
-                     "value": displayValue
-                   });
-  }
 
   function itemCount() {
     if (!root.model)
@@ -129,7 +62,6 @@ RowLayout {
     label: root.label
     description: root.description
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   ComboBox {
@@ -203,22 +135,6 @@ RowLayout {
       Behavior on border.color {
         ColorAnimation {
           duration: Style.animationFast
-        }
-      }
-
-      MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-        onEntered: {
-          if (root.tooltip != "") {
-            TooltipService.show(root, root.tooltip);
-          }
-        }
-        onExited: {
-          if (root.tooltip != "") {
-            TooltipService.hide();
-          }
         }
       }
     }

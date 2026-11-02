@@ -81,7 +81,6 @@ SmartPanel {
 
         NIconButton {
           icon: "close"
-          tooltipText: I18n.tr("common.close")
           onClicked: root.close()
           Layout.alignment: Qt.AlignTop | Qt.AlignRight
           Layout.preferredHeight: Style.baseWidgetSize

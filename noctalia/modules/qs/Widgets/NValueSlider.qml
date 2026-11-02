@@ -32,25 +32,6 @@ RowLayout {
 
   readonly property bool sliderActive: slider.activeFocus || slider.pressed
   readonly property bool isValueChanged: defaultValue !== undefined && (value !== defaultValue)
-  readonly property string indicatorTooltip: {
-    if (defaultValue === undefined)
-      return "";
-    var defaultVal = defaultValue;
-    if (typeof defaultVal === "number") {
-      // If it's a decimal between 0 and 1, format as percentage
-      if (defaultVal > 0 && defaultVal <= 1 && from >= 0 && from < 1) {
-        return I18n.tr("panels.indicator.default-value", {
-                         "value": Math.floor(defaultVal * 100) + "%"
-                       });
-      }
-      return I18n.tr("panels.indicator.default-value", {
-                       "value": String(defaultVal)
-                     });
-    }
-    return I18n.tr("panels.indicator.default-value", {
-                     "value": String(defaultVal)
-                   });
-  }
 
   ColumnLayout {
     spacing: Style.marginS
@@ -61,7 +42,6 @@ RowLayout {
       description: root.description
       visible: root.label !== "" || root.description !== ""
       showIndicator: root.isValueChanged
-      indicatorTooltip: root.indicatorTooltip
       opacity: root.enabled ? 1.0 : 0.6
       Layout.fillWidth: true
     }
@@ -107,7 +87,6 @@ RowLayout {
       icon: "restore"
       enabled: root.enabled
       baseSize: Style.baseWidgetSize * 0.8
-      tooltipText: I18n.tr("common.reset")
       onClicked: root.moved(root.defaultValue)
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter

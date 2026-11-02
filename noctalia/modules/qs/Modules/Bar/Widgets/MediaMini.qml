@@ -393,7 +393,6 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton | Qt.ForwardButton | Qt.BackButton
 
     onClicked: mouse => {
-                 TooltipService.hide();
                  if (mouse.button === Qt.LeftButton) {
                    PanelService.getPanel("mediaPlayerPanel", screen)?.toggle(container);
                  } else if (mouse.button === Qt.RightButton) {
@@ -406,20 +405,6 @@ Item {
                    MediaService.previous();
                  }
                }
-
-    onEntered: {
-      if (!root || !screen) {
-        return;
-      }
-      var scrollMode = scrollingMode;
-      if ((isVertical || scrollMode === "never")) {
-        var panel = PanelService.getPanel("mediaPlayerPanel", screen);
-        if (panel && !panel.isPanelOpen) {
-          TooltipService.show(root, title, BarService.getTooltipDirection(root.screen?.name));
-        }
-      }
-    }
-    onExited: TooltipService.hide()
   }
 
   // Components

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Shapes
 import qs.Commons
-import qs.Services.UI
 
 Slider {
   id: root
@@ -12,8 +11,6 @@ Slider {
   property var cutoutColor: Color.mSurface
   property bool snapAlways: true
   property real heightRatio: 0.7
-  property var tooltipText
-  property string tooltipDirection: "auto"
   property bool hovering: false
 
   readonly property color effectiveFillColor: enabled ? fillColor : Color.mOutline
@@ -227,26 +224,10 @@ Slider {
 
       onEntered: {
         root.hovering = true;
-        if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.show(knob, root.tooltipText, root.tooltipDirection);
-        }
       }
 
       onExited: {
         root.hovering = false;
-        if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.hide();
-        }
-      }
-    }
-
-    // Hide tooltip when slider is pressed (anywhere on the slider)
-    Connections {
-      target: root
-      function onPressedChanged() {
-        if (root.pressed && root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.hide();
-        }
       }
     }
   }

@@ -681,13 +681,6 @@ Item {
             icon: NetworkService.getSignalInfo(modelData.signal, modelData.connected).icon
             pointSize: Style.fontSizeXXL
             color: networkItem.getContentColors()[1]
-
-            MouseArea {
-              anchors.fill: parent
-              hoverEnabled: true
-              onEntered: TooltipService.show(parent, NetworkService.getSignalInfo(modelData.signal, modelData.connected).label + " (" + modelData.signal + "%)")
-              onExited: TooltipService.hide()
-            }
           }
 
           ColumnLayout {
@@ -802,7 +795,6 @@ Item {
             NIconButton {
               visible: modelData.connected && NetworkService.disconnectingFrom !== modelData.ssid
               icon: "info"
-              tooltipText: I18n.tr("common.info")
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mSurfaceVariant
               colorFg: Color.mOnSurface
@@ -821,7 +813,6 @@ Item {
             NIconButton {
               visible: !root.showOnlyLists && modelData.existing && !modelData.connected && !networkItem.isBusy
               icon: "trash"
-              tooltipText: I18n.tr("tooltips.forget-network")
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mPrimary
               colorFg: Color.mOnPrimary
@@ -883,7 +874,6 @@ Item {
             anchors.right: parent.right
             anchors.margins: Style.marginS
             icon: root.detailsGrid ? "layout-list" : "layout-grid"
-            tooltipText: root.detailsGrid ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
             baseSize: Style.baseWidgetSize * 0.65
             onClicked: {
               root.detailsGrid = !root.detailsGrid;
@@ -918,12 +908,6 @@ Item {
                 icon: "network"
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
-                MouseArea {
-                  anchors.fill: parent
-                  hoverEnabled: true
-                  onEntered: TooltipService.show(parent, I18n.tr("wifi.panel.interface"))
-                  onExited: TooltipService.hide()
-                }
               }
               NText {
                 text: NetworkService.activeWifiIf || "-"
@@ -940,8 +924,6 @@ Item {
                   enabled: (NetworkService.activeWifiIf && NetworkService.activeWifiIf.length > 0)
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                  onExited: TooltipService.hide()
                   onClicked: {
                     const value = NetworkService.activeWifiIf || "";
                     if (value.length > 0) {
@@ -961,12 +943,6 @@ Item {
                 icon: "router"
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
-                MouseArea {
-                  anchors.fill: parent
-                  hoverEnabled: true
-                  onEntered: TooltipService.show(parent, I18n.tr("common.frequency"))
-                  onExited: TooltipService.hide()
-                }
               }
               NText {
                 text: NetworkService.activeWifiDetails.band || "-"
@@ -983,12 +959,6 @@ Item {
                 icon: "gauge"
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
-                MouseArea {
-                  anchors.fill: parent
-                  hoverEnabled: true
-                  onEntered: TooltipService.show(parent, I18n.tr("wifi.panel.link-speed"))
-                  onExited: TooltipService.hide()
-                }
               }
               NText {
                 text: (NetworkService.activeWifiDetails.rateShort && NetworkService.activeWifiDetails.rateShort.length > 0) ? NetworkService.activeWifiDetails.rateShort : ((NetworkService.activeWifiDetails.rate && NetworkService.activeWifiDetails.rate.length > 0) ? NetworkService.activeWifiDetails.rate : "-")
@@ -1009,12 +979,7 @@ Item {
                 MouseArea {
                   anchors.fill: parent
                   hoverEnabled: true
-                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.ipv4") : I18n.tr("wifi.panel.ipv6"))
-                  onExited: TooltipService.hide()
-                  onClicked: {
-                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.ipv4") : I18n.tr("wifi.panel.ipv6"));
-                  }
+                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                 }
               }
               NText {
@@ -1028,8 +993,6 @@ Item {
                   enabled: root.ipVersion === 4 ? !!(NetworkService.activeWifiDetails.ipv4 && NetworkService.activeWifiDetails.ipv4.length > 0) : !!(NetworkService.activeWifiDetails.ipv6 && NetworkService.activeWifiDetails.ipv6.length > 0)
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                  onExited: TooltipService.hide()
                   onClicked: {
                     const value = root.ipVersion === 4 ? (NetworkService.activeWifiDetails.ipv4 || "") : ((NetworkService.activeWifiDetails.ipv6 || []).join(", ") || "");
                     if (value.length > 0) {
@@ -1052,12 +1015,7 @@ Item {
                 MouseArea {
                   anchors.fill: parent
                   hoverEnabled: true
-                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv6") + ")")
-                  onExited: TooltipService.hide()
-                  onClicked: {
-                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("wifi.panel.dns") + " (" + I18n.tr("wifi.panel.ipv6") + ")");
-                  }
+                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                 }
               }
               NText {
@@ -1071,8 +1029,6 @@ Item {
                   enabled: root.ipVersion === 4 ? !!(NetworkService.activeWifiDetails.dns4 && NetworkService.activeWifiDetails.dns4.length > 0) : !!(NetworkService.activeWifiDetails.dns6 && NetworkService.activeWifiDetails.dns6.length > 0)
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                  onExited: TooltipService.hide()
                   onClicked: {
                     const value = root.ipVersion === 4 ? ((NetworkService.activeWifiDetails.dns4 || []).join(", ") || "") : ((NetworkService.activeWifiDetails.dns6 || []).join(", ") || "");
                     if (value.length > 0) {
@@ -1095,12 +1051,7 @@ Item {
                 MouseArea {
                   anchors.fill: parent
                   hoverEnabled: true
-                  onEntered: TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv6") + ")")
-                  onExited: TooltipService.hide()
-                  onClicked: {
-                    root.ipVersion = root.ipVersion === 4 ? 6 : 4;
-                    TooltipService.show(parent, root.ipVersion === 4 ? I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv4") + ")" : I18n.tr("common.gateway") + " (" + I18n.tr("wifi.panel.ipv6") + ")");
-                  }
+                  onClicked: root.ipVersion = root.ipVersion === 4 ? 6 : 4
                 }
               }
               NText {
@@ -1114,8 +1065,6 @@ Item {
                   enabled: root.ipVersion === 4 ? !!(NetworkService.activeWifiDetails.gateway4 && NetworkService.activeWifiDetails.gateway4.length > 0) : !!(NetworkService.activeWifiDetails.gateway6 && NetworkService.activeWifiDetails.gateway6.length > 0)
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onEntered: TooltipService.show(parent, I18n.tr("tooltips.copy-address"))
-                  onExited: TooltipService.hide()
                   onClicked: {
                     const value = root.ipVersion === 4 ? (NetworkService.activeWifiDetails.gateway4 || "") : ((NetworkService.activeWifiDetails.gateway6 || []).join(", ") || "");
                     if (value.length > 0) {

@@ -252,7 +252,6 @@ Popup {
 
         NIconButton {
           icon: "filepicker-refresh"
-          tooltipText: I18n.tr("common.refresh")
           onClicked: {
             // Force a proper refresh by resetting the folder
             const currentFolder = folderModel.folder;
@@ -263,7 +262,6 @@ Popup {
         }
         NIconButton {
           icon: "filepicker-close"
-          tooltipText: I18n.tr("common.close")
           onClicked: {
             root.cancelled();
             root.close();
@@ -294,7 +292,6 @@ Popup {
 
           NIconButton {
             icon: "filepicker-arrow-up"
-            tooltipText: I18n.tr("tooltips.up")
             baseSize: Style.baseWidgetSize * 0.8
             enabled: folderModel.folder.toString() !== "file:///"
             onClicked: {
@@ -306,7 +303,6 @@ Popup {
 
           NIconButton {
             icon: "filepicker-home"
-            tooltipText: I18n.tr("tooltips.home")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               const homePath = Quickshell.env("HOME") || "/home";
@@ -317,7 +313,6 @@ Popup {
 
           NIconButton {
             icon: filePickerPanel.showSearchBar ? "filepicker-x" : "filepicker-search"
-            tooltipText: filePickerPanel.showSearchBar ? I18n.tr("tooltips.search-close") : I18n.tr("common.search")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               filePickerPanel.showSearchBar = !filePickerPanel.showSearchBar;
@@ -382,13 +377,11 @@ Popup {
 
           NIconButton {
             icon: filePickerPanel.viewMode ? "filepicker-list" : "filepicker-layout-grid"
-            tooltipText: filePickerPanel.viewMode ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: filePickerPanel.viewMode = !filePickerPanel.viewMode
           }
           NIconButton {
             icon: root.showHiddenFiles ? "filepicker-eye-off" : "filepicker-eye"
-            tooltipText: root.showHiddenFiles ? I18n.tr("tooltips.hidden-files-hide") : I18n.tr("tooltips.hidden-files-hide")
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               root.showHiddenFiles = !root.showHiddenFiles;

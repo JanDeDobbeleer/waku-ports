@@ -50,14 +50,6 @@ NIconButton {
   // If we have a custom path and not using distro logo, use the theme icon.
   // If using distro logo, don't use theme icon.
   icon: (customIconPath === "" && !useDistroLogo) ? customIcon : ""
-  tooltipText: {
-    if (!screen || PanelService.getPanel("controlCenterPanel", screen)?.isPanelOpen) {
-      return "";
-    } else {
-      return I18n.tr("tooltips.open-control-center");
-    }
-  }
-  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
   customRadius: Style.radiusL

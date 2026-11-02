@@ -190,7 +190,6 @@ ColumnLayout {
             hot: modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
-            tooltipText: I18n.tr("common.countdown")
             onClicked: root.updateEntry(delegateItem.index, {
                                           "countdownEnabled": !(modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true)
                                         })
@@ -199,7 +198,6 @@ ColumnLayout {
           // Settings button (cogwheel)
           NIconButton {
             icon: "settings"
-            tooltipText: I18n.tr("panels.session-menu.entry-settings-tooltip")
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
             onClicked: root.openEntrySettingsDialog(delegateItem.index)

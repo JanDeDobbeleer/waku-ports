@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 
 Item {
   id: root
@@ -10,7 +9,6 @@ Item {
   // Public properties
   property string text: ""
   property string icon: ""
-  property var tooltipText
   property color backgroundColor: Color.mPrimary
   property color textColor: Color.mOnPrimary
   property color hoverColor: Color.mHover
@@ -149,21 +147,12 @@ Item {
       onEntered: {
         root.hovered = root.enabled ? true : false;
         root.entered();
-        if (root.hovered && root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.show(root, root.tooltipText);
-        }
       }
       onExited: {
         root.hovered = false;
         root.exited();
-        if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.hide();
-        }
       }
       onPressed: mouse => {
-                   if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-                     TooltipService.hide();
-                   }
                    if (mouse.button === Qt.LeftButton) {
                      root.clicked();
                    } else if (mouse.button == Qt.RightButton) {
@@ -175,9 +164,6 @@ Item {
 
       onCanceled: {
         root.hovered = false;
-        if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-          TooltipService.hide();
-        }
       }
     }
   }

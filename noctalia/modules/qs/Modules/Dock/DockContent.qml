@@ -20,7 +20,6 @@ Item {
   required property int extraRight
   property alias dockContainer: dockContainer
   readonly property bool isAttachedMode: Settings.data.dock.dockType === "attached"
-  readonly property string tooltipDirection: dockRoot.dockPosition === "left" ? "right" : (dockRoot.dockPosition === "right" ? "left" : (dockRoot.dockPosition === "top" ? "bottom" : "top"))
 
   Rectangle {
     id: dockContainer
@@ -314,7 +313,6 @@ Item {
 
               onEntered: {
                 dockRoot.anyAppHovered = true;
-                TooltipService.show(launcherButton, I18n.tr("actions.open-launcher"), tooltipDirection);
                 if (dockRoot.autoHide) {
                   dockRoot.showTimer.stop();
                   dockRoot.hideTimer.stop();
@@ -325,7 +323,6 @@ Item {
 
               onExited: {
                 dockRoot.anyAppHovered = false;
-                TooltipService.hide();
                 if (dockRoot.autoHide && !dockRoot.dockHovered && !dockRoot.peekHovered && !dockRoot.menuHovered && dockRoot.dragSourceIndex === -1) {
                   dockRoot.hideTimer.restart();
                 }
@@ -343,7 +340,6 @@ Item {
                                return;
                              }
                              dockRoot.closeAllContextMenus();
-                             TooltipService.hideImmediately();
                              launcherContextMenu.show(launcherButton, null, targetScreen);
                              return;
                            }
@@ -688,11 +684,6 @@ Item {
 
               onEntered: {
                 dockRoot.anyAppHovered = true;
-                const appName = appButton.appTitle || appButton.appId || "Unknown";
-                const tooltipText = appName.length > 40 ? appName.substring(0, 37) + "..." : appName;
-                if (!contextMenu.visible) {
-                  TooltipService.show(appButton, tooltipText, tooltipDirection);
-                }
                 if (dockRoot.autoHide) {
                   dockRoot.showTimer.stop();
                   dockRoot.hideTimer.stop();
@@ -703,7 +694,6 @@ Item {
 
               onExited: {
                 dockRoot.anyAppHovered = false;
-                TooltipService.hide();
                 // Clear menuHovered if no current menu or menu not visible
                 if (!dockRoot.currentContextMenu || !dockRoot.currentContextMenu.visible) {
                   dockRoot.menuHovered = false;
@@ -723,8 +713,6 @@ Item {
                              }
                              // Close any other existing context menu first
                              dockRoot.closeAllContextMenus();
-                             // Hide tooltip when showing context menu
-                             TooltipService.hideImmediately();
                              contextMenu.show(appButton, modelData, targetScreen);
                              return;
                            }
@@ -756,7 +744,6 @@ Item {
                              const clickAction = Settings.data.dock.groupClickAction || "cycle";
                              if (clickAction === "list") {
                                const targetScreen = dockRoot.modelData || dockRoot.screen || null;
-                               TooltipService.hideImmediately();
                                // Left-click list should always open the grouped window list view.
                                contextMenu.show(appButton, modelData, targetScreen, "list");
                              } else {

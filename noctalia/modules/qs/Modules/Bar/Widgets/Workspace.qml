@@ -758,7 +758,6 @@ Item {
         onReleased: mouse => {
                       if (mouse.button === Qt.RightButton) {
                         mouse.accepted = true;
-                        TooltipService.hide();
                         root.selectedWindowId = "";
                         root.selectedAppId = "";
                         openGroupedContextMenu(groupedContainer);
@@ -839,20 +838,11 @@ Item {
               onReleased: mouse => {
                             if (mouse.button === Qt.RightButton && modelData) {
                               mouse.accepted = true;
-                              TooltipService.hide();
                               root.selectedWindowId = modelData.id || modelData.address || "";
                               root.selectedAppId = modelData.appId;
                               openGroupedContextMenu(groupedTaskbarItem);
                             }
                           }
-              onEntered: {
-                if (!modelData)
-                  return;
-                TooltipService.show(groupedTaskbarItem, modelData.title || modelData.appId || "Unknown app.", BarService.getTooltipDirection(root.screenName));
-              }
-              onExited: {
-                TooltipService.hide();
-              }
             }
           }
         }

@@ -102,7 +102,6 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.audio.volumeFeedbackSoundFile ?? ""
         buttonIcon: "folder-open"
-        buttonTooltip: I18n.tr("panels.notifications.sounds-files-select-file")
         onInputTextChanged: text => Settings.data.audio.volumeFeedbackSoundFile = text
         onButtonClicked: volumeFeedbackFilePicker.open()
       }

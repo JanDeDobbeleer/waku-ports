@@ -217,7 +217,6 @@ ColumnLayout {
             NIconButtonHot {
               icon: "bug"
               hot: PluginService.isPluginHotReloadEnabled(modelData.id)
-              tooltipText: PluginService.isPluginHotReloadEnabled(modelData.id) ? I18n.tr("panels.plugins.development-disable") : I18n.tr("panels.plugins.development-enable")
               baseSize: Style.baseWidgetSize * 0.7
               onClicked: PluginService.togglePluginHotReload(modelData.id)
               visible: Settings.isDebug
@@ -225,7 +224,6 @@ ColumnLayout {
 
             NIconButton {
               icon: "settings"
-              tooltipText: I18n.tr("panels.plugins.settings-tooltip")
               baseSize: Style.baseWidgetSize * 0.7
               visible: (modelData.entryPoints?.settings !== undefined)
               enabled: modelData.enabled
@@ -236,7 +234,6 @@ ColumnLayout {
 
             NIconButton {
               icon: "external-link"
-              tooltipText: I18n.tr("panels.plugins.open-plugin-page")
               baseSize: Style.baseWidgetSize * 0.7
               visible: true
               onClicked: {
@@ -247,7 +244,6 @@ ColumnLayout {
 
             NIconButton {
               icon: "trash"
-              tooltipText: I18n.tr("common.uninstall")
               baseSize: Style.baseWidgetSize * 0.7
               onClicked: {
                 uninstallDialog.pluginToUninstall = modelData;

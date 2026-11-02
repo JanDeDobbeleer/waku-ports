@@ -129,11 +129,5 @@ Item {
     onRightClicked: {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }
-    tooltipText: {
-      if (pill.text !== "") {
-        return pill.text;
-      }
-      return I18n.tr("tooltips.manage-vpn");
-    }
   }
 }

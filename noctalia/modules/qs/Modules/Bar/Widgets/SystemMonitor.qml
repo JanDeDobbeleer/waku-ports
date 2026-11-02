@@ -89,57 +89,6 @@ Item {
     Quickshell.execDetached(["cmd", "/c", Settings.data.systemMonitor.externalMonitor]);
   }
 
-  // Build comprehensive tooltip text with all stats
-  function buildTooltipContent() {
-    let rows = [];
-
-    // CPU
-    rows.push([I18n.tr("system-monitor.cpu-usage"), `${Math.round(SystemStatService.cpuUsage)}% (${SystemStatService.cpuFreq.replace(/[^0-9.]/g, "")} GHz)`]);
-    if (showCpuCores) {
-      SystemStatService.coresUsage.forEach((usage, core) => rows.push(["  " + I18n.tr("system-monitor.core-usage", {
-                                                                                        "id": core
-                                                                                      }), `${Math.round(usage)}%`]));
-    }
-
-    if (SystemStatService.cpuTemp > 0) {
-      rows.push([I18n.tr("system-monitor.cpu-temp"), `${Math.round(SystemStatService.cpuTemp)}°C`]);
-    }
-
-    // GPU (if available)
-    if (SystemStatService.gpuAvailable) {
-      rows.push([I18n.tr("system-monitor.gpu-temp"), `${Math.round(SystemStatService.gpuTemp)}°C`]);
-    }
-
-    // Load Average
-    if (SystemStatService.loadAvg1 >= 0) {
-      rows.push([I18n.tr("system-monitor.load-average"), `${SystemStatService.loadAvg1.toFixed(2)} · ${SystemStatService.loadAvg5.toFixed(2)} · ${SystemStatService.loadAvg15.toFixed(2)}`]);
-    }
-
-    // Memory
-    rows.push([I18n.tr("common.memory"), `${Math.round(SystemStatService.memPercent)}% (${(SystemStatService.memGb).toFixed(1)} GiB)`]);
-
-    // Swap (if available)
-    if (SystemStatService.swapTotalGb > 0) {
-      rows.push([I18n.tr("bar.system-monitor.swap-usage-label"), `${Math.round(SystemStatService.swapPercent)}% (${(SystemStatService.swapGb).toFixed(1)} GiB)`]);
-    }
-
-    // Network
-    rows.push([I18n.tr("system-monitor.download-speed"), `${SystemStatService.formatSpeed(SystemStatService.rxSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s"]);
-    rows.push([I18n.tr("system-monitor.upload-speed"), `${SystemStatService.formatSpeed(SystemStatService.txSpeed).replace(/([0-9.]+)([A-Za-z]+)/, "$1 $2")}` + "/s"]);
-
-    // Disk
-    const diskPercent = SystemStatService.diskPercents[diskPath];
-    if (diskPercent !== undefined) {
-      const usedGb = SystemStatService.diskUsedGb[diskPath] || 0;
-      const sizeGb = SystemStatService.diskSizeGb[diskPath] || 0;
-      const availGb = SystemStatService.diskAvailableGb[diskPath] || 0;
-      rows.push([I18n.tr("system-monitor.disk"), `${diskPercent}% (${usedGb.toFixed(1)} / ${sizeGb.toFixed(1)} GB)`]);
-      rows.push([I18n.tr("common.available"), `${availGb.toFixed(1)} GB`]);
-    }
-
-    return rows;
-  }
-
   // Visibility-aware warning/critical states (delegates to service)
   readonly property bool cpuWarning: showCpuUsage && SystemStatService.cpuWarning
   readonly property bool cpuCritical: showCpuUsage && SystemStatService.cpuCritical
@@ -925,7 +874,7 @@ Item {
 
   // MouseArea at root level for extended click area
   MouseArea {
-    id: tooltipArea
+    id: mainMouseArea
     anchors.fill: parent
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
@@ -933,35 +882,11 @@ Item {
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
                    PanelService.getPanel("systemStatsPanel", screen)?.toggle(root);
-                   TooltipService.hide();
                  } else if (mouse.button === Qt.RightButton) {
-                   TooltipService.hide();
                    PanelService.showContextMenu(contextMenu, root, screen);
                  } else if (mouse.button === Qt.MiddleButton) {
-                   TooltipService.hide();
                    openExternalMonitor();
                  }
                }
-    onEntered: {
-      if (!PanelService.getPanel("systemStatsPanel", screen).isPanelOpen) {
-        TooltipService.show(root, buildTooltipContent(), BarService.getTooltipDirection(root.screen?.name));
-        tooltipRefreshTimer.start();
-      }
-    }
-    onExited: {
-      tooltipRefreshTimer.stop();
-      TooltipService.hide();
-    }
-  }
-
-  Timer {
-    id: tooltipRefreshTimer
-    interval: 1000
-    repeat: true
-    onTriggered: {
-      if (tooltipArea.containsMouse) {
-        TooltipService.updateText(buildTooltipContent());
-      }
-    }
   }
 }

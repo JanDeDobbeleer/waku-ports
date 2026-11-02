@@ -15,10 +15,7 @@ Item {
   property string onMiddleClickedCommand: ""
   property string stateChecksJson: "[]" // Store state checks as JSON string
 
-  property string generalTooltipText: ""
   property bool enableOnStateLogic: false
-  property bool showExecTooltip: true
-  property bool _hasCustomTooltip: false
 
   property string _currentIcon: "heart" // Default icon
   property bool _isHot: false
@@ -48,10 +45,7 @@ Item {
         Logger.e("CustomButton", "Failed to parse stateChecksJson:", e.message);
         _parsedStateChecks = [];
       }
-      generalTooltipText = widgetSettings.generalTooltipText || "";
-      _hasCustomTooltip = !!(widgetSettings.generalTooltipText && widgetSettings.generalTooltipText.trim() !== "");
       enableOnStateLogic = widgetSettings.enableOnStateLogic || false;
-      showExecTooltip = widgetSettings.showExecTooltip !== undefined ? widgetSettings.showExecTooltip : true;
 
       updateState();
     }
@@ -123,39 +117,10 @@ Item {
     stateUpdateTimer.restart();
   }
 
-  function _buildTooltipText() {
-    // Build tooltip based on settings
-    let tooltip = "";
-
-    // If user set custom text, always show it
-    // If no custom text and showExecTooltip is off, show i18n default
-    if (_hasCustomTooltip) {
-      tooltip = generalTooltipText;
-    } else if (!showExecTooltip) {
-      tooltip = I18n.tr("bar.custom-button.default-tooltip");
-    }
-
-    // Add command details if enabled
-    if (showExecTooltip) {
-      if (onClickedCommand) {
-        tooltip += (tooltip ? "\n" : "") + I18n.tr("bar.custom-button.left-click-label") + `: ${onClickedCommand}`;
-      }
-      if (onRightClickedCommand) {
-        tooltip += (tooltip ? "\n" : "") + I18n.tr("bar.custom-button.right-click-label") + `: ${onRightClickedCommand}`;
-      }
-      if (onMiddleClickedCommand) {
-        tooltip += (tooltip ? "\n" : "") + I18n.tr("bar.custom-button.middle-click-label") + `: ${onMiddleClickedCommand}`;
-      }
-    }
-
-    return tooltip;
-  }
-
   NIconButtonHot {
     id: button
     icon: _activeStateIcon
     hot: _isHot
-    tooltipText: _buildTooltipText()
     onClicked: {
       if (onClickedCommand) {
         Quickshell.execDetached(["cmd", "/c", onClickedCommand]);

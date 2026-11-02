@@ -57,7 +57,6 @@ ColumnLayout {
 
           NIconButton {
             icon: "trash"
-            tooltipText: I18n.tr("panels.plugins.sources-remove-tooltip")
             visible: index !== 0 // Cannot remove official source
             baseSize: Style.baseWidgetSize * 0.7
             onClicked: {

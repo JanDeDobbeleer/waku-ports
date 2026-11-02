@@ -39,9 +39,6 @@ RowLayout {
   Layout.fillWidth: true
 
   readonly property bool isValueChanged: (defaultValue !== undefined) && (value !== defaultValue)
-  readonly property string indicatorTooltip: defaultValue !== undefined ? I18n.tr("panels.indicator.default-value", {
-                                                                                    "value": String(defaultValue)
-                                                                                  }) : ""
 
   Timer {
     id: repeatTimer
@@ -85,7 +82,6 @@ RowLayout {
     label: root.label
     description: root.description
     showIndicator: root.isValueChanged
-    indicatorTooltip: root.indicatorTooltip
   }
 
   // Main spinbox container

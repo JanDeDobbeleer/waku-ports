@@ -486,7 +486,6 @@ Item {
             NIconButton {
               visible: modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting
               icon: "info"
-              tooltipText: I18n.tr("common.info")
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mSurfaceVariant
               colorFg: Color.mOnSurface
@@ -501,7 +500,6 @@ Item {
             NIconButton {
               visible: !root.showOnlyLists && (modelData.paired || modelData.trusted) && !modelData.connected && !isBusy && !modelData.blocked
               icon: "trash"
-              tooltipText: I18n.tr("common.unpair")
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mPrimary
               colorFg: Color.mOnPrimary
@@ -559,7 +557,6 @@ Item {
             anchors.right: parent.right
             anchors.margins: Style.marginS
             icon: root.detailsGrid ? "layout-list" : "layout-grid"
-            tooltipText: root.detailsGrid ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
             baseSize: Style.baseWidgetSize * 0.65
             onClicked: {
               root.detailsGrid = !root.detailsGrid;

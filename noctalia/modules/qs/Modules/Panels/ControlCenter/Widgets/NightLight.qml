@@ -12,7 +12,6 @@ NIconButtonHot {
   enabled: ProgramCheckerService.wlsunsetAvailable
   icon: Settings.data.nightLight.enabled ? (Settings.data.nightLight.forced ? "nightlight-forced" : "nightlight-on") : "nightlight-off"
   hot: Settings.data.nightLight.enabled
-  tooltipText: I18n.tr("common.night-light")
 
   onClicked: {
     if (!Settings.data.nightLight.enabled) {

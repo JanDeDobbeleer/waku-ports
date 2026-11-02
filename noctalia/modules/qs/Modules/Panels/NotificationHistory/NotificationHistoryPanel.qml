@@ -408,14 +408,12 @@ SmartPanel {
 
             NIconButton {
               icon: NotificationService.doNotDisturb ? "bell-off" : "bell"
-              tooltipText: NotificationService.doNotDisturb ? I18n.tr("tooltips.do-not-disturb-enabled") : I18n.tr("tooltips.do-not-disturb-enabled")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: NotificationService.doNotDisturb = !NotificationService.doNotDisturb
             }
 
             NIconButton {
               icon: "trash"
-              tooltipText: I18n.tr("actions.clear-history")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
                 NotificationService.clearHistory();
@@ -426,7 +424,6 @@ SmartPanel {
 
             NIconButton {
               icon: "settings"
-              tooltipText: I18n.tr("common.settings")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
                 SettingsPanelService.openToTab(SettingsPanel.Tab.Notifications, 0, screen);
@@ -436,7 +433,6 @@ SmartPanel {
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("common.close")
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: root.close()
             }
@@ -980,7 +976,6 @@ SmartPanel {
                             NIconButton {
                               id: expandButton
                               icon: notificationDelegate.isExpanded ? "chevron-up" : "chevron-down"
-                              tooltipText: notificationDelegate.isExpanded ? I18n.tr("notifications.panel.click-to-collapse") || "Click to collapse" : I18n.tr("notifications.panel.click-to-expand") || "Click to expand"
                               baseSize: notificationDelegate.actionButtonSize
                               opacity: (notificationDelegate.canExpand || notificationDelegate.isExpanded) ? 1.0 : 0.0
                               enabled: notificationDelegate.canExpand || notificationDelegate.isExpanded
@@ -999,7 +994,6 @@ SmartPanel {
                             // Delete button
                             NIconButton {
                               icon: "trash"
-                              tooltipText: I18n.tr("tooltips.delete-notification")
                               baseSize: notificationDelegate.actionButtonSize
 
                               onClicked: {

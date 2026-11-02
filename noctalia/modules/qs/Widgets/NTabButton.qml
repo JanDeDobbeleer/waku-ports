@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 Rectangle {
@@ -11,7 +10,6 @@ Rectangle {
   // Public properties
   property string text: ""
   property string icon: ""
-  property var tooltipText
   property bool checked: false
   property int tabIndex: 0
   property real pointSize: Style.fontSizeM
@@ -88,33 +86,15 @@ Rectangle {
     }
   }
 
-  // Tooltip
-  Timer {
-    id: tooltipTimer
-    interval: 500
-    onTriggered: {
-      if (root.isHovered && root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-        TooltipService.show(root, root.tooltipText);
-      }
-    }
-  }
-
   MouseArea {
     anchors.fill: parent
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
     onEntered: {
       root.isHovered = true;
-      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-        tooltipTimer.start();
-      }
     }
     onExited: {
       root.isHovered = false;
-      tooltipTimer.stop();
-      if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
-        TooltipService.hide();
-      }
     }
     onClicked: {
       root.clicked();

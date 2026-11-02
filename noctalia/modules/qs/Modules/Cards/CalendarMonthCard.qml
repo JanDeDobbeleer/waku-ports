@@ -384,34 +384,11 @@ NBox {
                 hoverEnabled: true
                 enabled: Settings.data.location.showCalendarEvents
 
-                onEntered: {
-                  const events = parent.parent.parent.parent.getEventsForDate(modelData.year, modelData.month, modelData.day);
-                  if (events.length > 0) {
-                    const summaries = events.map(event => {
-                                                   if (root.isAllDayEvent(event)) {
-                                                     return event.summary;
-                                                   } else {
-                                                     const timeFormat = Settings.data.location.use12hourFormat ? "hh:mm AP" : "HH:mm";
-                                                     const start = new Date(event.start * 1000);
-                                                     const startFormatted = I18n.locale.toString(start, timeFormat);
-                                                     const end = new Date(event.end * 1000);
-                                                     const endFormatted = I18n.locale.toString(end, timeFormat);
-                                                     return `${startFormatted}-${endFormatted} ${event.summary}`;
-                                                   }
-                                                 }).join('\n');
-                    TooltipService.show(parent, summaries, "auto", Style.tooltipDelay, Settings.data.ui.fontFixed);
-                  }
-                }
-
                 onClicked: {
                   const dateWithSlashes = `${(modelData.month + 1).toString().padStart(2, '0')}/${modelData.day.toString().padStart(2, '0')}/${modelData.year.toString().substring(2)}`;
                   if (ProgramCheckerService.gnomeCalendarAvailable) {
                     Quickshell.execDetached(["gnome-calendar", "--date", dateWithSlashes]);
                   }
-                }
-
-                onExited: {
-                  TooltipService.hide();
                 }
               }
 

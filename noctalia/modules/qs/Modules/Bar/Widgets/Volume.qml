@@ -57,8 +57,6 @@ Item {
         // Ignore the first volume change
         firstVolumeReceived = true;
       } else {
-        // Hide any tooltip while the pill is visible / being updated
-        TooltipService.hide();
         pill.show();
         externalHideTimer.restart();
       }
@@ -68,7 +66,6 @@ Item {
       if (!firstVolumeReceived) {
         firstVolumeReceived = true;
       } else {
-        TooltipService.hide();
         pill.show();
         externalHideTimer.restart();
       }
@@ -78,8 +75,6 @@ Item {
       if (!firstVolumeReceived) {
         firstVolumeReceived = true;
       } else {
-        // Hide any tooltip while the pill is visible / being updated
-        TooltipService.hide();
         pill.show();
         externalHideTimer.restart();
       }
@@ -89,8 +84,6 @@ Item {
       if (!firstVolumeReceived) {
         firstVolumeReceived = true;
       } else {
-        // Hide any tooltip while the pill is visible / being updated
-        TooltipService.hide();
         pill.show();
         externalHideTimer.restart();
       }
@@ -158,26 +151,8 @@ Item {
     suffix: "%"
     forceOpen: displayMode === "alwaysShow"
     forceClose: displayMode === "alwaysHide"
-    tooltipText: {
-      if (PanelService.getPanel("audioPanel", screen)?.isPanelOpen) {
-        return "";
-      } else {
-        const nick = AudioService.sink?.nickname ?? "";
-        const volumeText = I18n.tr("tooltips.volume-at", {
-                                     "volume": (() => {
-                                                  const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
-                                                  const displayVolume = Math.min(maxVolume, AudioService.volume);
-                                                  return Math.round(displayVolume * 100);
-                                                })()
-                                   });
-        return nick ? volumeText + "\n" + nick : volumeText;
-      }
-    }
 
     onWheel: function (delta) {
-      // Hide tooltip as soon as the user starts scrolling to adjust volume
-      TooltipService.hide();
-
       if (root.reverseScroll)
         delta *= -1;
 

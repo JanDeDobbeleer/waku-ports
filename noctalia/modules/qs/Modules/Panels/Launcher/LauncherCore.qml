@@ -701,7 +701,6 @@ Rectangle {
       NIconButton {
         visible: root.showLayoutToggle
         icon: Settings.data.appLauncher.viewMode === "grid" ? "layout-list" : "layout-grid"
-        tooltipText: Settings.data.appLauncher.viewMode === "grid" ? I18n.tr("tooltips.list-view") : I18n.tr("tooltips.grid-view")
         customRadius: Style.iRadiusM
         Layout.preferredWidth: searchInput.height
         Layout.preferredHeight: searchInput.height
@@ -729,7 +728,6 @@ Rectangle {
           required property string modelData
           required property int index
           icon: root.currentProvider.categoryIcons ? (root.currentProvider.categoryIcons[modelData] || "star") : "star"
-          tooltipText: root.currentProvider.getCategoryName ? root.currentProvider.getCategoryName(modelData) : modelData
           tabIndex: index
           checked: categoryTabs.currentIndex === index
           onClicked: root.selectCategoryWithSlide(index)

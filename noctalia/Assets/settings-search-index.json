@@ -2346,15 +2346,6 @@
     "subTabLabel": "common.performance"
   },
   {
-    "labelKey": "panels.user-interface.tooltips-label",
-    "descriptionKey": "panels.user-interface.tooltips-description",
-    "widget": "NToggle",
-    "tab": 1,
-    "tabLabel": "panels.user-interface.title",
-    "subTab": 0,
-    "subTabLabel": "common.appearance"
-  },
-  {
     "labelKey": "panels.user-interface.box-border-label",
     "descriptionKey": "panels.user-interface.box-border-description",
     "widget": "NToggle",

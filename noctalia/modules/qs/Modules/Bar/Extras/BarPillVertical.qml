@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
-import qs.Services.UI
 import qs.Widgets
 
 Item {
@@ -13,7 +12,6 @@ Item {
   property string icon: ""
   property string text: ""
   property string suffix: ""
-  property var tooltipText
   property bool autoHide: false
   property bool forceOpen: false
   property bool forceClose: false
@@ -84,15 +82,6 @@ Item {
   height: contentHeight
   implicitWidth: buttonSize
   implicitHeight: contentHeight
-
-  Connections {
-    target: root
-    function onTooltipTextChanged() {
-      if (hovered) {
-        TooltipService.updateText(root.tooltipText);
-      }
-    }
-  }
 
   // Unified background for the entire pill area to avoid overlapping opacity
   Rectangle {
@@ -309,7 +298,6 @@ Item {
     onEntered: {
       hovered = true;
       root.entered();
-      TooltipService.show(root, root.tooltipText, BarService.getTooltipDirection(root.screen?.name), (forceOpen || forceClose) ? Style.tooltipDelay : Style.tooltipDelayLong);
       if (forceClose) {
         return;
       }
@@ -323,10 +311,8 @@ Item {
       if (!forceOpen && !forceClose) {
         hide();
       }
-      TooltipService.hide();
     }
     onClicked: mouse => {
-                 TooltipService.hide();
                  if (mouse.button === Qt.LeftButton) {
                    root.clicked();
                  } else if (mouse.button === Qt.RightButton) {

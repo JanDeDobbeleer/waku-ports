@@ -821,14 +821,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onEntered: {
-                  TooltipService.show(sidebarToggle, root.sidebarExpanded ? I18n.tr("tooltips.collapse") : I18n.tr("tooltips.expand"));
-                }
-                onExited: {
-                  TooltipService.hide();
-                }
                 onClicked: {
-                  TooltipService.hide();
                   root.sidebarExpanded = !root.sidebarExpanded;
                 }
               }
@@ -922,12 +915,6 @@ Item {
                     root.sidebarExpanded = true;
                     root.wasCollapsedBeforeSearch = false; // Expanding manually resets this
                     Qt.callLater(() => searchInput.inputItem.forceActiveFocus());
-                  }
-                  onEntered: {
-                    TooltipService.show(searchCollapsedButton, I18n.tr("common.search"));
-                  }
-                  onExited: {
-                    TooltipService.hide();
                   }
                 }
               }
@@ -1117,30 +1104,15 @@ Item {
                   cursorShape: Qt.PointingHandCursor
                   onEntered: {
                     tabItem.hovering = true;
-                    // Show tooltip when sidebar is collapsed
-                    if (!root.sidebarExpanded) {
-                      TooltipService.show(tabItem, I18n.tr(modelData.label));
-                    }
                   }
                   onExited: {
                     tabItem.hovering = false;
-                    // Hide tooltip when sidebar is collapsed
-                    if (!root.sidebarExpanded) {
-                      TooltipService.hide();
-                    }
                   }
                   onCanceled: {
                     tabItem.hovering = false;
-                    if (!root.sidebarExpanded) {
-                      TooltipService.hide();
-                    }
                   }
                   onClicked: {
                     root.currentTabIndex = index;
-                    // Hide tooltip on click
-                    if (!root.sidebarExpanded) {
-                      TooltipService.hide();
-                    }
                   }
                 }
               }
@@ -1206,7 +1178,6 @@ Item {
 
             NIconButton {
               icon: "close"
-              tooltipText: I18n.tr("common.close")
               Layout.alignment: Qt.AlignVCenter
               onClicked: root.closeRequested()
             }

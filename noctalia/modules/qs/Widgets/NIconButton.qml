@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
-import qs.Services.UI
 
 Item {
   id: root
@@ -11,8 +10,6 @@ Item {
   property bool applyUiScale: true
 
   property string icon
-  property var tooltipText
-  property string tooltipDirection: "auto"
   property bool allowClickWhenDisabled: false
   property bool handleWheel: false
   property bool hovering: false
@@ -88,7 +85,7 @@ Item {
 
   // MouseArea fills root (extends beyond visual button for bar click area)
   MouseArea {
-    // Always enabled to allow hover/tooltip even when the button is disabled
+    // Always enabled to allow hover even when the button is disabled
     enabled: true
     anchors.fill: parent
     cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
@@ -96,22 +93,13 @@ Item {
     hoverEnabled: true
     onEntered: {
       hovering = root.enabled ? true : false;
-      if (hovering && tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.show(root, tooltipText, tooltipDirection);
-      }
       root.entered();
     }
     onExited: {
       hovering = false;
-      if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.hide(root);
-      }
       root.exited();
     }
     onClicked: mouse => {
-                 if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-                   TooltipService.hide(root);
-                 }
                  if (!root.enabled && !allowClickWhenDisabled) {
                    return;
                  }

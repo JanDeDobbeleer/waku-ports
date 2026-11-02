@@ -91,8 +91,6 @@ Singleton {
   readonly property int animationSlowest: (Settings.data.general.animationDisabled || PowerProfileService.noctaliaPerformanceMode) ? 0 : Math.round(750 / Settings.data.general.animationSpeed)
 
   // Delays
-  readonly property int tooltipDelay: 300
-  readonly property int tooltipDelayLong: 1200
   readonly property int pillDelay: 500
 
   // Widgets base size

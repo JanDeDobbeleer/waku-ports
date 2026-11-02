@@ -42,7 +42,6 @@ ColumnLayout {
         text: Settings.data.general.avatarImage
         placeholderText: '~/.face' // don't translate path
         buttonIcon: "photo"
-        buttonTooltip: I18n.tr("panels.general.profile-tooltip")
         onInputTextChanged: text => Settings.data.general.avatarImage = text
         onButtonClicked: {
           avatarPicker.openFilePicker();

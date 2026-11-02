@@ -59,14 +59,6 @@ NIconButton {
   applyUiScale: false
   customRadius: Style.radiusL
   icon: NotificationService.doNotDisturb ? "bell-off" : "bell"
-  tooltipText: {
-    if (PanelService.getPanel("notificationHistoryPanel", screen)?.isPanelOpen) {
-      return "";
-    } else {
-      return I18n.tr("tooltips.open-notification-history-enable-dnd");
-    }
-  }
-  tooltipDirection: BarService.getTooltipDirection(screen?.name)
   colorBg: Style.capsuleColor
   colorFg: Color.resolveColorKey(iconColorKey)
   border.color: Style.capsuleBorderColor

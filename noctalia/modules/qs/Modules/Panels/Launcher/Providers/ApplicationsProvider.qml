@@ -618,9 +618,6 @@ Item {
             "icon": isAppPinned({
                                   "id": item.appId
                                 }) ? "unpin" : "pin",
-            "tooltip": isAppPinned({
-                                     "id": item.appId
-                                   }) ? I18n.tr("common.unpin") : I18n.tr("common.pin"),
             "action": function () {
               togglePin(item.appId);
             }

@@ -233,8 +233,6 @@ SmartPanel {
                                PanelService.openedPanel.close();
                              }
                            } else if (mouse.button === Qt.RightButton) {
-                             TooltipService.hideImmediately();
-
                              if (panelContent.popupMenuWindow && panelContent.popupMenuWindow.visible) {
                                panelContent.popupMenuWindow.close();
                                return;
@@ -278,9 +276,7 @@ SmartPanel {
                 if (panelContent.popupMenuWindow) {
                   panelContent.popupMenuWindow.close();
                 }
-                TooltipService.show(trayIcon, modelData.tooltipTitle || modelData.name || modelData.id || "Tray Item", BarService.getTooltipDirection(root.screen?.name));
               }
-              onExited: TooltipService.hide()
             }
           }
         }

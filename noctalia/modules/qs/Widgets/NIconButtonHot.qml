@@ -3,7 +3,6 @@ import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.UI
 
 Rectangle {
   id: root
@@ -12,8 +11,6 @@ Rectangle {
   property real baseSize: Style.baseWidgetSize
   property bool applyUiScale: true
   property string icon
-  property var tooltipText
-  property string tooltipDirection: "auto"
   property bool allowClickWhenDisabled: false
   property bool hot: false
 
@@ -97,7 +94,7 @@ Rectangle {
   }
 
   MouseArea {
-    // Always enabled to allow hover/tooltip even when the button is disabled
+    // Always enabled to allow hover even when the button is disabled
     enabled: true
     anchors.fill: parent
     cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
@@ -106,26 +103,17 @@ Rectangle {
 
     onEntered: {
       hovering = root.enabled ? true : false;
-      if (hovering && tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.show(parent, tooltipText, tooltipDirection);
-      }
       root.entered();
     }
 
     onExited: {
       hovering = false;
-      if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.hide();
-      }
       root.exited();
     }
 
     onPressed: function (mouse) {
       if (root.enabled) {
         root.pressed = true;
-      }
-      if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.hide();
       }
     }
 
@@ -153,9 +141,6 @@ Rectangle {
       root.hovering = false;
       root.pressed = false;
       root.scale = 1.0;
-      if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
-        TooltipService.hide();
-      }
     }
   }
 }

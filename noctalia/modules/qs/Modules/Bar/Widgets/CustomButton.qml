@@ -80,10 +80,6 @@ Item {
   readonly property bool parseJson: widgetSettings.parseJson !== undefined ? widgetSettings.parseJson : (widgetMetadata.parseJson || false)
   readonly property bool hasExec: (leftClickExec || rightClickExec || middleClickExec || (wheelMode === "unified" && wheelExec) || (wheelMode === "separate" && (wheelUpExec || wheelDownExec)))
   readonly property bool showIcon: (widgetSettings.showIcon !== undefined) ? widgetSettings.showIcon : true
-  readonly property bool showExecTooltip: widgetSettings.showExecTooltip !== undefined ? widgetSettings.showExecTooltip : (widgetMetadata.showExecTooltip !== undefined ? widgetMetadata.showExecTooltip : true)
-  readonly property bool showTextTooltip: widgetSettings.showTextTooltip !== undefined ? widgetSettings.showTextTooltip : (widgetMetadata.showTextTooltip !== undefined ? widgetMetadata.showTextTooltip : true)
-  readonly property string generalTooltipText: widgetSettings.generalTooltipText !== undefined ? widgetSettings.generalTooltipText : (widgetMetadata.generalTooltipText || "")
-  readonly property bool _hasCustomTooltip: generalTooltipText.trim() !== ""
   readonly property string hideMode: widgetSettings.hideMode || "alwaysExpanded"
   readonly property bool hasOutput: _dynamicText !== ""
   readonly property bool shouldForceOpen: textStream && (hideMode === "alwaysExpanded" || hideMode === "maxTransparent")
@@ -239,72 +235,6 @@ Item {
     customIconColor: iconColor
     customTextColor: textColor
 
-    // Helper function to build tooltip content
-    function _buildTooltipContent() {
-      var lines = [];
-
-      // Add custom tooltip if set
-      if (_hasCustomTooltip) {
-        lines.push(generalTooltipText);
-      }
-
-      // Add command details if enabled and available
-      if (showExecTooltip && hasExec) {
-        if (leftClickExec !== "") {
-          lines.push(I18n.tr("bar.custom-button.left-click-label") + `: ${leftClickExec}`);
-        } else if (!leftClickUpdateText) {
-          lines.push(I18n.tr("bar.custom-button.left-click-label") + ": " + I18n.tr("actions.widget-settings"));
-        }
-
-        if (rightClickExec !== "") {
-          lines.push(I18n.tr("bar.custom-button.right-click-label") + `: ${rightClickExec}`);
-        } else if (!rightClickUpdateText) {
-          lines.push(I18n.tr("bar.custom-button.right-click-label") + ": " + I18n.tr("actions.widget-settings"));
-        }
-
-        if (middleClickExec !== "") {
-          lines.push(I18n.tr("bar.custom-button.middle-click-label") + `: ${middleClickExec}`);
-        } else if (!middleClickUpdateText) {
-          lines.push(I18n.tr("bar.custom-button.middle-click-label") + ": " + I18n.tr("actions.widget-settings"));
-        }
-
-        if (wheelMode === "unified" && wheelExec !== "") {
-          lines.push(I18n.tr("bar.custom-button.wheel-label") + `: ${wheelExec}`);
-        } else if (wheelMode === "separate") {
-          if (wheelUpExec !== "") {
-            lines.push(I18n.tr("bar.custom-button.wheel-up") + `: ${wheelUpExec}`);
-          }
-          if (wheelDownExec !== "") {
-            lines.push(I18n.tr("bar.custom-button.wheel-down") + `Wheel down: ${wheelDownExec}`);
-          }
-        }
-      }
-
-      // Add dynamic text tooltip if enabled and available
-      if (showTextTooltip && _dynamicTooltip !== "") {
-        lines.push(_dynamicTooltip);
-      }
-
-      return lines;
-    }
-
-    tooltipText: {
-      var lines = _buildTooltipContent();
-
-      // If no custom tooltip and both switches are off, show default tooltip
-      if (!_hasCustomTooltip && !showExecTooltip && !showTextTooltip) {
-        return I18n.tr("bar.custom-button.default-tooltip");
-      }
-
-      // If there's content, join with newlines
-      if (lines.length > 0) {
-        return lines.join("\n");
-      }
-
-      // Fallback (shouldn't reach here normally)
-      return I18n.tr("bar.custom-button.default-tooltip");
-    }
-
     onClicked: root.clicked()
     onRightClicked: root.rightClicked()
     onMiddleClicked: root.middleClicked()
@@ -314,7 +244,6 @@ Item {
   // Internal state for dynamic text
   property string _dynamicText: ""
   property string _dynamicIcon: ""
-  property string _dynamicTooltip: ""
   property string _dynamicColor: ""
   property string _dynamicIconColor: ""
   property string _dynamicTextColor: ""
@@ -445,7 +374,6 @@ Item {
         const parsed = JSON.parse(jsonStr);
         const text = parsed.text || "";
         const icon = parsed.icon || "";
-        let tooltip = parsed.tooltip || "";
 
         // Support both "color" (legacy) and "iconColor"/"textColor" (new)
         const legacyColor = parsed.color || "";
@@ -470,7 +398,6 @@ Item {
           _scrollState.originalText = "";
           _dynamicText = "";
           _dynamicIcon = "";
-          _dynamicTooltip = "";
           _dynamicColor = "";
           _dynamicIconColor = "";
           _dynamicTextColor = "";
@@ -497,7 +424,6 @@ Item {
         _dynamicIconColor = resolvedIconColor;
         _dynamicTextColor = resolvedTextColor;
 
-        _dynamicTooltip = toHtml(tooltip);
         _scrollState.offset = 0;
         return;
       } catch (e) {
@@ -509,7 +435,6 @@ Item {
       _scrollState.originalText = "";
       _dynamicText = "";
       _dynamicIcon = "";
-      _dynamicTooltip = "";
       _dynamicColor = "";
       _dynamicIconColor = "";
       _dynamicTextColor = "";
@@ -535,7 +460,6 @@ Item {
     _dynamicColor = "";
     _dynamicIconColor = "";
     _dynamicTextColor = "";
-    _dynamicTooltip = toHtml(contentStr);
     _scrollState.offset = 0;
   }
 
@@ -594,22 +518,6 @@ Item {
     if (!textStream && middleClickUpdateText) {
       runTextCommand();
     }
-  }
-
-  function toHtml(str) {
-    const htmlTagRegex = /<\/?[a-zA-Z][^>]*>/g;
-    const placeholders = [];
-    let i = 0;
-    const protectedStr = str.replace(htmlTagRegex, tag => {
-                                       placeholders.push(tag);
-                                       return `___HTML_TAG_${i++}___`;
-                                     });
-
-    let escaped = protectedStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/\r\n|\r|\n/g, "<br/>");
-
-    escaped = escaped.replace(/___HTML_TAG_(\d+)___/g, (_, index) => placeholders[Number(index)]);
-
-    return escaped;
   }
 
   function runTextCommand() {
