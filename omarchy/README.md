@@ -6,8 +6,9 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 
 ## Run it
 
-    .\tools\start.ps1       # starts the shell, hidden, no tray
-    .\tools\stop.ps1
+    .\tools\start.ps1       # live: your deployed engine, tray, app bar, Windows taskbar hidden
+    .\tools\start.ps1 -Dev  # the bundled engine, hidden, no tray, no app bar, taskbar left alone
+    .\tools\stop.ps1        # (-Dev for the bundled engine); the engine restores the taskbar
 
 | Hotkey | What |
 |---|---|
