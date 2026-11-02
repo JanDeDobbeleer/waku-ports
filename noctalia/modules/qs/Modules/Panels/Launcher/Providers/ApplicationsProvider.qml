@@ -525,6 +525,12 @@ Item {
       "isImage": false,
       "_score": (score !== undefined ? score : 0),
       "provider": root,
+      "onActivateNew": function () {
+        // A new window even when the app already runs; Enter raises the running one instead.
+        // Quickshell's DesktopEntry has no executeNew(); there the plain launch is the fallback.
+        launcher.closeImmediately();
+        Qt.callLater(() => app.executeNew ? app.executeNew() : app.execute());
+      },
       "onActivateAdmin": function () {
         // Elevated launch (UAC prompt). Shortcuts expose a DesktopAction with id "admin";
         // Store apps do not, and then nothing happens rather than a silent non-elevated start.

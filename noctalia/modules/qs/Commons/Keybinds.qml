@@ -158,6 +158,7 @@ QtObject {
       "keyLeft": "Navigation: Left",
       "keyRight": "Navigation: Right",
       "keyEnter": "Navigation: Enter",
+      "keyEnterNew": "Launcher: New window",
       "keyEnterAdmin": "Launcher: Run as administrator",
       "keyEscape": "Navigation: Escape"
     };

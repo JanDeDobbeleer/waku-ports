@@ -597,6 +597,7 @@
   },
   "launcher": {
     "admin-hint": "{key}: run as administrator",
+    "new-window-hint": "{key}: new window",
     "categories": {
       "all": "All",
       "audiovideo": "Audio & Video",
@@ -1214,6 +1215,7 @@
       "keybinds-down": "Move down",
       "keybinds-enter": "Confirm / Action",
       "keybinds-enter-admin": "Run as administrator (launcher)",
+      "keybinds-enter-new": "Open a new window (launcher)",
       "keybinds-escape": "Close / Back",
       "keybinds-left": "Move left",
       "keybinds-modifier-description": "Shortcuts must include a modifier key (Ctrl or Alt).",
