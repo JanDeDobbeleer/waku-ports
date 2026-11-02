@@ -10,6 +10,8 @@ Item {
 
   property real radius: 0
   property string imagePath: ""
+  // Qt reads a plain "C:/..." path as a URL with scheme "c", so a Windows path becomes a file URL.
+  readonly property string _imageUrl: /^[A-Za-z]:[\\/]/.test(imagePath) ? "file:///" + imagePath.replace(/\\/g, "/") : imagePath
   property string fallbackIcon: ""
   property real fallbackIconSize: Style.fontSizeXXL
   property real borderWidth: 0
@@ -40,7 +42,7 @@ Item {
       id: staticComponent
       Image {
         visible: false
-        source: root.imagePath
+        source: root._imageUrl
         mipmap: true
         smooth: true
         asynchronous: true
@@ -53,7 +55,7 @@ Item {
       id: animatedComponent
       AnimatedImage {
         visible: false
-        source: root.imagePath
+        source: root._imageUrl
         mipmap: true
         smooth: true
         asynchronous: true

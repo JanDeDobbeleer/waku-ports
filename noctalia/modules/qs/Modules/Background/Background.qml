@@ -464,12 +464,24 @@ Variants {
       // QML Image.source is a url type; comparing url === string can return
       // false even for identical paths. This converts both sides to strings.
       function _pathStr(p) {
-        var s = p.toString();
-        // QUrl.toString() may add a file:// prefix for local paths
-        if (s.startsWith("file://")) {
-          return s.substring(7);
+        var s = p.toString().replace(/\\/g, "/");
+        // QUrl.toString() may add a file:// prefix for local paths ("file:///C:/..." on Windows)
+        if (/^file:\/\/\/[A-Za-z]:/.test(s)) {
+          s = s.substring(8);
+        } else if (s.startsWith("file://")) {
+          s = s.substring(7);
         }
-        return s;
+        // Windows paths ignore case
+        return /^[A-Za-z]:/.test(s) ? s.toLowerCase() : s;
+      }
+
+      // Image URL for a local path. Qt reads a plain "C:/..." path as a URL with scheme "c".
+      function _url(p) {
+        var s = String(p).replace(/\\/g, "/");
+        if (/^[A-Za-z]:/.test(s)) {
+          return "file:///" + s;
+        }
+        return String(p);
       }
 
       // ------------------------------------------------------
@@ -595,7 +607,7 @@ Variants {
         currentWallpaper.source = "";
 
         Qt.callLater(() => {
-                       currentWallpaper.source = source;
+                       currentWallpaper.source = _url(source);
                      });
       }
 
@@ -618,7 +630,7 @@ Variants {
         }
 
         // If we're already transitioning to this same wallpaper, skip
-        if (transitioning && source === nextWallpaper.source) {
+        if (transitioning && _pathStr(source) === _pathStr(nextWallpaper.source)) {
           return;
         }
 
@@ -664,7 +676,7 @@ Variants {
           currentWallpaper.asynchronous = false;
           transitionAnimation.start();
         } else {
-          nextWallpaper.source = source;
+          nextWallpaper.source = _url(source);
           if (nextWallpaper.status === Image.Ready) {
             if (!wallpaperReady) {
               wallpaperReady = true;

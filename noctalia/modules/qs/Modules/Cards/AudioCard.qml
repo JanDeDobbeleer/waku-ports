@@ -26,10 +26,10 @@ NBox {
     var inputVol = AudioService.inputVolume;
     localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
     if (AudioService.sink) {
-      lastSinkId = AudioService.sink.id;
+      lastSinkId = AudioService.sink.id ?? -1;
     }
     if (AudioService.source) {
-      lastSourceId = AudioService.source.id;
+      lastSourceId = AudioService.source.id ?? -1;
     }
   }
 
@@ -38,7 +38,7 @@ NBox {
     target: AudioService
     function onSinkChanged() {
       if (AudioService.sink) {
-        const newSinkId = AudioService.sink.id;
+        const newSinkId = AudioService.sink.id ?? -1;
         if (newSinkId !== lastSinkId) {
           lastSinkId = newSinkId;
           // Immediately set local volume to current device's volume
@@ -56,7 +56,7 @@ NBox {
     target: AudioService
     function onSourceChanged() {
       if (AudioService.source) {
-        const newSourceId = AudioService.source.id;
+        const newSourceId = AudioService.source.id ?? -1;
         if (newSourceId !== lastSourceId) {
           lastSourceId = newSourceId;
           // Immediately set local volume to current device's volume
