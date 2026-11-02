@@ -53,30 +53,6 @@ Variants {
       }
     }
 
-    // Bar content in separate windows to prevent fullscreen redraws
-    // Note: Window stays alive when bar is hidden (visible=false) to avoid
-    // rapid Wayland surface destruction/creation that can crash compositors.
-    // Content is debounce-unloaded inside BarContentWindow.
-    Loader {
-      active: {
-        if (!parent.windowLoaded || !parent.shouldBeActive)
-          return false;
-
-        // Check if bar is configured for this screen
-        var monitors = Settings.data.bar.monitors || [];
-        return monitors.length === 0 || monitors.includes(modelData?.name);
-      }
-      asynchronous: false
-
-      sourceComponent: BarContentWindow {
-        screen: modelData
-      }
-
-      onLoaded: {
-        Logger.d("AllScreens", "BarContentWindow created for", modelData?.name);
-      }
-    }
-
     // BarTriggerZone - thin invisible zone to reveal hidden bar
     // Always loaded when auto-hide is enabled (it's just 1px, no performance impact)
     Loader {
