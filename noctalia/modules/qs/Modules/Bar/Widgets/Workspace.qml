@@ -118,7 +118,7 @@ Item {
   property int windowRevision: 0
 
   property ListModel localWorkspaces: ListModel {}
-  property int lastFocusedWorkspaceId: -1
+  property var lastFocusedWorkspaceId: -1
   property real masterProgress: 0.0
   property bool effectsActive: false
   property color effectColor: Color.mPrimary
@@ -130,7 +130,7 @@ Item {
   property int wheelAccumulatedDelta: 0
   property bool wheelCooldown: false
 
-  signal workspaceChanged(int workspaceId, color accentColor)
+  signal workspaceChanged(var workspaceId, color accentColor)
 
   property bool isHovered: false
 
