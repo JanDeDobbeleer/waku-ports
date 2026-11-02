@@ -9,6 +9,7 @@ import qs.Services.Theming
 import qs.Services.UI
 import qs.compat
 import waku as W
+import waku.services as S
 
 Singleton {
   id: root
@@ -47,8 +48,6 @@ Singleton {
   // Signals for reactive UI updates
   signal wallpaperChanged(string screenName, string path)
   // Emitted when a wallpaper changes
-  signal wallpaperProcessingComplete(string screenName, string path, string cachedPath)
-  // Emitted when wallpaper processing (resize/cache) is complete. cachedPath is the resized version.
   signal wallpaperDirectoryChanged(string screenName, string directory)
   // Emitted when a monitor's directory changes
   signal wallpaperListChanged(string screenName, int count)
@@ -245,10 +244,102 @@ Singleton {
   }
 
   onWallpaperListChanged: prewarmTimer.restart()
-  onWallpaperChanged: prewarmTimer.restart()
+  onWallpaperChanged: {
+    prewarmTimer.restart();
+    syncWindowsWallpaper();
+  }
+
+  // -------------------------------------------------
+  // The wallpaper itself belongs to Windows: every choice is handed to waku's Wallpapers service,
+  // which sets it on all monitors with no transition. Noctalia keeps its own record (the cache file)
+  // for the picker, the favorites and the colour generation. Windows has one wallpaper, so the
+  // first screen's choice is the one that is applied. With WAKU_WALLPAPER_DRYRUN=1 the service only
+  // logs "Wallpapers: dry run, not setting <path>".
+  property string appliedKey: ""
+  property bool startupApplied: false
+
+  // A local path with forward slashes: no file:// scheme, no solid:// colour. "" if there is none.
+  function localPath(p) {
+    var s = String(p === undefined || p === null ? "" : p);
+    if (s === "" || s.indexOf(solidColorPrefix) === 0)
+      return "";
+    if (/^file:\/\/\/[A-Za-z]:/.test(s))
+      s = s.substring(8);
+    else if (s.indexOf("file://") === 0)
+      s = s.substring(7);
+    try {
+      s = decodeURIComponent(s);
+    } catch (e) {}
+    return s.replace(/\\/g, "/");
+  }
+
+  // Windows paths ignore case.
+  function pathKey(p) {
+    return localPath(p).toLowerCase();
+  }
+
+  function syncWindowsWallpaper() {
+    if (!isInitialized || !Settings.data.wallpaper.enabled || Settings.data.wallpaper.useSolidColor || !S.Wallpapers.available || Quickshell.screens.length === 0)
+      return;
+    if (!startupApplied && !currentWallpapers[Quickshell.screens[0].name]) {
+      // Nothing is recorded for this screen (a first run, or a cache from another screen name):
+      // keep the Windows wallpaper and take it as the shell's choice instead of setting the default.
+      startupApplied = true;
+      adoptWindowsWallpaper();
+      return;
+    }
+    var path = localPath(getWallpaper(Quickshell.screens[0].name));
+    if (path === "")
+      return;
+    var key = pathKey(path);
+    startupApplied = true;
+    if (key === appliedKey)
+      return;
+    appliedKey = key;
+    if (key === pathKey(S.Wallpapers.current))
+      return;
+    S.Wallpapers.setWallpaper(path);
+  }
+
+  // A change made outside the shell (wakuc wallpaper next, the gallery, Windows settings) becomes
+  // the shell's choice, so the colours and the picker follow it.
+  function adoptWindowsWallpaper() {
+    if (!startupApplied || !Settings.data.wallpaper.enabled || Quickshell.screens.length === 0)
+      return;
+    var key = pathKey(S.Wallpapers.current);
+    if (key === "" || key === appliedKey)
+      return;
+    appliedKey = key;
+    changeWallpaper(localPath(S.Wallpapers.current), Quickshell.screens[0].name);
+  }
+
+  Connections {
+    target: S.Wallpapers
+    function onCurrentChanged() {
+      root.adoptWindowsWallpaper();
+    }
+  }
+
+  // The shell never changes the Windows lock screen picture.
+  Binding {
+    target: S.Wallpapers
+    property: "setLockScreen"
+    value: false
+  }
+
+  // One folder for the shell and the engine, so `wakuc wallpaper next` and the shell agree.
+  Binding {
+    target: S.Wallpapers
+    property: "imagePath"
+    value: root.defaultDirectory
+    when: root.defaultDirectory.length > 0
+  }
 
   function init() {
     Logger.i("Wallpaper", "Service started");
+
+    // No animation: the new wallpaper is set at once.
+    S.Wallpapers.configureEngine(false, "");
 
     translateModels();
     Qt.callLater(root._dedupeWallpaperFavoritesByPath);
@@ -1695,6 +1786,7 @@ Singleton {
 
       Logger.d("Wallpaper", "Loaded wallpapers from cache file:", Object.keys(root.currentWallpapers).length, "screens");
       root.isInitialized = true;
+      root.syncWindowsWallpaper();
       root._scheduleThemeSyncFromCachedWallpaper();
     }
 
@@ -1703,6 +1795,7 @@ Singleton {
       root.currentWallpapers = {};
       Logger.d("Wallpaper", "Cache file doesn't exist or failed to load, starting with empty wallpapers");
       root.isInitialized = true;
+      root.syncWindowsWallpaper();
       root._scheduleThemeSyncFromCachedWallpaper();
     }
   }

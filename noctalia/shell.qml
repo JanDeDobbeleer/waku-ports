@@ -123,8 +123,6 @@ ShellRoot {
         delayedInitTimer.restart();
       }
 
-      Overview {}
-      Background {}
       DesktopWidgets {}
       AllScreens {}
       Dock {}
