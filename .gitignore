@@ -1,0 +1,7 @@
+# not ports: scratch, engine builds and old logs
+regress/
+wt/
+*.bundle
+# runtime output a port may leave in its folder
+live.err.txt
+live.out.txt
