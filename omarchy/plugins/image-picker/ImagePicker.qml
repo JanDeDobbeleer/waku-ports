@@ -213,7 +213,7 @@ Item {
     if (wallpaperMode) {
       wallpaperMode = false
       root.opened = false
-      if (path) S.Wallpapers.setWallpaper(String(path).replace(/\//g, "\\"))
+      if (path) root.setWallpaper(String(path))
       return
     }
 
@@ -398,6 +398,15 @@ Item {
   }
 
   property string wallpaperPending: ""
+
+  // The engine ignores setWallpaper ("No image paths configured") until it has been told its folder,
+  // so give it the folder of the picked image first. No hotkey, no auto-change: this shell owns those.
+  function setWallpaper(path) {
+    var file = path.replace(/\\/g, "/")
+    var folder = file.lastIndexOf("/") > 0 ? file.slice(0, file.lastIndexOf("/")) : root.wallpaperDir()
+    if (String(S.Wallpapers.imagePath).replace(/\\/g, "/") !== folder) S.Wallpapers.configure(folder, "", "primary", 0)
+    S.Wallpapers.setWallpaper(file)
+  }
 
   function openWallpapers() {
     wallpaperPending = String(S.Wallpapers.current || "").replace(/\\/g, "/")
@@ -645,6 +654,14 @@ Item {
     var labels = args.showLabels === true || args.showLabels === "true"
     var filter = args.filterable === true || args.filterable === "true"
     openSelector(dirs, rows, sel, selFile, doneF, labels, filter)
+  }
+
+  // PORTDBG: pick row `index` as Enter would, for `wakuc call shell call omarchy.image-picker debugApply 1`
+  function debugApply(index) {
+    selectedIndex = Number(index)
+    var path = currentPath()
+    applySelected()
+    return String(path)
   }
 
   // PORTDBG: state dump for `wakuc call shell call omarchy.image-picker debugState x`
