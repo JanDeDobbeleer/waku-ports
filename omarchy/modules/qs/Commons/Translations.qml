@@ -30,9 +30,10 @@ QtObject {
 
   // Read through FileView so blockLoading applies to the first lookup, and
   // keep the maps bound to the watched files for subsequent updates.
-  readonly property var englishStrings: parseCatalog(englishFile.text())
-  readonly property var baseStrings: parseCatalog(baseFile.text())
-  readonly property var languageStrings: parseCatalog(languageFile.text())
+  property int rev: 0
+  readonly property var englishStrings: (root.rev, parseCatalog(englishFile.text()))
+  readonly property var baseStrings: (root.rev, parseCatalog(baseFile.text()))
+  readonly property var languageStrings: (root.rev, parseCatalog(languageFile.text()))
   readonly property var strings: {
     var merged = ({})
     var layers = [root.englishStrings, root.baseStrings, root.languageStrings]
@@ -79,6 +80,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 
   // Only read for a regional code; for "da" the language file covers it.
@@ -88,6 +91,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 
   property FileView languageFile: FileView {
@@ -96,5 +101,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 }

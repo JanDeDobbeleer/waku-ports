@@ -13,7 +13,7 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 | Hotkey | What |
 |---|---|
 | Ctrl+Alt+Space | The Omarchy menu |
-| Ctrl+Alt+Shift+Space | The app list |
+| Alt+Space | The app launcher (Apps list) |
 | Ctrl+Alt+T | Theme switcher |
 | Ctrl+Alt+B | Background switcher |
 | Ctrl+Alt+E | Windows emoji picker (Win+.) |

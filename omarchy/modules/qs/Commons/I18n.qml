@@ -17,11 +17,14 @@ import "Numbers.js" as Numbers
 QtObject {
   id: root
 
-  readonly property string omarchyPath: (Quickshell.env("OMARCHY_PATH") || "")
-  readonly property string configHome: Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")
+  readonly property string omarchyPath: (Quickshell.env("OMARCHY_PATH") || "").replace(/\\/g, "/")
+  readonly property string configHome: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")).replace(/\\/g, "/")
 
-  readonly property string language: languageCode(languageFile.text())
-  readonly property var localeSettings: parseCatalog(registryFile.text())[root.language] || ({})
+  // Windows port: the engine does not re-run a binding when a FileView finishes loading, so every
+  // read below also depends on `rev`, which each FileView bumps when it loads or changes.
+  property int rev: 0
+  readonly property string language: (root.rev, languageCode(languageFile.text()))
+  readonly property var localeSettings: (root.rev, parseCatalog(registryFile.text()))[root.language] || ({})
   readonly property string formatLocale: localeSettings.formatLocale || "en-US"
   // From the registry: how numbers are written and which way text runs.
   readonly property string decimal: localeSettings.decimal || "."
@@ -30,8 +33,8 @@ QtObject {
 
   // Reading text() makes blockLoading take effect on the first lookup.
   // These bindings also rebuild the maps when a watched catalog changes.
-  readonly property var englishStrings: parseCatalog(englishCatalogFile.text())
-  readonly property var languageStrings: parseCatalog(languageCatalogFile.text())
+  readonly property var englishStrings: (root.rev, parseCatalog(englishCatalogFile.text()))
+  readonly property var languageStrings: (root.rev, parseCatalog(languageCatalogFile.text()))
   readonly property var strings: {
     var merged = ({})
     for (var k in root.englishStrings) merged[k] = root.englishStrings[k]
@@ -90,6 +93,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 
   property FileView englishCatalogFile: FileView {
@@ -98,6 +103,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 
   property FileView languageCatalogFile: FileView {
@@ -106,6 +113,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 
   property FileView registryFile: FileView {
@@ -114,5 +123,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
+    onLoaded: root.rev++
+    onLoadFailed: root.rev++
   }
 }

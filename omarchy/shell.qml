@@ -1672,7 +1672,7 @@ ShellRoot {
     appid: "omarchy"
     name: "omarchy-apps-key"
     description: "Omarchy apps"
-    keys: "Ctrl+Alt+Shift+Space"
+    keys: "Alt+Space"
     onPressed: shell.toggle("omarchy.menu", "{\"menu\":\"apps\"}")
   }
 
