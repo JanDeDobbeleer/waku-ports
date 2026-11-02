@@ -12,6 +12,14 @@ QtObject {
     property bool scannerEnabled: false
     onScannerEnabledChanged: if (scannerEnabled) S.Network.refresh()
 
+    // S.Network.networks stays empty until the first refresh(), so ask once at start and again when
+    // the radio first shows up (the service reports no Wi-Fi for its first second).
+    Component.onCompleted: Qt.callLater(function() { S.Network.refresh() })
+    property Connections radioWatch: Connections {
+        target: S.Network
+        function onWifiAvailableChanged() { if (S.Network.wifiAvailable) S.Network.refresh() }
+    }
+
     property var items: []
     readonly property var networks: ({ values: device.items })
 
