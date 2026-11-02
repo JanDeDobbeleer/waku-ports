@@ -6,7 +6,8 @@ $env:PATH += ';C:\Program Files\komorebi\bin'
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $modules = Join-Path $port 'modules'
-$home_ = Join-Path $port 'smoke\loadcheck'
+# Outside the port: the live shell reloads, and breaks, when a file under its config home changes.
+$home_ = Join-Path $env:TEMP 'noctalia-loadcheck'; New-Item -ItemType Directory -Force $home_ | Out-Null
 $logs = Join-Path $port 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $files = Get-ChildItem (Join-Path $modules 'qs') -Recurse -Filter *.qml |
   Where-Object { $_.Name -cmatch '^[A-Z]' -and $_.FullName -match $Filter } | Sort-Object FullName
