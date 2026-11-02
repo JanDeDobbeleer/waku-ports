@@ -596,6 +596,7 @@
     "visible": "Always visible"
   },
   "launcher": {
+    "admin-hint": "{key}: run as administrator",
     "categories": {
       "all": "All",
       "audiovideo": "Audio & Video",
@@ -1212,6 +1213,7 @@
       "keybinds-description": "Configure global navigation keys for panels and launcher.",
       "keybinds-down": "Move down",
       "keybinds-enter": "Confirm / Action",
+      "keybinds-enter-admin": "Run as administrator (launcher)",
       "keybinds-escape": "Close / Back",
       "keybinds-left": "Move left",
       "keybinds-modifier-description": "Shortcuts must include a modifier key (Ctrl or Alt).",
