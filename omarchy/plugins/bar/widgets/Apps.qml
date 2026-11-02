@@ -316,21 +316,15 @@ BarWidget {
           implicitWidth: preview.cardW
           implicitHeight: column.implicitHeight + preview.cardPad * 2
 
-          // Omarchy's own look: square, and the popup's background, border colour and thickness.
-          BorderSurface {
-            anchors.fill: parent
-            radius: 0
-            color: Commons.Color.popups.background
-            borderSpec: preview.borderSpec
-          }
-
-          // Hover (and the focused window) tint the same surface instead of changing its border.
+          // Omarchy's look: square tiles with no border of their own (the outline belongs to the
+          // flyout). The focused window takes the fill a connected network or Bluetooth row has,
+          // hover takes the hover fill, the rest a faint tile.
           Rectangle {
             anchors.fill: parent
-            anchors.margins: Border.top(preview.borderSpec)
             radius: 0
-            color: cardArea.containsMouse ? Style.hoverFill
-              : (card.modelData.active ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.10) : "transparent")
+            color: card.modelData.active ? Style.selectedFillFor(root.ink, Commons.Color.accent)
+              : (cardArea.containsMouse ? Style.hoverFillFor(root.ink, Commons.Color.accent)
+              : Style.normalFillFor(root.ink, Commons.Color.accent))
           }
 
           ColumnLayout {
