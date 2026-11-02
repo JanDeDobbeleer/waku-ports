@@ -1,5 +1,4 @@
 module qs.Modules.Panels.Settings.Tabs.Wallpaper
 AutomationSubTab 1.0 AutomationSubTab.qml
 GeneralSubTab 1.0 GeneralSubTab.qml
-LookAndFeelSubTab 1.0 LookAndFeelSubTab.qml
 WallpaperTab 1.0 WallpaperTab.qml
