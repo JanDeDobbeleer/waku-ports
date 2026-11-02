@@ -162,13 +162,32 @@ Singleton {
       NetworkService.airplaneModeEnabled = false;
       ToastService.showNotice(I18n.tr("toast.airplane-mode.title"), I18n.tr("common.disabled"), "plane-off");
       Logger.i("AirplaneMode", "Disabled");
-    } else if (adapter.enabled) {
-      ToastService.showNotice(I18n.tr("common.bluetooth"), I18n.tr("common.enabled"), "bluetooth");
-      Logger.d("Bluetooth", "Adapter enabled");
     } else {
-      ToastService.showNotice(I18n.tr("common.bluetooth"), I18n.tr("common.disabled"), "bluetooth-off");
-      Logger.d("Bluetooth", "Adapter disabled");
+      // Only a real on/off change after startup is worth a toast. The adapter reports state changes
+      // while it settles at startup (and for other reasons), which popped up "Bluetooth enabled" on
+      // every launch.
+      const nowEnabled = !!adapter.enabled;
+      const changed = _lastEnabled !== null && _lastEnabled !== nowEnabled;
+      _lastEnabled = nowEnabled;
+      if (!changed || !_startupSettled) {
+        Logger.d("Bluetooth", "Adapter state update (no toast):", nowEnabled ? "enabled" : "disabled");
+      } else if (nowEnabled) {
+        ToastService.showNotice(I18n.tr("common.bluetooth"), I18n.tr("common.enabled"), "bluetooth");
+        Logger.d("Bluetooth", "Adapter enabled");
+      } else {
+        ToastService.showNotice(I18n.tr("common.bluetooth"), I18n.tr("common.disabled"), "bluetooth-off");
+        Logger.d("Bluetooth", "Adapter disabled");
+      }
     }
+  }
+
+  // Last adapter on/off state seen (null until the first update), and whether startup is over
+  property var _lastEnabled: null
+  property bool _startupSettled: false
+  Timer {
+    interval: 8000
+    running: true
+    onTriggered: root._startupSettled = true
   }
 
   // Unify discovery controls
