@@ -40,7 +40,7 @@ Singleton {
   property int rssiPollIntervalMs: Settings?.data?.network?.bluetoothRssiPollIntervalMs || 60000
   // RSSI helper sub‑component
   property BluetoothRssi rssi: BluetoothRssi {
-    enabled: root.enabled && root.rssiPollingEnabled
+    enabled: false // RSSI polling shells out to bluetoothctl; Windows has no equivalent
     intervalMs: root.rssiPollIntervalMs
     connectedDevices: root.connectedDevices
   }

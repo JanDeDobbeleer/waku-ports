@@ -454,7 +454,10 @@ Singleton {
     if (backend && backend.turnOffMonitors) {
       backend.turnOffMonitors();
     } else {
-      Logger.w("Compositor", "No backend available for turnOffMonitors");
+      // Windows: broadcast WM_SYSCOMMAND / SC_MONITORPOWER (0xF170) = 2 (power off). Any mouse or
+      // key input turns the displays back on, so turnOnMonitors() has nothing to do.
+      // The script is user32 SendMessage(HWND_BROADCAST, 0x0112, 0xF170, 2), UTF-16LE base64.
+      Quickshell.execDetached(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", "QQBkAGQALQBUAHkAcABlACAALQBOAGEAbQBlACAAVwAgAC0ATgBhAG0AZQBzAHAAYQBjAGUAIABOACAALQBNAGUAbQBiAGUAcgBEAGUAZgBpAG4AaQB0AGkAbwBuACAAJwBbAEQAbABsAEkAbQBwAG8AcgB0ACgAIgB1AHMAZQByADMAMgAuAGQAbABsACIAKQBdACAAcAB1AGIAbABpAGMAIABzAHQAYQB0AGkAYwAgAGUAeAB0AGUAcgBuACAASQBuAHQAUAB0AHIAIABTAGUAbgBkAE0AZQBzAHMAYQBnAGUAKABJAG4AdABQAHQAcgAgAGgALAAgAGkAbgB0ACAAbQAsACAASQBuAHQAUAB0AHIAIAB3ACwAIABJAG4AdABQAHQAcgAgAGwAKQA7ACcAOwAgAFsAdgBvAGkAZABdAFsATgAuAFcAXQA6ADoAUwBlAG4AZABNAGUAcwBzAGEAZwBlACgAWwBJAG4AdABQAHQAcgBdADAAeABGAEYARgBGACwAIAAwAHgAMAAxADEAMgAsACAAWwBJAG4AdABQAHQAcgBdADAAeABGADEANwAwACwAIABbAEkAbgB0AFAAdAByAF0AMgApAA=="]);
     }
   }
 
@@ -497,79 +500,21 @@ Singleton {
     }
   }
 
-  property int lockAndSuspendCheckCount: 0
-
+  // Windows has no Noctalia lock screen: lock the workstation through the engine, then sleep.
   function lockAndSuspend() {
     Logger.i("Compositor", "Lock and suspend requested");
-
-    // if a custom lock command exists, execute it and suspend without wait
-    if (executeSessionAction("lock")) {
-      suspend();
-      return;
-    }
-
-    // If already locked, suspend immediately
-    if (PanelService && PanelService.lockScreen && PanelService.lockScreen.active) {
-      Logger.i("Compositor", "Screen already locked, suspending");
-      suspend();
-      return;
-    }
-
-    // Lock the screen first
-    try {
-      if (PanelService && PanelService.lockScreen) {
-        PanelService.lockScreen.active = true;
-        lockAndSuspendCheckCount = 0;
-
-        // Wait for lock screen to be confirmed active before suspending
-        lockAndSuspendTimer.start();
-      } else {
-        Logger.w("Compositor", "Lock screen not available, suspending without lock");
-        suspend();
-      }
-    } catch (e) {
-      Logger.w("Compositor", "Failed to activate lock screen before suspend: " + e);
-      suspend();
-    }
+    lock();
+    lockAndSuspendTimer.restart();
   }
 
   Timer {
     id: lockAndSuspendTimer
-    interval: 100
-    repeat: true
+    interval: 1500
+    repeat: false
     running: false
-
     onTriggered: {
-      lockAndSuspendCheckCount++;
-
-      // Check if lock screen is now active
-      if (PanelService && PanelService.lockScreen && PanelService.lockScreen.active) {
-        // Verify the lock screen component is loaded
-        if (PanelService.lockScreen.item) {
-          Logger.i("Compositor", "Lock screen confirmed active, suspending");
-          stop();
-          lockAndSuspendCheckCount = 0;
-          suspend();
-        } else {
-          // Lock screen is active but component not loaded yet, wait a bit more
-          if (lockAndSuspendCheckCount > 20) {
-            // Max 2 seconds wait
-            Logger.w("Compositor", "Lock screen active but component not loaded, suspending anyway");
-            stop();
-            lockAndSuspendCheckCount = 0;
-            suspend();
-          }
-        }
-      } else {
-        // Lock screen not active yet, keep checking
-        if (lockAndSuspendCheckCount > 30) {
-          // Max 3 seconds wait
-          Logger.w("Compositor", "Lock screen failed to activate, suspending anyway");
-          stop();
-          lockAndSuspendCheckCount = 0;
-          suspend();
-        }
-      }
+      // A custom sleep command is honoured by suspend()
+      suspend();
     }
   }
 }

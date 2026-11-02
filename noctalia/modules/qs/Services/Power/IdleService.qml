@@ -197,9 +197,9 @@ Singleton {
     } else if (stage === "lock") {
       if (Settings.data.idle.lockCommand)
         Quickshell.execDetached(["cmd", "/c", Settings.data.idle.lockCommand]);
-      if (PanelService.lockScreen && !PanelService.lockScreen.active) {
-        PanelService.lockScreen.active = true;
-      }
+      // Windows: no Noctalia lock screen; a custom lock command replaces the default
+      if (!Settings.data.idle.lockCommand)
+        CompositorService.lock();
       root.lockRequested();
     } else if (stage === "suspend") {
       if (Settings.data.idle.suspendCommand)

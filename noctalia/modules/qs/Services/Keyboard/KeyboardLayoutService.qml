@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import waku.services as S
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
@@ -68,6 +68,23 @@ Singleton {
     return codeMatch ? codeMatch[1].toUpperCase() : I18n.tr("common.unknown");
   }
 
+  // The engine's DesktopState reads the layout of the foreground window's thread ("EN",
+  // "English (United States)"). It polls only while a connection or binding observes it.
+  function _syncFromEngine() {
+    const code = S.DesktopState.keyboardLayout;
+    if (!code)
+      return;
+    root.fullLayoutName = S.DesktopState.keyboardLayoutName || code;
+    root.currentLayout = code.toUpperCase();
+  }
+
+  Connections {
+    target: S.DesktopState
+    function onKeyboardLayoutChanged() {
+      root._syncFromEngine();
+    }
+  }
+
   // Watch for layout changes and show toast
   onCurrentLayoutChanged: {
     // Update previousLayout after checking for changes
@@ -89,6 +106,7 @@ Singleton {
 
   Component.onCompleted: {
     Logger.i("KeyboardLayout", "Service started");
+    _syncFromEngine();
     // Mark as initialized after a delay to allow first layout update to complete
     // This prevents showing a toast on the initial load
     initializationTimer.start();

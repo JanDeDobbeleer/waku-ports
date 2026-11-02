@@ -1,10 +1,8 @@
 pragma Singleton
-import Qt.labs.folderlistmodel 2.10
-import QtQml.Models
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import waku.services as S
 import qs.Commons
 import qs.compat
 
@@ -36,113 +34,46 @@ Singleton {
   signal numLockChanged(bool active)
   signal scrollLockChanged(bool active)
 
-  Instantiator {
-    model: FolderListModel {
-      id: folderModel
-      folder: Qt.resolvedUrl("/sys/class/leds")
-      showFiles: false
-      showOnlyReadable: true
+  // The engine's DesktopState reads the toggle state of the lock keys (GetKeyState) and polls only
+  // while something is connected to it, so the connection is held only while a consumer registered.
+  function _sync(emit) {
+    const caps = S.DesktopState.capsLock;
+    const num = S.DesktopState.numLock;
+    const scroll = S.DesktopState.scrollLock;
+    if (root.capsLockOn !== caps) {
+      root.capsLockOn = caps;
+      if (emit)
+        root.capsLockChanged(caps);
     }
-    delegate: Component {
-      FileView {
-        id: fileView
-        path: filePath + "/brightness"
-        // sysfs brightness can fail transiently (e.g. resume); omit console spam like other sysfs FileViews.
-        printErrors: false
-        watchChanges: false
+    if (root.numLockOn !== num) {
+      root.numLockOn = num;
+      if (emit)
+        root.numLockChanged(num);
+    }
+    if (root.scrollLockOn !== scroll) {
+      root.scrollLockOn = scroll;
+      if (emit)
+        root.scrollLockChanged(scroll);
+    }
+  }
 
-        function parseBrightnessLedOn(raw) {
-          var t = raw.trim();
-          if (t === "" || !/^[0-9]+$/.test(t))
-            return null;
-          return parseInt(t, 10) !== 0;
-        }
+  onShouldRunChanged: {
+    // First read after polling starts updates the properties only (the OSD listens to the signals
+    // and would flash on startup).
+    if (shouldRun)
+      _sync(false);
+  }
 
-        function applyLockState(kind, state, emitIfChanged) {
-          switch (kind) {
-          case "numlock":
-            if (emitIfChanged && root.numLockOn !== state) {
-              root.numLockOn = state;
-              root.numLockChanged(state);
-              Logger.i("LockKeysService", "Num Lock:", state, fileView.path);
-            } else if (!emitIfChanged) {
-              root.numLockOn = state;
-            }
-            break;
-          case "capslock":
-            if (emitIfChanged && root.capsLockOn !== state) {
-              root.capsLockOn = state;
-              root.capsLockChanged(state);
-              Logger.i("LockKeysService", "Caps Lock:", state, fileView.path);
-            } else if (!emitIfChanged) {
-              root.capsLockOn = state;
-            }
-            break;
-          case "scrolllock":
-            if (emitIfChanged && root.scrollLockOn !== state) {
-              root.scrollLockOn = state;
-              root.scrollLockChanged(state);
-              Logger.i("LockKeysService", "Scroll Lock:", state, fileView.path);
-            } else if (!emitIfChanged) {
-              root.scrollLockOn = state;
-            }
-            break;
-          }
-        }
-
-        // Only apply after a successful read — failed reloads must not update UI (empty text is not "off").
-        onLoaded: {
-          if (!fileView.isWanted)
-          return;
-          var state = fileView.parseBrightnessLedOn(fileView.text());
-          if (state === null)
-          return;
-
-          var kind = fileName.split("::")[1];
-
-          // First read after polling starts: sync bar/UI from sysfs without firing
-          // *Changed signals (OSD listens to those and would flash on startup).
-          if (!fileView.initialCheckDone) {
-            fileView.initialCheckDone = true;
-            fileView.applyLockState(kind, state, false);
-            return;
-          }
-
-          fileView.applyLockState(kind, state, true);
-        }
-
-        // FolderListModel only provides filters for file names, not folders
-        property bool isWanted: {
-          if (fileName.startsWith("input") && fileName.includes("::")) {
-            switch (fileName.split("::")[1]) {
-              case "numlock":
-              case "capslock":
-              case "scrolllock":
-              return true;
-            }
-          }
-          return false;
-        }
-
-        // After shouldRun becomes true, first brightness read updates properties only (no *Changed signals).
-        property bool initialCheckDone: false
-        property variant connections: Connections {
-          target: root
-          function onShouldRunChanged() {
-            if (root.shouldRun) {
-              fileView.initialCheckDone = false;
-            }
-          }
-        }
-
-        // sysfs does not provide change notifications
-        property variant refreshTimer: Timer {
-          interval: 200
-          running: root.shouldRun && fileView.isWanted
-          repeat: true
-          onTriggered: fileView.reload()
-        }
-      }
+  Connections {
+    target: root.shouldRun ? S.DesktopState : null
+    function onCapsLockChanged() {
+      root._sync(true);
+    }
+    function onNumLockChanged() {
+      root._sync(true);
+    }
+    function onScrollLockChanged() {
+      root._sync(true);
     }
   }
 

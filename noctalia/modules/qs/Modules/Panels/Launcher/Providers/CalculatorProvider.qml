@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "../../../../Helpers/AdvancedMath.js" as AdvancedMath
 import qs.Commons
+import qs.compat
 import qs.Services.Keyboard
 import qs.Services.UI
 
@@ -41,8 +42,8 @@ Item {
               "isImage": false,
               "provider": root,
               "onActivate": function () {
-                // Copy result to clipboard via xclip
-                Quickshell.execDetached(["sh", "-c", "echo -n '" + formattedResult.replace(/'/g, "'\\''") + "' | wl-copy"]);
+                // Copy result to the Windows clipboard (no sh/wl-copy on Windows)
+                Os.copy(formattedResult);
                 ToastService.showNotice(I18n.tr("common.copied-to-clipboard"), formattedResult);
                 if (launcher)
                   launcher.close();

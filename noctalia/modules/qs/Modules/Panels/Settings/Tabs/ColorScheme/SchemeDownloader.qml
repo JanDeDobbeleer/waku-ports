@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Services.Theming
 import qs.Services.UI
 import qs.Widgets
+import qs.compat
 
 Popup {
   id: root
@@ -494,6 +495,15 @@ Popup {
     }
   }
 
+  FileView {
+    id: schemeWriter
+    blockWrites: true
+    atomicWrites: false
+    printErrors: true
+  }
+
+  // Fetches every file over HTTP and writes it with FileView (no sh/curl on Windows). FileView
+  // creates the parent folders.
   function downloadSchemeFiles(schemeName, files) {
     if (files.length === 0) {
       downloadError = I18n.tr("panels.color-scheme.download-error-no-files");
@@ -504,105 +514,74 @@ Popup {
     }
 
     var targetDir = ColorSchemeService.downloadedSchemesDirectory + "/" + schemeName;
-    var downloadScript = "mkdir -p '" + targetDir + "'\n";
-
-    // Build download script for all files
+    var queue = [];
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       var filePath = file.path;
-      // Remove scheme name and leading / from path
       var relativePath = filePath;
       if (filePath.startsWith(schemeName + "/")) {
         relativePath = filePath.substring(schemeName.length + 1);
       } else if (filePath.startsWith("/" + schemeName + "/")) {
         relativePath = filePath.substring(schemeName.length + 2);
       }
-      var localPath = targetDir + "/" + relativePath;
-      var localDir = localPath.substring(0, localPath.lastIndexOf('/'));
-
-      downloadScript += "mkdir -p '" + localDir + "'\n";
       var rawUrl = file.url || file.download_url;
-      if (rawUrl) {
-        var downloadUrl = encodeURI(rawUrl);
-        downloadScript += "curl -L -s -o '" + localPath + "' '" + downloadUrl + "' || wget -q -O '" + localPath + "' '" + downloadUrl + "'\n";
-      }
+      if (rawUrl)
+        queue.push({
+                     "url": encodeURI(rawUrl),
+                     "localPath": targetDir + "/" + relativePath
+                   });
     }
 
-    Logger.d("ColorSchemeDownload", "Downloading", files.length, "files for scheme", schemeName);
+    Logger.d("ColorSchemeDownload", "Downloading", queue.length, "files for scheme", schemeName);
 
-    // Execute download script
-    var stderrOutput = "";
-    var downloadProcess = Qt.createQmlObject(`
-                                             import QtQuick
-                                             import Quickshell.Io
-                                             import qs.Commons
-                                             Process {
-                                             id: downloadProcess
-                                             command: ["sh", "-c", ` + JSON.stringify(downloadScript) + `]
-                                             stderr: StdioCollector {
-                                               onStreamFinished: {
-                                                 if (text && text.trim()) {
-                                                   Logger.e("ColorSchemeDownload", "Download stderr:", text);
-                                                   root.lastStderrOutput = text.trim();
-                                                 }
-                                               }
-                                             }
-                                             }
-                                             `, root, "DownloadProcess_" + schemeName);
-
-    downloadProcess.exited.connect(function (exitCode) {
-      if (exitCode === 0) {
+    var failed = "";
+    function finish() {
+      if (failed === "") {
         Logger.i("ColorSchemeDownload", "Scheme downloaded successfully:", schemeName);
         ToastService.showNotice(I18n.tr("panels.color-scheme.download-success-title"), I18n.tr("panels.color-scheme.download-success-description", {
                                                                                                  "scheme": schemeName
                                                                                                }), "settings-color-scheme");
-        // Set pending scheme to apply after reload
         pendingApplyScheme = schemeName;
-        // Reload color schemes
         ColorSchemeService.loadColorSchemes();
-        downloading = false;
-        downloadingScheme = "";
       } else {
-        var errorDetails = "Exit code: " + exitCode;
-        if (root.lastStderrOutput) {
-          errorDetails += " - " + root.lastStderrOutput;
-        }
         downloadError = I18n.tr("panels.color-scheme.download-error-download-failed", {
-                                  "code": exitCode
-                                }) + "\n" + errorDetails;
+                                  "code": 1
+                                }) + "
+" + failed;
         Logger.e("ColorSchemeDownload", downloadError);
         ToastService.showError(I18n.tr("panels.color-scheme.download-error-title"), I18n.tr("panels.color-scheme.download-error-description", {
                                                                                               "scheme": schemeName
-                                                                                            }) + "\n" + errorDetails);
-        // Clean up the partially downloaded directory on failure
-        var cleanupScript = "rm -rf '" + targetDir + "'";
-        var cleanupProcess = Qt.createQmlObject(`
-                                                 import QtQuick
-                                                 import Quickshell.Io
-                                                 Process {
-                                                 id: cleanupProcess
-                                                 command: ["sh", "-c", ` + JSON.stringify(cleanupScript) + `]
-                                                 }
-                                                 `, root, "CleanupProcess_" + schemeName);
-
-        cleanupProcess.exited.connect(function (cleanupExitCode) {
-          if (cleanupExitCode === 0) {
-            Logger.d("ColorSchemeDownload", "Partially downloaded scheme directory cleaned up:", targetDir);
-          } else {
-            Logger.w("ColorSchemeDownload", "Failed to clean up partially downloaded scheme directory:", targetDir);
-          }
-          downloading = false;
-          downloadingScheme = "";
-          cleanupProcess.destroy();
-        });
-
-        cleanupProcess.running = true;
+                                                                                            }) + "
+" + failed);
+        Os.rm(targetDir, true);
       }
-      root.lastStderrOutput = "";
-      downloadProcess.destroy();
-    });
+      downloading = false;
+      downloadingScheme = "";
+    }
 
-    downloadProcess.running = true;
+    function next() {
+      if (queue.length === 0 || failed !== "") {
+        finish();
+        return;
+      }
+      var item = queue.shift();
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+          return;
+        if (xhr.status === 200) {
+          schemeWriter.path = "";
+          schemeWriter.path = item.localPath;
+          schemeWriter.setText(xhr.responseText);
+        } else {
+          failed = "HTTP " + xhr.status + " " + item.url;
+        }
+        next();
+      };
+      xhr.open("GET", item.url);
+      xhr.send();
+    }
+    next();
   }
 
   function isSchemeInstalled(schemeName) {
@@ -634,52 +613,28 @@ Popup {
 
     Logger.i("ColorSchemeDownload", "Deleting scheme:", schemeName);
 
-    // Check if the deleted scheme is the currently active one
     var currentScheme = Settings.data.colorSchemes.predefinedScheme || "";
     var deletedSchemeDisplayName = ColorSchemeService.getBasename(schemeName);
     var needsReset = (currentScheme === deletedSchemeDisplayName);
 
-    // Only allow deleting downloaded schemes, not preinstalled ones
-    var targetDir = ColorSchemeService.downloadedSchemesDirectory + "/" + schemeName;
-    var deleteScript = "rm -rf '" + targetDir + "'";
+    // Only downloaded schemes can be deleted, not preinstalled ones
+    Os.rm(ColorSchemeService.downloadedSchemesDirectory + "/" + schemeName, true);
 
-    var deleteProcess = Qt.createQmlObject(`
-                                           import QtQuick
-                                           import Quickshell.Io
-                                           Process {
-                                           id: deleteProcess
-                                           command: ["sh", "-c", ` + JSON.stringify(deleteScript) + `]
-                                           }
-                                           `, root, "DeleteProcess_" + schemeName);
+    ToastService.showNotice(I18n.tr("panels.color-scheme.delete-success-title"), I18n.tr("panels.color-scheme.delete-success-description", {
+                                                                                           "scheme": schemeName
+                                                                                         }), "settings-color-scheme");
+    if (needsReset) {
+      Settings.data.colorSchemes.predefinedScheme = "Noctalia (default)";
+      ColorSchemeService.setPredefinedScheme("Noctalia (default)");
+    }
+    // rm runs detached; rescan once it has had time to finish
+    reloadAfterDeleteTimer.restart();
+  }
 
-    deleteProcess.exited.connect(function (exitCode) {
-      if (exitCode === 0) {
-        Logger.i("ColorSchemeDownload", "Scheme deleted successfully:", schemeName);
-        ToastService.showNotice(I18n.tr("panels.color-scheme.delete-success-title"), I18n.tr("panels.color-scheme.delete-success-description", {
-                                                                                               "scheme": schemeName
-                                                                                             }), "settings-color-scheme");
-
-        // If the deleted scheme was the active one, reset to default BEFORE reloading
-        if (needsReset) {
-          Logger.i("ColorSchemeDownload", "Deleted scheme was active, resetting to Noctalia (default)");
-          // Clear the setting immediately so ColorSchemeService won't try to apply the deleted scheme
-          Settings.data.colorSchemes.predefinedScheme = "Noctalia (default)";
-          // Apply the default scheme immediately
-          ColorSchemeService.setPredefinedScheme("Noctalia (default)");
-        }
-
-        // Reload color schemes
-        ColorSchemeService.loadColorSchemes();
-      } else {
-        Logger.e("ColorSchemeDownload", "Delete failed with exit code:", exitCode);
-        ToastService.showError(I18n.tr("panels.color-scheme.delete-error-title"), I18n.tr("panels.color-scheme.delete-error-description", {
-                                                                                            "scheme": schemeName
-                                                                                          }));
-      }
-      deleteProcess.destroy();
-    });
-
-    deleteProcess.running = true;
+  Timer {
+    id: reloadAfterDeleteTimer
+    interval: 600
+    onTriggered: ColorSchemeService.loadColorSchemes()
   }
 
   Connections {

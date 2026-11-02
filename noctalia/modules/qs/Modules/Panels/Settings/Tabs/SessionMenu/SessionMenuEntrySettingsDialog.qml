@@ -16,16 +16,15 @@ Popup {
 
   signal updateEntryProperties(int index, var properties)
 
-  // Default commands mapping
+  // What Windows runs when the command field is empty (the engine's ControlCenter session actions)
   readonly property var defaultCommands: {
-    "lock": I18n.tr("panels.session-menu.entry-settings-default-command-lock"),
-    "suspend": "systemctl suspend || loginctl suspend",
-    "hibernate": "systemctl hibernate || loginctl hibernate",
-    "reboot": "systemctl reboot || loginctl reboot",
-    "rebootToUefi": "systemctl reboot --firmware-setup || loginctl reboot --firmware-setup",
-    "logout": I18n.tr("panels.session-menu.entry-settings-default-command-logout"),
-    "shutdown": "systemctl poweroff || loginctl poweroff",
-    "userspaceReboot": "systemctl soft-reboot"
+    "lock": "rundll32.exe user32.dll,LockWorkStation",
+    "suspend": "rundll32.exe powrprof.dll,SetSuspendState 0,1,0",
+    "hibernate": "shutdown /h",
+    "reboot": "shutdown /r /t 0",
+    "rebootToUefi": "shutdown /r /fw /t 0",
+    "logout": "shutdown /l",
+    "shutdown": "shutdown /s /hybrid /t 0"
   }
 
   readonly property string defaultCommand: defaultCommands[entryId] || ""
@@ -109,7 +108,7 @@ Popup {
         Layout.fillWidth: true
         label: I18n.tr("common.command")
         description: I18n.tr("panels.session-menu.entry-settings-command-description")
-        placeholderText: I18n.tr("panels.session-menu.entry-settings-command-placeholder")
+        placeholderText: "e.g. shutdown /s /t 0"
         onTextChanged: root.save()
       }
 
