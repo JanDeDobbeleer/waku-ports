@@ -166,30 +166,13 @@ StyledWindow {
         bar.closeTray();
     }
 
-    // Port: the engine activates a panel window when it is shown, not when keyboardFocus flips at
-    // run time, so a launcher opened by a shortcut would not receive keys or notice a focus loss.
+    // The engine takes the foreground when keyboardFocus turns on, so a launcher opened by a
+    // shortcut receives keys. `hadFocus` starts true when the window is already active and
+    // otherwise becomes true when the activation arrives (onActiveChanged below).
     onKeyboardPanelOpenChanged: {
-        hadFocus = false;
-        if (keyboardPanelOpen) {
+        hadFocus = keyboardPanelOpen && root.backingWindow.active;
+        if (keyboardPanelOpen)
             lightDismissSince = Date.now();
-            activateTimer.restart();
-        } else {
-            activateTimer.stop();
-        }
-    }
-
-    Timer {
-        id: activateTimer
-
-        interval: 30
-        onTriggered: {
-            if (!root.keyboardPanelOpen)
-                return;
-            if (root.backingWindow.active)
-                root.hadFocus = true;
-            else
-                root.backingWindow.requestActivate();
-        }
     }
 
     // Focus loss: the user switched to another window while a panel was open. Activation is
