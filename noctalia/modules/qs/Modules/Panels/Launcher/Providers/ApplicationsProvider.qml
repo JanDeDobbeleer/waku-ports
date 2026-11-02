@@ -525,6 +525,18 @@ Item {
       "isImage": false,
       "_score": (score !== undefined ? score : 0),
       "provider": root,
+      "onActivateAdmin": function () {
+        // Elevated launch (UAC prompt). Shortcuts expose a DesktopAction with id "admin";
+        // Store apps do not, and then nothing happens rather than a silent non-elevated start.
+        const actions = app.actions ? Array.from(app.actions) : [];
+        const adminAction = actions.find(a => a.id === "admin");
+        if (!adminAction) {
+          Logger.w("ApplicationsProvider", `No admin launch for: ${app.name}`);
+          return;
+        }
+        launcher.closeImmediately();
+        Qt.callLater(() => adminAction.execute());
+      },
       "onActivate": function () {
         // Close the launcher/SmartPanel immediately without any animations.
         // Ensures we are not preventing the future focusing of the app

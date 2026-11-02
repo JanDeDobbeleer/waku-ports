@@ -344,6 +344,7 @@ Singleton {
         property list<string> keyLeft: ["Left"]
         property list<string> keyRight: ["Right"]
         property list<string> keyEnter: ["Return", "Enter"]
+        property list<string> keyEnterAdmin: ["Shift+Return"]
         property list<string> keyEscape: ["Esc"]
         property list<string> keyRemove: ["Del"]
       }

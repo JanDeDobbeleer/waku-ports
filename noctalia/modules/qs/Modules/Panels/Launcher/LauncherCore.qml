@@ -405,6 +405,20 @@ Rectangle {
     selectedIndex = LauncherNav.selectNextColumn(selectedIndex, results.length, gridColumns);
   }
 
+  // Elevated launch of the selected result; only items with onActivateAdmin support it.
+  function activateAdmin() {
+    if (results.length > 0 && results[selectedIndex]) {
+      const item = results[selectedIndex];
+      const provider = item.provider || currentProvider;
+      if (!item.onActivateAdmin)
+        return;
+      if (Settings.data.appLauncher.sortByMostUsed && provider && provider.trackUsage && item.usageKey) {
+        ShellState.recordLauncherUsage(item.usageKey);
+      }
+      item.onActivateAdmin();
+    }
+  }
+
   function activate() {
     if (results.length > 0 && results[selectedIndex]) {
       const item = results[selectedIndex];
@@ -439,6 +453,13 @@ Rectangle {
   function handleKeyPress(event) {
     if (checkKey(event, 'escape')) {
       close();
+      event.accepted = true;
+      return;
+    }
+
+    // Checked before 'enter': a user may bind the same key to both, and admin wins.
+    if (checkKey(event, 'enterAdmin')) {
+      activateAdmin();
       event.accepted = true;
       return;
     }
@@ -900,6 +921,19 @@ Rectangle {
           var prefix = root.activeProvider && root.activeProvider.name ? root.activeProvider.name + ": " : "";
           return prefix + I18n.trp("common.result-count", root.results.length);
         }
+        pointSize: Style.fontSizeXS
+        color: Color.mOnSurfaceVariant
+        horizontalAlignment: Text.AlignCenter
+      }
+
+      // Hint for the elevated launch, shown while the selected result supports it.
+      NText {
+        readonly property var adminKeys: Settings.data.general.keybinds.keyEnterAdmin
+        visible: !!(root.results.length > 0 && root.results[root.selectedIndex] && root.results[root.selectedIndex].onActivateAdmin) && adminKeys && adminKeys.length > 0
+        Layout.fillWidth: true
+        text: I18n.tr("launcher.admin-hint", {
+                        "key": adminKeys && adminKeys.length > 0 ? adminKeys[0] : ""
+                      })
         pointSize: Style.fontSizeXS
         color: Color.mOnSurfaceVariant
         horizontalAlignment: Text.AlignCenter
