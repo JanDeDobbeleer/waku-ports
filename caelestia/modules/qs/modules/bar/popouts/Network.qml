@@ -63,7 +63,7 @@ ColumnLayout {
         }
     }
 
-    // wabar gap: read only. The tunnel is shown beside the Wi-Fi link, not instead of it.
+    // waku gap: read only. The tunnel is shown beside the Wi-Fi link, not instead of it.
     RowLayout {
         visible: root.view === "wireless" && Nmcli.vpnActive
         Layout.preferredHeight: visible ? implicitHeight : 0
