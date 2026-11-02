@@ -1,5 +1,6 @@
 module qs.Modules.Bar.Widgets
 ActiveWindow 1.0 ActiveWindow.qml
+AppsList 1.0 AppsList.qml
 AudioVisualizer 1.0 AudioVisualizer.qml
 Battery 1.0 Battery.qml
 Bluetooth 1.0 Bluetooth.qml

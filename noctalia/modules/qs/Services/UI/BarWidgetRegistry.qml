@@ -14,6 +14,7 @@ Singleton {
   // Widget registry object mapping widget names to components
   property var widgets: ({
                            "ActiveWindow": activeWindowComponent,
+                           "AppsList": appsListComponent,
                            "AudioVisualizer": audioVisualizerComponent,
                            "Battery": batteryComponent,
                            "Bluetooth": bluetoothComponent,
@@ -89,6 +90,9 @@ Singleton {
                                     "colorizeIcons": false,
                                     "textColor": "none"
                                   },
+                                  "AppsList": {
+                                    "onlySameOutput": false
+                                  },
                                   "AudioVisualizer": {
                                     "width": 200,
                                     "colorName": "primary",
@@ -118,8 +122,7 @@ Singleton {
                                     "useCustomFont": false,
                                     "customFont": "",
                                     "formatHorizontal": "HH:mm ddd, MMM dd",
-                                    "formatVertical": "HH mm - dd MM",
-                                    "tooltipFormat": "HH:mm ddd, MMM dd"
+                                    "formatVertical": "HH mm - dd MM"
                                   },
                                   "ControlCenter": {
                                     "useDistroLogo": false,
@@ -134,9 +137,6 @@ Singleton {
                                     "icon": "heart",
                                     "showIcon": true,
                                     "iconPosition": "left",
-                                    "showExecTooltip": true,
-                                    "showTextTooltip": true,
-                                    "generalTooltipText": "",
                                     "hideMode": "alwaysExpanded",
                                     "leftClickExec": "",
                                     "leftClickUpdateText": false,
@@ -326,6 +326,9 @@ Singleton {
   // Component definitions - these are loaded once at startup
   property Component activeWindowComponent: Component {
     ActiveWindow {}
+  }
+  property Component appsListComponent: Component {
+    AppsList {}
   }
   property Component audioVisualizerComponent: Component {
     AudioVisualizer {}
