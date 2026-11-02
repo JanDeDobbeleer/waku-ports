@@ -27,6 +27,26 @@ Popup {
   signal accepted(var paths)
   signal cancelled
 
+  // Path <-> file URL, Windows-aware ("D:\a\b" <-> "file:///D:/a/b")
+  function toFileUrl(path) {
+    const p = String(path || "").replace(/\\/g, "/");
+    return /^[A-Za-z]:/.test(p) ? "file:///" + p : "file://" + p;
+  }
+  function fromFileUrl(url) {
+    return String(url).replace(/^file:\/\/\/([A-Za-z]:)/, "$1").replace(/^file:\/\//, "");
+  }
+
+  // Point the folder view at currentPath (the folder binding breaks after the first manual navigation)
+  function syncFolder() {
+    if (typeof folderModel !== "undefined")
+      folderModel.folder = toFileUrl(root.currentPath);
+  }
+
+  onAboutToShow: {
+    root.currentPath = root.initialPath;
+    syncFolder();
+  }
+
   function openFilePicker() {
     if (!root.currentPath)
       root.currentPath = root.initialPath;
@@ -295,8 +315,8 @@ Popup {
             baseSize: Style.baseWidgetSize * 0.8
             enabled: folderModel.folder.toString() !== "file:///"
             onClicked: {
-              const parentPath = folderModel.parentFolder.toString().replace("file://", "");
-              folderModel.folder = "file://" + parentPath;
+              const parentPath = root.fromFileUrl(folderModel.parentFolder);
+              folderModel.folder = root.toFileUrl(parentPath);
               root.currentPath = parentPath;
             }
           }
@@ -306,7 +326,7 @@ Popup {
             baseSize: Style.baseWidgetSize * 0.8
             onClicked: {
               const homePath = Quickshell.env("HOME") || "/home";
-              folderModel.folder = "file://" + homePath;
+              folderModel.folder = root.toFileUrl(homePath);
               root.currentPath = homePath;
             }
           }
@@ -336,7 +356,7 @@ Popup {
             onEditingFinished: {
               const newPath = text.trim();
               if (newPath !== "" && newPath !== root.currentPath) {
-                folderModel.folder = "file://" + newPath;
+                folderModel.folder = root.toFileUrl(newPath);
                 root.currentPath = newPath;
               } else {
                 text = root.currentPath;
@@ -406,7 +426,7 @@ Popup {
 
         FolderListModel {
           id: folderModel
-          folder: "file://" + root.currentPath
+          folder: root.toFileUrl(root.currentPath)
           // Use wildcard filters including hidden files when showHiddenFiles is true
           nameFilters: root.showHiddenFiles ? ["*", ".*"] : root.nameFilters
           showDirs: root.showDirs
@@ -416,7 +436,7 @@ Popup {
           sortReversed: false
 
           onFolderChanged: {
-            root.currentPath = folder.toString().replace("file://", "");
+            root.currentPath = root.fromFileUrl(folder);
             filePickerPanel.currentSelection = [];
             Qt.callLater(root.updateFilteredModel);
           }
@@ -424,7 +444,7 @@ Popup {
           onStatusChanged: {
             if (status === FolderListModel.Error) {
               if (root.currentPath !== Quickshell.env("HOME")) {
-                folder = "file://" + Quickshell.env("HOME");
+                folder = root.toFileUrl(Quickshell.env("HOME"));
                 root.currentPath = Quickshell.env("HOME");
               }
             } else if (status === FolderListModel.Ready) {
@@ -528,7 +548,7 @@ Popup {
                   id: thumbnail
                   anchors.fill: parent
                   anchors.margins: Style.marginXS
-                  source: iconContainer.isImage ? "file://" + model.filePath : ""
+                  source: iconContainer.isImage ? root.toFileUrl(model.filePath) : ""
                   fillMode: Image.PreserveAspectFit
                   visible: iconContainer.isImage && status === Image.Ready
                   smooth: false
@@ -637,7 +657,7 @@ Popup {
                                  if (mouse.button === Qt.LeftButton) {
                                    if (model.fileIsDir) {
                                      // Double-click on folder always navigates into it
-                                     folderModel.folder = "file://" + model.filePath;
+                                     folderModel.folder = root.toFileUrl(model.filePath);
                                      root.currentPath = model.filePath;
                                    } else {
                                      // Double-click on file selects and confirms (only in file mode)
@@ -736,7 +756,7 @@ Popup {
                                  if (mouse.button === Qt.LeftButton) {
                                    if (model.fileIsDir) {
                                      // Double-click on folder always navigates into it
-                                     folderModel.folder = "file://" + model.filePath;
+                                     folderModel.folder = root.toFileUrl(model.filePath);
                                      root.currentPath = model.filePath;
                                    } else {
                                      // Double-click on file selects and confirms (only in file mode)
@@ -804,7 +824,7 @@ Popup {
     Component.onCompleted: {
       if (!root.currentPath)
         root.currentPath = root.initialPath;
-      folderModel.folder = "file://" + root.currentPath;
+      folderModel.folder = root.toFileUrl(root.currentPath);
     }
   }
 }
