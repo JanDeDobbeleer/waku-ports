@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.41/schema.json",
+  "app_specific_configuration_path": "$Env:KOMOREBI_CONFIG_HOME/applications.json",
+  "window_hiding_behaviour": "Cloak",
+  "cross_monitor_move_behaviour": "Insert",
+  "mouse_follows_focus": false,
+  "default_workspace_padding": 6,
+  "default_container_padding": 3,
+  "border": true,
+  "border_implementation": "Komorebi",
+  "border_width": 4,
+  "border_offset": -1,
+  "border_style": "Rounded",
+  "border_colours": {
+    "single": "#8CAAEE",
+    "stack": "#95C7AE",
+    "monocle": "#C79595",
+    "floating": "#C7C795",
+    "unfocused": "#282C34",
+    "unfocused_locked": "#C7AE95"
+  },
+  "monitors": [
+    {
+      "workspaces": [
+        {
+          "name": "I",
+          "layout": "BSP"
+        },
+        {
+          "name": "II",
+          "layout": "VerticalStack"
+        },
+        {
+          "name": "III",
+          "layout": "HorizontalStack"
+        },
+        {
+          "name": "IV",
+          "layout": "UltrawideVerticalStack"
+        },
+        {
+          "name": "V",
+          "layout": "Rows"
+        },
+        {
+          "name": "VI",
+          "layout": "Grid"
+        },
+        {
+          "name": "VII",
+          "layout": "RightMainVerticalStack"
+        }
+      ]
+    }
+  ]
+}
