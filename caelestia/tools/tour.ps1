@@ -1,10 +1,10 @@
-# Starts the full shell once, opens each panel in turn through wabarc, saves cropped captures to
+# Starts the full shell once, opens each panel in turn through wakuc, saves cropped captures to
 # shots\tour\<name>.png and closes the panel again. Full-screen captures hold whatever is behind the
 # transparent shell, so only the crops are kept and the full captures are deleted at once.
 param(
   [string]$Home_ = 'D:\wabar-ports\caelestia',
-  [string]$Exe = 'D:\wabar\build\arm64-debug\wabar.exe',
-  [string]$Wabarc = 'D:\wabar\build\arm64-debug\wabarc.exe',
+  [string]$Exe = 'D:\waku\build\arm64-debug\waku.exe',
+  [string]$Wakuc = 'D:\waku\build\arm64-debug\wakuc.exe',
   [int]$SettleSeconds = 30
 )
 $ErrorActionPreference = 'Stop'
@@ -14,11 +14,11 @@ $err = Join-Path $Home_ 'logs\tour.err.txt'
 New-Item -ItemType Directory -Force (Split-Path $err) | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $p = Start-Process $Exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -RedirectStandardError $err
-function Status { & $Wabarc --config-home $Home_ status 2>&1 | Out-String }
+function Status { & $Wakuc --config-home $Home_ status 2>&1 | Out-String }
 $ready = $false
 for ($i = 0; $i -lt 60 -and -not $ready; $i++) {
   Start-Sleep -Seconds 4
-  if ($p.HasExited) { 'wabar exited early'; break }
+  if ($p.HasExited) { 'waku exited early'; break }
   $s = Status
   if ($s -match 'windows=([1-9])') { $ready = $true }
 }
@@ -36,7 +36,7 @@ $states = @(
 )
 Add-Type -AssemblyName System.Drawing
 foreach ($st in $states) {
-  if ($st.cmd.Count) { & $Wabarc --config-home $Home_ @($st.cmd) 2>&1 | Out-Null; Start-Sleep -Seconds 5 }
+  if ($st.cmd.Count) { & $Wakuc --config-home $Home_ @($st.cmd) 2>&1 | Out-Null; Start-Sleep -Seconds 5 }
   $full = Join-Path $out ("_full_" + $st.n + '.png')
   & (Join-Path $Home_ 'tools\shot.ps1') -Out $full 2>&1 | Out-Null
   $img = $null
@@ -53,10 +53,10 @@ foreach ($st in $states) {
     Remove-Item -LiteralPath $cand -Force
     "captured $($st.n): ${w}x${h} (full size $($im.Width))"
   } else { "no capture for $($st.n)" }
-  if ($st.cmd.Count) { & $Wabarc --config-home $Home_ @($st.cmd) 2>&1 | Out-Null; Start-Sleep -Seconds 2 }
+  if ($st.cmd.Count) { & $Wakuc --config-home $Home_ @($st.cmd) 2>&1 | Out-Null; Start-Sleep -Seconds 2 }
 }
 "status: $(Status)".Trim()
-& $Wabarc --config-home $Home_ quit 2>&1 | Out-Null
+& $Wakuc --config-home $Home_ quit 2>&1 | Out-Null
 Start-Sleep -Seconds 5
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force; 'killed' }
 "log problem lines:"

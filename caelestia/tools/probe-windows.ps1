@@ -1,10 +1,10 @@
-# One launch: lists wabar's top-level windows (rect, ex style, DPI, monitor rect), then opens the
+# One launch: lists waku's top-level windows (rect, ex style, DPI, monitor rect), then opens the
 # sidebar, session and OSD in turn and saves right-strip crops (x 3040..3840) to shots\edge\.
 # Full captures are deleted at once. Read-only: no input, no --register-app-bar, --no-tray.
 param(
   [string]$Home_ = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$Tag = 'before',
-  [string]$Bin = 'D:\wabar\build\arm64-debug',
+  [string]$Bin = 'D:\waku\build\arm64-debug',
   [int]$SettleSeconds = 25
 )
 $ErrorActionPreference = 'Stop'
@@ -39,13 +39,13 @@ public static class PW {
 Add-Type -AssemblyName System.Windows.Forms
 $mon = [Windows.Forms.Screen]::PrimaryScreen
 "monitor bounds=$($mon.Bounds) working=$($mon.WorkingArea)"
-$exe = Join-Path $Bin 'wabar.exe'; $wc = Join-Path $Bin 'wabarc.exe'
+$exe = Join-Path $Bin 'waku.exe'; $wc = Join-Path $Bin 'wakuc.exe'
 $out = Join-Path $Home_ 'shots\edge'; New-Item -ItemType Directory -Force $out | Out-Null
 $logs = Join-Path $Home_ 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $p = Start-Process $exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -WindowStyle Hidden -RedirectStandardError (Join-Path $logs 'edge.err.txt') -RedirectStandardOutput (Join-Path $logs 'edge.out.txt')
 function Crop($name, $x, $y, $w, $h) {
-  $full = Join-Path $env:TEMP "wabar_edge_full.png"
+  $full = Join-Path $env:TEMP "waku_edge_full.png"
   & (Join-Path $PSScriptRoot 'shot.ps1') -Out $full | Out-Null
   $im = [Drawing.Bitmap]::FromFile($full)
   $c = $im.Clone((New-Object Drawing.Rectangle $x, $y, $w, $h), $im.PixelFormat)

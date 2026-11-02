@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import M3Shapes
-import wabar.services as S
+import waku.services as S
 import Caelestia.Config
 import Caelestia.I18n
 import Caelestia.Multimedia
@@ -91,7 +91,7 @@ Item {
                 id: pfp
 
                 anchors.fill: parent
-                // wabar's ControlCenter exposes the Windows account picture; empty when the account has none.
+                // waku's ControlCenter exposes the Windows account picture; empty when the account has none.
                 source: root.faceOverride || S.ControlCenter.avatarUrl
             }
 

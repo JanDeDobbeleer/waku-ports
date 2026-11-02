@@ -80,7 +80,7 @@ Item {
             StateLayer {
                 id: stateLayer
 
-                // wabar gap: there is no qalc terminal; the button copies the expression instead.
+                // waku gap: there is no qalc terminal; the button copies the expression instead.
                 onClicked: {
                     Quickshell.clipboardText = root.math;
                     root.list.screenState.launcher = false;

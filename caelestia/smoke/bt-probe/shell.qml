@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Bluetooth as QB
-import wabar.services as S
+import waku.services as S
 
 ShellRoot {
     function dump(tag) {

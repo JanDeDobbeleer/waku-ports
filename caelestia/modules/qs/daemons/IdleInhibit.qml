@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import wabar.services as S
+import waku.services as S
 import Caelestia.State
 
 Scope {
@@ -16,7 +16,7 @@ Scope {
         target: RuntimeState
     }
 
-    // wabar's IdleInhibitor holds SetThreadExecutionState; it ignores `window`.
+    // waku's IdleInhibitor holds SetThreadExecutionState; it ignores `window`.
     S.IdleInhibitor {
         enabled: RuntimeState.inhibitIdle
     }

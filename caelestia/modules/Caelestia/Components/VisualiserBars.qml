@@ -2,7 +2,7 @@ import QtQuick
 
 // Visible stub for caelestia's C++ VisualiserBars. Draws one rounded bar per value along the
 // bottom, no per-frame smoothing. Nothing feeds `values` on Windows (the cava source is dropped).
-// wabar gap: no animation between value updates, no mirrored left/right layout.
+// waku gap: no animation between value updates, no mirrored left/right layout.
 Item {
     id: root
 

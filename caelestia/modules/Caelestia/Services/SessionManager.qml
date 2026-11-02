@@ -5,16 +5,16 @@ import Quickshell
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
-import wabar.services as S
+import waku.services as S
 
 // Port of caelestia's C++ SessionManager (logind over DBus). Here the session actions go through
-// wabar's ControlCenter.requestAction: lock (LockWorkStation), sleep, hibernate, signOut, restart
+// waku's ControlCenter.requestAction: lock (LockWorkStation), sleep, hibernate, signOut, restart
 // and shutdown. One gate: GlobalConfig.services.allowSystemActions (default true) blocks them all;
 // the environment variable CAELESTIA_DRYRUN=1 makes a call log `DRYRUN session <action>` and do
 // nothing else. A refused or dry-run call is recorded in `lastLogged`.
 // `exec(command, confirmed)` returns true when the command was a session command (handled,
 // refused or logged), so the caller must not run it as a process; false for any other command.
-// wabar's ControlCenter asks for a second call within a few seconds to confirm signOut, restart and
+// waku's ControlCenter asks for a second call within a few seconds to confirm signOut, restart and
 // shutdown. `confirmed` (the launcher, which hides those rows until the user opts in) makes the
 // second call itself; the session menu leaves it false, so its button needs a second press and a
 // toast says so.

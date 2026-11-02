@@ -5,10 +5,10 @@ import Quickshell
 import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
-import wabar.services as S
+import waku.services as S
 import qs.compat
 
-// Caelestia's Hyprland service over wabar. The objects it hands out (`monitors.values`,
+// Caelestia's Hyprland service over waku. The objects it hands out (`monitors.values`,
 // `workspaces.values`, `activeToplevel`, ...) keep the shape of Quickshell's Hyprland types but are
 // plain QtObjects built here, so a module that declares `required property HyprlandMonitor` must
 // declare `var` instead.
@@ -18,7 +18,7 @@ import qs.compat
 // the lock keys and keyboard layout through `DesktopState`. With no tiling window manager running
 // `workspaces.values` is empty and `hasWm` is false, so a bar can show a "no WM" pill.
 //
-// wabar gap: `Workspaces` gives a window count per workspace, not the windows. With komorebi the
+// waku gap: `Workspaces` gives a window count per workspace, not the windows. With komorebi the
 // windows of each workspace come from a read-only `komorebic state` (hwnd lists per monitor and
 // workspace, in the same order as `Workspaces`), joined by hwnd with the ungrouped TaskbarModel
 // rows (key `w:<hwnd>`: title, executable, icon). A window the taskbar does not list (tool
@@ -40,14 +40,14 @@ Singleton {
     readonly property var workspaces: workspaceList
     readonly property var toplevels: toplevelList
 
-    // wabar gap: only the foreground window is known. It has a title and an executable name, no
+    // waku gap: only the foreground window is known. It has a title and an executable name, no
     // class, address or workspace.
     readonly property var activeToplevel: foreground
     readonly property var focusedWorkspace: workspaceList.values.find(w => w.focused) ?? null
     readonly property var focusedMonitor: monitorList.values.find(m => m.focused) ?? monitorList.values[0] ?? null
     readonly property int activeWsId: focusedWorkspace?.id ?? 1
 
-    // wabar gap: no keyboard device model. The lock keys and the layout come from DesktopState.
+    // waku gap: no keyboard device model. The lock keys and the layout come from DesktopState.
     readonly property bool capsLock: S.DesktopState.capsLock
     readonly property bool numLock: S.DesktopState.numLock
     readonly property string defaultKbLayout: S.DesktopState.keyboardLayout || "??"
@@ -235,7 +235,7 @@ Singleton {
         return sendKomorebic(["change-layout", name], dry);
     }
 
-    // wabar gap: komorebi and GlazeWM have no special workspaces.
+    // waku gap: komorebi and GlazeWM have no special workspaces.
     function toggleSpecial(name: string): void {
     }
 
@@ -283,7 +283,7 @@ Singleton {
         const name = appName(seen?.[hwnd]?.exe || row.exe || "");
         if (!name)
             return "no executable";
-        if (name === "wabar" || name === "wabarc")
+        if (name === "waku" || name === "wakuc")
             return "the bar";
         // A window komorebi managed before is not one it ignores.
         if (!seen?.[hwnd] && komorebiIgnores(name + ".exe", row.title, rules))
@@ -561,7 +561,7 @@ Singleton {
     // only when it differs, an object is created or destroyed only for a real addition or removal,
     // and a list is assigned only when its members changed.
     function rebuild(): void {
-        const wabarMons = S.Workspaces.monitors;
+        const wakuMons = S.Workspaces.monitors;
         const screens = Quickshell.screens;
 
         // 1. Plan: plain data only, so the signature can tell whether anything changed.
@@ -571,10 +571,10 @@ Singleton {
             const screen = screens[i];
             // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1,
             // so `komorebic state` windows (keyed by monitor index) were never found.
-            let wmi = wabarMons.findIndex(m => m.name === screen.name);
-            if (wmi < 0 && wabarMons.length === screens.length)
+            let wmi = wakuMons.findIndex(m => m.name === screen.name);
+            if (wmi < 0 && wakuMons.length === screens.length)
                 wmi = i;
-            const wm = wmi >= 0 ? wabarMons[wmi] : null;
+            const wm = wmi >= 0 ? wakuMons[wmi] : null;
             const wsPlan = [];
             const list = wm?.workspaces ?? [];
             for (let j = 0; j < list.length; j++) {
@@ -1102,7 +1102,7 @@ Singleton {
     QtObject {
         id: extras
 
-        // wabar gap: nothing to configure. These keep upstream's call sites working.
+        // waku gap: nothing to configure. These keep upstream's call sites working.
         property var options: ({})
         property var devices: ({
                 keyboards: [],

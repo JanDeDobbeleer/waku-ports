@@ -1,8 +1,8 @@
-# caelestia for wabar
+# caelestia for waku
 
-A port of [caelestia-dots/shell](https://github.com/caelestia-dots/shell) to wabar. GPL-3.0, a
+A port of [caelestia-dots/shell](https://github.com/caelestia-dots/shell) to waku. GPL-3.0, a
 derivative work of the upstream shell (see `LICENSE` and `NOTICE`). Start it with
-`wabar.exe --config-home <this folder> --no-tray --font-engine=directwrite`.
+`waku.exe --config-home <this folder> --no-tray --font-engine=directwrite`.
 
 ## UI scale
 
@@ -54,20 +54,20 @@ multiply with the settings above.
   click on a row jumps there. A click on the icon raises the focused window's next sibling, or the
   window that had focus last. A click raises a window through the engine's `WindowControl` when the
   engine has it, else through `komorebic eager-focus`; the highlight moves at once.
-- Test IPC (`wabarc --config-home <home> call bar ...`): `dots`, `layoutDry next|previous` (logs the
+- Test IPC (`wakuc --config-home <home> call bar ...`): `dots`, `layoutDry next|previous` (logs the
   command, never runs it), `clickLayout` (the click handler; only with `CAELESTIA_DRYRUN=1`),
   `layoutButton` (glyph, workspace, layout, visibility), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
   `activateApp <i>`, `activateGroupWindow <exe> <i>` (refuse unless the target is already focused),
   `fakeCopies <n>` (fake windows for the badge).
 - komorebi work area: the engine keeps komorebi's cached work area in step with the OS after every
-  screen or work area change (`wabar --no-workarea-sync` turns it off); the shell does nothing.
+  screen or work area change (`waku --no-workarea-sync` turns it off); the shell does nothing.
 ## Launcher commands and session actions
 
-The launcher's `>` commands act on Windows through wabar:
+The launcher's `>` commands act on Windows through waku:
 
 | Command | What it does |
 |---|---|
-| `>wallpaper`, `>random` | Sets the Windows wallpaper through wabar's `Wallpapers` service, with its change animation (`services.wallpaperAnimation`: `circle`, `slide_top`, `diamond`, `split`, `fade`, `none`; empty is wabar's default). The folder is `paths.wallpaperDir` (default `~/Pictures/Wallpapers`); wabar's own folder is set to the same one. Each change also sets the Windows lock screen (and sign-in screen) picture unless `services.wallpaperLockScreen` is `false` (default `true`). |
+| `>wallpaper`, `>random` | Sets the Windows wallpaper through waku's `Wallpapers` service, with its change animation (`services.wallpaperAnimation`: `circle`, `slide_top`, `diamond`, `split`, `fade`, `none`; empty is waku's default). The folder is `paths.wallpaperDir` (default `~/Pictures/Wallpapers`); waku's own folder is set to the same one. Each change also sets the Windows lock screen (and sign-in screen) picture unless `services.wallpaperLockScreen` is `false` (default `true`). |
 | `>light`, `>dark` | Regenerates the palette and switches the Windows app and system theme (`ControlCenter.toggleTheme`, only when it differs). |
 | `>scheme`, `>variant` | Chooses the colour scheme and variant. The choice, with the mode, is saved in `state/persistent.json` and restored at startup. `dynamic` follows the current wallpaper. |
 | `>lock`, `>sleep` | `LockWorkStation` and sleep, through `ControlCenter.requestAction`. |
@@ -75,7 +75,7 @@ The launcher's `>` commands act on Windows through wabar:
 
 The session menu buttons use the same actions. `services.allowSystemActions` (default `true`)
 turns every session action off when `false`. Sign out, restart and shutdown need a second press in
-the session menu (wabar's confirm step).
+the session menu (waku's confirm step).
 
-Test switch: start wabar with the environment variable `CAELESTIA_DRYRUN=1` and every action logs a
+Test switch: start waku with the environment variable `CAELESTIA_DRYRUN=1` and every action logs a
 `DRYRUN ...` line (or `REFUSED ...`) and changes nothing.

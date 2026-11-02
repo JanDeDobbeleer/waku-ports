@@ -83,7 +83,7 @@ ClipRect {
 
     property real blur: onSpecial ? 1 : 0
 
-    // Port: no `as Workspace` cast. On wabar a cast to a type of the same module came back null
+    // Port: no `as Workspace` cast. On waku a cast to a type of the same module came back null
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
         return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);

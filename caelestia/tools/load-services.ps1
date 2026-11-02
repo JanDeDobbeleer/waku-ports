@@ -1,6 +1,6 @@
 # Instantiates every singleton under modules\qs\{services,utils} and every daemon once, then
-# reports load failures. Runs wabar on a generated config home (smoke\loadcheck), read only.
-param([int]$Seconds = 10, [string]$Bin = 'D:\wabar\build\arm64-debug')
+# reports load failures. Runs waku on a generated config home (smoke\loadcheck), read only.
+param([int]$Seconds = 10, [string]$Bin = 'D:\waku\build\arm64-debug')
 $ErrorActionPreference = 'Stop'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $home_ = Join-Path $port 'smoke\loadcheck'
@@ -21,9 +21,9 @@ $q += '    }', '}'
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $err = Join-Path $port 'logs\load.err.txt'; New-Item -ItemType Directory -Force (Split-Path $err) | Out-Null
 $args_ = @('--config-home', $home_, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
-$p = Start-Process (Join-Path $Bin 'wabar.exe') -ArgumentList $args_ -RedirectStandardError $err -RedirectStandardOutput (Join-Path $port 'logs\load.out.txt') -PassThru -WindowStyle Hidden
-try { Start-Sleep -Seconds $Seconds; & (Join-Path $Bin 'wabarc.exe') --config-home $home_ status } finally {
-  & (Join-Path $Bin 'wabarc.exe') --config-home $home_ quit
+$p = Start-Process (Join-Path $Bin 'waku.exe') -ArgumentList $args_ -RedirectStandardError $err -RedirectStandardOutput (Join-Path $port 'logs\load.out.txt') -PassThru -WindowStyle Hidden
+try { Start-Sleep -Seconds $Seconds; & (Join-Path $Bin 'wakuc.exe') --config-home $home_ status } finally {
+  & (Join-Path $Bin 'wakuc.exe') --config-home $home_ quit
   if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Force }
 }
 $log = @(Get-Content $err, (Join-Path $port 'logs\load.out.txt') -ErrorAction SilentlyContinue)

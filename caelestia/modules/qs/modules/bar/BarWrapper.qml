@@ -24,7 +24,7 @@ Item {
     readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
     property bool isHovered
 
-    // Port: no `as Bar` casts here. On wabar the cast of a Loader item to a type of the same module came
+    // Port: no `as Bar` casts here. On waku the cast of a Loader item to a type of the same module came
     // back null, so the hover path (Interactions -> checkPopout) did nothing. The item is called untyped.
     function closeTray(): void {
         content.item?.closeTray();

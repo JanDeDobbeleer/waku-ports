@@ -10,7 +10,7 @@ Searcher {
 
     function launch(entry: DesktopEntry): void {
         appDb.incrementFrequency(entry.id);
-        // wabar: DesktopEntry.execute starts the shortcut or Store app; there is no terminal wrapper.
+        // waku: DesktopEntry.execute starts the shortcut or Store app; there is no terminal wrapper.
         entry.execute();
     }
 

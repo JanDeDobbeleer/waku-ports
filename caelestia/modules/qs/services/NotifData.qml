@@ -52,7 +52,7 @@ QtObject {
     property bool hasActionIcons
     property list<var> actions
 
-    // wabar gap: no fullscreen detection (upstream asks Hyprland).
+    // waku gap: no fullscreen detection (upstream asks Hyprland).
     readonly property bool hasFullscreen: false
 
     readonly property Timer timer: Timer {
@@ -65,7 +65,7 @@ QtObject {
         }
     }
 
-    // wabar: Notification has no expireTimeoutChanged, residentChanged, hasActionIconsChanged, actionsChanged or hintsChanged signals.
+    // waku: Notification has no expireTimeoutChanged, residentChanged, hasActionIconsChanged, actionsChanged or hintsChanged signals.
     readonly property Connections conn: Connections {
         function onClosed(): void {
             notif.close();

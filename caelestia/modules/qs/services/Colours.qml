@@ -7,16 +7,16 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import Caelestia.State
-import wabar.services as S
+import waku.services as S
 import qs.services
 import qs.compat
 import qs.utils
 
-// Caelestia's colour service over wabar's ColorScheme. Upstream reads a scheme.json written by the
+// Caelestia's colour service over waku's ColorScheme. Upstream reads a scheme.json written by the
 // `caelestia scheme` CLI. Here the scheme is generated in process from the wallpaper
 // (`ColorScheme.fromImage`) or from a fixed seed colour, and the role names get the `m3` prefix
 // that caelestia's QML expects (`ColorScheme.colors.primary` becomes `palette.m3primary`).
-// wabar gap: ColorScheme has no success roles and no terminal colours, so `m3success*` and
+// waku gap: ColorScheme has no success roles and no terminal colours, so `m3success*` and
 // `term*` keep the defaults of the M3Palette below. The scheme, seed, variant and mode are kept in
 // PersistentState (state/persistent.json in the config home) and restored at startup.
 Singleton {
@@ -161,7 +161,7 @@ Singleton {
         regenerate(false);
     }
 
-    // Switches the Windows app and system light/dark theme through wabar's ControlCenter, which
+    // Switches the Windows app and system light/dark theme through waku's ControlCenter, which
     // only has a toggle: it is toggled when the theme is not the wanted one already.
     function setWindowsTheme(mode: string): void {
         if (Paths.dryRun) {

@@ -6,7 +6,7 @@ import "Calc.js" as Calc
 // Port of caelestia's C++ Qalculator singleton (libqalculate). This evaluates plain arithmetic
 // with a hand-written parser (Calc.js); it never calls eval. Unit conversions, currencies,
 // symbolic maths and everything else libqalculate does are not supported.
-// wabar gap: arithmetic only. An unsupported expression returns "error: <reason>".
+// waku gap: arithmetic only. An unsupported expression returns "error: <reason>".
 QtObject {
     id: root
 
@@ -31,7 +31,7 @@ QtObject {
         }
     }
 
-    // wabar gap: the C++ name is `eval`, which QML rejects as a method name.
+    // waku gap: the C++ name is `eval`, which QML rejects as a method name.
     function evalSync(expr: string, printExpr: bool): string {
         if (!expr)
             return "";

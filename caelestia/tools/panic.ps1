@@ -1,12 +1,12 @@
-# Emergency stop: quits wabar, brings the Windows taskbar back, and kills a stuck wabar if it did not quit.
+# Emergency stop: quits waku, brings the Windows taskbar back, and kills a stuck waku if it did not quit.
 # Run it from any PowerShell: pwsh -NoProfile -File D:\wabar-ports\caelestia\tools\panic.ps1
 $home_ = 'D:\wabar-ports\caelestia'
-$wabarc = 'D:\wabar\dist\wabar\wabarc.exe'
-& $wabarc --config-home $home_ quit 2>&1 | Out-Null
+$wakuc = 'D:\waku\dist\waku\wakuc.exe'
+& $wakuc --config-home $home_ quit 2>&1 | Out-Null
 Start-Sleep -Seconds 4
-$left = Get-Process wabar -ErrorAction SilentlyContinue
+$left = Get-Process waku -ErrorAction SilentlyContinue
 if ($left) {
-  # Only a wabar that runs this config home; leave any other copy alone.
+  # Only a waku that runs this config home; leave any other copy alone.
   foreach ($p in $left) {
     $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId=$($p.Id)").CommandLine
     if ($cmd -match [regex]::Escape($home_)) { Stop-Process -Id $p.Id -Force }
@@ -22,4 +22,4 @@ public static class Tb {
 '@
 $h = [Tb]::FindWindow('Shell_TrayWnd', $null)
 if ($h -ne [IntPtr]::Zero) { [void][Tb]::ShowWindow($h, 8) }   # SW_SHOWNA
-'wabar stopped, taskbar shown.'
+'waku stopped, taskbar shown.'

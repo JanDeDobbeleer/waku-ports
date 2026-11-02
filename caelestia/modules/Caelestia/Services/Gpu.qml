@@ -5,15 +5,15 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 
-// Port of caelestia's Gpu over wabar's Gpu source (PDH engine counters, any vendor). type is
+// Port of caelestia's Gpu over waku's Gpu source (PDH engine counters, any vendor). type is
 // Generic when the counters exist, else None. Temperature is NaN (no sensor access on Windows).
 // The source polls until its first sample (to learn the type) and then only while referenced.
 QtObject {
     id: root
 
-    // Reference count driven by ServiceRef. The wabar source polls only while something holds a ref.
+    // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
     property int refs: 0
     function ref(): void {
         refs++;

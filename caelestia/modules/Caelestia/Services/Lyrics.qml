@@ -4,7 +4,7 @@ import QtQuick
 import Caelestia.Config
 
 // Stub for caelestia's C++ Lyrics service (local .lrc files, lrclib and NetEase lookups).
-// wabar gap: no lookup runs. `lyrics` stays empty, `hasLyrics` false, and `loading` false.
+// waku gap: no lookup runs. `lyrics` stays empty, `hasLyrics` false, and `loading` false.
 // The properties and methods exist so the lyrics widgets load.
 QtObject {
     property var lyrics: []

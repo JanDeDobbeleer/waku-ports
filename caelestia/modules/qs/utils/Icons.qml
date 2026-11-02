@@ -95,7 +95,7 @@ Singleton {
         [["phone"], "smartphone"],
         [["mouse"], "mouse"],
         [["keyboard"], "keyboard"],
-        // Port additions: device types wabar reports that upstream's rules do not know.
+        // Port additions: device types waku reports that upstream's rules do not know.
         [["watch"], "watch"],
         [["computer"], "computer"],
         [["tablet"], "tablet"],

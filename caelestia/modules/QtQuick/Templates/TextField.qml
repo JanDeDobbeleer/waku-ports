@@ -2,7 +2,7 @@ import QtQuick
 
 // Stand-in for QtQuick.Templates.TextField: a Control around a TextInput.
 // The enums repeat the TextInput values so `TextField.AlignHCenter` and `TextField.Password` work.
-// wabar gap: no built-in placeholder drawing (caelestia draws its own), no context menu.
+// waku gap: no built-in placeholder drawing (caelestia draws its own), no context menu.
 Control {
     id: field
 

@@ -5,13 +5,13 @@
 # parameters or that are windows are compile-checked only and listed as such. Singletons are
 # skipped (they cannot be created) and listed.
 #
-# One wabar process loads the files one after another and logs "LOADALL|BEGIN|file" before each.
-# If wabar hangs or exits mid-run, the file named by the last BEGIN is recorded as CRASH and the
-# run restarts with the rest. Needs the merged engine at D:\wabar\build\arm64-debug.
+# One waku process loads the files one after another and logs "LOADALL|BEGIN|file" before each.
+# If waku hangs or exits mid-run, the file named by the last BEGIN is recorded as CRASH and the
+# run restarts with the rest. Needs the merged engine at D:\waku\build\arm64-debug.
 param(
   [string]$Components = (Join-Path $PSScriptRoot '..\modules\qs\components'),
   [string]$Stubs = (Join-Path $PSScriptRoot '..\smoke\wp3\modules'),
-  [string]$Bin = 'D:\wabar\build\arm64-debug',
+  [string]$Bin = 'D:\waku\build\arm64-debug',
   [int]$IdleSeconds = 20,
   [int]$MaxSeconds = 180,
   [string[]]$Only
@@ -88,7 +88,7 @@ ShellRoot {
   [IO.File]::WriteAllText((Join-Path $home_ 'shell.qml'), $shell, (New-Object Text.UTF8Encoding $false))
   $err = Join-Path $work "run$iteration.err.txt"; $out = Join-Path $work "run$iteration.out.txt"
   $launch = @('--config-home', $home_, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
-  $p = Start-Process -FilePath (Join-Path $Bin 'wabar.exe') -ArgumentList $launch -RedirectStandardError $err -RedirectStandardOutput $out -PassThru -WindowStyle Hidden
+  $p = Start-Process -FilePath (Join-Path $Bin 'waku.exe') -ArgumentList $launch -RedirectStandardError $err -RedirectStandardOutput $out -PassThru -WindowStyle Hidden
   $sw = [Diagnostics.Stopwatch]::StartNew(); $lastSize = -1; $idle = [Diagnostics.Stopwatch]::StartNew(); $done = $false
   while ($sw.Elapsed.TotalSeconds -lt $MaxSeconds) {
     Start-Sleep -Milliseconds 500
@@ -98,7 +98,7 @@ ShellRoot {
     if ($tail -match 'LOADALL\|DONE') { $done = $true; break }
     if ($p.HasExited -or $idle.Elapsed.TotalSeconds -gt $IdleSeconds) { break }
   }
-  & (Join-Path $Bin 'wabarc.exe') --config-home $home_ quit 2>$null | Out-Null
+  & (Join-Path $Bin 'wakuc.exe') --config-home $home_ quit 2>$null | Out-Null
   if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Force }
   $lines = @(Get-Content -LiteralPath $err, $out -ErrorAction SilentlyContinue | Where-Object { $_ -match 'LOADALL\|' })
   $last = $null
@@ -108,7 +108,7 @@ ShellRoot {
     if ($l -match 'LOADALL\|FAIL\|([^|]+)\|(.*)$') { $results[$Matches[1]] = [pscustomobject]@{ Status = 'FAIL'; Detail = $Matches[2] }; $last = $null; continue }
   }
   if ($done) { break }
-  if ($last) { $results[$last] = [pscustomobject]@{ Status = 'CRASH'; Detail = 'wabar hung or exited while loading this file; see ' + $err } }
+  if ($last) { $results[$last] = [pscustomobject]@{ Status = 'CRASH'; Detail = 'waku hung or exited while loading this file; see ' + $err } }
   elseif (-not $lines) { Write-Host "no LOADALL output; see $err"; break }
   $remaining = [System.Collections.Generic.List[object]]@($remaining | Where-Object { -not $results.ContainsKey($_.File) })
 }

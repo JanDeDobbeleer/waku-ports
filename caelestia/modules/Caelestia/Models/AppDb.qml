@@ -2,7 +2,7 @@ import QtQuick
 
 // Port of caelestia's C++ AppDb: wraps DesktopEntry objects as AppEntry objects and sorts them by
 // favourite (the id matches a regex of favouriteApps), then launch count, then name.
-// wabar gap: counts live in memory only (the original keeps them in an SQLite file at `path`).
+// waku gap: counts live in memory only (the original keeps them in an SQLite file at `path`).
 // `path` is accepted and ignored.
 QtObject {
     id: root

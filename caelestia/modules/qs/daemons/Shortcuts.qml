@@ -58,8 +58,8 @@ Scope {
         // qmllint enable unresolved-type
         name: "launcher"
         description: "Toggle launcher"
-        // Port: Hyprland binds the key (Super) in its own config; on Windows wabar registers it.
-        // Change it here, or remove the line and bind `wabarc shortcut launcher` in whkd.
+        // Port: Hyprland binds the key (Super) in its own config; on Windows waku registers it.
+        // Change it here, or remove the line and bind `wakuc shortcut launcher` in whkd.
         keys: "alt+space"
         onPressed: root.launcherInterrupted = false
         onReleased: {

@@ -5,15 +5,15 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 
-// Port of caelestia's NetworkUsage. wabar's Network source has no throughput, so this polls
+// Port of caelestia's NetworkUsage. waku's Network source has no throughput, so this polls
 // `netstat -e` (interface byte counters, summed over all interfaces) while referenced. Speeds are
 // bytes per second; totals count from the first sample.
 QtObject {
     id: root
 
-    // Reference count driven by ServiceRef. The wabar source polls only while something holds a ref.
+    // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
     property int refs: 0
     function ref(): void {
         refs++;

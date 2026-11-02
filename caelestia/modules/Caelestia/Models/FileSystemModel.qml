@@ -3,7 +3,7 @@ import Qt.labs.folderlistmodel
 
 // Port of caelestia's C++ FileSystemModel on top of Qt.labs.folderlistmodel. The model has one
 // role, `modelData`, which holds a FileSystemEntry; `entries` is the same list as an array.
-// wabar gap: `recursive` is accepted and ignored (FolderListModel lists one folder), `Videos`
+// waku gap: `recursive` is accepted and ignored (FolderListModel lists one folder), `Videos`
 // matches by suffix only, and `isImage` and `mimeType` are decided from the suffix.
 ListModel {
     id: root

@@ -1,7 +1,7 @@
 import QtQuick
 
 // Stub for caelestia's C++ BlobRect (an SDF rounded rectangle that blends with its group and
-// deforms like a spring). wabar gap: a plain Rectangle in the group colour. The spring and
+// deforms like a spring). waku gap: a plain Rectangle in the group colour. The spring and
 // exclusion properties exist so shells load, and do nothing. The deform matrices stay identity.
 Item {
     id: root

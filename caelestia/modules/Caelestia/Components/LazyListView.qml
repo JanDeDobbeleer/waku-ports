@@ -7,7 +7,7 @@ import QtQuick
 // The C++ type also has an attached object, read by delegates as `LazyListView.<name>`:
 //   preferredHeight, visibleHeight (writable), layoutY, ready, adding, removing (read),
 //   trackViewport (writable).
-// wabar gap: attached objects cannot be written in QML. Delegates that use them (the bar
+// waku gap: attached objects cannot be written in QML. Delegates that use them (the bar
 // workspaces and the sidebar notification lists, ported later) must be edited to declare these as
 // plain properties on the delegate root. This list view only reads `height` of each delegate.
 ListView {

@@ -3,17 +3,17 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 import qs.compat
 
 // Stub of upstream's VPN service (WireGuard, WARP, NetBird and Tailscale adapters that shell out to
-// their CLIs). wabar knows only whether a VPN link is up (`Network.vpnActive`, `vpnName`), so
+// their CLIs). waku knows only whether a VPN link is up (`Network.vpnActive`, `vpnName`), so
 // `connected` follows that and every action is a no-op. The properties keep upstream's names so
 // the utilities toggle and the nexus network page load.
 Singleton {
     id: root
 
-    // wabar gap: read only. wabar cannot connect or disconnect a VPN.
+    // waku gap: read only. waku cannot connect or disconnect a VPN.
     readonly property bool connected: S.Network.vpnActive
     readonly property var status: ({
             connected: connected,

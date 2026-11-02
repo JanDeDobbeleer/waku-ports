@@ -8,7 +8,7 @@ ScrollBar {
     id: root
 
     required property Flickable flickable
-    // wabar: the QtQuick.Templates shim has no attached ScrollBar, so follow the flickable here.
+    // waku: the QtQuick.Templates shim has no attached ScrollBar, so follow the flickable here.
     size: flickable.visibleArea.heightRatio
     position: flickable.visibleArea.yPosition
     property bool shouldBeActive

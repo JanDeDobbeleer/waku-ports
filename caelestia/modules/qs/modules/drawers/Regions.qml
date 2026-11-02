@@ -75,7 +75,7 @@ Region {
     component R: Region {
         required property Item panel
 
-        // Port: wabar's Region has one change signal for x, y, width and height, so a binding
+        // Port: waku's Region has one change signal for x, y, width and height, so a binding
         // that reads its own width or height loops. The size lives in w_ and h_ instead.
         property real w_: panel.width
         property real h_: panel.height

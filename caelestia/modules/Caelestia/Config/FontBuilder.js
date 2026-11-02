@@ -2,7 +2,7 @@
 
 // JS port of upstream's FontBuilder value type. Every call returns a new builder, so a style's
 // shared builder is never changed. build() returns a QML font (Qt.font with variableAxes, which
-// needs wabar's --font-engine=directwrite to take effect).
+// needs waku's --font-engine=directwrite to take effect).
 
 function _clone(s) {
     return {

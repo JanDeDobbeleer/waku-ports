@@ -195,7 +195,7 @@ Loader {
                         text: Tr.trCtx("Delete", "button")
                         type: TextButton.Text
                         onClicked: {
-                            // wabar gap: never deletes anything. There is no recorder, so there are no recordings.
+                            // waku gap: never deletes anything. There is no recorder, so there are no recordings.
                             root.props.recordingConfirmDelete = "";
                         }
                     }

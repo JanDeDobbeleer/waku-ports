@@ -1,7 +1,7 @@
 import QtQuick
 
 // Stand-in for QtQuick.Templates.ScrollBar.
-// wabar gap: the real type is also an attached object (`Flickable { ScrollBar.vertical: ... }`)
+// waku gap: the real type is also an attached object (`Flickable { ScrollBar.vertical: ... }`)
 // that follows its Flickable. Pure QML cannot attach, so an instance must be placed next to the
 // Flickable and fed `size` and `position` (e.g. from Flickable.visibleArea).
 Control {

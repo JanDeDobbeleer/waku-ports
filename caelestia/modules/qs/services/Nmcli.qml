@@ -3,12 +3,12 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Caelestia.I18n
-import wabar.services as S
+import waku.services as S
 import qs.compat
 
-// Caelestia's Nmcli API over wabar's Network service. Upstream wraps nmcli (1800 lines); wabar gives
+// Caelestia's Nmcli API over waku's Network service. Upstream wraps nmcli (1800 lines); waku gives
 // the active link, the Wi-Fi scan list and `connectTo`, so everything else is a neutral stub
-// marked `// wabar gap:`.
+// marked `// waku gap:`.
 Singleton {
     id: root
 
@@ -45,7 +45,7 @@ Singleton {
     readonly property alias connectionCheckTimer: connectionCheckTimer
     readonly property alias immediateCheckTimer: immediateCheckTimer
 
-    // The link wabar reports when the scan list has no entry for it yet.
+    // The link waku reports when the scan list has no entry for it yet.
     readonly property AccessPoint syntheticActive: wifiLinked && S.Network.ssid ? synthetic : null
     readonly property AccessPoint synthetic: AccessPoint {
         lastIpcObject: ({
@@ -129,8 +129,8 @@ Singleton {
             });
     }
 
-    // wabar gap: wabar switches to a known profile only. An unknown secured network needs the
-    // password dialog, and wabar has nothing to hand the password to.
+    // waku gap: waku switches to a known profile only. An unknown secured network needs the
+    // password dialog, and waku has nothing to hand the password to.
     function connectToNetwork(ssid: string, password: string, bssid: string, callback: var): void {
         const ok = S.Network.connectTo(ssid);
         if (callback)
@@ -160,7 +160,7 @@ Singleton {
         connectToNetwork(ssid, "", bssid, callback);
     }
 
-    // wabar gap: no disconnect call.
+    // waku gap: no disconnect call.
     function disconnectFromNetwork(): void {
     }
 
@@ -168,7 +168,7 @@ Singleton {
         unsupported(callback);
     }
 
-    // wabar gap: no profile management.
+    // waku gap: no profile management.
     function forgetNetwork(ssid: string, callback: var): void {
         unsupported(callback);
     }
@@ -186,7 +186,7 @@ Singleton {
         unsupported(callback);
     }
 
-    // wabar gap: no radio switch.
+    // waku gap: no radio switch.
     function enableWifi(enabled: bool, callback: var): void {
         unsupported(callback);
     }
@@ -274,7 +274,7 @@ Singleton {
         const old = [...networks];
         const next = [];
         const known = [];
-        // wabar gap: no BSSID, so the SSID stands in for it and keeps rows distinct.
+        // waku gap: no BSSID, so the SSID stands in for it and keeps rows distinct.
         for (const n of S.Network.networks) {
             if (n.known)
                 known.push(n.ssid);

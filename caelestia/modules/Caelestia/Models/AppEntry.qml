@@ -9,7 +9,7 @@ QtObject {
     property QtObject entry
     property int frequency: 0
 
-    // wabar gap: a QML type cannot declare a property named `id`, so upstream `entry.id` is `appId`.
+    // waku gap: a QML type cannot declare a property named `id`, so upstream `entry.id` is `appId`.
     readonly property string appId: entry?.id ?? ""
     readonly property string name: entry?.name ?? ""
     readonly property string comment: entry?.comment ?? ""

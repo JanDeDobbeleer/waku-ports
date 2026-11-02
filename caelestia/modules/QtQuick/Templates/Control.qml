@@ -1,6 +1,6 @@
 import QtQuick
 
-// Pure QML stand-in for QtQuick.Templates.Control. The wabar engine does not ship the real
+// Pure QML stand-in for QtQuick.Templates.Control. The waku engine does not ship the real
 // QtQuick.Templates module, so the port provides the subset caelestia's components use.
 // A control places its `background` over the full size (behind) and its `contentItem` inside the
 // padding, like the C++ template. Subclasses add behaviour.

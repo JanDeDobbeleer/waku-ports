@@ -1,6 +1,6 @@
 import QtQuick
 
-// M3Shapes MaterialShape stub: a Rectangle whose corner radius follows `shape`. wabar gap:
+// M3Shapes MaterialShape stub: a Rectangle whose corner radius follows `shape`. waku gap:
 // no polygon morphing, so every shape is a rounded rectangle, circle or pill; `fromShape`,
 // `toShape` and `morphProgress` interpolate the radius only.
 Rectangle {

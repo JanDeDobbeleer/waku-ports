@@ -10,7 +10,7 @@ import qs.services
 Scope {
     id: root
 
-    // wabar gap: nothing to switch off. Windows has no compositor effects to disable, so game
+    // waku gap: nothing to switch off. Windows has no compositor effects to disable, so game
     // mode is a flag other modules can read.
     function applyGameMode(): void {
         Hypr.extras.applyOptions({});

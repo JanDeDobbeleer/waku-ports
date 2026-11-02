@@ -60,7 +60,7 @@ Column {
             playing: visible
             asynchronous: true
             speed: Config.general.sessionGifSpeed
-            // wabar: `root:/` is the shell folder, and a drive path needs a file: scheme here.
+            // waku: `root:/` is the shell folder, and a drive path needs a file: scheme here.
             source: {
                 const path = Paths.absolutePath(Config.paths.sessionGif.replace(/^root:\//, `${Quickshell.shellDir}/`));
                 return /^[A-Za-z]:\//.test(path) ? `file:///${path}` : path;

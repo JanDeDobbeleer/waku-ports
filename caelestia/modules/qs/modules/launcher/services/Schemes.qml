@@ -6,7 +6,7 @@ import Quickshell
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
-import wabar.services as S
+import waku.services as S
 import qs.services
 import qs.utils
 

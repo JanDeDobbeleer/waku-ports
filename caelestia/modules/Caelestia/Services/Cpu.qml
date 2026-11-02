@@ -5,15 +5,15 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 
-// Port of caelestia's Cpu over wabar's Cpu source. percentage is 0..1. The name comes from the
+// Port of caelestia's Cpu over waku's Cpu source. percentage is 0..1. The name comes from the
 // registry (read only). Temperature is NaN: Windows exposes no CPU sensor without a driver, and
 // HeroCard shows an indeterminate bar for NaN.
 QtObject {
     id: root
 
-    // Reference count driven by ServiceRef. The wabar source polls only while something holds a ref.
+    // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
     property int refs: 0
     function ref(): void {
         refs++;

@@ -5,7 +5,7 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import Caelestia.Services
-import wabar.services as S
+import waku.services as S
 import qs.utils
 
 Scope {

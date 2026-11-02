@@ -187,7 +187,7 @@ StyledListView {
         }
     }
 
-    // wabar: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+    // waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
     StyledScrollBar {
         parent: root
         flickable: root

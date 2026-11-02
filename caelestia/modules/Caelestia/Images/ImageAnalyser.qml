@@ -1,8 +1,8 @@
 import QtQuick
-import wabar.services
+import waku.services
 
-// Port of caelestia's C++ ImageAnalyser. `luminance` comes from wabar's ColorScheme.luminance for
-// a `source` file. wabar gap: `sourceItem` (grabbing an item and analysing the pixels) is not
+// Port of caelestia's C++ ImageAnalyser. `luminance` comes from waku's ColorScheme.luminance for
+// a `source` file. waku gap: `sourceItem` (grabbing an item and analysing the pixels) is not
 // supported and `dominantColour` stays a neutral grey.
 QtObject {
     id: root
