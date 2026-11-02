@@ -102,13 +102,13 @@ Item {
         Keys.onEscapePressed: root.screenState.launcher = false
 
         Keys.onPressed: event => {
-            // Port: Shift+Enter starts the selected app as a new window, Alt+Shift+Enter elevated.
+            // Port: Shift+Enter starts the selected app as a new window, Ctrl+Shift+Enter elevated.
             // Handled here and accepted, so the plain Enter path (onAccepted) never also runs.
             if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier) && !list.showWallpapers && !text.startsWith(GlobalConfig.launcher.actionPrefix)) {
                 const entry = list.currentList?.currentItem?.modelData;
                 if (entry) {
                     let started = true;
-                    if (event.modifiers & Qt.AltModifier)
+                    if (event.modifiers & Qt.ControlModifier)
                         started = Apps.launchAdmin(entry);
                     else
                         Apps.launchNew(entry);

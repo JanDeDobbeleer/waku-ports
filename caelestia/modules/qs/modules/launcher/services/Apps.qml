@@ -24,7 +24,7 @@ Searcher {
             entry.execute();
     }
 
-    // Port: Alt+Shift+Enter. Runs the "admin" action of the entry (UAC prompt). False when the
+    // Port: Ctrl+Shift+Enter. Runs the "admin" action of the entry (UAC prompt). False when the
     // entry has none (Store apps without an execution alias).
     function launchAdmin(entry: DesktopEntry): bool {
         const action = Array.from(entry.actions ?? []).find(a => a.id === "admin");
