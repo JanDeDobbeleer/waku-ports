@@ -236,16 +236,6 @@ ColumnLayout {
 
   NToggle {
     Layout.fillWidth: true
-    visible: CompositorService.isNiri
-    label: I18n.tr("panels.bar.appearance-hide-on-overview-label")
-    description: I18n.tr("panels.bar.appearance-hide-on-overview-description")
-    checked: Settings.data.bar.hideOnOverview
-    defaultValue: Settings.getDefaultValue("bar.hideOnOverview")
-    onToggled: checked => Settings.data.bar.hideOnOverview = checked
-  }
-
-  NToggle {
-    Layout.fillWidth: true
     label: I18n.tr("panels.bar.appearance-outer-corners-label")
     description: I18n.tr("panels.bar.appearance-outer-corners-description")
     checked: Settings.data.bar.outerCorners

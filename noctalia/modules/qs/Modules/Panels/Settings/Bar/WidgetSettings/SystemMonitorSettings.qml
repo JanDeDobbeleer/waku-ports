@@ -30,7 +30,6 @@ ColumnLayout {
   property bool valueShowCpuFreq: widgetData.showCpuFreq !== undefined ? widgetData.showCpuFreq : widgetMetadata.showCpuFreq
   property bool valueShowCpuTemp: widgetData.showCpuTemp !== undefined ? widgetData.showCpuTemp : widgetMetadata.showCpuTemp
   property bool valueShowGpuTemp: widgetData.showGpuTemp !== undefined ? widgetData.showGpuTemp : widgetMetadata.showGpuTemp
-  property bool valueShowLoadAverage: widgetData.showLoadAverage !== undefined ? widgetData.showLoadAverage : widgetMetadata.showLoadAverage
   property bool valueShowMemoryUsage: widgetData.showMemoryUsage !== undefined ? widgetData.showMemoryUsage : widgetMetadata.showMemoryUsage
   property bool valueShowMemoryAsPercent: widgetData.showMemoryAsPercent !== undefined ? widgetData.showMemoryAsPercent : widgetMetadata.showMemoryAsPercent
   property bool valueShowSwapUsage: widgetData.showSwapUsage !== undefined ? widgetData.showSwapUsage : widgetMetadata.showSwapUsage
@@ -52,7 +51,6 @@ ColumnLayout {
     settings.showCpuFreq = valueShowCpuFreq;
     settings.showCpuTemp = valueShowCpuTemp;
     settings.showGpuTemp = valueShowGpuTemp;
-    settings.showLoadAverage = valueShowLoadAverage;
     settings.showMemoryUsage = valueShowMemoryUsage;
     settings.showMemoryAsPercent = valueShowMemoryAsPercent;
     settings.showSwapUsage = valueShowSwapUsage;
@@ -178,19 +176,6 @@ ColumnLayout {
                  saveSettings();
                }
     defaultValue: widgetMetadata.showCpuTemp
-  }
-
-  NToggle {
-    id: showLoadAverage
-    Layout.fillWidth: true
-    label: I18n.tr("bar.system-monitor.load-average-label")
-    description: I18n.tr("bar.system-monitor.load-average-description")
-    checked: valueShowLoadAverage
-    onToggled: checked => {
-                 valueShowLoadAverage = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.showLoadAverage
   }
 
   NToggle {

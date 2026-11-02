@@ -30,11 +30,6 @@ ColumnLayout {
       tabIndex: 2
       checked: subTabBar.currentIndex === 2
     }
-    NTabButton {
-      text: I18n.tr("common.visualizer")
-      tabIndex: 3
-      checked: subTabBar.currentIndex === 3
-    }
   }
 
   Item {
@@ -49,6 +44,5 @@ ColumnLayout {
     VolumesSubTab {}
     DevicesSubTab {}
     MediaSubTab {}
-    VisualizerSubTab {}
   }
 }

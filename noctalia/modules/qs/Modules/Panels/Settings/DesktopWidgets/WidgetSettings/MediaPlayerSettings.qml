@@ -71,18 +71,6 @@ ColumnLayout {
 
   NToggle {
     Layout.fillWidth: true
-    label: I18n.tr("bar.media-mini.show-visualizer-label")
-    description: I18n.tr("panels.desktop-widgets.media-player-show-visualizer-description")
-    checked: valueShowVisualizer
-    onToggled: checked => {
-                 valueShowVisualizer = checked;
-                 saveSettings();
-               }
-    defaultValue: widgetMetadata.showVisualizer
-  }
-
-  NToggle {
-    Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.media-player-show-buttons-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-buttons-description")
     checked: valueShowButtons
@@ -91,33 +79,6 @@ ColumnLayout {
                  saveSettings();
                }
     defaultValue: widgetMetadata.showButtons
-  }
-
-  NComboBox {
-    Layout.fillWidth: true
-    label: I18n.tr("panels.audio.visualizer-type-label")
-    description: I18n.tr("panels.desktop-widgets.media-player-visualizer-type-description")
-    enabled: valueShowVisualizer
-    model: [
-      {
-        "key": "linear",
-        "name": I18n.tr("options.visualizer-types.linear")
-      },
-      {
-        "key": "mirrored",
-        "name": I18n.tr("options.visualizer-types.mirrored")
-      },
-      {
-        "key": "wave",
-        "name": I18n.tr("options.visualizer-types.wave")
-      }
-    ]
-    currentKey: valueVisualizerType
-    onSelected: key => {
-                  valueVisualizerType = key;
-                  saveSettings();
-                }
-    defaultValue: widgetMetadata.visualizerType
   }
 
   NComboBox {

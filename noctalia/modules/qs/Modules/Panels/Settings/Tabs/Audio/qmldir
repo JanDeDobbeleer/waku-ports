@@ -2,5 +2,4 @@ module qs.Modules.Panels.Settings.Tabs.Audio
 AudioTab 1.0 AudioTab.qml
 DevicesSubTab 1.0 DevicesSubTab.qml
 MediaSubTab 1.0 MediaSubTab.qml
-VisualizerSubTab 1.0 VisualizerSubTab.qml
 VolumesSubTab 1.0 VolumesSubTab.qml

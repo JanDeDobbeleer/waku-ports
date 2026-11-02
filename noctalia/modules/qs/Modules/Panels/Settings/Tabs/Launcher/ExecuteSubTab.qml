@@ -35,13 +35,4 @@ ColumnLayout {
     visible: Settings.data.appLauncher.customLaunchPrefixEnabled
     onTextChanged: Settings.data.appLauncher.customLaunchPrefix = text
   }
-
-  NTextInput {
-    label: I18n.tr("panels.launcher.settings-annotation-tool-label")
-    description: I18n.tr("panels.launcher.settings-annotation-tool-description")
-    Layout.fillWidth: true
-    text: Settings.data.appLauncher.screenshotAnnotationTool
-    placeholderText: I18n.tr("panels.launcher.settings-annotation-tool-placeholder")
-    onTextChanged: Settings.data.appLauncher.screenshotAnnotationTool = text
-  }
 }

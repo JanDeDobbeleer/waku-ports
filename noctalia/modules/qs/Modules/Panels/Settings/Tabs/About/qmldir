@@ -1,5 +1,3 @@
 module qs.Modules.Panels.Settings.Tabs.About
 AboutTab 1.0 AboutTab.qml
-ContributorsSubTab 1.0 ContributorsSubTab.qml
-SupportersSubTab 1.0 SupportersSubTab.qml
 VersionSubTab 1.0 VersionSubTab.qml

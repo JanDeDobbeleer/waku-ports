@@ -339,27 +339,6 @@ Item {
                        BluetoothService.setDiscoverable(!checked);
                      }
         }
-
-        // RSSI Polling
-        NToggle {
-          label: I18n.tr("panels.connections.bluetooth-rssi-polling-label")
-          description: I18n.tr("panels.connections.bluetooth-rssi-polling-description")
-          checked: Settings.data.network.bluetoothRssiPollingEnabled
-          onToggled: checked => Settings.data.network.bluetoothRssiPollingEnabled = checked
-        }
-        NSpinBox {
-          label: I18n.tr("panels.connections.bluetooth-rssi-polling-interval-label")
-          description: I18n.tr("panels.connections.bluetooth-rssi-polling-interval-description")
-          from: 10000
-          to: 120000
-          stepSize: 1000
-          value: Settings.data.network.bluetoothRssiPollIntervalMs
-          defaultValue: Settings.getDefaultValue("network.bluetoothRssiPollIntervalMs")
-          onValueChanged: Settings.data.network.bluetoothRssiPollIntervalMs = value
-          suffix: " ms"
-          Layout.alignment: Qt.AlignVCenter
-          visible: Settings.data.network.bluetoothRssiPollingEnabled
-        }
       }
     }
   }
@@ -570,28 +549,10 @@ Item {
             anchors.fill: parent
             anchors.margins: Style.marginS
             flow: root.detailsGrid ? GridLayout.TopToBottom : GridLayout.LeftToRight
-            rows: root.detailsGrid ? 3 : 6
+            rows: root.detailsGrid ? 3 : 5
             columns: root.detailsGrid ? 2 : 1
             columnSpacing: Style.marginM
             rowSpacing: Style.marginXS
-
-            // --- Item 1: Signal Strength ---
-            RowLayout {
-              Layout.fillWidth: true
-              Layout.preferredWidth: 1
-              spacing: Style.marginXS
-              NIcon {
-                icon: BluetoothService.getSignalIcon(modelData)
-                pointSize: Style.fontSizeXS
-                color: Color.mOnSurface
-              }
-              NText {
-                text: BluetoothService.getSignalStrength(modelData)
-                pointSize: Style.fontSizeXS
-                color: Color.mOnSurface
-                Layout.fillWidth: true
-              }
-            }
 
             // --- Item 2: Battery ---
             RowLayout {
@@ -686,95 +647,6 @@ Item {
                 onToggled: checked => BluetoothService.setDeviceAutoConnect(modelData, checked)
               }
             }
-          }
-        }
-      }
-    }
-  }
-
-  // PIN Authentication Overlay (This part needs some love :P)
-  Rectangle {
-    id: pinOverlay
-    visible: !root.showOnlyLists && BluetoothService.pinRequired
-    anchors.centerIn: parent
-    width: Math.min(parent.width * 0.9, 400)
-    height: pinCol.implicitHeight + Style.margin2L
-    color: Color.mSurface
-    radius: Style.radiusM
-    border.color: Style.boxBorderColor
-    border.width: Style.borderS
-    z: 1000
-
-    MouseArea {
-      anchors.fill: parent
-      acceptedButtons: Qt.AllButtons
-      onClicked: mouse => mouse.accepted = true
-      onWheel: wheel => wheel.accepted = true
-    }
-
-    ColumnLayout {
-      id: pinCol
-      anchors.fill: parent
-      anchors.margins: Style.marginL
-      spacing: Style.marginL
-
-      NIcon {
-        icon: "lock"
-        pointSize: 48
-        color: Color.mPrimary
-        Layout.alignment: Qt.AlignHCenter
-      }
-      NText {
-        text: I18n.tr("panels.connections.authentication-required")
-        pointSize: Style.fontSizeXL
-        font.weight: Style.fontWeightBold
-        color: Color.mOnSurface
-        horizontalAlignment: Text.AlignHCenter
-        Layout.fillWidth: true
-      }
-      NText {
-        text: I18n.tr("panels.connections.pin-instructions")
-        pointSize: Style.fontSizeM
-        color: Color.mOnSurfaceVariant
-        wrapMode: Text.WordWrap
-        horizontalAlignment: Text.AlignHCenter
-        Layout.fillWidth: true
-      }
-      NTextInput {
-        id: pinInput
-        Layout.fillWidth: true
-        placeholderText: "123456"
-        inputIconName: "key"
-        onVisibleChanged: {
-          if (visible) {
-            text = "";
-            inputItem.forceActiveFocus();
-          }
-        }
-        inputItem.onEditingFinished: {
-          if (text.length > 0) {
-            BluetoothService.submitPin(text);
-            text = "";
-          }
-        }
-      }
-      RowLayout {
-        Layout.alignment: Qt.AlignHCenter
-        spacing: Style.marginM
-        NButton {
-          text: I18n.tr("common.cancel")
-          icon: "x"
-          onClicked: BluetoothService.cancelPairing()
-        }
-        NButton {
-          text: I18n.tr("common.confirm")
-          icon: "check"
-          backgroundColor: Color.mPrimary
-          textColor: Color.mOnPrimary
-          enabled: pinInput.text.length > 0
-          onClicked: {
-            BluetoothService.submitPin(pinInput.text);
-            pinInput.text = "";
           }
         }
       }

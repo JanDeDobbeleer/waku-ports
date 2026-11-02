@@ -2,4 +2,3 @@ module qs.Modules.Panels.Settings.Tabs.ColorScheme
 ColorSchemeTab 1.0 ColorSchemeTab.qml
 ColorsSubTab 1.0 ColorsSubTab.qml
 SchemeDownloader 1.0 SchemeDownloader.qml
-TemplatesSubTab 1.0 TemplatesSubTab.qml
