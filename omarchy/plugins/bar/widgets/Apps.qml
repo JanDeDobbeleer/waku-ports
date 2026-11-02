@@ -1,5 +1,7 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
+import waku as W
 import waku.services as S
 import qs.Commons
 import qs.Commons as Commons
@@ -42,7 +44,7 @@ BarWidget {
       }
       var g = byExe[exe]
       if (!g.iconUrl) g.iconUrl = o.iconUrl
-      g.windows.push({ index: i, title: o.title, active: o.active, minimized: o.minimized })
+      g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized })
     }
     var kept = []
     var seen = {}
@@ -95,9 +97,18 @@ BarWidget {
     return null
   }
 
+  // Where the card opens: just below the bar strip, under the hovered tile. Without a rect the engine
+  // anchors to the whole thickness of the bar's window, which spans the screen, and the card would
+  // open at the bottom of it. The rect runs from the tile's top to the bottom of the strip.
+  readonly property rect previewRect: {
+    if (!hoverItem) return Qt.rect(0, 0, 0, 0)
+    var top = hoverItem.mapToItem(root, 0, 0).y
+    return Qt.rect(0, 0, hoverItem.width, Math.max(1, root.height - top))
+  }
+
   Timer {
     id: closeTimer
-    interval: 220
+    interval: 350
     onTriggered: if (!preview.containsMouse) root.close()
   }
 
@@ -255,70 +266,158 @@ BarWidget {
       opacity: 0.7
     }
   }
+  // The thumbnails are DWM windows drawn above the card, so they go live only once it has settled.
+  property bool previewSettled: false
+  onPreviewOpenChanged: if (!previewOpen) previewSettled = false
+  Timer {
+    interval: 220
+    running: root.previewOpen && !root.previewSettled
+    onTriggered: root.previewSettled = true
+  }
+
   PopupCard {
     id: preview
     anchorItem: root.hoverItem ? root.hoverItem : root
+    anchor.rect: root.previewRect
     owner: root
     bar: root.bar
     triggerMode: "hover"
     open: root.previewOpen && root.previewGroup !== null
-    contentWidth: preview.fittedContentWidth(Style.space(300))
-    contentHeight: preview.fittedContentHeight(list.implicitHeight)
 
-    Column {
-      id: list
+    readonly property real boxW: Style.space(240)
+    readonly property real boxH: Style.space(150)
+    readonly property real cardPad: Style.space(6)
+    readonly property real cardW: boxW + cardPad * 2
+    readonly property real gap: Style.space(8)
+    readonly property int count: root.previewGroup ? root.previewGroup.windows.length : 0
+    // A single strip while it fits in 60% of the screen, then a wrapping grid.
+    readonly property real maxW: Math.max(cardW, (preview.screenW > 0 ? preview.screenW : 1920) * 0.6 - preview.padding * 2)
+    readonly property int cols: count <= 0 ? 1
+      : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
+
+    // The card pads and borders the content on both sides; the height already counts them.
+    contentWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec))
+    contentHeight: preview.fittedContentHeight(grid.implicitHeight)
+
+    GridLayout {
+      id: grid
       anchors.fill: parent
-      spacing: Style.space(2)
+      columns: preview.cols
+      columnSpacing: preview.gap
+      rowSpacing: preview.gap
 
       Repeater {
         model: root.previewGroup ? root.previewGroup.windows : []
 
-        delegate: Rectangle {
-          id: item
+        delegate: Item {
+          id: card
           required property var modelData
 
-          width: list.width
-          height: Style.spacing.popupRowHeight
-          radius: Style.cornerRadius
-          color: itemArea.containsMouse ? Style.hoverFill : (item.modelData.active ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.12) : "transparent")
-          opacity: item.modelData.minimized ? 0.6 : 1
+          implicitWidth: preview.cardW
+          implicitHeight: column.implicitHeight + preview.cardPad * 2
 
-          Image {
-            id: itemIcon
-            anchors.left: parent.left
-            anchors.leftMargin: Style.spacing.controlPaddingX
-            anchors.verticalCenter: parent.verticalCenter
-            width: Style.space(16)
-            height: width
-            source: root.previewGroup ? root.previewGroup.iconUrl : ""
-            sourceSize: Qt.size(width * 2, height * 2)
-            fillMode: Image.PreserveAspectFit
-            asynchronous: true
-            smooth: true
+          // Omarchy's own look: square, and the popup's background, border colour and thickness.
+          BorderSurface {
+            anchors.fill: parent
+            radius: 0
+            color: Commons.Color.popups.background
+            borderSpec: preview.borderSpec
           }
 
-          Text {
-            anchors.left: itemIcon.right
-            anchors.leftMargin: Style.space(8)
-            anchors.right: parent.right
-            anchors.rightMargin: Style.spacing.controlPaddingX
-            anchors.verticalCenter: parent.verticalCenter
-            textFormat: Text.PlainText
-            text: item.modelData.title !== "" ? item.modelData.title : root.previewGroup.exe
-            elide: Text.ElideRight
-            color: Commons.Color.popups.text
-            font.family: Style.font.family
-            font.pixelSize: Style.font.body
-            font.bold: item.modelData.active
+          // Hover (and the focused window) tint the same surface instead of changing its border.
+          Rectangle {
+            anchors.fill: parent
+            anchors.margins: Border.top(preview.borderSpec)
+            radius: 0
+            color: cardArea.containsMouse ? Style.hoverFill
+              : (card.modelData.active ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.10) : "transparent")
+          }
+
+          ColumnLayout {
+            id: column
+            anchors.fill: parent
+            anchors.margins: preview.cardPad
+            spacing: Style.space(4)
+
+            // The preview area: the window's live thumbnail, or the program icon when there is none
+            // (a minimized window has no DWM thumbnail).
+            Item {
+              id: box
+              Layout.preferredWidth: preview.boxW
+              Layout.preferredHeight: preview.boxH
+
+              Rectangle {
+                anchors.fill: parent
+                radius: 0
+                color: Qt.rgba(0, 0, 0, 0.25)
+              }
+
+              Image {
+                anchors.centerIn: parent
+                visible: card.modelData.minimized || !thumb.available
+                opacity: card.modelData.minimized ? 0.55 : 1
+                width: Style.space(48)
+                height: width
+                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                sourceSize: Qt.size(width * 2, height * 2)
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                smooth: true
+              }
+
+              W.WindowThumbnail {
+                id: thumb
+                readonly property real inset: Style.space(4)
+                readonly property real availW: box.width - inset * 2
+                readonly property real availH: box.height - inset * 2
+                readonly property real ratio: sourceWidth > 0 && sourceHeight > 0 ? sourceWidth / sourceHeight : availW / availH
+
+                x: (box.width - width) / 2
+                y: (box.height - height) / 2
+                width: Math.min(availW, availH * ratio)
+                height: width / ratio
+                visible: !card.modelData.minimized
+                hwnd: card.modelData.minimized ? 0 : card.modelData.hwnd
+                active: root.previewSettled && card.modelData.hwnd !== 0 && !card.modelData.minimized
+                fit: W.WindowThumbnail.PreserveAspectFit
+              }
+            }
+
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: Style.space(6)
+
+              Image {
+                Layout.preferredWidth: Style.space(16)
+                Layout.preferredHeight: Style.space(16)
+                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                sourceSize: Qt.size(width * 2, height * 2)
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                smooth: true
+              }
+
+              Text {
+                Layout.fillWidth: true
+                textFormat: Text.PlainText
+                text: card.modelData.title !== "" ? card.modelData.title : (root.previewGroup ? root.previewGroup.exe : "")
+                elide: Text.ElideRight
+                maximumLineCount: 1
+                color: Commons.Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: card.modelData.active
+              }
+            }
           }
 
           MouseArea {
-            id: itemArea
+            id: cardArea
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-              taskbar.activate(item.modelData.index)
+              taskbar.activate(card.modelData.index)
               root.close()
             }
           }
