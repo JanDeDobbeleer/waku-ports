@@ -1,4 +1,4 @@
-# Starts wabar on a config home, lists the top-level windows of the process (rect, styles, z
+# Starts waku on a config home, lists the top-level windows of the process (rect, styles, z
 # order) and runs WindowFromPoint on sample points, optionally after a shortcut and a shot.
 # Read-only: sends no input. Always passes --no-tray, never --register-app-bar.
 param(
@@ -6,7 +6,7 @@ param(
   [int]$Seconds = 10,
   [string]$Shortcut,
   [string]$Shot,
-  [string]$Bin = 'D:\wabar\build\arm64-debug'
+  [string]$Bin = 'D:\waku\build\arm64-debug'
 )
 Add-Type @'
 using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;
@@ -35,15 +35,15 @@ public static class P {
 [P]::SetProcessDPIAware() | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$wabar = Join-Path $Bin 'wabar.exe'; $wabarc = Join-Path $Bin 'wabarc.exe'
+$waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
 $launch = @('--config-home', $ConfigHome, '--no-tray', '--font-engine=directwrite')
 if ((Resolve-Path $ConfigHome).Path.TrimEnd([char]92) -ne $port.TrimEnd([char]92)) { $launch += @('--import-path', (Join-Path $port 'modules')) }
-$p = Start-Process -FilePath $wabar -ArgumentList $launch -PassThru -WindowStyle Hidden `
+$p = Start-Process -FilePath $waku -ArgumentList $launch -PassThru -WindowStyle Hidden `
   -RedirectStandardError (Join-Path $port 'logs\probe.err.txt') -RedirectStandardOutput (Join-Path $port 'logs\probe.out.txt')
 try {
   Start-Sleep -Seconds $Seconds
-  & $wabarc --config-home $ConfigHome status
-  if ($Shortcut) { & $wabarc --config-home $ConfigHome shortcut $Shortcut; Start-Sleep -Seconds 2 }
+  & $wakuc --config-home $ConfigHome status
+  if ($Shortcut) { & $wakuc --config-home $ConfigHome shortcut $Shortcut; Start-Sleep -Seconds 2 }
   $order = 0
   foreach ($h in [P]::All()) { $order++; $pidv = 0; [void][P]::GetWindowThreadProcessId($h, [ref]$pidv)
     if ($pidv -eq $p.Id) { "z=$order " + [P]::Info($h) } }
@@ -54,6 +54,6 @@ try {
   }
   if ($Shot) { & (Join-Path $PSScriptRoot 'shot.ps1') -Out $Shot }
 } finally {
-  & $wabarc --config-home $ConfigHome quit
+  & $wakuc --config-home $ConfigHome quit
   if (-not $p.WaitForExit(8000)) { Stop-Process -Id $p.Id -Force }
 }

@@ -23,7 +23,7 @@ Singleton {
 
     property bool loaded
 
-    // wabar gap: no fullscreen detection (upstream asks Hyprland).
+    // waku gap: no fullscreen detection (upstream asks Hyprland).
     function hasFullscreen(): bool {
         return false;
     }

@@ -51,7 +51,7 @@ ColumnLayout {
         }
     }
 
-    // wabar gap: no screen recorder on Windows yet, so there is no recording folder to list, play,
+    // waku gap: no screen recorder on Windows yet, so there is no recording folder to list, play,
     // reveal or delete. The header keeps upstream's layout; the body is a notice.
     StyledRect {
         Layout.fillWidth: true

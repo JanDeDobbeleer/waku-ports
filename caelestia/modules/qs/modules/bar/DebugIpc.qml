@@ -2,8 +2,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
-import wabar as W
-import wabar.services as S
+import waku as W
+import waku.services as S
 import qs.services
 import qs.utils
 import Caelestia.Services
@@ -11,7 +11,7 @@ import Caelestia.Config
 import qs.modules.launcher.services
 
 // TEST ONLY. Opens and closes the bar flyouts without a cursor, so a capture run (no input allowed)
-// can check them: `wabarc --config-home <home> call bar popout network`. It sets the same state the
+// can check them: `wakuc --config-home <home> call bar popout network`. It sets the same state the
 // hover handler sets (Wrapper.currentName, hasCurrent, currentCenter). Remove once a person has
 // checked the hover path on a real desktop.
 Scope {
@@ -83,7 +83,7 @@ Scope {
             return `${p.currentName} ${p.hasCurrent} ${f(pt.x)} ${f(pt.y)} ${f(p.width)} ${f(p.height)}`;
         }
 
-        // One line per known device: connected, wabar type, resolved Material icon. No names.
+        // One line per known device: connected, waku type, resolved Material icon. No names.
         function btDevices(): string {
             return Bluetooth.devices.values.map(d => `${d.connected} ${d.row?.type} ${Icons.getBluetoothIcon(d.icon)}`).join("; ");
         }
@@ -319,7 +319,7 @@ Scope {
                 ["200", r("Cloaked on workspace III", "Code", false), "not minimized"],
                 ["300", r("Minimized but listed", "Code", true), "komorebi lists it"],
                 ["400", r("   ", "notepad", true), "empty title"],
-                ["500", r("bar", "wabar", true), "the bar"],
+                ["500", r("bar", "waku", true), "the bar"],
                 ["600", r("Vault", "1Password", true), "komorebi ignores it"],
                 ["650", r("Picture-in-Picture", "firefox", true), "komorebi ignores it"],
                 ["700", r("Spotify Premium", "Spotify", true), ""],
@@ -446,7 +446,7 @@ Scope {
         target: "bar"
     }
 
-    // TEST ONLY. `wabarc --config-home <home> call launcher action <name>` runs the handler of the
+    // TEST ONLY. `wakuc --config-home <home> call launcher action <name>` runs the handler of the
     // launcher row with that name (Light, Dark, Random, Lock, Sleep, Shutdown, ...), the same code a
     // click runs. Run it with CAELESTIA_DRYRUN=1: the actions then only log.
     IpcHandler {
@@ -570,7 +570,7 @@ Scope {
 
     // TEST ONLY. Times the pictures of the wallpaper picker without the launcher: loads the first
     // `count` wallpapers into plain Images set up like the picker's (`full`: the file at the item's
-    // size; `thumb`: image://thumb) and reports when each became ready. `wabarc call thumbprobe
+    // size; `thumb`: image://thumb) and reports when each became ready. `wakuc call thumbprobe
     // start thumb 7`, then `result` until all are ready.
     property var probes: []
 
@@ -617,7 +617,7 @@ Scope {
 
         target: "thumbprobe"
     }
-    // TEST ONLY. The colour state, for a capture run without input: `wabarc --config-home <home>
+    // TEST ONLY. The colour state, for a capture run without input: `wakuc --config-home <home>
     // call colours dump` prints the mode, whether the preview palette is shown and a few roles;
     // `mode light` switches the palette only (never the Windows theme); `step <i>` moves the open
     // launcher list to row i as the arrow keys do, without accepting it.

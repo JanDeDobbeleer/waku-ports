@@ -13,7 +13,7 @@ Item {
 
     required property color colour
 
-    // Port: the wabar shim reports every device as plain "bluetooth", so the icon name comes from the
+    // Port: the waku shim reports every device as plain "bluetooth", so the icon name comes from the
     // service's device type (row.type) and, for "Generic", from the device name. The result is a
     // freedesktop-style name that Icons.getBluetoothIcon understands.
     function iconNameFor(device: var): string {

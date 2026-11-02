@@ -3,7 +3,7 @@ import QtQuick.Effects
 
 // Stand-in for caelestia's C++ RoundedMask (a custom scene graph node): draws `source` clipped to
 // a rectangle with per-corner radii, through MultiEffect's mask.
-// wabar gap: `color` (the fill for the area cut off by the corners) is not drawn.
+// waku gap: `color` (the fill for the area cut off by the corners) is not drawn.
 Item {
     id: root
 

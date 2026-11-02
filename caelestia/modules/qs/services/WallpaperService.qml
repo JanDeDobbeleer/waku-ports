@@ -6,17 +6,17 @@ import Quickshell.Io
 import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
-import wabar as W
-import wabar.services as S
+import waku as W
+import waku.services as S
 import qs.services
 import qs.utils
 
 // The wallpaper list and the current wallpaper. Upstream calls this singleton `Wallpapers`; that
-// name is taken by wabar.services.Wallpapers, which `import Quickshell` re-exports and which
+// name is taken by waku.services.Wallpapers, which `import Quickshell` re-exports and which
 // shadows any user type of that name, so modules that port `Wallpapers.x` use `WallpaperService.x`.
 // The list comes from a read only directory listing of the wallpaper folder
-// (GlobalConfig.paths.wallpaperDir), the current wallpaper from wabar's Wallpapers service. That
-// service is pointed at the same folder (so `wabarc wallpaper next` and the port agree) and
+// (GlobalConfig.paths.wallpaperDir), the current wallpaper from waku's Wallpapers service. That
+// service is pointed at the same folder (so `wakuc wallpaper next` and the port agree) and
 // applies a choice to Windows, with the animation named by GlobalConfig.services.wallpaperAnimation.
 // GlobalConfig.services.wallpaperLockScreen (default true) makes the service also set the Windows
 // lock screen picture after each change.
@@ -29,7 +29,7 @@ Searcher {
     property bool showPreview: false
     readonly property string current: showPreview ? previewPath : actualCurrent
     property string previewPath
-    property string actualCurrent: fromWabar(S.Wallpapers.current)
+    property string actualCurrent: fromWaku(S.Wallpapers.current)
     property bool previewColourLock
     property bool pendingPreviewClear
 
@@ -38,7 +38,7 @@ Searcher {
     // The width of the picker's thumbnails; Visual's `thumbnailWidth` default must match.
     readonly property int thumbnailWidth: 640
 
-    function fromWabar(path: string): string {
+    function fromWaku(path: string): string {
         return Paths.slash(path) || fallback;
     }
 
@@ -55,7 +55,7 @@ Searcher {
         S.Wallpapers.configureEngine(name !== "none", name === "none" ? "" : name);
     }
 
-    // Fills wabar's thumbnail cache in the background, current wallpaper first, then its neighbours
+    // Fills waku's thumbnail cache in the background, current wallpaper first, then its neighbours
     // outward (the picker opens on the current one), so the first open shows images at once.
     function prewarmThumbnails(): void {
         const all = entries;
@@ -192,7 +192,7 @@ Searcher {
         target: Paths
     }
 
-    // Both the shell and the engine (wabarc wallpaper next/random, the gallery) use one folder.
+    // Both the shell and the engine (wakuc wallpaper next/random, the gallery) use one folder.
     Binding {
         target: S.Wallpapers
         property: "imagePath"
@@ -259,14 +259,14 @@ Searcher {
 
     Connections {
         function onCurrentChanged(): void {
-            root.actualCurrent = root.fromWabar(S.Wallpapers.current);
+            root.actualCurrent = root.fromWaku(S.Wallpapers.current);
             root.previewColourLock = false;
         }
 
         target: S.Wallpapers
     }
 
-    // wabar gap: no recursive folder model; a directory listing stands in for FileSystemModel.
+    // waku gap: no recursive folder model; a directory listing stands in for FileSystemModel.
     Process {
         id: lister
 

@@ -80,7 +80,7 @@ StyledRect {
                     roleValue: "wifi"
                     delegate: Toggle {
                         icon: "wifi"
-                        // wabar gap: Nmcli.enableWifi is a no-op (no radio switch), so show the state only.
+                        // waku gap: Nmcli.enableWifi is a no-op (no radio switch), so show the state only.
                         enabled: false
                         checked: Nmcli.wifiEnabled
                         onClicked: Nmcli.toggleWifi()
@@ -116,7 +116,7 @@ StyledRect {
                         icon: "settings"
                         inactiveOnColour: Colours.palette.m3onSurfaceVariant
                         isToggle: false
-                        // wabar gap: no settings window (qs.modules.nexus is not ported yet).
+                        // waku gap: no settings window (qs.modules.nexus is not ported yet).
                         enabled: false
                         onClicked: root.screenState.utilities = false
                     }
@@ -150,7 +150,7 @@ StyledRect {
                     delegate: Toggle {
                         icon: "vpn_key"
                         checked: VPN.connected && VPN.status.state !== "needs-auth" && VPN.status.state !== "error"
-                        // wabar gap: VPN is read only (VPN.toggle is a no-op), so show the state only.
+                        // waku gap: VPN is read only (VPN.toggle is a no-op), so show the state only.
                         enabled: false
                         isToggle: VPN.status.state !== "needs-auth" && VPN.status.state !== "error"
                         inactiveOnColour: Colours.palette.m3onSurfaceVariant

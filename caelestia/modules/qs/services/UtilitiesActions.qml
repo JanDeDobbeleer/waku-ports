@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
 import Caelestia.I18n
-import wabar.services as S
+import waku.services as S
 import qs.compat
 import qs.utils
 

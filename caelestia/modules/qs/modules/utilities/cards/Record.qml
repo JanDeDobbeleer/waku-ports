@@ -81,7 +81,7 @@ StyledRect {
             }
 
             SplitButton {
-                // wabar gap: no screen recorder on Windows yet (Recorder is a stub).
+                // waku gap: no screen recorder on Windows yet (Recorder is a stub).
                 disabled: true
 
                 active: menuItems.find(m => root.props.recordingMode === m.icon + m.text) ?? menuItems[0]

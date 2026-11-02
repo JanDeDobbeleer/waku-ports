@@ -5,15 +5,15 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 
-// Port of caelestia's Storage over wabar's Disks source. disks is a list of plain objects with
+// Port of caelestia's Storage over waku's Disks source. disks is a list of plain objects with
 // mount, used, total, free (KiB), perc (0..1) and hasRoot. manualPrimaryDisk takes one of them;
 // it is kept by mount so a refresh does not drop the choice.
 QtObject {
     id: root
 
-    // Reference count driven by ServiceRef. The wabar source polls only while something holds a ref.
+    // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
     property int refs: 0
     function ref(): void {
         refs++;

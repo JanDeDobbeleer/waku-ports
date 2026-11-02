@@ -37,7 +37,7 @@ ShellRoot {
                 Text {
                     color: "white"
                     font: Tokens.font.headline.small
-                    text: Tr.tr("hello %1").arg("wabar")
+                    text: Tr.tr("hello %1").arg("waku")
                 }
                 Text {
                     color: "#cdd6f4"

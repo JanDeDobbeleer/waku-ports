@@ -42,7 +42,7 @@ Searcher {
 
         model: {
             const enableDangerous = GlobalConfig.launcher.enableDangerousActions;
-            // wabar gap: the nexus settings window is not ported; its action is hidden.
+            // waku gap: the nexus settings window is not ported; its action is hidden.
             return GlobalConfig.launcher.actions.values.filter(a => a.enabled && (enableDangerous || !a.dangerous) && !(a.command ?? []).includes("nexus"));
         }
 
@@ -85,7 +85,7 @@ Searcher {
             } else if (command[0] === "caelestia" && command[1] === "wallpaper" && command[2] === "-r") {
                 WallpaperService.setRandom();
             } else {
-                // wabar gap: the other commands call Linux tools.
+                // waku gap: the other commands call Linux tools.
                 console.warn("Launcher: no Windows counterpart for", command.join(" "));
             }
         }

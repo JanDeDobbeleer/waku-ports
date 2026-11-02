@@ -28,7 +28,7 @@ Singleton {
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
-    // wabar gap: no audio capture. cava and the beat tracker keep upstream's names and stay silent.
+    // waku gap: no audio capture. cava and the beat tracker keep upstream's names and stay silent.
     readonly property alias cava: cava
     readonly property alias beatTracker: beatTracker
 

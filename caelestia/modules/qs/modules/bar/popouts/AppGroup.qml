@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import wabar
+import waku
 import Caelestia.Config
 import qs.components
 import qs.services

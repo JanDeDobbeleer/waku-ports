@@ -38,7 +38,7 @@ StyledWindow {
 
     // Port: the panels that close when the user presses Escape, clicks outside them, switches to
     // another window, or toggles them again. Upstream gets the click and focus part from
-    // HyprlandFocusGrab; wabar's shim of it ends for good after its first clear (it writes `active`,
+    // HyprlandFocusGrab; waku's shim of it ends for good after its first clear (it writes `active`,
     // which removes this binding), so the window does it itself.
     readonly property bool lightDismissOpen: {
         const s = screenState;
@@ -130,7 +130,7 @@ StyledWindow {
         height: panels.notifications.height
 
         Region {
-            // Port: x reads w_, not width (wabar's Region has one change signal for its geometry).
+            // Port: x reads w_, not width (waku's Region has one change signal for its geometry).
             readonly property real w_: panels.osdWrapper.width * (1 - panels.osd.offsetScale) + root.borderThickness
 
             x: root.width - w_
@@ -436,7 +436,7 @@ StyledWindow {
     component PanelBg: BlobRect {
         required property Item panel
         property real deformAmount: 0.15
-        // Port: edges the panel is flush with. The wabar blob stub does not fuse shapes, so a
+        // Port: edges the panel is flush with. The waku blob stub does not fuse shapes, so a
         // flush edge is square and overlaps the frame instead of leaving a seam and a wedge.
         property bool attachTop: false
         property bool attachRight: false

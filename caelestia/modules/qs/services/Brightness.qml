@@ -5,14 +5,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 import qs.components.misc
 import qs.services
 import qs.compat
 
-// Brightness over wabar's ControlCenter service (DDC/CI and the laptop panel). ControlCenter has
+// Brightness over waku's ControlCenter service (DDC/CI and the laptop panel). ControlCenter has
 // one brightness value for the selected source, so every screen's `Monitor` shows that value.
-// wabar gap: no per-screen brightness.
+// waku gap: no per-screen brightness.
 Singleton {
     id: root
 

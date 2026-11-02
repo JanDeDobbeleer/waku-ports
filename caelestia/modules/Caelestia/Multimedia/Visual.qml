@@ -1,14 +1,14 @@
 import QtQuick
 import Caelestia.Config
-import wabar as W
+import waku as W
 
 // Shows an image, an animated image or (not yet) a video, picked by file suffix. Same properties
 // as caelestia's Visual. The numeric values of VisualSource.FillMode equal Image.FillMode.
-// `thumbnail: true` shows a still image through wabar's `image://thumb` provider: a downscaled copy
+// `thumbnail: true` shows a still image through waku's `image://thumb` provider: a downscaled copy
 // (`thumbnailWidth` pixels wide) from a memory and disk cache, decoded off the GUI thread, instead of
 // decoding the full file on every load. Use it for lists of large images (the wallpaper picker); only
 // local still images are affected.
-// wabar gap: video files (mp4, webm, mkv...) are not decoded; they show nothing and `type` is Live.
+// waku gap: video files (mp4, webm, mkv...) are not decoded; they show nothing and `type` is Live.
 Item {
     id: root
 

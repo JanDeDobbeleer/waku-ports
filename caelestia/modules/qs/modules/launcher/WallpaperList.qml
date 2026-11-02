@@ -49,7 +49,7 @@ PathView {
 
         readonly property string search: root.search.text.split(" ").slice(1).join(" ")
 
-        // wabar: entries of an earlier directory scan are destroyed, so drop the nulls.
+        // waku: entries of an earlier directory scan are destroyed, so drop the nulls.
         values: WallpaperService.query(search).filter(w => w)
         onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === WallpaperService.actualCurrent)
     }

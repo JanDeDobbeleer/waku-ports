@@ -6,12 +6,12 @@ itself in this pass: where a setting is a toggle, the button opens the Windows U
 
 Code: `modules/qs/services/UtilitiesActions.qml` (the list and the launch),
 `modules/qs/modules/dashboard/UtilitiesTab.qml` (the grid), config flag `dashboard.showUtilities`
-(default `true`). Test IPC: `wabarc call bar utilitiesTab`, `wabarc call bar utilitiesAction <id>`
-(refused unless `CAELESTIA_DRYRUN=1`), `wabarc call bar dashTab <n>`, `wabarc call bar dashRect`.
+(default `true`). Test IPC: `wakuc call bar utilitiesTab`, `wakuc call bar utilitiesAction <id>`
+(refused unless `CAELESTIA_DRYRUN=1`), `wakuc call bar dashTab <n>`, `wakuc call bar dashRect`.
 
 ## Sources
 
-- **YASB (retired Qt Widgets build, tag `yasb-native-final` in `D:\wabar`).** The control center
+- **YASB (retired Qt Widgets build, tag `yasb-native-final` in `D:\waku`).** The control center
   had quick-action tiles: Do Not Disturb, Mute, Mic Mute, Screenshot (`ms-screenclip:` through
   ShellExecute, `widgets/control_center/control_center_system.cpp`), touch keyboard (TabTip COM),
   Dark Mode; a settings menu of `ms-settings:` links (Windows Update, Network, Bluetooth, Sound,
@@ -28,7 +28,7 @@ Code: `modules/qs/services/UtilitiesActions.qml` (the list and the launch),
   Win+. (emoji), Win+Ctrl+O (on-screen keyboard), and the `ms-settings:` deep links.
 - **Snipping Tool protocol** ([Launch Snipping Tool](https://learn.microsoft.com/en-us/windows/apps/develop/launch/launch-snipping-tool)).
   The new `ms-screenclip://capture/image|video` protocol requires a `redirect-uri` and a
-  packaged caller; an unpackaged caller gets no UI. wabar is unpackaged, so the tab uses the
+  packaged caller; an unpackaged caller gets no UI. waku is unpackaged, so the tab uses the
   legacy bare `ms-screenclip:` (what YASB used) for the snip overlay, and starts the Snipping Tool
   app for recording.
 
@@ -38,7 +38,7 @@ during the check.
 
 ## How a button launches
 
-Every target goes to `S.Shell.open` (wabar's ShellExecute "open" on a worker thread). ShellExecute
+Every target goes to `S.Shell.open` (waku's ShellExecute "open" on a worker thread). ShellExecute
 resolves URIs, `.cpl` and `.msc` files, `shell:` paths and programs on `PATH` or in App Paths, and
 it handles programs whose manifest asks for elevation (Task Manager), which `CreateProcess` would
 refuse. With `CAELESTIA_DRYRUN=1` a click logs `DRYRUN utilities <id> <target>` instead.
@@ -107,4 +107,4 @@ Real toggles with a documented API, not built in this pass:
 - Battery saver state: `Windows.System.Power.PowerManager.EnergySaverStatus` (read only).
 - Project mode state: `QueryDisplayConfig` topology (read only; `SetDisplayConfig` to switch).
 
-These need engine (C++) services in wabar; the port only consumes them.
+These need engine (C++) services in waku; the port only consumes them.

@@ -5,13 +5,13 @@ import Quickshell
 import Quickshell.Io
 import Caelestia
 import Caelestia.Config
-import wabar.services as S
+import waku.services as S
 
-// Port of caelestia's Memory over wabar's Memory source. Sizes are KiB, percentage is 0..1.
+// Port of caelestia's Memory over waku's Memory source. Sizes are KiB, percentage is 0..1.
 QtObject {
     id: root
 
-    // Reference count driven by ServiceRef. The wabar source polls only while something holds a ref.
+    // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
     property int refs: 0
     function ref(): void {
         refs++;

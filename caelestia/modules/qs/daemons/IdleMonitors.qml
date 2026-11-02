@@ -5,7 +5,7 @@ import Quickshell
 import Caelestia.Config
 import Caelestia.State
 import Quickshell.Services.UPower
-import wabar.services as S
+import waku.services as S
 import qs.services
 import qs.utils
 

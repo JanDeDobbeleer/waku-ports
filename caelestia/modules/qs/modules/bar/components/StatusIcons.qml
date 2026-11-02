@@ -125,7 +125,7 @@ StyledRect {
                             text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
                             color: root.colour
 
-                            // wabar gap: upstream has no VPN badge; a small key marks an active tunnel.
+                            // waku gap: upstream has no VPN badge; a small key marks an active tunnel.
                             MaterialIcon {
                                 visible: Nmcli.vpnActive
                                 anchors.right: parent.right

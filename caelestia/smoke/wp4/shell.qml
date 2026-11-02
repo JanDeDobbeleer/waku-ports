@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
-import wabar.services as S
+import waku.services as S
 import Caelestia.Config
 import qs.services
 import qs.utils

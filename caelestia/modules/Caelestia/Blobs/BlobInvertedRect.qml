@@ -3,7 +3,7 @@ import QtQuick.Shapes
 
 // Stub for caelestia's C++ BlobInvertedRect (a frame: the group colour everywhere except a
 // rounded hole inset by the four border widths). Drawn as an odd-even filled Shape.
-// wabar gap: no blending with other blobs, no deformation.
+// waku gap: no blending with other blobs, no deformation.
 Item {
     id: root
 

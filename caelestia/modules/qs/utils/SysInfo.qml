@@ -24,8 +24,8 @@ Singleton {
     // Uptime trimmed to its two largest components
     property string uptimeShort
     readonly property string user: Quickshell.env("USERNAME")
-    readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || "Explorer" // wabar gap: no compositor name on Windows
-    readonly property string shell: "wabar"
+    readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || "Explorer" // waku gap: no compositor name on Windows
+    readonly property string shell: "waku"
 
     property string kernel
     property string hostname: Quickshell.env("COMPUTERNAME")
@@ -107,7 +107,7 @@ Singleton {
         }
     }
 
-    // Read only: the boot time from CIM, once. wabar has no uptime service.
+    // Read only: the boot time from CIM, once. waku has no uptime service.
     Process {
         running: true
         command: ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "[DateTimeOffset]::new((Get-CimInstance Win32_OperatingSystem).LastBootUpTime).ToUnixTimeMilliseconds()"]
