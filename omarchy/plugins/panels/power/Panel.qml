@@ -465,11 +465,14 @@ Panel {
         }
 
         // ---------- Power profile picker ----------
+        // Windows port: no profiles to list, so no header and no separator either.
         PanelSeparator {
+          visible: root.profiles.length > 0
           foreground: root.bar.foreground
         }
 
         Column {
+          visible: root.profiles.length > 0
           width: parent.width
           spacing: Style.space(10)
 

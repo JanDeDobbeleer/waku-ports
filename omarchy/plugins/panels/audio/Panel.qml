@@ -207,7 +207,8 @@ Panel {
   readonly property real inputVolume: inputViaWpctl ? UntypedInput.volume : (source && source.audio ? source.audio.volume : 0)
   readonly property bool inputMuted: inputViaWpctl ? UntypedInput.muted : (source && source.audio ? source.audio.muted : false)
   readonly property var inputPeakNode: inputViaWpctl ? null : source
-  readonly property bool inputLevelShown: !!inputPeakNode
+  // Windows port: PwNodePeakMonitor is a stub, so the meter would only be an empty bar.
+  readonly property bool inputLevelShown: false
 
   onRawAudioSinksChanged: if (rawAudioSinks.length > 0) cachedAudioSinks = rawAudioSinks
   onRawAudioSourcesChanged: if (rawAudioSources.length > 0) cachedAudioSources = rawAudioSources
