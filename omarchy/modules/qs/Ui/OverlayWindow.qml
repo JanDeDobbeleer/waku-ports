@@ -33,6 +33,21 @@ PanelWindow {
     && !!targetMonitor && Math.round(devicePixelRatio * 120) === Math.round(targetMonitor.scale * 120)
   property bool contentRevealed: false
 
+  // Closing keeps the window mapped for one more frame at opacity 0. A window
+  // hidden while its last frame was still the open overlay keeps that frame, and
+  // the next open presented it (the scrim, the card) for a few frames before the
+  // new content rendered, which showed as a flash of the dimmed desktop on open.
+  // The transparent frame replaces it first.
+  property bool closing: false
+  Timer {
+    id: closeTimer
+    interval: 50
+    onTriggered: {
+      window.closing = false
+      if (!window.shown) window.targetScreen = null
+    }
+  }
+
   onContentReadyChanged: {
     contentRevealed = false
     // Resize and scale notifications arrive while Qt is still updating the
@@ -54,8 +69,17 @@ PanelWindow {
   // Live monitor scaling does not emit a Hyprland monitor event, so its cached
   // scale can lag behind Qt. Refresh on opening and on scale changes while open.
   onShownChanged: {
-    targetScreen = shown ? focusedScreen() : null
-    if (shown && typeof Hyprland.refreshMonitors === "function") Hyprland.refreshMonitors()
+    if (shown) {
+      closeTimer.stop()
+      closing = false
+      targetScreen = focusedScreen()
+      if (typeof Hyprland.refreshMonitors === "function") Hyprland.refreshMonitors()
+    } else if (targetScreen && backingWindowVisible) {
+      closing = true
+      closeTimer.restart()
+    } else {
+      targetScreen = null
+    }
   }
   onDevicePixelRatioChanged: if (shown && typeof Hyprland.refreshMonitors === "function") Hyprland.refreshMonitors()
 
@@ -73,7 +97,7 @@ PanelWindow {
     }
   }
 
-  visible: shown && !!targetScreen && !!targetMonitor
+  visible: (shown || closing) && !!targetScreen && !!targetMonitor
   screen: targetScreen
   anchors { top: true; left: true; bottom: true; right: true }
   color: "transparent"
