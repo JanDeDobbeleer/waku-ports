@@ -270,7 +270,15 @@ Singleton {
         unsupported(callback);
     }
 
+    // refresh() emits networksChanged when a scan starts, with the same list. Rebuilding then would
+    // destroy every row the UI shows, so only a changed list rebuilds.
+    property string networksSignature: ""
+
     function rebuild(): void {
+        const signature = JSON.stringify(S.Network.networks || []);
+        if (signature === networksSignature)
+            return;
+        networksSignature = signature;
         const old = [...networks];
         const next = [];
         const known = [];
