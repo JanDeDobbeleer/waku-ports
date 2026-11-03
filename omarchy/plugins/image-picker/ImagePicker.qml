@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
+import waku as W
 import waku.services as S
 import qs.Commons
 import qs.Commons as Commons
@@ -408,21 +409,65 @@ Item {
     S.Wallpapers.setWallpaper(file)
   }
 
+  // Wallpapers are 4K files: decoding one per card is what made the picker slow. The engine's
+  // image://thumb provider returns a downscaled copy from a memory and disk cache, decoded off the
+  // GUI thread (the same provider the Caelestia port uses). The width fits the expanded card at
+  // 2x; theme previews are small already and load as files.
+  readonly property int thumbnailWidth: 1280
+
+  function cardSource(path) {
+    if (!path) return ""
+    if (!wallpaperMode) return Util.fileUrl(path)
+    return W.Thumbnails.url(String(path).replace(/\\/g, "/"), thumbnailWidth)
+  }
+
+  // Fills the thumbnail cache in the background, the current wallpaper first and then its
+  // neighbours outward, so the picker opens on images that are ready.
+  function prewarmWallpapers(paths, current) {
+    var n = paths.length
+    if (n === 0) return
+    var start = Math.max(0, paths.indexOf(current))
+    var order = [paths[start]]
+    for (var d = 1; order.length < n; d++) {
+      if (order.length < n) order.push(paths[(start + d) % n])
+      if (order.length < n && 2 * d < n) order.push(paths[(start - d + n) % n])
+    }
+    W.Thumbnails.cancelPrewarm()
+    W.Thumbnails.prewarm(order, thumbnailWidth)
+  }
+
   function openWallpapers() {
     wallpaperPending = String(S.Wallpapers.current || "").replace(/\\/g, "/")
+    wallpaperWarmOnly = false
+    scanWallpapers()
+  }
+
+  property bool wallpaperWarmOnly: false
+
+  function scanWallpapers() {
+    if (wallpaperRowsProc.running) return
     wallpaperRowsProc.command = [root.gitFind, root.wallpaperDir(), "-maxdepth", "2", "-type", "f", "(",
       "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", "-o", "-iname", "*.bmp", ")"]
     wallpaperRowsProc.running = true
+  }
+
+  // Warm the cache shortly after start, so even the first open shows images at once.
+  Timer {
+    interval: 6000; running: true; repeat: false
+    onTriggered: { root.wallpaperWarmOnly = true; root.scanWallpapers() }
   }
 
   Process {
     id: wallpaperRowsProc
     stdout: StdioCollector {
       onStreamFinished: {
-        var rows = String(text || "").split("\n").map(function(l) { return l.trim().replace(/\\/g, "/") })
-          .filter(function(l) { return l.length > 0 }).sort().join("\n")
-        if (!rows) return
-        root.openSelector("", rows, root.wallpaperPending, "", "", true, true)
+        var list = String(text || "").split("\n").map(function(l) { return l.trim().replace(/\\/g, "/") })
+          .filter(function(l) { return l.length > 0 }).sort()
+        if (list.length === 0) return
+        var current = root.wallpaperPending || String(S.Wallpapers.current || "").replace(/\\/g, "/")
+        root.prewarmWallpapers(list, current)
+        if (root.wallpaperWarmOnly) return
+        root.openSelector("", list.join("\n"), root.wallpaperPending, "", "", true, true)
         root.wallpaperMode = true
       }
     }
@@ -894,9 +939,10 @@ Item {
                   // every preview visited in a large collection.
                   // Queue the selected preview first; neighbors must not delay
                   // the image the user opened the picker to see.
-                  source: previewHold.held && (item.selected || root.neighborImagesEnabled) && item.thumbnailPath ? Util.fileUrl(item.thumbnailPath) : ""
-                  sourceSize.width: Math.ceil(root.expandedWidth * Screen.devicePixelRatio)
-                  sourceSize.height: Math.ceil(root.expandedHeight * Screen.devicePixelRatio)
+                  source: previewHold.held && (item.selected || root.neighborImagesEnabled) && item.thumbnailPath ? root.cardSource(item.thumbnailPath) : ""
+                  // The thumbnail is already small; theme previews decode at the card's size.
+                  sourceSize.width: root.wallpaperMode ? 0 : Math.ceil(root.expandedWidth * Screen.devicePixelRatio)
+                  sourceSize.height: root.wallpaperMode ? 0 : Math.ceil(root.expandedHeight * Screen.devicePixelRatio)
                   fillMode: Image.PreserveAspectCrop
                   asynchronous: true
                   cache: false
