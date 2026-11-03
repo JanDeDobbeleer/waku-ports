@@ -32,7 +32,7 @@ if (-not $KeepColours) {
 }
 
 New-Item -ItemType Directory -Force -Path $KomorebiHome | Out-Null
-if (Test-Path -LiteralPath $target) {
+if ((Test-Path -LiteralPath $target) -and ([IO.File]::ReadAllText($target) -ne $text)) {   # no backup of an identical file
   $backup = "$target.bak-before-$name-$(Get-Date -Format yyyyMMdd-HHmmss)"
   if ($PSCmdlet.ShouldProcess($target, "back up to $backup")) { Copy-Item -LiteralPath $target -Destination $backup }
 }
