@@ -1,6 +1,13 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/waku-icon-dark.svg">
+    <img src="assets/waku-icon.svg" alt="waku" width="120">
+  </picture>
+</p>
+
 # waku ports
 
-Shells for [waku](D:\waku), the Windows shell engine, ported from Linux Quickshell setups. One folder per port:
+Shells for [waku](https://github.com/JanDeDobbeleer/waku), the Windows shell engine, ported from Linux Quickshell setups. One folder per port:
 
 | Port | Upstream | Notes |
 |---|---|---|
@@ -18,7 +25,7 @@ Each port has its own README, `tools\`, and licence.
     .\stop.ps1
     .\install-startup.ps1 -Port omarchy   # start it at sign-in (writes Startup\waku.lnk, keeps the old one as .bak)
 
-The launcher runs your deployed engine (`D:\waku\dist\waku\waku.exe`) with `--register-app-bar --hide-taskbar`:
+The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with `--register-app-bar --hide-taskbar`:
 the bar reserves its edge of the screen and the Windows taskbar is hidden while it runs. `stop.ps1` asks each
 waku to quit through its own `wakuc`, so the engine puts the taskbar back.
 
@@ -35,7 +42,5 @@ unchanged, ordered by commit date. Commits are conventional (`feat(scope):`, `fi
 
 Not tracked (see `.gitignore`): `regress/` and `wt/` (scratch and engine builds), `*.bundle`, and each port's
 `bin/`, `state/`, `logs/` and `shots/`. A port's `bin/` is a copy of an engine build; copy one in before using
-`-Dev`.
+`-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
 
-The old repos are kept in `D:\waku-ports-backups\` as `<port>.bundle` and `<port>.git`, plus
-`caelestia-pre-linearize.bundle` (Caelestia before its 31 merge commits were removed).
