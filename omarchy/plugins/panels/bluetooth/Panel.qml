@@ -58,8 +58,7 @@ Panel {
   readonly property var discoveredDevices: deviceGroups.discovered || []
 
   readonly property string icon: {
-    if (!adapter) return ""
-    if (!adapter.enabled) return "󰂲"
+    if (!adapter || !adapter.enabled) return "󰂲"
     if (connectedDevices.length > 0) return "󰂱"
     return "󰂯"
   }
@@ -501,7 +500,10 @@ Panel {
     if (selectedIndex < 0) selectedIndex = 0
   }
 
-  visible: adapter !== null
+  // Always shown. The engine reports no default adapter until the radio is probed at start (and
+  // when there is none), and a hidden widget gets no width in the bar. Without an adapter it shows
+  // the "off" icon and the panel says so.
+  visible: true
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
