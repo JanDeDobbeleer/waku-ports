@@ -1,0 +1,33 @@
+name: commits
+
+# Every commit in a pull request needs a conventional subject: type(scope)?: text.
+on:
+  pull_request:
+
+concurrency:
+  group: commits-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  subjects:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check commit subjects
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          . tools/hooks/conventional.sh
+          bad=0
+          while IFS= read -r line; do
+            sha="${line%% *}"; subject="${line#* }"
+            if ! is_conventional "$subject"; then
+              echo "::error::$sha is not a conventional commit: $subject"
+              bad=1
+            fi
+          done < <(git log --no-merges --format='%h %s' "$BASE..$HEAD")
+          exit $bad
