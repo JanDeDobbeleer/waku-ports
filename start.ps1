@@ -30,6 +30,22 @@ if ($DryRun) {
   . $hook
 }
 
+# 2b. the port's komorebi settings: the port's tools\apply-komorebi.ps1 puts its komorebi.json in the
+# komorebi config home ($env:KOMOREBI_CONFIG_HOME, else ~\.config\komorebi), so komorebi follows the
+# shell that is starting instead of whichever port ran last. Not for -Dev, which touches nothing.
+$apply = Join-Path $PortDir 'tools\apply-komorebi.ps1'
+if (-not $Dev -and (Test-Path $apply) -and (Test-Path (Join-Path $PortDir 'komorebi\komorebi.json'))) {
+  $komorebiHome = if ($env:KOMOREBI_CONFIG_HOME) { $env:KOMOREBI_CONFIG_HOME } else { Join-Path $env:USERPROFILE '.config\komorebi' }
+  if ($DryRun) {
+    Write-Host "would apply $Port's komorebi.json to $komorebiHome"
+  } elseif (Get-Command komorebic.exe -ErrorAction SilentlyContinue) {
+    & $apply -KomorebiHome $komorebiHome | Out-Null
+    Write-Host "komorebi: applied $Port's komorebi.json to $komorebiHome"
+  } else {
+    Write-Warning 'komorebic.exe not found; komorebi keeps its current config'
+  }
+}
+
 # 3. the engine and its flags
 if ($Dev) {
   $Waku = Join-Path $PortDir 'bin\waku.exe'

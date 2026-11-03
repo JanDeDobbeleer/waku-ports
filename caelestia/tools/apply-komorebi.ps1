@@ -9,7 +9,7 @@ $name = Split-Path $port -Leaf
 $source = Join-Path $port 'komorebi\komorebi.json'
 $target = Join-Path $KomorebiHome 'komorebi.json'
 New-Item -ItemType Directory -Force -Path $KomorebiHome | Out-Null
-if (Test-Path -LiteralPath $target) {
+if ((Test-Path -LiteralPath $target) -and ((Get-FileHash -LiteralPath $target).Hash -ne (Get-FileHash -LiteralPath $source).Hash)) {   # no backup of an identical file
   $backup = "$target.bak-before-$name-$(Get-Date -Format yyyyMMdd-HHmmss)"
   if ($PSCmdlet.ShouldProcess($target, "back up to $backup")) { Copy-Item -LiteralPath $target -Destination $backup }
 }
