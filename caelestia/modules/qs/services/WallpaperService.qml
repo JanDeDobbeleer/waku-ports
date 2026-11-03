@@ -24,7 +24,8 @@ import qs.utils
 Searcher {
     id: root
 
-    readonly property string fallback: Paths.slash(Quickshell.shellPath("assets/wallpaper.webp"))
+    // No bundled picture: when waku reports no current wallpaper, nothing is shown.
+    readonly property string fallback: ""
 
     property bool showPreview: false
     readonly property string current: showPreview ? previewPath : actualCurrent
