@@ -436,10 +436,31 @@ Item {
     W.Thumbnails.prewarm(order, thumbnailWidth)
   }
 
+  // The scan takes a moment. Until its result arrives the picker may still show the theme layout
+  // (the background hotkey pressed while the theme switcher is open), so the old cards go at once,
+  // and a list from an earlier scan of the same folder opens without waiting.
+  property var wallpaperCache: []
+  property string wallpaperCacheDir: ""
+
   function openWallpapers() {
     wallpaperPending = String(S.Wallpapers.current || "").replace(/\\/g, "/")
-    wallpaperWarmOnly = false
+    if (opened && !wallpaperMode) {
+      imageArray = []
+      selectedIndex = 0
+      themeMode = false
+    }
+    if (wallpaperCache.length > 0 && wallpaperCacheDir === root.wallpaperDir()) {
+      openWallpaperList(wallpaperCache)
+      wallpaperWarmOnly = true // the rescan only refreshes the cache
+    } else {
+      wallpaperWarmOnly = false
+    }
     scanWallpapers()
+  }
+
+  function openWallpaperList(list) {
+    root.openSelector("", list.join("\n"), root.wallpaperPending, "", "", true, true)
+    root.wallpaperMode = true
   }
 
   property bool wallpaperWarmOnly: false
@@ -465,10 +486,11 @@ Item {
           .filter(function(l) { return l.length > 0 }).sort()
         if (list.length === 0) return
         var current = root.wallpaperPending || String(S.Wallpapers.current || "").replace(/\\/g, "/")
+        root.wallpaperCache = list
+        root.wallpaperCacheDir = root.wallpaperDir()
         root.prewarmWallpapers(list, current)
         if (root.wallpaperWarmOnly) return
-        root.openSelector("", list.join("\n"), root.wallpaperPending, "", "", true, true)
-        root.wallpaperMode = true
+        root.openWallpaperList(list)
       }
     }
   }
