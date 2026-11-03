@@ -1,5 +1,5 @@
 # Starts waku on a config home and prints the CPU seconds it used over a 5 s window after a warm-up.
-param([Parameter(Mandatory)][string]$ConfigHome, [int]$Warmup = 8, [string]$Bin = 'D:\waku\build\arm64-debug')
+param([Parameter(Mandatory)][string]$ConfigHome, [int]$Warmup = 8, [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }))
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $l = @('--config-home', $ConfigHome, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))

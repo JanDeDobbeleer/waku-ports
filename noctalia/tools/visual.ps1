@@ -1,7 +1,7 @@
 # Starts Noctalia on its own config home, lists IPC targets, opens panels through `wakuc call`
 # and takes a screenshot of each. Shots hold the full desktop (private): keep them in shots\.
 param(
-  [string]$Bin = 'D:\wabar-compat\build\arm64-release',
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }),
   [string]$Steps = 'launcher toggle', # ';'-separated "target function [args]"; closed again with the same call
   [int]$Boot = 12
 )

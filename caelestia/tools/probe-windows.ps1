@@ -4,7 +4,7 @@
 param(
   [string]$Home_ = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string]$Tag = 'before',
-  [string]$Bin = 'D:\waku\build\arm64-debug',
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }),
   [int]$SettleSeconds = 25
 )
 $ErrorActionPreference = 'Stop'

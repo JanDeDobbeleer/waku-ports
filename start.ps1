@@ -10,7 +10,7 @@
 # pre-start step, and may set $PortFlags (extra waku arguments). It can read $Dev and $PortDir.
 param(
   [Parameter(Mandatory)][ValidateSet('caelestia', 'noctalia', 'omarchy')][string]$Port,
-  [string]$Waku = 'D:\waku\dist\waku\waku.exe',
+  [string]$Waku,   # default: $env:WAKU_EXE, else waku.exe on PATH
   [switch]$Dev,
   [switch]$DryRun
 )
@@ -35,9 +35,10 @@ if ($Dev) {
   $Waku = Join-Path $PortDir 'bin\waku.exe'
   $flags = @('--config-home', $PortDir, '--no-tray', '--font-engine=directwrite') + $PortFlags
 } else {
+  if (-not $Waku) { $Waku = if ($env:WAKU_EXE) { $env:WAKU_EXE } else { (Get-Command waku.exe -ErrorAction SilentlyContinue).Source } }
   $flags = @('--config-home', $PortDir, '--font-engine=directwrite', '--register-app-bar', '--hide-taskbar') + $PortFlags
 }
-if (-not (Test-Path $Waku)) { throw "engine not found: $Waku" }
+if (-not $Waku -or -not (Test-Path $Waku)) { throw "engine not found: $Waku (set WAKU_EXE, pass -Waku, or put waku.exe on PATH)" }
 if ($DryRun) {
   Write-Host "would start: `"$Waku`" $($flags -join ' ')"
   return

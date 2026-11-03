@@ -1,7 +1,7 @@
 # Noctalia port: spike report
 
 Date: 2026-11-01. Upstream: noctalia-dev/noctalia-shell, branch `legacy-v4` (MIT, QML only).
-Engine: bundle copied to `bin\` (see `bin\ENGINE.txt`, waku `9a1ae9e`). Nothing in `D:\waku` was
+Engine: bundle copied to `bin\` (see `bin\ENGINE.txt`, waku `9a1ae9e`). Nothing in the waku repo was
 changed. All work is QML, shims and scripts inside this folder.
 
 ## Result
@@ -76,7 +76,7 @@ Ordered by how many files each blocked.
 
 ## Update: engine gaps closed (2026-11-01)
 
-Engine branch `feat/quickshell-compat` in `D:\wabar-compat` (a git worktree of waku, two commits on
+Engine branch `feat/quickshell-compat` in a local git worktree of waku (two commits on
 top of `9a1ae9e`): `8f68488` and `85f7ac5`. Not merged into `main`.
 
 | Gap | Now |

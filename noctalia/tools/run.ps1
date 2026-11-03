@@ -6,7 +6,7 @@ param(
   [string[]]$Shortcut, # one or more, fired in order, 2 s apart
   [string]$Shot,
   [int]$Toast = 0, # raise this many test toasts (tools	oast.ps1) before the shortcut and shot
-  [string]$Bin = 'D:\wabar-ports\noctalia\bin'
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
 )
 $ErrorActionPreference = 'Stop'
 $env:PATH += ';C:\Program Files\komorebi\bin'
