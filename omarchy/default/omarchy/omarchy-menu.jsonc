@@ -3,7 +3,7 @@
   // omarchy-menu.upstream.jsonc. Add your own rows in ~/.config/omarchy/extensions/omarchy-menu.jsonc.
 
   // Root Menu
-  "apps": {"icon": "󰀻", "label": "Apps", "aliases": ["app", "applications"], "provider": "apps", "action": "omarchy-shell omarchy.dock apps"},
+  "apps": {"icon": "󰀻", "label": "Apps", "aliases": ["app", "applications"], "provider": "apps"},
   "appearance": {"icon": "󰏘", "label": "Style", "aliases": ["style"]},
   "appearance.theme": {"icon": "󰸌", "label": "Theme", "aliases": ["theme", "themes"], "action": "omarchy-shell shell summon omarchy.image-picker '{\"source\":\"themes\"}'"},
   "appearance.background": {"icon": "", "label": "Background", "aliases": ["background", "wallpaper"], "action": "omarchy-shell shell summon omarchy.image-picker '{\"source\":\"wallpapers\"}'"},

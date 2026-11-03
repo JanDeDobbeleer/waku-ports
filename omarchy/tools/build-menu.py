@@ -69,6 +69,9 @@ for key, label, glyph, action, extra in ENTRIES:
     up = upstream.get(key, {})
     if key == "apps":
         entry = dict(up)
+        # Upstream's action opens the dock's app grid, which this port does not have. Without an
+        # action the row is a submenu: Enter lists the apps from the app library.
+        entry.pop("action", None)
     else:
         entry = {"icon": up.get("icon") or glyph or "", "label": label}
         entry.update(extra)
