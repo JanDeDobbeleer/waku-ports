@@ -14,7 +14,6 @@ QtObject {
 
     // S.Network.networks stays empty until the first refresh(), so ask once at start and again when
     // the radio first shows up (the service reports no Wi-Fi for its first second).
-    Component.onCompleted: Qt.callLater(function() { S.Network.refresh() })
     property Connections radioWatch: Connections {
         target: S.Network
         function onWifiAvailableChanged() { if (S.Network.wifiAvailable) S.Network.refresh() }
@@ -24,8 +23,28 @@ QtObject {
     readonly property var networks: ({ values: device.items })
 
     // Rebuilt from the engine's list; each record is {ssid, signal 0..100, secured, connected, known}.
+    // refresh() emits networksChanged when a scan starts, with the same list; feeding that to the
+    // Instantiator would rebuild every row. The model only changes when the list does.
+    property var scanned: []
+    property string scannedSignature: ""
+    function syncScanned() {
+        var list = S.Network.networks || []
+        var signature = JSON.stringify(list)
+        if (signature === scannedSignature) return
+        scannedSignature = signature
+        scanned = list
+    }
+    Component.onCompleted: {
+        Qt.callLater(function() { S.Network.refresh() })
+        syncScanned()
+    }
+    property Connections listWatch: Connections {
+        target: S.Network
+        function onNetworksChanged() { device.syncScanned() }
+    }
+
     property Instantiator builder: Instantiator {
-        model: S.Network.networks || []
+        model: device.scanned
         delegate: WifiNetworkItem {
             required property var modelData
             name: String(modelData.ssid || "")
