@@ -1,0 +1,17 @@
+#!/bin/sh
+# commit-msg: enforce conventional commit subjects.
+# Enable with: git config core.hooksPath tools/hooks
+
+msg_file="$1"
+subject=$(grep -v '^#' "$msg_file" | tr -d '\r' | sed -n '/[^[:space:]]/{p;q;}')
+
+. "$(dirname "$0")/conventional.sh"
+if is_conventional "$subject"; then
+  exit 0
+fi
+
+echo "commit-msg: subject is not a conventional commit:" >&2
+echo "  $subject" >&2
+echo "expected: type(scope)?: subject, e.g. 'fix(omarchy): keep the menu open'" >&2
+echo "types: $CONVENTIONAL_TYPES" >&2
+exit 1

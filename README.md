@@ -40,6 +40,19 @@ One straight line: no merge commits, fast-forward only. The three ports were sep
 (138 commits) was moved in under `caelestia/`, `noctalia/` and `omarchy/` with authors, dates and messages
 unchanged, ordered by commit date. Commits are conventional (`feat(scope):`, `fix:`, `docs:`).
 
+## Commits
+
+Commits are conventional: `type(scope): subject`, lower case, imperative, no trailing period. Types are
+`feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `build`, `ci`, `chore`, `style` and `revert`. The scope is
+free text, usually a port (`omarchy`) or an area. There are no releases or tags here. Enable the check once per
+clone:
+
+```powershell
+git config core.hooksPath tools/hooks
+```
+
+A pull request check (`.github/workflows/commits.yml`) applies the same rule to every commit in the PR.
+
 Not tracked (see `.gitignore`): `regress/` and `wt/` (scratch and engine builds), `*.bundle`, and each port's
 `bin/`, `state/`, `logs/` and `shots/`. A port's `bin/` is a copy of an engine build; copy one in before using
 `-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
