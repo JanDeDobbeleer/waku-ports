@@ -1,5 +1,5 @@
 # Makes Windows start a port at sign-in: writes waku.lnk in the Startup folder that runs
-# D:\waku-ports\start.ps1 -Port <port>. An existing waku.lnk or wabar.lnk is moved to a .bak file first.
+# start.ps1 -Port <port>. An existing waku.lnk or wabar.lnk is moved to a .bak file first.
 #   .\install-startup.ps1 -Port omarchy
 #   .\install-startup.ps1 -Port omarchy -WhatIf     show what it would do
 [CmdletBinding(SupportsShouldProcess)]

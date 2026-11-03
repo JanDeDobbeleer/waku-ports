@@ -4,7 +4,7 @@
 # Nothing changes on the machine. A second run (-Restore) shows the saved colour choice.
 param(
   [switch]$Restore,
-  [string]$Bin = 'D:\waku\dist\waku'
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
 )
 $ErrorActionPreference = 'Stop'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path

@@ -1,4 +1,5 @@
-# Starts this port through the shared launcher, D:\waku-ports\start.ps1. Kept so the Startup shortcut that
+# Starts this port through the shared launcher, start.ps1 in the repo root. Kept so the Startup shortcut that
 # points here keeps working.
-param([string]$Waku = 'D:\waku\dist\waku\waku.exe', [switch]$Dev, [switch]$DryRun)
-& (Join-Path $PSScriptRoot '..\..\start.ps1') -Port noctalia -Waku $Waku -Dev:$Dev -DryRun:$DryRun
+param([string]$Waku, [switch]$Dev, [switch]$DryRun)
+$extra = @{}; if ($Waku) { $extra.Waku = $Waku }
+& (Join-Path $PSScriptRoot '..\..\start.ps1') -Port noctalia @extra -Dev:$Dev -DryRun:$DryRun

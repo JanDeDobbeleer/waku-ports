@@ -6,7 +6,7 @@ param(
   [int]$Seconds = 10,
   [string]$Shortcut,
   [string]$Shot,
-  [string]$Bin = 'D:\waku\build\arm64-debug'
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
 )
 Add-Type @'
 using System; using System.Text; using System.Collections.Generic; using System.Runtime.InteropServices;

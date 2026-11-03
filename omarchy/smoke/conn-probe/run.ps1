@@ -1,4 +1,4 @@
-param([string]$Waku = 'D:\waku\dist\waku\waku.exe', [int]$Seconds = 30)
+param([string]$Waku = $(if ($env:WAKU_EXE) { $env:WAKU_EXE } else { (Get-Command waku.exe).Source }), [int]$Seconds = 30)
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $home_ = Split-Path -Parent $MyInvocation.MyCommand.Path
 $err = Join-Path $home_ 'probe.err.txt'

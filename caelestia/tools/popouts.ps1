@@ -5,7 +5,7 @@ param(
   [Alias('Home')][string]$ConfigHome = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [string[]]$Names = @('network', 'bluetooth', 'battery', 'audio', 'activewindow'),
   [string]$Out = (Join-Path $PSScriptRoot '..\shots'),
-  [string]$Bin = 'D:\waku\dist\waku'
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
 )
 $ErrorActionPreference = 'Stop'
 $env:QT_FORCE_STDERR_LOGGING = '1'

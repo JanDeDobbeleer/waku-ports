@@ -1,6 +1,6 @@
 # Instantiates every singleton under modules\qs\{services,utils} and every daemon once, then
 # reports load failures. Runs waku on a generated config home (smoke\loadcheck), read only.
-param([int]$Seconds = 10, [string]$Bin = 'D:\waku\build\arm64-debug')
+param([int]$Seconds = 10, [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }))
 $ErrorActionPreference = 'Stop'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $home_ = Join-Path $port 'smoke\loadcheck'

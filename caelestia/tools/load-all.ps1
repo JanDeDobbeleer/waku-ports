@@ -7,11 +7,11 @@
 #
 # One waku process loads the files one after another and logs "LOADALL|BEGIN|file" before each.
 # If waku hangs or exits mid-run, the file named by the last BEGIN is recorded as CRASH and the
-# run restarts with the rest. Needs the merged engine at D:\waku\build\arm64-debug.
+# run restarts with the rest. Needs an engine build: set WAKU_BIN, or copy one to bin\.
 param(
   [string]$Components = (Join-Path $PSScriptRoot '..\modules\qs\components'),
   [string]$Stubs = (Join-Path $PSScriptRoot '..\smoke\wp3\modules'),
-  [string]$Bin = 'D:\waku\build\arm64-debug',
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }),
   [int]$IdleSeconds = 20,
   [int]$MaxSeconds = 180,
   [string[]]$Only

@@ -1,7 +1,7 @@
 # Emergency stop: quits waku, brings the Windows taskbar back, and kills a stuck waku if it did not quit.
-# Run it from any PowerShell: pwsh -NoProfile -File D:\waku-ports\caelestia\tools\panic.ps1
-$home_ = 'D:\waku-ports\caelestia'
-$wakuc = 'D:\waku\dist\waku\wakuc.exe'
+# Run it from any PowerShell: pwsh -NoProfile -File <repo>\caelestia\tools\panic.ps1
+$home_ = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$wakuc = if ($env:WAKU_EXE) { Join-Path (Split-Path $env:WAKU_EXE) 'wakuc.exe' } else { (Get-Command wakuc.exe).Source }
 & $wakuc --config-home $home_ quit 2>&1 | Out-Null
 Start-Sleep -Seconds 4
 $left = Get-Process waku -ErrorAction SilentlyContinue

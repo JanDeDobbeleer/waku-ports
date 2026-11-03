@@ -11,7 +11,7 @@ Code: `modules/qs/services/UtilitiesActions.qml` (the list and the launch),
 
 ## Sources
 
-- **YASB (retired Qt Widgets build, tag `yasb-native-final` in `D:\waku`).** The control center
+- **YASB (retired Qt Widgets build, tag `yasb-native-final` in the [waku repo](https://github.com/JanDeDobbeleer/waku)).** The control center
   had quick-action tiles: Do Not Disturb, Mute, Mic Mute, Screenshot (`ms-screenclip:` through
   ShellExecute, `widgets/control_center/control_center_system.cpp`), touch keyboard (TabTip COM),
   Dark Mode; a settings menu of `ms-settings:` links (Windows Update, Network, Bluetooth, Sound,
@@ -33,7 +33,7 @@ Code: `modules/qs/services/UtilitiesActions.qml` (the list and the launch),
   app for recording.
 
 All schemes in the table were checked as registered (`HKCR\<scheme>` exists) and all executables
-as present on the development machine (Windows 11 build 26300, ARM64). No action was launched
+as present on a Windows 11 build 26300 (ARM64) machine. No action was launched
 during the check.
 
 ## How a button launches

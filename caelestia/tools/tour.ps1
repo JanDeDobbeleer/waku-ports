@@ -2,9 +2,10 @@
 # shots\tour\<name>.png and closes the panel again. Full-screen captures hold whatever is behind the
 # transparent shell, so only the crops are kept and the full captures are deleted at once.
 param(
-  [string]$Home_ = 'D:\wabar-ports\caelestia',
-  [string]$Exe = 'D:\waku\build\arm64-debug\waku.exe',
-  [string]$Wakuc = 'D:\waku\build\arm64-debug\wakuc.exe',
+  [string]$Home_ = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' }),
+  [string]$Exe = (Join-Path $Bin 'waku.exe'),
+  [string]$Wakuc = (Join-Path $Bin 'wakuc.exe'),
   [int]$SettleSeconds = 30
 )
 $ErrorActionPreference = 'Stop'
