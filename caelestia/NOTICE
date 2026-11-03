@@ -7,8 +7,8 @@ The port is a derivative work of Caelestia and is licensed under the GPL-3.0 (se
 Nothing from this port, not even a snippet, may be added to the MIT-licensed waku repository.
 waku loads the port at run time as a config home only.
 
-upstream\ holds the unmodified baseline, minus the two large binaries that are identical to the copies in
-assets\ (wallpaper.webp and the Google Sans Flex font file). Everything outside upstream\ is modified or new.
+The unmodified upstream source is not kept here; fetch it from the repository above at the commit above.
+Everything in this directory is modified or new.
 Assets from upstream: google-sans-flex (SIL OFL, see its LICENSE), bongocat.gif, dino.png,
 logo.svg, wallpaper.webp.
 Material Symbols Rounded (assets/fonts/MaterialSymbolsRounded.ttf): Apache-2.0, Google,
