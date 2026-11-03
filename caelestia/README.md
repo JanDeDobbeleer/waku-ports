@@ -4,6 +4,19 @@ A port of [caelestia-dots/shell](https://github.com/caelestia-dots/shell) to wak
 derivative work of the upstream shell (see `LICENSE` and `NOTICE`). Start it with
 `waku.exe --config-home <this folder> --no-tray --font-engine=directwrite`.
 
+## Fonts
+
+Caelestia needs two fonts that Windows does not have: **Material Symbols Rounded** (every icon) and
+**Google Sans Flex** (the text). They are not in this repo. Install them once, for your user only, no
+admin rights needed:
+
+    .\tools\install-fonts.ps1
+
+The script downloads them from upstream (google/material-design-icons and google/fonts) into
+`%LOCALAPPDATA%\Microsoft\Windows\Fonts` and registers them under `HKCU`. Restart waku afterwards.
+Or install the files by hand: right-click each `.ttf` and choose "Install". Without them the icons show as
+empty boxes and the text falls back to a system font.
+
 ## UI scale
 
 Caelestia's design tokens assume a screen of about 1x. On Windows at 150% every logical pixel is 1.5

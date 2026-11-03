@@ -25,16 +25,6 @@ ShellRoot {
             VPN;
     }
 
-    FontLoader {
-        source: Qt.resolvedUrl("assets/google-sans-flex/GoogleSansFlex-VariableFont_GRAD,ROND,opsz,slnt,wdth,wght.ttf")
-    }
-
-    // Upstream expects Material Symbols Rounded to be installed. Windows has none, so the port ships it
-    // (Apache-2.0, google/material-design-icons).
-    FontLoader {
-        source: Qt.resolvedUrl("assets/fonts/MaterialSymbolsRounded.ttf")
-    }
-
     Binding {
         target: ShellState
         property: "shellRoot"

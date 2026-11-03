@@ -32,7 +32,6 @@ ShellRoot {
             root.log("toast0", [Toaster.toasts[0].title, Toaster.toasts[0].icon, Toaster.toasts[0].type, Toaster.toasts[0].timeout, Toaster.toasts[0].closed]);
             Toaster.toasts[0].close();
             root.log("toasts.length after close", Toaster.toasts.length);
-            root.log("font loader", [Tokens.googleSansFlex.status, Tokens.googleSansFlex.name]);
         }
     }
 

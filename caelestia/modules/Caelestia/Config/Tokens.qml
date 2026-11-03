@@ -80,15 +80,4 @@ QtObject {
         readonly property var clock: FB.make(GlobalConfig.appearance.font.clock, 12, Font.Normal, false, {})
         readonly property string workspaces: GlobalConfig.appearance.font.workspaces
     }
-
-    // Google Sans Flex ships in the port's assets/, found relative to this module so that any
-    // config home works. Without the file the family falls back to the system.
-    readonly property FontLoader googleSansFlex: FontLoader {
-        source: Qt.resolvedUrl("../../../assets/google-sans-flex/GoogleSansFlex-VariableFont_GRAD,ROND,opsz,slnt,wdth,wght.ttf")
-    }
-
-    // Material Symbols Rounded (Apache-2.0, google/material-design-icons) for every MaterialIcon.
-    readonly property FontLoader materialSymbols: FontLoader {
-        source: Qt.resolvedUrl("../../../assets/fonts/MaterialSymbolsRounded.ttf")
-    }
 }

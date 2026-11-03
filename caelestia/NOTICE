@@ -9,7 +9,7 @@ waku loads the port at run time as a config home only.
 
 The unmodified upstream source is not kept here; fetch it from the repository above at the commit above.
 Everything in this directory is modified or new.
-Assets from upstream: google-sans-flex (SIL OFL, see its LICENSE), bongocat.gif, dino.png,
-logo.svg.
-Material Symbols Rounded (assets/fonts/MaterialSymbolsRounded.ttf): Apache-2.0, Google,
-https://github.com/google/material-design-icons (variablefont/). Downloaded 2026-10-30.
+Assets from upstream: bongocat.gif, dino.png, logo.svg.
+Fonts are not shipped. tools\install-fonts.ps1 downloads Material Symbols Rounded (Apache-2.0, Google,
+https://github.com/google/material-design-icons) and Google Sans Flex (SIL OFL 1.1, Google,
+https://github.com/google/fonts) from upstream.
