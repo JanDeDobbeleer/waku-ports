@@ -9,6 +9,7 @@ import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
 import qs.compat
+import waku.services as S
 
 Panel {
   id: root
@@ -18,9 +19,9 @@ Panel {
   // permits — needed for the toggleBluetooth method below.
   manageIpc: false
 
-  // Address -> "connecting" | "disconnecting" | "forgetting".
-  // The actual Bluetooth sequencing lives in bin/omarchy-bluetooth-device;
-  // this map only keeps the panel responsive while BlueZ catches up.
+  // Address -> "connecting" | "forgetting". Rows show connecting and
+  // disconnecting from device.state; "connecting" only marks a connect that owes
+  // the audio output switch. Cleared when the engine reports an error.
   property var pendingActions: ({})
 
   readonly property var adapter: Bluetooth.defaultAdapter
@@ -78,6 +79,7 @@ Panel {
   readonly property string heroStatusText: {
     if (!adapter) return Commons.I18n.t("bluetooth.noAdapter")
     if (!adapter.enabled) return Commons.I18n.t("bluetooth.turnedOff")
+    if (S.Bluetooth.error !== "") return S.Bluetooth.error
     return activePhrases[phraseIndex % activePhrases.length]
   }
 
@@ -264,10 +266,6 @@ Panel {
     if (action) pendingTimeout.restart()
   }
 
-  function deviceCommand(action, address) {
-    return ["omarchy-bluetooth-device", action, address]
-  }
-
   function runDeviceAction(device, action, pending) {
     if (!device || !device.address) return
     setPendingAction(device.address, pending)
@@ -279,15 +277,14 @@ Panel {
   function connectDevice(device) {
     if (!device || device.connected) return
     if (device.paired || device.bonded || device.trusted) runDeviceAction(device, "connect", "connecting")
-    else runDeviceAction(device, "pair", "connecting")
+    else runDeviceAction(device, "pair", "")
   }
 
   function disconnectDevice(device) {
     if (!device || !device.address) return
     if (!device.connected) return
-    setPendingAction(device.address, "disconnecting")
     if (device.disconnect) device.disconnect()
-    Quickshell.execDetached(deviceCommand("disconnect", device.address))
+    else device.connected = false
   }
 
   function forgetDevice(device) {
@@ -313,7 +310,6 @@ Panel {
 
       var finishedConnecting = action === "connecting" && found && found.connected
       if (finishedConnecting
-          || (action === "disconnecting" && found && !found.connected)
           || (action === "forgetting" && (!found || (!found.paired && !found.bonded && !found.trusted)))) {
         if (finishedConnecting) scheduleAudioOutputSwitch(found)
         delete next[address]
@@ -581,6 +577,15 @@ Panel {
       if (items[i] && items[i] !== root) { items[i].owesDiscoveryStop = true; return }
     }
     if (adapter !== null && adapter.discovering) adapter.discovering = false
+  }
+
+  // A failed connect, disconnect or pair sets the engine's error; drop the
+  // pending markers so nothing keeps waiting on it.
+  Connections {
+    target: S.Bluetooth
+    function onErrorChanged() {
+      if (S.Bluetooth.error !== "") root.pendingActions = ({})
+    }
   }
 
   Timer {
@@ -921,12 +926,12 @@ Panel {
     readonly property string statusText: {
       if (!dev) return ""
       if (action === "forgetting") return Commons.I18n.t("bluetooth.forgetting")
-      if (action === "disconnecting" || devState === 2) return Commons.I18n.t("bluetooth.disconnecting")
+      if (devState === 2) return Commons.I18n.t("bluetooth.disconnecting")
       if (isConnected) {
         if (dev.batteryAvailable) return Commons.I18n.formatNumber(Math.round(dev.battery * 100)) + "%"
         return sectionName === "connected" ? "" : Commons.I18n.t("bluetooth.connectedStatus")
       }
-      if (action === "connecting" || devState === 3 || dev.pairing === true) return Commons.I18n.t("bluetooth.connecting")
+      if (devState === 3 || dev.pairing === true) return Commons.I18n.t("bluetooth.connecting")
       if (isDiscovered) return ""
       return ""
     }
