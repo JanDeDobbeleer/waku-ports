@@ -193,7 +193,7 @@ ColumnLayout {
         text: Tr.tr("Open settings")
         icon: "settings"
 
-        onClicked: root.popouts.detachRequested("bluetooth")
+        onClicked: Qt.openUrlExternally("ms-settings:bluetooth")
     }
 
     component Toggle: RowLayout {

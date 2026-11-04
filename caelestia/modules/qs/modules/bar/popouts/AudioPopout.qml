@@ -111,7 +111,7 @@ Item {
             text: Tr.tr("Open settings")
             icon: "settings"
 
-            onClicked: root.popouts.detachRequested("audio")
+            onClicked: Qt.openUrlExternally("ms-settings:sound")
         }
     }
 }
