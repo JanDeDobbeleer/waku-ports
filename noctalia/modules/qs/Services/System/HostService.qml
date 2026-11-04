@@ -8,13 +8,13 @@ import qs.compat
 
 // Noctalia's HostService on Windows: the user and machine names come from the engine's ControlCenter
 // (the Windows account) and the environment. There is no distro, so `osPretty` is "Windows" and
-// `osLogo` is empty (the widgets then draw no logo).
+// `osLogo` is the Windows logo.
 Singleton {
   id: root
 
   // Public properties
   readonly property string osPretty: "Windows"
-  readonly property string osLogo: ""
+  readonly property string osLogo: Qt.resolvedUrl(Quickshell.shellDir + "/Assets/windows.svg")
   readonly property bool isNixOS: false
   readonly property bool isReady: true
 
