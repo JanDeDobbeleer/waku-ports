@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Bluetooth
+import waku.services as S
+import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
@@ -18,6 +20,16 @@ ColumnLayout {
 
     width: Tokens.px(300)
     spacing: Tokens.spacing.small
+
+    // waku sets `error` when a connect or disconnect fails; `connected` only snaps back.
+    Connections {
+        function onErrorChanged(): void {
+            if (S.Bluetooth.error)
+                Toaster.toast(Tr.tr("Bluetooth"), S.Bluetooth.error, "bluetooth_disabled", Toast.Error);
+        }
+
+        target: S.Bluetooth
+    }
 
     StyledText {
         Layout.topMargin: Tokens.padding.medium
