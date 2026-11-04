@@ -222,9 +222,7 @@ ShellRoot {
     }
 
     // Debug summary after the launcher opened.
-    // The harness config home has no assets folder; point the session gif at the port's.
     Component.onCompleted: {
-        GlobalConfig.paths.sessionGif = Qt.resolvedUrl("../../assets/kurukuru.gif").toString().replace("file:///", "");
         console.log("WP6: screen", root.scr.width, root.scr.height, root.scr.devicePixelRatio, "window", win.width, win.height);
     }
 
