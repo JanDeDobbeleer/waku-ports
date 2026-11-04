@@ -98,11 +98,9 @@ ColumnLayout {
     Repeater {
         visible: root.view === "wireless"
         model: ScriptModel {
-            values: [...Nmcli.networks].sort((a, b) => {
-                if (a.active !== b.active)
-                    return b.active - a.active;
-                return b.strength - a.strength;
-            }).slice(0, 8)
+            // The connected network is the "Connected to ..." line above, and the count above leaves
+            // it out, so the list does too.
+            values: [...Nmcli.networks].filter(n => !n.active).sort((a, b) => b.strength - a.strength).slice(0, 8)
         }
 
         RowLayout {
