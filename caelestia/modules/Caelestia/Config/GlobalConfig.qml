@@ -188,7 +188,6 @@ QtObject {
                 property string language: ""
                 property bool showOverFullscreen: false
                 property real mediaGifSpeedAdjustment: 300
-                property real sessionGifSpeed: 0.7
                 property JsonObject apps: JsonObject {
                     property list<string> terminal: ["foot"]
                     property list<string> audio: ["pwvucontrol"]
@@ -786,7 +785,6 @@ QtObject {
             property JsonObject paths: JsonObject {
                 property string wallpaperDir: root._home + "/Pictures/Wallpapers"
                 property string lyricsDir: root._home + "/Music/Lyrics/"
-                property string sessionGif: "root:/assets/kurukuru.gif"
                 property string mediaGif: "root:/assets/bongocat.gif"
                 property string noNotifsPic: "root:/assets/dino.png"
                 property string lockNoNotifsPic: "root:/assets/dino.png"
