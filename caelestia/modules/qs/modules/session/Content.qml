@@ -1,12 +1,12 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Caelestia
 import Caelestia.Config
 import Caelestia.Services
 import qs.components
 import qs.components.controls
+import qs.components.effects
 import qs.services
 import qs.utils
 
@@ -49,23 +49,16 @@ Column {
         KeyNavigation.down: hibernate
     }
 
-    Loader {
-        active: Config.paths.sessionGif.trim() !== ""
+    // waku: the static Windows logo takes the place of the animated session GIF.
+    Item {
+        implicitWidth: Tokens.sizes.session.button
+        implicitHeight: Tokens.sizes.session.button
 
-        sourceComponent: AnimatedImage {
-            width: Tokens.sizes.session.button
-            height: Tokens.sizes.session.button
-            sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
-
-            playing: visible
-            asynchronous: true
-            speed: Config.general.sessionGifSpeed
-            // waku: `root:/` is the shell folder, and a drive path needs a file: scheme here.
-            source: {
-                const path = Paths.absolutePath(Config.paths.sessionGif.replace(/^root:\//, `${Quickshell.shellDir}/`));
-                return /^[A-Za-z]:\//.test(path) ? `file:///${path}` : path;
-            }
-            fillMode: AnimatedImage.PreserveAspectFit
+        ColouredIcon {
+            anchors.centerIn: parent
+            source: SysInfo.osLogo
+            implicitSize: Math.round(Tokens.sizes.session.button * 0.6)
+            colour: Colours.palette.m3tertiary
         }
     }
 
