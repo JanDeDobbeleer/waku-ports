@@ -17,8 +17,7 @@ Singleton {
     property string osPrettyName: "Windows"
     property string osId: "windows"
     property list<string> osIdLike: []
-    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
-    property bool isDefaultLogo: true
+    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/windows.svg`)
 
     property string uptime
     // Uptime trimmed to its two largest components
