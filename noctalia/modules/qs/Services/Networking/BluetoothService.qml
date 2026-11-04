@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
+import waku.services as S
 import "../../Helpers/BluetoothUtils.js" as BluetoothUtils
 import qs.Commons
 import qs.Services.System
@@ -91,6 +92,17 @@ Singleton {
     function onEnabledChanged() {
       if (adapter?.enabled && Settings.data.network.bluetoothAutoConnect) {
         autoConnectTimer.restart();
+      }
+    }
+  }
+
+  // A failed connect or disconnect never throws: the engine reports it in its Bluetooth.error.
+  Connections {
+    target: S.Bluetooth
+    function onErrorChanged() {
+      if (S.Bluetooth.error !== "") {
+        Logger.w("Bluetooth", S.Bluetooth.error);
+        ToastService.showWarning(I18n.tr("common.bluetooth"), S.Bluetooth.error);
       }
     }
   }
