@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "nomarchy.dev-gallery",
+  "name": "Dev gallery",
+  "version": "1.0.0",
+  "author": "Nomarchy",
+  "description": "Visual reference for nomarchy-shell common UI components. Summon with: nomarchy-shell shell summon nomarchy.dev-gallery '{}' (or run: nomarchy dev ui-preview).",
+  "kinds": [
+    "panel"
+  ],
+  "entryPoints": {
+    "panel": "GalleryPanel.qml"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "nomarchy.keyboard-layout",
+  "name": "Keyboard layout",
+  "version": "1.0.0",
+  "author": "Nomarchy",
+  "description": "Current keyboard layout and input language, click cycles",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "KeyboardLayout.qml"
+  },
+  "barWidget": {
+    "displayName": "Keyboard layout",
+    "description": "Current keyboard layout and input language, click cycles",
+    "category": "Compositor",
+    "defaultSection": "right",
+    "allowMultiple": false
+  },
+  "nomarchy": {
+    "clonePaths": [
+      {
+        "source": "KeyboardLayoutModel.js",
+        "target": "KeyboardLayoutModel.js"
+      }
+    ]
+  }
+}

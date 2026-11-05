@@ -12,6 +12,6 @@ fi
 
 echo "commit-msg: subject is not a conventional commit:" >&2
 echo "  $subject" >&2
-echo "expected: type(scope)?: subject, e.g. 'fix(omarchy): keep the menu open'" >&2
+echo "expected: type(scope)?: subject, e.g. 'fix(nomarchy): keep the menu open'" >&2
 echo "types: $CONVENTIONAL_TYPES" >&2
 exit 1
