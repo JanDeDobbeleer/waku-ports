@@ -1,6 +1,5 @@
 # The Noctalia port's part of start.ps1 in the repo root. Runs in the launcher's scope: $PortDir and $Dev are set,
 # and $PortFlags may be assigned (extra waku arguments).
-$env:PATH += ';C:\Program Files\komorebi\bin'
 # Noctalia reads its config and cache folders from these; keep them inside the port. HOME is only read
 # (default wallpaper and video folders).
 $env:NOCTALIA_CONFIG_DIR = Join-Path $PortDir 'state\config'

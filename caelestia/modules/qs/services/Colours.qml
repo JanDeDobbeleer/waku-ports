@@ -178,7 +178,7 @@ Singleton {
     function setMode(mode: string): void {
         applyMode(mode);
         setWindowsTheme(mode);
-        Toaster.toast(mode === "light" ? Tr.tr("Light mode") : Tr.tr("Dark mode"), Tr.tr("Colour scheme and Windows theme"), mode === "light" ? "light_mode" : "dark_mode", Toast.Success, 2500);
+        Toaster.toast(mode === "light" ? Tr.tr("Light mode") : Tr.tr("Dark mode"), Tr.tr("Colour scheme and Windows theme"), mode === "light" ? "light_mode" : "dark_mode", Toast.Info, 2500);
     }
 
     function persist(): void {

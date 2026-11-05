@@ -33,6 +33,12 @@ pre-start step (Omarchy applies its theme, Noctalia points its config at `state\
 (extra waku arguments). To add a port, add its folder, an `env.ps1`, and its name to the `ValidateSet` in
 `start.ps1`.
 
+## Tiling and keys
+
+Every port tiles with waku's built-in tiler and handles keys with `wakukeys`, with no komorebi or whkd.
+`start.ps1` starts `wakukeys` with the port's `keys.conf`; the three ports ship the same file. The cheat
+sheet is in each port's README (`caelestia/README.md`, `noctalia/README.md`, `omarchy/README.md`).
+
 ## Start at sign-in
 
 Use waku's own command. `wakuc startup enable` registers a per-user logon Scheduled Task that runs
@@ -49,16 +55,17 @@ wakuc startup disable     # remove the task
 
 - The task starts waku with `--register-app-bar` and `--hide-taskbar` unless you pass `--no-app-bar` or
   `--keep-taskbar` to `startup enable`.
-- Other waku flags follow `--`: `--font-engine=directwrite`, `--manage-komorebi` (reload komorebi and its bar
-  after a screen or scale change), `--log-file <path>` (a JSON Lines diagnostics log; off unless you pass it).
+- Other waku flags follow `--`: `--font-engine=directwrite`, `--log-file <path>` (a JSON Lines diagnostics log; off unless you pass it).
 - To switch to another port at sign-in, run `startup enable` again with that port's folder. It replaces the
   task. Run one port at a time.
 - `startup enable` deletes an old `waku.lnk` in your Startup folder, with no backup, so waku does not start
   twice.
 - The task runs waku directly. It does not run `start.ps1` or a port's `tools\env.ps1`, so put anything a port
-  needs (an environment variable, a `PATH` entry) in your user environment. caelestia needs only
-  `C:\Program Files\komorebi\bin` on `PATH`; confirm it is on the machine or user `PATH`.
-- komorebi is started separately (its own logon task or `komorebic start`); waku never starts it.
+  needs (an environment variable, a `PATH` entry) in your user environment.
+- `startup enable` also registers the key handler `wakukeys.exe` when the port has a `keys.conf`. It reads that
+  file by itself.
+- Every port uses waku's built-in tiler (turned on in its `shell.qml`) and key handler (its `keys.conf`). waku
+  supports no other tiling window manager.
 
 The full reference is "Run at sign-in" in the waku repository's `docs/install.md`.
 

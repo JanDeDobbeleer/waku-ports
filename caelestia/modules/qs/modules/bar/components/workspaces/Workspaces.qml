@@ -21,7 +21,9 @@ ClipRect {
     readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
     readonly property int activeWsIdx: workspaceIndex(activeWsId)
     // Port: komorebi workspaces are real, so show all of them when there are more than `shown`.
-    readonly property int shown: Math.max(1, Config.bar.workspaces.shown, Hypr.workspaces.values.filter(w => w.monitor === monitor).length)
+    // Port, Windows virtual desktops: the desktops that exist plus one dot that creates the next.
+    readonly property int existing: Hypr.workspaces.values.filter(w => w.monitor === monitor).length
+    readonly property int shown: Hypr.virtualDesktops ? Math.min(20, existing + 1) : Math.max(1, Config.bar.workspaces.shown, existing)
 
     readonly property bool dynamic: Config.bar.workspaces.dynamic
 
@@ -87,6 +89,15 @@ ClipRect {
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
         return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
+    }
+
+    // Right click on a dot closes that desktop (Windows virtual desktops only).
+    function removeWorkspaceAt(x: real, y: real): string {
+        const ws = workspaces.itemAt(x, y)?.ws ?? 0;
+        if (!ws)
+            return "none";
+        Hypr.removeWorkspace(ws);
+        return "remove";
     }
 
     // The click handler of the dots (the test IPC calls it too). Returns what happened.
@@ -222,7 +233,13 @@ ClipRect {
 
         MouseArea {
             anchors.fill: workspaces
-            onClicked: event => root.clickWorkspaceAt(event.x, event.y)
+            acceptedButtons: Hypr.canRemoveWorkspace ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton
+            onClicked: event => {
+                if (event.button === Qt.RightButton)
+                    root.removeWorkspaceAt(event.x, event.y);
+                else
+                    root.clickWorkspaceAt(event.x, event.y);
+            }
         }
 
         Behavior on scale {

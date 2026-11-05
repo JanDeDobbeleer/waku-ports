@@ -52,28 +52,23 @@ multiply with the settings above.
 
 - `bar.workspaces.dynamic` (default `true`, in `config/shell.json`): the dots are every occupied
   workspace of the monitor, the active one, and the first empty workspace after the last of those
-  (a slot to move to an empty desktop), in workspace order. `false` shows every komorebi workspace
-  (at least `bar.workspaces.shown`).
+  (a slot to move to an empty desktop), in workspace order. `false` shows at least `bar.workspaces.shown` dots.
 - Layout button: one button (bar entry `layout`) right below the dots shows the glyph of the
-  layout of the active workspace; each workspace keeps its own layout. Click runs
-  `komorebic cycle-layout next` for the workspace that is active now, wheel up `previous`, wheel
-  down `next`. Hovering shows the layout name and a hint. The button is hidden without a komorebi
-  workspace. The glyph changes at once and settles on komorebi's state.
-  BSP `view_quilt`, Columns `view_column`, Rows `table_rows`, VerticalStack `view_sidebar`,
-  HorizontalStack `view_agenda`, UltrawideVerticalStack `view_week`, Grid `grid_view`,
-  RightMainVerticalStack `view_sidebar` mirrored.
+  layout of the focused workspace (waku's tiler keeps one layout per desktop and monitor). A click
+  steps to the next layout, wheel up the previous, wheel down the next. Hovering shows the layout
+  name and a hint. The button is hidden while the tiler is off. mainStack `view_sidebar`,
+  mainStackTop `view_agenda`, columns `view_column`, rows `table_rows`, bsp `view_quilt`, grid
+  `grid_view`, centerMain `view_week`.
 - Running apps: one icon per application (grouped by executable, first-seen order). A count badge
   marks an application with several windows; hovering it lists them (title, workspace numeral) and a
   click on a row jumps there. A click on the icon raises the focused window's next sibling, or the
-  window that had focus last. A click raises a window through the engine's `WindowControl` when the
-  engine has it, else through `komorebic eager-focus`; the highlight moves at once.
+  window that had focus last. A click raises a window through the engine's `WindowControl`; the
+  highlight moves at once.
 - Test IPC (`wakuc --config-home <home> call bar ...`): `dots`, `layoutDry next|previous` (logs the
   command, never runs it), `clickLayout` (the click handler; only with `CAELESTIA_DRYRUN=1`),
   `layoutButton` (glyph, workspace, layout, visibility), `appGroups`, `apps`, `popout layout`, `popout appGroup:<exe>`,
   `activateApp <i>`, `activateGroupWindow <exe> <i>` (refuse unless the target is already focused),
   `fakeCopies <n>` (fake windows for the badge).
-- komorebi work area: the engine keeps komorebi's cached work area in step with the OS after every
-  screen or work area change (`waku --no-workarea-sync` turns it off); the shell does nothing.
 ## Launcher commands and session actions
 
 The launcher's `>` commands act on Windows through waku:
@@ -92,3 +87,48 @@ the session menu (waku's confirm step).
 
 Test switch: start waku with the environment variable `CAELESTIA_DRYRUN=1` and every action logs a
 `DRYRUN ...` line (or `REFUSED ...`) and changes nothing.
+
+## Keys and tiling
+
+This port uses waku's own tiler and key handler. No komorebi, whkd or AutoHotkey is needed. The shell
+turns the tiler on (`Tiling.enabled`, in `shell.qml`) and ships its bindings in `keys.conf` next to
+`shell.qml`; `wakukeys` reads that file by itself when it runs with this folder as `--config-home`
+(`start.ps1` and `wakuc startup enable` both do). All three ports ship the same file, so they behave the
+same. Edit `keys.conf` and save: the daemon reloads it. `wakukeys status` shows what is bound.
+
+Windows reserves `Alt+Space` and `Win+L`; they cannot be bound.
+
+| Keys | Does |
+|---|---|
+| `Alt+T` | new Windows Terminal window |
+| `Alt+Q` | close the focused window |
+| `Alt+M` | minimize the focused window |
+| `Alt+Shift+O` | reload the shell |
+| **Focus** | |
+| `Alt+Left/Down/Up/Right` | focus the window in that direction |
+| `Alt+Shift+[` / `Alt+Shift+]` | focus the previous / next window |
+| **Move** | |
+| `Alt+Shift+Left/Down/Up/Right` | swap the window with its neighbour |
+| `Alt+Shift+Enter` | promote the window to the main slot |
+| **Stacks** (windows that share one slot; the top one shows) | |
+| `Ctrl+Alt+Shift+Left/Down/Up/Right` | stack the window onto its neighbour |
+| `Alt+;` | take the window out of its stack |
+| `Alt+[` / `Alt+]` | cycle the stack backward / forward |
+| **Resize** | |
+| `Alt+=` / `Alt+-` | wider / narrower |
+| `Alt+Shift+=` / `Alt+Shift+-` | taller / shorter |
+| **Layout** | |
+| `Alt+L` | next layout: mainStack, mainStackTop, columns, rows, bsp, grid, centerMain |
+| `Alt+X` / `Alt+Y` | mirror the layout horizontally / vertically |
+| `Alt+F` | float the window, or tile it again |
+| `Alt+Shift+M` | monocle: the focused window fills the area |
+| `Alt+Shift+R` | retile every window of the desktop |
+| `Alt+P` | pause or resume the tiler |
+| **Desktops** | |
+| `Alt+1` ... `Alt+9` | go to desktop 1 to 9 |
+| `Alt+Shift+1` ... `Alt+Shift+9` | move the window to desktop 1 to 9 (you stay); past the last desktop it makes one new desktop |
+| `Ctrl+Alt+Left` / `Ctrl+Alt+Right` | previous / next desktop |
+
+The same actions run from a terminal: `wakuc tile layout next`, `wakuc tile focus left`,
+`wakuc desktop goto 2`, `wakuc tile status`. The layout button below the desktop dots cycles the
+layouts with a click or the wheel.

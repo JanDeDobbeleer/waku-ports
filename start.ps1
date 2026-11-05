@@ -30,22 +30,6 @@ if ($DryRun) {
   . $hook
 }
 
-# 2b. the port's komorebi settings: the port's tools\apply-komorebi.ps1 puts its komorebi.json in the
-# komorebi config home ($env:KOMOREBI_CONFIG_HOME, else ~\.config\komorebi), so komorebi follows the
-# shell that is starting instead of whichever port ran last. Not for -Dev, which touches nothing.
-$apply = Join-Path $PortDir 'tools\apply-komorebi.ps1'
-if (-not $Dev -and (Test-Path $apply) -and (Test-Path (Join-Path $PortDir 'komorebi\komorebi.json'))) {
-  $komorebiHome = if ($env:KOMOREBI_CONFIG_HOME) { $env:KOMOREBI_CONFIG_HOME } else { Join-Path $env:USERPROFILE '.config\komorebi' }
-  if ($DryRun) {
-    Write-Host "would apply $Port's komorebi.json to $komorebiHome"
-  } elseif (Get-Command komorebic.exe -ErrorAction SilentlyContinue) {
-    & $apply -KomorebiHome $komorebiHome | Out-Null
-    Write-Host "komorebi: applied $Port's komorebi.json to $komorebiHome"
-  } else {
-    Write-Warning 'komorebic.exe not found; komorebi keeps its current config'
-  }
-}
-
 # 3. the engine and its flags
 if ($Dev) {
   $Waku = Join-Path $PortDir 'bin\waku.exe'
@@ -67,3 +51,17 @@ if ($Dev) {
   $p = Start-Process $Waku -PassThru -WorkingDirectory (Split-Path $Waku) -ArgumentList $flags
 }
 Write-Host "$Port started, pid $($p.Id)"
+
+# 4. the key handler, with the port's keys.conf (wakukeys reads <config home>\keys.conf by itself).
+# Not for -Dev, which registers no keys.
+if (-not $Dev) {
+  $keysExe = Join-Path (Split-Path $Waku) 'wakukeys.exe'
+  if (-not (Test-Path (Join-Path $PortDir 'keys.conf'))) {
+    Write-Warning "$Port has no keys.conf; the key handler is not started"
+  } elseif (-not (Test-Path $keysExe)) {
+    Write-Warning "wakukeys.exe is not next to waku.exe ($keysExe); the key handler is not started"
+  } else {
+    $k = Start-Process $keysExe -PassThru -WorkingDirectory (Split-Path $keysExe) -ArgumentList @('--config-home', $PortDir)
+    Write-Host "keys started, pid $($k.Id)"
+  }
+}

@@ -4,6 +4,14 @@
 #   .\stop.ps1
 #   .\stop.ps1 -DryRun
 param([switch]$DryRun)
+# The key handler goes first, so no key reaches a bar that is quitting.
+foreach ($keys in @(Get-CimInstance Win32_Process -Filter "Name='wakukeys.exe'" -ErrorAction SilentlyContinue)) {
+  if ($DryRun) { Write-Host "would stop wakukeys pid $($keys.ProcessId)"; continue }
+  Write-Host "stopping wakukeys pid $($keys.ProcessId)"
+  & $keys.ExecutablePath stop | Out-Null
+  $kp = Get-Process -Id $keys.ProcessId -ErrorAction SilentlyContinue
+  if ($kp -and -not $kp.WaitForExit(5000)) { Stop-Process -Id $keys.ProcessId -Force }
+}
 $running = @(Get-CimInstance Win32_Process -Filter "Name='waku.exe'" -ErrorAction SilentlyContinue)
 if ($running.Count -eq 0) { Write-Host 'no waku is running'; return }
 foreach ($proc in $running) {
