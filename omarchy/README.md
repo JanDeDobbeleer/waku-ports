@@ -52,7 +52,6 @@ wallpaper) and the dock.
 | `tools\winshot.ps1` | Saves each shell window as a PNG (transparency is lost; desktop captures can contain private content) |
 | `tools\theme-apply.ps1 <name>` | Applies a theme (`-Prepare` only refreshes the picker's previews) |
 | `tools\build-menu.py` | Regenerates the Windows menu from the upstream one |
-| `tools\apply-batchN.py` | The port's mechanical changes, in order; each is idempotent (batch 10 then 16 for Wi-Fi) |
 
 `Menu.qml` and `ImagePicker.qml` have `debugState` helpers (marked `PORTDBG`) that the tools above call.
 
