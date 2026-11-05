@@ -9,12 +9,12 @@ import qs.utils
 
 // Port: the running-applications list. It replaces upstream's rotated active-window label (the
 // bar entry keeps the id "activeWindow", so the layout and the config stay as they were) and
-// shows one icon per application (`Hypr.appGroups`: the windows komorebi manages, on every
-// workspace, plus floating ones, grouped by executable, in first-seen order). The application
+// shows one icon per application (`Hypr.appGroups`: the windows of every virtual desktop,
+// grouped by executable, in first-seen order). The application
 // with the focused window sits on a rounded primary pill, like the active workspace. An
 // application with several windows has a count badge. An application with windows on other
 // workspaces only is dimmed, and so is one whose windows are all minimized (with a dash below the
-// icon; komorebi drops minimized windows, `Hypr` adds them back from the taskbar rows). A click
+// icon). A click
 // raises the window, restoring a minimized one (`Hypr.clickGroup`: for a group the
 // focused window's next sibling, else the last focused one), switching to its workspace first
 // when needed. Hovering an icon opens upstream's "activewindow" popout for a single window

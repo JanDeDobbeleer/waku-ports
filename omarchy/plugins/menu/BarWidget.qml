@@ -20,7 +20,7 @@ BarWidget {
         Image {
           id: logo
           anchors.fill: parent
-          source: Qt.resolvedUrl(Quickshell.shellDir + "/assets/windows.svg")
+          source: "file:///" + String(Quickshell.shellDir).replace(/\\/g, "/") + "/assets/windows.svg"
           sourceSize.width: width
           sourceSize.height: height
           fillMode: Image.PreserveAspectFit

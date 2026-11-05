@@ -2,7 +2,6 @@
 # The probe prints PROBE|DONE when finished. Never touches the real config home.
 param([Parameter(Mandatory)][string]$Qml, [string]$Bin = (Join-Path $PSScriptRoot '..\bin'), [int]$MaxSeconds = 40)
 $ErrorActionPreference = 'Stop'
-$env:PATH += ';C:\Program Files\komorebi\bin'
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $home_ = Join-Path $port 'smoke\probe'

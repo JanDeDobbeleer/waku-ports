@@ -46,7 +46,7 @@ ShapePath {
   }
 
   // Corner radius. Port: the radius Windows 11 gives a window (8 px), so the bar's inverted corners
-  // and komorebi's rounded windows share one curve.
+  // and the tiled windows' rounded corners share one curve.
   readonly property real radius: Style.radiusXS
 
   // Framed bar properties

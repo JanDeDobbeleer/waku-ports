@@ -13,30 +13,16 @@ import qs.compat
 // plain QtObjects built here, so a module that declares `required property HyprlandMonitor` must
 // declare `var` instead.
 //
-// Sources: komorebi or GlazeWM through `Workspaces` (ids are the workspace's position on its
-// monitor, `Hypr.activeWsId` counts from 1), the foreground window through `TaskbarModel`, and
-// the lock keys and keyboard layout through `DesktopState`. With no tiling window manager running
-// `workspaces.values` is empty and `hasWm` is false, so a bar can show a "no WM" pill.
+// Sources: the Windows virtual desktops through `Workspaces` (ids are the desktop's position,
+// `Hypr.activeWsId` counts from 1), the foreground window and the window rows through
+// `TaskbarModel`, and the lock keys and keyboard layout through `DesktopState`. Tiling is waku's
+// own (`S.Tiling`), not this service's concern.
 //
-// waku gap: `Workspaces` gives a window count per workspace, not the windows. With komorebi the
-// windows of each workspace come from a read-only `komorebic state` (hwnd lists per monitor and
-// workspace, in the same order as `Workspaces`), joined by hwnd with the ungrouped TaskbarModel
-// rows (key `w:<hwnd>`: title, executable, icon). A window the taskbar does not list (tool
-// windows, overlays) is not shown. With GlazeWM, or before the first state, a workspace has no
-// windows.
-//
-// With the Windows virtual desktops (no tiling manager: `Workspaces.provider` is "windows") the
-// engine lists the windows of each desktop (hwnd numbers). They are joined by hwnd with the same
-// taskbar rows; a window without a row is skipped, the rows give title, executable, icon and
-// minimized, and the rows' order (first appeared) is the window order. There is one engine entry
-// (handle 0) for every screen, so a window is listed once per screen workspace but once in
-// `toplevels`.
-//
-// Minimized windows: komorebi drops a window from its workspace when it is minimized and adds it
-// back to the focused workspace when it is restored, so `komorebic state` never lists one. The
-// taskbar rows still do (`minimized` true). Such a row becomes a toplevel with `minimized: true` on
-// the workspace komorebi last had it on, else on the focused one (see minimizedVerdict for the
-// filter).
+// The engine lists the windows of each desktop (hwnd numbers). They are joined by hwnd with the
+// ungrouped taskbar rows (key `w:<hwnd>`); a window without a row is skipped, the rows give title,
+// executable, icon and minimized, and the rows' order (first appeared) is the window order. There
+// is one engine entry (handle 0) for every screen, so a window is listed once per screen
+// workspace but once in `toplevels`.
 Singleton {
     id: root
 
@@ -92,21 +78,11 @@ Singleton {
         runFocus(mon, current.id - 1 + delta);
     }
 
-    // `ws` is a workspace id (its 1-based position on the monitor) or its name.
+    // `ws` is a desktop id (its 1-based position). A dot past the last desktop creates it.
     function focusWorkspace(ws: var): void {
-        // Windows virtual desktops: a dot past the last desktop creates it.
-        if (S.Workspaces.provider === "windows") {
-            const n = Number(ws);
-            if (Number.isInteger(n) && n >= 1)
-                S.Workspaces.focus(0, String(n - 1));
-            return;
-        }
-        const mon = focusedMonitor;
-        if (!mon)
-            return;
-        const target = workspaceList.values.find(w => w.monitor === mon && (w.id === Number(ws) || w.name === String(ws)));
-        if (target)
-            runFocus(mon, target.id - 1);
+        const n = Number(ws);
+        if (Number.isInteger(n) && n >= 1)
+            S.Workspaces.focus(0, String(n - 1));
     }
 
     // Windows virtual desktops: closes desktop `ws` (1-based, like focusWorkspace) the way Task
@@ -120,22 +96,11 @@ Singleton {
             S.Workspaces.remove(0, String(n - 1));
     }
 
-    // `komorebic focus-workspace <index>`, an index (0-based) of an existing workspace on the
-    // focused monitor. Anything else is dropped.
+    // Shows the existing desktop `index` (0-based). A step never creates a desktop; only a click on
+    // a dot does (focusWorkspace). Anything else is dropped.
     function runFocus(mon: var, index: int): void {
-        // Windows virtual desktops (no tiling manager running): the engine switches the desktop.
-        if (S.Workspaces.provider === "windows") {
-            // A step never creates a desktop; only a click on a dot does (focusWorkspace).
-            if (Number.isInteger(index) && index >= 0 && index < S.VirtualDesktops.desktops.length)
-                S.Workspaces.focus(0, String(index));
-            return;
-        }
-        if (!komorebi || mon !== focusedMonitor || !Number.isInteger(index))
-            return;
-        const count = workspaceList.values.filter(w => w.monitor === mon).length;
-        if (index < 0 || index >= count)
-            return;
-        sendKomorebic(["focus-workspace", String(index)]);
+        if (Number.isInteger(index) && index >= 0 && index < S.VirtualDesktops.desktops.length)
+            S.Workspaces.focus(0, String(index));
     }
 
     // The window the bar's running-apps list points at, for the hover popout (null: show the
@@ -144,21 +109,17 @@ Singleton {
 
     // Brings a toplevel from `toplevels` to the front and returns what it did, for the test IPC:
     // "focused" (already the focused window: nothing happens, a taskbar click would minimise it),
-    // "switch+activate" (its workspace is focused first with `komorebic focus-workspace`, or its
-    // virtual desktop is shown, then, after the switch, the window is raised), "window-control" (raised through the
-    // engine's `WindowControl`), "activate" (raised through a TaskbarModel row), "eager-focus"
-    // (`komorebic eager-focus <exe>`: the last resort, it may pick another window of that exe) or
-    // "none". The highlight moves at once (`optimisticHwnd`) and settles on komorebi's state.
+    // "switch+activate" (its virtual desktop is shown first, then, after the switch, the window is
+    // raised), "window-control" (raised through the engine's `WindowControl`), "activate" (raised
+    // through a TaskbarModel row) or "none". The highlight moves at once (`optimisticHwnd`) and
+    // settles on the foreground window.
     // A minimized window is restored by both raise paths (WindowControl and the taskbar row), never
     // minimized again: it is never the focused window. With `dry` nothing happens; the result
     // says what would (test IPC).
-    // Whether raising `t` first needs a switch to its workspace: komorebi (a workspace on the
-    // focused monitor that is not shown) or a virtual desktop that is not shown (the monitor does
-    // not matter: desktops belong to none).
+    // Whether raising `t` first needs a switch to its desktop (the monitor does not matter:
+    // desktops belong to none).
     function switchesFirst(t: var): bool {
-        if (virtualDesktops)
-            return !t.wsActive;
-        return komorebi && t.monId === focusedMonitor?.id && !t.wsActive;
+        return !t.wsActive;
     }
 
     function activateToplevel(t: var, dry = false): string {
@@ -187,7 +148,6 @@ Singleton {
         } else {
             result = activateHwnd(t.address, exe);
         }
-        settleTimer.restart();
         return result;
     }
 
@@ -204,12 +164,6 @@ Singleton {
             if (!dry)
                 taskbar.activate(row);
             return "activate";
-        }
-        // Focus a window by its executable name.
-        if (komorebi && /^[A-Za-z0-9_.\- ]+$/.test(exe)) {
-            if (!dry)
-                sendKomorebic(["eager-focus", exe.toLowerCase().endsWith(".exe") ? exe : exe + ".exe"]);
-            return "eager-focus";
         }
         return "none";
     }
@@ -241,42 +195,7 @@ Singleton {
         return w?.name ?? String(t?.wsId ?? "");
     }
 
-    // The only komorebic commands this shell sends: focus-workspace, eager-focus, cycle-layout and
-    // change-layout. With `dry` the command is logged and not run (tests). A refresh of the state
-    // follows.
-    readonly property var allowedCommands: ["focus-workspace", "eager-focus", "cycle-layout", "change-layout"]
-    readonly property var layoutNames: ["BSP", "Columns", "Rows", "VerticalStack", "HorizontalStack", "UltrawideVerticalStack", "Grid", "RightMainVerticalStack"]
-    property string lastCommand: ""
-
-    function sendKomorebic(args: var, dry = false): bool {
-        if (!komorebi || !allowedCommands.includes(args[0]))
-            return false;
-        if (args[0] === "change-layout" && !layoutNames.includes(args[1]))
-            return false;
-        if (args[0] === "cycle-layout" && args[1] !== "next" && args[1] !== "previous")
-            return false;
-        lastCommand = "komorebic " + args.join(" ");
-        settleTimer.restart();
-        if (dry) {
-            console.log("dry run: " + lastCommand);
-            return true;
-        }
-        focusProc.pending = ["komorebic"].concat(args);
-        if (!focusProc.running)
-            focusProc.start();
-        return true;
-    }
-
-    // Cycles the layout of the focused workspace (`next` or `previous`).
-    function cycleLayout(direction: string, dry = false): bool {
-        return sendKomorebic(["cycle-layout", direction], dry);
-    }
-
-    function setLayout(name: string, dry = false): bool {
-        return sendKomorebic(["change-layout", name], dry);
-    }
-
-    // waku gap: komorebi and GlazeWM have no special workspaces.
+    // waku gap: no special workspaces.
     function toggleSpecial(name: string): void {
     }
 
@@ -305,125 +224,6 @@ Singleton {
         return !ipc?.class || !ipc.mapped || (ipc.tags ?? []).some(t => ignoredTags.includes(t));
     }
 
-    // Why a taskbar row is not a minimized toplevel, or "" when it is one. `row` is a taskbar row
-    // ({ title, exe, minimized }); the engine has already dropped tool windows, owned windows,
-    // hidden and empty-title windows, immersive shell windows and ghost UWP frames from the rows.
-    // `managed`: the hwnds komorebi lists; `seen`: hwnd -> what komorebi last said about it;
-    // `rules`: komorebi's ignore_identifiers; `restored`: hwnd -> when it was restored (a window
-    // restored a moment ago stays until komorebi lists it again, so its icon does not jump).
-    function minimizedVerdict(hwnd: string, row: var, managed: var, seen: var, rules: var, restored: var, now: real): string {
-        if (!row)
-            return "no taskbar row";
-        // A cloaked window (another workspace) is not minimized: komorebi lists it.
-        if (!row.minimized && !(now - (restored?.[hwnd] ?? 0) < 1500))
-            return "not minimized";
-        if (managed?.[hwnd])
-            return "komorebi lists it";
-        if (!(row.title ?? "").trim())
-            return "empty title";
-        const name = appName(seen?.[hwnd]?.exe || row.exe || "");
-        if (!name)
-            return "no executable";
-        if (name === "waku" || name === "wakuc")
-            return "the bar";
-        // A window komorebi managed before is not one it ignores.
-        if (!seen?.[hwnd] && komorebiIgnores(name + ".exe", row.title, rules))
-            return "komorebi ignores it";
-        return "";
-    }
-
-    // Whether one of komorebi's ignore rules matches a window by executable and title. Rules on the
-    // class or the path cannot be checked (the taskbar rows have neither) and do not match.
-    function komorebiIgnores(exe: string, title: string, rules: var): bool {
-        const one = r => {
-            const id = String(r?.id ?? "");
-            const s = r?.matching_strategy ?? "Legacy";
-            let v;
-            if (r?.kind === "Exe")
-                v = exe.toLowerCase();
-            else if (r?.kind === "Title")
-                v = title;
-            else
-                return false;
-            const i = r.kind === "Exe" ? id.toLowerCase() : id;
-            switch (s) {
-            case "Legacy":
-                return r.kind === "Exe" ? v === i : (v.startsWith(i) || v.endsWith(i));
-            case "Equals":
-                return v === i;
-            case "StartsWith":
-                return v.startsWith(i);
-            case "EndsWith":
-                return v.endsWith(i);
-            case "Contains":
-                return v.includes(i);
-            case "DoesNotEqual":
-                return v !== i;
-            case "DoesNotStartWith":
-                return !v.startsWith(i);
-            case "DoesNotEndWith":
-                return !v.endsWith(i);
-            case "DoesNotContain":
-                return !v.includes(i);
-            case "Regex":
-                try {
-                    return new RegExp(id).test(r.kind === "Exe" ? exe : title);
-                } catch (e) {
-                    return false;
-                }
-            default:
-                return false;
-            }
-        };
-        for (const r of rules ?? []) {
-            if (Array.isArray(r) ? (r.length > 0 && r.every(one)) : one(r))
-                return true;
-        }
-        return false;
-    }
-
-    // The minimized windows per "<monitor>:<workspace>", as komorebi-like entries for windowsOf.
-    // Empty without komorebi or before its first state.
-    function minimizedByWs(): var {
-        const out = {};
-        if (!komorebi || lastStateSig === "")
-            return out;
-        const mons = S.Workspaces.monitors;
-        let active = "";
-        for (let mi = 0; mi < mons.length && !active; mi++) {
-            const wi = (mons[mi].workspaces ?? []).findIndex(w => w.focused);
-            if (wi >= 0)
-                active = mi + ":" + wi;
-        }
-        if (!active && mons.length > 0) {
-            const wi = (mons[0].workspaces ?? []).findIndex(w => w.active);
-            if (wi >= 0)
-                active = "0:" + wi;
-        }
-        const now = Date.now();
-        for (const hwnd of Object.keys(taskbarWindows)) {
-            const row = taskbarWindows[hwnd];
-            if (minimizedVerdict(hwnd, row, managedHwnds, seenHwnds, ignoreRules, restoredAt, now) !== "")
-                continue;
-            const s = seenHwnds[hwnd];
-            const known = s && s.mi < mons.length && s.wi < (mons[s.mi].workspaces ?? []).length;
-            const slot = known ? s.mi + ":" + s.wi : active;
-            if (!slot)
-                continue;
-            if (!out[slot])
-                out[slot] = [];
-            out[slot].push({
-                hwnd: Number(hwnd),
-                exe: s?.exe || row.exe || "",
-                title: row.title,
-                windowClass: s?.windowClass ?? "",
-                floating: s?.floating ?? false,
-                minimized: true
-            });
-        }
-        return out;
-    }
-
     function reloadDynamicConfs(): void {
     }
 
@@ -444,7 +244,7 @@ Singleton {
         return "";
     }
 
-    // The windows of a virtual desktop as komorebi-like entries for windowsOf: the engine's hwnds
+    // The windows of a virtual desktop as entries for windowsOf: the engine's hwnds
     // that the taskbar lists, in the taskbar rows' order (the engine's order is by hwnd). The row
     // says whether the window is minimized; a window without a row is skipped.
     function desktopWindows(hwnds: var): var {
@@ -467,16 +267,13 @@ Singleton {
         return out;
     }
 
-    // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order, then the
-    // minimized windows placed there (`minimized`: from minimizedByWs). On virtual desktops: the
-    // desktop's windows (`desktopHwnds`, see desktopWindows).
-    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool, minimized = ({}), desktopHwnds = []): var {
+    // Toplevel items of desktop `wsIdx` on monitor `monIdx`: the desktop's windows (`desktopHwnds`,
+    // see desktopWindows).
+    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool, desktopHwnds = []): var {
         const out = [];
-        const key = monIdx + ":" + wsIdx;
         const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        const source = virtualDesktops ? desktopWindows(desktopHwnds) : (wsWindows[key] ?? []).concat(minimized[key] ?? []);
-        for (const h of source) {
-            // The taskbar row adds the icon; komorebi's own title and exe stand in without it
+        for (const h of desktopWindows(desktopHwnds)) {
+            // The taskbar row adds the icon; the entry's own title and exe stand in without it
             // (the model has no window to attach to here, so it can stay empty).
             const row = taskbarWindows[h.hwnd] ?? ({
                     title: h.title,
@@ -520,90 +317,6 @@ Singleton {
         return out;
     }
 
-    // Reads the JSON of `komorebic state` into { "<monitor>:<workspace>": [{hwnd, exe, ...}] }.
-    function parseState(text: string): void {
-        let state;
-        try {
-            state = JSON.parse(text);
-        } catch (e) {
-            return;
-        }
-        const list = o => Array.isArray(o) ? o : (o?.elements ?? []);
-        const one = (w, floating) => ({
-                hwnd: w.hwnd,
-                exe: w.exe ?? "",
-                title: w.title ?? "",
-                windowClass: w.class ?? "",
-                floating: floating
-            });
-        const map = {};
-        const layouts = {};
-        const managed = {};
-        // What komorebi said about each window last, kept while the taskbar lists the window, so a
-        // minimized one (dropped from the state) goes back to its own workspace.
-        const seen = {};
-        const live = Object.keys(taskbarWindows).length > 0;
-        for (const k of Object.keys(seenHwnds))
-            if (!live || taskbarWindows[k])
-                seen[k] = seenHwnds[k];
-        list(state?.monitors).forEach((mon, mi) => list(mon.workspaces).forEach((ws, wi) => {
-            const out = [];
-            for (const c of list(ws.containers))
-                for (const w of list(c.windows))
-                    out.push(one(w, false));
-            for (const w of list(ws.monocle_container?.windows))
-                out.push(one(w, false));
-            if (ws.maximized_window)
-                out.push(one(ws.maximized_window, false));
-            for (const w of list(ws.floating_windows))
-                out.push(one(w, true));
-            map[mi + ":" + wi] = out;
-            for (const w of out) {
-                managed[String(w.hwnd)] = true;
-                seen[String(w.hwnd)] = {
-                    mi: mi,
-                    wi: wi,
-                    exe: w.exe,
-                    windowClass: w.windowClass,
-                    floating: w.floating
-                };
-            }
-            // `layout` is { "Default": "BSP" }, { "Custom": [...] } or a bare name.
-            const l = ws.layout;
-            layouts[mi + ":" + wi] = typeof l === "string" ? l : (l?.Default ?? (l?.Custom ? "Custom" : ""));
-        }));
-        // komorebi's focused window: focused monitor, workspace, container, window.
-        let focusedHwnd = "";
-        try {
-            const mons = state?.monitors;
-            const monObj = list(mons)[mons?.focused ?? 0];
-            const wsList = monObj?.workspaces;
-            const wsObj = list(wsList)[wsList?.focused ?? 0];
-            const conts = wsObj?.containers;
-            const c = list(conts)[conts?.focused ?? 0];
-            const wins = c?.windows;
-            const w = list(wins)[wins?.focused ?? 0];
-            if (w?.hwnd)
-                focusedHwnd = String(w.hwnd);
-        } catch (e) {
-        }
-        komorebiFocused = focusedHwnd;
-        // komorebi's answer replaces the guess, unless the guess is too fresh to be in the state.
-        if (optimisticHwnd && Date.now() - optimisticAt > 300) {
-            optimisticHwnd = "";
-            optimisticTimer.stop();
-        }
-        seenHwnds = seen;
-        const stateSig = JSON.stringify([layouts, map]);
-        if (stateSig === lastStateSig)
-            return;
-        lastStateSig = stateSig;
-        managedHwnds = managed;
-        wsLayouts = layouts;
-        wsWindows = map;
-        rebuild();
-    }
-
     // What the last rebuild was made from. An identical input does nothing: the objects below are
     // kept, so a delegate bound to one never sees it replaced.
     property string rebuildSig: ""
@@ -622,8 +335,8 @@ Singleton {
         return true;
     }
 
-    // Brings monitors, workspaces and windows up to date with the engine's workspaces, the
-    // `komorebic state` windows and the screens. Objects are kept by identity: a property is set
+    // Brings monitors, workspaces and windows up to date with the engine's desktops and the
+    // screens. Objects are kept by identity: a property is set
     // only when it differs, an object is created or destroyed only for a real addition or removal,
     // and a list is assigned only when its members changed.
     function rebuild(): void {
@@ -632,11 +345,9 @@ Singleton {
 
         // 1. Plan: plain data only, so the signature can tell whether anything changed.
         const plan = [];
-        const minimized = minimizedByWs();
         for (let i = 0; i < screens.length; i++) {
             const screen = screens[i];
-            // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1,
-            // so `komorebic state` windows (keyed by monitor index) were never found.
+            // The index, not the object: indexOf() on a fresh list of QObject wrappers gave -1.
             let wmi = wakuMons.findIndex(m => m.name === screen.name);
             if (wmi < 0 && wakuMons.length === screens.length)
                 wmi = i;
@@ -656,8 +367,7 @@ Singleton {
                     label: src.label || String(j + 1),
                     active: !!src.active,
                     focused: !!src.focused,
-                    layout: wsLayouts[wmi + ":" + j] ?? "",
-                    windows: windowsOf(wmi, j, !!src.active, minimized, src.windows)
+                    windows: windowsOf(wmi, j, !!src.active, src.windows)
                 });
             }
             plan.push({
@@ -713,8 +423,6 @@ Singleton {
                 }
                 if (ws.id !== wp.index + 1)
                     ws.id = wp.index + 1;
-                if (ws.layoutName !== wp.layout)
-                    ws.layoutName = wp.layout;
                 if (ws.name !== wp.label)
                     ws.name = wp.label;
                 if (ws.monitor !== mon)
@@ -842,8 +550,6 @@ Singleton {
 
     Component.onCompleted: {
         rebuild();
-        if (komorebi)
-            rulesPoll.running = true;
     }
 
     Connections {
@@ -854,7 +560,6 @@ Singleton {
                 return;
             root.engineSig = sig;
             root.rebuild();
-            root.queue();
         }
 
         target: S.Workspaces
@@ -883,33 +588,21 @@ Singleton {
     QtObject {
         id: toplevelList
 
-        // The windows of all workspaces that komorebi and the taskbar both know, plus the
-        // minimized windows the taskbar lists (`minimized: true`).
+        // The windows of all desktops that the taskbar lists, minimized ones included
+        // (`minimized: true`).
         property var values: []
     }
 
     // Foreground window from the taskbar rows.
     property var foreground: null
-    // hwnd -> { title, exe, iconUrl } for every taskbar row, and the komorebi windows per workspace.
+    // hwnd -> { title, exe, iconUrl } for every taskbar row.
     property var taskbarWindows: ({})
-    property var wsWindows: ({})
-    // "<monitor>:<workspace>" -> komorebi layout name.
-    property var wsLayouts: ({})
     // hwnd -> row of the ungrouped TaskbarModel, for `taskbar.activate(row)`.
     property var taskbarRows: ({})
-    // The hwnds the last komorebi state lists, hwnd -> what komorebi said about a window last
-    // ({ mi, wi, exe, windowClass, floating }), komorebi's ignore rules (`komorebic global-state`)
-    // and hwnd -> when a minimized window was restored. See minimizedVerdict.
-    property var managedHwnds: ({})
-    property var seenHwnds: ({})
-    property var ignoreRules: []
-    property var restoredAt: ({})
     property var pendingActivate: null
-    property string komorebiFocused: ""
-    // The window with focus: the foreground taskbar row when the engine lists it, else the one
-    // komorebi has focused.
-    // `optimisticHwnd` leads for a moment after a click, so the highlight moves at once.
-    readonly property string focusedHwnd: optimisticHwnd || foreground?.address || komorebiFocused
+    // The window with focus: the foreground taskbar row. `optimisticHwnd` leads for a moment after
+    // a click, so the highlight moves at once.
+    readonly property string focusedHwnd: optimisticHwnd || foreground?.address || ""
     property string optimisticHwnd: ""
     property real optimisticAt: 0
     // key (the app's executable) -> hwnd of the group's window that had focus last.
@@ -927,94 +620,17 @@ Singleton {
     readonly property int taskbarCount: taskbar.count
     readonly property bool taskbarAvailable: S.TaskbarService.available
 
-    readonly property bool komorebi: S.Workspaces.provider === "komorebi"
-    // The workspaces are Windows virtual desktops (no tiling manager runs).
+    // The workspaces are Windows virtual desktops.
     readonly property bool virtualDesktops: S.Workspaces.provider === "windows"
     // The engine can close a desktop (the shell interface is open and more than one exists).
     readonly property bool canRemoveWorkspace: virtualDesktops && S.Workspaces.canRemove
 
-    property string lastStateSig: ""
     property string engineSig: ""
     property string knownSig: ""
     property string knownKeys: ""
     property string rowsSig: ""
     property string foregroundSig: ""
-    function queue(): void {
-        if (!stateTimer.running)
-            stateTimer.start();
-    }
-    onKomorebiChanged: {
-        queue();
-        if (komorebi && !rulesPoll.running)
-            rulesPoll.running = true;
-    }
-
-    // Read only: `komorebic global-state` prints the configuration komorebi runs with; only the
-    // ignore rules are taken, once per komorebi connection.
-    Process {
-        id: rulesPoll
-
-        command: ["komorebic", "global-state"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const rules = JSON.parse(text)?.ignore_identifiers;
-                    root.ignoreRules = Array.isArray(rules) ? rules : [];
-                } catch (e) {
-                    root.ignoreRules = [];
-                }
-                root.rebuild();
-            }
-        }
-    }
-
-    // A restored window stays in the list for a moment (see minimizedVerdict); then the list is
-    // rebuilt from what komorebi says.
-    Timer {
-        id: restoreTimer
-
-        interval: 1600
-        onTriggered: root.rebuild()
-    }
-
-    // komorebi events that change no workspace (a layout set by a hotkey) do not show in the
-    // engine's data, so the state is read now and then anyway. An unchanged answer does nothing.
-    Timer {
-        interval: 10000
-        repeat: true
-        running: root.komorebi
-        onTriggered: root.queue()
-    }
-
-    // Read only: `komorebic state` prints the state and changes nothing.
-    Timer {
-        id: stateTimer
-
-        interval: 150
-        onTriggered: {
-            if (!root.komorebi) {
-                root.lastStateSig = "";
-                root.wsWindows = {};
-                root.wsLayouts = {};
-                root.rebuild();
-            } else if (statePoll.running) {
-                stateTimer.restart();
-            } else {
-                        statePoll.running = true;
-            }
-        }
-    }
-
-    Process {
-        id: statePoll
-
-        command: ["komorebic", "state"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseState(text)
-        }
-    }
-
-    // Waits for komorebi to uncloak the windows of the workspace just focused, then raises one.
+    // Waits for the switch to finish, then raises the window.
     Timer {
         id: activateTimer
 
@@ -1035,34 +651,6 @@ Singleton {
         onTriggered: root.optimisticHwnd = ""
     }
 
-    // Refreshes the state a moment after a command or an activation, so the highlight settles on
-    // what komorebi reports.
-    Timer {
-        id: settleTimer
-
-        interval: 400
-        onTriggered: root.queue()
-    }
-
-    // Runs the allowed komorebic commands (see sendKomorebic); a request made while it runs waits
-    // and replaces any earlier waiting one.
-    Process {
-        id: focusProc
-
-        property var pending: []
-
-        function start(): void {
-            command = pending;
-            pending = [];
-            running = true;
-        }
-
-        onRunningChanged: {
-            if (!running && pending.length > 0)
-                start();
-        }
-    }
-
     S.TaskbarModel {
         id: taskbar
 
@@ -1070,8 +658,8 @@ Singleton {
         service: S.TaskbarService
         grouping: false
         // The engine starts its window tracker only for a model that has a bar window; the apps
-        // list hands it its own (see AppsList). showOnlyVisible stays false: komorebi cloaks the
-        // windows of the other workspaces and they must stay in the list.
+        // list hands it its own (see AppsList). showOnlyVisible stays false: the windows of the
+        // other desktops are cloaked and they must stay in the list.
         window: root.barWindow
     }
 
@@ -1096,39 +684,12 @@ Singleton {
             const knownSig = JSON.stringify(known);
             if (knownSig !== root.knownSig) {
                 const keys = Object.keys(known).sort().join(",");
-                // A window that was minimized and is not any more: restored a moment ago.
-                const now = Date.now();
-                let restored = false;
-                let flipped = false;
-                const restoredAt = {};
-                for (const h of Object.keys(root.restoredAt))
-                    if (known[h] && now - root.restoredAt[h] < 1500)
-                        restoredAt[h] = root.restoredAt[h];
-                for (const h of Object.keys(known)) {
-                    const was = root.taskbarWindows[h];
-                    if (was && !!was.minimized !== !!known[h].minimized)
-                        flipped = true;
-                    if (was?.minimized && !known[h].minimized) {
-                        restoredAt[h] = now;
-                        restored = true;
-                    }
-                }
-                root.restoredAt = restoredAt;
-                if (restored)
-                    restoreTimer.restart();
-                // komorebi drops a window on minimize and adds it on restore: read its state.
-                if (flipped)
-                    root.queue();
                 root.knownSig = knownSig;
                 root.taskbarWindows = known;
-                // A title or an icon needs no new state, only a new join. A window that came or
-                // went does.
+                // A window that came or went: look at the desktops now instead of at the next poll.
                 if (keys !== root.knownKeys) {
                     root.knownKeys = keys;
-                    root.queue();
-                    // Look at the desktops now instead of at the next poll (500 ms).
-                    if (root.virtualDesktops)
-                        S.VirtualDesktops.refresh();
+                    S.VirtualDesktops.refresh();
                 }
                 root.rebuild();
             }
@@ -1237,7 +798,6 @@ Singleton {
         property int id
         property string key
         property string name
-        property string layoutName
         property var monitor: null
         property bool active
         property bool focused

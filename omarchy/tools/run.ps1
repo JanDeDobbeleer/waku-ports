@@ -11,7 +11,7 @@ param(
   [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
 )
 $ErrorActionPreference = 'Stop'
-$env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH + ';C:\Program Files\komorebi\bin' # Git's bash and find first: the shell runs bash scripts
+$env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH # Git's bash and find first: the shell runs bash scripts
 # Omarchy reads its config and cache dirs from these; keep them inside the port. HOME is only read
 # (default wallpaper and video folders).
 $portRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path

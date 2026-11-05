@@ -20,10 +20,9 @@ ClipRect {
     readonly property bool onSpecial: monitor?.lastIpcObject.specialWorkspace?.name !== ""
     readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
     readonly property int activeWsIdx: workspaceIndex(activeWsId)
-    // Port: komorebi workspaces are real, so show all of them when there are more than `shown`.
-    // Port, Windows virtual desktops: the desktops that exist plus one dot that creates the next.
+    // Port: the desktops that exist plus one dot that creates the next.
     readonly property int existing: Hypr.workspaces.values.filter(w => w.monitor === monitor).length
-    readonly property int shown: Hypr.virtualDesktops ? Math.min(20, existing + 1) : Math.max(1, Config.bar.workspaces.shown, existing)
+    readonly property int shown: Math.min(20, existing + 1)
 
     readonly property bool dynamic: Config.bar.workspaces.dynamic
 

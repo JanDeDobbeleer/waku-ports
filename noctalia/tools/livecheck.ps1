@@ -4,7 +4,6 @@
 param([string]$Bin = (Join-Path $PSScriptRoot '..\bin'), [int]$MaxSeconds = 60)
 $ErrorActionPreference = 'Stop'
 $env:QT_FORCE_STDERR_LOGGING = '1'
-$env:PATH += ';C:\Program Files\komorebi\bin'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $env:NOCTALIA_CONFIG_DIR = Join-Path $port 'state\config'; $env:NOCTALIA_CACHE_DIR = Join-Path $port 'state\cache'
 $env:HOME = $env:USERPROFILE

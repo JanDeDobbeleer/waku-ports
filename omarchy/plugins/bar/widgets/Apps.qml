@@ -8,7 +8,7 @@ import qs.Commons as Commons
 import qs.Ui
 
 // Windows port: the running applications, one icon per program, right of the workspaces. The rows
-// are the engine's `TaskbarModel` (every window the taskbar lists, on every komorebi workspace),
+// are the engine's `TaskbarModel` (every window the taskbar lists, on every virtual desktop),
 // grouped by executable in the order they first appeared. The program with the foreground window
 // sits on a highlighted tile, one whose windows are all minimized is dimmed with a dash under the
 // icon, and a program with several windows has a count badge. A click raises the window after the

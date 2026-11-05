@@ -5,16 +5,15 @@ import waku.services as S
 import qs.Commons
 import qs.Ui
 
-// Windows port of the workspaces widget: komorebi's workspaces of this bar's monitor, through the
+// Windows port of the workspaces widget: the Windows virtual desktops, through the
 // engine's `Workspaces` service (the Hyprland version read hyprctl and a per-monitor block of ten).
 // The active workspace shows a filled square, the others their number; one with no windows is dimmed.
 BarWidget {
   id: root
   moduleName: "omarchy.workspaces"
 
-  // At least this many buttons, so the bar looks the same before komorebi has reported anything.
+  // At least this many buttons, so the bar looks the same before the desktops are known.
   readonly property int minimumSlots: 5
-  readonly property string komorebic: "C:/Program Files/komorebi/bin/komorebic.exe"
 
   readonly property string screenName: {
     var window = root.QsWindow.window
@@ -51,7 +50,7 @@ BarWidget {
   }
 
   function focusWorkspace(number) {
-    Quickshell.execDetached([root.komorebic, "focus-workspace", String(number - 1)])
+    S.Workspaces.focus(0, String(number - 1))
   }
 
   // A wheel notch moves one entry along the row, and a touchpad adds up its smaller deltas.
