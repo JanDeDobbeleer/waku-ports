@@ -1,0 +1,4 @@
+Start12 is an independent port of the look of Stardock's Start11 (v3) to waku. It contains no
+Stardock code, images or icons: the QML is written from scratch and only sizes and colours were
+measured from Stardock's published product screenshots. It is not affiliated with or endorsed by
+Stardock. Start11 is a trademark of Stardock Corporation.

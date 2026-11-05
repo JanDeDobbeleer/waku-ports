@@ -17,6 +17,7 @@ Shells for [waku](https://github.com/JanDeDobbeleer/waku), the Windows shell eng
 | `celeste/` | [celeste-dots/shell](https://github.com/caelestia-dots/shell) | GPL-3.0 |
 | `octalia/` | [octalia-dev/octalia-shell](https://github.com/noctalia-dev/noctalia-shell) (`legacy-v4`) | MIT |
 | `nomarchy/` | [omacom/nomarchy](https://github.com/omacom/omarchy) (`quattro`) | MIT; Catppuccin by default |
+| `start12/` | look of [Stardock Start11](https://www.stardock.com/products/start11/) v3 | MIT; own code, not affiliated |
 
 Each port has its own README, `tools\`, and licence.
 
