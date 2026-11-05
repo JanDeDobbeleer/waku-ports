@@ -7,7 +7,6 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$env:PATH += ';C:\Program Files\komorebi\bin'
 $env:NOCTALIA_CONFIG_DIR = Join-Path $port 'state\config'
 $env:NOCTALIA_CACHE_DIR = Join-Path $port 'state\cache'
 $env:HOME = $env:USERPROFILE

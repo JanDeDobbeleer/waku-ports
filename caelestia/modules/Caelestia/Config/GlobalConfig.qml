@@ -305,7 +305,7 @@ QtObject {
                     property bool occupiedBg: false
                     property bool showUnoccupied: true
                     // Port: show the occupied workspaces, the active one and the first empty one after
-                    // them; false shows every komorebi workspace of the monitor.
+                    // them; false shows every desktop.
                     property bool dynamic: true
                     property bool perMonitor: true
                     property bool showUtilities: true

@@ -4,11 +4,11 @@ import Quickshell.Wayland
 import waku.services as S
 import qs.Commons
 
-// Compositor backend for waku: komorebi or GlazeWM through the engine's `Workspaces`, windows
-// through `ToplevelManager`. Same contract as the Wayland backends this replaces.
+// Compositor backend for waku: the Windows virtual desktops through the engine's `Workspaces`,
+// windows through `ToplevelManager`. Same contract as the Wayland backends this replaces.
 //
-// A window belongs to the workspace whose `windows` (komorebi) lists its handle. With GlazeWM, or
-// for a window komorebi does not list, it is reported on the focused workspace of the first monitor.
+// A window belongs to the desktop whose `windows` lists its handle. A window no desktop lists is
+// reported on the focused desktop of the first monitor.
 Item {
   id: root
 
@@ -25,7 +25,7 @@ Item {
   function initialize() {
     syncWorkspaces();
     syncWindows();
-    Logger.i("WakuService", "Service started (" + (S.Workspaces.provider || "no tiling window manager") + ")");
+    Logger.i("WakuService", "Service started (" + (S.Workspaces.provider || "no virtual desktops") + ")");
   }
 
   Connections {
@@ -98,7 +98,7 @@ Item {
     const out = [];
     const wsId = focusedWorkspaceId();
     const output = workspaces.count > 0 ? workspaces.get(0).output : "";
-    // hwnd -> {workspace id, monitor name} for the windows komorebi lists.
+    // hwnd -> {workspace id, monitor name} for the windows the desktops list.
     const placed = {};
     for (const mon of (S.Workspaces.monitors || [])) {
       for (const ws of (mon.workspaces || [])) {
@@ -144,7 +144,7 @@ Item {
   function switchToWorkspace(workspace) {
     if (!workspace)
       return;
-    Quickshell.execDetached(["komorebic", "focus-workspace", String((workspace.idx ?? 1) - 1)]);
+    S.Workspaces.focus(0, String(workspace.oid));
   }
 
   function cycleKeyboardLayout() {

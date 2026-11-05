@@ -2,7 +2,6 @@
 # one line per failing file to logs\loadcheck.txt. Never touches the real config home.
 param([string]$Bin = (Join-Path $PSScriptRoot '..\bin'), [int]$MaxSeconds = 120, [string]$Filter = '')
 $ErrorActionPreference = 'Stop'
-$env:PATH += ';C:\Program Files\komorebi\bin'
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $modules = Join-Path $port 'modules'
