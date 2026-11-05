@@ -1,0 +1,21 @@
+singleton Style 1.0 Style.qml
+singleton Pins 1.0 Pins.qml
+Island 1.0 Island.qml
+Glyph 1.0 Glyph.qml
+WindowsLogo 1.0 WindowsLogo.qml
+IconButton 1.0 IconButton.qml
+BarWindow 1.0 BarWindow.qml
+DownloadsToolbar 1.0 DownloadsToolbar.qml
+ClockText 1.0 ClockText.qml
+StartMenu 1.0 StartMenu.qml
+AppTile 1.0 AppTile.qml
+AppRow 1.0 AppRow.qml
+PinnedPage 1.0 PinnedPage.qml
+WidgetsPage 1.0 WidgetsPage.qml
+AllAppsList 1.0 AllAppsList.qml
+SearchResults 1.0 SearchResults.qml
+Ring 1.0 Ring.qml
+DriveBar 1.0 DriveBar.qml
+ShortcutRow 1.0 ShortcutRow.qml
+PowerMenu 1.0 PowerMenu.qml
+AppMenu 1.0 AppMenu.qml

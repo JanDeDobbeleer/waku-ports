@@ -9,7 +9,7 @@
 # A port's tools\env.ps1 is run in this script's scope. It may set environment variables and run any
 # pre-start step, and may set $PortFlags (extra waku arguments). It can read $Dev and $PortDir.
 param(
-  [Parameter(Mandatory)][ValidateSet('celeste', 'octalia', 'nomarchy')][string]$Port,
+  [Parameter(Mandatory)][ValidateSet('celeste', 'octalia', 'nomarchy', 'start12')][string]$Port,
   [string]$Waku,   # default: $env:WAKU_EXE, else waku.exe on PATH
   [switch]$Dev,
   [switch]$DryRun
