@@ -1,0 +1,12 @@
+module qs.Modules.Panels.ControlCenter.Widgets
+AirplaneMode 1.0 AirplaneMode.qml
+Bluetooth 1.0 Bluetooth.qml
+CustomButton 1.0 CustomButton.qml
+DarkMode 1.0 DarkMode.qml
+KeepAwake 1.0 KeepAwake.qml
+Network 1.0 Network.qml
+NightLight 1.0 NightLight.qml
+OctaliaPerformance 1.0 OctaliaPerformance.qml
+Notifications 1.0 Notifications.qml
+PowerProfile 1.0 PowerProfile.qml
+WallpaperSelector 1.0 WallpaperSelector.qml

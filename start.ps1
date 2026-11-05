@@ -2,14 +2,14 @@
 # the deployed engine on it. One launcher for every port; what is port-specific lives in the port, in
 # <port>\tools\env.ps1.
 #
-#   .\start.ps1 -Port omarchy          the live setup: your engine, tray, app bar, Windows taskbar hidden
-#   .\start.ps1 -Port omarchy -Dev     the port's own bundled engine (<port>\bin), hidden, no tray, no app bar
-#   .\start.ps1 -Port noctalia -DryRun print what would run, change nothing
+#   .\start.ps1 -Port nomarchy          the live setup: your engine, tray, app bar, Windows taskbar hidden
+#   .\start.ps1 -Port nomarchy -Dev     the port's own bundled engine (<port>\bin), hidden, no tray, no app bar
+#   .\start.ps1 -Port octalia -DryRun print what would run, change nothing
 #
 # A port's tools\env.ps1 is run in this script's scope. It may set environment variables and run any
 # pre-start step, and may set $PortFlags (extra waku arguments). It can read $Dev and $PortDir.
 param(
-  [Parameter(Mandatory)][ValidateSet('caelestia', 'noctalia', 'omarchy')][string]$Port,
+  [Parameter(Mandatory)][ValidateSet('celeste', 'octalia', 'nomarchy')][string]$Port,
   [string]$Waku,   # default: $env:WAKU_EXE, else waku.exe on PATH
   [switch]$Dev,
   [switch]$DryRun
