@@ -4,6 +4,7 @@ import QtQml.Models
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import waku.services as S
 
 import qs.Commons
 import qs.Commons as Commons
@@ -176,6 +177,11 @@ ShellRoot {
     // case the user dir already existed at startup.
     pluginRegistry.rescan()
     shell._syncServices()
+    // The built-in waku tiler is the default on every port (keys.conf drives it).
+    S.Tiling.layout = "mainStack"
+    S.Tiling.gap = 8
+    S.Tiling.ratio = 0.5
+    S.Tiling.enabled = true
   }
 
   function mutateShellConfig(mutator) {

@@ -25,6 +25,13 @@ import qs.compat
 // windows, overlays) is not shown. With GlazeWM, or before the first state, a workspace has no
 // windows.
 //
+// With the Windows virtual desktops (no tiling manager: `Workspaces.provider` is "windows") the
+// engine lists the windows of each desktop (hwnd numbers). They are joined by hwnd with the same
+// taskbar rows; a window without a row is skipped, the rows give title, executable, icon and
+// minimized, and the rows' order (first appeared) is the window order. There is one engine entry
+// (handle 0) for every screen, so a window is listed once per screen workspace but once in
+// `toplevels`.
+//
 // Minimized windows: komorebi drops a window from its workspace when it is minimized and adds it
 // back to the focused workspace when it is restored, so `komorebic state` never lists one. The
 // taskbar rows still do (`minimized` true). Such a row becomes a toplevel with `minimized: true` on
@@ -87,6 +94,13 @@ Singleton {
 
     // `ws` is a workspace id (its 1-based position on the monitor) or its name.
     function focusWorkspace(ws: var): void {
+        // Windows virtual desktops: a dot past the last desktop creates it.
+        if (S.Workspaces.provider === "windows") {
+            const n = Number(ws);
+            if (Number.isInteger(n) && n >= 1)
+                S.Workspaces.focus(0, String(n - 1));
+            return;
+        }
         const mon = focusedMonitor;
         if (!mon)
             return;
@@ -95,9 +109,27 @@ Singleton {
             runFocus(mon, target.id - 1);
     }
 
+    // Windows virtual desktops: closes desktop `ws` (1-based, like focusWorkspace) the way Task
+    // View's close button does, without switching to it. The spare "add" dot (a number past the
+    // last desktop) never closes anything.
+    function removeWorkspace(ws: var): void {
+        if (!canRemoveWorkspace)
+            return;
+        const n = Number(ws);
+        if (Number.isInteger(n) && n >= 1 && n <= S.VirtualDesktops.desktops.length)
+            S.Workspaces.remove(0, String(n - 1));
+    }
+
     // `komorebic focus-workspace <index>`, an index (0-based) of an existing workspace on the
     // focused monitor. Anything else is dropped.
     function runFocus(mon: var, index: int): void {
+        // Windows virtual desktops (no tiling manager running): the engine switches the desktop.
+        if (S.Workspaces.provider === "windows") {
+            // A step never creates a desktop; only a click on a dot does (focusWorkspace).
+            if (Number.isInteger(index) && index >= 0 && index < S.VirtualDesktops.desktops.length)
+                S.Workspaces.focus(0, String(index));
+            return;
+        }
         if (!komorebi || mon !== focusedMonitor || !Number.isInteger(index))
             return;
         const count = workspaceList.values.filter(w => w.monitor === mon).length;
@@ -112,21 +144,30 @@ Singleton {
 
     // Brings a toplevel from `toplevels` to the front and returns what it did, for the test IPC:
     // "focused" (already the focused window: nothing happens, a taskbar click would minimise it),
-    // "switch+activate" (its workspace is focused first with `komorebic focus-workspace`, then,
-    // after komorebi has uncloaked it, the window is raised), "window-control" (raised through the
+    // "switch+activate" (its workspace is focused first with `komorebic focus-workspace`, or its
+    // virtual desktop is shown, then, after the switch, the window is raised), "window-control" (raised through the
     // engine's `WindowControl`), "activate" (raised through a TaskbarModel row), "eager-focus"
     // (`komorebic eager-focus <exe>`: the last resort, it may pick another window of that exe) or
     // "none". The highlight moves at once (`optimisticHwnd`) and settles on komorebi's state.
     // A minimized window is restored by both raise paths (WindowControl and the taskbar row), never
     // minimized again: it is never the focused window. With `dry` nothing happens; the result
     // says what would (test IPC).
+    // Whether raising `t` first needs a switch to its workspace: komorebi (a workspace on the
+    // focused monitor that is not shown) or a virtual desktop that is not shown (the monitor does
+    // not matter: desktops belong to none).
+    function switchesFirst(t: var): bool {
+        if (virtualDesktops)
+            return !t.wsActive;
+        return komorebi && t.monId === focusedMonitor?.id && !t.wsActive;
+    }
+
     function activateToplevel(t: var, dry = false): string {
         if (!t || !t.address)
             return "none";
         if (focusedHwnd === t.address)
             return "focused";
         if (dry) {
-            if (komorebi && t.monId === focusedMonitor?.id && !t.wsActive)
+            if (switchesFirst(t))
                 return "switch+activate";
             return activateHwnd(t.address, t.lastIpcObject?.class ?? "", true);
         }
@@ -135,7 +176,7 @@ Singleton {
         optimisticTimer.restart();
         const exe = t.lastIpcObject?.class ?? "";
         let result;
-        if (komorebi && t.monId === focusedMonitor?.id && !t.wsActive) {
+        if (switchesFirst(t)) {
             pendingActivate = {
                 hwnd: t.address,
                 exe: exe
@@ -403,13 +444,38 @@ Singleton {
         return "";
     }
 
+    // The windows of a virtual desktop as komorebi-like entries for windowsOf: the engine's hwnds
+    // that the taskbar lists, in the taskbar rows' order (the engine's order is by hwnd). The row
+    // says whether the window is minimized; a window without a row is skipped.
+    function desktopWindows(hwnds: var): var {
+        const out = [];
+        for (const hwnd of hwnds ?? []) {
+            const row = taskbarWindows[hwnd];
+            if (!row)
+                continue;
+            out.push({
+                hwnd: hwnd,
+                exe: row.exe || "",
+                title: row.title,
+                windowClass: "",
+                floating: false,
+                minimized: !!row.minimized,
+                order: taskbarRows[hwnd] ?? 0
+            });
+        }
+        out.sort((a, b) => a.order - b.order);
+        return out;
+    }
+
     // Toplevel items of workspace `wsIdx` on monitor `monIdx`, in komorebi's order, then the
-    // minimized windows placed there (`minimized`: from minimizedByWs).
-    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool, minimized = ({})): var {
+    // minimized windows placed there (`minimized`: from minimizedByWs). On virtual desktops: the
+    // desktop's windows (`desktopHwnds`, see desktopWindows).
+    function windowsOf(monIdx: int, wsIdx: int, wsActive: bool, minimized = ({}), desktopHwnds = []): var {
         const out = [];
         const key = monIdx + ":" + wsIdx;
         const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        for (const h of (wsWindows[key] ?? []).concat(minimized[key] ?? [])) {
+        const source = virtualDesktops ? desktopWindows(desktopHwnds) : (wsWindows[key] ?? []).concat(minimized[key] ?? []);
+        for (const h of source) {
             // The taskbar row adds the icon; komorebi's own title and exe stand in without it
             // (the model has no window to attach to here, so it can stay empty).
             const row = taskbarWindows[h.hwnd] ?? ({
@@ -574,6 +640,10 @@ Singleton {
             let wmi = wakuMons.findIndex(m => m.name === screen.name);
             if (wmi < 0 && wakuMons.length === screens.length)
                 wmi = i;
+            // Virtual desktops belong to no monitor: the engine has one entry with handle 0 and
+            // no name, which every screen shows.
+            if (wmi < 0)
+                wmi = wakuMons.findIndex(m => m.handle === 0);
             const wm = wmi >= 0 ? wakuMons[wmi] : null;
             const wsPlan = [];
             const list = wm?.workspaces ?? [];
@@ -587,7 +657,7 @@ Singleton {
                     active: !!src.active,
                     focused: !!src.focused,
                     layout: wsLayouts[wmi + ":" + j] ?? "",
-                    windows: windowsOf(wmi, j, !!src.active, minimized)
+                    windows: windowsOf(wmi, j, !!src.active, minimized, src.windows)
                 });
             }
             plan.push({
@@ -701,10 +771,16 @@ Singleton {
         if (!sameList(workspaceList.values, wss))
             workspaceList.values = wss;
         if (windowsChanged) {
+            // One entry per window: virtual desktops show the same windows on every screen.
             const all = [];
+            const seen = {};
             for (const w of wss)
-                for (const t of w.toplevels.values)
+                for (const t of w.toplevels.values) {
+                    if (seen[t.address])
+                        continue;
+                    seen[t.address] = true;
                     all.push(t);
+                }
             toplevelList.values = all;
             updateGroups(all);
         }
@@ -852,6 +928,10 @@ Singleton {
     readonly property bool taskbarAvailable: S.TaskbarService.available
 
     readonly property bool komorebi: S.Workspaces.provider === "komorebi"
+    // The workspaces are Windows virtual desktops (no tiling manager runs).
+    readonly property bool virtualDesktops: S.Workspaces.provider === "windows"
+    // The engine can close a desktop (the shell interface is open and more than one exists).
+    readonly property bool canRemoveWorkspace: virtualDesktops && S.Workspaces.canRemove
 
     property string lastStateSig: ""
     property string engineSig: ""
@@ -1046,6 +1126,9 @@ Singleton {
                 if (keys !== root.knownKeys) {
                     root.knownKeys = keys;
                     root.queue();
+                    // Look at the desktops now instead of at the next poll (500 ms).
+                    if (root.virtualDesktops)
+                        S.VirtualDesktops.refresh();
                 }
                 root.rebuild();
             }

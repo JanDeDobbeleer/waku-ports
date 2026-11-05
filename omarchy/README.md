@@ -19,7 +19,7 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 | Ctrl+Alt+E | Windows emoji picker (Win+.) |
 | Ctrl+Alt+V | Windows clipboard history (Win+V) |
 
-Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), komorebi (workspaces) and a
+Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), and a
 Nerd Font (`Cascadia Mono NF` is the default, see `Style.qml`). No Python. The shell uses its own home,
 `state\home`, not your user profile.
 
@@ -27,7 +27,7 @@ Nerd Font (`Cascadia Mono NF` is the default, see `Style.qml`). No Python. The s
 
 | Part | How it works on Windows |
 |---|---|
-| Bar | menu, workspaces (komorebi), running apps (one icon per program), clock, weather, tray, bluetooth, network, audio, power |
+| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program), clock, weather, tray, bluetooth, network, audio, power |
 | Menu | Apps, Appearance (Theme, Background), Trigger (Emoji, Clipboard), Setup (Audio, Bluetooth, Network, Power, Windows Settings), About, System (Lock, Sleep, Sign out, Restart, Shut down) |
 | Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons |
 | Theme switcher | 21 Omarchy themes (`themes\`); `tools\theme-apply.ps1 <name>` rewrites the files the shell watches, so colours change live |
@@ -51,7 +51,6 @@ wallpaper) and the dock.
 | `tools\menu-state.ps1 -Menu apps -Rows 8` | Opens a menu and prints its state and rows, no screenshot |
 | `tools\winshot.ps1` | Saves each shell window as a PNG (transparency is lost; desktop captures can contain private content) |
 | `tools\theme-apply.ps1 <name>` | Applies a theme (`-Prepare` only refreshes the picker's previews) |
-| `tools\apply-komorebi.ps1` | Applies `komorebi\komorebi.json` (rounded border in the flyout border's colour and thickness, Omarchy's gaps, the current theme's colours) to komorebi, with a backup; run it again after a theme change (see `komorebi\README.md`) |
 | `tools\build-menu.py` | Regenerates the Windows menu from the upstream one |
 | `tools\apply-batchN.py` | The port's mechanical changes, in order; each is idempotent (batch 10 then 16 for Wi-Fi) |
 
@@ -79,3 +78,47 @@ wallpaper) and the dock.
 - The tooltip logs "Binding loop detected for property contentWidth" (engine `PopupWindow`).
 - `PopupCard` and the tooltip no longer clamp to the screen edge.
 - The theme list has no per-theme wallpapers (those are large and live in Omarchy's repo).
+
+## Keys and tiling
+
+This port uses waku's own tiler and key handler. No komorebi, whkd or AutoHotkey is needed. The shell
+turns the tiler on (`Tiling.enabled`, in `shell.qml`) and ships its bindings in `keys.conf` next to
+`shell.qml`; `wakukeys` reads that file by itself when it runs with this folder as `--config-home`
+(`start.ps1` and `wakuc startup enable` both do). All three ports ship the same file, so they behave the
+same. Edit `keys.conf` and save: the daemon reloads it. `wakukeys status` shows what is bound.
+
+Windows reserves `Alt+Space` and `Win+L`; they cannot be bound.
+
+| Keys | Does |
+|---|---|
+| `Alt+T` | new Windows Terminal window |
+| `Alt+Q` | close the focused window |
+| `Alt+M` | minimize the focused window |
+| `Alt+Shift+O` | reload the shell |
+| **Focus** | |
+| `Alt+Left/Down/Up/Right` | focus the window in that direction |
+| `Alt+Shift+[` / `Alt+Shift+]` | focus the previous / next window |
+| **Move** | |
+| `Alt+Shift+Left/Down/Up/Right` | swap the window with its neighbour |
+| `Alt+Shift+Enter` | promote the window to the main slot |
+| **Stacks** (windows that share one slot; the top one shows) | |
+| `Ctrl+Alt+Shift+Left/Down/Up/Right` | stack the window onto its neighbour |
+| `Alt+;` | take the window out of its stack |
+| `Alt+[` / `Alt+]` | cycle the stack backward / forward |
+| **Resize** | |
+| `Alt+=` / `Alt+-` | wider / narrower |
+| `Alt+Shift+=` / `Alt+Shift+-` | taller / shorter |
+| **Layout** | |
+| `Alt+L` | next layout: mainStack, mainStackTop, columns, rows, bsp, grid, centerMain |
+| `Alt+X` / `Alt+Y` | mirror the layout horizontally / vertically |
+| `Alt+F` | float the window, or tile it again |
+| `Alt+Shift+M` | monocle: the focused window fills the area |
+| `Alt+Shift+R` | retile every window of the desktop |
+| `Alt+P` | pause or resume the tiler |
+| **Desktops** | |
+| `Alt+1` ... `Alt+9` | go to desktop 1 to 9 |
+| `Alt+Shift+1` ... `Alt+Shift+9` | move the window to desktop 1 to 9 (you stay); past the last desktop it makes one new desktop |
+| `Ctrl+Alt+Left` / `Ctrl+Alt+Right` | previous / next desktop |
+
+The same actions run from a terminal: `wakuc tile layout next`, `wakuc tile focus left`,
+`wakuc desktop goto 2`, `wakuc tile status`.

@@ -11,6 +11,7 @@
 // Qt & Quickshell Core
 import QtQuick
 import Quickshell
+import waku.services as S
 
 // Commons & Services
 import qs.Commons
@@ -48,6 +49,12 @@ ShellRoot {
   Component.onCompleted: {
     Logger.i("Shell", "---------------------------");
     Logger.i("Shell", "Noctalia Hello!");
+
+    // The built-in waku tiler is the default on every port (keys.conf drives it).
+    S.Tiling.layout = "mainStack";
+    S.Tiling.gap = 8;
+    S.Tiling.ratio = 0.5;
+    S.Tiling.enabled = true;
   }
 
   Connections {

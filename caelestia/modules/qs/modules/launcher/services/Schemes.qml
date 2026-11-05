@@ -72,7 +72,7 @@ Searcher {
         Colours.scheme = name;
         Colours.seed = name === "dynamic" ? "wallpaper" : flavour;
         apply();
-        Toaster.toast(Tr.tr("Colour scheme changed"), `${name} ${flavour}`, "palette", Toast.Success, 2500);
+        Toaster.toast(Tr.tr("Colour scheme changed"), `${name} ${flavour}`, "palette", Toast.Info, 2500);
     }
 
     list: schemes.instances
