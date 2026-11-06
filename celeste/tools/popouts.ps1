@@ -14,7 +14,7 @@ $logs = Join-Path $port 'logs'; New-Item -ItemType Directory -Force $logs, $Out 
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
 $p = Start-Process -FilePath $waku -PassThru -WindowStyle Hidden `
   -RedirectStandardError (Join-Path $logs 'popouts.err.txt') -RedirectStandardOutput (Join-Path $logs 'popouts.out.txt') `
-  -ArgumentList @('--config-home', $ConfigHome, '--no-tray', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
+  -ArgumentList @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
 try {
   $ready = $false
   for ($i = 0; $i -lt 60 -and -not $ready; $i++) {

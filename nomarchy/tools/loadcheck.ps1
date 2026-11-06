@@ -34,7 +34,7 @@ $urls
 $err = Join-Path $logs 'loadcheck.err.txt'; $out = Join-Path $logs 'loadcheck.out.txt'
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
 $p = Start-Process -FilePath $waku -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
-  -ArgumentList @('--config-home', $home_, '--no-tray', '--import-path', $modules)
+  -ArgumentList @('--config-home', $home_, '--no-tray', '--no-app-bar', '--import-path', $modules)
 $t0 = Get-Date
 try {
   while (((Get-Date) - $t0).TotalSeconds -lt $MaxSeconds) {

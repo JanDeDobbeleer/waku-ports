@@ -33,10 +33,10 @@ if ($DryRun) {
 # 3. the engine and its flags
 if ($Dev) {
   $Waku = Join-Path $PortDir 'bin\waku.exe'
-  $flags = @('--config-home', $PortDir, '--no-tray', '--font-engine=directwrite') + $PortFlags
+  $flags = @('--config-home', $PortDir, '--no-tray', '--no-app-bar', '--font-engine=directwrite') + $PortFlags
 } else {
   if (-not $Waku) { $Waku = if ($env:WAKU_EXE) { $env:WAKU_EXE } else { (Get-Command waku.exe -ErrorAction SilentlyContinue).Source } }
-  $flags = @('--config-home', $PortDir, '--font-engine=directwrite', '--register-app-bar', '--hide-taskbar') + $PortFlags
+  $flags = @('--config-home', $PortDir, '--font-engine=directwrite', '--hide-taskbar') + $PortFlags
 }
 if (-not $Waku -or -not (Test-Path $Waku)) { throw "engine not found: $Waku (set WAKU_EXE, pass -Waku, or put waku.exe on PATH)" }
 if ($DryRun) {

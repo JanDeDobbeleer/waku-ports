@@ -1,6 +1,6 @@
 # Starts waku on a config home, lists the top-level windows of the process (rect, styles, z
 # order) and runs WindowFromPoint on sample points, optionally after a shortcut and a shot.
-# Read-only: sends no input. Always passes --no-tray, never --register-app-bar.
+# Read-only: sends no input. Always passes --no-tray, always --no-app-bar.
 param(
   [Alias('Home')][string]$ConfigHome = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [int]$Seconds = 10,
@@ -36,7 +36,7 @@ public static class P {
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
-$launch = @('--config-home', $ConfigHome, '--no-tray', '--font-engine=directwrite')
+$launch = @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--font-engine=directwrite')
 if ((Resolve-Path $ConfigHome).Path.TrimEnd([char]92) -ne $port.TrimEnd([char]92)) { $launch += @('--import-path', (Join-Path $port 'modules')) }
 $p = Start-Process -FilePath $waku -ArgumentList $launch -PassThru -WindowStyle Hidden `
   -RedirectStandardError (Join-Path $port 'logs\probe.err.txt') -RedirectStandardOutput (Join-Path $port 'logs\probe.out.txt')

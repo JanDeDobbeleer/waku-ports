@@ -24,7 +24,7 @@ Each port has its own README, `tools\`, and licence.
     .\start.ps1 -Port octalia -DryRun    # print what would run
     .\stop.ps1
 
-The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with `--register-app-bar --hide-taskbar`:
+The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with `--hide-taskbar` (panels reserve screen space by default):
 the bar reserves its edge of the screen and the Windows taskbar is hidden while it runs. `stop.ps1` asks each
 waku to quit through its own `wakuc`, so the engine puts the taskbar back.
 
@@ -53,7 +53,7 @@ wakuc startup status      # is it registered, with which command and which waku.
 wakuc startup disable     # remove the task
 ```
 
-- The task starts waku with `--register-app-bar` and `--hide-taskbar` unless you pass `--no-app-bar` or
+- The task starts waku with `--hide-taskbar` unless you pass `--no-app-bar` or
   `--keep-taskbar` to `startup enable`.
 - Other waku flags follow `--`: `--font-engine=directwrite`, `--log-file <path>` (a JSON Lines diagnostics log; off unless you pass it).
 - To switch to another port at sign-in, run `startup enable` again with that port's folder. It replaces the
