@@ -25,18 +25,42 @@ QtObject {
     property string _manualMount: ""
     onManualPrimaryDiskChanged: _manualMount = manualPrimaryDisk ? manualPrimaryDisk.mount : ""
 
-    readonly property var disks: {
-        const list = src.disks ?? [];
-        return list.map(d => ({
-                    mount: d.mount,
-                    used: d.used / 1024,
-                    total: d.total / 1024,
-                    free: d.free / 1024,
-                    perc: d.perc / 100,
-                    hasRoot: d.hasRoot
-                }));
+    // Port: the list is replaced on every poll. Anything built from it (the drive menu's items)
+    // is torn down and rebuilt each time, which closes an open menu. So the list is replaced only
+    // when the set of drives changes; the usage numbers are updated in place on the same objects.
+    property var disks: []
+    readonly property var _srcDisks: src.disks
+    function _refresh(): void {
+        const list = _srcDisks ?? [];
+        const same = list.length === disks.length && list.every((d, i) => d.mount === disks[i].mount && d.hasRoot === disks[i].hasRoot);
+        if (!same) {
+            disks = list.map(d => ({
+                        mount: d.mount,
+                        used: d.used / 1024,
+                        total: d.total / 1024,
+                        free: d.free / 1024,
+                        perc: d.perc / 100,
+                        hasRoot: d.hasRoot
+                    }));
+            return;
+        }
+        list.forEach((d, i) => {
+            disks[i].used = d.used / 1024;
+            disks[i].total = d.total / 1024;
+            disks[i].free = d.free / 1024;
+            disks[i].perc = d.perc / 100;
+        });
+        usageTick++;
     }
-    readonly property var primaryDisk: disks.find(d => d.mount === _manualMount) ?? disks.find(d => d.hasRoot) ?? disks[0] ?? null
+    property int usageTick: 0
+    on_SrcDisksChanged: _refresh()
+    Component.onCompleted: _refresh()
+    // A copy, re-made on each usage update (usageTick), so bindings that read its numbers refresh.
+    readonly property var primaryDisk: {
+        usageTick;
+        const d = disks.find(d => d.mount === _manualMount) ?? disks.find(d => d.hasRoot) ?? disks[0];
+        return d ? Object.assign({}, d) : null;
+    }
     readonly property real percentage: primaryDisk ? primaryDisk.perc : 0
 
     readonly property var src: S.Disks {
