@@ -16,7 +16,7 @@ $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
 if (Get-Process waku -ErrorAction SilentlyContinue) { throw 'a waku shell is running; stop it first' }
 $p = Start-Process -FilePath $waku -PassThru -WindowStyle Hidden `
   -RedirectStandardError (Join-Path $logs 'visual.err.txt') -RedirectStandardOutput (Join-Path $logs 'visual.out.txt') `
-  -ArgumentList @('--config-home', $port, '--no-tray', '--no-app-bar', '--font-engine=directwrite')
+  -ArgumentList @('--config-home', $port, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite')
 try {
   Start-Sleep -Seconds $Boot
   & $wakuc --config-home $port status

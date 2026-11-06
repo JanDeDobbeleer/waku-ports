@@ -9,7 +9,7 @@ $env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH
 $logs = Join-Path $root 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $w = Join-Path $Bin 'wakuc.exe'
 $p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden `
-  -ArgumentList @('--config-home', $root, '--no-tray', '--no-app-bar', '--font-engine=directwrite') `
+  -ArgumentList @('--config-home', $root, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite') `
   -RedirectStandardError (Join-Path $logs 'menu.err.txt') -RedirectStandardOutput (Join-Path $logs 'menu.out.txt')
 try {
   Start-Sleep -Seconds $Wait

@@ -43,7 +43,7 @@ function Save-Windows([uint32]$ProcId, [string]$Path) {
 $logs = Join-Path $root 'logs'; $shots = Join-Path $root 'shots'
 New-Item -ItemType Directory -Force $logs, $shots | Out-Null
 $p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden `
-  -ArgumentList @('--config-home', $root, '--no-tray', '--no-app-bar', '--font-engine=directwrite') `
+  -ArgumentList @('--config-home', $root, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite') `
   -RedirectStandardError (Join-Path $logs 'win.err.txt') -RedirectStandardOutput (Join-Path $logs 'win.out.txt')
 try {
   Start-Sleep -Seconds $Seconds

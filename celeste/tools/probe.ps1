@@ -36,7 +36,7 @@ public static class P {
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
-$launch = @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--font-engine=directwrite')
+$launch = @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite')
 if ((Resolve-Path $ConfigHome).Path.TrimEnd([char]92) -ne $port.TrimEnd([char]92)) { $launch += @('--import-path', (Join-Path $port 'modules')) }
 $p = Start-Process -FilePath $waku -ArgumentList $launch -PassThru -WindowStyle Hidden `
   -RedirectStandardError (Join-Path $port 'logs\probe.err.txt') -RedirectStandardOutput (Join-Path $port 'logs\probe.out.txt')

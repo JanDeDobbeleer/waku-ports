@@ -22,7 +22,7 @@ $logs = Join-Path $port 'logs'
 New-Item -ItemType Directory -Force $logs | Out-Null
 $err = Join-Path $logs 'run.err.txt'; $out = Join-Path $logs 'run.out.txt'
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
-$launch = @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--font-engine=directwrite')
+$launch = @('--config-home', $ConfigHome, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite')
 # A smoke shell has its own config home; the port's modules still resolve through --import-path.
 if ((Resolve-Path $ConfigHome).Path.TrimEnd([char]92) -ne $port.TrimEnd([char]92)) { $launch += @('--import-path', (Join-Path $port 'modules')) }
 $p = Start-Process -FilePath $waku -ArgumentList $launch -RedirectStandardError $err `
