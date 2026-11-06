@@ -12,9 +12,9 @@ taskbar of three islands and a Pro-style Start menu. Written from scratch, MIT. 
 
 | Element | Works through |
 |---|---|
-| Start button, Start menu | click, `wakuc surface toggle startmenu`, `Ctrl+Escape` (`keys.conf`) |
-| Downloads toolbar | lists your Downloads folder; a click opens the item |
-| App island | built-in `Taskbar`: pinned and running apps, grouping, right-click menu |
+| Start menu | click, `wakuc surface toggle startmenu`, `Ctrl+Escape` (`keys.conf`) |
+| App island | Start button, built-in `Taskbar` (pinned and running apps, grouping, right-click menu), Downloads |
+| Desktop and layout island | the virtual desktops (click to switch) and the tiler layout (click next, right-click previous) |
 | Tray island | built-in `Tray`, `Volume`, `Notifications`, and the clock |
 | Search | `AppsService.search`; Enter starts the first match |
 | Pinned page | your pins (first run: the apps you launch most); right-click to pin or unpin |
@@ -34,4 +34,4 @@ Dropped because waku has no backend for them, not stubbed:
 - The bare Windows key: the shell owns it, so use `Ctrl+Escape`.
 - The Run history line.
 
-Window tiling is off; this port is a Start menu and taskbar, not a tiler.
+Windows are tiled by waku's built-in tiler, turned on in `shell.qml` with the keys in `keys.conf` (the same as the other ports). It tiles inside the work area the taskbar leaves free.
