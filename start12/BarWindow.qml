@@ -2,10 +2,10 @@ import QtQuick
 import waku
 import waku.widgets
 
-// The Start12 taskbar: three islands on a transparent strip along the bottom edge. Left: the Start
-// button and the Downloads toolbar. Middle: your pinned and running apps. Right: the notification
-// area, volume, the clock and notifications. Only the islands take clicks; the strip between them
-// passes them to the windows below.
+// The Start12 taskbar: three islands on a transparent strip along the bottom edge, as in Start11.
+// Left: the virtual desktops and the tiler layout. Middle: the Start button, your pinned and running
+// apps, and the Downloads toolbar. Right: the notification area, volume, the clock and notifications.
+// Only the islands take clicks; the strip between them passes them to the windows below.
 PanelWindow {
     id: bar
 
@@ -23,25 +23,55 @@ PanelWindow {
     color: "transparent"
 
     mask: Region {
-        Region { item: startIsland }
-        Region { item: appsIsland }
+        Region { item: leftIsland }
+        Region { item: mainIsland }
         Region { item: trayIsland }
     }
 
     Island {
-        id: startIsland
+        id: leftIsland
         anchors.left: parent.left
         anchors.leftMargin: 8
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Style.islandGap
-        width: startRow.implicitWidth + 12
+        width: leftRow.implicitWidth + 12
 
         Row {
-            id: startRow
+            id: leftRow
+            anchors.centerIn: parent
+            spacing: 6
+
+            DesktopSwitcher {
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Rectangle {
+                visible: layout.visible
+                anchors.verticalCenter: parent.verticalCenter
+                width: 1
+                height: 24
+                color: Style.islandBorder
+            }
+            LayoutSwitcher {
+                id: layout
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
+    Island {
+        id: mainIsland
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Style.islandGap
+        width: mainRow.implicitWidth + 16
+
+        Row {
+            id: mainRow
             anchors.centerIn: parent
             spacing: 6
 
             Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
                 width: 40
                 height: 40
                 radius: 6
@@ -58,29 +88,26 @@ PanelWindow {
                     onClicked: bar.startMenu.toggle()
                 }
             }
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 1
+                height: 24
+                color: Style.islandBorder
+            }
+            Taskbar {
+                id: apps
+                anchors.verticalCenter: parent.verticalCenter
+                iconSize: 24
+                grouping: true
+                indicator: true
+                buttonHeight: 40
+                buttonPadding: 8
+                activePadding: 8
+                buttonRadius: 6
+            }
             DownloadsToolbar {
                 anchors.verticalCenter: parent.verticalCenter
             }
-        }
-    }
-
-    Island {
-        id: appsIsland
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: Style.islandGap
-        width: Math.max(56, apps.implicitWidth + 16)
-
-        Taskbar {
-            id: apps
-            anchors.centerIn: parent
-            iconSize: 24
-            grouping: true
-            indicator: true
-            buttonHeight: 40
-            buttonPadding: 8
-            activePadding: 8
-            buttonRadius: 6
         }
     }
 
