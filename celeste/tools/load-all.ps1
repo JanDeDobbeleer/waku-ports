@@ -87,7 +87,7 @@ ShellRoot {
 "@
   [IO.File]::WriteAllText((Join-Path $home_ 'shell.qml'), $shell, (New-Object Text.UTF8Encoding $false))
   $err = Join-Path $work "run$iteration.err.txt"; $out = Join-Path $work "run$iteration.out.txt"
-  $launch = @('--config-home', $home_, '--no-tray', '--no-app-bar', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
+  $launch = @('--config-home', $home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
   $p = Start-Process -FilePath (Join-Path $Bin 'waku.exe') -ArgumentList $launch -RedirectStandardError $err -RedirectStandardOutput $out -PassThru -WindowStyle Hidden
   $sw = [Diagnostics.Stopwatch]::StartNew(); $lastSize = -1; $idle = [Diagnostics.Stopwatch]::StartNew(); $done = $false
   while ($sw.Elapsed.TotalSeconds -lt $MaxSeconds) {

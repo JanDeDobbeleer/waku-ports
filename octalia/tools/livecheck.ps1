@@ -15,7 +15,7 @@ if ($existing -match 'running; pid=') { throw 'a shell already runs for the live
 Copy-Item -LiteralPath (Join-Path $port 'smoke\livecheck.qml') -Destination (Join-Path $home_ 'shell.qml') -Force
 $err = Join-Path $port 'logs\livecheck.err.txt'
 $p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput "$err.out" `
-  -ArgumentList @('--config-home', $home_, '--no-tray', '--no-app-bar', '--import-path', (Join-Path $port 'modules'))
+  -ArgumentList @('--config-home', $home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--import-path', (Join-Path $port 'modules'))
 $t0 = Get-Date
 try {
   while (((Get-Date) - $t0).TotalSeconds -lt $MaxSeconds) {

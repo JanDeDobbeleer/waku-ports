@@ -17,7 +17,7 @@ $env:WAKU_WALLPAPER_DRYRUN = '1'
 $env:CELESTE_WALLPAPERS_DIR = Join-Path $port 'assets'
 $waku = Join-Path $Bin 'waku.exe'; $wakuc = Join-Path $Bin 'wakuc.exe'
 $p = Start-Process -FilePath $waku -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
-  -ArgumentList @('--config-home', $port, '--import-path', (Join-Path $port 'modules'), '--font-engine=directwrite', '--no-tray', '--no-app-bar')
+  -ArgumentList @('--config-home', $port, '--import-path', (Join-Path $port 'modules'), '--font-engine=directwrite', '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling')
 function Call([string[]]$a) { "{0} -> {1}" -f ($a -join ' '), (& $wakuc --config-home $port call @a 2>&1 | Out-String).Trim() }
 try {
   Start-Sleep -Seconds 12

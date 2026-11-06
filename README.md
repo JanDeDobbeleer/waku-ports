@@ -7,6 +7,9 @@
 
 # waku ports
 
+> **waku is in active development.** Expect breaking changes in the engine and in these ports; flags and
+> options can change or go away without a deprecation period.
+
 Shells for [waku](https://github.com/JanDeDobbeleer/waku), the Windows shell engine, ported from Linux Quickshell setups. One folder per port:
 
 | Port | Upstream | Notes |
@@ -20,12 +23,12 @@ Each port has its own README, `tools\`, and licence.
 ## Start one
 
     .\start.ps1 -Port nomarchy             # stops any running waku, then starts the port
-    .\start.ps1 -Port nomarchy -Dev        # the port's bundled engine (<port>\bin), hidden, no tray, no app bar
+    .\start.ps1 -Port nomarchy -Dev        # the port's bundled engine (<port>\bin), hidden, no tray, no app bar, no keys, no tiling
     .\start.ps1 -Port octalia -DryRun    # print what would run
     .\stop.ps1
 
-The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with `--hide-taskbar` (panels reserve screen space by default):
-the bar reserves its edge of the screen and the Windows taskbar is hidden while it runs. `stop.ps1` asks each
+The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with no extra flags. waku's defaults apply: the bar reserves its edge of the screen, the Windows taskbar
+is hidden while it runs, windows are tiled and the key daemon starts when the port has a `keys.conf`. `stop.ps1` asks each
 waku to quit through its own `wakuc`, so the engine puts the taskbar back.
 
 What belongs to a port stays in the port: `<port>\tools\env.ps1` sets its environment variables and runs any

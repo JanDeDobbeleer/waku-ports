@@ -14,7 +14,7 @@ New-Item -ItemType Directory -Force $out | Out-Null
 $err = Join-Path $Home_ 'logs\tour.err.txt'
 New-Item -ItemType Directory -Force (Split-Path $err) | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1'
-$p = Start-Process $Exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--no-app-bar', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -RedirectStandardError $err
+$p = Start-Process $Exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -RedirectStandardError $err
 function Status { & $Wakuc --config-home $Home_ status 2>&1 | Out-String }
 $ready = $false
 for ($i = 0; $i -lt 60 -and -not $ready; $i++) {

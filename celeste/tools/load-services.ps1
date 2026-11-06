@@ -20,7 +20,7 @@ $q += '    }', '}'
 [IO.File]::WriteAllText((Join-Path $home_ 'shell.qml'), ($q -join "`n"), (New-Object Text.UTF8Encoding $false))
 $env:QT_FORCE_STDERR_LOGGING = '1'
 $err = Join-Path $port 'logs\load.err.txt'; New-Item -ItemType Directory -Force (Split-Path $err) | Out-Null
-$args_ = @('--config-home', $home_, '--no-tray', '--no-app-bar', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
+$args_ = @('--config-home', $home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite', '--import-path', (Join-Path $port 'modules'))
 $p = Start-Process (Join-Path $Bin 'waku.exe') -ArgumentList $args_ -RedirectStandardError $err -RedirectStandardOutput (Join-Path $port 'logs\load.out.txt') -PassThru -WindowStyle Hidden
 try { Start-Sleep -Seconds $Seconds; & (Join-Path $Bin 'wakuc.exe') --config-home $home_ status } finally {
   & (Join-Path $Bin 'wakuc.exe') --config-home $home_ quit

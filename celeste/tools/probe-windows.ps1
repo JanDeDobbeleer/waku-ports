@@ -43,7 +43,7 @@ $exe = Join-Path $Bin 'waku.exe'; $wc = Join-Path $Bin 'wakuc.exe'
 $out = Join-Path $Home_ 'shots\edge'; New-Item -ItemType Directory -Force $out | Out-Null
 $logs = Join-Path $Home_ 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1'
-$p = Start-Process $exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--no-app-bar', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -WindowStyle Hidden -RedirectStandardError (Join-Path $logs 'edge.err.txt') -RedirectStandardOutput (Join-Path $logs 'edge.out.txt')
+$p = Start-Process $exe -ArgumentList @('--config-home', $Home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite', '--import-path', (Join-Path $Home_ 'modules')) -PassThru -WindowStyle Hidden -RedirectStandardError (Join-Path $logs 'edge.err.txt') -RedirectStandardOutput (Join-Path $logs 'edge.out.txt')
 function Crop($name, $x, $y, $w, $h) {
   $full = Join-Path $env:TEMP "waku_edge_full.png"
   & (Join-Path $PSScriptRoot 'shot.ps1') -Out $full | Out-Null

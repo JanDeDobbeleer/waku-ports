@@ -9,7 +9,7 @@ Copy-Item -LiteralPath $Qml -Destination (Join-Path $home_ 'shell.qml') -Force
 $logs = Join-Path $port 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $err = Join-Path $logs 'probe.err.txt'; $out = Join-Path $logs 'probe.out.txt'
 $p = Start-Process -FilePath (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden -RedirectStandardError $err -RedirectStandardOutput $out `
-  -ArgumentList @('--config-home', $home_, '--no-tray', '--no-app-bar', '--import-path', (Join-Path $port 'modules'))
+  -ArgumentList @('--config-home', $home_, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--import-path', (Join-Path $port 'modules'))
 $t0 = Get-Date
 try {
   while (((Get-Date) - $t0).TotalSeconds -lt $MaxSeconds) {
