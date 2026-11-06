@@ -20,14 +20,8 @@ PanelWindow {
 
     name: "startmenu"
     visible: false
-    anchors {
-        bottom: true
-        left: true
-    }
-    margins {
-        bottom: Style.barHeight + 6
-        left: 8
-    }
+    anchors.bottom: true
+    margins.bottom: Style.barHeight + 6
     implicitWidth: Style.menuWidth
     implicitHeight: Style.menuHeight + Style.avatarSize / 2
     exclusionMode: ExclusionMode.Ignore
