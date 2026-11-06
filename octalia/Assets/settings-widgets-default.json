@@ -91,6 +91,9 @@
       "iconColor": "none",
       "textColor": "none"
     },
+    "LayoutSwitcher": {
+      "iconColor": "none"
+    },
     "KeyboardLayout": {
       "displayMode": "onhover",
       "showIcon": true,

@@ -22,6 +22,7 @@ Singleton {
                            "DarkMode": darkModeComponent,
                            "KeepAwake": keepAwakeComponent,
                            "KeyboardLayout": keyboardLayoutComponent,
+                           "LayoutSwitcher": layoutSwitcherComponent,
                            "LockKeys": lockKeysComponent,
                            "Launcher": launcherComponent,
                            "MediaMini": mediaMiniComponent,
@@ -159,6 +160,9 @@ Singleton {
                                   "KeepAwake": {
                                     "iconColor": "none",
                                     "textColor": "none"
+                                  },
+                                  "LayoutSwitcher": {
+                                    "iconColor": "none"
                                   },
                                   "KeyboardLayout": {
                                     "displayMode": "onhover",
@@ -335,6 +339,9 @@ Singleton {
   }
   property Component keyboardLayoutComponent: Component {
     KeyboardLayout {}
+  }
+  property Component layoutSwitcherComponent: Component {
+    LayoutSwitcher {}
   }
   property Component keepAwakeComponent: Component {
     KeepAwake {}
