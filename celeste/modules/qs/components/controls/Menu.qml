@@ -32,17 +32,24 @@ MouseArea {
     property MenuItem active: items[0] ?? null
     property bool expanded
 
-    signal itemSelected(item: MenuItem)
+    // Port: untyped. A MenuItem-typed argument cannot take a component derived from MenuItem
+    // (the drive menu's DiskItem); the call fails and the handler never runs.
+    signal itemSelected(var item)
 
+    // Port: the `as ContentWindow` cast is null here, so the menu ended up on the window's root item
+    // instead of the interaction wrapper. Its items' hover then took the hover from the wrapper,
+    // which read it as the mouse leaving and closed the dashboard. Duck-typed lookup instead.
     parent: {
-        const win = QsWindow.window;
-        const contentWin = win as ContentWindow; // If inside the drawer content window, put it inside the interaction wrapper so hover works
-        return contentWin ? contentWin.interactionWrapper : (win as QsWindow).contentItem;
+        const win = QsWindow.window; // qmllint disable missing-property
+        return win?.interactionWrapper ?? win?.contentItem ?? null;
     }
     anchors.fill: parent
 
     enabled: expanded
-    hoverEnabled: expanded
+    // Port: no hover here. This item covers the whole drawer window, and a hover-enabled child
+    // takes the hover away from Interactions, which then thinks the mouse left and closes the
+    // dashboard before a menu item can be clicked.
+    hoverEnabled: false
     cursorShape: expanded ? Qt.ArrowCursor : undefined
     onClicked: expanded = false
 
@@ -99,7 +106,6 @@ MouseArea {
 
         MouseArea {
             anchors.fill: parent
-            hoverEnabled: true
             onWheel: e => e.accepted = true
         }
 
