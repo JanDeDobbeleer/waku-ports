@@ -108,8 +108,8 @@ StyledRect {
             minLeftWidth: row.implicitWidth * 0.6
 
             menuItems: disks.instances
-            active: menuItems.find(m => m.modelData === Storage.primaryDisk) ?? menuItems[0] ?? null
-            menu.onItemSelected: item => Storage.manualPrimaryDisk = (item as DiskItem).modelData
+            active: menuItems.find(m => m.modelData.mount === Storage.primaryDisk?.mount) ?? menuItems[0] ?? null
+            menu.onItemSelected: item => Storage.manualPrimaryDisk = item.modelData
 
             Variants {
                 id: disks
@@ -124,7 +124,7 @@ StyledRect {
     component DiskItem: MenuItem {
         required property var modelData
 
-        icon: modelData === Storage.primaryDisk ? "check" : ""
+        icon: modelData.mount === Storage.primaryDisk?.mount ? "check" : ""
         text: modelData.mount
         activeIcon: "storage"
     }
