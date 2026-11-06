@@ -16,6 +16,9 @@
           "id": "nomarchy.workspaces"
         },
         {
+          "id": "nomarchy.layout-switcher"
+        },
+        {
           "id": "nomarchy.apps"
         }
       ],

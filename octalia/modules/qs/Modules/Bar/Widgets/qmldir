@@ -11,6 +11,7 @@ CustomButton 1.0 CustomButton.qml
 DarkMode 1.0 DarkMode.qml
 KeepAwake 1.0 KeepAwake.qml
 KeyboardLayout 1.0 KeyboardLayout.qml
+LayoutSwitcher 1.0 LayoutSwitcher.qml
 Launcher 1.0 Launcher.qml
 LockKeys 1.0 LockKeys.qml
 MediaMini 1.0 MediaMini.qml

@@ -46,6 +46,9 @@
       "center": [
         {
           "id": "Workspace"
+        },
+        {
+          "id": "LayoutSwitcher"
         }
       ],
       "right": [
