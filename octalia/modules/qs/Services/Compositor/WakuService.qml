@@ -15,7 +15,9 @@ Item {
   property ListModel workspaces: ListModel {}
   property var windows: []
   property int focusedWindowIndex: -1
-  property bool globalWorkspaces: false
+  // Virtual desktops belong to no monitor (the engine reports one entry without a name), so every
+  // bar shows all of them.
+  property bool globalWorkspaces: true
 
   signal workspaceChanged
   signal activeWindowChanged
