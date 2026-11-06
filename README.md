@@ -56,7 +56,7 @@ wakuc startup status      # is it registered, with which command and which waku.
 wakuc startup disable     # remove the task
 ```
 
-- The task starts waku with `--hide-taskbar` unless you pass `--no-app-bar` or
+- The task starts waku with no flags, so every default applies, unless you pass `--no-app-bar` or
   `--keep-taskbar` to `startup enable`.
 - Other waku flags follow `--`: `--font-engine=directwrite`, `--log-file <path>` (a JSON Lines diagnostics log; off unless you pass it).
 - To switch to another port at sign-in, run `startup enable` again with that port's folder. It replaces the
