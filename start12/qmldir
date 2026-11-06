@@ -19,3 +19,5 @@ DriveBar 1.0 DriveBar.qml
 ShortcutRow 1.0 ShortcutRow.qml
 PowerMenu 1.0 PowerMenu.qml
 AppMenu 1.0 AppMenu.qml
+DesktopSwitcher 1.0 DesktopSwitcher.qml
+LayoutSwitcher 1.0 LayoutSwitcher.qml
