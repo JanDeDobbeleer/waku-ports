@@ -48,6 +48,7 @@ Rectangle {
         showDirs: true
         showDotAndDotDot: false
         sortField: FolderListModel.Time
+        sortReversed: true
     }
 
     PopupWindow {
@@ -55,8 +56,9 @@ Rectangle {
         anchor.item: root
         padding: 6
 
+        // FolderListModel.count does not signal a change, so bind to the view's own count.
         Text {
-            visible: files.count === 0
+            visible: list.count === 0
             text: "This folder is empty"
             color: Style.dim
             font.family: Style.font
@@ -65,12 +67,13 @@ Rectangle {
         }
 
         ListView {
-            visible: files.count > 0
+            id: list
+            visible: count > 0
             width: 320
-            height: Math.min(files.count, 10) * 34
+            height: Math.min(count, 10) * 34
             clip: true
             model: files
-            interactive: files.count > 10
+            interactive: count > 10
 
             delegate: Rectangle {
                 id: row
