@@ -5,4 +5,4 @@ wt/
 # runtime output a port may leave in its folder
 live.err.txt
 live.out.txt
-omarchy/smoke/conn-probe/probe.*.txt
+nomarchy/smoke/conn-probe/probe.*.txt

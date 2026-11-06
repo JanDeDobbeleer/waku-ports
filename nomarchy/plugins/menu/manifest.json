@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "nomarchy.menu",
+  "name": "Nomarchy menu",
+  "version": "1.0.0",
+  "author": "Nomarchy",
+  "description": "Quickshell-powered Nomarchy command menu",
+  "kinds": [
+    "menu",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "menu": "Menu.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Nomarchy menu",
+    "description": "Launches the Nomarchy menu",
+    "category": "Compositor",
+    "allowMultiple": false
+  }
+}

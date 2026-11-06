@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "nomarchy.layout-switcher",
+  "name": "Layout switcher",
+  "version": "1.0.0",
+  "author": "Nomarchy",
+  "description": "Layout of waku's tiler for the focused workspace, click cycles",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "LayoutSwitcher.qml"
+  },
+  "barWidget": {
+    "displayName": "Layout switcher",
+    "description": "Layout of waku's tiler for the focused workspace, click cycles",
+    "category": "Compositor",
+    "defaultSection": "left",
+    "allowMultiple": false
+  }
+}

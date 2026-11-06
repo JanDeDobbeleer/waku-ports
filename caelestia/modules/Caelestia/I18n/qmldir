@@ -1,3 +1,0 @@
-module Caelestia.I18n
-singleton Tr 1.0 Tr.qml
-singleton Units 1.0 Units.qml
