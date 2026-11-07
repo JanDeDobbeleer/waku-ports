@@ -57,6 +57,12 @@ LazyLoader {
         surfaceFormat.opaque: false
         title: loader.title
 
+        // Port: the engine activates (brings to the front) a window only when it is shown after its
+        // setup, not one that is visible from the start, which is what a LazyLoader gives. So it
+        // starts hidden and is shown once it is loaded; otherwise it opens behind the active window.
+        visible: false
+        Component.onCompleted: Qt.callLater(() => root.visible = true)
+
         onVisibleChanged: {
             if (!visible)
                 rejected();
