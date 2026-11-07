@@ -5,6 +5,7 @@ import Quickshell
 import Celeste
 import Celeste.Config
 import Celeste.I18n
+import Celeste.State
 import qs.components
 import qs.components.filedialog
 import qs.utils
@@ -13,13 +14,14 @@ Item {
     id: root
 
     required property ScreenState screenState
-    property string faceOverride
+    // Port: kept in state/persistent.json, so the choice survives a restart.
+    readonly property string faceOverride: PersistentState.faceImage
     readonly property FileDialog facePicker: FileDialog {
         title: Tr.tr("Select a profile picture")
         filterLabel: Tr.tr("Image files")
         filters: Images.validImageExtensions
-        // Port: Windows has no ~/.face. The choice only lasts for the session and nothing is copied.
-        onAccepted: path => root.faceOverride = path
+        // Port: Windows has no ~/.face. The path is kept in PersistentState; the file is not copied.
+        onAccepted: path => PersistentState.faceImage = path
     }
 
     readonly property real nonAnimHeight: (content.item as Content)?.nonAnimHeight ?? 0

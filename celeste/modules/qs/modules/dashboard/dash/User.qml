@@ -92,7 +92,8 @@ Item {
 
                 anchors.fill: parent
                 // waku's ControlCenter exposes the Windows account picture; empty when the account has none.
-                source: root.faceOverride || S.ControlCenter.avatarUrl
+                // Port: the picker gives a plain path ("C:/..."), which is not a URL.
+                source: root.faceOverride ? (root.faceOverride.startsWith("file:") ? root.faceOverride : "file:///" + root.faceOverride.replace(/\\/g, "/").replace(/^\/+/, "")) : S.ControlCenter.avatarUrl
             }
 
             StyledRect {

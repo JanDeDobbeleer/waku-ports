@@ -16,6 +16,8 @@ QtObject {
     property alias colourSeed: adapter.colourSeed
     property alias colourVariant: adapter.colourVariant
     property alias colourMode: adapter.colourMode
+    // Port: the profile picture chosen in the dashboard (a file path, empty for the Windows account picture).
+    property alias faceImage: adapter.faceImage
 
     property FileView file: FileView {
         path: Quickshell.shellPath("state/persistent.json")
@@ -33,6 +35,7 @@ QtObject {
             property string colourSeed: "wallpaper" // wallpaper, or a key of Colours.seeds
             property string colourVariant: "tonalspot"
             property string colourMode: "dark" // dark or light
+            property string faceImage: ""
         }
     }
 }
