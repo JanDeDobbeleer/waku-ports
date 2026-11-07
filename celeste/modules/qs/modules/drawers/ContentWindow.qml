@@ -498,6 +498,9 @@ StyledWindow {
         }
 
         group: blobGroup
+        // Port: a closed panel sits just off its edge and, with the blob smoothing, still bulges the
+        // frame into a small rounded corner there (the utilities panel at the bottom right).
+        visible: panel.visible
         x: panel.x + bar.implicitWidth
         y: panel.y + root.borderThickness
         implicitWidth: panel.width
