@@ -676,8 +676,6 @@ QtObject {
                 property bool smartScheme: true
                 // Port: false blocks every session action (lock, sleep, shutdown, ...) in the launcher and the session menu.
                 property bool allowSystemActions: true
-                // Port: the animation waku plays when the wallpaper changes: circle, slide_top, diamond, split, fade or none. Empty is waku's default.
-                property string wallpaperAnimation: ""
                 // Port: a wallpaper change also sets the Windows lock screen (and sign-in screen) picture.
                 property bool wallpaperLockScreen: true
                 property string defaultPlayer: "Spotify"

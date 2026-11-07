@@ -17,7 +17,7 @@ import qs.utils
 // The list comes from a read only directory listing of the wallpaper folder
 // (GlobalConfig.paths.wallpaperDir), the current wallpaper from waku's Wallpapers service. That
 // service is pointed at the same folder (so `wakuc wallpaper next` and the port agree) and
-// applies a choice to Windows, with the animation named by GlobalConfig.services.wallpaperAnimation.
+// applies a choice to Windows.
 // GlobalConfig.services.wallpaperLockScreen (default true) makes the service also set the Windows
 // lock screen picture after each change.
 // With CELESTE_DRYRUN=1 a choice only logs `DRYRUN wallpaper set <path>`.
@@ -48,12 +48,6 @@ Searcher {
         if (category.includes("/"))
             category = category.slice(0, category.indexOf("/"));
         return category;
-    }
-
-    // The wallpaper animation: "" is the service's own default, "none" turns it off.
-    function configureEngine(): void {
-        const name = GlobalConfig.services.wallpaperAnimation;
-        S.Wallpapers.configureEngine(name !== "none", name === "none" ? "" : name);
     }
 
     // Fills waku's thumbnail cache in the background, current wallpaper first, then its neighbours
@@ -170,7 +164,6 @@ Searcher {
     }
 
     Component.onCompleted: {
-        configureEngine();
         rescan();
     }
 
@@ -206,14 +199,6 @@ Searcher {
         target: S.Wallpapers
         property: "setLockScreen"
         value: GlobalConfig.services.wallpaperLockScreen
-    }
-
-    Connections {
-        function onWallpaperAnimationChanged(): void {
-            root.configureEngine();
-        }
-
-        target: GlobalConfig.services
     }
 
     // The picker closed while the lock held: show the current palette once the lock ends. The

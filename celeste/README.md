@@ -75,7 +75,7 @@ The launcher's `>` commands act on Windows through waku:
 
 | Command | What it does |
 |---|---|
-| `>wallpaper`, `>random` | Sets the Windows wallpaper through waku's `Wallpapers` service, with its change animation (`services.wallpaperAnimation`: `circle`, `slide_top`, `diamond`, `split`, `fade`, `none`; empty is waku's default). The folder is `paths.wallpaperDir` (default `~/Pictures/Wallpapers`); waku's own folder is set to the same one. Each change also sets the Windows lock screen (and sign-in screen) picture unless `services.wallpaperLockScreen` is `false` (default `true`). |
+| `>wallpaper`, `>random` | Sets the Windows wallpaper through waku's `Wallpapers` service; Windows applies its own fade. The folder is `paths.wallpaperDir` (default `~/Pictures/Wallpapers`); waku's own folder is set to the same one. Each change also sets the Windows lock screen (and sign-in screen) picture unless `services.wallpaperLockScreen` is `false` (default `true`). |
 | `>light`, `>dark` | Regenerates the palette and switches the Windows app and system theme (`ControlCenter.toggleTheme`, only when it differs). |
 | `>scheme`, `>variant` | Chooses the colour scheme and variant. The choice, with the mode, is saved in `state/persistent.json` and restored at startup. `dynamic` follows the current wallpaper. |
 | `>lock`, `>sleep` | `LockWorkStation` and sleep, through `ControlCenter.requestAction`. |
