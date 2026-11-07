@@ -18,7 +18,6 @@
   },
   "services": {
     "allowSystemActions": true,
-    "wallpaperAnimation": "none",
     "wallpaperLockScreen": true,
     "weatherUnits": 1
   }
