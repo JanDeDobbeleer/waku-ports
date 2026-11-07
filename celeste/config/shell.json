@@ -1,7 +1,7 @@
 {
   "border": {
     "thickness": 0,
-    "rounding": 8
+    "rounding": 0
   },
   "bar": {
     "workspaces": {
