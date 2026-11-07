@@ -188,17 +188,41 @@ Item {
             implicitHeight: implicitWidth
             fillMode: VisualSource.PreserveAspectFit
 
+            // Port: only images are thumbnails. There is no freedesktop icon theme here, so
+            // folders and other files get a Material icon instead (see glyph below).
+            visible: item.modelData.isImage
+
             Component.onCompleted: {
                 const file = item.modelData;
                 if (file.isImage)
-                    source = Qt.resolvedUrl(file.path);
-                else if (!file.isDir)
-                    source = Quickshell.iconPath(file.mimeType.replace("/", "-"), "application-x-zerosize");
-                else if (root.dialog.cwd.length === 1 && ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Public", "Templates", "Videos"].includes(file.name))
-                    source = Quickshell.iconPath(`folder-${file.name.toLowerCase()}`);
-                else
-                    source = Quickshell.iconPath("inode-directory");
+                    source = file.path.startsWith("file:") ? file.path : "file:///" + file.path.replace(/\\/g, "/").replace(/^\/+/, "");
             }
+        }
+
+        MaterialIcon {
+            anchors.centerIn: icon
+            visible: !item.modelData.isImage
+            text: {
+                const file = item.modelData;
+                if (!file.isDir)
+                    return "draft";
+                if (root.dialog.cwd.length === 1) {
+                    const special = {
+                        "Desktop": "desktop_windows",
+                        "Documents": "folder_open",
+                        "Downloads": "download",
+                        "Music": "library_music",
+                        "Pictures": "photo_library",
+                        "Videos": "video_library"
+                    };
+                    if (special[file.name])
+                        return special[file.name];
+                }
+                return "folder";
+            }
+            color: Colours.palette.m3primary
+            fill: 1
+            fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.6).build()
         }
 
         StyledText {
