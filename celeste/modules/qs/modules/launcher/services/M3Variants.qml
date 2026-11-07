@@ -84,7 +84,7 @@ Searcher {
             list.screenState.launcher = false;
             Colours.flavour = variant;
             Schemes.apply();
-            Toaster.toast(Tr.tr("Scheme variant changed"), name, "colors", Toast.Success, 2500);
+            Toaster.toast(Tr.tr("Scheme variant changed"), name, "colors", Toast.Info, 2500);
         }
     }
 }
