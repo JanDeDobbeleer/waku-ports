@@ -96,7 +96,7 @@ Searcher {
         }
         // The engine picks (never the current one) and plays the transition.
         S.Wallpapers.random();
-        Toaster.toast(Tr.tr("Wallpaper changed"), Tr.tr("A random wallpaper"), "casino", Toast.Success, 2500);
+        Toaster.toast(Tr.tr("Wallpaper changed"), Tr.tr("A random wallpaper"), "casino", Toast.Info, 2500);
     }
 
     function setWallpaper(path: string): void {
@@ -118,7 +118,7 @@ Searcher {
             previewColourLock = false;
         }
         const name = path.slice(path.lastIndexOf("/") + 1);
-        Toaster.toast(Tr.tr("Wallpaper changed"), name, "image", Toast.Success, 2500);
+        Toaster.toast(Tr.tr("Wallpaper changed"), name, "image", Toast.Info, 2500);
     }
 
     function preview(path: string): void {
