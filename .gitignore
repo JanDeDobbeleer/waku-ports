@@ -2,3 +2,4 @@
 # runtime output a port may leave in its folder
 live.err.txt
 live.out.txt
+bin/

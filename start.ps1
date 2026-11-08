@@ -3,7 +3,7 @@
 # <port>\tools\env.ps1.
 #
 #   .\start.ps1 -Port nomarchy          the live setup: your engine, tray, app bar, Windows taskbar hidden
-#   .\start.ps1 -Port nomarchy -Dev     the port's own bundled engine (<port>\bin), hidden, no tray, no app bar, no keys, no tiling
+#   .\start.ps1 -Port nomarchy -Dev     the shared bundled engine (<repo>\bin), hidden, no tray, no app bar, no keys, no tiling
 #   .\start.ps1 -Port octalia -DryRun print what would run, change nothing
 #
 # A port's tools\env.ps1 is run in this script's scope. It may set environment variables and run any
@@ -32,7 +32,7 @@ if ($DryRun) {
 
 # 3. the engine and its flags
 if ($Dev) {
-  $Waku = Join-Path $PortDir 'bin\waku.exe'
+  $Waku = Join-Path $PSScriptRoot 'bin\waku.exe'
   $flags = @('--config-home', $PortDir, '--no-tray', '--no-app-bar', '--keep-taskbar', '--no-keys', '--no-tiling', '--font-engine=directwrite') + $PortFlags
 } else {
   if (-not $Waku) { $Waku = if ($env:WAKU_EXE) { $env:WAKU_EXE } else { (Get-Command waku.exe -ErrorAction SilentlyContinue).Source } }

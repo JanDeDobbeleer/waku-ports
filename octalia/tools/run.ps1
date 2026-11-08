@@ -6,7 +6,7 @@ param(
   [string[]]$Shortcut, # one or more, fired in order, 2 s apart
   [string]$Shot,
   [int]$Toast = 0, # raise this many test toasts (tools	oast.ps1) before the shortcut and shot
-  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\..\bin' })
 )
 $ErrorActionPreference = 'Stop'
 # Octalia reads its config and cache dirs from these; keep them inside the port. HOME is only read

@@ -8,7 +8,7 @@ param(
   [string]$Shot,
   [string]$Crop, # x,y,w,h of the screenshot
   [int]$Toast = 0, # raise this many test toasts (tools	oast.ps1) before the shortcut and shot
-  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\bin' })
+  [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\..\bin' })
 )
 $ErrorActionPreference = 'Stop'
 $env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH # Git's bash and find first: the shell runs bash scripts

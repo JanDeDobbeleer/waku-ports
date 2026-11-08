@@ -24,7 +24,7 @@ Each port has its own README, `tools\`, and licence.
 ## Start one
 
     .\start.ps1 -Port nomarchy             # stops any running waku, then starts the port
-    .\start.ps1 -Port nomarchy -Dev        # the port's bundled engine (<port>\bin), hidden, no tray, no app bar, no keys, no tiling
+    .\start.ps1 -Port nomarchy -Dev        # the shared bundled engine (<repo>\bin), hidden, no tray, no app bar, no keys, no tiling
     .\start.ps1 -Port octalia -DryRun    # print what would run
     .\stop.ps1
 
@@ -92,7 +92,7 @@ git config core.hooksPath tools/hooks
 
 A pull request check (`.github/workflows/commits.yml`) applies the same rule to every commit in the PR.
 
-Not tracked (see `.gitignore`): `*.bundle`, and each port's
-`bin/`, `state/`, `logs/` and `shots/`. A port's `bin/` is a copy of an engine build; copy one in before using
-`-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
+Not tracked (see `.gitignore`): `*.bundle`, the root
+`bin/`, and each port's `state/`, `logs/` and `shots/`. `bin/` is one copy of an engine build shared by all ports; copy
+one in before using `-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
 
