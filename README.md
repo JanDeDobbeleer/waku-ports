@@ -92,7 +92,7 @@ git config core.hooksPath tools/hooks
 
 A pull request check (`.github/workflows/commits.yml`) applies the same rule to every commit in the PR.
 
-Not tracked (see `.gitignore`): `regress/` and `wt/` (scratch and engine builds), `*.bundle`, and each port's
+Not tracked (see `.gitignore`): `*.bundle`, and each port's
 `bin/`, `state/`, `logs/` and `shots/`. A port's `bin/` is a copy of an engine build; copy one in before using
 `-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
 

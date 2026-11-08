@@ -1,4 +1,0 @@
-module qs.services
-singleton Colours 1.0 Colours.qml
-singleton Players 1.0 Players.qml
-singleton Wallpapers 1.0 Wallpapers.qml
