@@ -18,7 +18,7 @@ Code: `modules/qs/services/UtilitiesActions.qml` (the list and the launch),
   Notifications, Power, Apps, Accounts, Privacy, all settings); power plan and mode; session
   actions. YASB had no cast, record or project action.
 - **What the port already has.** The sidebar utilities panel (`modules/qs/modules/utilities`):
-  Keep awake (real, `SetThreadExecutionState`), the screen recorder (stub, "Unavailable"), quick
+  Keep awake (real, `SetThreadExecutionState`), quick
   toggles: Wi-Fi (state only), Bluetooth (real toggle through `Quickshell.Bluetooth`), mic mute
   (real), DND (the shell's own notification DND), game mode, wallpaper playing, VPN (state only),
   settings (disabled). Light/dark and the session actions are launcher actions. The bar's

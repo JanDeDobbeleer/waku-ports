@@ -719,7 +719,6 @@ QtObject {
                 property int maxToasts: 4
                 property JsonObject cards: JsonObject {
                     property bool keepAwake: true
-                    property bool recorder: true
                     property bool quickToggles: true
                 }
                 property JsonObject toasts: JsonObject {

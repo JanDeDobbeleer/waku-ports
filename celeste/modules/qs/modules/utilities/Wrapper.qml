@@ -18,10 +18,6 @@ Item {
     property matrix4x4 deformMatrix
 
     readonly property PersistentProperties props: PersistentProperties {
-        property bool recordingListExpanded: false
-        property string recordingConfirmDelete
-        property string recordingMode
-
         reloadableId: "utilities"
     }
     readonly property bool shouldBeActive: screenState.sidebar || (screenState.utilities && Config.utilities.enabled && !(screenState.session && Config.session.enabled))

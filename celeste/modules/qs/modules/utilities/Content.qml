@@ -15,8 +15,8 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property matrix4x4 deformMatrix
 
-    readonly property int enabledCards: (idleInhibit.active ? 1 : 0) + (record.active ? 1 : 0) + (toggles.active ? 1 : 0)
-    readonly property real nonAnimHeight: ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + ((record.item as Record)?.nonAnimHeight ?? 0) + ((toggles.item as Toggles)?.implicitHeight ?? 0) + layout.spacing * Math.max(0, enabledCards - 1)
+    readonly property int enabledCards: (idleInhibit.active ? 1 : 0) + (toggles.active ? 1 : 0)
+    readonly property real nonAnimHeight: ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + ((toggles.item as Toggles)?.implicitHeight ?? 0) + layout.spacing * Math.max(0, enabledCards - 1)
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
@@ -40,22 +40,6 @@ Item {
         }
 
         Loader {
-            id: record
-
-            Layout.fillWidth: true
-            active: Config.utilities.cards.recorder
-            visible: active
-            z: 1
-
-            sourceComponent: Record {
-                objectName: "utilitiesScreenRecorder"
-
-                props: root.props
-                screenState: root.screenState
-            }
-        }
-
-        Loader {
             id: toggles
 
             Layout.fillWidth: true
@@ -69,10 +53,5 @@ Item {
                 popouts: root.popouts
             }
         }
-    }
-
-    RecordingDeleteModal {
-        props: root.props
-        deformMatrix: root.deformMatrix
     }
 }
