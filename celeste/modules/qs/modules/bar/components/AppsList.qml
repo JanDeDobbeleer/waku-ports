@@ -194,7 +194,13 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.clickApp(app.index)
+                    onClicked: {
+                        // The hover flyout has done its job once an app is chosen. Switching to
+                        // a window on another desktop can swallow the hover exit that would
+                        // otherwise close it.
+                        root.bar.popouts.hasCurrent = false;
+                        root.clickApp(app.index);
+                    }
                 }
             }
         }

@@ -232,6 +232,24 @@ Singleton {
         return (exe ?? "").replace(/\.exe$/i, "").toLowerCase();
     }
 
+    // The application a taskbar row belongs to, from the engine's pin id (`uniqueId`): "aumid:<id>"
+    // for a packaged app, "explorer:<folder>" for a File Explorer window, "path:<exe>[|args]" for
+    // the rest. Windows of one application share one identity, so the apps list groups them:
+    //   aumid:Microsoft.WindowsTerminal_8wekyb3d8bbwe!App  ->  microsoft.windowsterminal
+    //   explorer:C:\Windows                                 ->  explorer
+    //   path:C:\Program Files\Spotify\Spotify.exe           ->  spotify
+    // The last path segment alone is wrong: every packaged app ends in "!App", and an Explorer
+    // window's would be its folder name.
+    function appIdentity(uniqueId: string): string {
+        const id = uniqueId ?? "";
+        if (id.startsWith("explorer:"))
+            return "explorer";
+        if (id.startsWith("aumid:"))
+            return id.slice(6).split("!")[0].split("_")[0].toLowerCase();
+        const path = (id.startsWith("path:") ? id.slice(5) : id).split("|")[0];
+        return path.split(/[\\/]/).pop().replace(/\.exe$/i, "").toLowerCase();
+    }
+
     // `image://appicon/...` of the installed app that `name` matches, or "" when none does.
     function appIconUrl(name: string): string {
         // The exe name first, then without a vendor prefix ("ms-teams") and without separators.
@@ -732,7 +750,7 @@ Singleton {
             required property string key
             required property string iconUrl
             required property string uniqueId
-            readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
+            readonly property string exe: root.appIdentity(uniqueId)
 
             onActiveChanged: rows.update()
             onMinimizedChanged: rows.update()
