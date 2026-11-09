@@ -26,6 +26,7 @@ Each port has its own README, `tools\`, and licence.
     .\start.ps1 -Port nomarchy             # stops any running waku, then starts the port
     .\start.ps1 -Port nomarchy -Dev        # the shared bundled engine (<repo>\bin), hidden, no tray, no app bar, no keys, no tiling
     .\start.ps1 -Port octalia -DryRun    # print what would run
+    .\start.ps1 -Port celeste -Log      # also write waku's diagnostics log to celeste\logs\waku.log (off by default)
     .\stop.ps1
 
 The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PATH`) with no extra flags. waku's defaults apply: the bar reserves its edge of the screen, the Windows taskbar

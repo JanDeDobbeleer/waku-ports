@@ -5,6 +5,7 @@
 #   .\start.ps1 -Port nomarchy          the live setup: your engine, tray, app bar, Windows taskbar hidden
 #   .\start.ps1 -Port nomarchy -Dev     the shared bundled engine (<repo>\bin), hidden, no tray, no app bar, no keys, no tiling
 #   .\start.ps1 -Port octalia -DryRun print what would run, change nothing
+#   .\start.ps1 -Port celeste -Log     also write waku's diagnostics log to <port>\logs\waku.log
 #
 # A port's tools\env.ps1 is run in this script's scope. It may set environment variables and run any
 # pre-start step, and may set $PortFlags (extra waku arguments). It can read $Dev and $PortDir.
@@ -12,6 +13,7 @@ param(
   [Parameter(Mandatory)][ValidateSet('celeste', 'octalia', 'nomarchy', 'start12')][string]$Port,
   [string]$Waku,   # default: $env:WAKU_EXE, else waku.exe on PATH
   [switch]$Dev,
+  [switch]$Log,    # write waku's diagnostics log to <port>\logs\waku.log (off by default)
   [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
@@ -28,6 +30,10 @@ if ($DryRun) {
   Write-Host "would run $hook"
 } elseif (Test-Path $hook) {
   . $hook
+}
+if ($Log -and -not $DryRun) {
+  $logDir = Join-Path $PortDir 'logs'; New-Item -ItemType Directory -Force $logDir | Out-Null
+  $PortFlags += @('--log-file', (Join-Path $logDir 'waku.log'))
 }
 
 # 3. the engine and its flags
