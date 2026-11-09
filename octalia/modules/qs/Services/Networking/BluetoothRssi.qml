@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
 import "../../Helpers/BluetoothUtils.js" as BluetoothUtils
