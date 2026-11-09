@@ -1,6 +1,6 @@
 pragma Singleton
 
-import QtQuick
+import QtQuick 6.10
 import QtQuick.Shapes
 import Quickshell
 import qs.compat

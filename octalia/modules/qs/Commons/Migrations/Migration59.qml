@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 6.10
 
 QtObject {
   function migrate(adapter, logger, rawJson) {

@@ -1,6 +1,6 @@
 pragma Singleton
 
-import QtQuick
+import QtQuick 6.10
 import Quickshell
 import qs.Services.Power
 import qs.compat

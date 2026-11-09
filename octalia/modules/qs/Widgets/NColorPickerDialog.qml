@@ -1,5 +1,5 @@
 import QtQml
-import QtQuick
+import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import "../Helpers/ColorList.js" as ColorList

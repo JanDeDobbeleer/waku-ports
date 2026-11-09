@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 6.10
 import QtQuick.Effects
 import qs.Commons
 import qs.Services.Power

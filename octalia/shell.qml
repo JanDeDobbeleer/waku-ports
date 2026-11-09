@@ -9,7 +9,7 @@
 //@ pragma Env QT_FFMPEG_ENCODING_HW_DEVICE_TYPES=vaapi,vdpau
 
 // Qt & Quickshell Core
-import QtQuick
+import QtQuick 6.10
 import Quickshell
 import waku.services as S
 

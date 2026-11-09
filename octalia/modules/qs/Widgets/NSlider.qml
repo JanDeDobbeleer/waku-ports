@@ -1,4 +1,4 @@
-import QtQuick
+import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Shapes
 import qs.Commons
