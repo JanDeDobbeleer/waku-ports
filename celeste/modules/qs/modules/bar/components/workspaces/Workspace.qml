@@ -31,7 +31,6 @@ Item {
     readonly property bool isOccupied: toplevels.length > 0
     readonly property bool hasWindows: isOccupied && showWindows && Config.bar.workspaces.maxWindowIcons > 0
     readonly property bool focused: activeWsId === ws
-    readonly property list<int> focusedShapeList: [MaterialShape.Slanted, MaterialShape.Oval, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Arrow, MaterialShape.Diamond, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.VerySunny, MaterialShape.Sunny, MaterialShape.Cookie4Sided, MaterialShape.Cookie6Sided, MaterialShape.Cookie7Sided, MaterialShape.Cookie9Sided, MaterialShape.Cookie12Sided, MaterialShape.Clover4Leaf, MaterialShape.SoftBurst, MaterialShape.Ghostish]
 
     property color offMonitorColour: Colours.palette.m3outlineVariant
     readonly property bool onOtherMonitor: {
@@ -48,15 +47,11 @@ Item {
         return Colours.layer(Colours.palette.m3outlineVariant, 2);
     }
 
+    // Every indicator is round: the focused, occupied and empty desktops differ by size and colour.
     function updateShape(): void {
         const shape = indicator.item as MaterialShape;
-        if (!shape)
-            return;
-
-        if (focused)
-            shape.shape = focusedShapeList[Math.floor(Math.random() * focusedShapeList.length)];
-        else
-            shape.shape = Qt.binding(() => isOccupied ? MaterialShape.Square : MaterialShape.Circle);
+        if (shape)
+            shape.shape = MaterialShape.Circle;
     }
 
     anchors.horizontalCenter: parent?.horizontalCenter
