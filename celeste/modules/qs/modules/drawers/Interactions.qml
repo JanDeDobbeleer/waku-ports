@@ -108,6 +108,11 @@ CustomMouseArea {
         if (dismissOnPress(event.x, event.y))
             event.accepted = true;
     }
+    // Port: a click on empty bar space opens the dashboard, like a click on the clock does.
+    onClicked: event => {
+        if (event.button === Qt.LeftButton && event.x < bar.implicitWidth && bar.emptyAt(event.x, event.y))
+            bar.clickClock();
+    }
     onContainsMouseChanged: {
         if (!containsMouse) {
             // Only hide if not activated by shortcut

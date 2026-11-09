@@ -43,6 +43,13 @@ ColumnLayout {
         return "dashboard opened";
     }
 
+    // Port: true when (x, y) in bar coordinates is not over any entry (a gap or a spacer), so a click
+    // there can open the dashboard. Entries are as wide as their item and centred.
+    function emptyAt(x: real, y: real): bool {
+        const ch = childAt(x, y);
+        return !ch || !ch.item;
+    }
+
     function checkPopout(y: real): void {
         const ch = childAt(width / 2, y);
 

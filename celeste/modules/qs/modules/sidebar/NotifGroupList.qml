@@ -30,6 +30,20 @@ LazyListView {
     cacheBuffer: 400
     removeDuration: Tokens.anim.durations.normal
 
+    // Port: upstream's LazyListView `adding` state (opacity 0, scale 0.7) as a ListView add
+    // transition. The first fill of the list does not run it, like upstream.
+    add: Transition {
+        Anim {
+            properties: "opacity"
+            from: 0
+            type: Anim.DefaultEffects
+        }
+        Anim {
+            properties: "scale"
+            from: 0.7
+        }
+    }
+
     useCustomViewport: true
     viewport: {
         CUtils.dependency(tWatcher.transform); // mapToItem is not reactive so use this to trigger updates

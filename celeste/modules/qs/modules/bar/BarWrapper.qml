@@ -46,6 +46,10 @@ Item {
         return content.item ? content.item.entryItem(id) : null;
     }
 
+    function emptyAt(x: real, y: real): bool {
+        return content.item ? content.item.emptyAt(x, y) : false;
+    }
+
     function clickClock(): string {
         return content.item ? content.item.clickClock() : "no content";
     }

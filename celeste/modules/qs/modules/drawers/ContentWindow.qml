@@ -45,7 +45,10 @@ StyledWindow {
         const conf = contentItem.Config;
         if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
             return true;
-        if (!conf.dashboard.showOnHover && s.dashboard && conf.dashboard.enabled)
+        // Port: with hover on, a dashboard opened by hovering closes when the pointer leaves; one
+        // opened by a click or shortcut (Interactions.dashboardShortcutActive) stays until a click
+        // elsewhere dismisses it.
+        if ((!conf.dashboard.showOnHover || interactions.dashboardShortcutActive) && s.dashboard && conf.dashboard.enabled)
             return true;
         if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current?.depth ?? 0) > 1)
             return true;
@@ -535,6 +538,12 @@ StyledWindow {
 
         visible: active && r > 0.5
         preferredRendererType: Shape.CurveRenderer
+
+        // The panel's own squash and stretch, so the fillet stays on the deformed edge. Fillets are
+        // children of the panel's BlobRect, in the same coordinates as its deform matrix.
+        transform: Matrix4x4 {
+            matrix: parent.deformMatrix
+        }
 
         ShapePath {
             fillColor: Qt.rgba(blobGroup.color.r, blobGroup.color.g, blobGroup.color.b, 1)

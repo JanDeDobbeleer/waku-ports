@@ -30,6 +30,20 @@ LazyListView {
 
     removeDuration: Tokens.anim.durations.normal
 
+    // Port: upstream's LazyListView `adding` state (opacity 0, scale 0) as a ListView add
+    // transition. The first fill of the list does not run it, like upstream.
+    add: Transition {
+        Anim {
+            properties: "opacity"
+            from: 0
+            type: Anim.DefaultEffects
+        }
+        Anim {
+            properties: "scale"
+            from: 0
+        }
+    }
+
     model: ScriptModel {
         values: {
             const map = new Map();
@@ -56,8 +70,8 @@ LazyListView {
             }
 
             // Port: LazyListView's attached layout properties are plain properties here, and the
-            // list is a ListView, so the delegate sets its own height. Adding and removing do not
-            // animate beyond the height and the fade.
+            // list is a ListView, so the delegate sets its own height. Adding runs the list's add
+            // transition; removing is the fade and shrink on `closed`.
             readonly property real preferredHeight: closed ? 0 : notifInner.nonAnimHeight
             readonly property real visibleHeight: closed ? 0 : notifInner.implicitHeight
             readonly property bool removing: false
