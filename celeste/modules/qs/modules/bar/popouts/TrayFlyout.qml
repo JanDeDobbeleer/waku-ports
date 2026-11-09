@@ -63,12 +63,24 @@ ColumnLayout {
         }
     }
 
+    // Port: the name of the icon under the cursor, empty otherwise (the bar button's badge already
+    // shows the count). The height is kept, so the flyout does not jump when a name appears.
     StyledText {
+        id: caption
+
         Layout.fillWidth: true
         Layout.preferredWidth: root.columns * root.cell + (root.columns - 1) * Tokens.spacing.small
+        Layout.preferredHeight: captionMetrics.height
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
-        text: root.hovered || Tr.trN("%n icon", "%n icons", TrayItems.count)
+        text: root.hovered
         color: Colours.palette.m3onSurfaceVariant
+
+        TextMetrics {
+            id: captionMetrics
+
+            font: caption.font
+            text: "X"
+        }
     }
 }
