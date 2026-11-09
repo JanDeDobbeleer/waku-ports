@@ -40,6 +40,8 @@ StyledRect {
     Component.onCompleted: runAnim()
 
     clip: true
+    // Smaller than the slot; scaling keeps the pill centred on its desktop.
+    scale: 0.7
     y: start + mask.y
     implicitHeight: end - start
     radius: Tokens.rounding.full
@@ -67,6 +69,9 @@ StyledRect {
 
     Colouriser {
         id: colouriser
+
+        // Solid indicator: the pill stays plain primary, without the tinted dot cut into it.
+        visible: false
 
         source: root.mask
         sourceColor: Colours.palette.m3onSurface
