@@ -260,6 +260,7 @@ ColumnLayout {
                 delegate: EntryWrapper {
                     OsIcon {
                         objectName: "taskbarLogo"
+                        screenState: root.screenState
                     }
                 }
             }
