@@ -19,9 +19,13 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 | Ctrl+Alt+E | Windows emoji picker (Win+.) |
 | Ctrl+Alt+V | Windows clipboard history (Win+V) |
 
-Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), and a
-Nerd Font (`Cascadia Mono NF` is the default, see `Style.qml`). No Python. The shell uses its own home,
-`state\home`, not your user profile.
+Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), and the
+**CaskaydiaMono Nerd Font**. Install it for your user, without admin rights:
+
+    .\tools\install-fonts.ps1
+
+The port wrapper uses the shared `tools\install-fonts.ps1` at the repository root. No Python. The shell
+uses its own home, `state\home`, not your user profile.
 
 ## What it does
 
