@@ -217,6 +217,20 @@ Scope {
             return Hypr.appGroups.map(g => `${g.exe} ${g.windows.length} ${g.windows.map(t => Hypr.workspaceLabel(t)).join("/")} [${g.windows.map(t => (t.srcHwnd ?? t.address) + (t.minimized ? "(min)" : "")).join(",")}]${g.windows.some(t => t.address === Hypr.focusedHwnd) ? " *" : ""}`).join("; ");
         }
 
+        function appProgress(): string {
+            return JSON.stringify(Hypr.appGroups.map(g => ({
+                app: g.exe,
+                state: g.progressState,
+                value: g.progress,
+                windows: g.windows.map(t => ({
+                    hwnd: t.address,
+                    focused: t.address === Hypr.focusedHwnd,
+                    state: t.progressState,
+                    value: t.progress
+                }))
+            })));
+        }
+
         // TEST ONLY. What a click on apps-list icon `i` would do, without doing it (the dry path
         // of Hypr.activateToplevel on the window clickGroup would pick).
         function clickAppDry(i: int): string {

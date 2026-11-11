@@ -309,6 +309,8 @@ Singleton {
                 monId: monIdx,
                 wsActive: wsActive,
                 minimized: !!h.minimized,
+                progressState: row.progressState ?? "none",
+                progress: row.progress ?? 0,
                 workspace: null,
                 wayland: null,
                 iconUrl: row.iconUrl,
@@ -562,8 +564,26 @@ Singleton {
                     exe: k,
                     windows: by[k],
                     icon: by[k][0].icon,
-                    iconUrl: by[k][0].iconUrl
+                    iconUrl: by[k][0].iconUrl,
+                    progressState: groupProgress(by[k]).state,
+                    progress: groupProgress(by[k]).value
                 }));
+    }
+
+    function groupProgress(windows: var): var {
+        const priority = { error: 0, paused: 1, normal: 2, indeterminate: 3, none: 4 };
+        let state = "none";
+        let value = 0;
+        for (const t of windows) {
+            const next = t.progressState ?? "none";
+            const p = priority[next] ?? 4;
+            const v = t.progress ?? 0;
+            if (p < priority[state] || (p === priority[state] && v < value)) {
+                state = next;
+                value = v;
+            }
+        }
+        return { state: state, value: value };
     }
 
     Component.onCompleted: {
@@ -696,7 +716,9 @@ Singleton {
                         title: o.title,
                         exe: o.exe,
                         iconUrl: o.iconUrl,
-                        minimized: o.minimized
+                        minimized: o.minimized,
+                        progressState: o.progressState,
+                        progress: o.progress
                     };
             }
             const knownSig = JSON.stringify(known);
@@ -744,6 +766,7 @@ Singleton {
 
         model: taskbar
         delegate: QtObject {
+            required property var model
             required property string title
             required property bool active
             required property bool minimized
@@ -751,11 +774,15 @@ Singleton {
             required property string iconUrl
             required property string uniqueId
             readonly property string exe: root.appIdentity(uniqueId)
+            readonly property string progressState: model.progressState ?? "none"
+            readonly property real progress: model.progress ?? 0
 
             onActiveChanged: rows.update()
             onMinimizedChanged: rows.update()
             onTitleChanged: rows.update()
             onIconUrlChanged: rows.update()
+            onProgressStateChanged: rows.update()
+            onProgressChanged: rows.update()
         }
         onObjectAdded: update()
         onObjectRemoved: update()

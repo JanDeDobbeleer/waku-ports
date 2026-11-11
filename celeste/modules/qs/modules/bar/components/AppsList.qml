@@ -96,15 +96,13 @@ Item {
         spacing: root.gap
 
         Repeater {
-            model: ScriptModel {
-                values: root.shown
-            }
+            model: root.shown.length
 
             delegate: Item {
                 id: app
 
-                required property var modelData
                 required property int index
+                readonly property var modelData: root.shown[index]
 
                 readonly property bool isApp: true
                 readonly property int windowCount: modelData.windows.length
@@ -113,10 +111,14 @@ Item {
                 // Every window of the application is minimized: dimmed, with a dash below the icon.
                 readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(t => t.minimized)
                 readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
+                readonly property string progressState: modelData.progressState ?? "none"
+                readonly property real progress: modelData.progress ?? 0
+                readonly property bool hasProgress: progressState !== "none"
+                readonly property bool busy: modelData.windows.some(t => t.progressState === "indeterminate")
 
                 width: root.fullCell
                 height: root.cell
-                opacity: (onActiveWs || focused) && !allMinimized ? 1 : 0.55
+                opacity: hasProgress || busy || ((onActiveWs || focused) && !allMinimized) ? 1 : 0.55
 
                 // A second card behind the icon marks a group.
                 StyledRect {
@@ -160,7 +162,7 @@ Item {
 
                 // The minimized mark: a short dash below the icon.
                 StyledRect {
-                    visible: app.allMinimized && !app.focused
+                    visible: app.allMinimized && !app.focused && !app.hasProgress && !app.busy
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: Math.round(root.cell * 0.06)
@@ -168,6 +170,71 @@ Item {
                     implicitHeight: Math.max(2, Tokens.px(3))
                     radius: Tokens.rounding.full
                     color: Colours.palette.m3onSurface
+                }
+
+                // The progress mark: a dot below the icon that pulses while the app is working.
+                Rectangle {
+                    id: progressDot
+
+                    readonly property bool steady: app.progressState === "error" || app.progressState === "paused"
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: Math.round(root.cell * 0.06)
+                    width: Math.max(4, Tokens.px(5))
+                    height: width
+                    radius: width / 2
+                    visible: app.hasProgress || app.busy
+                    color: app.progressState === "error" ? Colours.palette.m3error : app.progressState === "paused" ? Colours.palette.m3tertiary : app.focused ? Colours.palette.m3onPrimary : Colours.palette.m3primary
+
+                    SequentialAnimation {
+                        loops: Animation.Infinite
+                        running: progressDot.visible && !progressDot.steady
+                        onRunningChanged: {
+                            if (!running) {
+                                progressDot.scale = 1;
+                                progressDot.opacity = 1;
+                            }
+                        }
+
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: progressDot
+                                property: "scale"
+                                from: 1
+                                to: 1.6
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+                            NumberAnimation {
+                                target: progressDot
+                                property: "opacity"
+                                from: 1
+                                to: 0.45
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+                        }
+
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: progressDot
+                                property: "scale"
+                                from: 1.6
+                                to: 1
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+                            NumberAnimation {
+                                target: progressDot
+                                property: "opacity"
+                                from: 0.45
+                                to: 1
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+                        }
+                    }
                 }
 
                 // The count of windows, at the icon's top-right corner.
