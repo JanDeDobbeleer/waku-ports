@@ -6,6 +6,7 @@ import Celeste
 import qs.components
 import qs.services
 import qs.compat
+import waku.services as S
 
 Singleton {
     property ShellRoot shellRoot
@@ -22,11 +23,15 @@ Singleton {
     }
 
     function forActive(): ScreenState {
-        const mon = Hypr.focusedMonitor;
-        for (const s of states.instances)
-            if (Hypr.monitorFor(s.modelData) === mon)
-                return s;
-        return null;
+        const c = componentsForActive();
+        return c ? forScreen(c.modelData) : null;
+    }
+
+    function forDashboardToggle(): ScreenState {
+        const active = forActive();
+        if (active?.dashboard)
+            return active;
+        return states.instances.find(s => s.dashboard) ?? active;
     }
 
     function componentsFor(screen: ShellScreen): Components {
@@ -37,6 +42,12 @@ Singleton {
     }
 
     function componentsForActive(): Components {
+        const handle = typeof S.WindowControl.monitor === "function" ? S.WindowControl.monitor(S.WindowControl.foreground()) : 0;
+        if (handle) {
+            for (const c of components.instances)
+                if (c.rootWindow?.monitorHandle === handle)
+                    return c;
+        }
         const mon = Hypr.focusedMonitor;
         for (const c of components.instances)
             if (Hypr.monitorFor(c.modelData) === mon)

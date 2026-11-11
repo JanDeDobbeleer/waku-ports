@@ -33,9 +33,9 @@ Scope {
         name: "dashboard"
         description: "Toggle dashboard"
         onPressed: {
-            if (root.hasFullscreen)
+            const screenState = ShellState.forDashboardToggle();
+            if (!screenState || (root.hasFullscreen && !screenState.dashboard))
                 return;
-            const screenState = ShellState.forActive();
             screenState.dashboard = !screenState.dashboard;
         }
     }
@@ -108,9 +108,9 @@ Scope {
     IpcHandler {
         function toggle(drawer: string): void {
             if (list().split("\n").includes(drawer)) {
-                if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
+                const screenState = drawer === "dashboard" ? ShellState.forDashboardToggle() : ShellState.forActive();
+                if (!screenState || (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer) && !(drawer === "dashboard" && screenState.dashboard)))
                     return;
-                const screenState = ShellState.forActive();
                 screenState[drawer] = !screenState[drawer];
             } else {
                 console.warn(lc, `Drawer "${drawer}" does not exist`);
