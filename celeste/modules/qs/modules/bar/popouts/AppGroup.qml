@@ -69,15 +69,17 @@ Item {
         Repeater {
             id: cards
 
-            model: root.windows
+            model: root.windows.length
 
             delegate: Item {
                 id: card
 
-                required property var modelData
                 required property int index
+                readonly property var modelData: root.windows[index]
 
                 readonly property bool focused: modelData.address === Hypr.focusedHwnd
+                readonly property string progressState: modelData.progressState ?? "none"
+                readonly property real progress: modelData.progress ?? 0
                 // DWM has no live thumbnail of a minimized window: none is registered, the card
                 // shows the icon.
                 readonly property bool minimized: !!modelData.minimized
@@ -179,6 +181,47 @@ Item {
                             color: card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
                         }
 
+                        Item {
+                            id: busyMarker
+                            objectName: "window-busy-marker"
+
+                            Layout.preferredWidth: (Tokens.sizes.bar.innerWidth - Tokens.padding.small) * 2 / 3
+                            Layout.preferredHeight: Layout.preferredWidth
+                            visible: card.progressState === "indeterminate"
+                            readonly property color ink: card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: width / 2
+                                color: "transparent"
+                                border.width: Math.max(1, Tokens.px(2))
+                                border.color: busyMarker.ink
+                                opacity: 0.25
+                            }
+
+                            Item {
+                                objectName: "window-busy-rotor"
+                                anchors.fill: parent
+
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.top: parent.top
+                                    width: Math.max(3, Tokens.px(4))
+                                    height: width
+                                    radius: width / 2
+                                    color: busyMarker.ink
+                                }
+
+                                RotationAnimation on rotation {
+                                    from: 0
+                                    to: 360
+                                    duration: 900
+                                    loops: Animation.Infinite
+                                    running: busyMarker.visible && root.visible
+                                }
+                            }
+                        }
+
                         MaterialIcon {
                             visible: card.minimized
                             text: "minimize"
@@ -203,6 +246,23 @@ Item {
                                 color: parent.away ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
                                 font: Tokens.font.label.medium
                             }
+
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Math.max(2, Tokens.px(3))
+                        visible: card.progressState !== "none" && card.progressState !== "indeterminate"
+                        radius: height / 2
+                        readonly property color ink: card.progressState === "error" ? Colours.palette.m3error : card.progressState === "paused" ? Colours.palette.m3tertiary : card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
+                        color: Qt.alpha(ink, 0.22)
+
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(1, card.progress))
+                            height: parent.height
+                            radius: height / 2
+                            color: parent.ink
                         }
                     }
                 }
