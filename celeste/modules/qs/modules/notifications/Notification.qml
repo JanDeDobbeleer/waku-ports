@@ -11,6 +11,7 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.utils
+import "NotificationHelpers.js" as NotificationHelpers
 
 StyledRect {
     id: root
@@ -30,9 +31,9 @@ StyledRect {
     x: implicitWidth
     Component.onCompleted: {
         x = 0;
-        modelData.lock(this);
+        NotificationHelpers.lock(modelData, this);
     }
-    Component.onDestruction: modelData.unlock(this)
+    Component.onDestruction: NotificationHelpers.unlock(modelData, this)
 
     Behavior on x {
         Anim {
@@ -49,24 +50,24 @@ StyledRect {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         preventStealing: true
 
-        onEntered: root.modelData.timer.stop()
+        onEntered: NotificationHelpers.stopTimer(root.modelData.timer)
         onExited: {
             if (!pressed)
-                root.modelData.timer.start();
+                NotificationHelpers.startTimer(root.modelData.timer);
         }
 
         drag.target: parent
         drag.axis: Drag.XAxis
 
         onPressed: event => {
-            root.modelData.timer.stop();
+            NotificationHelpers.stopTimer(root.modelData.timer);
             startY = event.y;
             if (event.button === Qt.MiddleButton)
-                root.modelData.close();
+                NotificationHelpers.close(root.modelData);
         }
         onReleased: event => {
             if (!containsMouse)
-                root.modelData.timer.start();
+                NotificationHelpers.startTimer(root.modelData.timer);
 
             if (Math.abs(root.x) < root.implicitWidth * Config.notifs.clearThreshold)
                 root.x = 0;
@@ -211,7 +212,7 @@ StyledRect {
                         centerY: progressIndicator.height / 2
 
                         startAngle: -90
-                        sweepAngle: ((root.modelData.hints.value ?? 0) / 100) * 360
+                        sweepAngle: NotificationHelpers.progressAngle(root.modelData.hints)
 
                         Behavior on sweepAngle {
                             Anim {
@@ -472,7 +473,7 @@ StyledRect {
                     inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
                     icon: "close"
                     padding: Tokens.padding.extraSmall
-                    onClicked: root.modelData.close()
+                    onClicked: NotificationHelpers.close(root.modelData)
                 }
 
                 Repeater {
@@ -486,7 +487,7 @@ StyledRect {
                         fillWidth: true
                         inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                         inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        text: modelData.text
+                        text: NotificationHelpers.actionText(modelData)
                         onClicked: modelData.invoke()
 
                         label.horizontalAlignment: Text.AlignHCenter

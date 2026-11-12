@@ -4,21 +4,15 @@ import Celeste.Config
 import Celeste.Multimedia
 import Celeste.Shaders
 import Celeste.State
+import waku.services as S
+import "WallpaperImplHelpers.js" as WallpaperImplHelpers
 
 Item {
     id: root
 
-    readonly final property var shader: {
-        CUtils.dependency(Config.background.wallpaperTransition);
-        let transition = CUtils.enumToString(Config.background, "wallpaperTransition");
-        if (!transition)
-            return Shaders.crossfade;
+    readonly final property var shader: WallpaperImplHelpers.shader(Config.background, Shaders, CUtils)
 
-        transition = transition[0].toLowerCase() + transition.slice(1);
-        return Shaders[transition] ?? Shaders.crossfade;
-    }
-
-    final property string source: Wallpapers.current
+    final property string source: S.Wallpapers.current
     final property ShaderEffectSource currentCapture: capture1
     final property real transitionProgress: 1
 
@@ -27,13 +21,13 @@ Item {
 
         if (transitionProgress < 1) {
             currentCapture = currentCapture === capture1 ? capture2 : capture1;
-            currentCapture.sourceItem = transition;
+            WallpaperImplHelpers.setSourceItem(currentCapture, transition);
         } else {
-            currentCapture.sourceItem = liveItem;
+            WallpaperImplHelpers.setSourceItem(currentCapture, liveItem);
         }
 
         currentCapture.visible = true;
-        currentCapture.scheduleUpdate();
+        WallpaperImplHelpers.scheduleUpdate(currentCapture);
     }
 
     Component.onCompleted: liveItem.source = source
@@ -42,8 +36,8 @@ Item {
         id: transitionAnim
 
         running: false
-        duration: root.shader.duration * Tokens.anim.durations.scale
-        easing: root.shader.easing
+        duration: WallpaperImplHelpers.duration(root.shader) * Tokens.anim.durations.scale
+        easing: WallpaperImplHelpers.easing(root.shader)
         to: 1
     }
 
@@ -104,6 +98,6 @@ Item {
 
         anchors.fill: parent
         visible: root.transitionProgress < 1
-        fragmentShader: root.shader.url
+        fragmentShader: WallpaperImplHelpers.url(root.shader)
     }
 }
