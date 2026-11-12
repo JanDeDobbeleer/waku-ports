@@ -4,7 +4,6 @@ import Quickshell.Widgets
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
-import qs.Widgets
 
 // AppsList - the running applications as a row of icons, in place of the active-window label
 // (styled after Celeste's bar list). One icon per application (windows grouped by app id, in the

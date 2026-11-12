@@ -1,10 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import Quickshell
 
 import qs.Commons
 import qs.Modules.MainScreen
-import qs.Services.UI
 import qs.Widgets
 
 SmartPanel {

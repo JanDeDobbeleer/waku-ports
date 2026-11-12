@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons

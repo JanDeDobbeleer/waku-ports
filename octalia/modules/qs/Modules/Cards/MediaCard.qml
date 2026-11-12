@@ -2,7 +2,6 @@ import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Services.Media
 import qs.Services.UI

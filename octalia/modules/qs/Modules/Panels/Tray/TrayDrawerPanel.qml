@@ -1,12 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Layouts
-import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.UI
-import qs.Widgets
 import qs.compat
 
 // A compact grid panel listing all tray items, opened from the Tray widget

@@ -4,8 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.Services.UI
-import qs.compat
 
 // Octalia's VPNService over the engine's Network (waku.services): the Windows RAS phone book
 // entries, dialled and hung up with `connectVpn` and `disconnectVpn`. A RAS entry has no uuid, so its

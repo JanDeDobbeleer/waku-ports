@@ -1,10 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.Notifications
 import Quickshell.Wayland
-import Quickshell.Widgets
 import qs.Commons
 import qs.Services.System
 import qs.Widgets

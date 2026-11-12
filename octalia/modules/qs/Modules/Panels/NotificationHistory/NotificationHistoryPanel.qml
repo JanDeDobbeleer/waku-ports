@@ -1,9 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Services.Notifications
-import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Modules.Panels.Settings

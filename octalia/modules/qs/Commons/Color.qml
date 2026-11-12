@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.Power
-import qs.compat
 
 /*
 Octalia is not strictly a Material Design project, it supports both some predefined

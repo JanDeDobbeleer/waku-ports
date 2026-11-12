@@ -1,7 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Effects
-import Quickshell
-import Quickshell.Widgets
 import qs.Commons
 import qs.compat
 

@@ -5,7 +5,6 @@ import Quickshell
 import waku.services as S
 import qs.Commons
 import qs.Services.UI
-import qs.compat
 
 // Octalia's NetworkService over the engine's Network (waku.services): Windows connectivity
 // profiles, wlanapi scans, the Wi-Fi radio switch and interface counters. Public names are upstream's.

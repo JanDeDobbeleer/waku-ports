@@ -4,7 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.compat
 
 // Octalia's BrightnessService over the engine's ControlCenter: one brightness (0..100) of the display
 // source the engine picked (WinRT or DDC/CI), shared by every screen. Upstream's sysfs, ddcutil and Apple

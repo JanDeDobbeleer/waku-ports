@@ -1,9 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.Widgets
 

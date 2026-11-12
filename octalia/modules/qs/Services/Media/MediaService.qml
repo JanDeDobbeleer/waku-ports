@@ -4,7 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.Mpris
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root

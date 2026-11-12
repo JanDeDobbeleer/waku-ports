@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
 import qs.compat
 

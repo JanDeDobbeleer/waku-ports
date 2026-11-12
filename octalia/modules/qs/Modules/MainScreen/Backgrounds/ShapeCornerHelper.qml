@@ -1,9 +1,7 @@
 pragma Singleton
 
 import QtQuick 6.10
-import QtQuick.Shapes
 import Quickshell
-import qs.compat
 
 /**
 * ShapeCornerHelper - Utility singleton for shape corner calculations

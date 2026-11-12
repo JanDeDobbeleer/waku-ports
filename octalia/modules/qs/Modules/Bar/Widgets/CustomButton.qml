@@ -1,10 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Modules.Bar.Extras
-import qs.Modules.Panels.Settings
 import qs.Services.Control
 import qs.Services.UI
 import qs.Widgets

@@ -7,9 +7,7 @@ import Quickshell.Io
 import waku.services as S
 import "../../Helpers/BluetoothUtils.js" as BluetoothUtils
 import qs.Commons
-import qs.Services.System
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root

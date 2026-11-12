@@ -5,8 +5,6 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.Location.Calendar
-import qs.Services.System
-import qs.compat
 
 Singleton {
   id: root

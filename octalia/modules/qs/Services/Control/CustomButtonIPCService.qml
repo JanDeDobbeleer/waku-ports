@@ -2,10 +2,8 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import Quickshell.Io
 import qs.Commons
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root

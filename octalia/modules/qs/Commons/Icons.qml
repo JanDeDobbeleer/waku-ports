@@ -1,10 +1,8 @@
 pragma Singleton
 
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root

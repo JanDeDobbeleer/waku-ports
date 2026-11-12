@@ -1,11 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
-import qs.Services.System
 import qs.Widgets
-import qs.compat
 
 ColumnLayout {
   id: root

@@ -1,11 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
-import qs.Widgets
 
 FloatingWindow {
   id: root

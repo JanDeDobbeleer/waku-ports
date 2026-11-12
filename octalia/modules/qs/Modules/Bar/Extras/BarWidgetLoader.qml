@@ -1,7 +1,5 @@
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.compat
 

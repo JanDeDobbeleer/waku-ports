@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root

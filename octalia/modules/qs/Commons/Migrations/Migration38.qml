@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import qs.Commons
 
 QtObject {
   function migrate(adapter, logger, rawJson) {

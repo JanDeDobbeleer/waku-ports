@@ -7,7 +7,6 @@ import "../Helpers/QtObj2JS.js" as QtObj2JS
 import qs.Commons
 import qs.Commons.Migrations
 import qs.Modules.OSD
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.compat
 

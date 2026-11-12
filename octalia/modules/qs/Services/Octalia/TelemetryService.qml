@@ -2,8 +2,6 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import qs.Commons
-import qs.compat
 
 // Telemetry is not part of the waku port: nothing is collected or sent. The names stay so callers load.
 Singleton {

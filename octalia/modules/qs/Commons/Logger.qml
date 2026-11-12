@@ -2,7 +2,6 @@ pragma Singleton
 
 import Quickshell
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root

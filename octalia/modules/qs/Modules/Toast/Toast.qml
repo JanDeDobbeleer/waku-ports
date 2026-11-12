@@ -1,8 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.System
 import qs.Widgets
 
 Item {

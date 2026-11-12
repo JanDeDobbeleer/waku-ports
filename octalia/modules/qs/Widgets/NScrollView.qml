@@ -1,6 +1,5 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Templates as T
 import qs.Commons
 
 ScrollView {

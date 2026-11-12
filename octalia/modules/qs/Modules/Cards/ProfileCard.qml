@@ -1,9 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
-import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.Panels.Settings
 import qs.Services.System

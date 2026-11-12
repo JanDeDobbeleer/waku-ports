@@ -7,7 +7,6 @@ import qs.Commons
 import qs.Services.Compositor
 import qs.Services.Power
 import qs.Services.System
-import qs.compat
 
 Singleton {
   id: root

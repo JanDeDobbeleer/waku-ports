@@ -1,9 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Services.System
-import qs.Services.UI
 import qs.Widgets
 
 // Unified system card: monitors CPU, temp, memory, disk

@@ -2,9 +2,7 @@ import QtQuick 6.10
 import QtQuick.Effects
 import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
-import qs.Widgets
 
 Item {
   id: root

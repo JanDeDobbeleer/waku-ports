@@ -1,12 +1,10 @@
 import QtQuick 6.10
-import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.Panels.Settings
 import qs.Services.Compositor
-import qs.Services.Octalia
 import qs.Services.Power
 import qs.Services.UI
 import qs.Widgets

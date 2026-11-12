@@ -6,7 +6,6 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs.Commons
 import qs.Services.System
-import qs.compat
 
 Singleton {
   id: root

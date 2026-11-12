@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import qs.compat
 
 // Stub. The audio visualiser needs octalia-qs's PwAudioSpectrum (PipeWire); waku has no
 // equivalent yet, so the bands stay empty and the visualiser shows nothing.

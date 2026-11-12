@@ -1,8 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
-import qs.Widgets
 
 Item {
   id: root

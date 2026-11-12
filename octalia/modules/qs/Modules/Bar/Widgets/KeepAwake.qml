@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Modules.Bar.Extras

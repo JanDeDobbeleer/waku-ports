@@ -1,7 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import "../Settings/Tabs/Connections" as WifiPrefs
 import qs.Commons
 import qs.Modules.MainScreen

@@ -1,10 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
-import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI

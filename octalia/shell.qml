@@ -18,7 +18,6 @@ import qs.Commons
 
 // Modules
 import qs.Modules.Background
-import qs.Modules.Bar
 import qs.Modules.DesktopWidgets
 import qs.Modules.Dock
 import qs.Modules.MainScreen
@@ -29,10 +28,8 @@ import qs.Modules.Panels.Launcher
 import qs.Modules.Panels.Settings
 import qs.Modules.Toast
 import qs.Services.Control
-import qs.Services.Hardware
 import qs.Services.Keyboard
 import qs.Services.Location
-import qs.Services.Networking
 import qs.Services.Octalia
 import qs.Services.Power
 import qs.Services.System

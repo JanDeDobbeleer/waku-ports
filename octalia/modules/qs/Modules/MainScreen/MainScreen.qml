@@ -1,6 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "Backgrounds" as Backgrounds
@@ -8,8 +6,6 @@ import "Backgrounds" as Backgrounds
 import qs.Commons
 
 // All panels
-import qs.Modules.Bar
-import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Audio
 import qs.Modules.Panels.Battery
 import qs.Modules.Panels.Bluetooth
@@ -31,7 +27,6 @@ import qs.Modules.Panels.Wallpaper
 import qs.Services.Compositor
 import qs.Services.Power
 import qs.Services.UI
-import qs.compat
 
 /**
 * MainScreen - Single PanelWindow per screen that manages all panels and the bar

@@ -2,7 +2,6 @@ import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.Compositor

@@ -1,9 +1,7 @@
 import QtQuick 6.10
-import Quickshell
 import "../../../../Helpers/AdvancedMath.js" as AdvancedMath
 import qs.Commons
 import qs.compat
-import qs.Services.Keyboard
 import qs.Services.UI
 
 Item {

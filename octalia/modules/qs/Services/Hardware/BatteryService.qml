@@ -3,12 +3,10 @@ import QtQml
 import QtQuick 6.10
 
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Services.Networking
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root

@@ -6,8 +6,6 @@ import waku.services as S
 
 import qs.Commons
 import qs.Services.Theming
-import qs.Services.UI
-import qs.compat
 
 // Wallpaper-derived colors, generated in process by the engine's ColorScheme (waku.services).
 // Upstream shells out to a python template processor that also writes the app/terminal themes;

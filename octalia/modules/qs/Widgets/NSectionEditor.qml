@@ -1,9 +1,7 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Effects
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.Octalia
 import qs.Widgets
 
 NBox {

@@ -1,11 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Effects
-import Quickshell
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.Media
 import qs.Services.UI
-import qs.Widgets
 import qs.Widgets.AudioSpectrum
 
 DraggableDesktopWidget {

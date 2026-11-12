@@ -4,7 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root

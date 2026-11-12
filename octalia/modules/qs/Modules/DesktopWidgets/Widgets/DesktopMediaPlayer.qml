@@ -1,7 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.Media

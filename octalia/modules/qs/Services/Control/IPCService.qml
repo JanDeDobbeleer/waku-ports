@@ -2,9 +2,6 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import Quickshell.Io
-import Quickshell.Wayland
-import Quickshell.Widgets
 
 import qs.Commons
 import qs.Modules.Panels.Settings
@@ -13,12 +10,10 @@ import qs.Services.Hardware
 import qs.Services.Location
 import qs.Services.Media
 import qs.Services.Networking
-import qs.Services.Octalia
 import qs.Services.Power
 import qs.Services.System
 import qs.Services.Theming
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root

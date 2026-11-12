@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
-import qs.compat
 
 // The port makes no calls to GitHub: no version check, no contributor list. The names stay so the
 // About tab loads; it shows "unknown" versions and no contributors.

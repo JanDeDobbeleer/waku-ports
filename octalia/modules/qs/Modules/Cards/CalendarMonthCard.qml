@@ -1,11 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Location
 import qs.Services.System
-import qs.Services.UI
 import qs.Widgets
 
 // Calendar month grid with navigation

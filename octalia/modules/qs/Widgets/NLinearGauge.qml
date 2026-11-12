@@ -1,6 +1,5 @@
 import QtQuick 6.10
 import qs.Commons
-import qs.Services.UI
 
 Rectangle {
   id: root

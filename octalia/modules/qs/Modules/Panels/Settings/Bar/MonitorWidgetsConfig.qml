@@ -1,10 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import "../../../../Helpers/QtObj2JS.js" as QtObj2JS
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.Widgets
 import qs.compat

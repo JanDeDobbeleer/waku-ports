@@ -4,8 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
-import qs.Services.UI
-import qs.compat
 
 /**
 * IdleService — native idle detection via ext-idle-notify-v1 Wayland protocol.

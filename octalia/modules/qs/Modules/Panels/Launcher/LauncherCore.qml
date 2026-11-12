@@ -1,14 +1,11 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Widgets
 import "Helpers/LauncherNavigation.js" as LauncherNav
 
 import "Providers"
 import qs.Commons
 import qs.Services.Keyboard
-import qs.Services.UI
 import qs.Widgets
 
 // Core launcher logic and UI - shared between SmartPanel (Launcher.qml) and overlay (LauncherOverlayWindow.qml)

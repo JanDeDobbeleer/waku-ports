@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 
 import qs.Commons
-import qs.Modules.MainScreen.Backgrounds
 import qs.Services.UI
 import qs.Widgets
 
