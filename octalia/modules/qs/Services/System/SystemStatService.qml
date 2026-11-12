@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQuick 6.10
 import Quickshell
 import waku.services as S

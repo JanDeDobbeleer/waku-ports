@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 /*
 * Octalia – made by https://github.com/noctalia-dev
 * Licensed under the MIT License.
