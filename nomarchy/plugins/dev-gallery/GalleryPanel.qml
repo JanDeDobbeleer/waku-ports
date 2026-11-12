@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
@@ -509,6 +510,7 @@ Item {
                     { key: "iconLarge",    size: Style.font.iconLarge,    sample: "\uf004 \uf005 \uf02d" }
                   ]
                   delegate: Item {
+                    id: fontSampleRow
                     required property var modelData
                     width: typeCol.width
                     implicitHeight: Math.max(metaCol.implicitHeight, sampleText.implicitHeight)
@@ -521,14 +523,14 @@ Item {
                       spacing: Style.space(1)
                       Text {
                         textFormat: Text.PlainText
-                        text: "Style.font." + modelData.key
+                        text: "Style.font." + fontSampleRow.modelData.key
                         color: root.foreground
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.bodySmall
                       }
                       Text {
                         textFormat: Text.PlainText
-                        text: modelData.size + " px"
+                        text: fontSampleRow.modelData.size + " px"
                         color: Qt.darker(root.foreground, 1.5)
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -542,10 +544,10 @@ Item {
                       anchors.right: parent.right
                       anchors.verticalCenter: parent.verticalCenter
                       anchors.leftMargin: Style.space(16)
-                      text: modelData.sample
+                      text: fontSampleRow.modelData.sample
                       color: root.foreground
                       font.family: root.fontFamily
-                      font.pixelSize: modelData.size
+                      font.pixelSize: fontSampleRow.modelData.size
                       elide: Text.ElideRight
                     }
                   }
@@ -817,6 +819,7 @@ Item {
                   ]
 
                   CursorSurface {
+                    id: cursorExample
                     required property var modelData
                     required property int index
                     width: parent.width
@@ -835,7 +838,7 @@ Item {
                       anchors.verticalCenter: parent.verticalCenter
                       anchors.leftMargin: Style.space(10)
                       anchors.rightMargin: Style.space(10)
-                      text: modelData.label
+                      text: cursorExample.modelData.label
                       color: root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.body

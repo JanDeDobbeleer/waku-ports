@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Ui
 import qs.Commons
@@ -36,7 +37,7 @@ BarWidget {
       textFormat: Text.PlainText
       anchors.verticalCenter: parent.verticalCenter
       text: root.playIcon
-      color: activePlayer && activePlayer.isPlaying ? root.bar.barForeground : Qt.darker(root.bar.barForeground, 1.5)
+      color: root.activePlayer && root.activePlayer.isPlaying ? root.bar.barForeground : Qt.darker(root.bar.barForeground, 1.5)
       font.family: root.bar.fontFamily
       font.pixelSize: Style.font.body
       Behavior on color {

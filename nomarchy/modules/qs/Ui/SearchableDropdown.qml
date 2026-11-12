@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic as QQC
 import qs.Commons
@@ -303,6 +304,7 @@ Item {
               }
 
               delegate: Rectangle {
+                id: optionRow
                 required property var modelData
                 required property int index
                 width: resultList.width
@@ -322,8 +324,8 @@ Item {
 
                   Text {
                     textFormat: Text.PlainText
-                    text: root.optionLabel(modelData)
-                    color: index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
+                    text: root.optionLabel(optionRow.modelData)
+                    color: optionRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     elide: Text.ElideRight
@@ -332,7 +334,7 @@ Item {
                   Text {
                     textFormat: Text.PlainText
                     visible: text !== ""
-                    text: root.optionDescription(modelData)
+                    text: root.optionDescription(optionRow.modelData)
                     color: Qt.darker(root.foreground, 1.5)
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.caption

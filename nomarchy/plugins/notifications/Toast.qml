@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 // One notification card. Layout.js decides where it goes and the scene animates
 // it there; the card owns only what happens inside its own edges.
 

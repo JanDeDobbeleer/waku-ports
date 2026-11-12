@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic as QQC
 import Quickshell.Io
@@ -547,6 +548,7 @@ Item {
               }
 
               delegate: Rectangle {
+                id: resultRow
                 required property var modelData
                 required property int index
 
@@ -573,14 +575,14 @@ Item {
                     height: Style.space(16)
                     radius: Math.max(2, Style.cornerRadius / 2)
                     anchors.verticalCenter: parent.verticalCenter
-                    color: selected ? Style.selectedFillFor(root.foreground, root.accent) : "transparent"
-                    borderSpec: selected
+                    color: resultRow.selected ? Style.selectedFillFor(root.foreground, root.accent) : "transparent"
+                    borderSpec: resultRow.selected
                       ? Border.controlSpec("selected", root.foreground, root.accent)
                       : Border.controlSpec("normal", root.foreground, root.accent)
 
                     Text {
                       anchors.centerIn: parent
-                      visible: selected
+                      visible: resultRow.selected
                       text: "✓"
                       color: Style.selectedStateColor(root.foreground, root.accent)
                       font.family: root.fontFamily
@@ -596,8 +598,8 @@ Item {
 
                     Text {
                       textFormat: Text.PlainText
-                      text: modelData.label
-                      color: index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
+                      text: resultRow.modelData.label
+                      color: resultRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.body
                       elide: Text.ElideRight
@@ -606,7 +608,7 @@ Item {
                     Text {
                       textFormat: Text.PlainText
                       visible: text !== ""
-                      text: modelData.description
+                      text: resultRow.modelData.description
                       color: Qt.darker(root.foreground, 1.5)
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -620,8 +622,8 @@ Item {
                   anchors.fill: parent
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onPositionChanged: resultList.currentIndex = parent.index
-                  onClicked: root.toggleValue(modelData.value)
+                  onPositionChanged: resultList.currentIndex = resultRow.index
+                  onClicked: root.toggleValue(resultRow.modelData.value)
                 }
               }
             }

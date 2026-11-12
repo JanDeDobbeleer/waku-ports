@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
@@ -304,6 +305,7 @@ Item {
     model: Quickshell.screens
 
     PanelWindow {
+      id: startupCover
       required property var modelData
       property int readyFrames: 0
       screen: modelData
@@ -323,10 +325,10 @@ Item {
       }
 
       FrameAnimation {
-        running: root.startupPending && root.desktopReady && readyFrames < 2
+        running: root.startupPending && root.desktopReady && startupCover.readyFrames < 2
         onTriggered: {
-          readyFrames += 1
-          if (readyFrames === 2) root.revealStartup()
+          startupCover.readyFrames += 1
+          if (startupCover.readyFrames === 2) root.revealStartup()
         }
       }
     }
@@ -367,8 +369,8 @@ Item {
         anchors.fill: parent
         source: root.themeBackground ? Util.fileUrl(root.themeBackground) : ""
         sourceSize: {
-          var w = Math.ceil((parent.width || modelData.width) * modelData.devicePixelRatio)
-          var h = Math.ceil((parent.height || modelData.height) * modelData.devicePixelRatio)
+          var w = Math.ceil((parent.width || panel.modelData.width) * panel.modelData.devicePixelRatio)
+          var h = Math.ceil((parent.height || panel.modelData.height) * panel.modelData.devicePixelRatio)
           var nativeSz = root.themeNativeSize
           return nativeSz && (nativeSz.width < w || nativeSz.height < h) ? Qt.size(nativeSz.width, nativeSz.height) : Qt.size(w, h)
         }
