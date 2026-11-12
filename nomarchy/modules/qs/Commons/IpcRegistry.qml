@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.compat
 
 // Every ShellIpc handler, so the shell can answer an nomarchy-shell call over

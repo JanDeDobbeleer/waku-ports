@@ -1,14 +1,12 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
-import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Services.Pipewire
 import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
-import qs.compat
 import waku.services as S
 
 Panel {

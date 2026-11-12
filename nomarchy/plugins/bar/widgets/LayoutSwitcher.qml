@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import waku.services as S
 import qs.Commons
 import qs.Ui

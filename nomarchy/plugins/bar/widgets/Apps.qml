@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import waku as W
 import waku.services as S
 import qs.Commons

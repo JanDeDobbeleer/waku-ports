@@ -1,11 +1,9 @@
 import QtQuick
-import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
-import qs.compat
 
 Panel {
   id: root

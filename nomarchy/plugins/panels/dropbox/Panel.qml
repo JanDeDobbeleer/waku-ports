@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui

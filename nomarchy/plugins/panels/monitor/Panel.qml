@@ -6,7 +6,6 @@ import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
-import qs.compat
 
 Panel {
   id: root
