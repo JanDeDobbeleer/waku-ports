@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import "VisualiserBarsHelpers.js" as VisualiserBarsHelpers
 
 // Visible stub for celeste's C++ VisualiserBars. Draws one rounded bar per value along the
 // bottom, no per-frame smoothing. Nothing feeds `values` on Windows (the cava source is dropped).
@@ -30,7 +33,7 @@ Item {
 
                 readonly final property real level: Math.max(0, Math.min(1, Number(modelData) || 0))
 
-                width: Math.max(1, (root.width - root.spacing * (root.values.length - 1)) / Math.max(1, root.values.length))
+                width: VisualiserBarsHelpers.barWidth(root)
                 height: Math.max(1, level * root.height)
                 y: root.height - height
                 radius: root.rounding
