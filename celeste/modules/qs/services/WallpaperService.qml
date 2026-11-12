@@ -94,8 +94,16 @@ Searcher {
     }
 
     function setWallpaper(path: string): void {
+        applyWallpaper(path, false);
+    }
+
+    function setWallpaperAllDesktops(path: string): bool {
+        return applyWallpaper(path, true);
+    }
+
+    function applyWallpaper(path: string, allDesktops: bool): bool {
         if (Paths.dryRun) {
-            console.warn(`DRYRUN wallpaper set ${path}`);
+            console.warn(`DRYRUN wallpaper set${allDesktops ? " on all desktops" : ""} ${path}`);
             actualCurrent = path;
             // No S.Wallpapers.currentChanged follows to end the colour lock.
             previewColourLock = false;
@@ -103,16 +111,30 @@ Searcher {
             // `actualCurrent` follows S.Wallpapers.current once the change has happened. A change
             // Windows never reports (a failed set) would keep the preview palette on screen, so
             // the lock also ends after a while.
-            S.Wallpapers.setWallpaper(path);
+            if (allDesktops) {
+                if (!S.Wallpapers.setWallpaperAllDesktops(path)) {
+                    previewColourLock = false;
+                    Toaster.toast(Tr.tr("Wallpaper unchanged"), Tr.tr("Could not apply to all desktops"), "error", Toast.Info, 2500);
+                    return false;
+                }
+            } else {
+                S.Wallpapers.setWallpaper(path);
+            }
             if (previewColourLock)
                 colourLockTimeout.restart();
         } else {
+            if (allDesktops) {
+                previewColourLock = false;
+                Toaster.toast(Tr.tr("Wallpaper unchanged"), Tr.tr("The Windows wallpaper service is not available"), "error", Toast.Info, 2500);
+                return false;
+            }
             console.warn("WallpaperService: the Windows wallpaper service is not available; only the shell changes");
             actualCurrent = path;
             previewColourLock = false;
         }
         const name = path.slice(path.lastIndexOf("/") + 1);
-        Toaster.toast(Tr.tr("Wallpaper changed"), name, "image", Toast.Info, 2500);
+        Toaster.toast(Tr.tr("Wallpaper changed"), allDesktops ? Tr.tr("%1 on all desktops").arg(name) : name, "image", Toast.Info, 2500);
+        return true;
     }
 
     function preview(path: string): void {
