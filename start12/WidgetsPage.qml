@@ -1,6 +1,9 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
 import waku.services as S
+import "Data.js" as Data
 
 // The widgets page: a clock, load rings, your drives and a Run box. Built while the menu is open,
 // so nothing samples the system while the menu is closed.
@@ -9,7 +12,7 @@ Item {
 
     signal ran
 
-    function bytes(n) {
+    function bytes(n: real): string {
         if (n >= 1073741824)
             return (n / 1073741824).toFixed(0) + " GB";
         if (n >= 1048576)
@@ -17,17 +20,17 @@ Item {
         return (n / 1024).toFixed(0) + " KB";
     }
 
-    function rate(n) {
+    function rate(n: real): string {
         if (n >= 1048576)
             return (n / 1048576).toFixed(1);
         return (n / 1024).toFixed(0);
     }
 
-    function rateUnit(n) {
+    function rateUnit(n: real): string {
         return n >= 1048576 ? "M" : "K";
     }
 
-    function focusRun() {
+    function focusRun(): void {
         run.forceActiveFocus();
     }
 
@@ -129,10 +132,10 @@ Item {
                 DriveBar {
                     required property var modelData
                     width: parent.width
-                    letter: String(modelData.mount).substring(0, 2)
-                    used: modelData.percent / 100
-                    freeText: root.bytes(modelData.free) + " free"
-                    color: modelData.system ? "#e0b84c" : Style.accent
+                    letter: Data.driveLetter(modelData)
+                    used: Data.driveUsed(modelData)
+                    freeText: root.bytes(Data.driveFree(modelData)) + " free"
+                    color: Data.isSystemDrive(modelData) ? "#e0b84c" : Style.accent
                 }
             }
         }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
 
@@ -15,13 +17,14 @@ Rectangle {
     border.color: Style.menuBorder
     border.width: 1
 
-    readonly property var actions: [
-        { id: "lock", glyph: "", label: "Lock", confirm: "" },
-        { id: "sleep", glyph: "", label: "Sleep", confirm: "" },
-        { id: "signOut", glyph: "", label: "Sign out", confirm: "Click again to sign out" },
-        { id: "restart", glyph: "", label: "Restart", confirm: "Click again to restart" },
-        { id: "shutdown", glyph: "", label: "Shut down", confirm: "Click again to shut down" }
-    ]
+    ListModel {
+        id: actions
+        ListElement { action: "lock"; glyph: ""; label: "Lock"; confirm: "" }
+        ListElement { action: "sleep"; glyph: ""; label: "Sleep"; confirm: "" }
+        ListElement { action: "signOut"; glyph: ""; label: "Sign out"; confirm: "Click again to sign out" }
+        ListElement { action: "restart"; glyph: ""; label: "Restart"; confirm: "Click again to restart" }
+        ListElement { action: "shutdown"; glyph: ""; label: "Shut down"; confirm: "Click again to shut down" }
+    }
 
     onVisibleChanged: if (!visible)
         S.ControlCenter.cancelAction()
@@ -32,12 +35,15 @@ Rectangle {
         y: 4
 
         Repeater {
-            model: root.actions
+            model: actions
 
             Rectangle {
                 id: row
-                required property var modelData
-                readonly property bool pending: S.ControlCenter.pendingAction === modelData.id
+                required property string action
+                required property string glyph
+                required property string label
+                required property string confirm
+                readonly property bool pending: S.ControlCenter.pendingAction === action
 
                 width: root.width - 8
                 height: 36
@@ -48,13 +54,13 @@ Rectangle {
                     x: 10
                     anchors.verticalCenter: parent.verticalCenter
                     width: 20
-                    text: row.modelData.glyph
+                    text: row.glyph
                     size: 15
                 }
                 Text {
                     x: 40
                     anchors.verticalCenter: parent.verticalCenter
-                    text: row.pending ? row.modelData.confirm : row.modelData.label
+                    text: row.pending ? row.confirm : row.label
                     color: Style.text
                     font.family: Style.font
                     font.pixelSize: Style.fontSize
@@ -64,7 +70,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if (S.ControlCenter.requestAction(row.modelData.id))
+                        if (S.ControlCenter.requestAction(row.action))
                             root.done();
                     }
                 }

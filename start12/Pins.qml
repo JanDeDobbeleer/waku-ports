@@ -1,8 +1,10 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import waku.services as S
+import "Data.js" as Data
 
 // The apps pinned to the Start menu, saved in %LOCALAPPDATA%\waku\start12_pins.json (outside the
 // config home, so saving does not reload the shell). The first time, the list is the apps you launch
@@ -10,30 +12,30 @@ import waku.services as S
 QtObject {
     id: root
 
-    property var ids: []
+    property list<string> ids: []
     property bool loaded: false      // the file was read (or found missing)
     property bool exists: false      // the file exists
     readonly property string path: Quickshell.env("LOCALAPPDATA") + "/waku/start12_pins.json"
 
-    function has(id) {
+    function has(id: string): bool {
         return ids.indexOf(id) >= 0;
     }
 
-    function save(next) {
+    function save(next: list<string>): void {
         ids = next;
         exists = true;
-        file.setText(JSON.stringify({ ids: next }));
+        pinsFile.setText(JSON.stringify({ ids: next }));
     }
 
-    function toggle(id) {
-        save(has(id) ? ids.filter(x => x !== id) : ids.concat([id]));
+    function toggle(id: string): void {
+        save(has(id) ? Data.without(ids, id) : ids.concat([id]));
     }
 
     // Start from the apps used most, once the catalogue has loaded.
-    function seed() {
+    function seed(): void {
         if (!loaded || exists || !S.AppsService.ready)
             return;
-        const top = S.AppsService.search("", 15).map(e => e.id);
+        const top = Data.ids(S.AppsService.search("", 15));
         if (top.length > 0)
             save(top);
     }
@@ -43,15 +45,13 @@ QtObject {
     onLoadedChanged: seed()
 
     property FileView file: FileView {
+        id: pinsFile
         path: root.path
         printErrors: false
         onLoaded: {
-            try {
-                root.ids = JSON.parse(text()).ids || [];
-                root.exists = true;
-            } catch (e) {
-                root.ids = [];
-            }
+            const read = Data.pinIds(text());
+            root.ids = read || [];
+            root.exists = read !== null;
             root.loaded = true;
         }
         onLoadFailed: {

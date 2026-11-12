@@ -1,14 +1,17 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
+import waku.services as S
 
 // An app in a list: a small icon and its name. Left click starts it; right click opens the app menu.
 Rectangle {
     id: root
 
-    required property var entry
+    required property S.DesktopEntry entry
     property bool highlighted: false
     signal activated
-    signal contextRequested(var point)
+    signal contextRequested(point: point)
 
     height: 40
     radius: 6

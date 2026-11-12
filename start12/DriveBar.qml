@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 // One drive: its letter, a bar of the space used, and the space free.

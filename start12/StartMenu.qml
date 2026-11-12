@@ -1,6 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Widgets
 import waku
 import waku.services as S
@@ -17,7 +18,7 @@ PanelWindow {
     property string view: "pages"       // "pages" or "all"
     property int page: 0                // 0 pinned, 1 widgets
     readonly property int pageCount: 2
-    property var contextEntry: null
+    property S.DesktopEntry contextEntry: null
 
     name: "startmenu"
     visible: false
@@ -40,23 +41,23 @@ PanelWindow {
             visible = true;
     }
 
-    function close() {
+    function close(): void {
         visible = false;
     }
 
-    function launch(entry) {
+    function launch(entry: S.DesktopEntry): void {
         S.AppsService.launch(entry.id);
         close();
     }
 
-    function openContext(entry, point) {
+    function openContext(entry: S.DesktopEntry, point: point): void {
         contextEntry = entry;
         appMenu.x = Math.min(point.x, scene.width - appMenu.width - 8);
         appMenu.y = Math.min(point.y, scene.height - appMenu.height - 8);
         appMenu.visible = true;
     }
 
-    function open(args) {
+    function open(args: list<string>): void {
         Quickshell.execDetached(args);
         close();
     }
@@ -114,7 +115,7 @@ PanelWindow {
 
             // ---- left: search and pages ----
             Item {
-                id: left
+                id: leftPane
                 width: Style.menuLeftWidth
                 height: parent.height
 
@@ -213,6 +214,7 @@ PanelWindow {
                     Repeater {
                         model: menu.pageCount
                         Rectangle {
+                            id: dot
                             required property int index
                             anchors.verticalCenter: parent.verticalCenter
                             width: index === menu.page ? 8 : 6
@@ -222,7 +224,7 @@ PanelWindow {
                             MouseArea {
                                 anchors.fill: parent
                                 anchors.margins: -4
-                                onClicked: menu.page = parent.index
+                                onClicked: menu.page = dot.index
                             }
                         }
                     }
@@ -239,8 +241,8 @@ PanelWindow {
             // ---- right: the user and the shortcuts ----
             Rectangle {
                 id: right
-                x: left.width
-                width: parent.width - left.width
+                x: leftPane.width
+                width: parent.width - leftPane.width
                 height: parent.height
                 color: Style.menuRight
                 topRightRadius: Style.menuRadius
@@ -334,7 +336,7 @@ PanelWindow {
         // The avatar sits on the top edge of the card, over both columns.
         ClippingRectangle {
             id: avatar
-            x: left.width + (Style.menuWidth - left.width) / 2 - width / 2
+            x: leftPane.width + (Style.menuWidth - leftPane.width) / 2 - width / 2
             y: 0
             width: Style.avatarSize
             height: Style.avatarSize
@@ -343,7 +345,7 @@ PanelWindow {
 
             Image {
                 anchors.fill: parent
-                visible: source != ""
+                visible: S.ControlCenter.avatarUrl !== ""
                 source: S.ControlCenter.avatarUrl
                 fillMode: Image.PreserveAspectCrop
                 smooth: true

@@ -1,4 +1,6 @@
 // Theme of the built-in widgets the taskbar uses (Taskbar, Tray, Volume, Notifications).
+pragma ComponentBehavior: Bound
+
 import waku
 
 ThemeSpec {

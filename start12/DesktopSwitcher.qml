@@ -1,13 +1,15 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
+import "Data.js" as Data
 
 // The virtual desktops as numbered buttons: the current one lit, desktops with windows marked by a dot.
 // A click goes to that desktop. Shows the first monitor's desktops.
 Row {
     id: root
 
-    readonly property var monitors: S.Workspaces.monitors || []
-    readonly property var desktops: monitors.length > 0 ? (monitors[0].workspaces || []) : []
+    readonly property list<var> desktops: Data.desktops(S.Workspaces.monitors)
 
     spacing: 2
 
@@ -18,8 +20,8 @@ Row {
             id: cell
             required property int index
             readonly property var desktop: root.desktops[index]
-            readonly property bool current: !!(desktop && (desktop.active || desktop.focused))
-            readonly property bool occupied: !!(desktop && desktop.hasWindows)
+            readonly property bool current: Data.isCurrent(desktop)
+            readonly property bool occupied: Data.hasWindows(desktop)
 
             width: 30
             height: 40
