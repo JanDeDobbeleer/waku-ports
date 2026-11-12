@@ -3,14 +3,15 @@ import QtQuick.Templates
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledScrollBarHelpers.js" as StyledScrollBarHelpers
 
 ScrollBar {
     id: root
 
     required final property Flickable flickable
     // waku: the QtQuick.Templates shim has no attached ScrollBar, so follow the flickable here.
-    size: flickable.visibleArea.heightRatio
-    position: flickable.visibleArea.yPosition
+    size: StyledScrollBarHelpers.visibleSize(flickable)
+    position: StyledScrollBarHelpers.visiblePosition(flickable)
     final property bool shouldBeActive
     final property real nonAnimPosition
     final property bool animating
@@ -21,7 +22,7 @@ ScrollBar {
         if (hovered)
             shouldBeActive = true;
         else
-            shouldBeActive = flickable.moving;
+            shouldBeActive = StyledScrollBarHelpers.isMoving(flickable);
     }
 
     // Sync nonAnimPosition with Qt's automatic position binding
@@ -41,11 +42,7 @@ ScrollBar {
 
     Component.onCompleted: {
         if (flickable) {
-            const contentHeight = flickable.contentHeight;
-            const height = flickable.height;
-            if (contentHeight > height) {
-                nonAnimPosition = Math.max(0, Math.min(1, flickable.contentY / (contentHeight - height)));
-            }
+            nonAnimPosition = StyledScrollBarHelpers.currentPosition(flickable);
         }
     }
     implicitWidth: Tokens.padding.extraSmall
@@ -88,13 +85,7 @@ ScrollBar {
         function onContentYChanged() {
             if (!root.animating && !fullMouse.pressed) {
                 root._updatingFromFlickable = true;
-                const contentHeight = root.flickable.contentHeight;
-                const height = root.flickable.height;
-                if (contentHeight > height) {
-                    root.nonAnimPosition = Math.max(0, Math.min(1, root.flickable.contentY / (contentHeight - height)));
-                } else {
-                    root.nonAnimPosition = 0;
-                }
+                root.nonAnimPosition = StyledScrollBarHelpers.currentPosition(root.flickable);
                 root._updatingFromFlickable = false;
             }
         }
@@ -104,7 +95,7 @@ ScrollBar {
 
     Connections {
         function onMovingChanged(): void {
-            if (root.flickable.moving)
+            if (StyledScrollBarHelpers.isMoving(root.flickable))
                 root.shouldBeActive = true;
             else
                 hideDelay.restart();
@@ -117,7 +108,7 @@ ScrollBar {
         id: hideDelay
 
         interval: 600
-        onTriggered: root.shouldBeActive = root.flickable.moving || root.hovered
+        onTriggered: root.shouldBeActive = StyledScrollBarHelpers.isMoving(root.flickable) || root.hovered
     }
 
     CustomMouseArea {
@@ -134,16 +125,7 @@ ScrollBar {
             root.nonAnimPosition = newPos;
             // Update flickable position
             // Map scrollbar position [0, 1-size] to contentY [0, maxContentY]
-            if (root.flickable) {
-                const contentHeight = root.flickable.contentHeight;
-                const height = root.flickable.height;
-                if (contentHeight > height) {
-                    const maxContentY = contentHeight - height;
-                    const maxPos = 1 - root.size;
-                    const contentY = maxPos > 0 ? (newPos / maxPos) * maxContentY : 0;
-                    root.flickable.contentY = Math.max(0, Math.min(maxContentY, contentY));
-                }
-            }
+            StyledScrollBarHelpers.setContentPosition(root.flickable, root.size, newPos);
         }
 
         anchors.fill: parent
@@ -156,16 +138,7 @@ ScrollBar {
             root.nonAnimPosition = newPos;
             // Update flickable position
             // Map scrollbar position [0, 1-size] to contentY [0, maxContentY]
-            if (root.flickable) {
-                const contentHeight = root.flickable.contentHeight;
-                const height = root.flickable.height;
-                if (contentHeight > height) {
-                    const maxContentY = contentHeight - height;
-                    const maxPos = 1 - root.size;
-                    const contentY = maxPos > 0 ? (newPos / maxPos) * maxContentY : 0;
-                    root.flickable.contentY = Math.max(0, Math.min(maxContentY, contentY));
-                }
-            }
+            StyledScrollBarHelpers.setContentPosition(root.flickable, root.size, newPos);
         }
 
         onPositionChanged: event => {
@@ -174,16 +147,7 @@ ScrollBar {
             root.nonAnimPosition = newPos;
             // Update flickable position
             // Map scrollbar position [0, 1-size] to contentY [0, maxContentY]
-            if (root.flickable) {
-                const contentHeight = root.flickable.contentHeight;
-                const height = root.flickable.height;
-                if (contentHeight > height) {
-                    const maxContentY = contentHeight - height;
-                    const maxPos = 1 - root.size;
-                    const contentY = maxPos > 0 ? (newPos / maxPos) * maxContentY : 0;
-                    root.flickable.contentY = Math.max(0, Math.min(maxContentY, contentY));
-                }
-            }
+            StyledScrollBarHelpers.setContentPosition(root.flickable, root.size, newPos);
         }
     }
 
