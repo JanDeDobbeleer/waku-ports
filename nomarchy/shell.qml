@@ -1214,9 +1214,13 @@ ShellRoot {
       console.warn("summon: plugin not enabled, not summoning:", id)
       return false
     }
-    // The theme and background picker is a modal overlay; other UI opening dismisses it.
-    if (id !== "nomarchy.image-picker" && shell.isPluginOpen("nomarchy.image-picker"))
-      shell.hide("nomarchy.image-picker")
+    // Modal overlays are exclusive: other UI opening dismisses them.
+    const modalOverlays = ["nomarchy.menu", "nomarchy.image-picker", "nomarchy.clipboard",
+      "nomarchy.emojis", "nomarchy.reminders", "nomarchy.wifiqr"]
+    for (let i = 0; i < modalOverlays.length; i++) {
+      if (modalOverlays[i] !== id && shell.isPluginOpen(modalOverlays[i]))
+        shell.hide(modalOverlays[i])
+    }
     // Bar widgets take no payload; payloadJson is dropped on this path.
     if (shell.isBarWidgetPanelPlugin(id)) {
       let summoned = shell.bar && typeof shell.bar.summonBarWidget === "function"
@@ -1979,6 +1983,10 @@ ShellRoot {
 
     function toggle(id: string, payloadJson: string): void {
       shell.toggle(id, payloadJson)
+    }
+
+    function isOpen(id: string): string {
+      return shell.isPluginOpen(id) ? "open" : "closed"
     }
 
     // A bar section's panels answer to their position as well as their id, so a

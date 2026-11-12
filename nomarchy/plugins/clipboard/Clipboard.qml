@@ -323,6 +323,7 @@ Item {
     id: panel
     shown: root.opened
     WlrLayershell.namespace: "nomarchy-clipboard"
+    onFocusLost: root.close()
 
     Rectangle {
       anchors.fill: parent

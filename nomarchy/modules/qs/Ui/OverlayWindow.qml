@@ -39,6 +39,31 @@ PanelWindow {
   // new content rendered, which showed as a flash of the dimmed desktop on open.
   // The transparent frame replaces it first.
   property bool closing: false
+
+  // Light dismiss: Hyprland keeps an exclusive overlay on top, Windows does not, so focus can
+  // move to another panel, menu or app and leave the overlay open behind it. Emitted when the
+  // shown overlay loses the focus it had; overlays dismiss on it as they do on Escape. The
+  // grace interval lets focus pass through "none active" while it moves within the shell.
+  signal focusLost()
+  property bool hadFocus: false
+  Item {
+    id: focusWatch
+    readonly property bool windowActive: Window.active
+    onWindowActiveChanged: {
+      if (windowActive) {
+        window.hadFocus = window.shown
+        focusLossTimer.stop()
+      } else if (window.shown && window.hadFocus) {
+        focusLossTimer.restart()
+      }
+    }
+  }
+  Timer {
+    id: focusLossTimer
+    interval: 80
+    onTriggered: if (window.shown && !focusWatch.windowActive) window.focusLost()
+  }
+
   Timer {
     id: closeTimer
     interval: 50
@@ -69,6 +94,8 @@ PanelWindow {
   // Live monitor scaling does not emit a Hyprland monitor event, so its cached
   // scale can lag behind Qt. Refresh on opening and on scale changes while open.
   onShownChanged: {
+    hadFocus = false
+    focusLossTimer.stop()
     if (shown) {
       closeTimer.stop()
       closing = false

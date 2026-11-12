@@ -25,6 +25,16 @@ call shell summon nomarchy.menu {"menu":"root"} => ok
 sleep 1
 call shell call nomarchy.image-picker debugState x => opened.{1,4}false
 call shell hide nomarchy.menu
+# Modal overlays are exclusive: summoning one dismisses the others.
+call shell summon nomarchy.menu {"menu":"root"} => ok
+sleep 2
+call shell isOpen nomarchy.menu => open
+call shell summon nomarchy.image-picker {"source":"themes"} => ok
+sleep 3
+call shell isOpen nomarchy.menu => closed
+call shell isOpen nomarchy.image-picker => open
+call shell hide nomarchy.image-picker
+call shell isOpen nomarchy.image-picker => closed
 call nomarchy.audio open
 call nomarchy.audio close
 call nomarchy.bluetooth open

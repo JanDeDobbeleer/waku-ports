@@ -97,6 +97,7 @@ Item {
     id: panel
     shown: root.opened
     WlrLayershell.namespace: "nomarchy-reminders"
+    onFocusLost: root.dismiss()
 
     Rectangle {
       anchors.fill: parent

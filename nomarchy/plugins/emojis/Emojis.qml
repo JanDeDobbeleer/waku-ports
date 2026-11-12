@@ -162,6 +162,7 @@ Item {
     id: panel
     shown: root.opened
     WlrLayershell.namespace: "nomarchy-emojis"
+    onFocusLost: root.dismiss()
 
     Rectangle {
       anchors.fill: parent

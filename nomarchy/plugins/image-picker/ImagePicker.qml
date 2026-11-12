@@ -73,8 +73,7 @@ Item {
   readonly property int previewRadius: Math.max(1, Math.min(16, Math.ceil((panel.width - expandedWidth) / (2 * (sliceWidth + sliceSpacing))) + 1))
   onPreviewRadiusChanged: updateVisibleItems()
 
-  property bool hadFocus: false
-  onOpenedChanged: if (!opened) { hadFocus = false; blurDismiss.stop(); layoutSettled = false; renderedFrames = 0; deleteConfirmOpen = false; pendingDeleteTheme = ""; deleteSelectionPath = ""; awaitingDeleteRefresh = false }
+  onOpenedChanged: if (!opened) { layoutSettled = false; renderedFrames = 0; deleteConfirmOpen = false; pendingDeleteTheme = ""; deleteSelectionPath = ""; awaitingDeleteRefresh = false }
 
   PreviewHold {
     id: previewHold
@@ -787,33 +786,12 @@ Item {
     shown: root.opened
     shownKeyboardFocus: root.imagesLoaded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "nomarchy-image-selector"
+    onFocusLost: root.cancel()
 
     MouseArea {
       anchors.fill: parent
       enabled: root.opened && root.imagesLoaded
       onClicked: root.cancel()
-    }
-
-    // Light dismiss: Hyprland keeps the exclusive overlay on top, Windows does not, so focus can
-    // move to another panel, menu or app and leave the picker open behind it. Cancel then, as
-    // Escape does. The window shows only once its images load, so dismiss only after it had focus.
-    Item {
-      id: focusWatch
-      readonly property bool windowActive: Window.active
-      onWindowActiveChanged: {
-        if (windowActive) {
-          root.hadFocus = true
-          blurDismiss.stop()
-        } else if (root.opened && root.hadFocus) {
-          blurDismiss.restart()
-        }
-      }
-    }
-
-    Timer {
-      id: blurDismiss
-      interval: 80
-      onTriggered: if (root.opened && !focusWatch.windowActive) root.cancel()
     }
 
     // Count presented frames while the card pre-renders below; two frames
