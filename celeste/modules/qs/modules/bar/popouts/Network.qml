@@ -57,7 +57,7 @@ ColumnLayout {
         spacing: Tokens.spacing.small
 
         MaterialIcon {
-            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0, false) : "wifi_off"
             color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
         }
 
@@ -142,7 +142,7 @@ ColumnLayout {
             }
 
             MaterialIcon {
-                text: Icons.getNetworkIcon(networkItem.modelData.strength)
+                text: Icons.getNetworkIcon(networkItem.modelData.strength, false)
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
             }
 

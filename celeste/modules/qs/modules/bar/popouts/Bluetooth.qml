@@ -121,7 +121,7 @@ ColumnLayout {
 
             MaterialIcon {
                 visible: device.modelData.state === BluetoothDeviceState.Connected
-                text: device.modelData.batteryAvailable ? Icons.getBatteryIcon(device.modelData.battery) : "battery_alert"
+                text: device.modelData.batteryAvailable ? Icons.getBatteryIcon(device.modelData.battery, false) : "battery_alert"
                 color: device.modelData.batteryAvailable && device.modelData.battery < 0.2 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
             }
 
