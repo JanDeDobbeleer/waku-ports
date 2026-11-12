@@ -39,7 +39,7 @@ Singleton {
   function resetCache() {
   }
 
-  function getAvatarPath(username) {
+  function getAvatarPath(username: var): string {
     return "";
   }
 

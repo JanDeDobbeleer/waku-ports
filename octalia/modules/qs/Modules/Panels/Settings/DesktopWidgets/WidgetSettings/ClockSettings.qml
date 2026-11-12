@@ -1,8 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "ClockSettings.js" as ClockSettingsData
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -14,13 +18,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
-  property string valueClockStyle: widgetData.clockStyle !== undefined ? widgetData.clockStyle : widgetMetadata.clockStyle
-  property string valueClockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.custonFont
-  property string valueFormat: widgetData.format !== undefined ? widgetData.format : widgetMetadata.format
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground", "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners", "roundedCorners")
+  property string valueClockStyle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockStyle", "clockStyle")
+  property string valueClockColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockColor", "clockColor")
+  property bool valueUseCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useCustomFont", "useCustomFont")
+  property string valueCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customFont", "custonFont")
+  property string valueFormat: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "format", "format")
 
   // Track the currently focused input field
   property var focusedInput: null
@@ -40,33 +44,8 @@ ColumnLayout {
     settingsChanged(settings);
   }
 
-  // Function to insert token at cursor position in the focused input
-  function insertToken(token) {
-    var currentText, cursorPos, input, newText;
-    if (!focusedInput || !focusedInput.inputItem) {
-      // If no input is focused, default to format input
-      if (formatInput.inputItem) {
-        formatInput.inputItem.focus = true;
-        focusedInput = formatInput;
-      }
-    }
-
-    if (focusedInput && focusedInput.inputItem) {
-      input = focusedInput.inputItem;
-      cursorPos = input.cursorPosition;
-      currentText = input.text;
-
-      // Insert token at cursor position
-      newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
-      input.text = newText + " ";
-
-      // Move cursor after the inserted token
-      input.cursorPosition = cursorPos + token.length + 1;
-
-      // Ensure the input keeps focus
-      input.focus = true;
-      saveSettings();
-    }
+  function insertToken(token: string): void {
+    ClockSettingsData.insertToken(root, formatInput, token);
   }
 
   NComboBox {
@@ -97,7 +76,7 @@ ColumnLayout {
                   root.valueClockStyle = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.clockStyle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockStyle")
   }
 
   NColorChoice {
@@ -108,7 +87,7 @@ ColumnLayout {
                   root.valueClockColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.clockColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockColor")
   }
 
   NToggle {
@@ -120,7 +99,7 @@ ColumnLayout {
                  root.valueUseCustomFont = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.useCustomFont
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useCustomFont")
   }
 
   NSearchableComboBox {
@@ -176,18 +155,10 @@ ColumnLayout {
         text: root.valueFormat
         onTextChanged: {
           root.valueFormat = text;
-          settingsChanged(root.saveSettings());
+          root.settingsChanged(root.saveSettings());
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = formatInput;
-              }
-            });
-          }
-        }
-        defaultValue: root.widgetMetadata.format
+        Component.onCompleted: ClockSettingsData.watchInput(inputItem, root, formatInput)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "format")
       }
     }
 
@@ -227,12 +198,13 @@ ColumnLayout {
               Layout.topMargin: Style.marginM
               model: I18n.locale.toString(root.now, root.valueFormat.trim()).split("\\n")
               delegate: NText {
+                required property var modelData
                 visible: text !== ""
                 text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: Color.resolveColorKey(valueClockColor)
+                color: Color.resolveColorKey(root.valueClockColor)
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
@@ -275,7 +247,7 @@ ColumnLayout {
                  root.valueShowBackground = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
@@ -288,6 +260,6 @@ ColumnLayout {
                  root.valueRoundedCorners = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 }

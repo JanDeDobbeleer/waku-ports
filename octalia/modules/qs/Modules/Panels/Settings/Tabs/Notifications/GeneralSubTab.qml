@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Services.Compositor
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -131,7 +132,7 @@ ColumnLayout {
         }
         label: monitorOption.modelData.name || I18n.tr("common.unknown")
         description: {
-          I18n.tr("system.monitor-description", {
+          I18n.trArgs("system.monitor-description", {
                     "model": monitorOption.modelData.model,
                     "width": monitorOption.modelData.width * compositorScale,
                     "height": monitorOption.modelData.height * compositorScale,
@@ -141,9 +142,9 @@ ColumnLayout {
         checked: (Settings.data.notifications.monitors || []).indexOf(monitorOption.modelData.name) !== -1
         onToggled: checked => {
                      if (checked) {
-                       Settings.data.notifications.monitors = root.addMonitor(Settings.data.notifications.monitors, monitorOption.modelData.name);
+                       Settings.data.notifications.monitors = SettingsValue.invoke(root, "addMonitor", Settings.data.notifications.monitors, monitorOption.modelData.name);
                      } else {
-                       Settings.data.notifications.monitors = root.removeMonitor(Settings.data.notifications.monitors, monitorOption.modelData.name);
+                       Settings.data.notifications.monitors = SettingsValue.invoke(root, "removeMonitor", Settings.data.notifications.monitors, monitorOption.modelData.name);
                      }
                    }
       }

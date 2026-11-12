@@ -7,6 +7,8 @@ import Quickshell.Widgets
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
+import "../Extras/TrayMenuHelpers.js" as TrayMenuHelpers
 import qs.compat
 
 Item {
@@ -24,11 +26,11 @@ Item {
     return PanelService.getPopupMenuWindow(screen);
   }
 
-  readonly property var trayMenu: popupMenuWindow ? popupMenuWindow.trayMenuLoader : null
+  readonly property var trayMenu: popupMenuWindow ? BarWidgetHelpers.readProperty(popupMenuWindow, "trayMenuLoader") : null
 
   Connections {
     target: PanelService
-    function onPopupMenuWindowRegistered(registeredScreen) {
+    function onPopupMenuWindowRegistered(registeredScreen: var): void {
       if (registeredScreen === root.screen) {
         root.popupMenuUpdateTrigger++;
       }
@@ -62,11 +64,11 @@ Item {
   readonly property bool density: Settings.data.bar.density
   readonly property int iconSize: Style.toOdd(capsuleHeight * 0.65)
 
-  property var blacklist: widgetSettings.blacklist || widgetMetadata.blacklist || [] // Read from settings
-  property var pinned: widgetSettings.pinned || widgetMetadata.pinned || [] // Pinned items (shown inline)
-  property bool drawerEnabled: widgetSettings.drawerEnabled !== undefined ? widgetSettings.drawerEnabled : (widgetMetadata.drawerEnabled !== undefined ? widgetMetadata.drawerEnabled : true) // Enable drawer panel
-  property bool hidePassive: widgetSettings.hidePassive !== undefined ? widgetSettings.hidePassive : true // Hide passive status items
-  readonly property string chevronColorKey: widgetSettings.chevronColor !== undefined ? widgetSettings.chevronColor : widgetMetadata.chevronColor
+  property var blacklist: BarWidgetHelpers.readProperty(widgetSettings, "blacklist") || BarWidgetHelpers.readProperty(widgetMetadata, "blacklist") || [] // Read from settings
+  property var pinned: BarWidgetHelpers.readProperty(widgetSettings, "pinned") || BarWidgetHelpers.readProperty(widgetMetadata, "pinned") || [] // Pinned items (shown inline)
+  property bool drawerEnabled: BarWidgetHelpers.readProperty(widgetSettings, "drawerEnabled") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "drawerEnabled") : (BarWidgetHelpers.readProperty(widgetMetadata, "drawerEnabled") !== undefined ? BarWidgetHelpers.readProperty(widgetMetadata, "drawerEnabled") : true) // Enable drawer panel
+  property bool hidePassive: BarWidgetHelpers.readProperty(widgetSettings, "hidePassive") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hidePassive") : true // Hide passive status items
+  readonly property string chevronColorKey: BarWidgetHelpers.readProperty(widgetSettings, "chevronColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "chevronColor") : BarWidgetHelpers.readProperty(widgetMetadata, "chevronColor")
   readonly property color chevronColor: Color.resolveColorKey(chevronColorKey)
   property var filteredItems: [] // Items to show inline (pinned)
   property var dropdownItems: [] // Items to show in drawer (unpinned)
@@ -91,8 +93,8 @@ Item {
       item = items[i];
       if (item) {
         // Direct property access creates reactive binding
-        s = item.status;
-        sig += (item.id || i) + ":" + (s !== undefined ? s : -1);
+        s = BarWidgetHelpers.readProperty(item, "status");
+        sig += (BarWidgetHelpers.readProperty(item, "id") || i) + ":" + (s !== undefined ? s : -1);
       }
     }
     // Trigger update when signature changes (status changed)
@@ -146,17 +148,17 @@ Item {
           continue;
         }
 
-        const title = item.tooltipTitle || item.name || item.id || "";
+        const title = BarWidgetHelpers.readProperty(item, "tooltipTitle") || BarWidgetHelpers.readProperty(item, "name") || BarWidgetHelpers.readProperty(item, "id") || "";
 
         // Skip passive items if hidePassive is enabled
-        if (root.hidePassive && item.status !== undefined && (item.status === SystemTray.Passive || item.status === 0)) {
+        if (root.hidePassive && BarWidgetHelpers.readProperty(item, "status") !== undefined && (BarWidgetHelpers.readProperty(item, "status") === Status.Passive || BarWidgetHelpers.readProperty(item, "status") === 0)) {
           continue;
         }
 
         // Check if blacklisted
         let isBlacklisted = false;
-        if (root.blacklist && root.blacklist.length > 0) {
-          for (j = 0; j < root.blacklist.length; j++) {
+        if (root.blacklist && BarWidgetHelpers.readProperty(root.blacklist, "length") > 0) {
+          for (j = 0; j < BarWidgetHelpers.readProperty(root.blacklist, "length"); j++) {
             const rule = root.blacklist[j];
             if (wildCardMatch(title, rule)) {
               isBlacklisted = true;
@@ -179,12 +181,12 @@ Item {
       // Build inline (pinned) and drawer (unpinned) lists
       // If pinned list is empty, all items go to drawer (none inline)
       // If pinned list has items, pinned items are inline, rest go to drawer
-      if (pinned && pinned.length > 0) {
+      if (pinned && BarWidgetHelpers.readProperty(pinned, "length") > 0) {
         let pinnedItems = [];
         for (k = 0; k < newItems.length; k++) {
           const item2 = newItems[k];
-          const title2 = item2.tooltipTitle || item2.name || item2.id || "";
-          for (m = 0; m < pinned.length; m++) {
+          const title2 = BarWidgetHelpers.readProperty(item2, "tooltipTitle") || BarWidgetHelpers.readProperty(item2, "name") || BarWidgetHelpers.readProperty(item2, "id") || "";
+          for (m = 0; m < BarWidgetHelpers.readProperty(pinned, "length"); m++) {
             const rule2 = pinned[m];
             if (wildCardMatch(title2, rule2)) {
               pinnedItems.push(item2);
@@ -199,7 +201,7 @@ Item {
         for (v = 0; v < newItems.length; v++) {
           const cand = newItems[v];
           let isPinned = false;
-          for (f = 0; f < filteredItems.length; f++) {
+          for (f = 0; f < BarWidgetHelpers.readProperty(filteredItems, "length"); f++) {
             if (filteredItems[f] === cand) {
               isPinned = true;
               break;
@@ -221,50 +223,27 @@ Item {
     updateDebounceTimer.restart();
   }
 
-  function wildCardMatch(str, rule) {
-    if (!str || !rule) {
-      return false;
-    }
-
-    // First, convert '*' to a placeholder to preserve it, then escape other special regex characters
-    // Use a unique placeholder that won't appear in normal strings
-    const placeholder = '\uE000'; // Private use character
-    let processedRule = rule.replace(/\*/g, placeholder);
-    // Escape all special regex characters (but placeholder won't match this)
-    let escapedRule = processedRule.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-    // Convert placeholder back to '.*' for wildcard matching
-    let pattern = escapedRule.replace(new RegExp(placeholder, 'g'), '.*');
-    // Add ^ and $ to match the entire string
-    pattern = '^' + pattern + '$';
-
-    try {
-      const regex = new RegExp(pattern, 'i');
-      // 'i' for case-insensitive
-      return regex.test(str);
-    } catch (e) {
-      Logger.w("Tray", "Invalid regex pattern for wildcard match:", rule, e.message);
-      return false; // If regex is invalid, it won't match
-    }
+  function wildCardMatch(str: string, rule: string): bool {
+    return BarWidgetHelpers.wildcardMatch(str, rule, Logger);
   }
 
-  function toggleDrawer(button) {
+  function toggleDrawer(button: var): void {
     // Close the popup menu if it's open
-    if (popupMenuWindow && popupMenuWindow.visible) {
+    if (popupMenuWindow && BarWidgetHelpers.readProperty(popupMenuWindow, "visible")) {
       popupMenuWindow.close();
     }
 
     const panel = PanelService.getPanel("trayDrawerPanel", root.screen);
     if (panel) {
-      panel.widgetSection = root.section;
-      panel.widgetIndex = root.sectionWidgetIndex;
-      panel.toggle(this);
+      PanelService.setPanelProperties(panel, { "widgetSection": root.section, "widgetIndex": root.sectionWidgetIndex });
+      PanelService.invokePanel(panel, "toggle", [this]);
     }
   }
 
   function onLoaded() {
     // When the widget is fully initialized with its props set the screen for the trayMenu
-    if (trayMenu && trayMenu.item) {
-      trayMenu.item.screen = screen;
+    if (trayMenu && BarWidgetHelpers.readProperty(trayMenu, "item")) {
+      TrayMenuHelpers.setMenuScreen(BarWidgetHelpers.readProperty(trayMenu, "item"), screen);
     }
   }
 
@@ -293,15 +272,15 @@ Item {
   }
 
   // Content dimensions for implicit sizing
-  readonly property int visibleItemCount: (root.drawerEnabled && dropdownItems.length > 0 ? 1 : 0) + filteredItems.length
+  readonly property int visibleItemCount: (root.drawerEnabled && BarWidgetHelpers.readProperty(dropdownItems, "length") > 0 ? 1 : 0) + BarWidgetHelpers.readProperty(filteredItems, "length")
   readonly property real capsulePadding: 0
   readonly property real capsuleWidth: isVertical ? capsuleHeight : Math.round(trayFlow.implicitWidth + capsulePadding * 2)
   readonly property real capsuleContentHeight: isVertical ? Math.round(trayFlow.implicitHeight + capsulePadding * 2) : capsuleHeight
 
   implicitWidth: isVertical ? barHeight : Math.round(trayFlow.implicitWidth + capsulePadding * 2)
   implicitHeight: isVertical ? Math.round(trayFlow.implicitHeight + capsulePadding * 2) : barHeight
-  visible: filteredItems.length > 0 || dropdownItems.length > 0
-  opacity: (filteredItems.length > 0 || dropdownItems.length > 0) ? 1.0 : 0.0
+  visible: BarWidgetHelpers.readProperty(filteredItems, "length") > 0 || BarWidgetHelpers.readProperty(dropdownItems, "length") > 0
+  opacity: (BarWidgetHelpers.readProperty(filteredItems, "length") > 0 || BarWidgetHelpers.readProperty(dropdownItems, "length") > 0) ? 1.0 : 0.0
 
   // Visual capsule centered in parent
   Rectangle {
@@ -348,7 +327,7 @@ Item {
     // Drawer opener (before items if opposite direction)
     NIconButton {
       id: chevronIconBefore
-      visible: root.drawerEnabled && root.dropdownItems.length > 0 && BarService.getPillDirection(root)
+      visible: root.drawerEnabled && BarWidgetHelpers.readProperty(root.dropdownItems, "length") > 0 && BarService.getPillDirection(root)
       width: root.isVertical ? root.barHeight : root.capsuleHeight
       height: root.isVertical ? root.capsuleHeight : root.barHeight
       baseSize: root.capsuleHeight
@@ -372,7 +351,7 @@ Item {
         }
       }
       onClicked: root.toggleDrawer(this)
-      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, root.screen)
+      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, root.screen, null)
     }
 
     // Pinned items
@@ -408,7 +387,7 @@ Item {
           backer.fillMode: Image.PreserveAspectFit
 
           source: {
-            let icon = trayDelegate.modelData?.icon || "";
+            let icon = BarWidgetHelpers.optionalProperty(trayDelegate.modelData, "icon") || "";
             if (!icon) {
               return "";
             }
@@ -425,7 +404,7 @@ Item {
           }
           opacity: status === Image.Ready ? 1 : 0
 
-          layer.enabled: root.widgetSettings.colorizeIcons !== false
+          layer.enabled: BarWidgetHelpers.readProperty(root.widgetSettings, "colorizeIcons") !== false
           layer.effect: ShaderEffect {
             property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
             property real colorizeMode: 1.0
@@ -484,14 +463,14 @@ Item {
                          }
                        } else if (mouse.button === Qt.MiddleButton) {
                          // Close the menu if it was visible
-                         if (popupMenuWindow && popupMenuWindow.visible) {
+                         if (popupMenuWindow && BarWidgetHelpers.readProperty(popupMenuWindow, "visible")) {
                            popupMenuWindow.close();
                            return;
                          }
                          trayDelegate.modelData.secondaryActivate && trayDelegate.modelData.secondaryActivate();
                        } else if (mouse.button === Qt.RightButton) {
                          // Close the menu if it was visible
-                         if (popupMenuWindow && popupMenuWindow.visible) {
+                         if (popupMenuWindow && BarWidgetHelpers.readProperty(popupMenuWindow, "visible")) {
                            popupMenuWindow.close();
                            return;
                          }
@@ -501,7 +480,7 @@ Item {
                            PanelService.openedPanel.close();
                          }
 
-                         if (trayDelegate.modelData.hasMenu && trayDelegate.modelData.menu && trayMenu && trayMenu.item) {
+                         if (trayDelegate.modelData.hasMenu && trayDelegate.modelData.menu && trayMenu && BarWidgetHelpers.readProperty(trayMenu, "item")) {
                            // Calculate menu position after ensuring menu is loaded
                            const calculateAndShow = () => {
                              // Position menu based on bar position, using visualAnchor for proper positioning
@@ -513,15 +492,15 @@ Item {
                                menuY = 0;
                              } else if (barPosition === "right") {
                                // For right bar: position menu to the left of the visual area
-                               menuX = -trayMenu.item.implicitWidth - Style.marginL;
+                               menuX = -BarWidgetHelpers.readProperty(trayMenu, "item").implicitWidth - Style.marginL;
                                menuY = 0;
                              } else {
                                // For horizontal bars: center horizontally and position below visual area
-                               menuX = (visualAnchor.width / 2) - (trayMenu.item.implicitWidth / 2);
+                               menuX = (visualAnchor.width / 2) - (BarWidgetHelpers.readProperty(trayMenu, "item").implicitWidth / 2);
                                menuY = visualAnchor.height + Style.marginS;
                              }
 
-                             PanelService.showTrayMenu(root.screen, trayDelegate.modelData, trayMenu.item, visualAnchor, menuX, menuY, root.section, root.sectionWidgetIndex);
+                             PanelService.showTrayMenu(root.screen, trayDelegate.modelData, BarWidgetHelpers.readProperty(trayMenu, "item"), visualAnchor, menuX, menuY, root.section, root.sectionWidgetIndex);
                            };
 
                            // Use Qt.callLater to ensure menu dimensions are calculated
@@ -538,7 +517,7 @@ Item {
     // Drawer opener (after items if normal direction)
     NIconButton {
       id: chevronIconAfter
-      visible: root.drawerEnabled && dropdownItems.length > 0 && !BarService.getPillDirection(root)
+      visible: root.drawerEnabled && BarWidgetHelpers.readProperty(dropdownItems, "length") > 0 && !BarService.getPillDirection(root)
       width: isVertical ? barHeight : capsuleHeight
       height: isVertical ? capsuleHeight : barHeight
       baseSize: capsuleHeight
@@ -562,7 +541,7 @@ Item {
         }
       }
       onClicked: toggleDrawer(this)
-      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, screen)
+      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, screen, null)
     }
   } // closes Flow
 }

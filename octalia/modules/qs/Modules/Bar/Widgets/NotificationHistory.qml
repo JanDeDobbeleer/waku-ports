@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
@@ -31,26 +32,16 @@ NIconButton {
     }
     return {};
   }
-  readonly property bool showUnreadBadge: widgetSettings.showUnreadBadge !== undefined ? widgetSettings.showUnreadBadge : widgetMetadata.showUnreadBadge
-  readonly property bool hideWhenZero: widgetSettings.hideWhenZero !== undefined ? widgetSettings.hideWhenZero : widgetMetadata.hideWhenZero
-  readonly property bool hideWhenZeroUnread: widgetSettings.hideWhenZeroUnread !== undefined ? widgetSettings.hideWhenZeroUnread : widgetMetadata.hideWhenZeroUnread
-  readonly property string unreadBadgeColor: widgetSettings.unreadBadgeColor !== undefined ? widgetSettings.unreadBadgeColor : widgetMetadata.unreadBadgeColor
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property bool showUnreadBadge: BarWidgetHelpers.readProperty(widgetSettings, "showUnreadBadge") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showUnreadBadge") : BarWidgetHelpers.readProperty(widgetMetadata, "showUnreadBadge")
+  readonly property bool hideWhenZero: BarWidgetHelpers.readProperty(widgetSettings, "hideWhenZero") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenZero") : BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenZero")
+  readonly property bool hideWhenZeroUnread: BarWidgetHelpers.readProperty(widgetSettings, "hideWhenZeroUnread") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenZeroUnread") : BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenZeroUnread")
+  readonly property string unreadBadgeColor: BarWidgetHelpers.readProperty(widgetSettings, "unreadBadgeColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "unreadBadgeColor") : BarWidgetHelpers.readProperty(widgetMetadata, "unreadBadgeColor")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   readonly property color badgeColor: Color.resolveColorKey(unreadBadgeColor)
 
-  function computeUnreadCount() {
-    var i, item, ts;
-    var since = NotificationService.lastSeenTs;
-    var count = 0;
-    var model = NotificationService.historyModel;
-    for (i = 0; i < model.count; i++) {
-      item = model.get(i);
-      ts = item.timestamp instanceof Date ? item.timestamp.getTime() : item.timestamp;
-      if (ts > since)
-        count++;
-    }
-    return count;
+  function computeUnreadCount(): int {
+    return BarWidgetHelpers.unreadNotificationCount(NotificationService.historyModel, NotificationService.lastSeenTs);
   }
 
   readonly property int count: computeUnreadCount()
@@ -63,8 +54,8 @@ NIconButton {
   colorFg: Color.resolveColorKey(iconColorKey)
   border.color: Style.capsuleBorderColor
   border.width: Style.capsuleBorderWidth
-  visible: !((hideWhenZero && NotificationService.historyModel.count === 0) || (hideWhenZeroUnread && count === 0))
-  opacity: !((hideWhenZero && NotificationService.historyModel.count === 0) || (hideWhenZeroUnread && count === 0)) ? 1.0 : 0.0
+  visible: !((hideWhenZero && BarWidgetHelpers.readProperty(NotificationService.historyModel, "count") === 0) || (hideWhenZeroUnread && count === 0))
+  opacity: !((hideWhenZero && BarWidgetHelpers.readProperty(NotificationService.historyModel, "count") === 0) || (hideWhenZeroUnread && count === 0)) ? 1.0 : 0.0
 
   NPopupContextMenu {
     id: contextMenu
@@ -103,18 +94,18 @@ NIconButton {
 
   onClicked: {
     var panel = PanelService.getPanel("notificationHistoryPanel", screen);
-    panel?.toggle(this);
+    PanelService.invokePanel(panel, "toggle", [this]);
   }
 
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 
   Loader {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
-    anchors.horizontalCenterOffset: parent.baseSize / 4
-    anchors.verticalCenterOffset: -parent.baseSize / 4
+    anchors.horizontalCenterOffset: root.baseSize / 4
+    anchors.verticalCenterOffset: -root.baseSize / 4
     z: 2
     active: root.showUnreadBadge
     sourceComponent: Rectangle {
@@ -125,7 +116,7 @@ NIconButton {
       color: root.hovering ? Color.mOnHover : (root.badgeColor || Color.mError)
       border.color: Color.mSurface
       border.width: Style.borderS
-      visible: count > 0
+      visible: root.count > 0
     }
   }
 }

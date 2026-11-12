@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Keyboard
 import qs.Widgets
+import "./ClipboardPreviewUtils.js" as ClipboardPreviewUtils
 
 Item {
   id: previewPanel
@@ -16,57 +17,20 @@ Item {
 
   implicitHeight: contentArea.implicitHeight + Style.margin2L
 
-  function loadContent() {
-    var requestedId;
-    if (!currentItem || !currentItem.clipboardId)
-      return;
-
-    if (isImageContent) {
-      // For images, check cache first then decode
-      imageDataUrl = ClipboardService.getImageData(currentItem.clipboardId) || "";
-      loadingFullContent = !imageDataUrl;
-      if (!imageDataUrl && currentItem.mime) {
-        ClipboardService.decodeToDataUrl(currentItem.clipboardId, currentItem.mime, null);
-      }
-    } else {
-      // For text, check sync cache first
-      const cached = ClipboardService.getContent(currentItem.clipboardId);
-      if (cached) {
-        fullContent = cached;
-        loadingFullContent = false;
-      } else {
-        // Show preview while loading full content
-        fullContent = currentItem.preview || "";
-        loadingFullContent = true;
-        // Async decode as fallback
-        requestedId = currentItem.clipboardId;
-        ClipboardService.decode(requestedId, function (content) {
-          var trimmed;
-          if (!previewPanel || !previewPanel.currentItem) {
-            return;
-          }
-          if (previewPanel.currentItem.clipboardId === requestedId) {
-            trimmed = content ? content.trim() : "";
-            if (trimmed !== "") {
-              previewPanel.fullContent = trimmed;
-            }
-            previewPanel.loadingFullContent = false;
-          }
-        });
-      }
-    }
+  function loadContent(): void {
+    ClipboardPreviewUtils.loadContent(previewPanel, ClipboardService);
   }
 
   Connections {
     target: previewPanel
-    function onCurrentItemChanged() {
+    function onCurrentItemChanged(): void {
       previewPanel.fullContent = "";
       previewPanel.imageDataUrl = "";
       previewPanel.loadingFullContent = false;
-      previewPanel.isImageContent = previewPanel.currentItem && previewPanel.currentItem.isImage;
+      previewPanel.isImageContent = ClipboardPreviewUtils.field(previewPanel.currentItem, "isImage");
 
-      if (previewPanel.currentItem && previewPanel.currentItem.clipboardId) {
-        loadContent();
+      if (ClipboardPreviewUtils.field(previewPanel.currentItem, "clipboardId")) {
+        previewPanel.loadContent();
       }
     }
   }
@@ -74,31 +38,17 @@ Item {
   readonly property int _rev: ClipboardService.revision
   on_RevChanged: {
     // When cache updates, try to load content if we're still showing loading or preview
-    if (currentItem && currentItem.clipboardId && !isImageContent && loadingFullContent) {
-      const cached = ClipboardService.getContent(currentItem.clipboardId);
-      if (cached) {
-        fullContent = cached;
-        loadingFullContent = false;
-      }
-    }
+    ClipboardPreviewUtils.refreshCachedText(previewPanel, ClipboardService);
   }
 
   Timer {
     id: imageUpdateTimer
     interval: 200
-    running: previewPanel.currentItem && previewPanel.currentItem.isImage && previewPanel.imageDataUrl === ""
-    repeat: previewPanel.currentItem && previewPanel.currentItem.isImage && previewPanel.imageDataUrl === ""
+    running: ClipboardPreviewUtils.shouldUpdateImage(previewPanel)
+    repeat: ClipboardPreviewUtils.shouldUpdateImage(previewPanel)
 
     onTriggered: {
-      if (previewPanel.currentItem && previewPanel.currentItem.clipboardId) {
-        const newData = ClipboardService.getImageData(previewPanel.currentItem.clipboardId) || "";
-        if (newData !== previewPanel.imageDataUrl) {
-          previewPanel.imageDataUrl = newData;
-          if (newData) {
-            previewPanel.loadingFullContent = false;
-          }
-        }
-      }
+      ClipboardPreviewUtils.updateImage(previewPanel, ClipboardService);
     }
   }
 
@@ -139,11 +89,11 @@ Item {
       NText {
         Layout.fillWidth: true
         text: {
-          const meta = ClipboardService.parseImageMeta(previewPanel.currentItem?.preview);
+          const meta = ClipboardService.parseImageMeta(ClipboardPreviewUtils.field(previewPanel.currentItem, "preview"));
           if (meta)
-            return `${meta.fmt} • ${meta.w}×${meta.h} • ${meta.size}`;
+            return ClipboardPreviewUtils.formatImageMeta(meta);
           // Fallback to basic info
-          const format = (previewPanel.currentItem?.mime || "image").split("/")[1]?.toUpperCase() || "Image";
+          const format = ClipboardPreviewUtils.imageFormat(ClipboardPreviewUtils.field(previewPanel.currentItem, "mime")) || "Image";
           return `${format} • ${previewImage.implicitWidth}×${previewImage.implicitHeight}`;
         }
         pointSize: Style.fontSizeS
@@ -183,12 +133,7 @@ Item {
       NText {
         Layout.fillWidth: true
         visible: previewPanel.fullContent.length > 0
-        text: {
-          const chars = previewPanel.fullContent.length;
-          const words = previewPanel.fullContent.split(/\s+/).filter(w => w.length > 0).length;
-          const lines = previewPanel.fullContent.split('\n').length;
-          return `${chars} chars, ${words} words, ${lines} lines`;
-        }
+        text: ClipboardPreviewUtils.contentStats(previewPanel.fullContent)
         pointSize: Style.fontSizeS
         color: Color.mOnSurfaceVariant
       }

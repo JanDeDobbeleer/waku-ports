@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,7 +17,7 @@ ColumnLayout {
     mainFolderPicker.open();
   }
 
-  function openMonitorFolderPicker(monitorName) {
+  function openMonitorFolderPicker(monitorName: string): void {
     specificFolderMonitorName = monitorName;
     monitorFolderPicker.currentPath = monitorFolderPicker.initialPath;
     monitorFolderPicker.open();
@@ -65,11 +66,7 @@ ColumnLayout {
     selectionMode: "folders"
     title: I18n.tr("setup.wallpaper.dir-select-title")
     initialPath: Settings.data.wallpaper.directory || Settings.defaultWallpapersDirectory
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    Settings.data.wallpaper.directory = paths[0];
-                  }
-                }
+    onAccepted: paths => SettingsValue.assignFirstPath(paths, Settings.data.wallpaper, "directory")
   }
 
   NFilePicker {
@@ -77,10 +74,6 @@ ColumnLayout {
     selectionMode: "folders"
     title: I18n.tr("panels.wallpaper.settings-select-monitor-folder")
     initialPath: WallpaperService.getMonitorDirectory(root.specificFolderMonitorName) || Settings.defaultWallpapersDirectory
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    WallpaperService.setMonitorDirectory(root.specificFolderMonitorName, paths[0]);
-                  }
-                }
+    onAccepted: paths => SettingsValue.setMonitorDirectoryFromPaths(paths, WallpaperService, root.specificFolderMonitorName)
   }
 }

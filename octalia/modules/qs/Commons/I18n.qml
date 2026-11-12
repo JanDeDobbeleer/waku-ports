@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "I18nUtils.js" as I18nUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -56,25 +58,8 @@ Singleton {
     printErrors: false
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: {
-      var data;
-      try {
-        data = JSON.parse(text());
-        root.translations = data;
-        Logger.i("I18n", `Loaded translations for "${root.langCode}"`);
+    onLoaded: I18nUtils.translationLoaded(root, fileView, Logger, fallbackFileView, Quickshell)
 
-        root.isLoaded = true;
-        root.translationsLoaded();
-
-        // Load English fallback for non-English languages (only after main file succeeds)
-        if (root.langCode !== "en") {
-          fallbackFileView.path = `${Quickshell.shellDir}/Assets/Translations/en.json`;
-        }
-      } catch (e) {
-        Logger.e("I18n", `Failed to parse translation file: ${e}`);
-        root.setLanguage("en");
-      }
-    }
     onLoadFailed: function (error) {
       var shortCode;
       if (root.langCode === "en") {
@@ -115,16 +100,8 @@ Singleton {
     id: fallbackFileView
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: {
-      var data;
-      try {
-        data = JSON.parse(text());
-        root.fallbackTranslations = data;
-        Logger.d("I18n", `Loaded english fallback translations`);
-      } catch (e) {
-        Logger.e("I18n", `Failed to parse fallback translation file: ${e}`);
-      }
-    }
+    onLoaded: I18nUtils.fallbackLoaded(root, fallbackFileView, Logger)
+
     onLoadFailed: function (error) {
       Logger.e("I18n", `Failed to load fallback translation file: ${error}`);
     }
@@ -269,24 +246,8 @@ Singleton {
 
   // -------------------------------------------
   // Get all translation keys (useful for debugging)
-  function getAllKeys(obj, prefix) {
-    var key;
-    if (typeof obj === "undefined")
-      obj = translations;
-    if (typeof prefix === "undefined")
-      prefix = "";
-
-    var keys = [];
-    for (key in (obj || {})) {
-      const value = obj[key];
-      const fullKey = prefix ? `${prefix}.${key}` : key;
-      if (typeof value === "object" && value !== null) {
-        keys = keys.concat(getAllKeys(value, fullKey));
-      } else if (typeof value === "string") {
-        keys.push(fullKey);
-      }
-    }
-    return keys;
+  function getAllKeys(obj: var, prefix: var): var {
+    return I18nUtils.getAllKeys(obj, prefix, root);
   }
 
   // -------------------------------------------
@@ -298,84 +259,21 @@ Singleton {
 
   // -------------------------------------------
   // Main translation function
-  function tr(key, interpolations) {
-    var placeholder;
-    var i;
-    if (typeof interpolations === "undefined")
-      interpolations = {};
+  function tr(key: string): string {
+    return I18nUtils.tr(key, undefined, root, Logger);
+  }
 
-    if (!isLoaded) {
-      //Logger.d("I18n", "Translations not loaded yet")
-      return key;
-    }
-
-    // Navigate nested keys (e.g., "menu.file.open")
-    const keys = key.split(".");
-
-    // Look-up translation in the active language
-    var value = translations;
-    var notFound = false;
-    for (i = 0; i < keys.length; i++) {
-      if (value && typeof value === "object" && keys[i] in value) {
-        value = value[keys[i]];
-      } else {
-        Logger.d("I18n", `Translation key "${key}" not found at part "${keys[i]}"`);
-        Logger.d("I18n", `Available keys: ${Object.keys(value || {}).join(", ")}`);
-        notFound = true;
-        break;
-      }
-    }
-
-    // Fallback to english if not found
-    if (notFound && availableLanguages.includes("en") && langCode !== "en") {
-      value = fallbackTranslations;
-      for (i = 0; i < keys.length; i++) {
-        if (value && typeof value === "object" && keys[i] in value) {
-          value = value[keys[i]];
-        } else {
-          // Indicate this key does not even exists in the english fallback
-          return `!!${key}!!`;
-        }
-      }
-    } else if (notFound) {
-      // No fallback available
-      return `!!${key}!!`;
-    }
-
-    if (typeof value !== "string") {
-      Logger.d("I18n", `Translation key "${key}" is not a string`);
-      return key;
-    }
-
-    // Handle interpolations (e.g., "Hello {name}!")
-    var result = value;
-    for (placeholder in interpolations) {
-      const regex = new RegExp(`\\{${placeholder}\\}`, 'g');
-      result = result.replace(regex, interpolations[placeholder]);
-    }
-
-    return result;
+  function trArgs(key: string, interpolations: var): string {
+    return I18nUtils.tr(key, interpolations, root, Logger);
   }
 
   // -------------------------------------------
   // Plural translation function
-  function trp(key, count, interpolations) {
-    var prop;
-    if (typeof interpolations === "undefined") {
-      interpolations = {};
-    }
+  function trp(key: string, count: var): string {
+    return I18nUtils.trp(key, count, undefined, root);
+  }
 
-    // Use key for singular, key-plural for plural
-    const realKey = count === 1 ? key : `${key}-plural`;
-
-    // Merge interpolations with count
-    var finalInterpolations = {
-      "count": count
-    };
-    for (prop in interpolations) {
-      finalInterpolations[prop] = interpolations[prop];
-    }
-
-    return tr(realKey, finalInterpolations);
+  function trpArgs(key: string, count: var, interpolations: var): string {
+    return I18nUtils.trp(key, count, interpolations, root);
   }
 }

@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
@@ -33,11 +35,13 @@ NIconButton {
     return {};
   }
 
-  readonly property string customIcon: widgetSettings.icon || (widgetMetadata ? widgetMetadata.icon : "rocket")
-  readonly property bool useDistroLogo: widgetSettings.useDistroLogo !== undefined ? widgetSettings.useDistroLogo : widgetMetadata.useDistroLogo
-  readonly property string customIconPath: widgetSettings.customIconPath !== undefined ? widgetSettings.customIconPath : widgetMetadata.customIconPath
-  readonly property bool enableColorization: widgetSettings.enableColorization !== undefined ? widgetSettings.enableColorization : widgetMetadata.enableColorization
-  readonly property string colorizeSystemIcon: widgetSettings.colorizeSystemIcon !== undefined ? widgetSettings.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
+  readonly property string customIcon: BarWidgetHelpers.readProperty(widgetSettings, "icon") || (widgetMetadata ? BarWidgetHelpers.readProperty(widgetMetadata, "icon") : "rocket")
+  readonly property bool useDistroLogo: BarWidgetHelpers.readProperty(widgetSettings, "useDistroLogo") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useDistroLogo") : BarWidgetHelpers.readProperty(widgetMetadata, "useDistroLogo")
+  readonly property string customIconPath: BarWidgetHelpers.readProperty(widgetSettings, "customIconPath") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "customIconPath") : BarWidgetHelpers.readProperty(widgetMetadata, "customIconPath")
+  readonly property bool enableColorization: BarWidgetHelpers.readProperty(widgetSettings, "enableColorization") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "enableColorization") : BarWidgetHelpers.readProperty(widgetMetadata, "enableColorization")
+  readonly property string colorizeSystemIcon: BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon") : BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemIcon")
+
+  readonly property color colorizationTargetColor: !hovering ? iconColor : Color.mOnHover
 
   readonly property color iconColor: {
     if (!enableColorization)
@@ -80,8 +84,8 @@ NIconButton {
 
                    if (action === "launcher-settings") {
                      panel = PanelService.getPanel("settingsPanel", screen);
-                     panel.requestedTab = SettingsPanel.Tab.Launcher;
-                     panel.toggle();
+                     PanelService.setPanelProperties(panel, { "requestedTab": SettingsPanel.Tab.Launcher });
+                     PanelService.invokePanel(panel, "toggle", []);
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
@@ -91,7 +95,7 @@ NIconButton {
   onClicked: PanelService.toggleLauncher(screen)
   onMiddleClicked: PanelService.toggleLauncher(screen)
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 
   IconImage {
@@ -111,7 +115,7 @@ NIconButton {
     asynchronous: true
     layer.enabled: (root.enableColorization) && (root.useDistroLogo || root.customIconPath !== "")
     layer.effect: ShaderEffect {
-      property color targetColor: !hovering ? iconColor : Color.mOnHover
+      property color targetColor: root.colorizationTargetColor
       property real colorizeMode: 2.0
 
       fragmentShader: Qt.resolvedUrl(ShellUrl.dir + "/Shaders/qsb/appicon_colorize.frag.qsb")

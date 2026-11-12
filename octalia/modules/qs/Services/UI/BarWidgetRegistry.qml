@@ -408,28 +408,28 @@ Singleton {
 
   // ------------------------------
   // Helper function to get widget component by name
-  function getWidget(id) {
+  function getWidget(id: var): Component {
     return widgets[id] || null;
   }
 
   // Helper function to check if widget exists
-  function hasWidget(id) {
+  function hasWidget(id: var): bool {
     return id in widgets;
   }
 
   // Get list of available widget id
-  function getAvailableWidgets() {
+  function getAvailableWidgets(): var {
     return Object.keys(widgets);
   }
 
   // Helper function to check if widget has user settings
-  function widgetHasUserSettings(id) {
+  function widgetHasUserSettings(id: var): bool {
     return widgetMetadata[id] !== undefined;
   }
 
   property var cpuIntensiveWidgets: []
 
-  function isCpuIntensive(id) {
+  function isCpuIntensive(id: var): bool {
     return cpuIntensiveWidgets.indexOf(id) >= 0;
   }
 }

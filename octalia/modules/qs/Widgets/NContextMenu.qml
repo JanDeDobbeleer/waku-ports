@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NContextMenuUtils.js" as MenuUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -48,18 +50,7 @@ Popup {
   signal triggered(string action)
 
   // Filter out hidden items to avoid spacing artifacts from zero-height items
-  readonly property var filteredModel: {
-    var i;
-    if (!model || model.length === 0)
-      return [];
-    var filtered = [];
-    for (i = 0; i < model.length; i++) {
-      if (model[i].visible !== false) {
-        filtered.push(model[i]);
-      }
-    }
-    return filtered;
-  }
+  readonly property var filteredModel: MenuUtils.filteredModel(model)
 
   width: 180
   padding: Style.marginS
@@ -87,8 +78,8 @@ Popup {
       required property int index
       width: listView.availableWidth
       height: root.itemHeight
-      opacity: menuItem.modelData.enabled !== false ? 1.0 : 0.5
-      enabled: menuItem.modelData.enabled !== false
+      opacity: MenuUtils.field(menuItem.modelData, "enabled") !== false ? 1.0 : 0.5
+      enabled: MenuUtils.field(menuItem.modelData, "enabled") !== false
 
       // Store reference to the popup
       property var popup: root
@@ -109,8 +100,8 @@ Popup {
 
         // Optional icon
         NIcon {
-          visible: menuItem.modelData.icon !== undefined
-          icon: menuItem.modelData.icon || ""
+          visible: MenuUtils.field(menuItem.modelData, "icon") !== undefined
+          icon: MenuUtils.field(menuItem.modelData, "icon") || ""
           pointSize: Style.fontSizeM
           color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
           Layout.leftMargin: root.itemPadding
@@ -123,12 +114,12 @@ Popup {
         }
 
         NText {
-          text: menuItem.modelData.label || menuItem.modelData.text || ""
+          text: MenuUtils.label(menuItem.modelData)
           pointSize: Style.fontSizeM
           color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
           verticalAlignment: Text.AlignVCenter
           Layout.fillWidth: true
-          Layout.leftMargin: menuItem.modelData.icon === undefined ? root.itemPadding : 0
+          Layout.leftMargin: MenuUtils.field(menuItem.modelData, "icon") === undefined ? root.itemPadding : 0
 
           Behavior on color {
             ColorAnimation {
@@ -140,7 +131,7 @@ Popup {
 
       onClicked: {
         if (enabled) {
-          popup.triggered(menuItem.modelData.action || menuItem.modelData.key || menuItem.index.toString());
+          popup.triggered(MenuUtils.action(menuItem.modelData, menuItem.index));
           popup.close();
         }
       }
@@ -148,42 +139,12 @@ Popup {
   }
 
   // Helper function to open at mouse position
-  function openAt(x, y) {
-    var constraint, itemCount, menuHeight, menuWidth, tl;
-    if (root.parent) {
-      menuWidth = root.width;
-      itemCount = root.filteredModel.length;
-      menuHeight = Math.max(itemCount * root.itemHeight + Math.max(0, itemCount - 1) * listView.spacing, root.itemHeight) + root.topPadding + root.bottomPadding;
-      constraint = root.constrainTo || root._detectedConstraint;
-      if (constraint) {
-        tl = constraint.mapToItem(root.parent, 0, 0);
-        x = Math.max(tl.x, Math.min(x, tl.x + constraint.width - menuWidth));
-        y = Math.max(tl.y, Math.min(y, tl.y + constraint.height - menuHeight));
-      } else {
-        x = Math.max(0, Math.min(x, root.parent.width - menuWidth));
-        y = Math.max(0, Math.min(y, root.parent.height - menuHeight));
-      }
-    }
-    root.x = x;
-    root.y = y;
-    root.open();
+  function openAt(x: var, y: var): void {
+    MenuUtils.openAt(x, y, root, listView.spacing);
   }
 
   // Helper function to open at item
-  function openAtItem(item, mouseX, mouseY) {
-    var p;
-    if (!root.constrainTo) {
-      root._detectedConstraint = null;
-      p = item;
-      while (p && p !== root.parent) {
-        if (p.clip && p.width > 0 && p.height > 0) {
-          root._detectedConstraint = p;
-          break;
-        }
-        p = p.parent;
-      }
-    }
-    var pos = item.mapToItem(root.parent, mouseX || 0, mouseY || 0);
-    openAt(pos.x, pos.y);
+  function openAtItem(item: var, mouseX: var, mouseY: var): void {
+    MenuUtils.openAtItem(item, mouseX, mouseY, root);
   }
 }

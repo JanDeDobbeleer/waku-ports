@@ -29,7 +29,7 @@ Singleton {
   function saveData() {
   }
 
-  function getAvatarPath(username) {
+  function getAvatarPath(username: var): string {
     return "";
   }
 

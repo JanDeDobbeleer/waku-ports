@@ -9,7 +9,7 @@ NIconButtonHot {
   readonly property bool hasPP: PowerProfileService.available
 
   enabled: hasPP
-  icon: PowerProfileService.getIcon()
+  icon: PowerProfileService.getIcon(undefined)
   hot: !PowerProfileService.isDefault()
   onClicked: PowerProfileService.cycleProfile()
 }

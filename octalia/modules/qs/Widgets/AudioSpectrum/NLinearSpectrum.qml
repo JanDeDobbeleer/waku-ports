@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "SpectrumWidgetUtils.js" as SpectrumWidgetUtils
+
 import QtQuick 6.10
 import qs.Commons
 
@@ -18,7 +20,7 @@ Item {
   property real minimumSignalValue: 0.01 // Default to 1% of height
 
   // Pre compute horizontal mirroring
-  readonly property int valuesCount: (values && values.length !== undefined) ? values.length : 0
+  readonly property int valuesCount: SpectrumWidgetUtils.length(values)
   readonly property int totalBars: mirrored ? valuesCount * 2 : valuesCount
   readonly property real barSlotSize: totalBars > 0 ? (vertical ? height : width) / totalBars : 0
   readonly property bool highQuality: (Settings.data.audio.visualizerType === "low") ? false : true

@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Settings // For SettingsPanel
 import qs.Services.Networking
@@ -34,9 +35,9 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: widgetSettings.displayMode !== undefined ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string displayMode: BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   implicitWidth: pill.width
   implicitHeight: pill.height
@@ -83,17 +84,17 @@ Item {
     oppositeDirection: BarService.getPillDirection(root)
     customIconColor: Color.resolveColorKeyOptional(root.iconColorKey)
     customTextColor: Color.resolveColorKeyOptional(root.textColorKey)
-    icon: NetworkService.getIcon()
+    icon: NetworkService.getIcon(undefined)
     text: NetworkService.getStatusText(false)
     autoHide: false
     forceOpen: !root.isBarVertical && root.displayMode === "alwaysShow"
     forceClose: root.isBarVertical || root.displayMode === "alwaysHide" || text === ""
     onClicked: {
       var panel = PanelService.getPanel("networkPanel", screen);
-      panel?.toggle(this);
+      PanelService.invokePanel(panel, "toggle", [this]);
     }
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
   }
 }

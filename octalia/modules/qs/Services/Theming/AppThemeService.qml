@@ -12,7 +12,7 @@ Singleton {
     target: WallpaperService
 
     // When the wallpaper changes, regenerate theme if necessary
-    function onWallpaperChanged(screenName, path) {
+    function onWallpaperChanged(screenName: var, path: var) {
       var effectiveMonitor = Settings.data.colorSchemes.monitorForColors;
       if (effectiveMonitor === "" || effectiveMonitor === undefined) {
         effectiveMonitor = Screen.name;
@@ -80,7 +80,7 @@ Singleton {
     TemplateProcessor.processWallpaperColors(wp, mode);
   }
 
-  function generateFromPredefinedScheme(schemeData) {
+  function generateFromPredefinedScheme(schemeData: var) {
     Logger.i("AppThemeService", "Generating templates from predefined color scheme");
     const mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
     var effectiveMonitor = Settings.data.colorSchemes.monitorForColors;

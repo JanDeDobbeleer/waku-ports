@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NColorPickerDialogUtils.js" as ColorDialogUtils
+
 import QtQml
 import QtQuick 6.10
 import QtQuick.Controls.Basic
@@ -47,15 +49,7 @@ Popup {
   modal: true
   closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-  onOpened: {
-    var parentPos;
-    // Center on screen after popup is opened and parent position is known
-    if (screen && parent) {
-      parentPos = parent.mapToItem(null, 0, 0);
-      x = Math.round((screen.width - width) / 2 - parentPos.x);
-      y = Math.round((screen.height - height) / 2 - parentPos.y);
-    }
-  }
+  onOpened: ColorDialogUtils.center(root)
 
   background: Rectangle {
     color: Color.mSurface
@@ -520,7 +514,7 @@ Popup {
                 cursorShape: Qt.CrossCursor
 
                 // Update color when clicking or dragging
-                function updateColor(mouse) {
+                function updateColor(mouse: MouseEvent): void {
                   // Normalize X and Y (0.0 to 1.0)
                   var xVal = Math.max(0, Math.min(1, mouse.x / width));
                   var yVal = Math.max(0, Math.min(1, 1.0 - (mouse.y / height))); // Flip Y (0 at bottom)
@@ -674,9 +668,9 @@ Popup {
                 width: 24
                 height: 24
                 radius: Style.iRadiusXXS
-                color: themeSwatch.modelData.color
-                border.color: root.selectedColor.toString() === themeSwatch.modelData.color.toString() ? Color.mPrimary : Color.mOutline
-                border.width: Math.max(1, root.selectedColor.toString() === themeSwatch.modelData.color.toString() ? Style.borderM : Style.borderS)
+                color: ColorDialogUtils.field(themeSwatch.modelData, "color")
+                border.color: root.selectedColor.toString() === ColorDialogUtils.field(themeSwatch.modelData, "color").toString() ? Color.mPrimary : Color.mOutline
+                border.width: Math.max(1, root.selectedColor.toString() === ColorDialogUtils.field(themeSwatch.modelData, "color").toString() ? Style.borderM : Style.borderS)
 
                 MouseArea {
                   anchors.fill: parent
@@ -684,7 +678,7 @@ Popup {
                   hoverEnabled: true
 
                   onClicked: {
-                    root.selectedColor = themeSwatch.modelData.color;
+                    root.selectedColor = ColorDialogUtils.field(themeSwatch.modelData, "color");
                   }
                 }
               }
@@ -712,9 +706,9 @@ Popup {
                 width: 24
                 height: 24
                 radius: Math.min(Style.iRadiusXS, width / 2)
-                color: paletteSwatch.modelData.color
-                border.color: root.selectedColor.toString() === paletteSwatch.modelData.color.toString() ? Color.mPrimary : Color.mOutline
-                border.width: root.selectedColor.toString() === paletteSwatch.modelData.color.toString() ? 2 : 1
+                color: ColorDialogUtils.field(paletteSwatch.modelData, "color")
+                border.color: root.selectedColor.toString() === ColorDialogUtils.field(paletteSwatch.modelData, "color").toString() ? Color.mPrimary : Color.mOutline
+                border.width: root.selectedColor.toString() === ColorDialogUtils.field(paletteSwatch.modelData, "color").toString() ? 2 : 1
 
                 MouseArea {
                   anchors.fill: parent
@@ -722,7 +716,7 @@ Popup {
                   hoverEnabled: true
 
                   onClicked: {
-                    root.selectedColor = paletteSwatch.modelData.color;
+                    root.selectedColor = ColorDialogUtils.field(paletteSwatch.modelData, "color");
                   }
                 }
               }

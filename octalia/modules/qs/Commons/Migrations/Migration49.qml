@@ -1,3 +1,4 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 import qs.Commons
 import qs.compat
@@ -6,12 +7,7 @@ QtObject {
   id: root
 
   // Remove old launcher_app_usage.json (usage tracking moved to ShellState)
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Settings", "Migrating settings to v49");
-
-    Os.rm(Settings.cacheDir + "launcher_app_usage.json");
-    logger.i("Settings", "Removed old launcher_app_usage.json");
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate49(adapter, logger, rawJson, Settings, Os);
   }
 }

@@ -1,5 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Shapes
+import "BackgroundHelpers.js" as BackgroundHelpers
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
@@ -71,7 +72,7 @@ Item {
           assignedPanel: {
             var p = PanelService.backgroundSlotAssignments[0];
             // Only render if this panel belongs to this screen
-            return (p && p.screen === root.windowRoot.screen) ? p : null;
+            return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
           }
           shapeContainer: unifiedBackgroundsShape
           defaultBackgroundColor: root.panelBackgroundColor
@@ -82,7 +83,7 @@ Item {
           assignedPanel: {
             var p = PanelService.backgroundSlotAssignments[1];
             // Only render if this panel belongs to this screen
-            return (p && p.screen === root.windowRoot.screen) ? p : null;
+            return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
           }
           shapeContainer: unifiedBackgroundsShape
           defaultBackgroundColor: root.panelBackgroundColor
@@ -125,7 +126,7 @@ Item {
             assignedPanel: {
               var p = PanelService.backgroundSlotAssignments[0];
               // Only render if this panel belongs to this screen
-              return (p && p.screen === root.windowRoot.screen) ? p : null;
+              return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
             }
             shapeContainer: panelBackgroundsShape
             defaultBackgroundColor: root.panelBackgroundColor
@@ -136,7 +137,7 @@ Item {
             assignedPanel: {
               var p = PanelService.backgroundSlotAssignments[1];
               // Only render if this panel belongs to this screen
-              return (p && p.screen === root.windowRoot.screen) ? p : null;
+              return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
             }
             shapeContainer: panelBackgroundsShape
             defaultBackgroundColor: root.panelBackgroundColor

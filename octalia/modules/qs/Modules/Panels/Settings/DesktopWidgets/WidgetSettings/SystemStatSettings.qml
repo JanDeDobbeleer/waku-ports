@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -14,11 +15,11 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property string valueStatType: widgetData.statType !== undefined ? widgetData.statType : widgetMetadata.statType
-  property string valueDiskPath: widgetData.diskPath !== undefined ? widgetData.diskPath : widgetMetadata.diskPath
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
-  property string valueLayout: widgetData.layout !== undefined ? widgetData.layout : widgetMetadata.layout
+  property string valueStatType: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "statType")
+  property string valueDiskPath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "diskPath")
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
+  property string valueLayout: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "layout")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -66,7 +67,7 @@ ColumnLayout {
                   root.valueStatType = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.statType
+    defaultValue: SettingsValue.read(root.widgetMetadata, "statType")
   }
 
   NComboBox {
@@ -74,19 +75,13 @@ ColumnLayout {
     visible: root.valueStatType === "Disk"
     label: I18n.tr("bar.system-monitor.disk-path-label")
     description: I18n.tr("bar.system-monitor.disk-path-description")
-    model: {
-      const paths = Object.keys(SystemStatService.diskPercents).sort();
-      return paths.map(path => ({
-                                  key: path,
-                                  name: path
-                                }));
-    }
+    model: SettingsValue.diskPathOptions(SystemStatService.diskPercents)
     currentKey: root.valueDiskPath
     onSelected: key => {
                   root.valueDiskPath = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.diskPath
+    defaultValue: SettingsValue.read(root.widgetMetadata, "diskPath")
   }
 
   NDivider {
@@ -102,7 +97,7 @@ ColumnLayout {
                  root.valueShowBackground = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
@@ -115,7 +110,7 @@ ColumnLayout {
                  root.valueRoundedCorners = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 
   NDivider {
@@ -142,6 +137,6 @@ ColumnLayout {
                   root.valueLayout = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.layout
+    defaultValue: SettingsValue.read(root.widgetMetadata, "layout")
   }
 }

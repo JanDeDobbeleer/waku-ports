@@ -1,3 +1,4 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -5,17 +6,7 @@ import qs.Commons
 QtObject {
   id: root
 
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Migration46", "Removing legacy PAM configuration file");
-
-    const configDir = Settings.configDir;
-    const pamConfigDir = configDir + "pam";
-    // Remove the entire pam directory if it exists
-    const script = `rm -rf '${pamConfigDir}'`;
-    Quickshell.execDetached(["sh", "-c", script]);
-
-    logger.d("Migration46", "Cleaned up legacy PAM config");
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate46(adapter, logger, rawJson, Settings, Quickshell);
   }
 }

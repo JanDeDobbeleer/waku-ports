@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Settings // For SettingsPanel
 import qs.Services.Networking
@@ -34,9 +35,9 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: widgetSettings.displayMode !== undefined ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string displayMode: BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   implicitWidth: pill.width
   implicitHeight: pill.height
@@ -84,17 +85,17 @@ Item {
     oppositeDirection: BarService.getPillDirection(root)
     customIconColor: Color.resolveColorKeyOptional(root.iconColorKey)
     customTextColor: Color.resolveColorKeyOptional(root.textColorKey)
-    icon: !BluetoothService.enabled ? "bluetooth-off" : ((BluetoothService.connectedDevices && BluetoothService.connectedDevices.length > 0) ? "bluetooth-connected" : "bluetooth")
+    icon: !BluetoothService.enabled ? "bluetooth-off" : ((BluetoothService.connectedDevices && BarWidgetHelpers.readProperty(BluetoothService.connectedDevices, "length") > 0) ? "bluetooth-connected" : "bluetooth")
     text: {
-      if (BluetoothService.connectedDevices && BluetoothService.connectedDevices.length > 0) {
+      if (BluetoothService.connectedDevices && BarWidgetHelpers.readProperty(BluetoothService.connectedDevices, "length") > 0) {
         const firstDevice = BluetoothService.connectedDevices[0];
         return firstDevice.name || firstDevice.deviceName;
       }
       return "";
     }
     suffix: {
-      if (BluetoothService.connectedDevices && BluetoothService.connectedDevices.length > 1) {
-        return ` + ${BluetoothService.connectedDevices.length - 1}`;
+      if (BluetoothService.connectedDevices && BarWidgetHelpers.readProperty(BluetoothService.connectedDevices, "length") > 1) {
+        return ` + ${BarWidgetHelpers.readProperty(BluetoothService.connectedDevices, "length") - 1}`;
       }
       return "";
     }
@@ -107,7 +108,7 @@ Item {
         p.toggle(this);
     }
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
   }
 }

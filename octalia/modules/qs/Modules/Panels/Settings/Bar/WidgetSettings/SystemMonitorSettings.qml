@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,28 +16,28 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  readonly property string barPosition: Settings.getBarPositionForScreen(screen?.name)
+  readonly property string barPosition: Settings.getBarPositionForScreen(SettingsValue.optionalRead(screen, "name"))
   readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
 
   // Local, editable state for checkboxes
-  property bool valueCompactMode: widgetData.compactMode !== undefined ? widgetData.compactMode : widgetMetadata.compactMode
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
-  property string valueTextColor: widgetData.textColor !== undefined ? widgetData.textColor : widgetMetadata.textColor
-  property bool valueUseMonospaceFont: widgetData.useMonospaceFont !== undefined ? widgetData.useMonospaceFont : widgetMetadata.useMonospaceFont
-  property bool valueUsePadding: widgetData.usePadding !== undefined ? widgetData.usePadding : widgetMetadata.usePadding
-  property bool valueShowCpuUsage: widgetData.showCpuUsage !== undefined ? widgetData.showCpuUsage : widgetMetadata.showCpuUsage
-  property bool valueShowCpuCores: widgetData.showCpuCores !== undefined ? widgetData.showCpuCores : widgetMetadata.showCpuCores
-  property bool valueShowCpuFreq: widgetData.showCpuFreq !== undefined ? widgetData.showCpuFreq : widgetMetadata.showCpuFreq
-  property bool valueShowCpuTemp: widgetData.showCpuTemp !== undefined ? widgetData.showCpuTemp : widgetMetadata.showCpuTemp
-  property bool valueShowGpuTemp: widgetData.showGpuTemp !== undefined ? widgetData.showGpuTemp : widgetMetadata.showGpuTemp
-  property bool valueShowMemoryUsage: widgetData.showMemoryUsage !== undefined ? widgetData.showMemoryUsage : widgetMetadata.showMemoryUsage
-  property bool valueShowMemoryAsPercent: widgetData.showMemoryAsPercent !== undefined ? widgetData.showMemoryAsPercent : widgetMetadata.showMemoryAsPercent
-  property bool valueShowSwapUsage: widgetData.showSwapUsage !== undefined ? widgetData.showSwapUsage : widgetMetadata.showSwapUsage
-  property bool valueShowNetworkStats: widgetData.showNetworkStats !== undefined ? widgetData.showNetworkStats : widgetMetadata.showNetworkStats
-  property bool valueShowDiskUsage: widgetData.showDiskUsage !== undefined ? widgetData.showDiskUsage : widgetMetadata.showDiskUsage
-  property bool valueShowDiskUsageAsPercent: widgetData.showDiskUsageAsPercent !== undefined ? widgetData.showDiskUsageAsPercent : widgetMetadata.showDiskUsageAsPercent
-  property bool valueShowDiskAvailable: widgetData.showDiskAvailable !== undefined ? widgetData.showDiskAvailable : widgetMetadata.showDiskAvailable
-  property string valueDiskPath: widgetData.diskPath !== undefined ? widgetData.diskPath : widgetMetadata.diskPath
+  property bool valueCompactMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "compactMode")
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
+  property string valueTextColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "textColor")
+  property bool valueUseMonospaceFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useMonospaceFont")
+  property bool valueUsePadding: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "usePadding")
+  property bool valueShowCpuUsage: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCpuUsage")
+  property bool valueShowCpuCores: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCpuCores")
+  property bool valueShowCpuFreq: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCpuFreq")
+  property bool valueShowCpuTemp: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCpuTemp")
+  property bool valueShowGpuTemp: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showGpuTemp")
+  property bool valueShowMemoryUsage: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showMemoryUsage")
+  property bool valueShowMemoryAsPercent: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showMemoryAsPercent")
+  property bool valueShowSwapUsage: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showSwapUsage")
+  property bool valueShowNetworkStats: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showNetworkStats")
+  property bool valueShowDiskUsage: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showDiskUsage")
+  property bool valueShowDiskUsageAsPercent: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showDiskUsageAsPercent")
+  property bool valueShowDiskAvailable: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showDiskAvailable")
+  property string valueDiskPath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "diskPath")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -71,7 +72,7 @@ ColumnLayout {
                  root.valueCompactMode = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.compactMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "compactMode")
   }
 
   NColorChoice {
@@ -81,7 +82,7 @@ ColumnLayout {
                   root.valueIconColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 
   NColorChoice {
@@ -91,7 +92,7 @@ ColumnLayout {
                   root.saveSettings();
                 }
     visible: !root.valueCompactMode
-    defaultValue: root.widgetMetadata.textColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "textColor")
   }
 
   NToggle {
@@ -104,7 +105,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     visible: !root.valueCompactMode
-    defaultValue: root.widgetMetadata.useMonospaceFont
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useMonospaceFont")
   }
 
   NToggle {
@@ -118,7 +119,7 @@ ColumnLayout {
                }
     visible: !root.valueCompactMode
     enabled: !root.isVerticalBar && root.valueUseMonospaceFont
-    defaultValue: root.widgetMetadata.usePadding
+    defaultValue: SettingsValue.read(root.widgetMetadata, "usePadding")
   }
 
   NDivider {
@@ -135,7 +136,7 @@ ColumnLayout {
                  root.valueShowCpuUsage = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showCpuUsage
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showCpuUsage")
   }
 
   NToggle {
@@ -161,7 +162,7 @@ ColumnLayout {
                  root.valueShowCpuFreq = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showCpuFreq
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showCpuFreq")
   }
 
   NToggle {
@@ -174,7 +175,7 @@ ColumnLayout {
                  root.valueShowCpuTemp = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showCpuTemp
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showCpuTemp")
   }
 
   NToggle {
@@ -188,7 +189,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     visible: SystemStatService.gpuAvailable
-    defaultValue: root.widgetMetadata.showGpuTemp
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showGpuTemp")
   }
 
   NToggle {
@@ -201,7 +202,7 @@ ColumnLayout {
                  root.valueShowMemoryUsage = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showMemoryUsage
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showMemoryUsage")
   }
 
   NToggle {
@@ -215,7 +216,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     visible: root.valueShowMemoryUsage
-    defaultValue: root.widgetMetadata.showMemoryAsPercent
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showMemoryAsPercent")
   }
 
   NToggle {
@@ -228,7 +229,7 @@ ColumnLayout {
                  root.valueShowSwapUsage = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showSwapUsage
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showSwapUsage")
   }
 
   NToggle {
@@ -241,7 +242,7 @@ ColumnLayout {
                  root.valueShowNetworkStats = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showNetworkStats
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showNetworkStats")
   }
 
   NDivider {
@@ -258,7 +259,7 @@ ColumnLayout {
                  root.valueShowDiskUsage = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showDiskUsage
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showDiskUsage")
   }
 
   NToggle {
@@ -271,7 +272,7 @@ ColumnLayout {
                  root.valueShowDiskUsageAsPercent = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showDiskUsageAsPercent
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showDiskUsageAsPercent")
   }
 
   NToggle {
@@ -284,7 +285,7 @@ ColumnLayout {
                  root.valueShowDiskAvailable = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showDiskAvailable
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showDiskAvailable")
   }
 
   NComboBox {
@@ -292,18 +293,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.disk-path-label")
     description: I18n.tr("bar.system-monitor.disk-path-description")
-    model: {
-      const paths = Object.keys(SystemStatService.diskPercents).sort();
-      return paths.map(path => ({
-                                  key: path,
-                                  name: path
-                                }));
-    }
+    model: SettingsValue.diskPathOptions(SystemStatService.diskPercents)
     currentKey: root.valueDiskPath
     onSelected: key => {
                   root.valueDiskPath = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.diskPath
+    defaultValue: SettingsValue.read(root.widgetMetadata, "diskPath")
   }
 }

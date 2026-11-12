@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Media
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -22,7 +23,7 @@ ColumnLayout {
   }
 
   Connections {
-    target: AudioService.sink?.audio ? AudioService.sink?.audio : null
+    target: SettingsValue.audioOutput(AudioService.sink)
     function onVolumeChanged() {
       root.localVolume = AudioService.volume;
     }
@@ -50,7 +51,7 @@ ColumnLayout {
       running: true
       repeat: true
       onTriggered: {
-        if (!AudioService.isSwitchingSink && Math.abs(root.localVolume - AudioService.volume) >= 0.01) {
+        if (!SettingsValue.read(AudioService, "isSwitchingSink") && Math.abs(root.localVolume - AudioService.volume) >= 0.01) {
           AudioService.setVolume(root.localVolume);
         }
       }

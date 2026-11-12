@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,11 +16,11 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueShowUnreadBadge: widgetData.showUnreadBadge !== undefined ? widgetData.showUnreadBadge : widgetMetadata.showUnreadBadge
-  property bool valueHideWhenZero: widgetData.hideWhenZero !== undefined ? widgetData.hideWhenZero : widgetMetadata.hideWhenZero
-  property bool valueHideWhenZeroUnread: widgetData.hideWhenZeroUnread !== undefined ? widgetData.hideWhenZeroUnread : widgetMetadata.hideWhenZeroUnread
-  property string valueUnreadBadgeColor: widgetData.unreadBadgeColor !== undefined ? widgetData.unreadBadgeColor : widgetMetadata.unreadBadgeColor
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
+  property bool valueShowUnreadBadge: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showUnreadBadge")
+  property bool valueHideWhenZero: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenZero")
+  property bool valueHideWhenZeroUnread: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenZeroUnread")
+  property string valueUnreadBadgeColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "unreadBadgeColor")
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -39,7 +40,7 @@ ColumnLayout {
                  root.valueShowUnreadBadge = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showUnreadBadge
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showUnreadBadge")
   }
 
   NColorChoice {
@@ -49,7 +50,7 @@ ColumnLayout {
                   root.valueIconColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 
   NColorChoice {
@@ -61,7 +62,7 @@ ColumnLayout {
                   root.saveSettings();
                 }
     visible: root.valueShowUnreadBadge
-    defaultValue: root.widgetMetadata.unreadBadgeColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "unreadBadgeColor")
   }
 
   NToggle {
@@ -73,7 +74,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     enabled: !root.valueHideWhenZeroUnread
-    defaultValue: root.widgetMetadata.hideWhenZero
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenZero")
   }
 
   NToggle {
@@ -84,6 +85,6 @@ ColumnLayout {
                  root.valueHideWhenZeroUnread = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideWhenZeroUnread
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenZeroUnread")
   }
 }

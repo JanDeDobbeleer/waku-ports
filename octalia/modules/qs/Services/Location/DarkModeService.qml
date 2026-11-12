@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "DarkModeUtils.js" as DarkModeUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -14,8 +16,8 @@ Singleton {
     target: LocationService.data
     enabled: Settings.data.colorSchemes.schedulingMode == "location"
     function onWeatherChanged() {
-      if (LocationService.data.weather !== null) {
-        const changes = root.collectWeatherChanges(LocationService.data.weather);
+      if (DarkModeUtils.weather(LocationService.data) !== null) {
+        const changes = root.collectWeatherChanges(DarkModeUtils.weather(LocationService.data));
         if (!root.initComplete) {
           root.initComplete = true;
           root.applyCurrentMode(changes);
@@ -85,15 +87,15 @@ Singleton {
       initComplete = true;
       applyCurrentMode(changes);
       scheduleNextMode(changes);
-    } else if (Settings.data.colorSchemes.schedulingMode == "location" && LocationService.data.weather) {
-      const changes = collectWeatherChanges(LocationService.data.weather);
+    } else if (Settings.data.colorSchemes.schedulingMode == "location" && DarkModeUtils.weather(LocationService.data)) {
+      const changes = collectWeatherChanges(DarkModeUtils.weather(LocationService.data));
       initComplete = true;
       applyCurrentMode(changes);
       scheduleNextMode(changes);
     }
   }
 
-  function parseTime(timeString) {
+  function parseTime(timeString: var): var {
     const parts = timeString.split(":").map(Number);
     return {
       "hour": parts[0],
@@ -101,97 +103,19 @@ Singleton {
     };
   }
 
-  function collectManualChanges() {
-    const sunriseTime = parseTime(Settings.data.colorSchemes.manualSunrise);
-    const sunsetTime = parseTime(Settings.data.colorSchemes.manualSunset);
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-
-    const yesterdaysSunset = new Date(year, month, day - 1, sunsetTime.hour, sunsetTime.minute);
-    const todaysSunrise = new Date(year, month, day, sunriseTime.hour, sunriseTime.minute);
-    const todaysSunset = new Date(year, month, day, sunsetTime.hour, sunsetTime.minute);
-    const tomorrowsSunrise = new Date(year, month, day + 1, sunriseTime.hour, sunriseTime.minute);
-
-    return [
-          {
-            "time": yesterdaysSunset.getTime(),
-            "darkMode": true
-          },
-          {
-            "time": todaysSunrise.getTime(),
-            "darkMode": false
-          },
-          {
-            "time": todaysSunset.getTime(),
-            "darkMode": true
-          },
-          {
-            "time": tomorrowsSunrise.getTime(),
-            "darkMode": false
-          }
-        ];
+  function collectManualChanges(): var {
+    return DarkModeUtils.collectManualChanges(root, Settings);
   }
 
-  function collectWeatherChanges(weather) {
-    var i;
-    const changes = [];
-
-    if (Date.now() < Date.parse(weather.daily.sunrise[0])) {
-      // The sun has not risen yet
-      changes.push({
-                     "time": Date.now() - 1,
-                     "darkMode": true
-                   });
-    }
-
-    for (i = 0; i < weather.daily.sunrise.length; i++) {
-      changes.push({
-                     "time": Date.parse(weather.daily.sunrise[i]),
-                     "darkMode": false
-                   });
-      changes.push({
-                     "time": Date.parse(weather.daily.sunset[i]),
-                     "darkMode": true
-                   });
-    }
-
-    return changes;
+  function collectWeatherChanges(weather: var): var {
+    return DarkModeUtils.collectWeatherChanges(weather);
   }
 
-  function applyCurrentMode(changes) {
-    var i;
-    const now = Date.now();
-    Logger.i("DarkModeService", `Applying mode at ${new Date(now).toLocaleString()} (${now})`);
-
-    // changes.findLast(change => change.time < now) // not available in QML...
-    let lastChange = null;
-    for (i = 0; i < changes.length; i++) {
-      Logger.d("DarkModeService", `Checking change: time=${changes[i].time} (${new Date(changes[i].time).toLocaleString()}), darkMode=${changes[i].darkMode}`);
-      if (changes[i].time < now) {
-        lastChange = changes[i];
-      }
-    }
-
-    if (lastChange) {
-      Logger.i("DarkModeService", `Selected change: time=${lastChange.time}, darkMode=${lastChange.darkMode}`);
-      Settings.data.colorSchemes.darkMode = lastChange.darkMode;
-      Logger.d("DarkModeService", `Reset: darkmode=${lastChange.darkMode}`);
-    } else {
-      Logger.w("DarkModeService", "No suitable change found for current time!");
-    }
+  function applyCurrentMode(changes: var): void {
+    DarkModeUtils.applyCurrentMode(changes, Settings, Logger);
   }
 
-  function scheduleNextMode(changes) {
-    const now = Date.now();
-    const nextChange = changes.find(change => change.time > now);
-    if (nextChange) {
-      root.nextDarkModeState = nextChange.darkMode;
-      timer.interval = nextChange.time - now;
-      timer.restart();
-      Logger.d("DarkModeService", `Scheduled: darkmode=${nextChange.darkMode} in ${timer.interval} ms`);
-    }
+  function scheduleNextMode(changes: var): void {
+    DarkModeUtils.scheduleNextMode(changes, root, Logger, timer);
   }
 }

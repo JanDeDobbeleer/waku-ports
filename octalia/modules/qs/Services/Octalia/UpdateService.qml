@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "UpdateServiceUtils.js" as UpdateServiceUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -46,12 +48,8 @@ Singleton {
 
   Connections {
     target: PanelService
-    function onPopupMenuWindowRegistered(screen) {
-      if (root.popupScheduled) {
-        if (!root.viewChangelogTargetScreen || root.viewChangelogTargetScreen.name === screen.name) {
-          root.openWhenReady();
-        }
-      }
+    function onPopupMenuWindowRegistered(screen: var) {
+      UpdateServiceUtils.onPopupMenuWindowRegistered(screen, root);
     }
   }
 
@@ -121,7 +119,7 @@ Singleton {
     clearChangelogRequest();
   }
 
-  function fetchUpgradeLog(fromVersion, toVersion) {
+  function fetchUpgradeLog(fromVersion: var, toVersion: var): void {
     // Normalize and ensure "v" prefix for consistent URL format
     let from = ensureVersionPrefix(fromVersion || changelogLastSeenVersion || "3.0.0");
     let to = ensureVersionPrefix(toVersion);
@@ -138,73 +136,29 @@ Singleton {
     const url = `${upgradeLogBaseUrl}/${from}/${to}`;
     Logger.i("UpdateService", "Fetching upgrade log:", url);
     const request = new XMLHttpRequest();
-    request.onreadystatechange = function () {
-      if (request.readyState === XMLHttpRequest.DONE) {
-        Logger.d("UpdateService", "Request completed with status:", request.status);
-        Logger.d("UpdateService", "Response text length:", request.responseText ? request.responseText.length : 0);
-
-        if (request.status >= 200 && request.status < 300) {
-          releaseContent = request.responseText || "";
-          Logger.d("UpdateService", "Successfully fetched upgrade log");
-          fetchError = "";
-          openWhenReady();
-        } else {
-          Logger.w("UpdateService", "Failed to fetch upgrade log, status:", request.status);
-          releaseContent = "";
-
-          if (request.status === 404) {
-            // Changelog not available for this version range - skip silently
-            Logger.w("UpdateService", "Changelog not found, skipping display");
-            fetchError = "";
-            popupScheduled = false;
-            markChangelogSeen(toVersion);
-          } else {
-            // Network error or server issue - show error to user
-            fetchError = I18n.tr("changelog.error.fetch-failed");
-            openWhenReady();
-          }
-        }
-      }
-    };
+    UpdateServiceUtils.observeUpgradeRequest(request, XMLHttpRequest.DONE, toVersion, root, Logger, I18n);
     request.open("GET", url);
     request.send();
   }
 
-  function normalizeVersion(version) {
+  function normalizeVersion(version: var): string {
     if (!version)
       return "";
     return version.startsWith("v") ? version.substring(1) : version;
   }
 
-  function ensureVersionPrefix(version) {
+  function ensureVersionPrefix(version: var): string {
     if (!version)
       return "";
     return version.startsWith("v") ? version : "v" + version;
   }
 
-  function parseVersionParts(version) {
-    const clean = normalizeVersion(version);
-    if (!clean)
-      return [];
-    return clean.split(/[^0-9]+/).filter(part => part.length > 0).map(part => parseInt(part));
+  function parseVersionParts(version: var): var {
+    return UpdateServiceUtils.parseVersionParts(version, root);
   }
 
-  function compareVersions(a, b) {
-    var i;
-    if (a === b)
-      return 0;
-    const partsA = parseVersionParts(a);
-    const partsB = parseVersionParts(b);
-    const length = Math.max(partsA.length, partsB.length);
-    for (i = 0; i < length; i++) {
-      const valA = partsA[i] || 0;
-      const valB = partsB[i] || 0;
-      if (valA > valB)
-        return 1;
-      if (valA < valB)
-        return -1;
-    }
-    return 0;
+  function compareVersions(a: var, b: var): int {
+    return UpdateServiceUtils.compareVersions(a, b, root);
   }
 
   // Check if user is upgrading from a version before telemetry was introduced
@@ -248,46 +202,8 @@ Singleton {
     }
   }
 
-  function openWhenReady() {
-    if (!popupScheduled)
-      return;
-
-    if (!Quickshell.screens || Quickshell.screens.length === 0) {
-      return;
-    }
-
-    let targetScreen = viewChangelogTargetScreen;
-
-    if (targetScreen) {
-      // Explicit screen requested - validate it
-      if (!PanelService.canShowPanelsOnScreen(targetScreen)) {
-        Logger.w("UpdateService", "Changelog cannot be shown on screen without bar:", targetScreen.name);
-        popupScheduled = false;
-        viewChangelogTargetScreen = null;
-        return;
-      }
-    } else {
-      // No explicit screen - find one that can show panels
-      targetScreen = PanelService.findScreenForPanels();
-      if (!targetScreen) {
-        Logger.w("UpdateService", "No screen available to show changelog");
-        popupScheduled = false;
-        return;
-      }
-    }
-
-    const panel = PanelService.getPanel("changelogPanel", targetScreen);
-    if (!panel) {
-      // Panel not found yet. Wait for popupMenuWindowRegistered signal.
-      // This avoids the memory leak (#1306).
-      Logger.d("UpdateService", "Waiting for changelogPanel on screen:", targetScreen.name);
-      return;
-    }
-
-    panel.open();
-    popupScheduled = false;
-    lastShownVersion = changelogCurrentVersion;
-    viewChangelogTargetScreen = null;
+  function openWhenReady(): void {
+    UpdateServiceUtils.openWhenReady(root, Quickshell, PanelService, Logger);
   }
 
   function openDiscord() {
@@ -334,7 +250,7 @@ Singleton {
   // Shows all changes since v3.0.0, unlike showLatestChangelog() which uses lastSeenVersion
   property var viewChangelogTargetScreen: null
 
-  function viewChangelog(screen) {
+  function viewChangelog(screen: var): void {
     if (!currentVersion)
       return;
 
@@ -354,7 +270,7 @@ Singleton {
     changelogToVersion = "";
   }
 
-  function markChangelogSeen(version) {
+  function markChangelogSeen(version: var): void {
     if (!version)
       return;
     changelogLastSeenVersion = version;
@@ -362,15 +278,7 @@ Singleton {
   }
 
   function loadChangelogState() {
-    try {
-      const changelog = ShellState.getChangelogState();
-      changelogLastSeenVersion = changelog.lastSeenVersion || "";
-
-      // Migration is now handled in Settings.qml
-      Logger.d("UpdateService", "Loaded changelog state from ShellState");
-    } catch (error) {
-      Logger.e("UpdateService", "Failed to load changelog state:", error);
-    }
+    UpdateServiceUtils.loadChangelogState(root, ShellState, Logger);
     changelogStateLoaded = true;
 
     // Handle pending telemetry wizard check first
@@ -411,21 +319,11 @@ Singleton {
     pendingSave = false;
     saveInProgress = true;
 
-    try {
-      ShellState.setChangelogState({
-                                     lastSeenVersion: changelogLastSeenVersion || ""
-                                   });
-      Logger.d("UpdateService", "Saved changelog state to ShellState");
-      saveInProgress = false;
+    UpdateServiceUtils.executeSave(root, ShellState, Logger);
+  }
 
-      // Check if another save was queued while we were saving
-      if (pendingSave) {
-        Qt.callLater(executeSave);
-      }
-    } catch (error) {
-      Logger.e("UpdateService", "Failed to save changelog state:", error);
-      saveInProgress = false;
-    }
+  function _scheduleExecuteSave(): void {
+    Qt.callLater(executeSave);
   }
 
   function saveChangelogState() {

@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Shapes
 import qs.Commons
 import qs.Modules.MainScreen.Backgrounds
+import "BackgroundHelpers.js" as BackgroundHelpers
 
 /**
 * PanelBackground - Dynamic ShapePath for rendering panel backgrounds
@@ -32,27 +33,27 @@ ShapePath {
   readonly property real radius: Style.radiusL
 
   // Get panel's panelRegion (geometry placeholder)
-  readonly property var panelRegion: assignedPanel?.panelRegion ?? null
+  readonly property var panelRegion: BackgroundHelpers.panelRegion(assignedPanel)
 
   // Get the actual panelBackground Item from panelRegion
   // Only access panelItem if panelRegion exists and is visible
-  readonly property var panelBg: (panelRegion && panelRegion.visible) ? panelRegion.panelItem : null
+  readonly property var panelBg: (panelRegion && BackgroundHelpers.field(panelRegion, "visible")) ? BackgroundHelpers.field(panelRegion, "panelItem") : null
 
   // Effective background color: use panel's if defined, else default
   readonly property color effectiveBackgroundColor: {
     if (!assignedPanel)
       return "transparent";
-    if (assignedPanel.panelBackgroundColor !== undefined) {
-      return assignedPanel.panelBackgroundColor;
+    if (BackgroundHelpers.field(assignedPanel, "panelBackgroundColor") !== undefined) {
+      return BackgroundHelpers.field(assignedPanel, "panelBackgroundColor");
     }
     return defaultBackgroundColor;
   }
 
   // Panel position - panelBg is in screen coordinates already
-  readonly property real panelX: panelBg ? panelBg.x : 0
-  readonly property real panelY: panelBg ? panelBg.y : 0
-  readonly property real panelWidth: panelBg ? panelBg.width : 0
-  readonly property real panelHeight: panelBg ? panelBg.height : 0
+  readonly property real panelX: panelBg ? BackgroundHelpers.field(panelBg, "x") : 0
+  readonly property real panelY: panelBg ? BackgroundHelpers.field(panelBg, "y") : 0
+  readonly property real panelWidth: panelBg ? BackgroundHelpers.field(panelBg, "width") : 0
+  readonly property real panelHeight: panelBg ? BackgroundHelpers.field(panelBg, "height") : 0
   readonly property bool isRenderable: assignedPanel && panelBg && panelWidth > 0 && panelHeight > 0
 
   // Flatten corners if panel is too small
@@ -64,7 +65,7 @@ ShapePath {
   readonly property real _minR: 0.01
 
   // Helper function for getting corner radius based on state
-  function getCornerRadius(cornerState) {
+  function getCornerRadius(cornerState: int): real {
     // State -1 = flat corner — use minimum safe radius instead of 0
     // to prevent degenerate PathArc (zero displacement + zero radius)
     if (cornerState === -1)
@@ -74,21 +75,21 @@ ShapePath {
   }
 
   // Per-corner multipliers and radii based on panelBg's corner states
-  readonly property real tlMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.topLeftCornerState) : 1
-  readonly property real tlMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.topLeftCornerState) : 1
-  readonly property real tlRadius: panelBg ? getCornerRadius(panelBg.topLeftCornerState) : 0
+  readonly property real tlMultX: panelBg ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(panelBg, "topLeftCornerState")) : 1
+  readonly property real tlMultY: panelBg ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(panelBg, "topLeftCornerState")) : 1
+  readonly property real tlRadius: panelBg ? getCornerRadius(BackgroundHelpers.field(panelBg, "topLeftCornerState")) : 0
 
-  readonly property real trMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.topRightCornerState) : 1
-  readonly property real trMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.topRightCornerState) : 1
-  readonly property real trRadius: panelBg ? getCornerRadius(panelBg.topRightCornerState) : 0
+  readonly property real trMultX: panelBg ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(panelBg, "topRightCornerState")) : 1
+  readonly property real trMultY: panelBg ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(panelBg, "topRightCornerState")) : 1
+  readonly property real trRadius: panelBg ? getCornerRadius(BackgroundHelpers.field(panelBg, "topRightCornerState")) : 0
 
-  readonly property real brMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.bottomRightCornerState) : 1
-  readonly property real brMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.bottomRightCornerState) : 1
-  readonly property real brRadius: panelBg ? getCornerRadius(panelBg.bottomRightCornerState) : 0
+  readonly property real brMultX: panelBg ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(panelBg, "bottomRightCornerState")) : 1
+  readonly property real brMultY: panelBg ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(panelBg, "bottomRightCornerState")) : 1
+  readonly property real brRadius: panelBg ? getCornerRadius(BackgroundHelpers.field(panelBg, "bottomRightCornerState")) : 0
 
-  readonly property real blMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.bottomLeftCornerState) : 1
-  readonly property real blMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.bottomLeftCornerState) : 1
-  readonly property real blRadius: panelBg ? getCornerRadius(panelBg.bottomLeftCornerState) : 0
+  readonly property real blMultX: panelBg ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(panelBg, "bottomLeftCornerState")) : 1
+  readonly property real blMultY: panelBg ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(panelBg, "bottomLeftCornerState")) : 1
+  readonly property real blRadius: panelBg ? getCornerRadius(BackgroundHelpers.field(panelBg, "bottomLeftCornerState")) : 0
 
   // ShapePath configuration
   strokeWidth: -1 // No stroke, fill only

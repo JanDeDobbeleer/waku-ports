@@ -264,7 +264,7 @@ PopupWindow {
                           action.execute();
                         }
                         if (Settings.data.dock.dockType === "attached") {
-                          const panel = PanelService.getPanel("staticDockPanel", root.screen, false);
+                          const panel = PanelService.getPanelWithFallback("staticDockPanel", root.screen, false);
                           if (panel)
                             panel.close();
                         }

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Media
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -34,17 +35,7 @@ ColumnLayout {
       placeholderText: I18n.tr("panels.audio.media-excluded-player-placeholder")
       buttonIcon: "add"
       Layout.fillWidth: true
-      onButtonClicked: {
-        const val = (blacklistInput.text || "").trim();
-        if (val !== "") {
-          const arr = (Settings.data.audio.mprisBlacklist || []);
-          if (!arr.find(x => String(x).toLowerCase() === val.toLowerCase())) {
-            Settings.data.audio.mprisBlacklist = [...arr, val];
-            blacklistInput.text = "";
-            MediaService.updateCurrentPlayer();
-          }
-        }
-      }
+      onButtonClicked: SettingsValue.addMediaBlacklistEntry(blacklistInput, Settings.data.audio, MediaService)
     }
 
     // Current blacklist entries
@@ -56,6 +47,7 @@ ColumnLayout {
       Repeater {
         model: Settings.data.audio.mprisBlacklist
         delegate: Rectangle {
+          id: blacklistEntry
           required property string modelData
           property real pad: Style.marginS
           color: Qt.alpha(Color.mOnSurface, 0.125)
@@ -66,10 +58,10 @@ ColumnLayout {
             id: chipRow
             spacing: Style.marginXS
             anchors.fill: parent
-            anchors.margins: pad
+            anchors.margins: blacklistEntry.pad
 
             NText {
-              text: modelData
+              text: blacklistEntry.modelData
               color: Color.mOnSurface
               pointSize: Style.fontSizeS
               Layout.alignment: Qt.AlignVCenter
@@ -81,15 +73,7 @@ ColumnLayout {
               baseSize: Style.baseWidgetSize * 0.8
               Layout.alignment: Qt.AlignVCenter
               Layout.rightMargin: Style.marginXS
-              onClicked: {
-                const arr = (Settings.data.audio.mprisBlacklist || []);
-                const idx = arr.findIndex(x => String(x) === modelData);
-                if (idx >= 0) {
-                  arr.splice(idx, 1);
-                  Settings.data.audio.mprisBlacklist = arr;
-                  MediaService.updateCurrentPlayer();
-                }
-              }
+              onClicked: SettingsValue.removeMediaBlacklistEntry(Settings.data.audio, MediaService, blacklistEntry.modelData)
             }
           }
 

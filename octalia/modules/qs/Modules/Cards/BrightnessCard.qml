@@ -4,6 +4,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.Hardware
 import qs.Widgets
+import "BrightnessCardUtils.js" as BrightnessCardUtils
 
 // Brightness control card for the ControlCenter
 NBox {
@@ -25,14 +26,14 @@ NBox {
 
   Component.onCompleted: {
     if (brightnessMonitor) {
-      localBrightness = brightnessMonitor.brightness || 0;
+      localBrightness = BrightnessCardUtils.field(brightnessMonitor, "brightness") || 0;
     }
   }
 
   // Update local brightness when monitor changes
   Connections {
     target: BrightnessService
-    function onMonitorBrightnessChanged(monitor, newBrightness) {
+    function onMonitorBrightnessChanged(monitor: var, newBrightness: real): void {
       if (monitor === root.brightnessMonitor && !root.localBrightnessChanging) {
         root.localBrightness = newBrightness;
       }
@@ -45,7 +46,7 @@ NBox {
     ignoreUnknownSignals: true
     function onBrightnessUpdated() {
       if (root.brightnessMonitor && !root.localBrightnessChanging) {
-        root.localBrightness = root.brightnessMonitor.brightness || 0;
+        root.localBrightness = BrightnessCardUtils.field(root.brightnessMonitor, "brightness") || 0;
       }
     }
   }
@@ -57,8 +58,8 @@ NBox {
     running: false
     repeat: false
     onTriggered: {
-      if (root.brightnessMonitor && Math.abs(root.localBrightness - root.brightnessMonitor.brightness) > 0.009) {
-        root.brightnessMonitor.setBrightness(root.localBrightness);
+      if (root.brightnessMonitor && Math.abs(root.localBrightness - BrightnessCardUtils.field(root.brightnessMonitor, "brightness")) > 0.009) {
+        BrightnessCardUtils.setBrightness(root.brightnessMonitor, root.localBrightness);
       }
     }
   }
@@ -73,8 +74,8 @@ NBox {
       spacing: Style.marginXXS
       Layout.fillWidth: true
       Layout.preferredWidth: 0
-      opacity: root.brightnessMonitor && root.brightnessMonitor.brightnessControlAvailable ? 1.0 : 0.5
-      enabled: root.brightnessMonitor && root.brightnessMonitor.brightnessControlAvailable
+      opacity: root.brightnessMonitor && BrightnessCardUtils.field(root.brightnessMonitor, "brightnessControlAvailable") ? 1.0 : 0.5
+      enabled: root.brightnessMonitor && BrightnessCardUtils.field(root.brightnessMonitor, "brightnessControlAvailable")
 
       // Brightness Header
       RowLayout {
@@ -85,7 +86,7 @@ NBox {
           icon: {
             if (!root.brightnessMonitor)
               return "brightness-low";
-            const brightness = root.brightnessMonitor.brightness || 0;
+            const brightness = BrightnessCardUtils.field(root.brightnessMonitor, "brightness") || 0;
             if (brightness <= 0.001)
               return "sun-off";
             return brightness <= 0.5 ? "brightness-low" : "brightness-high";
@@ -110,7 +111,7 @@ NBox {
           text: root.brightnessMonitor ? Math.round(root.localBrightness * 100) + "%" : "N/A"
           pointSize: Style.fontSizeXS
           color: Color.mOnSurfaceVariant
-          opacity: root.brightnessMonitor && root.brightnessMonitor.brightnessControlAvailable ? 1.0 : 0.5
+          opacity: root.brightnessMonitor && BrightnessCardUtils.field(root.brightnessMonitor, "brightnessControlAvailable") ? 1.0 : 0.5
         }
       }
 
@@ -137,7 +138,7 @@ NBox {
           propagateComposedEvents: true
 
           onWheel: wheel => {
-                     if (brightnessSlider.enabled && root.brightnessMonitor && root.brightnessMonitor.brightnessControlAvailable) {
+                     if (brightnessSlider.enabled && root.brightnessMonitor && BrightnessCardUtils.field(root.brightnessMonitor, "brightnessControlAvailable")) {
                        const delta = wheel.angleDelta.y || wheel.angleDelta.x;
                        const step = Settings.data.brightness.brightnessStep / 100.0; // Convert percentage to 0-1 range
                        const increment = delta > 0 ? step : -step;

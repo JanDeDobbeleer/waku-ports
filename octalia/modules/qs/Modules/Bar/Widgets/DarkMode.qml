@@ -1,5 +1,6 @@
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -27,7 +28,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   icon: "dark-mode"
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
@@ -62,6 +63,6 @@ NIconButton {
   }
 
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

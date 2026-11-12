@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Media
 import qs.Widgets
+import "AudioCardUtils.js" as AudioCardUtils
 
 // Audio controls card: output and input volume controls
 NBox {
@@ -25,10 +26,10 @@ NBox {
     var inputVol = AudioService.inputVolume;
     localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
     if (AudioService.sink) {
-      lastSinkName = AudioService.sink.name;
+      lastSinkName = AudioCardUtils.field(AudioService.sink, "name");
     }
     if (AudioService.source) {
-      lastSourceName = AudioService.source.name;
+      lastSourceName = AudioCardUtils.field(AudioService.source, "name");
     }
   }
 
@@ -38,7 +39,7 @@ NBox {
     function onSinkChanged() {
       var vol;
       if (AudioService.sink) {
-        const newSinkName = AudioService.sink.name;
+        const newSinkName = AudioCardUtils.field(AudioService.sink, "name");
         if (newSinkName !== root.lastSinkName) {
           root.lastSinkName = newSinkName;
           // Immediately set local volume to current device's volume
@@ -57,7 +58,7 @@ NBox {
     function onSourceChanged() {
       var vol;
       if (AudioService.source) {
-        const newSourceName = AudioService.source.name;
+        const newSourceName = AudioCardUtils.field(AudioService.source, "name");
         if (newSourceName !== root.lastSourceName) {
           root.lastSourceName = newSourceName;
           // Immediately set local volume to current device's volume
@@ -79,13 +80,13 @@ NBox {
     repeat: true
     onTriggered: {
       // Only sync if sink hasn't changed
-      if (AudioService.sink && AudioService.sink.name === root.lastSinkName) {
+      if (AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
         if (Math.abs(root.localOutputVolume - AudioService.volume) >= 0.01) {
           AudioService.setVolume(root.localOutputVolume);
         }
       }
       // Only sync if source hasn't changed
-      if (AudioService.source && AudioService.source.name === root.lastSourceName) {
+      if (AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
         if (Math.abs(root.localInputVolume - AudioService.inputVolume) >= 0.01) {
           AudioService.setInputVolume(root.localInputVolume);
         }
@@ -97,7 +98,7 @@ NBox {
     target: AudioService
     function onVolumeChanged() {
       var vol;
-      if (!root.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === root.lastSinkName) {
+      if (!root.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
         vol = AudioService.volume;
         root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -108,7 +109,7 @@ NBox {
     target: AudioService
     function onInputVolumeChanged() {
       var vol;
-      if (!root.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === root.lastSourceName) {
+      if (!root.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
         vol = AudioService.inputVolume;
         root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -119,7 +120,7 @@ NBox {
     target: outputVolumeSlider
     function onSliderActiveChanged() {
       var vol;
-      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === root.lastSinkName) {
+      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
         vol = AudioService.volume;
         root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -130,7 +131,7 @@ NBox {
     target: inputVolumeSlider
     function onSliderActiveChanged() {
       var vol;
-      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === root.lastSourceName) {
+      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
         vol = AudioService.inputVolume;
         root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -166,7 +167,7 @@ NBox {
         }
 
         NText {
-          text: AudioService.sink ? AudioService.sink.description : "No output device"
+          text: AudioService.sink ? AudioCardUtils.field(AudioService.sink, "description") : "No output device"
           pointSize: Style.fontSizeXS
           color: Color.mOnSurfaceVariant
           elide: Text.ElideRight
@@ -232,7 +233,7 @@ NBox {
         }
 
         NText {
-          text: AudioService.source ? AudioService.source.description : "No input device"
+          text: AudioService.source ? AudioCardUtils.field(AudioService.source, "description") : "No input device"
           pointSize: Style.fontSizeXS
           color: Color.mOnSurfaceVariant
           elide: Text.ElideRight

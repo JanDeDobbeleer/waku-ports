@@ -9,6 +9,7 @@ import qs.Modules.Panels.Settings
 import qs.Services.Theming
 import qs.Services.UI
 import qs.Widgets
+import "./WallpaperPanelUtils.js" as WallpaperPanelUtils
 
 SmartPanel {
   id: root
@@ -38,103 +39,44 @@ SmartPanel {
   panelAnchorBottom: panelPosition.startsWith("bottom_")
   panelAnchorTop: panelPosition.startsWith("top_")
 
-  // Store direct reference to content for instant access
   property var contentItem: null
 
+  // Store direct reference to content for instant access
+
   // Override keyboard handlers to enable grid navigation
-  function onDownPressed() {
-    if (!contentItem)
-      return;
-    let view = contentItem.screenRepeater.itemAt(contentItem.currentScreenIndex);
-    if (view?.gridView) {
-      if (!view.gridView.hasActiveFocus) {
-        view.gridView.forceActiveFocus();
-        if (view.gridView.currentIndex < 0 && view.gridView.model.length > 0) {
-          view.gridView.currentIndex = 0;
-        }
-      } else {
-        if (view.gridView.currentIndex < 0 && view.gridView.model.length > 0) {
-          view.gridView.currentIndex = 0;
-        } else {
-          view.gridView.moveCurrentIndexDown();
-        }
-      }
-    }
+  function onDownPressed(): void {
+    WallpaperPanelUtils.navigate(contentItem, "down");
   }
 
-  function onUpPressed() {
-    if (!contentItem)
-      return;
-    let view = contentItem.screenRepeater.itemAt(contentItem.currentScreenIndex);
-    if (view?.gridView?.hasActiveFocus) {
-      if (view.gridView.currentIndex < 0 && view.gridView.model.length > 0) {
-        view.gridView.currentIndex = 0;
-      } else {
-        view.gridView.moveCurrentIndexUp();
-      }
-    }
+  function onUpPressed(): void {
+    WallpaperPanelUtils.navigate(contentItem, "up");
   }
 
-  function onLeftPressed() {
-    if (!contentItem)
-      return;
-    let view = contentItem.screenRepeater.itemAt(contentItem.currentScreenIndex);
-    if (view?.gridView?.hasActiveFocus) {
-      if (view.gridView.currentIndex < 0 && view.gridView.model.length > 0) {
-        view.gridView.currentIndex = 0;
-      } else {
-        view.gridView.moveCurrentIndexLeft();
-      }
-    }
+  function onLeftPressed(): void {
+    WallpaperPanelUtils.navigate(contentItem, "left");
   }
 
-  function onRightPressed() {
-    if (!contentItem)
-      return;
-    let view = contentItem.screenRepeater.itemAt(contentItem.currentScreenIndex);
-    if (view?.gridView?.hasActiveFocus) {
-      if (view.gridView.currentIndex < 0 && view.gridView.model.length > 0) {
-        view.gridView.currentIndex = 0;
-      } else {
-        view.gridView.moveCurrentIndexRight();
-      }
-    }
+  function onRightPressed(): void {
+    WallpaperPanelUtils.navigate(contentItem, "right");
   }
 
-  function onReturnPressed() {
-    var item;
-    if (!contentItem)
-      return;
-
-    // Check if Wallhaven page input has focus
-    if (contentItem.wallhavenView && contentItem.wallhavenView.visible && contentItem.wallhavenView.pageInput && contentItem.wallhavenView.pageInput.inputItem.activeFocus) {
-      contentItem.wallhavenView.pageInput.submitPage();
-      return;
-    }
-
-    let view = contentItem.screenRepeater.itemAt(contentItem.currentScreenIndex);
-    if (view?.gridView?.hasActiveFocus) {
-      let gridView = view.gridView;
-      if (gridView.currentIndex >= 0 && gridView.currentIndex < gridView.model.count) {
-        item = gridView.model.get(gridView.currentIndex);
-        view.selectItem(item.path, item.isDirectory);
-      }
-    }
+  function onReturnPressed(): void {
+    WallpaperPanelUtils.activateCurrentItem(contentItem);
   }
 
-  function onEnterPressed() {
+  function onEnterPressed(): void {
     onReturnPressed();
   }
 
   panelContent: Rectangle {
     id: panelContent
 
-    property alias wallhavenView: wallhavenView
+    property alias wallhavenView: wallhavenViewItem
     property int currentScreenIndex: {
       var i;
-      if (screen !== null) {
+      if (root.screen !== null) {
         for (i = 0; i < Quickshell.screens.length; i++) {
-          if (Quickshell.screens[i].name == screen.name) {
+          if (Quickshell.screens[i].name == root.screen.name) {
             return i;
           }
         }
@@ -153,7 +95,7 @@ SmartPanel {
     }
 
     // Function to update Wallhaven resolution filter
-    function updateWallhavenResolution() {
+    function updateWallhavenResolution(): void {
       var resolution;
       if (typeof WallhavenService === "undefined") {
         return;
@@ -180,7 +122,7 @@ SmartPanel {
       // Trigger new search with updated resolution
       if (Settings.data.wallpaper.useWallhaven) {
         if (wallhavenView) {
-          wallhavenView.loading = true;
+          wallhavenViewItem.loading = true;
         }
         WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);
       }
@@ -192,11 +134,7 @@ SmartPanel {
     Loader {
       id: wallhavenSettingsPopup
       source: "WallhavenSettingsPopup.qml"
-      onLoaded: {
-        if (item) {
-          item.screen = screen;
-        }
-      }
+      onLoaded: WallpaperPanelUtils.setScreen(item, root.screen)
     }
 
     // Solid color picker dialog
@@ -211,27 +149,13 @@ SmartPanel {
     Connections {
       target: root
       function onOpened() {
-        var i;
-        // Ensure contentItem is set
-        if (!root.contentItem) {
-          root.contentItem = panelContent;
-        }
-        // Reset grid view selections
-        for (i = 0; i < screenRepeater.count; i++) {
-          let item = screenRepeater.itemAt(i);
-          if (item && item.gridView) {
-            item.gridView.currentIndex = -1;
-          }
-        }
-        if (wallhavenView && wallhavenView.gridView) {
-          wallhavenView.gridView.currentIndex = -1;
-        }
+        WallpaperPanelUtils.resetGridSelections(panelContent);
         panelContent.appearanceTabIndex = Settings.data.colorSchemes.darkMode ? 1 : 0;
         WallpaperService.wallpaperSelectionAppearance = panelContent.appearanceTabIndex === 1 ? "dark" : "light";
         // Give initial focus to search input
         Qt.callLater(() => {
                        if (searchInput.inputItem) {
-                         searchInput.inputItem.forceActiveFocus();
+                         WallpaperPanelUtils.focusInput(searchInput.inputItem);
                        }
                      });
       }
@@ -242,15 +166,8 @@ SmartPanel {
       id: searchDebounceTimer
       interval: 150
       onTriggered: {
-        var i;
         panelContent.filterText = searchInput.text;
-        // Trigger update on all screen views
-        for (i = 0; i < screenRepeater.count; i++) {
-          let item = screenRepeater.itemAt(i);
-          if (item && item.updateFiltered) {
-            item.updateFiltered();
-          }
-        }
+        WallpaperPanelUtils.updateFilteredViews(screenRepeater);
       }
     }
 
@@ -266,7 +183,7 @@ SmartPanel {
         onTriggered: {
           Settings.data.wallpaper.wallhavenQuery = searchInput.text;
           if (typeof WallhavenService !== "undefined") {
-            wallhavenView.loading = true;
+            wallhavenViewItem.loading = true;
             WallhavenService.search(searchInput.text, 1);
           }
         }
@@ -332,9 +249,8 @@ SmartPanel {
               icon: "settings"
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
-                var settingsPanel = PanelService.getPanel("settingsPanel", screen);
-                settingsPanel.requestedTab = SettingsPanel.Tab.Wallpaper;
-                settingsPanel.open();
+                var settingsPanel = PanelService.getPanel("settingsPanel", root.screen);
+                PanelService.openSettingsPanel(settingsPanel, SettingsPanel.Tab.Wallpaper);
               }
             }
 
@@ -393,7 +309,7 @@ SmartPanel {
                 id: screenTab
                 required property var modelData
                 required property int index
-                text: screenTab.modelData.name || `Screen ${screenTab.index + 1}`
+                text: WallpaperPanelUtils.field(screenTab.modelData, "name") || `Screen ${screenTab.index + 1}`
                 tabIndex: screenTab.index
                 checked: {
                   screenTabBar.currentIndex === screenTab.index;
@@ -423,7 +339,7 @@ SmartPanel {
                 }
                 // Give focus to search input
                 if (searchInput.inputItem && searchInput.inputItem.visible) {
-                  searchInput.inputItem.forceActiveFocus();
+                  WallpaperPanelUtils.focusInput(searchInput.inputItem);
                 }
                 // Mark initialization as complete after a short delay
                 Qt.callLater(function () {
@@ -461,7 +377,7 @@ SmartPanel {
                   // Only search if the query actually changed
                   if (typeof WallhavenService !== "undefined" && text !== WallhavenService.currentQuery) {
                     Settings.data.wallpaper.wallhavenQuery = text;
-                    wallhavenView.loading = true;
+                    wallhavenViewItem.loading = true;
                     WallhavenService.search(text, 1);
                   }
                 }
@@ -470,16 +386,11 @@ SmartPanel {
               Keys.onPressed: event => {
                                 if (Keybinds.checkKey(event, 'down', Settings)) {
                                   if (Settings.data.wallpaper.useWallhaven) {
-                                    if (wallhavenView && wallhavenView.gridView) {
-                                      wallhavenView.gridView.forceActiveFocus();
-                                    }
+                                    WallpaperPanelUtils.focusWallhavenGrid(wallhavenViewItem)
                                   } else {
-                                    let currentView = screenRepeater.itemAt(panelContent.currentScreenIndex);
-                                    if (currentView && currentView.gridView) {
-                                      currentView.gridView.forceActiveFocus();
-                                    }
+                                    WallpaperPanelUtils.focusGrid(screenRepeater, panelContent.currentScreenIndex);
                                   }
-                                  event.accepted = true;
+                                  WallpaperPanelUtils.acceptEvent(event);
                                 }
                               }
             }
@@ -509,10 +420,10 @@ SmartPanel {
                                                     _initialized = true;
                                                   })
 
-              model: Settings.data.colorSchemes.useWallpaperColors ? TemplateProcessor.schemeTypes : ColorSchemeService.schemes.map(s => ({
+              model: Settings.data.colorSchemes.useWallpaperColors ? TemplateProcessor.schemeTypes : ColorSchemeService.schemes.map(function (s: string): var { return ({
                                                                                                                                             "key": ColorSchemeService.getBasename(s),
                                                                                                                                             "name": ColorSchemeService.getBasename(s)
-                                                                                                                                          }))
+                                                                                                                                          }); })
               currentKey: Settings.data.colorSchemes.useWallpaperColors ? Settings.data.colorSchemes.generationMethod : Settings.data.colorSchemes.predefinedScheme
               onCurrentKeyChanged: {
                 if (!_initialized)
@@ -604,8 +515,8 @@ SmartPanel {
 
                               // If the view is already initialized, trigger a new search when switching to it
                               // Preserve current page when switching back to Wallhaven source
-                              if (wallhavenView && wallhavenView.initialized && !WallhavenService.fetching) {
-                                wallhavenView.loading = true;
+                              if (wallhavenViewItem && wallhavenViewItem.initialized && !WallhavenService.fetching) {
+                                wallhavenViewItem.loading = true;
                                 WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", WallhavenService.currentPage);
                               }
                             }
@@ -622,9 +533,7 @@ SmartPanel {
                 if (searchInput.inputItem) {
                   searchInput.inputItem.focus = false;
                 }
-                if (wallhavenSettingsPopup.item) {
-                  wallhavenSettingsPopup.item.showAt(wallhavenSettingsButton);
-                }
+                WallpaperPanelUtils.showSettings(wallhavenSettingsPopup.item, wallhavenSettingsButton);
               }
             }
           }
@@ -654,15 +563,18 @@ SmartPanel {
               model: Quickshell.screens
               delegate: WallpaperScreenView {
                 id: screenView
-                required property var modelData
+                required property ShellScreen modelData
                 targetScreen: screenView.modelData
+                filterText: panelContent.filterText
               }
             }
           }
 
           // Wallhaven wallpapers
           WallhavenView {
-            id: wallhavenView
+            id: wallhavenViewItem
+            currentScreenIndex: panelContent.currentScreenIndex
+            screenWidth: root.screen?.width ?? 1920
           }
         }
       }
@@ -672,7 +584,8 @@ SmartPanel {
   // Component for each screen's wallpaper view
   component WallpaperScreenView: Item {
     id: wallpaperScreenView
-    property var targetScreen
+    property ShellScreen targetScreen
+    property string filterText: ""
     property alias gridView: wallpaperGridView
 
     // Local reactive state for this screen
@@ -693,11 +606,11 @@ SmartPanel {
     property int _browseScanGeneration: 0
 
     // Favorited paths (any light/dark) first, then the rest
-    function sortFavoritesToTop(items) {
+    function sortFavoritesToTop(items: var): var {
       var i, it;
       var favs = [];
       var rest = [];
-      for (i = 0; i < items.length; i++) {
+      for (i = 0; i < WallpaperPanelUtils.arrayLength(items); i++) {
         it = items[i];
         if (!it.isDirectory && WallpaperService.isFavorite(it.path)) {
           favs.push(it);
@@ -710,13 +623,13 @@ SmartPanel {
 
     // Rebuild filteredItems and sync to wallpaperModel (full replacement, no animation).
     // When skipSync is true the caller will animate the model itself.
-    function updateFiltered(skipSync) {
+    function updateFiltered(skipSync: bool): void {
       var dirPath, i;
       var combinedItems = [];
 
       // In browse mode, add directories first
       if (isBrowseMode) {
-        for (i = 0; i < directoriesList.length; i++) {
+        for (i = 0; i < WallpaperPanelUtils.arrayLength(directoriesList); i++) {
           dirPath = directoriesList[i];
           combinedItems.push({
                                "path": dirPath,
@@ -738,30 +651,28 @@ SmartPanel {
       combinedItems = sortFavoritesToTop(combinedItems);
 
       // Apply filter if text is present
-      if (!panelContent.filterText || panelContent.filterText.trim().length === 0) {
+      if (!wallpaperScreenView.filterText || wallpaperScreenView.filterText.trim().length === 0) {
         filteredItems = combinedItems;
         if (!skipSync)
           syncModel();
         return;
       }
 
-      const results = FuzzySort.go(panelContent.filterText.trim(), combinedItems, {
+      const results = FuzzySort.go(wallpaperScreenView.filterText.trim(), combinedItems, {
                                      "key": 'name',
                                      "limit": 200
                                    });
-      var filtered = results.map(function (r) {
-        return r.obj;
-      });
+      var filtered = WallpaperPanelUtils.fuzzyResults(results);
       filteredItems = sortFavoritesToTop(filtered);
       if (!skipSync)
         syncModel();
     }
 
     // Copy filteredItems into the ListModel (full rebuild, no animation).
-    function syncModel() {
+    function syncModel(): void {
       var i;
       wallpaperModel.clear();
-      for (i = 0; i < filteredItems.length; i++) {
+      for (i = 0; i < WallpaperPanelUtils.arrayLength(filteredItems); i++) {
         wallpaperModel.append(filteredItems[i]);
       }
       wallpaperGridView.currentIndex = -1;
@@ -769,7 +680,7 @@ SmartPanel {
     }
 
     // Animate a single item moving to its new position after a favorite toggle.
-    function handleFavoriteMove(path) {
+    function handleFavoriteMove(path: string): void {
       var i, j;
       // Find where the item currently sits in the model
       var fromIndex = -1;
@@ -784,7 +695,7 @@ SmartPanel {
 
       // Find where it should be in the freshly-computed filteredItems
       var toIndex = -1;
-      for (j = 0; j < filteredItems.length; j++) {
+      for (j = 0; j < WallpaperPanelUtils.arrayLength(filteredItems); j++) {
         if (filteredItems[j].path === path) {
           toIndex = j;
           break;
@@ -806,15 +717,15 @@ SmartPanel {
       interval: Style.animationNormal + settleDelay
       onTriggered: {
         wallpaperGridView.animateMovement = false;
-        reconcileModel();
+        wallpaperScreenView.reconcileModel();
       }
     }
 
     // Reorder wallpaperModel to match filteredItems using in-place moves.
     // Avoids clear+rebuild which would destroy delegates and flash thumbnails.
-    function reconcileModel() {
+    function reconcileModel(): void {
       var currentPos, i, j;
-      for (i = 0; i < filteredItems.length; i++) {
+      for (i = 0; i < WallpaperPanelUtils.arrayLength(filteredItems); i++) {
         currentPos = -1;
         for (j = i; j < wallpaperModel.count; j++) {
           if (wallpaperModel.get(j).path === filteredItems[i].path) {
@@ -834,44 +745,44 @@ SmartPanel {
 
     Connections {
       target: WallpaperService
-      function onWallpaperChanged(screenName, path) {
+      function onWallpaperChanged(screenName: string, path: string): void {
         if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
           wallpaperScreenView.currentWallpaper = WallpaperService.getWallpaperPathForSlot(wallpaperScreenView.targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
         }
       }
-      function onWallpaperSelectionAppearanceChanged() {
+      function onWallpaperSelectionAppearanceChanged(): void {
         if (wallpaperScreenView.targetScreen !== null) {
           wallpaperScreenView.currentWallpaper = WallpaperService.getWallpaperPathForSlot(wallpaperScreenView.targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
-          updateFiltered(false);
+          wallpaperScreenView.updateFiltered(false);
         }
       }
-      function onWallpaperDirectoryChanged(screenName, directory) {
+      function onWallpaperDirectoryChanged(screenName: string, directory: string): void {
         if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
           // Reset browse path when root directory changes
           if (wallpaperScreenView.isBrowseMode) {
             WallpaperService.navigateToRoot(wallpaperScreenView.targetScreen.name);
           }
-          refreshWallpaperScreenData();
+          wallpaperScreenView.refreshWallpaperScreenData();
         }
       }
-      function onWallpaperListChanged(screenName, count) {
+      function onWallpaperListChanged(screenName: string, count: int): void {
         if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
-          refreshWallpaperScreenData();
+          wallpaperScreenView.refreshWallpaperScreenData();
         }
       }
-      function onBrowsePathChanged(screenName, path) {
+      function onBrowsePathChanged(screenName: string, path: string): void {
         if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
           wallpaperScreenView.currentBrowsePath = path;
-          refreshWallpaperScreenData();
+          wallpaperScreenView.refreshWallpaperScreenData();
         }
       }
-      function onFavoritesChanged(path) {
-        updateFiltered(true);   // recompute filteredItems but skip full model rebuild
-        handleFavoriteMove(path); // animate the item to its new position
+      function onFavoritesChanged(path: string): void {
+        wallpaperScreenView.updateFiltered(true);   // recompute filteredItems but skip full model rebuild
+        wallpaperScreenView.handleFavoriteMove(path); // animate the item to its new position
       }
     }
 
-    function refreshWallpaperScreenData() {
+    function refreshWallpaperScreenData(): void {
       var browsePath, gen;
       if (targetScreen === null) {
         return;
@@ -886,24 +797,17 @@ SmartPanel {
 
         // Bump generation so stale scan callbacks from rapid navigation are ignored
         gen = ++_browseScanGeneration;
-        WallpaperService.scanDirectoryWithDirs(targetScreen.name, browsePath, function (result) {
-          if (gen !== _browseScanGeneration)
-            return; // Stale callback from a superseded navigation
-          wallpapersList = result.files;
-          directoriesList = result.directories;
-          Logger.d("WallpaperPanel", "Browse mode: Got", wallpapersList.length, "files and", directoriesList.length, "directories for screen", targetScreen.name);
-          updateFiltered();
-        });
+        WallpaperPanelUtils.scanDirectory(WallpaperService, wallpaperScreenView, targetScreen.name, browsePath, gen, Logger);
       } else {
         // Normal mode: just use the wallpaper list from service
         wallpapersList = WallpaperService.getWallpapersList(targetScreen.name);
         directoriesList = [];
         Logger.d("WallpaperPanel", "Got", wallpapersList.length, "wallpapers for screen", targetScreen.name);
-        updateFiltered();
+        updateFiltered(false);
       }
     }
 
-    function selectItem(path, isDirectory) {
+    function selectItem(path: string, isDirectory: bool): void {
       var screen;
       if (isDirectory) {
         WallpaperService.setBrowsePath(targetScreen.name, path);
@@ -915,7 +819,7 @@ SmartPanel {
     }
 
     // Helper function to cycle view modes
-    function cycleViewMode() {
+    function cycleViewMode(): void {
       var mode = Settings.data.wallpaper.viewMode;
       if (mode === "single") {
         Settings.data.wallpaper.viewMode = "recursive";
@@ -927,7 +831,7 @@ SmartPanel {
     }
 
     // Helper function to get icon for current view mode
-    function getViewModeIcon() {
+    function getViewModeIcon(): string {
       var mode = Settings.data.wallpaper.viewMode;
       if (mode === "single")
         return "folder";
@@ -967,7 +871,7 @@ SmartPanel {
           fadeCornerRadius: Style.radiusM
 
           NText {
-            text: isBrowseMode ? currentBrowsePath : WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
+            text: wallpaperScreenView.isBrowseMode ? wallpaperScreenView.currentBrowsePath : WallpaperService.getMonitorDirectory(wallpaperScreenView.targetScreen?.name ?? "")
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
           }
@@ -1014,9 +918,9 @@ SmartPanel {
         }
 
         NIconButton {
-          icon: getViewModeIcon()
+          icon: wallpaperScreenView.getViewModeIcon()
           baseSize: Style.baseWidgetSize * 0.8
-          onClicked: cycleViewMode()
+          onClicked: wallpaperScreenView.cycleViewMode()
         }
 
         NIconButton {
@@ -1036,7 +940,7 @@ SmartPanel {
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: {
             if (wallpaperScreenView.isBrowseMode) {
-              refreshWallpaperScreenData();
+              wallpaperScreenView.refreshWallpaperScreenData();
             } else {
               WallpaperService.refreshWallpapersList();
             }
@@ -1063,7 +967,7 @@ SmartPanel {
           positionViewAtBeginning();
         }
 
-        property int columns: (screen.width > 1920) ? 5 : 4
+        property int columns: (wallpaperScreenView.targetScreen?.width > 1920) ? 5 : 4
         property int itemSize: cellWidth
 
         cellWidth: Math.floor((availableWidth - leftMargin - rightMargin) / columns)
@@ -1082,10 +986,10 @@ SmartPanel {
 
         onKeyPressed: event => {
                         if (Keybinds.checkKey(event, 'enter', Settings)) {
-                          if (currentIndex >= 0 && currentIndex < wallpaperScreenView.filteredItems.length) {
-                            selectItem(wallpaperScreenView.filteredItems[currentIndex]);
+                          if (currentIndex >= 0 && currentIndex < WallpaperPanelUtils.arrayLength(wallpaperScreenView.filteredItems)) {
+                            wallpaperScreenView.selectItem(WallpaperPanelUtils.field(wallpaperScreenView.filteredItems[currentIndex], "path"), WallpaperPanelUtils.field(wallpaperScreenView.filteredItems[currentIndex], "isDirectory"));
                           }
-                          event.accepted = true;
+                          WallpaperPanelUtils.acceptEvent(event);
                         }
                       }
 
@@ -1101,21 +1005,18 @@ SmartPanel {
             anchors.fill: parent
             anchors.margins: Style.marginXS
 
-            property string wallpaperPath: wallpaperItemWrapper.model.path ?? ""
-            property bool isDirectory: wallpaperItemWrapper.model.isDirectory ?? false
-            property bool isSelected: !isDirectory && (wallpaperPath === currentWallpaper)
-            property bool isFavorited: {
-              WallpaperService.favoritesRevision;
-              return !isDirectory && WallpaperService.isFavorite(wallpaperPath);
-            }
-            property string filename: wallpaperItemWrapper.model.name ?? wallpaperPath.split('/').pop()
+            property string wallpaperPath: WallpaperPanelUtils.field(wallpaperItemWrapper.model, "path") ?? ""
+            property bool isDirectory: WallpaperPanelUtils.field(wallpaperItemWrapper.model, "isDirectory") ?? false
+            property bool isSelected: !isDirectory && (wallpaperPath === wallpaperScreenView.currentWallpaper)
+            property bool isFavorited: !isDirectory && WallpaperPanelUtils.isFavorite(WallpaperService.favoritesRevision, WallpaperService, wallpaperPath)
+            property string filename: WallpaperPanelUtils.field(wallpaperItemWrapper.model, "name") ?? wallpaperPath.split('/').pop()
             property string cachedPath: ""
 
             spacing: Style.marginXS
 
             Component.onCompleted: {
               if (!isDirectory && ImageCacheService.initialized) {
-                ImageCacheService.getThumbnail(wallpaperPath, function (path, success) {
+                ImageCacheService.getThumbnail(wallpaperPath, function (path: string, success: bool) {
                   if (wallpaperItem)
                     wallpaperItem.cachedPath = success ? path : wallpaperPath;
                 });
@@ -1293,33 +1194,28 @@ SmartPanel {
                 implicitHeight: paletteRowRow.implicitHeight
                 width: implicitWidth
                 height: implicitHeight
-                visible: wallpaperItem.isFavorited && paletteRow.colors.length > 0
+                visible: wallpaperItem.isFavorited && WallpaperPanelUtils.arrayLength(paletteRow.colors) > 0
 
                 property int diameter: 25 * Style.uiScaleRatio
                 property int _favRevision: 0
-                property var favData: {
-                  _favRevision;
-                  WallpaperService.favoritesRevision;
-                  Settings.data.wallpaper.linkLightAndDarkWallpapers;
-                  return WallpaperService.getFavoriteForDisplay(wallpaperItem.wallpaperPath);
-                }
-                property var colors: favData && favData.paletteColors ? favData.paletteColors : []
+                property var favData: WallpaperPanelUtils.favoriteData(_favRevision, WallpaperService.favoritesRevision, Settings.data.wallpaper.linkLightAndDarkWallpapers, WallpaperService, wallpaperItem.wallpaperPath)
+                property var colors: WallpaperPanelUtils.field(favData, "paletteColors") || []
                 property bool isDark: {
                   if (!favData) {
                     return false;
                   }
-                  if (favData.appearance === "dark") {
+                  if (WallpaperPanelUtils.field(favData, "appearance") === "dark") {
                     return true;
                   }
-                  if (favData.appearance === "light") {
+                  if (WallpaperPanelUtils.field(favData, "appearance") === "light") {
                     return false;
                   }
-                  return favData.darkMode === true;
+                  return WallpaperPanelUtils.field(favData, "darkMode") === true;
                 }
 
                 Connections {
                   target: WallpaperService
-                  function onFavoriteDataUpdated(path) {
+                  function onFavoriteDataUpdated(path: string): void {
                     if (path === wallpaperItem.wallpaperPath)
                       paletteRow._favRevision++;
                   }
@@ -1391,7 +1287,7 @@ SmartPanel {
                 onTapped: {
                   wallpaperGridView.forceActiveFocus();
                   wallpaperGridView.currentIndex = wallpaperItemWrapper.index;
-                  selectItem(wallpaperItem.wallpaperPath, wallpaperItem.isDirectory);
+                  wallpaperScreenView.selectItem(wallpaperItem.wallpaperPath, wallpaperItem.isDirectory);
                 }
               }
             }
@@ -1443,13 +1339,13 @@ SmartPanel {
             Layout.alignment: Qt.AlignHCenter
           }
           NText {
-            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.no-match") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.empty-directory") : I18n.tr("wallpaper.no-wallpaper"))
+            text: (wallpaperScreenView.filterText && wallpaperScreenView.filterText.length > 0) ? I18n.tr("wallpaper.no-match") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.empty-directory") : I18n.tr("wallpaper.no-wallpaper"))
             color: Color.mOnSurface
             font.weight: Style.fontWeightBold
             Layout.alignment: Qt.AlignHCenter
           }
           NText {
-            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.try-different-search") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.go-up-hint") : I18n.tr("wallpaper.configure-directory"))
+            text: (wallpaperScreenView.filterText && wallpaperScreenView.filterText.length > 0) ? I18n.tr("wallpaper.try-different-search") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.go-up-hint") : I18n.tr("wallpaper.configure-directory"))
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
@@ -1469,6 +1365,8 @@ SmartPanel {
     property alias pageInput: pageInput
 
     property var wallpapers: []
+    property int currentScreenIndex: 0
+    property int screenWidth: 1920
     property bool loading: false
     property string errorMessage: ""
     property bool initialized: false
@@ -1476,13 +1374,13 @@ SmartPanel {
 
     Connections {
       target: typeof WallhavenService !== "undefined" ? WallhavenService : null
-      function onSearchCompleted(results, meta) {
+      function onSearchCompleted(results: var, meta: var): void {
         wallhavenViewRoot.wallpapers = results || [];
         wallhavenViewRoot.loading = false;
         wallhavenViewRoot.errorMessage = "";
         wallhavenViewRoot.searchScheduled = false;
       }
-      function onSearchFailed(error) {
+      function onSearchFailed(error: string): void {
         wallhavenViewRoot.loading = false;
         wallhavenViewRoot.errorMessage = error || "";
         wallhavenViewRoot.searchScheduled = false;
@@ -1546,7 +1444,7 @@ SmartPanel {
 
           anchors.fill: parent
 
-          visible: !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === "" && (wallhavenViewRoot.wallpapers && wallhavenViewRoot.wallpapers.length > 0)
+          visible: !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === "" && (WallpaperPanelUtils.arrayLength(wallhavenViewRoot.wallpapers) > 0)
           interactive: true
           keyNavigationEnabled: true
           keyNavigationWraps: false
@@ -1565,7 +1463,7 @@ SmartPanel {
             positionViewAtBeginning();
           }
 
-          property int columns: (screen.width > 1920) ? 5 : 4
+          property int columns: (wallhavenViewRoot.screenWidth > 1920) ? 5 : 4
           property int itemSize: cellWidth
 
           cellWidth: Math.floor((availableWidth - leftMargin - rightMargin) / columns)
@@ -1584,11 +1482,11 @@ SmartPanel {
 
           onKeyPressed: event => {
                           if (Keybinds.checkKey(event, 'enter', Settings)) {
-                            if (currentIndex >= 0 && currentIndex < wallhavenViewRoot.wallpapers.length) {
+                            if (currentIndex >= 0 && currentIndex < WallpaperPanelUtils.arrayLength(wallhavenViewRoot.wallpapers)) {
                               let wallpaper = wallhavenViewRoot.wallpapers[currentIndex];
-                              wallhavenDownloadAndApply(wallpaper);
+                              wallhavenViewRoot.wallhavenDownloadAndApply(wallpaper, undefined);
                             }
-                            event.accepted = true;
+                            WallpaperPanelUtils.acceptEvent(event);
                           }
                         }
 
@@ -1605,7 +1503,7 @@ SmartPanel {
               anchors.margins: Style.marginXS
 
               property string thumbnailUrl: (wallhavenItemWrapper.modelData && typeof WallhavenService !== "undefined") ? WallhavenService.getThumbnailUrl(wallhavenItemWrapper.modelData, "large") : ""
-              property string wallpaperId: (wallhavenItemWrapper.modelData && wallhavenItemWrapper.modelData.id) ? wallhavenItemWrapper.modelData.id : ""
+              property string wallpaperId: (wallhavenItemWrapper.modelData && WallpaperPanelUtils.field(wallhavenItemWrapper.modelData, "id")) ? WallpaperPanelUtils.field(wallhavenItemWrapper.modelData, "id") : ""
 
               spacing: Style.marginXS
 
@@ -1683,7 +1581,7 @@ SmartPanel {
                   onTapped: {
                     wallhavenGridView.forceActiveFocus();
                     wallhavenGridView.currentIndex = wallhavenItemWrapper.index;
-                    wallhavenDownloadAndApply(wallhavenItemWrapper.modelData);
+                    wallhavenViewRoot.wallhavenDownloadAndApply(wallhavenItemWrapper.modelData, undefined);
                   }
                 }
               }
@@ -1790,7 +1688,7 @@ SmartPanel {
           radius: Style.radiusM
           border.color: Color.mOutline
           border.width: Style.borderS
-          visible: (!wallhavenViewRoot.wallpapers || wallhavenViewRoot.wallpapers.length === 0) && !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === ""
+          visible: (!wallhavenViewRoot.wallpapers || WallpaperPanelUtils.arrayLength(wallhavenViewRoot.wallpapers) === 0) && !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === ""
           z: 10
 
           ColumnLayout {
@@ -1863,12 +1761,12 @@ SmartPanel {
 
             Connections {
               target: WallhavenService
-              function onCurrentPageChanged() {
+              function onCurrentPageChanged(): void {
                 pageInput.text = "" + WallhavenService.currentPage;
               }
             }
 
-            function submitPage() {
+            function submitPage(): void {
               var page = parseInt(text);
               if (!isNaN(page) && page >= 1 && page <= WallhavenService.lastPage) {
                 if (page !== WallhavenService.currentPage) {
@@ -1904,14 +1802,14 @@ SmartPanel {
     }
 
     // -------------------------------
-    function wallhavenDownloadAndApply(wallpaper, targetScreen) {
+    function wallhavenDownloadAndApply(wallpaper: var, targetScreen: var): void {
       if (typeof WallhavenService !== "undefined") {
-        WallhavenService.downloadWallpaper(wallpaper, function (success, localPath) {
+        WallhavenService.downloadWallpaper(wallpaper, function (success: bool, localPath: string) {
           var whScreen;
           if (success) {
-            whScreen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : Quickshell.screens[currentScreenIndex].name;
-            if (!Settings.data.wallpaper.setWallpaperOnAllMonitors && currentScreenIndex < Quickshell.screens.length) {
-              WallpaperService.changeWallpaper(localPath, Quickshell.screens[currentScreenIndex].name, WallpaperService.wallpaperSelectionAppearance);
+            whScreen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : Quickshell.screens[wallhavenViewRoot.currentScreenIndex].name;
+            if (!Settings.data.wallpaper.setWallpaperOnAllMonitors && wallhavenViewRoot.currentScreenIndex < Quickshell.screens.length) {
+              WallpaperService.changeWallpaper(localPath, Quickshell.screens[wallhavenViewRoot.currentScreenIndex].name, WallpaperService.wallpaperSelectionAppearance);
             } else {
               WallpaperService.changeWallpaper(localPath, undefined, WallpaperService.wallpaperSelectionAppearance);
             }

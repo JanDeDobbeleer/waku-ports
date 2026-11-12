@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NIconPickerUtils.js" as IconPickerUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -22,12 +24,7 @@ Popup {
 
   property string query: ""
   property var allIcons: Object.keys(Icons.icons)
-  property var filteredIcons: {
-    if (query === "")
-      return allIcons;
-    var q = query.toLowerCase();
-    return allIcons.filter(name => name.toLowerCase().includes(q));
-  }
+  property var filteredIcons: IconPickerUtils.filter(allIcons, query)
   readonly property int columns: 6
   readonly property int cellW: Math.floor(grid.width / columns)
   readonly property int cellH: Math.round(cellW * 0.7 + 36)

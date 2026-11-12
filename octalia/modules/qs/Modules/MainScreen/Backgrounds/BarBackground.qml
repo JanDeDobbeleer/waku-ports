@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import qs.Commons
 import qs.Modules.MainScreen.Backgrounds
 import qs.Services.UI
+import "BackgroundHelpers.js" as BackgroundHelpers
 
 /**
 * BarBackground - ShapePath component for rendering the bar background
@@ -38,11 +39,11 @@ ShapePath {
 
     // Check screen-specific configuration
     var monitors = Settings.data.bar.monitors || [];
-    var screenName = windowRoot?.screen?.name || "";
+    var screenName = BackgroundHelpers.screenField(windowRoot, "name") || "";
 
     // If no monitors specified, show on all screens
     // If monitors specified, only show if this screen is in the list
-    return monitors.length === 0 || monitors.includes(screenName);
+    return BackgroundHelpers.includesScreen(monitors, screenName);
   }
 
   // Corner radius. Port: the radius Windows 11 gives a window (8 px), so the bar's inverted corners
@@ -56,18 +57,18 @@ ShapePath {
 
   // Bar position - since bar's parent fills the screen and Shape also fills the screen,
   // we can use bar.x and bar.y directly (they're already in screen coordinates)
-  readonly property point barMappedPos: bar ? Qt.point(bar.x, bar.y) : Qt.point(0, 0)
+  readonly property point barMappedPos: bar ? Qt.point(BackgroundHelpers.field(bar, "x"), BackgroundHelpers.field(bar, "y")) : Qt.point(0, 0)
 
   // Effective dimensions - 0 when bar shouldn't show (similar to panel behavior)
-  readonly property real barWidth: (bar && shouldShow) ? bar.width : 0
-  readonly property real barHeight: (bar && shouldShow) ? bar.height : 0
+  readonly property real barWidth: (bar && shouldShow) ? BackgroundHelpers.field(bar, "width") : 0
+  readonly property real barHeight: (bar && shouldShow) ? BackgroundHelpers.field(bar, "height") : 0
 
   // Screen dimensions for frame
-  readonly property real screenWidth: windowRoot?.screen?.width || 0
-  readonly property real screenHeight: windowRoot?.screen?.height || 0
+  readonly property real screenWidth: BackgroundHelpers.screenField(windowRoot, "width") || 0
+  readonly property real screenHeight: BackgroundHelpers.screenField(windowRoot, "height") || 0
 
   // Inner hole dimensions for framed mode - always relative to screen
-  readonly property string barPosition: Settings.getBarPositionForScreen(windowRoot?.screen?.name)
+  readonly property string barPosition: Settings.getBarPositionForScreen(BackgroundHelpers.screenField(windowRoot, "name"))
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
   readonly property real holeX: (barPosition === "left") ? barWidth : frameThickness
   readonly property real holeY: (barPosition === "top") ? barHeight : frameThickness
@@ -83,7 +84,7 @@ ShapePath {
   readonly property real _minR: 0.01
 
   // Helper function for getting corner radius based on state
-  function getCornerRadius(cornerState) {
+  function getCornerRadius(cornerState: int): real {
     // State -1 = flat corner — use minimum safe radius instead of 0
     // to prevent degenerate PathArc (zero displacement + zero radius)
     if (cornerState === -1)
@@ -93,21 +94,21 @@ ShapePath {
   }
 
   // Per-corner multipliers and radii based on bar's corner states (handle null bar)
-  readonly property real tlMultX: bar ? ShapeCornerHelper.getMultX(bar.topLeftCornerState) : 1
-  readonly property real tlMultY: bar ? ShapeCornerHelper.getMultY(bar.topLeftCornerState) : 1
-  readonly property real tlRadius: bar ? getCornerRadius(bar.topLeftCornerState) : 0
+  readonly property real tlMultX: bar ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(bar, "topLeftCornerState")) : 1
+  readonly property real tlMultY: bar ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(bar, "topLeftCornerState")) : 1
+  readonly property real tlRadius: bar ? getCornerRadius(BackgroundHelpers.field(bar, "topLeftCornerState")) : 0
 
-  readonly property real trMultX: bar ? ShapeCornerHelper.getMultX(bar.topRightCornerState) : 1
-  readonly property real trMultY: bar ? ShapeCornerHelper.getMultY(bar.topRightCornerState) : 1
-  readonly property real trRadius: bar ? getCornerRadius(bar.topRightCornerState) : 0
+  readonly property real trMultX: bar ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(bar, "topRightCornerState")) : 1
+  readonly property real trMultY: bar ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(bar, "topRightCornerState")) : 1
+  readonly property real trRadius: bar ? getCornerRadius(BackgroundHelpers.field(bar, "topRightCornerState")) : 0
 
-  readonly property real brMultX: bar ? ShapeCornerHelper.getMultX(bar.bottomRightCornerState) : 1
-  readonly property real brMultY: bar ? ShapeCornerHelper.getMultY(bar.bottomRightCornerState) : 1
-  readonly property real brRadius: bar ? getCornerRadius(bar.bottomRightCornerState) : 0
+  readonly property real brMultX: bar ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(bar, "bottomRightCornerState")) : 1
+  readonly property real brMultY: bar ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(bar, "bottomRightCornerState")) : 1
+  readonly property real brRadius: bar ? getCornerRadius(BackgroundHelpers.field(bar, "bottomRightCornerState")) : 0
 
-  readonly property real blMultX: bar ? ShapeCornerHelper.getMultX(bar.bottomLeftCornerState) : 1
-  readonly property real blMultY: bar ? ShapeCornerHelper.getMultY(bar.bottomLeftCornerState) : 1
-  readonly property real blRadius: bar ? getCornerRadius(bar.bottomLeftCornerState) : 0
+  readonly property real blMultX: bar ? ShapeCornerHelper.getMultX(BackgroundHelpers.field(bar, "bottomLeftCornerState")) : 1
+  readonly property real blMultY: bar ? ShapeCornerHelper.getMultY(BackgroundHelpers.field(bar, "bottomLeftCornerState")) : 1
+  readonly property real blRadius: bar ? getCornerRadius(BackgroundHelpers.field(bar, "bottomLeftCornerState")) : 0
 
   // True when the bar path has valid, non-degenerate geometry to render.
   // Mirrors PanelBackground.isRenderable — prevents CurveRenderer crash on zero-area paths.
@@ -117,16 +118,16 @@ ShapePath {
   // corners are flat (state -1) to prevent CurveRenderer antialiasing artifacts.
   // Uses corner state checks instead of radius === 0 since flat corners now have _minR.
   readonly property real screenEdgeOvershoot: 2
-  readonly property real topEdgeOvs: (!isFramed && shouldShow && bar && bar.topLeftCornerState === -1 && bar.topRightCornerState === -1 && barMappedPos.y <= 0) ? -screenEdgeOvershoot : 0
-  readonly property real bottomEdgeOvs: (!isFramed && shouldShow && bar && bar.bottomLeftCornerState === -1 && bar.bottomRightCornerState === -1 && (barMappedPos.y + barHeight) >= screenHeight) ? screenEdgeOvershoot : 0
-  readonly property real leftEdgeOvs: (!isFramed && shouldShow && bar && bar.topLeftCornerState === -1 && bar.bottomLeftCornerState === -1 && barMappedPos.x <= 0) ? -screenEdgeOvershoot : 0
-  readonly property real rightEdgeOvs: (!isFramed && shouldShow && bar && bar.topRightCornerState === -1 && bar.bottomRightCornerState === -1 && (barMappedPos.x + barWidth) >= screenWidth) ? screenEdgeOvershoot : 0
+  readonly property real topEdgeOvs: (!isFramed && shouldShow && bar && BackgroundHelpers.field(bar, "topLeftCornerState") === -1 && BackgroundHelpers.field(bar, "topRightCornerState") === -1 && barMappedPos.y <= 0) ? -screenEdgeOvershoot : 0
+  readonly property real bottomEdgeOvs: (!isFramed && shouldShow && bar && BackgroundHelpers.field(bar, "bottomLeftCornerState") === -1 && BackgroundHelpers.field(bar, "bottomRightCornerState") === -1 && (barMappedPos.y + barHeight) >= screenHeight) ? screenEdgeOvershoot : 0
+  readonly property real leftEdgeOvs: (!isFramed && shouldShow && bar && BackgroundHelpers.field(bar, "topLeftCornerState") === -1 && BackgroundHelpers.field(bar, "bottomLeftCornerState") === -1 && barMappedPos.x <= 0) ? -screenEdgeOvershoot : 0
+  readonly property real rightEdgeOvs: (!isFramed && shouldShow && bar && BackgroundHelpers.field(bar, "topRightCornerState") === -1 && BackgroundHelpers.field(bar, "bottomRightCornerState") === -1 && (barMappedPos.x + barWidth) >= screenWidth) ? screenEdgeOvershoot : 0
 
   // Auto-hide opacity factor for background fade
-  property real opacityFactor: (bar && bar.isHidden) ? 0 : 1
+  property real opacityFactor: (bar && BackgroundHelpers.field(bar, "isHidden")) ? 0 : 1
 
   Behavior on opacityFactor {
-    enabled: root.bar && root.bar.autoHide
+    enabled: root.bar && BackgroundHelpers.field(root.bar, "autoHide")
     NumberAnimation {
       duration: Style.animationFast
       easing.type: Easing.OutQuad

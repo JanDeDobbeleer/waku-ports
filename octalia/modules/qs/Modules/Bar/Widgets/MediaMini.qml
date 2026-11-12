@@ -4,6 +4,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
@@ -40,17 +41,17 @@ Item {
   readonly property real barFontSize: Style.getBarFontSizeForScreen(screenName)
 
   // Widget settings
-  readonly property string hideMode: widgetSettings.hideMode !== undefined ? widgetSettings.hideMode : widgetMetadata.hideMode
-  readonly property bool hideWhenIdle: widgetSettings.hideWhenIdle !== undefined ? widgetSettings.hideWhenIdle : widgetMetadata.hideWhenIdle
-  readonly property bool showAlbumArt: widgetSettings.showAlbumArt !== undefined ? widgetSettings.showAlbumArt : widgetMetadata.showAlbumArt
-  readonly property bool showArtistFirst: widgetSettings.showArtistFirst !== undefined ? widgetSettings.showArtistFirst : widgetMetadata.showArtistFirst
-  readonly property bool showVisualizer: widgetSettings.showVisualizer !== undefined ? widgetSettings.showVisualizer : widgetMetadata.showVisualizer
-  readonly property string visualizerType: widgetSettings.visualizerType !== undefined ? widgetSettings.visualizerType : widgetMetadata.visualizerType
-  readonly property string scrollingMode: widgetSettings.scrollingMode !== undefined ? widgetSettings.scrollingMode : widgetMetadata.scrollingMode
-  readonly property bool showProgressRing: widgetSettings.showProgressRing !== undefined ? widgetSettings.showProgressRing : widgetMetadata.showProgressRing
-  readonly property bool useFixedWidth: widgetSettings.useFixedWidth !== undefined ? widgetSettings.useFixedWidth : widgetMetadata.useFixedWidth
-  readonly property real maxWidth: widgetSettings.maxWidth !== undefined ? widgetSettings.maxWidth : Math.max(widgetMetadata.maxWidth, screen ? screen.width * 0.06 : 0)
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string hideMode: BarWidgetHelpers.readProperty(widgetSettings, "hideMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideMode") : BarWidgetHelpers.readProperty(widgetMetadata, "hideMode")
+  readonly property bool hideWhenIdle: BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") : BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenIdle")
+  readonly property bool showAlbumArt: BarWidgetHelpers.readProperty(widgetSettings, "showAlbumArt") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showAlbumArt") : BarWidgetHelpers.readProperty(widgetMetadata, "showAlbumArt")
+  readonly property bool showArtistFirst: BarWidgetHelpers.readProperty(widgetSettings, "showArtistFirst") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showArtistFirst") : BarWidgetHelpers.readProperty(widgetMetadata, "showArtistFirst")
+  readonly property bool showVisualizer: BarWidgetHelpers.readProperty(widgetSettings, "showVisualizer") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showVisualizer") : BarWidgetHelpers.readProperty(widgetMetadata, "showVisualizer")
+  readonly property string visualizerType: BarWidgetHelpers.readProperty(widgetSettings, "visualizerType") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "visualizerType") : BarWidgetHelpers.readProperty(widgetMetadata, "visualizerType")
+  readonly property string scrollingMode: BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") : BarWidgetHelpers.readProperty(widgetMetadata, "scrollingMode")
+  readonly property bool showProgressRing: BarWidgetHelpers.readProperty(widgetSettings, "showProgressRing") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showProgressRing") : BarWidgetHelpers.readProperty(widgetMetadata, "showProgressRing")
+  readonly property bool useFixedWidth: BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") : BarWidgetHelpers.readProperty(widgetMetadata, "useFixedWidth")
+  readonly property real maxWidth: BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") : Math.max(BarWidgetHelpers.readProperty(widgetMetadata, "maxWidth"), screen ? screen.width * 0.06 : 0)
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
   readonly property color textColor: Color.resolveColorKey(textColorKey)
 
   // Dimensions
@@ -189,8 +190,8 @@ Item {
 
       // Append available players (like in Control Center) so user can switch from the bar
       var players = MediaService.getAvailablePlayers ? MediaService.getAvailablePlayers() : [];
-      if (players && players.length > 1) {
-        for (i = 0; i < players.length; i++) {
+      if (players && BarWidgetHelpers.readProperty(players, "length") > 1) {
+        for (i = 0; i < BarWidgetHelpers.readProperty(players, "length"); i++) {
           isCurrent = (i === MediaService.selectedPlayerIndex);
           items.push({
                        "label": players[i].identity,
@@ -341,8 +342,8 @@ Item {
           fadeCornerRadius: Style.radiusM
 
           NText {
-            color: hasPlayer ? root.textColor : Color.mOnSurfaceVariant
-            pointSize: barFontSize
+            color: root.hasPlayer ? root.textColor : Color.mOnSurfaceVariant
+            pointSize: root.barFontSize
             elide: Text.ElideNone
           }
         }
@@ -397,9 +398,9 @@ Item {
 
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   PanelService.getPanel("mediaPlayerPanel", root.screen)?.toggle(container);
+                   PanelService.invokePanel(PanelService.getPanel("mediaPlayerPanel", root.screen), "toggle", [container]);
                  } else if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, container, root.screen);
+                   PanelService.showContextMenu(contextMenu, container, root.screen, null);
                  } else if (mouse.button === Qt.MiddleButton && root.hasPlayer) {
                    MediaService.playPause();
                  } else if (mouse.button === Qt.ForwardButton && root.hasPlayer) {
@@ -450,6 +451,7 @@ Item {
 
   // Progress Ring Component
   component ProgressRing: Canvas {
+    id: progressRingCanvas
     property real progress: 0
     property real lineWidth: 2
 
@@ -458,13 +460,13 @@ Item {
         requestPaint();
     }
 
-    onProgressChanged: repaint()
-    Component.onCompleted: repaint()
+    onProgressChanged: progressRingCanvas.repaint()
+    Component.onCompleted: progressRingCanvas.repaint()
 
     Connections {
       target: Color
       function onMPrimaryChanged() {
-        repaint();
+        progressRingCanvas.repaint();
       }
     }
 

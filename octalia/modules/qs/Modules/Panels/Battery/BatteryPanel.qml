@@ -4,6 +4,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell.Services.UPower
 import qs.Commons
+import "BatteryPanelUtils.js" as BatteryPanelUtils
 import qs.Modules.MainScreen
 import qs.Services.Hardware
 import qs.Services.Networking
@@ -23,33 +24,33 @@ SmartPanel {
     property real contentPreferredHeight: mainLayout.implicitHeight + Style.margin2L
 
     property var batteryWidgetInstance: BarService.lookupWidget("Battery", root.screen ? root.screen.name : null)
-    readonly property var batteryWidgetSettings: batteryWidgetInstance ? batteryWidgetInstance.widgetSettings : null
-    readonly property var batteryWidgetMetadata: BarWidgetRegistry.widgetMetadata["Battery"]
+    readonly property var batteryWidgetSettings: BatteryPanelUtils.field(batteryWidgetInstance, "widgetSettings")
+    readonly property var batteryWidgetMetadata: BatteryPanelUtils.field(BarWidgetRegistry.widgetMetadata, "Battery")
     readonly property bool powerProfileAvailable: PowerProfileService.available
     readonly property var powerProfiles: [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
     readonly property bool profilesAvailable: PowerProfileService.available
     property int profileIndex: profileToIndex(PowerProfileService.profile)
-    readonly property bool showPowerProfiles: root.panelID ? root.panelID.showPowerProfiles : resolveWidgetSetting("showPowerProfiles", false)
-    readonly property bool showOctaliaPerformance: root.panelID ? root.panelID.showOctaliaPerformance : resolveWidgetSetting("showOctaliaPerformance", false)
+    readonly property bool showPowerProfiles: root.panelID ? BatteryPanelUtils.field(root.panelID, "showPowerProfiles") : resolveWidgetSetting("showPowerProfiles", false)
+    readonly property bool showOctaliaPerformance: root.panelID ? BatteryPanelUtils.field(root.panelID, "showOctaliaPerformance") : resolveWidgetSetting("showOctaliaPerformance", false)
     readonly property bool isLowBattery: BatteryService.isLowBattery
     readonly property bool isCriticalBattery: BatteryService.isCriticalBattery
     readonly property var primaryDevice: BatteryService.primaryDevice
 
-    function profileToIndex(p) {
+    function profileToIndex(p: var): int {
       return powerProfiles.indexOf(p) ?? 1;
     }
 
-    function indexToProfile(idx) {
+    function indexToProfile(idx: int): var {
       return powerProfiles[idx] ?? PowerProfile.Balanced;
     }
 
-    function setProfileByIndex(idx) {
+    function setProfileByIndex(idx: int): void {
       var prof = indexToProfile(idx);
       profileIndex = idx;
       PowerProfileService.setProfile(prof);
     }
 
-    function resolveWidgetSetting(key, defaultValue) {
+    function resolveWidgetSetting(key: string, defaultValue: var): var {
       if (batteryWidgetSettings && batteryWidgetSettings[key] !== undefined)
         return batteryWidgetSettings[key];
       if (batteryWidgetMetadata && batteryWidgetMetadata[key] !== undefined)
@@ -120,7 +121,7 @@ SmartPanel {
       NBox {
         Layout.fillWidth: true
         implicitHeight: chargeLayout.implicitHeight + Style.margin2L
-        visible: BatteryService.laptopBatteries.length > 0 || BatteryService.bluetoothBatteries.length > 0
+        visible: BatteryPanelUtils.arrayLength(BatteryService.laptopBatteries) > 0 || BatteryPanelUtils.arrayLength(BatteryService.bluetoothBatteries) > 0
 
         ColumnLayout {
           id: chargeLayout
@@ -192,7 +193,7 @@ SmartPanel {
                       Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         height: parent.height
-                        radius: parent.radius
+                        radius: Math.min(Style.radiusL, height / 2)
                         width: {
                           var p = BatteryService.getPercentage(laptopBattery.modelData);
                           var ratio = Math.max(0, Math.min(1, p / 100));
@@ -218,7 +219,7 @@ SmartPanel {
 
           NDivider {
             Layout.fillWidth: true
-            visible: BatteryService.laptopBatteries.length > 0 && BatteryService.bluetoothBatteries.length > 0
+            visible: BatteryPanelUtils.arrayLength(BatteryService.laptopBatteries) > 0 && BatteryPanelUtils.arrayLength(BatteryService.bluetoothBatteries) > 0
           }
 
           // Other devices (Bluetooth) section
@@ -258,7 +259,7 @@ SmartPanel {
                   Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     height: parent.height
-                    radius: parent.radius
+                    radius: Math.min(Style.radiusL, height / 2)
                     width: {
                       var p = BatteryService.getPercentage(bluetoothBattery.modelData);
                       var ratio = Math.max(0, Math.min(1, p / 100));
@@ -339,20 +340,20 @@ SmartPanel {
               NIcon {
                 icon: "powersaver"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "powersaver" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "powersaver" ? Color.mPrimary : Color.mOnSurfaceVariant
               }
 
               NIcon {
                 icon: "balanced"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "balanced" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "balanced" ? Color.mPrimary : Color.mOnSurfaceVariant
                 Layout.fillWidth: true
               }
 
               NIcon {
                 icon: "performance"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "performance" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "performance" ? Color.mPrimary : Color.mOnSurfaceVariant
               }
             }
           }

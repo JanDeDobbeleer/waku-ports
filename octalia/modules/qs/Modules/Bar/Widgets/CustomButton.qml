@@ -2,6 +2,7 @@ import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Services.Control
 import qs.Services.UI
@@ -56,30 +57,30 @@ Item {
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
 
-  readonly property string customIcon: widgetSettings.icon || widgetMetadata.icon
-  readonly property string iconPosition: widgetSettings.iconPosition || widgetMetadata.iconPosition
-  readonly property string leftClickExec: widgetSettings.leftClickExec || widgetMetadata.leftClickExec
-  readonly property bool leftClickUpdateText: widgetSettings.leftClickUpdateText ?? widgetMetadata.leftClickUpdateText
-  readonly property string rightClickExec: widgetSettings.rightClickExec || widgetMetadata.rightClickExec
-  readonly property bool rightClickUpdateText: widgetSettings.rightClickUpdateText ?? widgetMetadata.rightClickUpdateText
-  readonly property string middleClickExec: widgetSettings.middleClickExec || widgetMetadata.middleClickExec
-  readonly property bool middleClickUpdateText: widgetSettings.middleClickUpdateText ?? widgetMetadata.middleClickUpdateText
-  readonly property string ipcIdentifier: widgetSettings.ipcIdentifier !== undefined ? widgetSettings.ipcIdentifier : (widgetMetadata.ipcIdentifier || "")
-  readonly property string wheelExec: widgetSettings.wheelExec || widgetMetadata.wheelExec
-  readonly property string wheelUpExec: widgetSettings.wheelUpExec || widgetMetadata.wheelUpExec
-  readonly property string wheelDownExec: widgetSettings.wheelDownExec || widgetMetadata.wheelDownExec
-  readonly property string wheelMode: widgetSettings.wheelMode || widgetMetadata.wheelMode
-  readonly property bool wheelUpdateText: widgetSettings.wheelUpdateText ?? widgetMetadata.wheelUpdateText
-  readonly property bool wheelUpUpdateText: widgetSettings.wheelUpUpdateText ?? widgetMetadata.wheelUpUpdateText
-  readonly property bool wheelDownUpdateText: widgetSettings.wheelDownUpdateText ?? widgetMetadata.wheelDownUpdateText
-  readonly property string textCommand: widgetSettings.textCommand !== undefined ? widgetSettings.textCommand : (widgetMetadata.textCommand || "")
-  readonly property bool textStream: widgetSettings.textStream !== undefined ? widgetSettings.textStream : (widgetMetadata.textStream || false)
-  readonly property int textIntervalMs: widgetSettings.textIntervalMs !== undefined ? widgetSettings.textIntervalMs : (widgetMetadata.textIntervalMs || 3000)
-  readonly property string textCollapse: widgetSettings.textCollapse !== undefined ? widgetSettings.textCollapse : (widgetMetadata.textCollapse || "")
-  readonly property bool parseJson: widgetSettings.parseJson !== undefined ? widgetSettings.parseJson : (widgetMetadata.parseJson || false)
+  readonly property string customIcon: BarWidgetHelpers.readProperty(widgetSettings, "icon") || BarWidgetHelpers.readProperty(widgetMetadata, "icon")
+  readonly property string iconPosition: BarWidgetHelpers.readProperty(widgetSettings, "iconPosition") || BarWidgetHelpers.readProperty(widgetMetadata, "iconPosition")
+  readonly property string leftClickExec: BarWidgetHelpers.readProperty(widgetSettings, "leftClickExec") || BarWidgetHelpers.readProperty(widgetMetadata, "leftClickExec")
+  readonly property bool leftClickUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "leftClickUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "leftClickUpdateText")
+  readonly property string rightClickExec: BarWidgetHelpers.readProperty(widgetSettings, "rightClickExec") || BarWidgetHelpers.readProperty(widgetMetadata, "rightClickExec")
+  readonly property bool rightClickUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "rightClickUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "rightClickUpdateText")
+  readonly property string middleClickExec: BarWidgetHelpers.readProperty(widgetSettings, "middleClickExec") || BarWidgetHelpers.readProperty(widgetMetadata, "middleClickExec")
+  readonly property bool middleClickUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "middleClickUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "middleClickUpdateText")
+  readonly property string ipcIdentifier: BarWidgetHelpers.readProperty(widgetSettings, "ipcIdentifier") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "ipcIdentifier") : (BarWidgetHelpers.readProperty(widgetMetadata, "ipcIdentifier") || "")
+  readonly property string wheelExec: BarWidgetHelpers.readProperty(widgetSettings, "wheelExec") || BarWidgetHelpers.readProperty(widgetMetadata, "wheelExec")
+  readonly property string wheelUpExec: BarWidgetHelpers.readProperty(widgetSettings, "wheelUpExec") || BarWidgetHelpers.readProperty(widgetMetadata, "wheelUpExec")
+  readonly property string wheelDownExec: BarWidgetHelpers.readProperty(widgetSettings, "wheelDownExec") || BarWidgetHelpers.readProperty(widgetMetadata, "wheelDownExec")
+  readonly property string wheelMode: BarWidgetHelpers.readProperty(widgetSettings, "wheelMode") || BarWidgetHelpers.readProperty(widgetMetadata, "wheelMode")
+  readonly property bool wheelUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "wheelUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "wheelUpdateText")
+  readonly property bool wheelUpUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "wheelUpUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "wheelUpUpdateText")
+  readonly property bool wheelDownUpdateText: BarWidgetHelpers.readProperty(widgetSettings, "wheelDownUpdateText") ?? BarWidgetHelpers.readProperty(widgetMetadata, "wheelDownUpdateText")
+  readonly property string textCommand: BarWidgetHelpers.readProperty(widgetSettings, "textCommand") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textCommand") : (BarWidgetHelpers.readProperty(widgetMetadata, "textCommand") || "")
+  readonly property bool textStream: BarWidgetHelpers.readProperty(widgetSettings, "textStream") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textStream") : (BarWidgetHelpers.readProperty(widgetMetadata, "textStream") || false)
+  readonly property int textIntervalMs: BarWidgetHelpers.readProperty(widgetSettings, "textIntervalMs") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textIntervalMs") : (BarWidgetHelpers.readProperty(widgetMetadata, "textIntervalMs") || 3000)
+  readonly property string textCollapse: BarWidgetHelpers.readProperty(widgetSettings, "textCollapse") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textCollapse") : (BarWidgetHelpers.readProperty(widgetMetadata, "textCollapse") || "")
+  readonly property bool parseJson: BarWidgetHelpers.readProperty(widgetSettings, "parseJson") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "parseJson") : (BarWidgetHelpers.readProperty(widgetMetadata, "parseJson") || false)
   readonly property bool hasExec: (leftClickExec || rightClickExec || middleClickExec || (wheelMode === "unified" && wheelExec) || (wheelMode === "separate" && (wheelUpExec || wheelDownExec)))
-  readonly property bool showIcon: (widgetSettings.showIcon !== undefined) ? widgetSettings.showIcon : true
-  readonly property string hideMode: widgetSettings.hideMode || "alwaysExpanded"
+  readonly property bool showIcon: (BarWidgetHelpers.readProperty(widgetSettings, "showIcon") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showIcon") : true
+  readonly property string hideMode: BarWidgetHelpers.readProperty(widgetSettings, "hideMode") || "alwaysExpanded"
   readonly property bool hasOutput: _dynamicText !== ""
   readonly property bool shouldForceOpen: textStream && (hideMode === "alwaysExpanded" || hideMode === "maxTransparent")
 
@@ -157,14 +158,14 @@ Item {
   }
 
   readonly property string colorizeSystemIcon: {
-    if (widgetSettings.colorizeSystemIcon !== undefined)
-      return widgetSettings.colorizeSystemIcon;
-    return widgetMetadata.colorizeSystemIcon !== undefined ? widgetMetadata.colorizeSystemIcon : "none";
+    if (BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon") !== undefined)
+      return BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon");
+    return BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemIcon") : "none";
   }
   readonly property string colorizeSystemText: {
-    if (widgetSettings.colorizeSystemText !== undefined)
-      return widgetSettings.colorizeSystemText;
-    return widgetMetadata.colorizeSystemText !== undefined ? widgetMetadata.colorizeSystemText : "none";
+    if (BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemText") !== undefined)
+      return BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemText");
+    return BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemText") !== undefined ? BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemText") : "none";
   }
 
   // Colorization is active if either icon or text has a color set
@@ -249,8 +250,8 @@ Item {
 
   // Maximum length for text display before scrolling (different values for horizontal and vertical)
   readonly property var maxTextLength: {
-    "horizontal": ((widgetSettings && widgetSettings.maxTextLength && widgetSettings.maxTextLength.horizontal !== undefined) ? widgetSettings.maxTextLength.horizontal : ((widgetMetadata && widgetMetadata.maxTextLength && widgetMetadata.maxTextLength.horizontal !== undefined) ? widgetMetadata.maxTextLength.horizontal : 10)),
-    "vertical": ((widgetSettings && widgetSettings.maxTextLength && widgetSettings.maxTextLength.vertical !== undefined) ? widgetSettings.maxTextLength.vertical : ((widgetMetadata && widgetMetadata.maxTextLength && widgetMetadata.maxTextLength.vertical !== undefined) ? widgetMetadata.maxTextLength.vertical : 10))
+    "horizontal": ((widgetSettings && BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength") && BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength").horizontal !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength").horizontal : ((widgetMetadata && BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength") && BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength").horizontal !== undefined) ? BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength").horizontal : 10)),
+    "vertical": ((widgetSettings && BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength") && BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength").vertical !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "maxTextLength").vertical : ((widgetMetadata && BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength") && BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength").vertical !== undefined) ? BarWidgetHelpers.readProperty(widgetMetadata, "maxTextLength").vertical : 10))
   }
   readonly property int _staticDuration: 6  // How many cycles to stay static at start/end
 
@@ -503,7 +504,7 @@ Item {
       Quickshell.execDetached(["cmd", "/c", rightClickExec]);
       Logger.i("CustomButton", `Executing command: ${rightClickExec}`);
     } else {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
     if (!textStream && rightClickUpdateText) {
       runTextCommand();

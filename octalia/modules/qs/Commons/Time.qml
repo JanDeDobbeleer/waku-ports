@@ -86,7 +86,7 @@ Singleton {
   }
 
   // Formats a Date object into a YYYYMMDD-HHMMSS string.
-  function getFormattedTimestamp(date) {
+  function getFormattedTimestamp(date: var): string {
     if (!date) {
       date = new Date();
     }
@@ -105,7 +105,7 @@ Singleton {
 
   // Format an easy to read approximate duration ex: 4h 32m
   // Used to display the time remaining on the Battery widget, computer uptime, etc..
-  function formatVagueHumanReadableDuration(totalSeconds) {
+  function formatVagueHumanReadableDuration(totalSeconds: var): string {
     if (typeof totalSeconds !== 'number' || totalSeconds < 0) {
       return '0s';
     }
@@ -135,7 +135,7 @@ Singleton {
   }
 
   // Format a date into
-  function formatRelativeTime(date) {
+  function formatRelativeTime(date: var): string {
     if (!date)
       return "";
     const diff = Date.now() - date.getTime();
@@ -144,18 +144,18 @@ Singleton {
     if (diff < 120000)
       return I18n.tr("notifications.time.diff-m");
     if (diff < 3600000)
-      return I18n.tr("notifications.time.diff-mm", {
+      return I18n.trArgs("notifications.time.diff-mm", {
                        "diff": Math.floor(diff / 60000)
                      });
     if (diff < 7200000)
       return I18n.tr("notifications.time.diff-h");
     if (diff < 86400000)
-      return I18n.tr("notifications.time.diff-hh", {
+      return I18n.trArgs("notifications.time.diff-hh", {
                        "diff": Math.floor(diff / 3600000)
                      });
     if (diff < 172800000)
       return I18n.tr("notifications.time.diff-d");
-    return I18n.tr("notifications.time.diff-dd", {
+    return I18n.trArgs("notifications.time.diff-dd", {
                      "diff": Math.floor(diff / 86400000)
                    });
   }

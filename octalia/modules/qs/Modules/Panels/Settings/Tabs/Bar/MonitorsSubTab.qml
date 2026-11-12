@@ -8,6 +8,7 @@ import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -32,14 +33,13 @@ ColumnLayout {
       implicitHeight: cardContent.implicitHeight + Style.margin2L
       color: Color.mSurface
 
-      required property var modelData
+      required property ShellScreen modelData
       readonly property string screenName: modelData.name || "Unknown"
       readonly property real compositorScale: {
         const info = CompositorService.displayScales[screenName];
         return (info && info.scale) ? info.scale : 1.0;
       }
       readonly property bool barEnabled: (Settings.data.bar.monitors || []).indexOf(screenName) !== -1
-      readonly property bool hasOverride: Settings.hasScreenOverride(screenName)
 
       // Track if override is enabled (controls both visibility AND whether overrides are applied)
       readonly property bool overrideEnabled: Settings.isScreenOverrideEnabled(screenName)
@@ -72,7 +72,7 @@ ColumnLayout {
 
             NText {
               text: {
-                return I18n.tr("system.monitor-description", {
+                return I18n.trArgs("system.monitor-description", {
                                  "model": monitorCard.modelData.model || I18n.tr("common.unknown"),
                                  "width": Math.round(monitorCard.modelData.width * monitorCard.compositorScale),
                                  "height": Math.round(monitorCard.modelData.height * monitorCard.compositorScale),
@@ -90,9 +90,9 @@ ColumnLayout {
             checked: monitorCard.barEnabled
             onToggled: checked => {
                          if (checked) {
-                           Settings.data.bar.monitors = root.addMonitor(Settings.data.bar.monitors, monitorCard.screenName);
+                           Settings.data.bar.monitors = SettingsValue.invoke(root, "addMonitor", Settings.data.bar.monitors, monitorCard.screenName);
                          } else {
-                           Settings.data.bar.monitors = root.removeMonitor(Settings.data.bar.monitors, monitorCard.screenName);
+                           Settings.data.bar.monitors = SettingsValue.invoke(root, "removeMonitor", Settings.data.bar.monitors, monitorCard.screenName);
                          }
                        }
           }
@@ -256,7 +256,7 @@ ColumnLayout {
                 text: I18n.tr("panels.bar.monitor-reset-all")
                 icon: "restore"
                 onClicked: {
-                  Settings.clearScreenOverride(monitorCard.screenName);
+                  Settings.clearScreenOverride(monitorCard.screenName, null);
                   BarService.widgetsRevision++;
                 }
               }

@@ -1,3 +1,5 @@
+import "BluetoothRssiUtils.js" as RssiUtils
+
 import QtQuick 6.10
 import Quickshell.Io
 import "../../Helpers/BluetoothUtils.js" as BluetoothUtils
@@ -26,20 +28,7 @@ QtObject {
       id: out
     }
     onExited: function (exitCode, exitStatus) {
-      var dbm, pct, text;
-      try {
-        text = out.text || "";
-        dbm = BluetoothUtils.parseRssiOutput(text);
-        if (root._currentAddr !== "" && dbm !== null) {
-          pct = BluetoothUtils.dbmToPercent(dbm);
-          if (pct !== null) {
-            root.cache[root._currentAddr] = pct;
-            root.version++;
-          }
-        }
-      } catch (e) {} finally {
-        root._currentAddr = "";
-      }
+      RssiUtils.onExited(root, out, BluetoothUtils);
     }
   }
 
@@ -48,25 +37,6 @@ QtObject {
     interval: root.intervalMs
     repeat: true
     running: root.enabled
-    onTriggered: {
-      var list = root.connectedDevices || [];
-      if (!list || list.length === 0)
-        return;
-      if (root._index >= list.length)
-        root._index = 0;
-      var dev = list[root._index++];
-      if (!dev)
-        return;
-      var addr = BluetoothUtils.macFromDevice(dev);
-      if (!addr || addr.length < 7)
-        return;
-      if (proc.running)
-        return; // avoid overlap
-      root._currentAddr = addr;
-      proc.command = ["sh", "-c", `bluetoothctl info "${addr}"`];
-      try {
-        proc.running = true;
-      } catch (e) {}
-    }
+    onTriggered: RssiUtils.onTriggered(root, proc, BluetoothUtils)
   }
 }

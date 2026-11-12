@@ -1,3 +1,5 @@
+import "NViewUtils.js" as ViewUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import qs.Commons
@@ -172,7 +174,7 @@ Item {
     return listView.itemAt(x, y);
   }
 
-  function itemAtIndex(index) {
+  function itemAtIndex(index: var): Item {
     return listView.itemAtIndex(index);
   }
 
@@ -296,7 +298,7 @@ Item {
     ScrollBar.vertical: ScrollBar {
       id: verticalScrollBar
       parent: root
-      x: root.mirrored ? 0 : root.width - width
+      x: ViewUtils.mirrored(root) ? 0 : root.width - width
       y: 0
       height: root.height
       policy: root.verticalPolicy

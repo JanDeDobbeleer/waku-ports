@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -17,22 +18,22 @@ ColumnLayout {
   readonly property bool isVerticalBar: Settings.data.bar.position === "left" || Settings.data.bar.position === "right"
 
   // Local state
-  property string valueHideMode: widgetData.hideMode !== undefined ? widgetData.hideMode : widgetMetadata.hideMode
-  property bool valueOnlyActiveWorkspaces: widgetData.onlyActiveWorkspaces !== undefined ? widgetData.onlyActiveWorkspaces : widgetMetadata.onlyActiveWorkspaces
-  property bool valueOnlySameOutput: widgetData.onlySameOutput !== undefined ? widgetData.onlySameOutput : widgetMetadata.onlySameOutput
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property bool valueShowTitle: isVerticalBar ? false : widgetData.showTitle !== undefined ? widgetData.showTitle : widgetMetadata.showTitle
-  property bool valueSmartWidth: widgetData.smartWidth !== undefined ? widgetData.smartWidth : widgetMetadata.smartWidth
-  property int valueMaxTaskbarWidth: widgetData.maxTaskbarWidth !== undefined ? widgetData.maxTaskbarWidth : widgetMetadata.maxTaskbarWidth
-  property int valueTitleWidth: widgetData.titleWidth !== undefined ? widgetData.titleWidth : widgetMetadata.titleWidth
-  property bool valueShowPinnedApps: widgetData.showPinnedApps !== undefined ? widgetData.showPinnedApps : widgetMetadata.showPinnedApps
-  property real valueIconScale: widgetData.iconScale !== undefined ? widgetData.iconScale : widgetMetadata.iconScale
+  property string valueHideMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideMode")
+  property bool valueOnlyActiveWorkspaces: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "onlyActiveWorkspaces")
+  property bool valueOnlySameOutput: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "onlySameOutput")
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property bool valueShowTitle: isVerticalBar ? false : SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showTitle")
+  property bool valueSmartWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "smartWidth")
+  property int valueMaxTaskbarWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "maxTaskbarWidth")
+  property int valueTitleWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "titleWidth")
+  property bool valueShowPinnedApps: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showPinnedApps")
+  property real valueIconScale: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconScale")
 
   Component.onCompleted: {
-    if (widgetData && widgetData.hideMode !== undefined) {
-      valueHideMode = widgetData.hideMode;
-    } else if (widgetMetadata && widgetMetadata.hideMode !== undefined) {
-      valueHideMode = widgetMetadata.hideMode;
+    if (widgetData && SettingsValue.read(widgetData, "hideMode") !== undefined) {
+      valueHideMode = SettingsValue.read(widgetData, "hideMode");
+    } else if (widgetMetadata && SettingsValue.read(widgetMetadata, "hideMode") !== undefined) {
+      valueHideMode = SettingsValue.read(widgetMetadata, "hideMode");
     }
   }
 
@@ -45,7 +46,7 @@ ColumnLayout {
     settings.showTitle = valueShowTitle;
     settings.smartWidth = valueSmartWidth;
     settings.maxTaskbarWidth = valueMaxTaskbarWidth;
-    settings.titleWidth = parseInt(titleWidthInput.text) || widgetMetadata.titleWidth;
+    settings.titleWidth = parseInt(titleWidthInput.text) || SettingsValue.read(widgetMetadata, "titleWidth");
     settings.showPinnedApps = valueShowPinnedApps;
     settings.iconScale = valueIconScale;
     settingsChanged(settings);
@@ -74,7 +75,7 @@ ColumnLayout {
                   root.valueHideMode = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.hideMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideMode")
   }
 
   NToggle {
@@ -86,7 +87,7 @@ ColumnLayout {
                  root.valueOnlySameOutput = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.onlySameOutput
+    defaultValue: SettingsValue.read(root.widgetMetadata, "onlySameOutput")
   }
 
   NToggle {
@@ -98,7 +99,7 @@ ColumnLayout {
                  root.valueOnlyActiveWorkspaces = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.onlyActiveWorkspaces
+    defaultValue: SettingsValue.read(root.widgetMetadata, "onlyActiveWorkspaces")
   }
 
   NToggle {
@@ -110,7 +111,7 @@ ColumnLayout {
                  root.valueColorizeIcons = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.colorizeIcons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeIcons")
   }
 
   NToggle {
@@ -122,7 +123,7 @@ ColumnLayout {
                  root.valueShowPinnedApps = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showPinnedApps
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showPinnedApps")
   }
 
   NValueSlider {
@@ -134,7 +135,7 @@ ColumnLayout {
     stepSize: 0.01
     showReset: true
     value: root.valueIconScale
-    defaultValue: root.widgetMetadata.iconScale
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconScale")
     onMoved: value => {
                root.valueIconScale = value;
                root.saveSettings();
@@ -152,7 +153,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     enabled: !root.isVerticalBar
-    defaultValue: root.widgetMetadata.showTitle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showTitle")
   }
 
   NTextInput {
@@ -161,10 +162,10 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.title-width-label")
     description: I18n.tr("bar.taskbar.title-width-description")
-    text: root.widgetData.titleWidth || root.widgetMetadata.titleWidth
+    text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "titleWidth")
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     onTextChanged: root.saveSettings()
-    defaultValue: String(root.widgetMetadata.titleWidth)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "titleWidth"))
   }
 
   NToggle {
@@ -177,7 +178,7 @@ ColumnLayout {
                  root.valueSmartWidth = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.smartWidth
+    defaultValue: SettingsValue.read(root.widgetMetadata, "smartWidth")
   }
 
   NValueSlider {
@@ -190,7 +191,7 @@ ColumnLayout {
     stepSize: 5
     showReset: true
     value: root.valueMaxTaskbarWidth
-    defaultValue: root.widgetMetadata.maxTaskbarWidth
+    defaultValue: SettingsValue.read(root.widgetMetadata, "maxTaskbarWidth")
     onMoved: value => {
                root.valueMaxTaskbarWidth = Math.round(value);
                root.saveSettings();

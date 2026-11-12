@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "NotificationRulesUtils.js" as RulesUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -14,7 +16,7 @@ Singleton {
   property var rules: []
 
   property FileView rulesFileView: FileView {
-    id: rulesFileView
+    id: rulesFile
     path: root.rulesFilePath
     watchChanges: true
     printErrors: false
@@ -25,13 +27,7 @@ Singleton {
     }
 
     onLoaded: {
-      try {
-        const parsed = JSON.parse(rulesFileView.text());
-        const raw = Array.isArray(parsed.rules) ? parsed.rules : [];
-        root.rules = raw.filter(r => (r.pattern || "").trim() !== "");
-      } catch (e) {
-        root.rules = [];
-      }
+      RulesUtils.load(root, rulesFile);
     }
 
     onLoadFailed: function (error) {
@@ -44,44 +40,12 @@ Singleton {
 
   function save() {
     Os.mkdirp(Settings.configDir);
-    root.rules = root.rules.filter(r => (r.pattern || "").trim() !== "");
+    root.rules = RulesUtils.filterRules(root.rules);
     rulesAdapter.rules = root.rules;
-    rulesFileView.writeAdapter();
+    rulesFile.writeAdapter();
   }
 
-  function evaluate(appName, summary, body) {
-    const haystack = [appName || "", summary || "", body || ""].join(" ");
-    for (let i = 0; i < root.rules.length; i++) {
-      const r = root.rules[i];
-      const pattern = (r.pattern || "").trim();
-      if (pattern === "")
-        continue;
-      let matched = false;
-      if (pattern.length >= 3 && pattern.startsWith("/") && pattern.endsWith("/")) {
-        try {
-          matched = new RegExp(pattern.slice(1, -1)).test(haystack);
-        } catch (e) {
-          Logger.w("NotificationRulesService", "Invalid regex:", pattern, e);
-        }
-      } else if (pattern.includes("*")) {
-        try {
-          const reStr = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
-          matched = new RegExp(reStr, "i").test(haystack);
-        } catch (e) {
-          matched = haystack.toLowerCase().includes(pattern.toLowerCase());
-        }
-      } else {
-        matched = haystack.toLowerCase().includes(pattern.toLowerCase());
-      }
-      if (matched) {
-        const a = (r.action || "block").toLowerCase();
-        if (a === "mute" || a === "hide")
-          return a;
-        if (a === "silence")
-          return "hide";
-        return "block";
-      }
-    }
-    return null;
+  function evaluate(appName: var, summary: var, body: var): var {
+    return RulesUtils.evaluate(appName, summary, body, root.rules, Logger);
   }
 }

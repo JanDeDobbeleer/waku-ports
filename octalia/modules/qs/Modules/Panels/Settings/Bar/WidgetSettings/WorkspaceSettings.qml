@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -14,26 +15,26 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property string valueLabelMode: widgetData.labelMode !== undefined ? widgetData.labelMode : widgetMetadata.labelMode
-  property bool valueHideUnoccupied: widgetData.hideUnoccupied !== undefined ? widgetData.hideUnoccupied : widgetMetadata.hideUnoccupied
-  property bool valueFollowFocusedScreen: widgetData.followFocusedScreen !== undefined ? widgetData.followFocusedScreen : widgetMetadata.followFocusedScreen
-  property int valueCharacterCount: widgetData.characterCount !== undefined ? widgetData.characterCount : widgetMetadata.characterCount
+  property string valueLabelMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "labelMode")
+  property bool valueHideUnoccupied: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideUnoccupied")
+  property bool valueFollowFocusedScreen: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "followFocusedScreen")
+  property int valueCharacterCount: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "characterCount")
 
   // Grouped mode settings
-  property bool valueShowApplications: widgetData.showApplications !== undefined ? widgetData.showApplications : widgetMetadata.showApplications
-  property bool valueShowApplicationsHover: widgetData.showApplicationsHover !== undefined ? widgetData.showApplicationsHover : widgetMetadata.showApplicationsHover
-  property bool valueShowLabelsOnlyWhenOccupied: widgetData.showLabelsOnlyWhenOccupied !== undefined ? widgetData.showLabelsOnlyWhenOccupied : widgetMetadata.showLabelsOnlyWhenOccupied
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property real valueUnfocusedIconsOpacity: widgetData.unfocusedIconsOpacity !== undefined ? widgetData.unfocusedIconsOpacity : widgetMetadata.unfocusedIconsOpacity
-  property real valueGroupedBorderOpacity: widgetData.groupedBorderOpacity !== undefined ? widgetData.groupedBorderOpacity : widgetMetadata.groupedBorderOpacity
-  property bool valueEnableScrollWheel: widgetData.enableScrollWheel !== undefined ? widgetData.enableScrollWheel : widgetMetadata.enableScrollWheel
-  property real valueIconScale: widgetData.iconScale !== undefined ? widgetData.iconScale : widgetMetadata.iconScale
-  property string valueFocusedColor: widgetData.focusedColor !== undefined ? widgetData.focusedColor : widgetMetadata.focusedColor
-  property string valueOccupiedColor: widgetData.occupiedColor !== undefined ? widgetData.occupiedColor : widgetMetadata.occupiedColor
-  property string valueEmptyColor: widgetData.emptyColor !== undefined ? widgetData.emptyColor : widgetMetadata.emptyColor
-  property bool valueShowBadge: widgetData.showBadge !== undefined ? widgetData.showBadge : widgetMetadata.showBadge
-  property real valuePillSize: widgetData.pillSize !== undefined ? widgetData.pillSize : widgetMetadata.pillSize
-  property string valueFontWeight: widgetData.fontWeight !== undefined ? widgetData.fontWeight : widgetMetadata.fontWeight
+  property bool valueShowApplications: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showApplications")
+  property bool valueShowApplicationsHover: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showApplicationsHover")
+  property bool valueShowLabelsOnlyWhenOccupied: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showLabelsOnlyWhenOccupied")
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property real valueUnfocusedIconsOpacity: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "unfocusedIconsOpacity")
+  property real valueGroupedBorderOpacity: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "groupedBorderOpacity")
+  property bool valueEnableScrollWheel: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "enableScrollWheel")
+  property real valueIconScale: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconScale")
+  property string valueFocusedColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "focusedColor")
+  property string valueOccupiedColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "occupiedColor")
+  property string valueEmptyColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "emptyColor")
+  property bool valueShowBadge: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBadge")
+  property real valuePillSize: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "pillSize")
+  property string valueFontWeight: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "fontWeight")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -80,7 +81,7 @@ ColumnLayout {
         "name": I18n.tr("options.workspace-labels.index-and-name")
       }
     ]
-    currentKey: root.widgetData.labelMode || root.widgetMetadata.labelMode
+    currentKey: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "labelMode")
     onSelected: key => {
                   root.valueLabelMode = key;
                   root.saveSettings();
@@ -108,7 +109,7 @@ ColumnLayout {
     to: 1.0
     stepSize: 0.01
     value: root.valuePillSize
-    defaultValue: root.widgetMetadata.pillSize
+    defaultValue: SettingsValue.read(root.widgetMetadata, "pillSize")
     showReset: true
     onMoved: value => {
                root.valuePillSize = value;
@@ -140,7 +141,7 @@ ColumnLayout {
         "name": I18n.tr("common.font-weight-bold")
       },
     ]
-    currentKey: root.widgetData.fontWeight || root.widgetMetadata.fontWeight
+    currentKey: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "fontWeight")
     onSelected: key => {
                   root.valueFontWeight = key;
                   root.saveSettings();
@@ -243,7 +244,7 @@ ColumnLayout {
     stepSize: 0.01
     showReset: true
     value: root.valueUnfocusedIconsOpacity
-    defaultValue: root.widgetMetadata.unfocusedIconsOpacity
+    defaultValue: SettingsValue.read(root.widgetMetadata, "unfocusedIconsOpacity")
     onMoved: value => {
                root.valueUnfocusedIconsOpacity = value;
                root.saveSettings();
@@ -260,7 +261,7 @@ ColumnLayout {
     stepSize: 0.01
     showReset: true
     value: root.valueGroupedBorderOpacity
-    defaultValue: root.widgetMetadata.groupedBorderOpacity
+    defaultValue: SettingsValue.read(root.widgetMetadata, "groupedBorderOpacity")
     onMoved: value => {
                root.valueGroupedBorderOpacity = value;
                root.saveSettings();
@@ -277,7 +278,7 @@ ColumnLayout {
     stepSize: 0.01
     showReset: true
     value: root.valueIconScale
-    defaultValue: root.widgetMetadata.iconScale
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconScale")
     onMoved: value => {
                root.valueIconScale = value;
                root.saveSettings();

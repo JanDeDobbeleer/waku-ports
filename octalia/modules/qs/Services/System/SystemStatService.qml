@@ -1,5 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
+import "SystemStatUtils.js" as SystemStatUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -17,14 +19,14 @@ Singleton {
   }
 
   function unregisterComponent(componentId: string) {
-    delete root._registered[componentId];
+    SystemStatUtils.unregisterComponent(root._registered, componentId);
     root._registered = Object.assign({}, root._registered);
     Logger.d("SystemStat", "Component unregistered:", componentId, "- total:", root._registeredCount);
   }
 
   property var _registered: ({})
   readonly property int _registeredCount: Object.keys(_registered).length
-  readonly property bool _lockScreenActive: PanelService.lockScreen?.active ?? false
+  readonly property bool _lockScreenActive: SystemStatUtils.lockScreenActive(PanelService.lockScreen)
   readonly property bool shouldRun: _registeredCount > 0 && !_lockScreenActive
 
   // Polling intervals (hardcoded to sensible values per stat type)
@@ -170,11 +172,11 @@ Singleton {
   // Network max speed tracking (autoscales from current history window)
   // Minimum floor of 1 MB/s so graph doesn't fluctuate at low speeds
   readonly property real rxMaxSpeed: {
-    const max = Math.max(...rxSpeedHistory);
+    const max = SystemStatUtils.maxHistory(rxSpeedHistory);
     return Math.max(max, 1000000); // 1 MB/s floor
   }
   readonly property real txMaxSpeed: {
-    const max = Math.max(...txSpeedHistory);
+    const max = SystemStatUtils.maxHistory(txSpeedHistory);
     return Math.max(max, 512000); // 512 KB/s floor
   }
 
@@ -215,12 +217,12 @@ Singleton {
   readonly property bool swapCritical: swapPercent >= swapCriticalThreshold
 
   // Helper functions for disk (disk path is dynamic)
-  function isDiskWarning(diskPath, available = false): bool {
-    return available ? (diskAvailPercents[diskPath] || 0) <= diskAvailWarningThreshold : (diskPercents[diskPath] || 0) >= diskWarningThreshold;
+  function isDiskWarning(diskPath: var, available: var): bool {
+    return SystemStatUtils.isDiskWarning(root, diskPath, available);
   }
 
-  function isDiskCritical(diskPath, available = false): bool {
-    return available ? (diskAvailPercents[diskPath] || 0) <= diskAvailCriticalThreshold : (diskPercents[diskPath] || 0) >= diskCriticalThreshold;
+  function isDiskCritical(diskPath: var, available: var): bool {
+    return SystemStatUtils.isDiskCritical(root, diskPath, available);
   }
 
   // Ready-to-use stat colors (for gauges, panels, icons)
@@ -238,8 +240,8 @@ Singleton {
     return Color.mPrimary;
   }
 
-  function getDiskColor(diskPath, available = false): color {
-    return isDiskCritical(diskPath, available) ? criticalColor : (isDiskWarning(diskPath, available) ? warningColor : Color.mPrimary);
+  function getDiskColor(diskPath: var, available: var): color {
+    return SystemStatUtils.getDiskColor(root, Color, diskPath, available);
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -279,7 +281,7 @@ Singleton {
         Binding {
           target: root
           property: "coresUsage"
-          value: (cpuSource.perCore || []).map(v => Number(v))
+          value: (cpuSource.perCore || []).map(function (v: var): real { return Number(v); })
         }
         Binding {
           target: root
@@ -374,39 +376,16 @@ Singleton {
   property var _diskSource: null
 
   // MHz (or GHz, if the engine ever reports that) to GHz.
-  function toGhz(freq) {
+  function toGhz(freq: var): var {
     return freq > 100 ? freq / 1000 : freq;
   }
 
-  function frequencyText(freq) {
+  function frequencyText(freq: var): string {
     return freq > 0 ? toGhz(freq).toFixed(1) + "GHz" : "0.0GHz";
   }
 
-  function readDisks() {
-    const percents = {};
-    const avail = {};
-    const used = {};
-    const free = {};
-    const size = {};
-    const disks = root._diskSource ? (root._diskSource.disks || []) : [];
-    const put = (key, d) => {
-      percents[key] = d.percent;
-      avail[key] = 100 - d.percent;
-      used[key] = d.used / _gib;
-      free[key] = d.free / _gib;
-      size[key] = d.total / _gib;
-    };
-    for (const d of disks)
-      put(d.mount, d);
-    const primary = root._diskSource ? root._diskSource.primaryDisk : null;
-    if (primary && primary.mount !== undefined)
-      put("/", primary);
-    diskPercents = percents;
-    diskAvailPercents = avail;
-    diskUsedGb = used;
-    diskAvailableGb = free;
-    diskSizeGb = size;
-    pushDiskHistory();
+  function readDisks(): void {
+    SystemStatUtils.readDisks(root);
   }
 
   // The history arrays advance at the upstream intervals while something is registered.
@@ -439,26 +418,13 @@ Singleton {
   }
   // -------------------------------------------------------
   // Helper function to format network speeds
-  function formatSpeed(bytesPerSecond) {
-    const units = ["KB", "MB", "GB"];
-    let value = bytesPerSecond / 1000;
-    let unitIndex = 0;
-
-    while (value >= 1000 && unitIndex < units.length - 1) {
-      value /= 1000;
-      unitIndex++;
-    }
-
-    const unit = units[unitIndex];
-    const shortUnit = unit[0];
-    const numStr = value < 10 ? value.toFixed(1) : Math.round(value).toString();
-
-    return (numStr + unit).length > 5 ? numStr + shortUnit : numStr + unit;
+  function formatSpeed(bytesPerSecond: var): string {
+    return SystemStatUtils.formatSpeed(bytesPerSecond);
   }
 
   // -------------------------------------------------------
   // Compact speed formatter for vertical bar display
-  function formatCompactSpeed(bytesPerSecond) {
+  function formatCompactSpeed(bytesPerSecond: var): string {
     if (!bytesPerSecond || bytesPerSecond <= 0)
       return "0";
     const units = ["", "K", "M", "G"];
@@ -480,7 +446,7 @@ Singleton {
   // -------------------------------------------------------
   // Smart formatter for memory values (GB) - max 4 chars
   // Uses decimal for < 10GB, integer otherwise
-  function formatGigabytes(memGb) {
+  function formatGigabytes(memGb: var): string {
     const value = parseFloat(memGb);
     if (isNaN(value))
       return "0G";
@@ -492,52 +458,25 @@ Singleton {
 
   // -------------------------------------------------------
   // Formatting gigabytes with optional padding
-  function formatGigabytesDisplay(memGb, maxGb = null) {
-    const value = formatGigabytes(memGb === null ? 0 : memGb);
-    if (maxGb !== null) {
-      const padding = Math.max(4, formatGigabytes(maxGb).length);
-      return value.padStart(padding, " ");
-    }
-    return value;
+  function formatGigabytesDisplay(memGb: var, maxGb: var): string {
+    return SystemStatUtils.formatGigabytesDisplay(root, memGb, maxGb);
   }
 
   // -------------------------------------------------------
   // Formatting percentage with optional padding
-  function formatPercentageDisplay(value, padding = false) {
-    return `${Math.round(value === null ? 0 : value)}%`.padStart(padding ? 4 : 0, " ");
+  function formatPercentageDisplay(value: var, padding: var): string {
+    return SystemStatUtils.formatPercentageDisplay(root, value, padding);
   }
 
   // -------------------------------------------------------
   // Formatting disk usage
-  function formatDiskDisplay(diskPath, {
-                             percent = false,
-                             available = false,
-                             padding = false
-} = {}) {
-    if (percent) {
-      const raw = available ? root.diskAvailPercents[diskPath] : root.diskPercents[diskPath];
-      return formatPercentageDisplay(raw, padding);
-    } else {
-      const rawGb = available ? root.diskAvailableGb[diskPath] : root.diskUsedGb[diskPath];
-      const maxGb = padding ? root.diskSizeGb[diskPath] : null;
-      return formatGigabytesDisplay(rawGb, maxGb);
-    }
+  function formatDiskDisplay(diskPath: var, options: var): string {
+    return SystemStatUtils.formatDiskDisplay(root, diskPath, options);
   }
 
   // -------------------------------------------------------
   // Formatting ram usage
-  function formatRamDisplay({
-                            swap = false,
-                            percent = false,
-                            padding = false
-} = {}) {
-    if (percent) {
-      const raw = swap ? swapPercent : memPercent;
-      return formatPercentageDisplay(raw, padding);
-    } else {
-      const rawGb = swap ? swapGb : memGb;
-      const maxGb = padding ? (swap ? swapTotalGb : memTotalGb) : null;
-      return formatGigabytesDisplay(rawGb, maxGb);
-    }
+  function formatRamDisplay(options: var): string {
+    return SystemStatUtils.formatRamDisplay(root, options);
   }
 }

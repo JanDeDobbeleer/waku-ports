@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "ControlCenterTab.js" as ControlCenterTabData
 
 ColumnLayout {
   id: root
@@ -52,7 +53,7 @@ ColumnLayout {
     var card, found, i, j;
     // Fill out availableWidgets ListModel
     availableWidgets.clear();
-    var sortedEntries = ControlCenterWidgetRegistry.getAvailableWidgets().slice().sort();
+    var sortedEntries = Array.from(ControlCenterWidgetRegistry.getAvailableWidgets()).sort();
     sortedEntries.forEach(entry => {
                             const displayName = entry;
                             const badges = [];
@@ -147,81 +148,35 @@ ColumnLayout {
 
     ShortcutsSubTab {
       availableWidgets: availableWidgets
-      onAddWidgetToSection: (widgetId, section) => _addWidgetToSection(widgetId, section)
-      onRemoveWidgetFromSection: (section, index) => _removeWidgetFromSection(section, index)
-      onReorderWidgetInSection: (section, fromIndex, toIndex) => _reorderWidgetInSection(section, fromIndex, toIndex)
-      onUpdateWidgetSettingsInSection: (section, index, settings) => _updateWidgetSettingsInSection(section, index, settings)
-      onMoveWidgetBetweenSections: (fromSection, index, toSection) => _moveWidgetBetweenSections(fromSection, index, toSection)
+      onAddWidgetToSection: (widgetId, section) => root._addWidgetToSection(widgetId, section)
+      onRemoveWidgetFromSection: (section, index) => root._removeWidgetFromSection(section, index)
+      onReorderWidgetInSection: (section, fromIndex, toIndex) => root._reorderWidgetInSection(section, fromIndex, toIndex)
+      onUpdateWidgetSettingsInSection: (section, index, settings) => root._updateWidgetSettingsInSection(section, index, settings)
+      onMoveWidgetBetweenSections: (fromSection, index, toSection) => root._moveWidgetBetweenSections(fromSection, index, toSection)
     }
   }
 
   // ---------------------------------
   // Signal functions
   // ---------------------------------
-  function _addWidgetToSection(widgetId, section) {
-    var metadata;
-    var newWidget = {
-      "id": widgetId
-    };
-    if (ControlCenterWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      metadata = ControlCenterWidgetRegistry.widgetMetadata[widgetId];
-      if (metadata) {
-        Object.keys(metadata).forEach(function (key) {
-          newWidget[key] = metadata[key];
-        });
-      }
-    }
-    Settings.data.controlCenter.shortcuts[section].push(newWidget);
+  function _addWidgetToSection(widgetId: string, section: string): void {
+    ControlCenterTabData.addWidget(Settings.data.controlCenter, ControlCenterWidgetRegistry, widgetId, section);
   }
 
-  function _removeWidgetFromSection(section, index) {
-    var newArray, removedWidgets;
-    if (index >= 0 && index < Settings.data.controlCenter.shortcuts[section].length) {
-      newArray = Settings.data.controlCenter.shortcuts[section].slice();
-      removedWidgets = newArray.splice(index, 1);
-      Settings.data.controlCenter.shortcuts[section] = newArray;
-    }
+  function _removeWidgetFromSection(section: string, index: int): void {
+    ControlCenterTabData.removeWidget(Settings.data.controlCenter, section, index);
   }
 
-  function _reorderWidgetInSection(section, fromIndex, toIndex) {
-    var item, newArray;
-    if (fromIndex >= 0 && fromIndex < Settings.data.controlCenter.shortcuts[section].length && toIndex >= 0 && toIndex < Settings.data.controlCenter.shortcuts[section].length) {
-
-      // Create a new array to avoid modifying the original
-      newArray = Settings.data.controlCenter.shortcuts[section].slice();
-      item = newArray[fromIndex];
-      newArray.splice(fromIndex, 1);
-      newArray.splice(toIndex, 0, item);
-
-      Settings.data.controlCenter.shortcuts[section] = newArray;
-    }
+  function _reorderWidgetInSection(section: string, fromIndex: int, toIndex: int): void {
+    ControlCenterTabData.reorderWidget(Settings.data.controlCenter, section, fromIndex, toIndex);
   }
 
-  function _moveWidgetBetweenSections(fromSection, index, toSection) {
-    var sourceArray, targetArray, widget;
-    // Get the widget from the source section
-    if (index >= 0 && index < Settings.data.controlCenter.shortcuts[fromSection].length) {
-      widget = Settings.data.controlCenter.shortcuts[fromSection][index];
-
-      // Remove from source section
-      sourceArray = Settings.data.controlCenter.shortcuts[fromSection].slice();
-      sourceArray.splice(index, 1);
-      Settings.data.controlCenter.shortcuts[fromSection] = sourceArray;
-
-      // Add to target section
-      targetArray = Settings.data.controlCenter.shortcuts[toSection].slice();
-      targetArray.push(widget);
-      Settings.data.controlCenter.shortcuts[toSection] = targetArray;
-    }
+  function _moveWidgetBetweenSections(fromSection: string, index: int, toSection: string): void {
+    ControlCenterTabData.moveWidget(Settings.data.controlCenter, fromSection, index, toSection);
   }
 
-  function _updateWidgetSettingsInSection(section, index, settings) {
-    // Create a new array to trigger QML's change detection for persistence.
-    // This is crucial for Settings.data to detect the change and persist it.
-    var newSectionArray = Settings.data.controlCenter.shortcuts[section].slice();
-    newSectionArray[index] = settings;
-    Settings.data.controlCenter.shortcuts[section] = newSectionArray;
-    Settings.saveImmediate();
+  function _updateWidgetSettingsInSection(section: string, index: int, settings: var): void {
+    ControlCenterTabData.updateWidgetSettings(Settings.data.controlCenter, section, index, settings, Settings);
   }
 
   // Base list model for all combo boxes

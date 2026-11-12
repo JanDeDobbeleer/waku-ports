@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import "."
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -10,7 +11,7 @@ ColumnLayout {
 
   // Time dropdown options (00:00 .. 23:30)
   ListModel {
-    id: timeOptions
+    id: timeOptionsModel
   }
 
   property var screen
@@ -22,7 +23,7 @@ ColumnLayout {
         hh = ("0" + h).slice(-2);
         mm = ("0" + m).slice(-2);
         key = hh + ":" + mm;
-        timeOptions.append({
+        timeOptionsModel.append({
                              "key": key,
                              "name": key
                            });
@@ -48,14 +49,14 @@ ColumnLayout {
       pendingOpen = true;
       active = true;
       if (item) {
-        item.open();
+        SettingsValue.callIfPresent(item, "open");
         pendingOpen = false;
       }
     }
 
     onItemChanged: {
       if (item && pendingOpen) {
-        item.open();
+        SettingsValue.callIfPresent(item, "open");
         pendingOpen = false;
       }
     }
@@ -67,7 +68,7 @@ ColumnLayout {
 
     ColorsSubTab {
       screen: root.screen
-      timeOptions: timeOptions
+      timeOptions: timeOptionsModel
       onOpenDownloadPopup: downloadPopupLoader.open()
     }
   }

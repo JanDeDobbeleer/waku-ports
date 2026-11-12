@@ -4,6 +4,7 @@ import QtQuick 6.10
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.UI
+import "SettingsValue.js" as SettingsValue
 
 SmartPanel {
   id: root
@@ -17,10 +18,6 @@ SmartPanel {
   readonly property bool attachToBar: settingsPanelMode === "attached"
 
   readonly property string barDensity: Settings.data.bar.density
-  readonly property string barPosition: Settings.getBarPositionForScreen(screen?.name)
-  readonly property bool barFloating: Settings.data.bar.barType === "floating"
-  readonly property real barMarginH: barFloating ? Math.ceil(Settings.data.bar.marginHorizontal) : 0
-  readonly property real barMarginV: barFloating ? Math.ceil(Settings.data.bar.marginVertical) : 0
 
   forceAttachToBar: attachToBar
   panelAnchorHorizontalCenter: !root.useButtonPosition && (attachToBar ? (barPosition === "top" || barPosition === "bottom") : true)
@@ -104,7 +101,7 @@ SmartPanel {
   property var _settingsContent: null
 
   // Override toggle to handle window mode
-  function toggle(buttonItem, buttonName) {
+  function toggle(buttonItem: var, buttonName: var): void {
     if (isWindowMode) {
       SettingsPanelService.toggleWindow(requestedTab);
       return;
@@ -118,7 +115,7 @@ SmartPanel {
   }
 
   // Override open to handle window mode
-  function open(buttonItem, buttonName) {
+  function open(buttonItem: var, buttonName: var): void {
     var buttonPos;
     if (isWindowMode) {
       SettingsPanelService.openWindow(requestedTab);
@@ -127,9 +124,9 @@ SmartPanel {
 
     // Panel mode: replicate SmartPanel.open() logic
     if (!buttonItem && buttonName) {
-      if (typeof buttonName === "object" && buttonName.x !== undefined && buttonName.y !== undefined) {
+      if (SettingsValue.hasCoordinates(buttonName)) {
         root.buttonItem = null;
-        root.buttonPosition = buttonName;
+        root.buttonPosition = SettingsValue.pointFromCoordinates(buttonName);
         root.buttonWidth = 0;
         root.buttonHeight = 0;
         root.useButtonPosition = true;
@@ -140,12 +137,12 @@ SmartPanel {
 
     if (buttonItem) {
       root.buttonItem = buttonItem;
-      buttonPos = buttonItem.mapToItem(null, 0, 0);
+      buttonPos = SettingsValue.itemGeometry(buttonItem);
       root.buttonPosition = Qt.point(buttonPos.x, buttonPos.y);
-      root.buttonWidth = buttonItem.width;
-      root.buttonHeight = buttonItem.height;
+      root.buttonWidth = buttonPos.width;
+      root.buttonHeight = buttonPos.height;
       root.useButtonPosition = true;
-    } else if (!(buttonName && typeof buttonName === "object" && buttonName.x !== undefined && buttonName.y !== undefined)) {
+    } else if (!(buttonName && SettingsValue.hasCoordinates(buttonName))) {
       root.buttonItem = null;
       root.useButtonPosition = false;
     }
@@ -155,108 +152,81 @@ SmartPanel {
   }
 
   // Open to a specific tab and optionally a subtab
-  function openToTab(tab, subTab, buttonItem, buttonName) {
+  function openToTab(tab: int, subTab: int, buttonItem: var, buttonName: var): void {
     requestedTab = tab !== undefined ? tab : SettingsPanel.Tab.General;
     requestedSubTab = subTab !== undefined ? subTab : -1;
     open(buttonItem, buttonName);
   }
 
-  // When the panel opens, initialize content
-  onOpened: {
-    if (_settingsContent) {
-      if (requestedEntry) {
-        _settingsContent.requestedTab = requestedEntry.tab;
-        _settingsContent.initialize();
-        const entry = requestedEntry;
-        requestedEntry = null;
-        Qt.callLater(() => _settingsContent.navigateToResult(entry));
-      } else {
-        _settingsContent.requestedTab = requestedTab;
-        if (requestedSubTab >= 0) {
-          _settingsContent._pendingSubTab = requestedSubTab;
-          requestedSubTab = -1;
-        }
-        _settingsContent.initialize();
-      }
-    }
+  onOpened: SettingsValue.initializeOpen(root)
+
+  function scrollDown(): void {
+    SettingsValue.callIfPresent(_settingsContent, "scrollDown");
   }
 
-  // Scroll functions - delegate to content
-  function scrollDown() {
-    if (_settingsContent)
-      _settingsContent.scrollDown();
+  function scrollUp(): void {
+    SettingsValue.callIfPresent(_settingsContent, "scrollUp");
   }
 
-  function scrollUp() {
-    if (_settingsContent)
-      _settingsContent.scrollUp();
+  function scrollPageDown(): void {
+    SettingsValue.callIfPresent(_settingsContent, "scrollPageDown");
   }
 
-  function scrollPageDown() {
-    if (_settingsContent)
-      _settingsContent.scrollPageDown();
+  function scrollPageUp(): void {
+    SettingsValue.callIfPresent(_settingsContent, "scrollPageUp");
   }
 
-  function scrollPageUp() {
-    if (_settingsContent)
-      _settingsContent.scrollPageUp();
+  function selectNextTab(): void {
+    SettingsValue.callIfPresent(_settingsContent, "selectNextTab");
   }
 
-  // Navigation functions - delegate to content
-  function selectNextTab() {
-    if (_settingsContent)
-      _settingsContent.selectNextTab();
+  function selectPreviousTab(): void {
+    SettingsValue.callIfPresent(_settingsContent, "selectPreviousTab");
   }
 
-  function selectPreviousTab() {
-    if (_settingsContent)
-      _settingsContent.selectPreviousTab();
-  }
-
-  // Override keyboard handlers from SmartPanel
-  function onTabPressed() {
+  function onTabPressed(): void {
     selectNextTab();
   }
 
-  function onBackTabPressed() {
+  function onBackTabPressed(): void {
     selectPreviousTab();
   }
 
-  function onUpPressed() {
-    if (_settingsContent && _settingsContent.searchText.trim() !== "") {
-      _settingsContent.searchSelectPrevious();
+  function onUpPressed(): void {
+    if (SettingsValue.hasSearchText(_settingsContent)) {
+      SettingsValue.callIfPresent(_settingsContent, "searchSelectPrevious");
     } else {
       scrollUp();
     }
   }
 
-  function onDownPressed() {
-    if (_settingsContent && _settingsContent.searchText.trim() !== "") {
-      _settingsContent.searchSelectNext();
+  function onDownPressed(): void {
+    if (SettingsValue.hasSearchText(_settingsContent)) {
+      SettingsValue.callIfPresent(_settingsContent, "searchSelectNext");
     } else {
       scrollDown();
     }
   }
 
-  function onPageUpPressed() {
+  function onPageUpPressed(): void {
     scrollPageUp();
   }
 
-  function onPageDownPressed() {
+  function onPageDownPressed(): void {
     scrollPageDown();
   }
 
-  function onCtrlJPressed() {
-    if (_settingsContent && _settingsContent.searchText.trim() !== "") {
-      _settingsContent.searchSelectNext();
+  function onCtrlJPressed(): void {
+    if (SettingsValue.hasSearchText(_settingsContent)) {
+      SettingsValue.callIfPresent(_settingsContent, "searchSelectNext");
     } else {
       scrollDown();
     }
   }
 
-  function onCtrlKPressed() {
-    if (_settingsContent && _settingsContent.searchText.trim() !== "") {
-      _settingsContent.searchSelectPrevious();
+  function onCtrlKPressed(): void {
+    if (SettingsValue.hasSearchText(_settingsContent)) {
+      SettingsValue.callIfPresent(_settingsContent, "searchSelectPrevious");
     } else {
       scrollUp();
     }
@@ -273,13 +243,13 @@ SmartPanel {
       onCloseRequested: root.close()
       Component.onCompleted: {
         root._settingsContent = settingsContent;
-        root.tabsModel = Qt.binding(function () {
+        root.tabsModel = Qt.binding(function (): var {
           return settingsContent.tabsModel;
         });
-        root.currentTabIndex = Qt.binding(function () {
+        root.currentTabIndex = Qt.binding(function (): int {
           return settingsContent.currentTabIndex;
         });
-        root.activeScrollView = Qt.binding(function () {
+        root.activeScrollView = Qt.binding(function (): var {
           return settingsContent.activeScrollView;
         });
       }

@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Services.Theming
 import qs.Services.UI
 import qs.Widgets
+import "ColorsSubTab.js" as ColorsSubTabData
 
 ColumnLayout {
   id: root
@@ -20,7 +21,7 @@ ColumnLayout {
 
   signal openDownloadPopup
 
-  function extractSchemeName(schemePath) {
+  function extractSchemeName(schemePath: string): string {
     var pathParts = schemePath.split("/");
     var filename = pathParts[pathParts.length - 1];
     var schemeName = filename.replace(".json", "");
@@ -38,37 +39,12 @@ ColumnLayout {
     return schemeName;
   }
 
-  function getSchemeColor(schemeName, colorKey) {
-    var entry, variant;
-    var _ = cacheVersion;
-
-    if (schemeColorsCache[schemeName]) {
-      entry = schemeColorsCache[schemeName];
-      variant = entry;
-
-      if (entry.dark || entry.light) {
-        variant = Settings.data.colorSchemes.darkMode ? (entry.dark || entry.light) : (entry.light || entry.dark);
-      }
-
-      if (variant && variant[colorKey]) {
-        return variant[colorKey];
-      }
-    }
-
-    if (colorKey === "mSurface")
-      return Color.mSurfaceVariant;
-    if (colorKey === "mPrimary")
-      return Color.mPrimary;
-    if (colorKey === "mSecondary")
-      return Color.mSecondary;
-    if (colorKey === "mTertiary")
-      return Color.mTertiary;
-    if (colorKey === "mError")
-      return Color.mError;
-    return Color.mOnSurfaceVariant;
+  function getSchemeColor(schemeName: string, colorKey: string): color {
+    var fallback = colorKey === "mSurface" ? Color.mSurfaceVariant : colorKey === "mPrimary" ? Color.mPrimary : colorKey === "mSecondary" ? Color.mSecondary : colorKey === "mTertiary" ? Color.mTertiary : colorKey === "mError" ? Color.mError : Color.mOnSurfaceVariant;
+    return ColorsSubTabData.getSchemeColor(root.schemeColorsCache, root.cacheVersion, schemeName, colorKey, Settings.data.colorSchemes.darkMode, fallback);
   }
 
-  function schemeLoaded(schemeName, jsonData) {
+  function schemeLoaded(schemeName: string, jsonData: var): void {
     var value = jsonData || {};
     schemeColorsCache[schemeName] = value;
     cacheVersion++;
@@ -94,18 +70,7 @@ ColumnLayout {
         FileView {
           path: schemeFile.modelData
           blockLoading: false
-          onLoaded: {
-            var jsonData;
-            var schemeName = root.extractSchemeName(path);
-
-            try {
-              jsonData = JSON.parse(text());
-              root.schemeLoaded(schemeName, jsonData);
-            } catch (e) {
-              Logger.w("ColorSchemeTab", "Failed to parse JSON for scheme:", schemeName, e);
-              root.schemeLoaded(schemeName, null);
-            }
-          }
+          onLoaded: ColorsSubTabData.loadScheme(text(), path, root)
         }
       }
     }

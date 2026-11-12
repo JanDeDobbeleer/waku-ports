@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NComboBoxUtils.js" as ComboUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -31,34 +33,16 @@ RowLayout {
   // Less strict comparison with != (instead of !==) so it can properly compare int vs string (ex for FPS: 30 and "30")
   readonly property bool isValueChanged: (defaultValue !== undefined) && (currentKey != defaultValue)
 
-  function itemCount() {
-    if (!root.model)
-      return 0;
-    if (typeof root.model.count === 'number')
-      return root.model.count;
-    if (Array.isArray(root.model))
-      return root.model.length;
-    return 0;
+  function itemCount(): var {
+    return ComboUtils.itemCount(root);
   }
 
-  function getItem(index) {
-    if (!root.model)
-      return null;
-    if (typeof root.model.get === 'function')
-      return root.model.get(index);
-    if (Array.isArray(root.model))
-      return root.model[index];
-    return null;
+  function getItem(index: var): var {
+    return ComboUtils.getItem(index, root);
   }
 
-  function findIndexByKey(key) {
-    var i, item;
-    for (i = 0; i < itemCount(); i++) {
-      item = getItem(i);
-      if (item && item.key === key)
-        return i;
-    }
-    return -1;
+  function findIndexByKey(key: var): int {
+    return ComboUtils.findIndexByKey(key, root);
   }
 
   NLabel {
@@ -80,9 +64,7 @@ RowLayout {
     currentIndex: root.findIndexByKey(root.currentKey)
 
     onActivated: {
-      var item = root.getItem(combo.currentIndex);
-      if (item && item.key !== undefined)
-        root.selected(item.key);
+      ComboUtils.select(combo.currentIndex, root);
     }
 
     Keys.onUpPressed: event => {
@@ -110,13 +92,10 @@ RowLayout {
                         }
 
     Keys.onReturnPressed: event => {
-      var item;
                             if (combo.popup.visible) {
-                              item = root.getItem(listView.currentIndex);
-                              if (item && item.key !== undefined) {
-                                root.selected(item.key);
+                              if (ComboUtils.select(listView.currentIndex, root)) {
                                 combo.currentIndex = listView.currentIndex;
-                                combo.popup.close();
+                                ComboUtils.closePopup(combo.popup);
                               }
                               event.accepted = true;
                             } else {
@@ -151,10 +130,8 @@ RowLayout {
       elide: Text.ElideRight
       color: combo.currentIndex >= 0 ? Color.mOnSurface : Color.mOnSurfaceVariant
       text: {
-        var item;
         if (combo.currentIndex >= 0 && combo.currentIndex < root.itemCount()) {
-          item = root.getItem(combo.currentIndex);
-          return item ? item.name : root.placeholder;
+          return ComboUtils.currentText(combo.currentIndex, root);
         }
         return root.placeholder;
       }
@@ -205,8 +182,7 @@ RowLayout {
             pointSize: Style.fontSizeM
             color: delegateRect.isHighlighted ? Color.mOnHover : Color.mOnSurface
             text: {
-              var item = root.getItem(delegateRect.index);
-              return item && item.name ? item.name : "";
+              return ComboUtils.delegateText(delegateRect.index, root);
             }
           }
 
@@ -219,11 +195,9 @@ RowLayout {
               }
             }
             onClicked: {
-              var item = root.getItem(delegateRect.index);
-              if (item && item.key !== undefined) {
-                root.selected(item.key);
-                listView.comboBox.currentIndex = delegateRect.index;
-                listView.comboBox.popup.close();
+              if (ComboUtils.select(delegateRect.index, root)) {
+                combo.currentIndex = delegateRect.index;
+                ComboUtils.closePopup(combo.popup);
               }
             }
           }

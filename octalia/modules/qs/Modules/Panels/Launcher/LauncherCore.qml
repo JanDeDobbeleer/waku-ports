@@ -891,11 +891,11 @@ Rectangle {
         readonly property var parts: {
           const out = [];
           if (selected && selected.onActivateNew && newKeys && newKeys.length > 0)
-            out.push(I18n.tr("launcher.new-window-hint", {
+            out.push(I18n.trArgs("launcher.new-window-hint", {
                                "key": newKeys[0]
                              }));
           if (selected && selected.onActivateAdmin && adminKeys && adminKeys.length > 0)
-            out.push(I18n.tr("launcher.admin-hint", {
+            out.push(I18n.trArgs("launcher.admin-hint", {
                                "key": adminKeys[0]
                              }));
           return out;

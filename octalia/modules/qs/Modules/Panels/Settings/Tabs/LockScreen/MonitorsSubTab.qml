@@ -6,6 +6,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -14,17 +15,8 @@ ColumnLayout {
   Layout.fillWidth: true
 
   // Helper functions to update arrays immutably
-  function addMonitor(list, name) {
-    const arr = (list || []).slice();
-    if (!arr.includes(name))
-      arr.push(name);
-    return arr;
-  }
-  function removeMonitor(list, name) {
-    return (list || []).filter(function (n) {
-      return n !== name;
-    });
-  }
+  function addMonitor(list: var, name: string): var { return SettingsValue.addUniqueValue(list, name); }
+  function removeMonitor(list: var, name: string): var { return SettingsValue.removeValue(list, name); }
 
   NText {
     text: I18n.tr("panels.lock-screen.monitors-desc")
@@ -44,7 +36,7 @@ ColumnLayout {
       }
       label: monitorOption.modelData.name || "Unknown"
       description: {
-        I18n.tr("system.monitor-description", {
+        I18n.trArgs("system.monitor-description", {
                   "model": monitorOption.modelData.model,
                   "width": monitorOption.modelData.width * compositorScale,
                   "height": monitorOption.modelData.height * compositorScale,

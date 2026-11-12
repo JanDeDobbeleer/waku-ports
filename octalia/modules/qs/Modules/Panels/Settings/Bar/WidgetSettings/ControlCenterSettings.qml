@@ -4,6 +4,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -17,12 +18,12 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueIcon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
+  property string valueIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "icon")
   // No distro logo on Windows (HostService.osLogo is empty).
   readonly property bool valueUseDistroLogo: false
-  property string valueCustomIconPath: widgetData.customIconPath !== undefined ? widgetData.customIconPath : widgetMetadata.customIconPath
-  property bool valueEnableColorization: widgetData.enableColorization !== undefined ? widgetData.enableColorization : widgetMetadata.enableColorization
-  property string valueColorizeSystemIcon: widgetData.colorizeSystemIcon !== undefined ? widgetData.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
+  property string valueCustomIconPath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customIconPath")
+  property bool valueEnableColorization: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "enableColorization")
+  property string valueColorizeSystemIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeSystemIcon")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -42,7 +43,7 @@ ColumnLayout {
                  root.valueEnableColorization = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.enableColorization
+    defaultValue: SettingsValue.read(root.widgetMetadata, "enableColorization")
   }
 
   NColorChoice {
@@ -54,7 +55,7 @@ ColumnLayout {
       root.valueColorizeSystemIcon = key;
       root.saveSettings();
     }
-    defaultValue: root.widgetMetadata.colorizeSystemIcon
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeSystemIcon")
   }
 
   RowLayout {
@@ -113,11 +114,6 @@ ColumnLayout {
     selectionMode: "files"
     nameFilters: ImageCacheService.basicImageFilters.concat(["*.svg"])
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    root.valueCustomIconPath = paths[0]; // Use first selected file
-                    root.saveSettings();
-                  }
-                }
+    onAccepted: paths => SettingsValue.acceptFirstFile(root, paths)
   }
 }

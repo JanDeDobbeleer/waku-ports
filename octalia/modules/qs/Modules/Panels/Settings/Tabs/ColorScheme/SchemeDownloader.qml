@@ -229,7 +229,7 @@ Popup {
               Logger.e("ColorSchemeDownload", downloadError);
             }
           } catch (e) {
-            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
+            downloadError = I18n.trArgs("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             Logger.e("ColorSchemeDownload", downloadError);
@@ -259,7 +259,7 @@ Popup {
             }
           }
         } else {
-          downloadError = I18n.tr("panels.color-scheme.download-error-api-error", {
+          downloadError = I18n.trArgs("panels.color-scheme.download-error-api-error", {
                                     "status": xhr.status
                                   });
           Logger.e("ColorSchemeDownload", downloadError);
@@ -379,7 +379,7 @@ Popup {
               getSchemeFilesDirect(scheme);
             }
           } catch (e) {
-            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
+            downloadError = I18n.trArgs("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             downloading = false;
@@ -415,7 +415,7 @@ Popup {
               Logger.e("ColorSchemeDownload", downloadError);
             }
           } catch (e) {
-            downloadError = I18n.tr("panels.color-scheme.download-error-parse-failed", {
+            downloadError = I18n.trArgs("panels.color-scheme.download-error-parse-failed", {
                                       "error": e.toString()
                                     });
             downloading = false;
@@ -423,7 +423,7 @@ Popup {
             Logger.e("ColorSchemeDownload", downloadError);
           }
         } else {
-          downloadError = I18n.tr("panels.color-scheme.download-error-api-error", {
+          downloadError = I18n.trArgs("panels.color-scheme.download-error-api-error", {
                                     "status": xhr.status
                                   });
           downloading = false;
@@ -548,17 +548,17 @@ Popup {
     function finish() {
       if (failed === "") {
         Logger.i("ColorSchemeDownload", "Scheme downloaded successfully:", schemeName);
-        ToastService.showNotice(I18n.tr("panels.color-scheme.download-success-title"), I18n.tr("panels.color-scheme.download-success-description", {
+        ToastService.showNotice(I18n.tr("panels.color-scheme.download-success-title"), I18n.trArgs("panels.color-scheme.download-success-description", {
                                                                                                  "scheme": schemeName
                                                                                                }), "settings-color-scheme");
         pendingApplyScheme = schemeName;
         ColorSchemeService.loadColorSchemes();
       } else {
-        downloadError = I18n.tr("panels.color-scheme.download-error-download-failed", {
+        downloadError = I18n.trArgs("panels.color-scheme.download-error-download-failed", {
                                   "code": 1
                                 }) + "\n" + failed;
         Logger.e("ColorSchemeDownload", downloadError);
-        ToastService.showError(I18n.tr("panels.color-scheme.download-error-title"), I18n.tr("panels.color-scheme.download-error-description", {
+        ToastService.showError(I18n.tr("panels.color-scheme.download-error-title"), I18n.trArgs("panels.color-scheme.download-error-description", {
                                                                                               "scheme": schemeName
                                                                                             }) + "\n" + failed);
         Os.rm(targetDir, true);
@@ -630,7 +630,7 @@ Popup {
     // Only downloaded schemes can be deleted, not preinstalled ones
     Os.rm(ColorSchemeService.downloadedSchemesDirectory + "/" + schemeName, true);
 
-    ToastService.showNotice(I18n.tr("panels.color-scheme.delete-success-title"), I18n.tr("panels.color-scheme.delete-success-description", {
+    ToastService.showNotice(I18n.tr("panels.color-scheme.delete-success-title"), I18n.trArgs("panels.color-scheme.delete-success-description", {
                                                                                            "scheme": schemeName
                                                                                          }), "settings-color-scheme");
     if (needsReset) {

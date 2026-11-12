@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -29,7 +30,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string valueIconColor: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string valueIconColor: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   readonly property color iconColor: Color.resolveColorKey(valueIconColor)
 
@@ -67,12 +68,12 @@ NIconButton {
 
   onClicked: {
     if (Settings.data.ui.settingsPanelMode === "attached") {
-      PanelService.getPanel("settingsPanel", screen)?.toggle(this);
+      PanelService.invokePanel(PanelService.getPanel("settingsPanel", screen), "toggle", [this]);
     } else {
-      PanelService.getPanel("settingsPanel", screen)?.toggle();
+      PanelService.invokePanel(PanelService.getPanel("settingsPanel", screen), "toggle", []);
     }
   }
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

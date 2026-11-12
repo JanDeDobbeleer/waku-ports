@@ -50,8 +50,8 @@ ColumnLayout {
       widgets[section] = newArray;
       BarService.widgetsRevision++;
 
-      if (removedWidgets[0].id === "ControlCenter" && BarService.lookupWidget("ControlCenter") === undefined) {
-        ToastService.showWarning(I18n.tr("toast.missing-control-center.label"), I18n.tr("toast.missing-control-center.description"), 6000);
+      if (removedWidgets[0].id === "ControlCenter" && BarService.lookupWidget("ControlCenter", undefined) === undefined) {
+        ToastService.showWarningDetailed(I18n.tr("toast.missing-control-center.label"), I18n.tr("toast.missing-control-center.description"), 6000, undefined, undefined);
       }
     }
   }
@@ -124,7 +124,7 @@ ColumnLayout {
 
   function updateAvailableWidgetsModel() {
     availableWidgets.clear();
-    const widgets = BarWidgetRegistry.getAvailableWidgets();
+    const widgets = Array.from(BarWidgetRegistry.getAvailableWidgets());
     widgets.forEach(entry => {
                       const displayName = entry;
                       availableWidgets.append({

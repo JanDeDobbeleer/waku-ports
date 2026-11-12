@@ -1,3 +1,5 @@
+import "WakuServiceUtils.js" as WakuServiceUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Wayland
@@ -54,99 +56,34 @@ Item {
 
   // The engine names a monitor "DISPLAY1"; Quickshell screens are "\\.\DISPLAY1". The bar matches
   // a workspace to its screen by name, so report the screen's own name.
-  function screenNameFor(monitorName) {
-    const want = String(monitorName || "").toLowerCase();
-    for (const s of Quickshell.screens) {
-      const n = String(s.name);
-      if (n.toLowerCase() === want || n.toLowerCase().endsWith("\\" + want))
-        return n;
-    }
-    return String(monitorName || "");
+  function screenNameFor(monitorName: var): string {
+    return WakuServiceUtils.screenNameFor(monitorName, Quickshell.screens);
   }
 
-  function syncWorkspaces() {
-    workspaces.clear();
-    const mons = S.Workspaces.monitors || [];
-    for (let m = 0; m < mons.length; m++) {
-      const list = mons[m].workspaces || [];
-      for (let w = 0; w < list.length; w++) {
-        const ws = list[w];
-        workspaces.append({
-                            "id": mons[m].name + ":" + ws.id,
-                            "idx": w + 1,
-                            "name": ws.label || String(w + 1),
-                            "output": screenNameFor(mons[m].name),
-                            "isFocused": !!ws.focused,
-                            "isActive": !!ws.active,
-                            "isUrgent": false,
-                            "isOccupied": !!ws.hasWindows,
-                            "oid": ws.id
-                          });
-      }
-    }
-    syncWindows();
-    workspaceChanged();
+  function syncWorkspaces(): void {
+    WakuServiceUtils.syncWorkspaces(root, S.Workspaces);
   }
 
-  function focusedWorkspaceId() {
-    for (let i = 0; i < workspaces.count; i++) {
-      if (workspaces.get(i).isFocused)
-        return workspaces.get(i).id;
-    }
-    return workspaces.count > 0 ? workspaces.get(0).id : "1";
+  function focusedWorkspaceId(): var {
+    return WakuServiceUtils.focusedWorkspaceId(workspaces);
   }
 
-  function syncWindows() {
-    const out = [];
-    const wsId = focusedWorkspaceId();
-    const output = workspaces.count > 0 ? workspaces.get(0).output : "";
-    // hwnd -> {workspace id, monitor name} for the windows the desktops list.
-    const placed = {};
-    for (const mon of (S.Workspaces.monitors || [])) {
-      for (const ws of (mon.workspaces || [])) {
-        for (const hwnd of (ws.windows || []))
-          placed[String(hwnd)] = {
-            "workspaceId": mon.name + ":" + ws.id,
-            "output": screenNameFor(mon.name)
-          };
-      }
-    }
-    let focused = -1;
-    const tls = ToplevelManager.toplevels.values || [];
-    for (let i = 0; i < tls.length; i++) {
-      const t = tls[i];
-      if (t.activated)
-        focused = i;
-      const at = placed[String(t.hwnd)];
-      out.push({
-                 "id": t.hwnd,
-                 "appId": t.appId,
-                 "title": t.title,
-                 "output": at ? at.output : output,
-                 "workspaceId": at ? at.workspaceId : wsId,
-                 "isFocused": t.activated,
-                 "toplevel": t
-               });
-    }
-    windows = out;
-    focusedWindowIndex = focused;
-    windowListChanged();
+  function syncWindows(): void {
+    WakuServiceUtils.syncWindows(root, S.Workspaces, ToplevelManager);
   }
 
-  function focusWindow(window) {
-    if (window && window.toplevel)
-      window.toplevel.activate();
+  function focusWindow(window: var): void {
+    WakuServiceUtils.focusWindow(window);
   }
 
-  function closeWindow(window) {
-    if (window && window.toplevel)
-      window.toplevel.close();
+  function closeWindow(window: var): void {
+    WakuServiceUtils.closeWindow(window);
   }
 
-  function switchToWorkspace(workspace) {
+  function switchToWorkspace(workspace: var): void {
     if (!workspace)
       return;
-    S.Workspaces.focus(0, String(workspace.oid));
+    S.Workspaces.focus(0, String(WakuServiceUtils.workspaceOid(workspace)));
   }
 
   function cycleKeyboardLayout() {
@@ -156,7 +93,7 @@ Item {
   function queryDisplayScales() {
   }
 
-  function getFocusedScreen() {
+  function getFocusedScreen(): var {
     return null;
   }
 }

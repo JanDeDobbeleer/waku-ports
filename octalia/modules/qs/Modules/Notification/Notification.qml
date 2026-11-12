@@ -7,18 +7,12 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "./NotificationUtils.js" as NotificationUtils
 
 // Simple notification popup - displays multiple notifications
 Variants {
 
-  model: {
-    const screens = Quickshell.screens.filter(screen => Settings.data.notifications.monitors.includes(screen.name));
-    // Empty list can mean two things :
-    // - No (visible) notification display activated in settings
-    // - One or more (not visible) displays are activated but unplugged
-    // In both cases we fallback to show notification on all screens
-    return screens.length === 0 ? Quickshell.screens : screens;
-  }
+  model: NotificationUtils.screensForNotifications(Quickshell.screens, Settings.data.notifications.monitors)
 
   delegate: Loader {
     id: root
@@ -40,14 +34,14 @@ Variants {
       repeat: false
     }
 
-    function activate() {
+    function activate(): void {
       shouldBeActive = true;
     }
 
     Connections {
       target: root.notificationModel
       function onCountChanged() {
-        if (root.notificationModel.count > 0) {
+        if (NotificationUtils.modelCount(root.notificationModel) > 0) {
           if (!root.shouldBeActive) {
             Qt.callLater(root.activate);
           }
@@ -146,34 +140,17 @@ Variants {
       margins.left: isLeft ? barOffsetLeft - shadowPadding + Style.marginM : 0
       margins.right: isRight ? barOffsetRight - shadowPadding + Style.marginM : 0
 
-      implicitWidth: notifWidth + shadowPadding * 2
+      implicitWidth: notifWindow.notifWidth + shadowPadding * 2
       implicitHeight: notificationStack.implicitHeight + Style.marginL
 
       property var animateConnection: null
 
-      Component.onCompleted: {
-        animateConnection = function (notificationId) {
-          var i, item;
-          var delegate = null;
-          if (notificationRepeater) {
-            for (i = 0; i < notificationRepeater.count; i++) {
-              item = notificationRepeater.itemAt(i);
-              if (item?.notificationId === notificationId) {
-                delegate = item;
-                break;
-              }
-            }
-          }
+      function animateNotification(notificationId: string): void {
+        NotificationUtils.animateNotification(notificationRepeater, notificationId, NotificationService);
+      }
 
-          try {
-            if (delegate && typeof delegate.animateOut === "function" && !delegate.isRemoving) {
-              delegate.animateOut();
-            }
-          } catch (e) {
-            // Service fallback if delegate is already invalid
-            NotificationService.dismissPopup(notificationId);
-          }
-        };
+      Component.onCompleted: {
+        animateConnection = animateNotification;
 
         NotificationService.animateAndRemove.connect(animateConnection);
       }
@@ -188,13 +165,9 @@ Variants {
       ColumnLayout {
         id: notificationStack
 
-        anchors {
-          top: parent.isTop ? parent.top : undefined
-          bottom: parent.isBottom ? parent.bottom : undefined
-          left: parent.isLeft ? parent.left : undefined
-          right: parent.isRight ? parent.right : undefined
-          horizontalCenter: parent.isCentered ? parent.horizontalCenter : undefined
-        }
+        anchors.top: notifWindow.isTop ? parent.top : undefined
+        anchors.bottom: notifWindow.isBottom ? parent.bottom : undefined
+        x: notifWindow.isLeft ? 0 : notifWindow.isRight ? parent.width - width : (parent.width - width) / 2
 
         spacing: -notifWindow.shadowPadding * 2 + Style.marginM
 
@@ -210,14 +183,14 @@ Variants {
 
         Repeater {
           id: notificationRepeater
-          model: notificationModel
+          model: root.notificationModel
 
           delegate: Item {
             id: card
             required property var model
             required property int index
 
-            property string notificationId: card.model.id
+            property string notificationId: NotificationUtils.role(card.model, "id")
             property var notificationData: card.model
             property bool isHovered: false
             property bool isRemoving: false
@@ -225,7 +198,7 @@ Variants {
             readonly property int animationDelay: card.index * 100
             readonly property int slideDistance: 300
 
-            Layout.preferredWidth: notifWidth + notifWindow.shadowPadding * 2
+            Layout.preferredWidth: notifWindow.notifWidth + notifWindow.shadowPadding * 2
             Layout.preferredHeight: (notifWindow.isCompact ? compactContent.implicitHeight : notificationContent.implicitHeight) + Style.margin2M + notifWindow.shadowPadding * 2
             Layout.maximumHeight: Layout.preferredHeight
 
@@ -254,7 +227,7 @@ Variants {
             readonly property real slideInOffset: notifWindow.isTop ? -slideDistance : slideDistance
             readonly property real slideOutOffset: slideInOffset
 
-            function clampSwipeDelta(deltaX) {
+            function clampSwipeDelta(deltaX: real): real {
               if (notifWindow.isRight)
                 return Math.max(0, deltaX);
               if (notifWindow.isLeft)
@@ -262,7 +235,7 @@ Variants {
               return deltaX;
             }
 
-            function clampVerticalSwipeDelta(deltaY) {
+            function clampVerticalSwipeDelta(deltaY: real): real {
               if (notifWindow.isBottom)
                 return Math.max(0, deltaY);
               if (notifWindow.isTop)
@@ -271,7 +244,7 @@ Variants {
             }
 
             // Animation setup
-            function triggerEntryAnimation() {
+            function triggerEntryAnimation(): void {
               animInDelayTimer.stop();
               removalTimer.stop();
               resumeTimer.stop();
@@ -311,7 +284,7 @@ Variants {
               }
             }
 
-            function animateOut() {
+            function animateOut(): void {
               if (isRemoving)
                 return;
               animInDelayTimer.stop();
@@ -327,7 +300,7 @@ Variants {
               }
             }
 
-            function dismissBySwipe() {
+            function dismissBySwipe(): void {
               if (isRemoving)
                 return;
               animInDelayTimer.stop();
@@ -350,7 +323,7 @@ Variants {
               }
             }
 
-            function runAction(actionId, isDismissed) {
+            function runAction(actionId: string, isDismissed: bool): void {
               if (!isDismissed) {
                 if (NotificationService.invokeActionAndSuppressClose(notificationId, actionId))
                   card.animateOut();
@@ -526,16 +499,14 @@ Variants {
                               if (card.suppressClick)
                               return;
 
-                              var actions = card.model.actionsJson ? JSON.parse(card.model.actionsJson) : [];
-                              var hasDefault = actions.some(function (a) {
-                                return a.identifier === "default";
-                              });
+                              var actions = NotificationUtils.parseActions(NotificationUtils.role(card.model, "actionsJson"));
+                              var hasDefault = NotificationUtils.hasDefaultAction(actions);
                               if (hasDefault && NotificationService.invokeActionAndSuppressClose(card.notificationId, "default")) {
                                 card.animateOut();
                               } else {
                                 // Without a default action, or if invoking it fails,
                                 // the best fallback is focusing the sender window by app identity.
-                                NotificationService.focusSenderWindow(card.model.appName);
+                                NotificationService.focusSenderWindow(NotificationUtils.role(card.model, "appName"));
                                 card.animateOut();
                               }
                             }
@@ -567,11 +538,11 @@ Variants {
                     id: progressBar
                     readonly property real progressWidth: cardBackground.width - (2 * cardBackground.radius)
                     height: parent.height
-                    x: cardBackground.radius + (progressWidth * (1 - card.model.progress)) / 2
-                    width: progressWidth * card.model.progress
+                    x: cardBackground.radius + (progressWidth * (1 - NotificationUtils.role(card.model, "progress"))) / 2
+                    width: progressWidth * NotificationUtils.role(card.model, "progress")
 
                     color: {
-                      var baseColor = card.model.urgency === 2 ? Color.mError : card.model.urgency === 0 ? Color.mOnSurface : Color.mPrimary;
+                      var baseColor = NotificationUtils.role(card.model, "urgency") === 2 ? Color.mError : NotificationUtils.role(card.model, "urgency") === 0 ? Color.mOnSurface : Color.mPrimary;
                       return Qt.alpha(baseColor, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0);
                     }
 
@@ -623,7 +594,7 @@ Variants {
                     Layout.preferredHeight: Math.round(40 * Style.uiScaleRatio)
                     Layout.alignment: Qt.AlignVCenter
                     radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
-                    imagePath: card.model.originalImage || ""
+                    imagePath: NotificationUtils.role(card.model, "originalImage") || ""
                     borderColor: "transparent"
                     borderWidth: 0
                     fallbackIcon: "bell"
@@ -644,11 +615,11 @@ Variants {
                         Layout.preferredHeight: 6
                         Layout.alignment: Qt.AlignVCenter
                         radius: Style.radiusXS
-                        color: card.model.urgency === 2 ? Color.mError : card.model.urgency === 0 ? Color.mOnSurface : Color.mPrimary
+                        color: NotificationUtils.role(card.model, "urgency") === 2 ? Color.mError : NotificationUtils.role(card.model, "urgency") === 0 ? Color.mOnSurface : Color.mPrimary
                       }
 
                       NText {
-                        text: card.model.appName || "Unknown App"
+                        text: NotificationUtils.role(card.model, "appName") || "Unknown App"
                         pointSize: Style.fontSizeXS
                         font.weight: Style.fontWeightBold
                         color: Color.mSecondary
@@ -656,7 +627,7 @@ Variants {
 
                       NText {
                         textFormat: Text.PlainText
-                        text: " " + Time.formatRelativeTime(card.model.timestamp)
+                        text: " " + Time.formatRelativeTime(NotificationUtils.role(card.model, "timestamp"))
                         pointSize: Style.fontSizeXXS
                         color: Color.mOnSurfaceVariant
                         Layout.alignment: Qt.AlignBottom
@@ -668,7 +639,7 @@ Variants {
                     }
 
                     NText {
-                      text: card.model.summary || I18n.tr("common.no-summary")
+                      text: NotificationUtils.role(card.model, "summary") || I18n.tr("common.no-summary")
                       pointSize: Style.fontSizeM
                       font.weight: Style.fontWeightMedium
                       color: Color.mOnSurface
@@ -682,7 +653,7 @@ Variants {
                     }
 
                     NText {
-                      text: card.model.body || ""
+                      text: NotificationUtils.role(card.model, "body") || ""
                       pointSize: Style.fontSizeM
                       color: Color.mOnSurface
                       textFormat: Text.StyledText
@@ -697,23 +668,18 @@ Variants {
 
                     // Actions
                     Flow {
+                      id: actionsFlow
                       Layout.fillWidth: true
                       spacing: Style.marginS
                       Layout.topMargin: Style.marginM
                       flow: Flow.LeftToRight
 
                       property string parentNotificationId: card.notificationId
-                      property var parsedActions: {
-                        try {
-                          return card.model.actionsJson ? JSON.parse(card.model.actionsJson) : [];
-                        } catch (e) {
-                          return [];
-                        }
-                      }
-                      visible: parsedActions.length > 0
+                      property var parsedActions: NotificationUtils.parseActions(NotificationUtils.role(card.model, "actionsJson"))
+                      visible: NotificationUtils.actionCount(parsedActions) > 0
 
                       Repeater {
-                        model: parent.parsedActions
+                        model: actionsFlow.parsedActions
 
                         delegate: NButton {
                           id: notificationAction
@@ -721,7 +687,7 @@ Variants {
                           property var actionData: notificationAction.modelData
 
                           text: {
-                            var actionText = actionData.text || "Open";
+                            var actionText = NotificationUtils.role(actionData, "text") || "Open";
                             if (actionText.includes(",")) {
                               return actionText.split(",")[1] || actionText;
                             }
@@ -734,7 +700,7 @@ Variants {
                           outlined: false
                           implicitHeight: 24
                           onClicked: {
-                            card.runAction(actionData.identifier, false);
+                            card.runAction(NotificationUtils.role(actionData, "identifier"), false);
                           }
                         }
                       }
@@ -771,7 +737,7 @@ Variants {
                   Layout.preferredHeight: Math.round(24 * Style.uiScaleRatio)
                   Layout.alignment: Qt.AlignVCenter
                   radius: Style.radiusXS
-                  imagePath: card.model.originalImage || ""
+                  imagePath: NotificationUtils.role(card.model, "originalImage") || ""
                   borderColor: "transparent"
                   borderWidth: 0
                   fallbackIcon: "bell"
@@ -783,7 +749,7 @@ Variants {
                   spacing: Style.marginXS
 
                   NText {
-                    text: card.model.summary || I18n.tr("common.no-summary")
+                    text: NotificationUtils.role(card.model, "summary") || I18n.tr("common.no-summary")
                     pointSize: Style.fontSizeM
                     font.weight: Style.fontWeightMedium
                     color: Color.mOnSurface
@@ -794,9 +760,9 @@ Variants {
                   }
 
                   NText {
-                    visible: card.model.body && card.model.body.length > 0
+                    visible: NotificationUtils.role(card.model, "body") && NotificationUtils.role(card.model, "body").length > 0
                     Layout.fillWidth: true
-                    text: card.model.body || ""
+                    text: NotificationUtils.role(card.model, "body") || ""
                     pointSize: Style.fontSizeS
                     color: Color.mOnSurfaceVariant
                     textFormat: Text.StyledText

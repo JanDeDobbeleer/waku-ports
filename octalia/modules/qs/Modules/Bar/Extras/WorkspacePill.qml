@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Compositor
 import qs.Widgets
 
@@ -33,23 +34,22 @@ Item {
   readonly property real fixedDimension: Style.toOdd(capsuleHeight * baseDimensionRatio)
 
   // Animated pill dimensions (for visual pill, not container)
-  property real pillWidth: isVertical ? fixedDimension : getWorkspaceWidth(workspace, false)
-  property real pillHeight: isVertical ? getWorkspaceHeight(workspace, false) : fixedDimension
+  property real pillWidth: isVertical ? fixedDimension : BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceWidth", pillContainer.workspace, false)
+  property real pillHeight: isVertical ? BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceHeight", pillContainer.workspace, false) : fixedDimension
 
   // Container uses full barHeight on cross-axis for larger click area
-  width: isVertical ? barHeight : getWorkspaceWidth(workspace, false)
-  height: isVertical ? getWorkspaceHeight(workspace, false) : barHeight
+  width: isVertical ? barHeight : BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceWidth", pillContainer.workspace, false)
+  height: isVertical ? BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceHeight", pillContainer.workspace, false) : barHeight
 
   states: [
     State {
       name: "active"
-      when: pillContainer.workspace.isActive
+      when: BarWidgetHelpers.readProperty(pillContainer.workspace, "isActive")
       PropertyChanges {
-        target: pillContainer
-        width: isVertical ? barHeight : getWorkspaceWidth(workspace, true)
-        height: isVertical ? getWorkspaceHeight(workspace, true) : barHeight
-        pillWidth: isVertical ? fixedDimension : getWorkspaceWidth(workspace, true)
-        pillHeight: isVertical ? getWorkspaceHeight(workspace, true) : fixedDimension
+        pillContainer.width: pillContainer.isVertical ? pillContainer.barHeight : BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceWidth", pillContainer.workspace, true)
+        pillContainer.height: pillContainer.isVertical ? BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceHeight", pillContainer.workspace, true) : pillContainer.barHeight
+        pillContainer.pillWidth: pillContainer.isVertical ? pillContainer.fixedDimension : BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceWidth", pillContainer.workspace, true)
+        pillContainer.pillHeight: pillContainer.isVertical ? BarWidgetHelpers.callWithTwoArguments(pillContainer, "getWorkspaceHeight", pillContainer.workspace, true) : pillContainer.fixedDimension
       }
     }
   ]
@@ -87,36 +87,21 @@ Item {
     color: {
       if (pillMouseArea.containsMouse)
         return Color.mHover;
-      if (pillContainer.workspace.isFocused)
+      if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isFocused"))
         return Color.resolveColorKey(pillContainer.focusedColor);
-      if (pillContainer.workspace.isUrgent)
+      if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isUrgent"))
         return Color.mError;
-      if (pillContainer.workspace.isOccupied)
+      if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isOccupied"))
         return Color.resolveColorKey(pillContainer.occupiedColor);
       return Qt.alpha(Color.resolveColorKey(pillContainer.emptyColor), 0.3);
     }
 
     Loader {
-      active: (pillContainer.labelMode !== "none") && (!pillContainer.showLabelsOnlyWhenOccupied || pillContainer.workspace.isOccupied || pillContainer.workspace.isFocused)
+      active: (pillContainer.labelMode !== "none") && (!pillContainer.showLabelsOnlyWhenOccupied || BarWidgetHelpers.readProperty(pillContainer.workspace, "isOccupied") || BarWidgetHelpers.readProperty(pillContainer.workspace, "isFocused"))
       anchors.fill: parent
       sourceComponent: Component {
         NText {
-          text: {
-            if (pillContainer.workspace.name && pillContainer.workspace.name.length > 0) {
-              if (pillContainer.labelMode === "name") {
-                return pillContainer.workspace.name.substring(0, pillContainer.characterCount);
-              }
-              if (pillContainer.labelMode === "index+name") {
-                // Vertical mode: compact format (no space, first char only)
-                // Horizontal mode: full format (space, more chars)
-                if (pillContainer.isVertical) {
-                  return pillContainer.workspace.idx.toString() + pillContainer.workspace.name.substring(0, 1);
-                }
-                return pillContainer.workspace.idx.toString() + " " + pillContainer.workspace.name.substring(0, pillContainer.characterCount);
-              }
-            }
-            return pillContainer.workspace.idx.toString();
-          }
+          text: BarWidgetHelpers.workspaceLabel(pillContainer.workspace, pillContainer.labelMode, pillContainer.isVertical, pillContainer.characterCount)
           family: Settings.data.ui.fontFixed
           // Size based on the fixed dimension (cross-axis) of the visual pill
           pointSize: (pillContainer.isVertical ? pillContainer.pillWidth : pillContainer.pillHeight) * pillContainer.textRatio
@@ -129,11 +114,11 @@ Item {
           color: {
             if (pillMouseArea.containsMouse)
               return Color.mOnHover;
-            if (pillContainer.workspace.isFocused)
+            if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isFocused"))
               return Color.resolveOnColorKey(pillContainer.focusedColor);
-            if (pillContainer.workspace.isUrgent)
+            if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isUrgent"))
               return Color.mOnError;
-            if (pillContainer.workspace.isOccupied)
+            if (BarWidgetHelpers.readProperty(pillContainer.workspace, "isOccupied"))
               return Color.resolveOnColorKey(pillContainer.occupiedColor);
             return Color.resolveOnColorKey(pillContainer.emptyColor);
           }
@@ -223,8 +208,8 @@ Item {
     color: "transparent"
     border.color: pillContainer.effectColor
     border.width: Math.max(1, Math.round((2 + 6 * (1.0 - pillContainer.masterProgress))))
-    opacity: pillContainer.effectsActive && pillContainer.workspace.isFocused ? (1.0 - pillContainer.masterProgress) * 0.7 : 0
-    visible: pillContainer.effectsActive && pillContainer.workspace.isFocused
+    opacity: pillContainer.effectsActive && BarWidgetHelpers.readProperty(pillContainer.workspace, "isFocused") ? (1.0 - pillContainer.masterProgress) * 0.7 : 0
+    visible: pillContainer.effectsActive && BarWidgetHelpers.readProperty(pillContainer.workspace, "isFocused")
     z: 1
   }
 }

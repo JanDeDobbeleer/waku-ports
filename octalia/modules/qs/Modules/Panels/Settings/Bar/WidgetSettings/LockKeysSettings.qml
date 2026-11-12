@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,15 +16,15 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueShowCapsLock: widgetData.showCapsLock !== undefined ? widgetData.showCapsLock : widgetMetadata.showCapsLock
-  property bool valueShowNumLock: widgetData.showNumLock !== undefined ? widgetData.showNumLock : widgetMetadata.showNumLock
-  property bool valueShowScrollLock: widgetData.showScrollLock !== undefined ? widgetData.showScrollLock : widgetMetadata.showScrollLock
+  property bool valueShowCapsLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCapsLock")
+  property bool valueShowNumLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showNumLock")
+  property bool valueShowScrollLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showScrollLock")
 
-  property string capsIcon: widgetData.capsLockIcon !== undefined ? widgetData.capsLockIcon : widgetMetadata.capsLockIcon
-  property string numIcon: widgetData.numLockIcon !== undefined ? widgetData.numLockIcon : widgetMetadata.numLockIcon
-  property string scrollIcon: widgetData.scrollLockIcon !== undefined ? widgetData.scrollLockIcon : widgetMetadata.scrollLockIcon
+  property string capsIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "capsLockIcon")
+  property string numIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "numLockIcon")
+  property string scrollIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "scrollLockIcon")
 
-  property bool valueHideWhenOff: widgetData.hideWhenOff !== undefined ? widgetData.hideWhenOff : (widgetMetadata.hideWhenOff !== undefined ? widgetMetadata.hideWhenOff : false)
+  property bool valueHideWhenOff: SettingsValue.undefinedFallbackDefault(widgetData, widgetMetadata, "hideWhenOff", false)
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -48,7 +49,7 @@ ColumnLayout {
                    root.valueShowCapsLock = checked;
                    root.saveSettings();
                  }
-      defaultValue: root.widgetMetadata.showCapsLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showCapsLock")
     }
 
     NIcon {
@@ -86,7 +87,7 @@ ColumnLayout {
                    root.valueShowNumLock = checked;
                    root.saveSettings();
                  }
-      defaultValue: root.widgetMetadata.showNumLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showNumLock")
     }
 
     NIcon {
@@ -124,7 +125,7 @@ ColumnLayout {
                    root.valueShowScrollLock = checked;
                    root.saveSettings();
                  }
-      defaultValue: root.widgetMetadata.showScrollLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showScrollLock")
     }
 
     NIcon {
@@ -164,6 +165,6 @@ ColumnLayout {
                  root.valueHideWhenOff = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideWhenOff
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenOff")
   }
 }

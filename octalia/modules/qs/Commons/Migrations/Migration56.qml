@@ -1,3 +1,4 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -5,17 +6,7 @@ import qs.Commons
 QtObject {
   id: root
 
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Settings", "Migrating settings to v56 (Color Scheme Migration)");
-
-    const scriptPath = Quickshell.shellDir + "/Scripts/python/src/theming/migrate-colorschemes.py";
-    const configDir = Settings.configDir;
-
-    logger.i("Settings", `Running color scheme migration script: ${scriptPath} with configDir: ${configDir}`);
-
-    // Run the migration script detached
-    Quickshell.execDetached(["python3", scriptPath, configDir]);
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate56(adapter, logger, rawJson, Settings, Quickshell);
   }
 }

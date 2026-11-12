@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -12,13 +13,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property int valueWidth: widgetData.width !== undefined ? widgetData.width : widgetMetadata.width
-  property int valueHeight: widgetData.height !== undefined ? widgetData.height : widgetMetadata.height
-  property string valueVisualizerType: widgetData.visualizerType !== undefined ? widgetData.visualizerType : widgetMetadata.visualizerType
-  property string valueColorName: widgetData.colorName !== undefined ? widgetData.colorName : widgetMetadata.colorName
-  property bool valueHideWhenIdle: widgetData.hideWhenIdle !== undefined ? widgetData.hideWhenIdle : widgetMetadata.hideWhenIdle
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
+  property int valueWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "width")
+  property int valueHeight: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "height")
+  property string valueVisualizerType: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "visualizerType")
+  property string valueColorName: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorName")
+  property bool valueHideWhenIdle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenIdle")
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -49,7 +50,7 @@ ColumnLayout {
         text = String(root.valueWidth);
       }
     }
-    defaultValue: String(root.widgetMetadata.width)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "width"))
   }
 
   NTextInput {
@@ -69,7 +70,7 @@ ColumnLayout {
         text = String(root.valueHeight);
       }
     }
-    defaultValue: String(root.widgetMetadata.height)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "height"))
   }
 
   NComboBox {
@@ -95,7 +96,7 @@ ColumnLayout {
                   root.valueVisualizerType = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.visualizerType
+    defaultValue: SettingsValue.read(root.widgetMetadata, "visualizerType")
   }
 
   NColorChoice {
@@ -107,7 +108,7 @@ ColumnLayout {
                   root.valueColorName = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.colorName
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorName")
   }
 
   NToggle {
@@ -119,7 +120,7 @@ ColumnLayout {
                  root.valueHideWhenIdle = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideWhenIdle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenIdle")
   }
 
   NDivider {
@@ -135,7 +136,7 @@ ColumnLayout {
                  root.valueShowBackground = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
@@ -148,6 +149,6 @@ ColumnLayout {
                  root.valueRoundedCorners = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 }

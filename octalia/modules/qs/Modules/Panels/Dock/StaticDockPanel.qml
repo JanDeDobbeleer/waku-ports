@@ -11,9 +11,7 @@ SmartPanel {
 
   readonly property string dockPosition: Settings.data.dock.position
   readonly property bool isVertical: dockPosition === "left" || dockPosition === "right"
-  readonly property bool hasBar: modelData && modelData.name ? (Settings.data.bar.monitors.includes(modelData.name) || (Settings.data.bar.monitors.length === 0)) : false
   readonly property bool barAtSameEdge: hasBar && Settings.getBarPositionForScreen(modelData?.name) === dockPosition
-  readonly property bool isFramed: Settings.data.bar.barType === "framed" && hasBar
   property bool isDockHovered: false
   property bool panelHovered: false
   readonly property int iconSize: Math.round(12 + 24 * (Settings.data.dock.size ?? 1))
@@ -190,7 +188,7 @@ SmartPanel {
                             }
                           });
 
-    if (JSON.stringify(currentPinned) !== JSON.stringify(newPinned)) {
+    if (JSON.stringify(Array.from(currentPinned)) !== JSON.stringify(newPinned)) {
       Settings.data.dock.pinnedApps = newPinned;
     }
   }

@@ -1,3 +1,5 @@
+import "NScrollViewUtils.js" as ScrollViewUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import qs.Commons
@@ -15,8 +17,8 @@ ScrollView {
   property int horizontalPolicy: ScrollBar.AsNeeded
   property bool preventHorizontalScroll: horizontalPolicy === ScrollBar.AlwaysOff
   property int boundsBehavior: Flickable.StopAtBounds
-  readonly property bool verticalScrollable: (contentItem.contentHeight > contentItem.height) || (verticalPolicy == ScrollBar.AlwaysOn)
-  readonly property bool horizontalScrollable: (contentItem.contentWidth > contentItem.width) || (horizontalPolicy == ScrollBar.AlwaysOn)
+  readonly property bool verticalScrollable: ScrollViewUtils.verticalOverflow(contentItem) || (verticalPolicy == ScrollBar.AlwaysOn)
+  readonly property bool horizontalScrollable: ScrollViewUtils.horizontalOverflow(contentItem) || (horizontalPolicy == ScrollBar.AlwaysOn)
   property bool showGradientMasks: true
   property color gradientColor: Color.mSurfaceVariant
   property int gradientHeight: 16
@@ -34,7 +36,7 @@ ScrollView {
     if (!root._internalFlickable)
       return 0;
     const flickable = root._internalFlickable;
-    return Math.max(0, Math.min(value, flickable.contentHeight - flickable.height));
+    return Math.max(0, Math.min(value, ScrollViewUtils.scrollRange(flickable)));
   }
 
   function applyWheelScroll(delta: real) {
@@ -45,13 +47,13 @@ ScrollView {
     const step = delta * root.wheelScrollMultiplier;
 
     if (!Settings.data.general.smoothScrollEnabled || Settings.data.general.animationDisabled) {
-      flickable.contentY = root.clampScrollY(flickable.contentY - step);
-      root._wheelTargetY = flickable.contentY;
+      ScrollViewUtils.setContentY(flickable, root.clampScrollY(ScrollViewUtils.contentY(flickable) - step));
+      root._wheelTargetY = ScrollViewUtils.contentY(flickable);
       return;
     }
 
     if (!wheelScrollAnimation.running)
-      root._wheelTargetY = flickable.contentY;
+      root._wheelTargetY = ScrollViewUtils.contentY(flickable);
 
     root._wheelTargetY = root.clampScrollY(root._wheelTargetY - step);
     wheelScrollAnimation.to = root._wheelTargetY;
@@ -132,17 +134,17 @@ ScrollView {
     target: root._internalFlickable
 
     function onDraggingChanged() {
-      if (!root._internalFlickable || !root._internalFlickable.dragging)
+      if (!root._internalFlickable || !ScrollViewUtils.dragging(root._internalFlickable))
         return;
       wheelScrollAnimation.stop();
-      root._wheelTargetY = root._internalFlickable.contentY;
+      root._wheelTargetY = ScrollViewUtils.contentY(root._internalFlickable);
     }
 
     function onFlickingChanged() {
-      if (!root._internalFlickable || !root._internalFlickable.flicking)
+      if (!root._internalFlickable || !ScrollViewUtils.flicking(root._internalFlickable))
         return;
       wheelScrollAnimation.stop();
-      root._wheelTargetY = root._internalFlickable.contentY;
+      root._wheelTargetY = ScrollViewUtils.contentY(root._internalFlickable);
     }
 
     function onContentHeightChanged() {
@@ -155,25 +157,14 @@ ScrollView {
   }
 
   // Function to configure the underlying Flickable
-  function configureFlickable() {
-    var child, i;
-    // Find the internal Flickable (it's usually the first child)
-    for (i = 0; i < children.length; i++) {
-      child = children[i];
-      if (child.toString().indexOf("Flickable") !== -1) {
-        // Configure the flickable to prevent horizontal scrolling
-        child.boundsBehavior = root.boundsBehavior;
-        root._internalFlickable = child;
+  function configureFlickable(): void {
+    if (!ScrollViewUtils.configureFirstFlickable(root, children, Flickable.VerticalFlick))
+      return;
 
-        if (root.preventHorizontalScroll) {
-          child.flickableDirection = Flickable.VerticalFlick;
-          child.contentWidth = Qt.binding(() => child.width);
-        }
-
-        root._wheelTargetY = child.contentY;
-        break;
-      }
+    if (root.preventHorizontalScroll) {
+      ScrollViewUtils.bindContentWidth(root._internalFlickable, Qt.binding(ScrollViewUtils.widthBinding(root._internalFlickable)));
     }
+    root._wheelTargetY = ScrollViewUtils.contentY(root._internalFlickable);
   }
 
   WheelHandler {

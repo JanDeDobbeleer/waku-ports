@@ -100,7 +100,7 @@ Slider {
     }
 
     LinearGradient {
-      id: fillGradient
+      id: activeFillGradient
       x1: 0
       y1: 0
       x2: root.availableWidth
@@ -127,7 +127,7 @@ Slider {
       ShapePath {
         id: fillPath
         strokeColor: "transparent"
-        fillGradient: fillGradient
+        fillGradient: activeFillGradient
 
         readonly property real fullWidth: root.availableWidth
         readonly property real h: root.trackHeight

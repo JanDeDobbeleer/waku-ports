@@ -74,7 +74,7 @@ NBox {
           ratio: (SystemStatService.diskPercents[root.diskPath] ?? 0) / 100
           icon: "storage"
           contentScale: root.contentScale
-          fillColor: SystemStatService.getDiskColor(root.diskPath)
+          fillColor: SystemStatService.getDiskColor(root.diskPath, undefined)
         }
       }
     }

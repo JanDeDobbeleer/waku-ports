@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "KeyboardLayoutUtils.js" as LayoutUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -14,56 +16,15 @@ Singleton {
   property bool isInitialized: false
 
   // Updates current layout from various format strings. Called by compositors
-  function setCurrentLayout(layoutString) {
+  function setCurrentLayout(layoutString: var): void {
     root.fullLayoutName = layoutString || I18n.tr("common.unknown");
     root.currentLayout = extractLayoutCode(layoutString);
   }
 
   // Extract layout code from various format strings
   // Priority: variant > country code > language lookup > fallback
-  function extractLayoutCode(layoutString) {
-    if (!layoutString)
-      return I18n.tr("common.unknown");
-
-    const str = layoutString.toLowerCase();
-
-    // If it's already a short code (2-3 chars), return uppercase
-    if (/^[a-z]{2,3}(\+.*)?$/.test(str)) {
-      return str.split('+')[0].toUpperCase();
-    }
-
-    // Check for layout variants first - these are more meaningful than country codes
-    // when distinguishing between multiple layouts of the same language
-    for (const [pattern, display] of Object.entries(variantMap)) {
-      if (str.includes(pattern)) {
-        return display;
-      }
-    }
-
-    // Extract short code from parentheses like "English (US)"
-    const shortCodeMatch = str.match(/\(([a-z]{2,3})\)/i);
-    if (shortCodeMatch) {
-      return shortCodeMatch[1].toUpperCase();
-    }
-
-    // Check for language/country names in the language map
-    // First, try to match at the start of the string (the primary language)
-    for (const [lang, code] of Object.entries(languageMap)) {
-      if (str.startsWith(lang)) {
-        return code.toUpperCase();
-      }
-    }
-    // Then try word boundary matching anywhere in the string
-    for (const [lang, code] of Object.entries(languageMap)) {
-      const regex = new RegExp(`\\b${lang}\\b`);
-      if (regex.test(str)) {
-        return code.toUpperCase();
-      }
-    }
-
-    // If nothing matches, try first 2-3 characters if they look like a code
-    const codeMatch = str.match(/^([a-z]{2,3})/);
-    return codeMatch ? codeMatch[1].toUpperCase() : I18n.tr("common.unknown");
+  function extractLayoutCode(layoutString: var): string {
+    return LayoutUtils.extractLayoutCode(layoutString, root, I18n);
   }
 
   // The engine's DesktopState reads the layout of the foreground window's thread ("EN",
@@ -90,10 +51,10 @@ Singleton {
 
     if (layoutChanged) {
       if (Settings.data.notifications.enableKeyboardLayoutToast) {
-        const message = I18n.tr("toast.keyboard-layout.changed", {
+        const message = I18n.trArgs("toast.keyboard-layout.changed", {
                                   "layout": fullLayoutName
                                 });
-        ToastService.showNotice(I18n.tr("toast.keyboard-layout.title"), message, "", 2000);
+        ToastService.showNoticeDetailed(I18n.tr("toast.keyboard-layout.title"), message, "", 2000, undefined, undefined);
       }
       Logger.d("KeyboardLayout", "Layout changed from", previousLayout, "to", currentLayout);
     }

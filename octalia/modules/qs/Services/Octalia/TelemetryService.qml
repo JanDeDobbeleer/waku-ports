@@ -15,18 +15,18 @@ Singleton {
   function init() {
   }
 
-  function getInstanceId() {
+  function getInstanceId(): string {
     return "";
   }
 
   function sendPing() {
   }
 
-  function getMonitorInfo() {
+  function getMonitorInfo(): var {
     return [];
   }
 
-  function getCompositorType() {
+  function getCompositorType(): string {
     return "waku";
   }
 }

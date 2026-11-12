@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "FontServiceUtils.js" as FontServiceUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -21,8 +23,8 @@ Singleton {
 
   // The families Qt finds on Windows (fc-list does not exist). Qt has no query for monospace, so a name
   // pattern stands in.
-  function isMonospace(family) {
-    return /mono|code|consol|courier|cascadia|fixed|terminal|hack|lucida console|inconsolata|iosevka|menlo/i.test(family);
+  function isMonospace(family: var): bool {
+    return FontServiceUtils.isMonospace(family);
   }
 
   function loadFontsViaFcList() {
@@ -30,10 +32,10 @@ Singleton {
       return;
     isLoading = true;
     const all = Qt.fontFamilies();
-    populateModels(all.join("\n"), all.filter(isMonospace).join("\n"));
+    populateModels(all.join("\n"), all.filter(FontServiceUtils.isMonospace).join("\n"));
   }
 
-  function populateModels(allFontsText, monoFontsText) {
+  function populateModels(allFontsText: var, monoFontsText: var): void {
     var families, fi, fontName, fontObj, i, j, k, line, m, mi, monoFamilies, monoName, n, name;
     // Parse monospace fonts into a lookup set
     // fc-list returns comma-separated family names for fonts with multiple families
@@ -69,9 +71,7 @@ Singleton {
     }
 
     // Sort font names
-    var sortedFonts = Object.keys(fontSet).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
+    var sortedFonts = FontServiceUtils.sortFontNames(fontSet);
 
     // Build arrays for batch insert
     var allBatch = [];
@@ -92,26 +92,26 @@ Singleton {
     }
 
     // Clear and populate models (single batch operation)
-    availableFonts.clear();
-    monospaceFonts.clear();
+    FontServiceUtils.clearModel(availableFonts);
+    FontServiceUtils.clearModel(monospaceFonts);
 
-    availableFonts.append({
-                            "key": Qt.application.font.family,
+    FontServiceUtils.appendItem(availableFonts, {
+                            "key": FontServiceUtils.applicationFontFamily(),
                             "name": I18n.tr("panels.indicator.system-default")
                           });
-    monospaceFonts.append({
+    FontServiceUtils.appendItem(monospaceFonts, {
                             "key": "monospace",
                             "name": I18n.tr("panels.indicator.system-default")
                           });
 
     for (m = 0; m < allBatch.length; m++)
-      availableFonts.append(allBatch[m]);
+      FontServiceUtils.appendItem(availableFonts, allBatch[m]);
     for (n = 0; n < monoBatch.length; n++)
-      monospaceFonts.append(monoBatch[n]);
+      FontServiceUtils.appendItem(monospaceFonts, monoBatch[n]);
 
     fontsLoaded = true;
     isLoading = false;
-    Logger.i("Font", "Loaded", availableFonts.count, "fonts,", monospaceFonts.count, "monospace");
+    Logger.i("Font", "Loaded", FontServiceUtils.count(availableFonts), "fonts,", FontServiceUtils.count(monospaceFonts), "monospace");
   }
 
   // Temporary storage for process outputs

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Compositor
 import qs.Services.UI
 import qs.Widgets
@@ -40,13 +41,13 @@ Item {
   }
 
   property bool hasWindow: false
-  readonly property string hideMode: (widgetSettings.hideMode !== undefined) ? widgetSettings.hideMode : widgetMetadata.hideMode
-  readonly property bool onlySameOutput: (widgetSettings.onlySameOutput !== undefined) ? widgetSettings.onlySameOutput : widgetMetadata.onlySameOutput
-  readonly property bool onlyActiveWorkspaces: (widgetSettings.onlyActiveWorkspaces !== undefined) ? widgetSettings.onlyActiveWorkspaces : widgetMetadata.onlyActiveWorkspaces
-  readonly property bool showTitle: isVerticalBar ? false : (widgetSettings.showTitle !== undefined) ? widgetSettings.showTitle : widgetMetadata.showTitle
-  readonly property bool smartWidth: (widgetSettings.smartWidth !== undefined) ? widgetSettings.smartWidth : widgetMetadata.smartWidth
-  readonly property int maxTaskbarWidthPercent: (widgetSettings.maxTaskbarWidth !== undefined) ? widgetSettings.maxTaskbarWidth : widgetMetadata.maxTaskbarWidth
-  readonly property real iconScale: (widgetSettings.iconScale !== undefined) ? widgetSettings.iconScale : widgetMetadata.iconScale
+  readonly property string hideMode: (BarWidgetHelpers.readProperty(widgetSettings, "hideMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "hideMode") : BarWidgetHelpers.readProperty(widgetMetadata, "hideMode")
+  readonly property bool onlySameOutput: (BarWidgetHelpers.readProperty(widgetSettings, "onlySameOutput") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "onlySameOutput") : BarWidgetHelpers.readProperty(widgetMetadata, "onlySameOutput")
+  readonly property bool onlyActiveWorkspaces: (BarWidgetHelpers.readProperty(widgetSettings, "onlyActiveWorkspaces") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "onlyActiveWorkspaces") : BarWidgetHelpers.readProperty(widgetMetadata, "onlyActiveWorkspaces")
+  readonly property bool showTitle: isVerticalBar ? false : (BarWidgetHelpers.readProperty(widgetSettings, "showTitle") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showTitle") : BarWidgetHelpers.readProperty(widgetMetadata, "showTitle")
+  readonly property bool smartWidth: (BarWidgetHelpers.readProperty(widgetSettings, "smartWidth") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "smartWidth") : BarWidgetHelpers.readProperty(widgetMetadata, "smartWidth")
+  readonly property int maxTaskbarWidthPercent: (BarWidgetHelpers.readProperty(widgetSettings, "maxTaskbarWidth") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "maxTaskbarWidth") : BarWidgetHelpers.readProperty(widgetMetadata, "maxTaskbarWidth")
+  readonly property real iconScale: (BarWidgetHelpers.readProperty(widgetSettings, "iconScale") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "iconScale") : BarWidgetHelpers.readProperty(widgetMetadata, "iconScale")
   readonly property int itemSize: Style.toOdd(capsuleHeight * Math.max(0.1, iconScale))
 
   // Maximum width for the taskbar widget to prevent overlapping with other widgets
@@ -62,7 +63,7 @@ Item {
   readonly property int titleWidth: {
     var entriesCount, maxWidthPerEntry;
     // First, use user-defined title width if set
-    var calculatedWidth = (widgetSettings.titleWidth !== undefined) ? widgetSettings.titleWidth : widgetMetadata.titleWidth;
+    var calculatedWidth = (BarWidgetHelpers.readProperty(widgetSettings, "titleWidth") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "titleWidth") : BarWidgetHelpers.readProperty(widgetMetadata, "titleWidth");
 
     // Second, shrink title width if it exceeds maxTaskbarWidth when smartWidth is enabled
     if (smartWidth && combinedModel.length > 0) {
@@ -77,7 +78,7 @@ Item {
 
     return calculatedWidth;
   }
-  readonly property bool showPinnedApps: (widgetSettings.showPinnedApps !== undefined) ? widgetSettings.showPinnedApps : widgetMetadata.showPinnedApps
+  readonly property bool showPinnedApps: (BarWidgetHelpers.readProperty(widgetSettings, "showPinnedApps") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showPinnedApps") : BarWidgetHelpers.readProperty(widgetMetadata, "showPinnedApps")
 
   // Context menu state - store ID instead of object reference to avoid stale references
   property string selectedWindowId: ""
@@ -187,7 +188,7 @@ Item {
                             }
                           });
 
-    if (JSON.stringify(currentPinned) !== JSON.stringify(newPinned)) {
+    if (JSON.stringify(Array.from(currentPinned)) !== JSON.stringify(newPinned)) {
       Settings.data.dock.pinnedApps = newPinned;
     }
   }
@@ -351,7 +352,7 @@ Item {
     // First pass: Add all running windows
     try {
       const total = CompositorService.windows.count || 0;
-      const activeIds = CompositorService.getActiveWorkspaces().map(function (ws) {
+      const activeIds = Array.from(CompositorService.getActiveWorkspaces()).map(function (ws) {
         return ws.id;
       });
 
@@ -740,7 +741,7 @@ Item {
 
             // Visual shifting logic
             readonly property bool isDragged: root.dragSourceIndex === index
-            property real shiftOffset: 0
+            property real shiftOffset
 
             // Calculate shift based on drag state
             // If I am NOT the dragged item, but I am in the path of the drag
@@ -861,7 +862,7 @@ Item {
                     asynchronous: true
 
                     // Apply dock shader to all taskbar icons
-                    layer.enabled: widgetSettings.colorizeIcons !== false
+                    layer.enabled: BarWidgetHelpers.readProperty(widgetSettings, "colorizeIcons") !== false
                     layer.effect: ShaderEffect {
                       property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
                       property real colorizeMode: 0.0 // Dock mode (grayscale)

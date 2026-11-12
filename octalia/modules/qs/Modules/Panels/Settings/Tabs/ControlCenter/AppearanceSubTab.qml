@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -65,13 +66,7 @@ ColumnLayout {
       Layout.fillWidth: true
       label: I18n.tr("panels.control-center.system-monitor-disk-path-label")
       description: I18n.tr("panels.control-center.system-monitor-disk-path-description")
-      model: {
-        const paths = Object.keys(SystemStatService.diskPercents).sort();
-        return paths.map(path => ({
-                                    key: path,
-                                    name: path
-                                  }));
-      }
+      model: SettingsValue.diskPathOptions(SystemStatService.diskPercents)
       currentKey: Settings.data.controlCenter.diskPath || "/"
       onSelected: key => Settings.data.controlCenter.diskPath = key
       defaultValue: Settings.getDefaultValue("controlCenter.diskPath") || "/"

@@ -5,6 +5,8 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "CustomButtonSettings.js" as CustomButtonData
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -21,52 +23,30 @@ ColumnLayout {
   QtObject {
     id: _settings
 
-    property string icon: root.widgetData.icon !== undefined ? root.widgetData.icon : root.widgetMetadata.icon
-    property string onClicked: root.widgetData.onClicked !== undefined ? root.widgetData.onClicked : root.widgetMetadata.onClicked
-    property string onRightClicked: root.widgetData.onRightClicked !== undefined ? root.widgetData.onRightClicked : root.widgetMetadata.onRightClicked
-    property string onMiddleClicked: root.widgetData.onMiddleClicked !== undefined ? root.widgetData.onMiddleClicked : root.widgetMetadata.onMiddleClicked
+    property string icon: SettingsValue.undefinedFallback(root.widgetData, root.widgetMetadata, "icon")
+    property string onClicked: SettingsValue.undefinedFallback(root.widgetData, root.widgetMetadata, "onClicked")
+    property string onRightClicked: SettingsValue.undefinedFallback(root.widgetData, root.widgetMetadata, "onRightClicked")
+    property string onMiddleClicked: SettingsValue.undefinedFallback(root.widgetData, root.widgetMetadata, "onMiddleClicked")
     property ListModel _stateChecksListModel: ListModel {}
     property string stateChecksJson: "[]"
-    property bool enableOnStateLogic: root.widgetData.enableOnStateLogic !== undefined ? root.widgetData.enableOnStateLogic : root.widgetMetadata.enableOnStateLogic
+    property bool enableOnStateLogic: SettingsValue.undefinedFallback(root.widgetData, root.widgetMetadata, "enableOnStateLogic")
 
-    function populateStateChecks() {
-      var i, initialChecks, item;
-      try {
-        initialChecks = JSON.parse(stateChecksJson);
-        if (initialChecks && Array.isArray(initialChecks)) {
-          for (i = 0; i < initialChecks.length; i++) {
-            item = initialChecks[i];
-            if (item && typeof item === "object") {
-              _settings._stateChecksListModel.append({
-                                                       "command": item.command || "",
-                                                       "icon": item.icon || ""
-                                                     });
-            } else {
-              Logger.w("CustomButtonSettings", "Invalid stateChecks entry at index " + i + ":", item);
-            }
-          }
-        }
-      } catch (e) {
-        Logger.e("CustomButtonSettings", "Failed to parse stateChecksJson:", e.message);
-      }
+    function populateStateChecks(): void {
+      CustomButtonData.populateStateChecks(stateChecksJson, _stateChecksListModel, Logger);
     }
+
 
     Component.onCompleted: {
       root.rootSettings = _settings;
-      stateChecksJson = (root.widgetData && root.widgetData.stateChecksJson !== undefined) ? root.widgetData.stateChecksJson : (root.widgetMetadata && root.widgetMetadata.stateChecksJson ? root.widgetMetadata.stateChecksJson : "[]");
+      stateChecksJson = CustomButtonData.stateChecksJson(root.widgetData, root.widgetMetadata);
       Qt.callLater(populateStateChecks);
     }
 
-    function saveSettings() {
-      var i;
-      var savedStateChecksArray = [];
-      for (i = 0; i < _settings._stateChecksListModel.count; i++) {
-        savedStateChecksArray.push(_settings._stateChecksListModel.get(i));
-      }
-      _settings.stateChecksJson = JSON.stringify(savedStateChecksArray);
+    function saveSettings(): var {
+_settings.stateChecksJson = CustomButtonData.serializeStateChecks(_settings._stateChecksListModel);
 
       return {
-        "id": root.widgetData.id,
+        "id": SettingsValue.read(root.widgetData, "id"),
         "icon": _settings.icon,
         "onClicked": _settings.onClicked,
         "onRightClicked": _settings.onRightClicked,
@@ -77,28 +57,22 @@ ColumnLayout {
     }
   }
 
-  function saveSettings() {
+  function saveSettings(): var {
     return _settings.saveSettings();
   }
 
-  function updateStateCheck(index, command, icon) {
-    _settings._stateChecksListModel.set(index, {
-                                          "command": command,
-                                          "icon": icon
-                                        });
+  function updateStateCheck(index: int, command: string, icon: string): void {
+    CustomButtonData.updateStateCheck(_settings._stateChecksListModel, index, command, icon);
     _settings.saveSettings();
   }
 
-  function removeStateCheck(index) {
-    _settings._stateChecksListModel.remove(index);
+  function removeStateCheck(index: int): void {
+    CustomButtonData.removeStateCheck(_settings._stateChecksListModel, index);
     _settings.saveSettings();
   }
 
-  function addStateCheck() {
-    _settings._stateChecksListModel.append({
-                                             "command": "",
-                                             "icon": ""
-                                           });
+  function addStateCheck(): void {
+    CustomButtonData.addStateCheck(_settings._stateChecksListModel);
     _settings.saveSettings();
   }
 
@@ -112,9 +86,9 @@ ColumnLayout {
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: _settings.icon || (root.widgetMetadata && root.widgetMetadata.icon ? root.widgetMetadata.icon : "")
+      icon: _settings.icon || (SettingsValue.read(root.widgetMetadata, "icon") ? SettingsValue.read(root.widgetMetadata, "icon") : "")
       pointSize: Style?.fontSizeXL ?? 24
-      visible: (_settings.icon || (root.widgetMetadata && root.widgetMetadata.icon ? root.widgetMetadata.icon : "")) !== ""
+      visible: (_settings.icon || (SettingsValue.read(root.widgetMetadata, "icon") ? SettingsValue.read(root.widgetMetadata, "icon") : "")) !== ""
     }
 
     NButton {
@@ -142,7 +116,7 @@ ColumnLayout {
       _settings.onClicked = text;
       root.saveSettings();
     }
-    defaultValue: root.widgetMetadata.onClicked
+    defaultValue: SettingsValue.read(root.widgetMetadata, "onClicked")
   }
 
   NTextInput {
@@ -155,7 +129,7 @@ ColumnLayout {
       _settings.onRightClicked = text;
       root.saveSettings();
     }
-    defaultValue: root.widgetMetadata.onRightClicked
+    defaultValue: SettingsValue.read(root.widgetMetadata, "onRightClicked")
   }
 
   NTextInput {
@@ -168,7 +142,7 @@ ColumnLayout {
       _settings.onMiddleClicked = text;
       root.saveSettings();
     }
-    defaultValue: root.widgetMetadata.onMiddleClicked
+    defaultValue: SettingsValue.read(root.widgetMetadata, "onMiddleClicked")
   }
 
   NDivider {}
@@ -183,12 +157,12 @@ ColumnLayout {
                  _settings.enableOnStateLogic = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.enableOnStateLogic
+    defaultValue: SettingsValue.read(root.widgetMetadata, "enableOnStateLogic")
   }
 
   ColumnLayout {
     Layout.fillWidth: true
-    visible: root.rootSettings && root.rootSettings.enableOnStateLogic
+    visible: root.rootSettings && SettingsValue.read(root.rootSettings, "enableOnStateLogic")
     spacing: Style?.marginM ?? 8
 
     NLabel {
@@ -196,7 +170,7 @@ ColumnLayout {
     }
 
     Repeater {
-      model: root.rootSettings ? root.rootSettings._stateChecksListModel : null
+      model: root.rootSettings ? SettingsValue.read(root.rootSettings, "_stateChecksListModel") : null
       delegate: Item {
         id: stateCheck
         required property int index
@@ -233,13 +207,13 @@ ColumnLayout {
 
             NIconButton {
               icon: "folder"
-              baseSize: Style?.buttonSizeS ?? 24
+              baseSize: SettingsValue.valueOrDefault(Style, "buttonSizeS", 24)
               onClicked: iconPickerDelegate.open()
             }
 
             NIconButton {
               icon: "close"
-              baseSize: Style?.buttonSizeS ?? 24
+              baseSize: SettingsValue.valueOrDefault(Style, "buttonSizeS", 24)
               colorBorder: Qt.alpha(Color.mOutline, Style.opacityLight)
               colorBg: Color.mError
               colorFg: Color.mOnError

@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "IdleServiceUtils.js" as IdleServiceUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -112,7 +114,7 @@ Singleton {
     }
   }
 
-  function _queueStage(stage) {
+  function _queueStage(stage: var): void {
     if (!_isValidStage(stage)) {
       Logger.w("IdleService", "Ignoring unknown queued stage:", stage);
       return;
@@ -125,11 +127,11 @@ Singleton {
     Logger.d("IdleService", "Queued idle stage while fade is active:", stage);
   }
 
-  function _isValidStage(stage) {
+  function _isValidStage(stage: var): bool {
     return stage === "screenOff" || stage === "lock" || stage === "suspend";
   }
 
-  function _isStageEnabled(stage): bool {
+  function _isStageEnabled(stage: var): bool {
     const idle = Settings.data.idle;
     if (stage === "screenOff")
       return idle.screenOffTimeout > 0;
@@ -148,7 +150,7 @@ Singleton {
       return;
     }
 
-    while (_queuedStages.length > 0) {
+    while (IdleServiceUtils.hasQueuedStages(_queuedStages)) {
       const nextStage = _queuedStages.shift();
       if (!_isValidStage(nextStage)) {
         Logger.w("IdleService", "Dropping queued unknown stage:", nextStage);
@@ -165,7 +167,7 @@ Singleton {
     }
   }
 
-  function _onIdle(stage) {
+  function _onIdle(stage: var): void {
     if (!_isValidStage(stage)) {
       Logger.w("IdleService", "Idle fired with unknown stage:", stage);
       return;
@@ -184,7 +186,7 @@ Singleton {
     graceTimer.restart();
   }
 
-  function _executeAction(stage) {
+  function _executeAction(stage: var): void {
     Logger.i("IdleService", "Executing action:", stage);
     if (stage === "screenOff") {
       if (Settings.data.idle.screenOffCommand)
@@ -252,147 +254,24 @@ Singleton {
     _applyCustomMonitors();
   }
 
-  function _applyCustomMonitors() {
-    var key;
-    var i;
-    // Destroy all existing custom monitors
-    for (key in _customMonitors) {
-      if (_customMonitors[key]) {
-        _customMonitors[key].destroy();
-      }
-    }
-    root._customMonitors = {};
-
-    const idle = Settings.data.idle;
-    if (!idle.enabled)
-      return;
-
-    var entries = [];
-    try {
-      entries = JSON.parse(idle.customCommands);
-    } catch (e) {
-      Logger.w("IdleService", "Failed to parse customCommands:", e);
-      return;
-    }
-
-    var newMonitors = {};
-    for (i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const timeoutSec = parseInt(entry.timeout);
-      const cmd = entry.command;
-      const resumeCmd = entry.resumeCommand || "";
-      if (!cmd && !resumeCmd || timeoutSec <= 0)
-        continue;
-      try {
-        const qml = `
-          import Quickshell.Wayland
-          IdleMonitor { timeout: ${timeoutSec} }
-        `;
-
-        const monitor = Qt.createQmlObject(qml, root, "IdleMonitor_custom_" + i);
-        const capturedCmd = cmd;
-        const capturedResumeCmd = resumeCmd;
-        monitor.isIdleChanged.connect(function () {
-          if (monitor.isIdle) {
-            if (capturedCmd)
-              root._executeCustomCommand(capturedCmd);
-          } else {
-            if (capturedResumeCmd)
-              root._executeCustomCommand(capturedResumeCmd);
-          }
-        });
-        newMonitors[i] = monitor;
-        root._monitorsCreated = true;
-        Logger.i("IdleService", "Custom monitor " + i + " created, timeout", timeoutSec, "s");
-      } catch (e) {
-        Logger.w("IdleService", "Failed to create custom monitor " + i + ":", e);
-      }
-    }
-    root._customMonitors = newMonitors;
+  function _createIdleMonitor(qml: var, name: var): QtObject {
+    return Qt.createQmlObject(qml, root, name);
   }
 
-  function _executeCustomCommand(cmd) {
+  function _applyCustomMonitors(): void {
+    IdleServiceUtils._applyCustomMonitors(root, Settings, Logger);
+  }
+
+  function _executeCustomCommand(cmd: var): void {
     Logger.i("IdleService", "Executing custom command:", cmd);
     Quickshell.execDetached(["cmd", "/c", cmd]);
   }
 
-  function _setMonitor(stage, timeoutSec) {
-    const propName = "_" + stage + "Monitor";
-    const existing = root[propName];
-
-    if (timeoutSec <= 0) {
-      if (existing) {
-        existing.destroy();
-        root[propName] = null;
-        Logger.d("IdleService", stage + " monitor disabled");
-      }
-      return;
-    }
-
-    if (existing) {
-      if (existing.timeout === timeoutSec)
-        return;
-      // ext-idle-notify-v1 has no update-timeout request — must recreate
-      existing.destroy();
-      root[propName] = null;
-      Logger.d("IdleService", stage + " monitor timeout changed to", timeoutSec, "s, recreating");
-    }
-
-    try {
-      const qml = `
-        import Quickshell.Wayland
-        IdleMonitor { timeout: ${timeoutSec} }
-      `;
-
-      const monitor = Qt.createQmlObject(qml, root, "IdleMonitor_" + stage);
-      monitor.isIdleChanged.connect(function () {
-        if (monitor.isIdle)
-          root._onIdle(stage);
-        else
-          root.cancelFade();
-      });
-      root[propName] = monitor;
-      root._monitorsCreated = true;
-      Logger.i("IdleService", stage + " monitor created, timeout", timeoutSec, "s");
-    } catch (e) {
-      Logger.w("IdleService", "IdleMonitor not available (compositor lacks ext-idle-notify-v1):", e);
-      root._monitorsCreated = false;
-    }
+  function _setMonitor(stage: var, timeoutSec: var): void {
+    IdleServiceUtils._setMonitor(root, stage, timeoutSec, Logger);
   }
 
-  function _ensureHeartbeat() {
-    if (_heartbeatMonitor)
-      return;
-    try {
-      const qml = `
-        import Quickshell.Wayland
-        IdleMonitor { timeout: 1 }
-      `;
-
-      const monitor = Qt.createQmlObject(qml, root, "IdleMonitor_heartbeat");
-      monitor.isIdleChanged.connect(function () {
-        if (monitor.isIdle) {
-          root.idleSeconds = 1;
-          idleCounter.start();
-        } else {
-          idleCounter.stop();
-          root.idleSeconds = 0;
-          if (root.fadePending === "lock" && Settings.data.idle.resumeLockCommand) {
-            Logger.i("IdleService", "Executing lock resume command");
-            Quickshell.execDetached(["cmd", "/c", Settings.data.idle.resumeLockCommand]);
-          } else if (root.fadePending === "suspend" && Settings.data.idle.resumeSuspendCommand) {
-            Logger.i("IdleService", "Executing suspend resume command");
-            Quickshell.execDetached(["cmd", "/c", Settings.data.idle.resumeSuspendCommand]);
-          }
-          root.cancelFade();
-          overlayCleanupTimer.stop();
-        }
-      });
-      _heartbeatMonitor = monitor;
-      root._monitorsCreated = true;
-      Logger.d("IdleService", "Heartbeat monitor created");
-    } catch (e) {
-      Logger.w("IdleService", "Heartbeat monitor failed:", e);
-    }
+  function _ensureHeartbeat(): void {
+    IdleServiceUtils._ensureHeartbeat(root, Settings, Logger, Quickshell, idleCounter, overlayCleanupTimer);
   }
 }

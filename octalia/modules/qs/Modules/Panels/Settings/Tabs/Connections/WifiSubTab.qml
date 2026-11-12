@@ -9,6 +9,7 @@ import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "WifiSubTab.js" as WifiData
 
 Item {
   id: root
@@ -25,29 +26,14 @@ Item {
 
   readonly property var activeNetworks: Object.values(NetworkService.networks)
 
-  readonly property var connectedNetworks: {
-    if (!NetworkService.wifiEnabled) {
-      return [];
-    }
-    return activeNetworks.filter(n => n.connected).sort((a, b) => b.signal - a.signal);
-  }
+  readonly property var connectedNetworks: WifiData.connectedNetworks(activeNetworks, NetworkService.wifiEnabled)
 
-  readonly property var savedNetworks: {
-    if (!NetworkService.wifiEnabled) {
-      return [];
-    }
-    return activeNetworks.filter(n => !n.connected && n.existing).sort((a, b) => b.signal - a.signal);
-  }
+  readonly property var savedNetworks: WifiData.savedNetworks(activeNetworks, NetworkService.wifiEnabled)
 
-  readonly property var availableNetworks: {
-    if (!NetworkService.wifiEnabled) {
-      return [];
-    }
-    return activeNetworks.filter(n => !n.connected && !n.existing).sort((a, b) => b.signal - a.signal);
-  }
+  readonly property var availableNetworks: WifiData.availableNetworks(activeNetworks, NetworkService.wifiEnabled)
 
   // Combined visibility check: tab must be visible AND the window must be visible
-  readonly property bool effectivelyVisible: root.visible && Window.window && Window.window.visible
+  readonly property bool effectivelyVisible: root.visible && Window.window && WifiData.isVisible(Window.window)
 
   onEffectivelyVisibleChanged: {
     if (effectivelyVisible) {
@@ -123,7 +109,7 @@ Item {
     // Network List [1] (Connected)
     NBox {
       id: connectedBox
-      visible: root.connectedNetworks.length > 0 && NetworkService.wifiEnabled
+      visible: WifiData.length(root.connectedNetworks) > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: connectedCol.implicitHeight + Style.margin2M
       border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
@@ -154,7 +140,7 @@ Item {
     // Network List [2] (Saved)
     NBox {
       id: savedBox
-      visible: root.savedNetworks.length > 0 && NetworkService.wifiEnabled
+      visible: WifiData.length(root.savedNetworks) > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: savedCol.implicitHeight + Style.margin2M
       border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
@@ -185,7 +171,7 @@ Item {
     // Network List [3] (Available)
     NBox {
       id: availableBox
-      visible: root.availableNetworks.length > 0 && NetworkService.wifiEnabled
+      visible: WifiData.length(root.availableNetworks) > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: availableCol.implicitHeight + Style.margin2M
       border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
@@ -227,24 +213,30 @@ Item {
       required property var modelData
       id: networkItem
 
-      readonly property bool isBusy: NetworkService.connectingTo === networkItem.modelData.ssid || NetworkService.disconnectingFrom === networkItem.modelData.ssid || NetworkService.forgettingNetwork === networkItem.modelData.ssid
-      readonly property bool isExpanded: root.infoSsid === networkItem.modelData.ssid
-      readonly property bool isEnterprise: NetworkService.isEnterprise(networkItem.modelData.security)
+      readonly property var networkSsid: WifiData.read(modelData, "ssid")
+      readonly property var networkSecurity: WifiData.read(modelData, "security")
+      readonly property var networkSignal: WifiData.read(modelData, "signal")
+      readonly property var networkConnected: WifiData.read(modelData, "connected")
+      readonly property var networkExisting: WifiData.read(modelData, "existing")
 
-      function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
-        if (NetworkService.connectingTo === networkItem.modelData.ssid) {
+      readonly property bool isBusy: NetworkService.connectingTo === networkItem.networkSsid || NetworkService.disconnectingFrom === networkItem.networkSsid || NetworkService.forgettingNetwork === networkItem.networkSsid
+      readonly property bool isExpanded: root.infoSsid === networkItem.networkSsid
+      readonly property bool isEnterprise: NetworkService.isEnterprise(networkItem.networkSecurity)
+
+      function getContentColors(): list<color> {
+        if (NetworkService.connectingTo === networkItem.networkSsid) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (networkItem.modelData.connected && NetworkService.internetConnectivity && NetworkService.disconnectingFrom !== networkItem.modelData.ssid) {
+        if (networkItem.networkConnected && NetworkService.internetConnectivity && NetworkService.disconnectingFrom !== networkItem.networkSsid) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (NetworkService.disconnectingFrom === networkItem.modelData.ssid || NetworkService.forgettingNetwork === networkItem.modelData.ssid) {
+        if (NetworkService.disconnectingFrom === networkItem.networkSsid || NetworkService.forgettingNetwork === networkItem.networkSsid) {
           return [Color.mError, Color.mOnError];
         }
-        if (networkItem.modelData.connected && !NetworkService.internetConnectivity) {
+        if (networkItem.networkConnected && !NetworkService.internetConnectivity) {
           return [Color.mError, Color.mOnError];
         }
-        return defaultColors;
+        return [Color.mSurface, Color.mOnSurface];
       }
 
       Layout.fillWidth: true
@@ -269,7 +261,7 @@ Item {
           NIcon {
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             horizontalAlignment: Text.AlignLeft
-            icon: NetworkService.getSignalInfo(networkItem.modelData.signal, networkItem.modelData.connected).icon
+            icon: WifiData.signalIcon(NetworkService.getSignalInfo(networkItem.networkSignal, networkItem.networkConnected))
             pointSize: Style.fontSizeXXL
             color: networkItem.getContentColors()[1]
           }
@@ -279,9 +271,9 @@ Item {
             spacing: Style.marginXXS
 
             NText {
-              text: networkItem.modelData.ssid
+              text: networkItem.networkSsid
               pointSize: Style.fontSizeM
-              font.weight: networkItem.modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
+              font.weight: networkItem.networkConnected ? Style.fontWeightBold : Style.fontWeightMedium
               elide: Text.ElideRight
               color: networkItem.getContentColors()[1]
               Layout.fillWidth: true
@@ -291,21 +283,21 @@ Item {
               spacing: Style.marginXS
 
               NIcon {
-                icon: NetworkService.isSecured(networkItem.modelData.security) ? "lock" : "lock-open"
+                icon: NetworkService.isSecured(networkItem.networkSecurity) ? "lock" : "lock-open"
                 pointSize: Style.fontSizeXXS
                 color: Qt.alpha(networkItem.getContentColors()[1], Style.opacityHeavy)
-                visible: !networkItem.modelData.connected && NetworkService.disconnectingFrom !== networkItem.modelData.ssid && NetworkService.forgettingNetwork !== networkItem.modelData.ssid
+                visible: !networkItem.networkConnected && NetworkService.disconnectingFrom !== networkItem.networkSsid && NetworkService.forgettingNetwork !== networkItem.networkSsid
               }
 
               NText {
                 text: {
-                  if (NetworkService.disconnectingFrom === networkItem.modelData.ssid) {
+                  if (NetworkService.disconnectingFrom === networkItem.networkSsid) {
                     return I18n.tr("wifi.panel.disconnecting");
                   }
-                  if (NetworkService.forgettingNetwork === networkItem.modelData.ssid) {
+                  if (NetworkService.forgettingNetwork === networkItem.networkSsid) {
                     return I18n.tr("wifi.panel.forgetting");
                   }
-                  if (networkItem.modelData.connected) {
+                  if (networkItem.networkConnected) {
                     switch (NetworkService.networkConnectivity) {
                     case "full":
                       return I18n.tr("common.connected");
@@ -317,7 +309,7 @@ Item {
                       return NetworkService.networkConnectivity;
                     }
                   }
-                  return NetworkService.isSecured(networkItem.modelData.security) ? networkItem.modelData.security : I18n.tr("wifi.panel.security-open");
+                  return NetworkService.isSecured(networkItem.networkSecurity) ? networkItem.networkSecurity : I18n.tr("wifi.panel.security-open");
                 }
                 pointSize: Style.fontSizeXXS
                 color: Qt.alpha(networkItem.getContentColors()[1], Style.opacityHeavy)
@@ -325,7 +317,7 @@ Item {
 
               // Network speed indicators (visible when connected and speed > 0)
               RowLayout {
-                visible: (networkItem.modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
+                visible: (networkItem.networkConnected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
                 spacing: 2
                 Layout.leftMargin: Style.marginXS
                 Layout.fillWidth: false
@@ -384,7 +376,7 @@ Item {
             }
 
             NIconButton {
-              visible: networkItem.modelData.connected && NetworkService.disconnectingFrom !== networkItem.modelData.ssid
+              visible: networkItem.networkConnected && NetworkService.disconnectingFrom !== networkItem.networkSsid
               icon: "info"
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mSurfaceVariant
@@ -392,10 +384,10 @@ Item {
               colorBorder: "transparent"
               colorBorderHover: "transparent"
               onClicked: {
-                if (root.infoSsid === networkItem.modelData.ssid) {
+                if (root.infoSsid === networkItem.networkSsid) {
                   root.infoSsid = "";
                 } else {
-                  root.infoSsid = networkItem.modelData.ssid;
+                  root.infoSsid = networkItem.networkSsid;
                   NetworkService.refreshActiveWifiDetails();
                 }
               }
@@ -403,13 +395,13 @@ Item {
 
             NButton {
               id: button
-              visible: networkItem.modelData.existing && !networkItem.modelData.connected && NetworkService.connectingTo !== networkItem.modelData.ssid
+              visible: networkItem.networkExisting && !networkItem.networkConnected && NetworkService.connectingTo !== networkItem.networkSsid
               enabled: !NetworkService.connecting && !networkItem.isBusy
               fontSize: Style.fontSizeS
               backgroundColor: Color.mPrimary
               textColor: Color.mOnPrimary
               text: I18n.tr("common.connect")
-              onClicked: NetworkService.connect(networkItem.modelData.ssid)
+              onClicked: NetworkService.connect(networkItem.networkSsid, undefined, undefined, undefined, undefined, undefined)
             }
           }
         }
@@ -426,9 +418,9 @@ Item {
           clip: true
 
           onVisibleChanged: {
-            if (visible && infoColumn && infoColumn.forceLayout) {
+            if (visible && WifiData.hasForceLayout(infoColumn)) {
               Qt.callLater(function () {
-                infoColumn.forceLayout();
+                WifiData.forceLayout(infoColumn);
               });
             }
           }
@@ -456,9 +448,9 @@ Item {
             columnSpacing: Style.marginM
             rowSpacing: Style.marginXS
             onColumnsChanged: {
-              if (infoColumn.forceLayout) {
+              if (WifiData.hasForceLayout(infoColumn)) {
                 Qt.callLater(function () {
-                  infoColumn.forceLayout();
+                  WifiData.forceLayout(infoColumn);
                 });
               }
             }
@@ -509,18 +501,18 @@ Item {
                 color: Color.mOnSurface
               }
               NText {
-                text: NetworkService.activeWifiDetails.ipv4 || "-"
+                text: WifiData.read(NetworkService.activeWifiDetails, "ipv4") || "-"
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
                 Layout.fillWidth: true
 
                 MouseArea {
                   anchors.fill: parent
-                  enabled: !!(NetworkService.activeWifiDetails.ipv4 && NetworkService.activeWifiDetails.ipv4.length > 0)
+                  enabled: WifiData.hasValue(NetworkService.activeWifiDetails, "ipv4")
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
                   onClicked: {
-                    const value = NetworkService.activeWifiDetails.ipv4 || "";
+                    const value = WifiData.read(NetworkService.activeWifiDetails, "ipv4") || "";
                     if (value.length > 0) {
                       Os.copy(value);
                       ToastService.showNotice(I18n.tr("common.wifi"), I18n.tr("common.copied-to-clipboard"), "wifi");

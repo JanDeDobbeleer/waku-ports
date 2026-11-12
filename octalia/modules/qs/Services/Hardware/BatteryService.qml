@@ -5,6 +5,7 @@ import QtQuick 6.10
 
 import Quickshell
 import Quickshell.Services.UPower
+import "BatteryUtils.js" as BatteryUtils
 import qs.Commons
 import qs.Services.Networking
 import qs.Services.UI
@@ -22,309 +23,74 @@ Singleton {
   readonly property real criticalThreshold: Settings.data.systemMonitor.batteryCriticalThreshold
   readonly property string batteryIcon: getIcon(batteryPercentage, batteryCharging, batteryPluggedIn, batteryReady)
 
-  readonly property var laptopBatteries: UPower.devices.values.filter(d => d.isLaptopBattery).sort((x, y) => {
-                                                                                                     // Force DisplayDevice to the top
-                                                                                                     if (x.nativePath.includes("DisplayDevice"))
-                                                                                                     return -1;
-                                                                                                     if (y.nativePath.includes("DisplayDevice"))
-                                                                                                     return 1;
+  readonly property var laptopBatteries: BatteryUtils.laptopBatteries(UPower.devices.values)
 
-                                                                                                     // Standard string comparison works for BAT0 vs BAT1
-                                                                                                     return x.nativePath.localeCompare(y.nativePath, undefined, {
-                                                                                                                                         numeric: true
-                                                                                                                                       });
-                                                                                                   })
+  readonly property var bluetoothBatteries: BatteryUtils.bluetoothBatteries(BluetoothService.devices)
 
-  readonly property var bluetoothBatteries: {
-    var btd, i;
-    var list = [];
-    var btArray = BluetoothService.devices?.values || [];
-    for (i = 0; i < btArray.length; i++) {
-      btd = btArray[i];
-      if (btd && btd.connected && btd.batteryAvailable) {
-        list.push(btd);
-      }
-    }
-    return list;
-  }
+  readonly property var _laptopBattery: UPower.displayDevice.isPresent ? UPower.displayDevice : BatteryUtils.firstOrNull(laptopBatteries)
+  readonly property var _bluetoothBattery: BatteryUtils.firstOrNull(bluetoothBatteries)
 
-  readonly property var _laptopBattery: UPower.displayDevice.isPresent ? UPower.displayDevice : (laptopBatteries.length > 0 ? laptopBatteries[0] : null)
-  readonly property var _bluetoothBattery: bluetoothBatteries.length > 0 ? bluetoothBatteries[0] : null
-
-  property var deviceModel: {
-    var model = [
-      {
-        "key": "__default__",
-        "name": I18n.tr("bar.battery.device-default")
-      }
-    ];
-    const devices = UPower.devices?.values || [];
-    for (let d of devices) {
-      if (!d || d.type === UPowerDeviceType.LinePower) {
-        continue;
-      }
-      model.push({
-                   key: d.nativePath || "",
-                   name: d.model || d.nativePath || I18n.tr("common.unknown")
-                 });
-    }
-    return model;
-  }
+  property var deviceModel: BatteryUtils.deviceModel(UPower, UPowerDeviceType.LinePower, I18n)
 
   property var _hasNotified: ({})
 
-  function findDevice(nativePath) {
-    if (!nativePath || nativePath === "__default__" || nativePath === "DisplayDevice") {
-      return _laptopBattery;
-    }
-
-    if (!UPower.devices) {
-      return null;
-    }
-
-    const devices = UPower.devices?.values || [];
-    for (let d of devices) {
-      if (d && d.nativePath === nativePath) {
-        if (d.type === UPowerDeviceType.LinePower) {
-          continue;
-        }
-        return d;
-      }
-    }
-    return null;
+  function findDevice(nativePath: var): var {
+    return BatteryUtils.findDevice(nativePath, root, UPower, UPowerDeviceType.LinePower);
   }
 
-  function isDevicePresent(device) {
-    if (!device) {
-      return false;
-    }
-
-    // Handle Bluetooth devices (identified by having batteryAvailable property)
-    if (device.batteryAvailable !== undefined) {
-      return device.connected === true;
-    }
-
-    // Handle UPower devices
-    if (device.type !== undefined) {
-      if (device.type === UPowerDeviceType.Battery && device.isPresent !== undefined) {
-        return device.isPresent === true;
-      }
-      // Fallback for non-battery UPower devices or if isPresent is missing
-      return device.ready && device.percentage !== undefined;
-    }
-    return false;
+  function isDevicePresent(device: var): var {
+    return BatteryUtils.isDevicePresent(device, UPowerDeviceType.Battery);
   }
 
-  function isDeviceReady(device) {
-    if (!isDevicePresent(device)) {
-      return false;
-    }
-    if (device.batteryAvailable !== undefined) {
-      return device.battery !== undefined;
-    }
-    return device.ready && device.percentage !== undefined;
+  function isDeviceReady(device: var): var {
+    return BatteryUtils.isDeviceReady(device, UPowerDeviceType.Battery);
   }
 
-  function getPercentage(device) {
-    if (!device) {
-      return -1;
-    }
-    if (device.batteryAvailable !== undefined) {
-      return Math.round((device.battery || 0) * 100);
-    }
-    return Math.round((device.percentage || 0) * 100);
+  function getPercentage(device: var): var {
+    return BatteryUtils.getPercentage(device);
   }
 
-  function isCharging(device): bool {
-    if (!device || isBluetoothDevice(device)) {
-      // Tracking bluetooth devices can charge or not is a loop hole, none of my devices has it, even if it possible?!
-      return false;  // Assuming not charging until someone/quickshell brings a way to do pretty unlikely.
-    }
-    if (device.state !== undefined) {
-      return device.state === UPowerDeviceState.Charging;
-    }
-    return false;
+  function isCharging(device: var): bool {
+    return BatteryUtils.isCharging(device, UPowerDeviceState.Charging);
   }
 
-  function isPluggedIn(device) {
-    if (!device || isBluetoothDevice(device)) {
-      // Tracking bluetooth devices can charge or not is a loop hole, none of my devices has it, even if it possible?!
-      return false;  // Assuming not charging until someone/quickshell brings a way to do pretty unlikely.
-    }
-    if (device.state !== undefined) {
-      return device.state === UPowerDeviceState.FullyCharged || device.state === UPowerDeviceState.PendingCharge;
-    }
-    return false;
+  function isPluggedIn(device: var): var {
+    return BatteryUtils.isPluggedIn(device, UPowerDeviceState.FullyCharged, UPowerDeviceState.PendingCharge);
   }
 
-  function isCriticalBattery(device) {
+  function isCriticalBattery(device: var): bool {
     return (!isCharging(device) && !isPluggedIn(device)) && getPercentage(device) <= criticalThreshold;
   }
 
-  function isLowBattery(device) {
+  function isLowBattery(device: var): bool {
     return (!isCharging(device) && !isPluggedIn(device)) && getPercentage(device) <= warningThreshold && getPercentage(device) > criticalThreshold;
   }
 
-  function isBluetoothDevice(device): bool {
-    if (!device) {
-      return false;
-    }
-    // Check for Quickshell Bluetooth device property
-    if (device.batteryAvailable !== undefined) {
-      return true;
-    }
-    // Check for UPower device path indicating it's a Bluetooth device
-    if (device.nativePath && (device.nativePath.includes("bluez") || device.nativePath.includes("bluetooth"))) {
-      return true;
-    }
-    return false;
+  function isBluetoothDevice(device: var): bool {
+    return BatteryUtils.isBluetoothDevice(device);
   }
 
-  function getDeviceName(device) {
-    var match;
-    if (!isDeviceReady(device)) {
-      return "";
-    }
-
-    if (!isBluetoothDevice(device) && device.isLaptopBattery) {
-      // If there is more than one battery explicitly name them
-      // Logger.e("BatteryDebug", "Available Battery count: " + laptopBatteries.length); // can be useful for debugging
-      if (laptopBatteries.length > 1 && device.nativePath) {
-        if (device.nativePath === "DisplayDevice") {
-          return I18n.tr("battery.all-batteries");
-        }
-        match = device.nativePath.match(/(\d+)$/);
-        if (match) {
-          // In case of 2 batteries: bat0 => bat1  bat1 => bat2
-          return I18n.tr("common.battery") + " " + (parseInt(match[1]) + 1);  // Append numbers
-        }
-      }
-      // Return Battery if there is only one
-      return I18n.tr("common.battery");
-    }
-
-    if (isBluetoothDevice(device) && device.name) {
-      return device.name;
-    }
-
-    if (device.model) {
-      return device.model;
-    }
-
-    return "";
+  function getDeviceName(device: var): var {
+    return BatteryUtils.getDeviceName(device, root, I18n);
   }
 
-  function getIcon(percent, charging, pluggedIn, isReady) {
-    if (!isReady) {
-      return "battery-exclamation";
-    }
-    if (charging) {
-      return "battery-charging";
-    }
-    if (pluggedIn) {
-      return "battery-charging-2";
-    }
-
-    const icons = [
-            {
-              threshold: 86,
-              icon: "battery-4"
-            },
-            {
-              threshold: 56,
-              icon: "battery-3"
-            },
-            {
-              threshold: 31,
-              icon: "battery-2"
-            },
-            {
-              threshold: 11,
-              icon: "battery-1"
-            },
-            {
-              threshold: 0,
-              icon: "battery"
-            }
-          ];
-
-    const match = icons.find(tier => percent >= tier.threshold);
-    return match ? match.icon : "battery-off"; // New fallback icon clearly represent if nothing is true here.
+  function getIcon(percent: var, charging: var, pluggedIn: var, isReady: var): var {
+    return BatteryUtils.getIcon(percent, charging, pluggedIn, isReady);
   }
 
-  function getRateText(device) {
-    if (!device || device.changeRate === undefined) {
-      return "";
-    }
-    const rate = Math.abs(device.changeRate);
-    if (device.timeToFull > 0) {
-      return I18n.tr("battery.charging-rate", {
-                       "rate": rate.toFixed(2)
-                     });
-    } else if (device.timeToEmpty > 0) {
-      return I18n.tr("battery.discharging-rate", {
-                       "rate": rate.toFixed(2)
-                     });
-    }
+  function getRateText(device: var): var {
+    return BatteryUtils.getRateText(device, I18n);
   }
 
-  function getTimeRemainingText(device) {
-    if (!isDeviceReady(device)) {
-      return I18n.tr("battery.no-battery-detected");
-    }
-    if (isPluggedIn(device)) {
-      return I18n.tr("battery.plugged-in");
-    } else if (device.timeToFull > 0) {
-      return I18n.tr("battery.time-until-full", {
-                       "time": Time.formatVagueHumanReadableDuration(device.timeToFull)
-                     });
-    } else if (device.timeToEmpty > 0) {
-      return I18n.tr("battery.time-left", {
-                       "time": Time.formatVagueHumanReadableDuration(device.timeToEmpty)
-                     });
-    }
-    return I18n.tr("common.idle");
+  function getTimeRemainingText(device: var): var {
+    return BatteryUtils.getTimeRemainingText(device, root, I18n, Time);
   }
 
-  function checkDevice(device) {
-    if (!device || !isDeviceReady(device)) {
-      return;
-    }
-
-    const percentage = getPercentage(device);
-    const charging = isCharging(device);
-    const pluggedIn = isPluggedIn(device);
-    const level = isLowBattery(device) ? "low" : (isCriticalBattery(device) ? "critical" : "");
-    var deviceKey = device.nativePath;
-
-    if (!_hasNotified[deviceKey]) {
-      _hasNotified[deviceKey] = {
-        low: false,
-        critical: false
-      };
-    }
-
-    if (charging || pluggedIn) {
-      _hasNotified[deviceKey].low = false;
-      _hasNotified[deviceKey].critical = false;
-    }
-
-    if (percentage > warningThreshold) {
-      _hasNotified[deviceKey].low = false;
-      _hasNotified[deviceKey].critical = false;
-    } else if (percentage > criticalThreshold) {
-      _hasNotified[deviceKey].critical = false;
-    }
-
-    if (level) {
-      if (!_hasNotified[deviceKey][level]) {
-        notify(device, level);
-        _hasNotified[deviceKey][level] = true;
-      }
-    }
+  function checkDevice(device: var): void {
+    BatteryUtils.checkDevice(device, root);
   }
 
-  function notify(device, level) {
+  function notify(device: var, level: var): void {
     if (!Settings.data.notifications.enableBatteryToast) {
       return;
     }
@@ -333,7 +99,7 @@ Singleton {
     var descKey = level === "critical" ? "toast.battery.critical-desc" : "toast.battery.low-desc";
 
     var title = I18n.tr(titleKey);
-    var desc = I18n.tr(descKey, {
+    var desc = I18n.trArgs(descKey, {
                          "percent": getPercentage(device)
                        });
     var icon = level === "critical" ? "battery-exclamation" : "battery-charging-2";
@@ -343,24 +109,24 @@ Singleton {
     }
 
     // Only 'showNotice' supports custom icons
-    ToastService.showNotice(title, desc, icon, 6000);
+    ToastService.showNoticeDetailed(title, desc, icon, 6000, undefined, undefined);
   }
 
   Instantiator {
     model: root.deviceModel
     delegate: Connections {
       required property var modelData
-      property var device: root.findDevice(modelData.key)
+      property var device: root.findDevice(BatteryUtils.deviceKey(modelData))
       target: device
 
       function onPercentageChanged() {
-        if (device.isLaptopBattery && modelData.key !== "__default__") {
+        if (BatteryUtils.skipDefaultNotification(device, modelData)) {
           return;
         }
         root.checkDevice(device);
       }
       function onStateChanged() {
-        if (device.isLaptopBattery && modelData.key !== "__default__") {
+        if (BatteryUtils.skipDefaultNotification(device, modelData)) {
           return;
         }
         root.checkDevice(device);

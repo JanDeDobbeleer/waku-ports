@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "IPCServiceUtils.js" as IPCUtils
+
 import QtQuick 6.10
 import Quickshell
 
@@ -21,23 +23,23 @@ Singleton {
   // Screen detector, set via init()
   property var screenDetector: null
 
-  function init(detector) {
+  function init(detector: var): void {
     root.screenDetector = detector;
     Logger.i("IPCService", "Service started");
   }
 
   // Helper for index-based notification lookups in IPC
-  function _getNotificationByIndex(index: string, funcName: string) {
+  function _getNotificationByIndex(index: string, funcName: string): var {
     var idx = index === "" ? 0 : parseInt(index);
     if (isNaN(idx)) {
       Logger.w("IPC", "Argument to ipc call '" + funcName + "' must be a number");
       return null;
     }
-    if (idx < 0 || idx >= NotificationService.popupModel.count) {
+    if (idx < 0 || idx >= IPCUtils.modelCount(NotificationService.popupModel)) {
       Logger.w("IPC", "Notification index out of range: " + idx);
       return null;
     }
-    return NotificationService.popupModel.get(idx);
+    return IPCUtils.modelGet(NotificationService.popupModel, idx);
   }
 
   IpcHandler {
@@ -103,7 +105,7 @@ Singleton {
                                             "idle": SettingsPanel.Tab.Idle
                                           })
 
-  function _parseSettingsTabArg(tabArg) {
+  function _parseSettingsTabArg(tabArg: var): var {
     var parts = tabArg.split("/");
     var tabId = _resolveSettingsTab(parts[0]);
     var subTabId = parts.length > 1 ? parseInt(parts[1]) : -1;
@@ -113,7 +115,7 @@ Singleton {
     };
   }
 
-  function _resolveSettingsTab(tabName) {
+  function _resolveSettingsTab(tabName: var): var {
     if (!tabName)
       return SettingsPanel.Tab.General;
     var key = tabName.toLowerCase().replace(/[-_]/g, "");
@@ -123,14 +125,14 @@ Singleton {
     return SettingsPanel.Tab.General;
   }
 
-  function _settingsToggle(tabId, subTabId) {
-    root.screenDetector.withCurrentScreen(screen => {
+  function _settingsToggle(tabId: var, subTabId: var): void {
+    root.screenDetector.withCurrentScreen(function (screen: var): void {
                                             SettingsPanelService.toggle(tabId, subTabId, screen);
                                           });
   }
 
-  function _settingsOpen(tabId, subTabId) {
-    root.screenDetector.withCurrentScreen(screen => {
+  function _settingsOpen(tabId: var, subTabId: var): void {
+    root.screenDetector.withCurrentScreen(function (screen: var): void {
                                             SettingsPanelService.openToTab(tabId, subTabId, screen);
                                           });
   }
@@ -144,7 +146,7 @@ Singleton {
 
     function toggleTab(tab: string) {
       var parsed = root._parseSettingsTabArg(tab);
-      root._settingsToggle(parsed.tab, parsed.subTab);
+      IPCUtils.toggleSettings(root, parsed);
     }
 
     function open() {
@@ -153,16 +155,16 @@ Singleton {
 
     function openTab(tab: string) {
       var parsed = root._parseSettingsTabArg(tab);
-      root._settingsOpen(parsed.tab, parsed.subTab);
+      IPCUtils.openSettings(root, parsed);
     }
   }
 
   IpcHandler {
     target: "calendar"
     function toggle() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var clockPanel = PanelService.getPanel("clockPanel", screen);
-                                              clockPanel?.toggle(null, "Clock");
+                                              IPCUtils.invokePanel(clockPanel, "toggle", [null, "Clock"]);
                                             });
     }
   }
@@ -171,7 +173,7 @@ Singleton {
     target: "notifications"
     function toggleHistory() {
       // Will attempt to open the panel next to the bar button if any.
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var notificationHistoryPanel = PanelService.getPanel("notificationHistoryPanel", screen);
                                               notificationHistoryPanel.toggle(null, "NotificationHistory");
                                             });
@@ -213,30 +215,14 @@ Singleton {
       var notif = root._getNotificationByIndex(index, "notifications invokeDefault");
       if (!notif)
         return false;
-
-      var actions = JSON.parse(notif.actionsJson || "[]");
-      if (actions.length === 0)
-        return false;
-
-      var actionId = actions.find(a => a.identifier === "default")?.identifier ?? actions[0].identifier;
-      return NotificationService.invokeAction(notif.id, actionId);
+      return IPCUtils.invokeDefault(notif, NotificationService);
     }
 
     function invokeDefaultAndDismiss(index: string): bool {
       var notif = root._getNotificationByIndex(index, "notifications invokeDefaultAndDismiss");
       if (!notif)
         return false;
-
-      var actions = JSON.parse(notif.actionsJson || "[]");
-      if (actions.length === 0) {
-        NotificationService.dismissPopup(notif.id);
-        return false;
-      }
-
-      var actionId = actions.find(a => a.identifier === "default")?.identifier ?? actions[0].identifier;
-      var result = NotificationService.invokeAction(notif.id, actionId);
-      NotificationService.dismissPopup(notif.id);
-      return result;
+      return IPCUtils.invokeDefaultAndDismiss(notif, NotificationService);
     }
 
     function invokeAction(id: string, actionId: string): bool {
@@ -251,7 +237,7 @@ Singleton {
       var notif = root._getNotificationByIndex(index, "notifications getActions");
       if (!notif)
         return "[]";
-      return notif.actionsJson || "[]";
+      return IPCUtils.notificationActions(notif);
     }
   }
 
@@ -259,28 +245,7 @@ Singleton {
     target: "toast"
 
     function send(json: string) {
-      var body, data, duration, icon, title, type;
-      try {
-        data = JSON.parse(json);
-        title = data.title || "";
-        body = data.body || "";
-        icon = data.icon || "";
-        type = data.type || "notice";
-        duration = data.duration;
-
-        switch (type) {
-        case "warning":
-          ToastService.showWarning(title, body, duration ?? 4000);
-          break;
-        case "error":
-          ToastService.showError(title, body, duration ?? 6000);
-          break;
-        default:
-          ToastService.showNotice(title, body, icon, duration ?? 3000);
-        }
-      } catch (error) {
-        Logger.e("IPC", "Failed to parse toast JSON: " + error);
-      }
+      IPCUtils.sendToast(json, ToastService, Logger);
     }
 
     function dismiss() {
@@ -320,7 +285,7 @@ Singleton {
   }
 
   function toggleLauncher() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInAppMode = !searchText.startsWith(">");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -342,7 +307,7 @@ Singleton {
       root.toggleLauncher();
     }
     function clipboard() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInClipMode = searchText.startsWith(">clip");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -358,7 +323,7 @@ Singleton {
                                             }, Settings.data.appLauncher.overviewLayer);
     }
     function command() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInCmdMode = searchText.startsWith(">cmd");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -371,7 +336,7 @@ Singleton {
                                             }, Settings.data.appLauncher.overviewLayer);
     }
     function emoji() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInEmojiMode = searchText.startsWith(">emoji");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -387,7 +352,7 @@ Singleton {
                                             }, Settings.data.appLauncher.overviewLayer);
     }
     function windows() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInWindowsMode = searchText.startsWith(">win");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -400,7 +365,7 @@ Singleton {
                                             }, Settings.data.appLauncher.overviewLayer);
     }
     function settings() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var searchText = PanelService.getLauncherSearchText(screen);
                                               var isInSettingsMode = searchText.startsWith(">settings");
                                               if (!PanelService.isLauncherOpen(screen)) {
@@ -420,7 +385,7 @@ Singleton {
     // New preferred method - lock the screen
     function lock() {
       // Only lock if not already locked (prevents the red screen issue)
-      if (!PanelService.lockScreen.active) {
+      if (!IPCUtils.lockScreenActive(PanelService.lockScreen)) {
         CompositorService.lock();
       }
     }
@@ -500,14 +465,7 @@ Singleton {
       ColorSchemeService.setPredefinedScheme(schemeName);
     }
     function setGenerationMethod(method: string) {
-      var i;
-      var valid = false;
-      for (i = 0; i < TemplateProcessor.schemeTypes.length; i++) {
-        if (TemplateProcessor.schemeTypes[i].key === method) {
-          valid = true;
-          break;
-        }
-      }
+      var valid = IPCUtils.isValidScheme(TemplateProcessor.schemeTypes, method);
 
       if (valid) {
         Settings.data.colorSchemes.generationMethod = method;
@@ -538,21 +496,21 @@ Singleton {
       AudioService.setInputMuted(!AudioService.inputMuted);
     }
     function togglePanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var panel = PanelService.getPanel("audioPanel", screen);
-                                              panel?.toggle(null, "Volume");
+                                              IPCUtils.invokePanel(panel, "toggle", [null, "Volume"]);
                                             });
     }
     function openPanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var panel = PanelService.getPanel("audioPanel", screen);
-                                              panel?.open(null, "Volume");
+                                              IPCUtils.invokePanel(panel, "open", [null, "Volume"]);
                                             });
     }
     function closePanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var panel = PanelService.getPanel("audioPanel", screen);
-                                              panel?.close(null, "Volume");
+                                              IPCUtils.invokePanel(panel, "close", [null, "Volume"]);
                                             });
     }
   }
@@ -560,22 +518,22 @@ Singleton {
   IpcHandler {
     target: "sessionMenu"
     function toggle() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var sessionMenuPanel = PanelService.getPanel("sessionMenuPanel", screen);
                                               // Session Menu is never open near the bar
-                                              sessionMenuPanel?.toggle();
+                                              IPCUtils.invokePanel(sessionMenuPanel, "toggle", []);
                                             });
     }
 
     function lock() {
-      if (!PanelService.lockScreen.active) {
+      if (!IPCUtils.lockScreenActive(PanelService.lockScreen)) {
         CompositorService.lock();
       }
     }
 
     function lockAndSuspend() {
       // Only lock and suspend if not already locked
-      if (!PanelService.lockScreen.active) {
+      if (!IPCUtils.lockScreenActive(PanelService.lockScreen)) {
         CompositorService.lockAndSuspend();
       }
     }
@@ -584,13 +542,13 @@ Singleton {
   IpcHandler {
     target: "controlCenter"
     function toggle() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
                                               if (Settings.data.controlCenter.position === "close_to_bar_button") {
                                                 // Will attempt to open the panel next to the bar button if any.
-                                                controlCenterPanel?.toggle(null, "ControlCenter");
+                                                IPCUtils.invokePanel(controlCenterPanel, "toggle", [null, "ControlCenter"]);
                                               } else {
-                                                controlCenterPanel?.toggle();
+                                                IPCUtils.invokePanel(controlCenterPanel, "toggle", []);
                                               }
                                             });
     }
@@ -608,9 +566,9 @@ Singleton {
     target: "wallpaper"
     function toggle() {
       if (Settings.data.wallpaper.enabled) {
-        root.screenDetector.withCurrentScreen(screen => {
+        root.screenDetector.withCurrentScreen(function (screen: var): void {
                                                 var wallpaperPanel = PanelService.getPanel("wallpaperPanel", screen);
-                                                wallpaperPanel?.toggle();
+                                                IPCUtils.invokePanel(wallpaperPanel, "toggle", []);
                                               });
       }
     }
@@ -632,7 +590,7 @@ Singleton {
         }
         return WallpaperService.getWallpaper(Quickshell.screens[0].name) ?? "";
       } else {
-        found = Quickshell.screens.find(s => s.name === screen);
+        found = IPCUtils.findScreen(Quickshell.screens, screen);
         if (!found) {
           Logger.w("IPC", "wallpaper get: unknown screen: " + screen);
           return "";
@@ -679,9 +637,9 @@ Singleton {
   IpcHandler {
     target: "network"
     function togglePanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var networkPanel = PanelService.getPanel("networkPanel", screen);
-                                              networkPanel?.toggle(null, "Network");
+                                              IPCUtils.invokePanel(networkPanel, "toggle", [null, "Network"]);
                                             });
     }
   }
@@ -698,9 +656,9 @@ Singleton {
       BluetoothService.setBluetoothEnabled(false);
     }
     function togglePanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var bluetoothPanel = PanelService.getPanel("bluetoothPanel", screen);
-                                              bluetoothPanel?.toggle(null, "Bluetooth");
+                                              IPCUtils.invokePanel(bluetoothPanel, "toggle", [null, "Bluetooth"]);
                                             });
     }
     function toggleAutoConnect() {
@@ -730,9 +688,9 @@ Singleton {
   IpcHandler {
     target: "battery"
     function togglePanel() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var batteryPanel = PanelService.getPanel("batteryPanel", screen);
-                                              batteryPanel?.toggle(null, "Battery");
+                                              IPCUtils.invokePanel(batteryPanel, "toggle", [null, "Battery"]);
                                             });
     }
   }
@@ -778,9 +736,9 @@ Singleton {
     target: "media"
 
     function toggle() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var panel = PanelService.getPanel("mediaPlayerPanel", screen);
-                                              panel?.toggle(null, "MediaMini");
+                                              IPCUtils.invokePanel(panel, "toggle", [null, "MediaMini"]);
                                             });
     }
 
@@ -832,19 +790,7 @@ Singleton {
 
     // Returns all settings and shell state as JSON
     function all(): string {
-      var snapshot;
-      try {
-        snapshot = ShellState.buildStateSnapshot();
-        if (!snapshot) {
-          throw new Error("State snapshot unavailable");
-        }
-        return JSON.stringify(snapshot, null, 2);
-      } catch (error) {
-        Logger.e("IPC", "Failed to serialize state:", error);
-        return JSON.stringify({
-                                "error": "Failed to serialize state: " + error
-                              }, null, 2);
-      }
+      return IPCUtils.stateAsJson(ShellState, Logger);
     }
   }
 
@@ -878,9 +824,9 @@ Singleton {
   IpcHandler {
     target: "systemMonitor"
     function toggle() {
-      root.screenDetector.withCurrentScreen(screen => {
+      root.screenDetector.withCurrentScreen(function (screen: var): void {
                                               var panel = PanelService.getPanel("systemStatsPanel", screen);
-                                              panel?.toggle(null, "SystemMonitor");
+                                              IPCUtils.invokePanel(panel, "toggle", [null, "SystemMonitor"]);
                                             });
     }
   }

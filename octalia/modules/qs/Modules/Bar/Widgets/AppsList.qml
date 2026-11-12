@@ -4,6 +4,8 @@ import QtQuick 6.10
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
+import "AppsListHelpers.js" as AppsListHelpers
 import qs.Services.Compositor
 import qs.Services.UI
 
@@ -41,7 +43,7 @@ Item {
     return {};
   }
 
-  readonly property bool onlySameOutput: (widgetSettings.onlySameOutput !== undefined) ? widgetSettings.onlySameOutput : (widgetMetadata.onlySameOutput ?? false)
+  readonly property bool onlySameOutput: (BarWidgetHelpers.readProperty(widgetSettings, "onlySameOutput") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "onlySameOutput") : (BarWidgetHelpers.readProperty(widgetMetadata, "onlySameOutput") ?? false)
 
   // The capsule is as high as the other bar widgets. Each application sits in a round cell inset from
   // the capsule by the same amount on every side, so the padding matches a single-icon widget.
@@ -56,57 +58,16 @@ Item {
   // [{key, appId, windows: [window...], focused, onActiveWs}]
   property var groups: []
 
-  function rebuild() {
-    var i;
-    const order = [];
-    const byKey = {};
-    const activeIds = CompositorService.getActiveWorkspaces().map(function (ws) {
-      return ws.id;
-    });
-    const total = CompositorService.windows.count || 0;
-    for (i = 0; i < total; i++) {
-      const w = CompositorService.windows.get(i);
-      if (!w || !w.appId)
-        continue;
-      if (onlySameOutput && w.output !== screenName)
-        continue;
-      const key = String(w.appId).toLowerCase();
-      let g = byKey[key];
-      if (!g) {
-        g = {
-          "key": key,
-          "appId": w.appId,
-          "windows": [],
-          "focused": false,
-          "onActiveWs": false
-        };
-        byKey[key] = g;
-        order.push(g);
-      }
-      g.windows.push(w);
-      if (w.isFocused)
-        g.focused = true;
-      if (activeIds.includes(w.workspaceId))
-        g.onActiveWs = true;
-    }
-    groups = order;
+  function rebuild(): void {
+    groups = AppsListHelpers.buildGroups(CompositorService, onlySameOutput, screenName);
   }
 
   // The window to focus when the application's icon is clicked
-  function focusGroup(g) {
-    if (!g || g.windows.length === 0)
-      return;
-    let target = g.windows[0];
-    const fi = g.windows.findIndex(function (w) {
-      return w.isFocused;
-    });
-    if (fi >= 0) {
-      target = g.windows[(fi + 1) % g.windows.length];
-    }
-    CompositorService.focusWindow(target);
+  function focusGroup(g: var): void {
+    AppsListHelpers.focusGroup(CompositorService, g);
   }
 
-  visible: groups.length > 0
+  visible: BarWidgetHelpers.readProperty(groups, "length") > 0
   implicitWidth: isVertical ? cell : capsule.width
   implicitHeight: isVertical ? capsule.height : cell
 
@@ -139,8 +100,8 @@ Item {
     Grid {
       id: list
       anchors.centerIn: parent
-      rows: root.isVertical ? root.groups.length : 1
-      columns: root.isVertical ? 1 : root.groups.length
+      rows: root.isVertical ? BarWidgetHelpers.readProperty(root.groups, "length") : 1
+      columns: root.isVertical ? 1 : BarWidgetHelpers.readProperty(root.groups, "length")
       spacing: root.gap
 
       Repeater {
@@ -152,12 +113,12 @@ Item {
           required property var modelData
           required property int index
 
-          readonly property int windowCount: modelData.windows.length
-          readonly property bool focused: modelData.focused
+          readonly property int windowCount: AppsListHelpers.windowCount(modelData)
+          readonly property bool focused: BarWidgetHelpers.readProperty(modelData, "focused")
 
           width: root.itemSize
           height: root.itemSize
-          opacity: (modelData.onActiveWs || focused) ? 1 : 0.55
+          opacity: (BarWidgetHelpers.readProperty(modelData, "onActiveWs") || focused) ? 1 : 0.55
 
           // A second card behind the icon marks a group
           Rectangle {
@@ -181,7 +142,7 @@ Item {
             anchors.centerIn: parent
             width: root.iconSize
             height: root.iconSize
-            source: ThemeIcons.iconForAppId(app.modelData.appId)
+            source: ThemeIcons.iconForAppId(BarWidgetHelpers.readProperty(app.modelData, "appId"), undefined)
             smooth: true
             asynchronous: true
           }
@@ -190,6 +151,7 @@ Item {
           // never covers much of it
           Rectangle {
             visible: app.windowCount > 1
+            id: badgeBackground
             readonly property real dot: Math.max(10, Math.round(root.iconSize * 0.5))
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -207,7 +169,7 @@ Item {
               anchors.centerIn: parent
               text: app.windowCount > 9 ? "9+" : app.windowCount
               color: Color.mOnTertiary
-              font.pixelSize: Math.round(parent.dot * 0.75)
+              font.pixelSize: Math.round(badgeBackground.dot * 0.75)
               font.bold: true
             }
           }

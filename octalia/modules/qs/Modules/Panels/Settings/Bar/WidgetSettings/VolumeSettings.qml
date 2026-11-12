@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,10 +16,10 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueDisplayMode: widgetData.displayMode !== undefined ? widgetData.displayMode : widgetMetadata.displayMode
-  property string valueMiddleClickCommand: widgetData.middleClickCommand !== undefined ? widgetData.middleClickCommand : widgetMetadata.middleClickCommand
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
-  property string valueTextColor: widgetData.textColor !== undefined ? widgetData.textColor : widgetMetadata.textColor
+  property string valueDisplayMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "displayMode")
+  property string valueMiddleClickCommand: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "middleClickCommand")
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
+  property string valueTextColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "textColor")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -52,7 +53,7 @@ ColumnLayout {
                   root.valueDisplayMode = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.displayMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "displayMode")
   }
 
   NColorChoice {
@@ -62,7 +63,7 @@ ColumnLayout {
                   root.valueIconColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 
   NColorChoice {
@@ -71,7 +72,7 @@ ColumnLayout {
                   root.valueTextColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.textColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "textColor")
   }
 
   // Middle click command
@@ -84,6 +85,6 @@ ColumnLayout {
       root.valueMiddleClickCommand = text;
       root.saveSettings();
     }
-    defaultValue: root.widgetMetadata.middleClickCommand
+    defaultValue: SettingsValue.read(root.widgetMetadata, "middleClickCommand")
   }
 }

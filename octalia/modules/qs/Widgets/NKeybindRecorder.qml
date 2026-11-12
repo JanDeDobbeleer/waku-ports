@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NKeybindRecorderUtils.js" as RecorderUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -37,15 +39,15 @@ Item {
 
   readonly property real _pillHeight: Style.baseWidgetSize * 1.1 * Style.uiScaleRatio
 
-  function _applyKeybind(keyStr) {
+  function _applyKeybind(keyStr: var): void {
     if (!keyStr)
       return;
 
     // 1. Internal duplicate check (same action)
-    for (let i = 0; i < root.currentKeybinds.length; i++) {
+    for (let i = 0; i < RecorderUtils.length(root.currentKeybinds); i++) {
       if (i !== root.recordingIndex && String(root.currentKeybinds[i]).toLowerCase() === keyStr.toLowerCase()) {
         hasConflict = true;
-        ToastService.showWarning(I18n.tr("panels.general.keybinds-conflict-title"), I18n.tr("panels.general.keybinds-conflict-description", {
+        ToastService.showWarning(I18n.tr("panels.general.keybinds-conflict-title"), I18n.trArgs("panels.general.keybinds-conflict-description", {
                                                                                               "action": root.label || "This action"
                                                                                             }));
         conflictTimer.restart();
@@ -57,7 +59,7 @@ Item {
     const conflict = Keybinds.getKeybindConflict(keyStr, root.settingsPath, Settings.data);
     if (conflict) {
       hasConflict = true;
-      ToastService.showWarning(I18n.tr("panels.general.keybinds-conflict-title"), I18n.tr("panels.general.keybinds-conflict-description", {
+      ToastService.showWarning(I18n.tr("panels.general.keybinds-conflict-title"), I18n.trArgs("panels.general.keybinds-conflict-description", {
                                                                                             "action": conflict
                                                                                           }));
       conflictTimer.restart();
@@ -69,7 +71,7 @@ Item {
       newKeybinds[recordingIndex] = keyStr;
     }
     // Ensure array is dense and limited to maxKeybinds
-    newKeybinds = newKeybinds.filter(k => k !== undefined && k !== "").slice(0, root.maxKeybinds);
+    newKeybinds = RecorderUtils.denseKeybinds(newKeybinds, root.maxKeybinds);
     recordingIndex = -1;
     root.keybindsChanged(newKeybinds);
   }
@@ -115,7 +117,7 @@ Item {
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
 
-          readonly property bool isOccupied: slotArea.index < root.currentKeybinds.length
+          readonly property bool isOccupied: slotArea.index < RecorderUtils.length(root.currentKeybinds)
           readonly property bool isRecordingThis: root.recordingIndex === slotArea.index
           readonly property string keybindText: isRecordingThis ? I18n.tr("placeholders.keybind-recording") : (isOccupied ? root.currentKeybinds[slotArea.index] : I18n.tr("placeholders.add-new-keybind"))
 
@@ -178,7 +180,7 @@ Item {
 
                 NIconButton {
                   anchors.centerIn: parent
-                  visible: root.recordingIndex === -1 && (root.currentKeybinds.length > 1 || root.allowEmpty)
+                  visible: root.recordingIndex === -1 && (RecorderUtils.length(root.currentKeybinds) > 1 || root.allowEmpty)
                   icon: "x"
                   colorBg: "transparent"
                   colorBgHover: Qt.alpha(Color.mError, 0.1)

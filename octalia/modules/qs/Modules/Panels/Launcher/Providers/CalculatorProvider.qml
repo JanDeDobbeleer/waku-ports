@@ -3,6 +3,7 @@ import "../../../../Helpers/AdvancedMath.js" as AdvancedMath
 import qs.Commons
 import qs.compat
 import qs.Services.UI
+import "./CalculatorProviderUtils.js" as CalculatorProviderUtils
 
 Item {
   id: root
@@ -15,62 +16,13 @@ Item {
   property string supportedLayouts: "list"
 
   // Initialize provider
-  function init() {
+  function init(): void {
     Logger.d("CalculatorProvider", "Initialized");
   }
 
   // Get search results - evaluates math expressions inline
-  function getResults(query) {
-    if (!query)
-      return [];
-
-    const trimmed = query.trim();
-    if (!trimmed || !isMathExpression(trimmed))
-      return [];
-
-    try {
-      const result = AdvancedMath.evaluate(trimmed);
-      const formattedResult = AdvancedMath.formatResult(result);
-      return [
-            {
-              "name": formattedResult,
-              "description": I18n.tr("launcher.providers.calculator-press-enter-to-copy"),
-              "icon": iconMode === "tabler" ? "calculator" : "accessories-calculator",
-              "isTablerIcon": true,
-              "isImage": false,
-              "provider": root,
-              "onActivate": function () {
-                // Copy result to the Windows clipboard (no sh/wl-copy on Windows)
-                Os.copy(formattedResult);
-                ToastService.showNotice(I18n.tr("common.copied-to-clipboard"), formattedResult);
-                if (launcher)
-                  launcher.close();
-              }
-            }
-          ];
-    } catch (error) {
-      return [];
-    }
+  function getResults(query: string): var {
+    return CalculatorProviderUtils.getResults(query, AdvancedMath, I18n, iconMode, root, Os, ToastService, launcher);
   }
 
-  // Check if a string is a valid math expression
-  function isMathExpression(expr) {
-    // Allow: digits, operators, parentheses, decimal points, whitespace, letters (for functions), commas
-    if (!/^[\d\s\+\-\*\/\(\)\.\%\^a-zA-Z,]+$/.test(expr))
-      return false;
-
-    // Must contain at least one operator OR a function call (letter followed by parenthesis)
-    if (!/[+\-*/%\^]/.test(expr) && !/[a-zA-Z]\s*\(/.test(expr))
-      return false;
-
-    // Reject if ends with an operator (incomplete expression)
-    if (/[+\-*/%\^]\s*$/.test(expr))
-      return false;
-
-    // Reject if it's just letters (would match app names)
-    if (/^[a-zA-Z\s]+$/.test(expr))
-      return false;
-
-    return true;
-  }
 }

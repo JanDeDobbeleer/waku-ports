@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Services.Media
 import qs.Services.UI
@@ -33,10 +34,10 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: (widgetSettings.displayMode !== undefined) ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string middleClickCommand: (widgetSettings.middleClickCommand !== undefined) ? widgetSettings.middleClickCommand : widgetMetadata.middleClickCommand
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string displayMode: (BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string middleClickCommand: (BarWidgetHelpers.readProperty(widgetSettings, "middleClickCommand") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "middleClickCommand") : BarWidgetHelpers.readProperty(widgetMetadata, "middleClickCommand")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   // Used to avoid opening the pill on Quickshell startup
   property bool firstInputVolumeReceived: false
@@ -47,7 +48,7 @@ Item {
 
   // Connection used to open the pill when input volume changes
   Connections {
-    target: AudioService.source?.audio ? AudioService.source?.audio : null
+    target: BarWidgetHelpers.optionalProperty(AudioService.source, "audio") ? BarWidgetHelpers.optionalProperty(AudioService.source, "audio") : null
     function onVolumeChanged() {
       // Logger.i("Bar:Microphone", "onInputVolumeChanged")
       if (!root.firstInputVolumeReceived) {
@@ -62,7 +63,7 @@ Item {
 
   // Connection used to open the pill when input mute state changes
   Connections {
-    target: AudioService.source?.audio ? AudioService.source?.audio : null
+    target: BarWidgetHelpers.optionalProperty(AudioService.source, "audio") ? BarWidgetHelpers.optionalProperty(AudioService.source, "audio") : null
     function onMutedChanged() {
       // Logger.i("Bar:Microphone", "onInputMutedChanged")
       if (!root.firstInputVolumeReceived) {
@@ -148,10 +149,10 @@ Item {
       }
     }
     onClicked: {
-      PanelService.getPanel("audioPanel", screen)?.toggle(this);
+      PanelService.invokePanel(PanelService.getPanel("audioPanel", screen), "toggle", [this]);
     }
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
     onMiddleClicked: {
       Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);

@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NClockUtils.js" as ClockUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import "../Helpers/ColorsConvert.js" as ColorsConvert
@@ -78,57 +80,6 @@ Item {
       return digitalClockComponent;
     }
 
-    onLoaded: {
-      item.now = Qt.binding(function () {
-        return root.now;
-      });
-      item.backgroundColor = Qt.binding(function () {
-        return root.backgroundColor;
-      });
-      item.clockColor = Qt.binding(function () {
-        return root.clockColor;
-      });
-      if (item.hasOwnProperty("secondHandColor")) {
-        item.secondHandColor = Qt.binding(function () {
-          return root.secondHandColor;
-        });
-      }
-      if (item.hasOwnProperty("progressColor")) {
-        item.progressColor = Qt.binding(function () {
-          return root.progressColor;
-        });
-      }
-      if (item.hasOwnProperty("hoursFontSize")) {
-        item.hoursFontSize = Qt.binding(function () {
-          return root.hoursFontSize;
-        });
-      }
-      if (item.hasOwnProperty("minutesFontSize")) {
-        item.minutesFontSize = Qt.binding(function () {
-          return root.minutesFontSize;
-        });
-      }
-      if ("hoursFontWeight" in item) {
-        item.hoursFontWeight = Qt.binding(function () {
-          return root.hoursFontWeight;
-        });
-      }
-      if ("minutesFontWeight" in item) {
-        item.minutesFontWeight = Qt.binding(function () {
-          return root.minutesFontWeight;
-        });
-      }
-      if (item.hasOwnProperty("scaleRatio")) {
-        item.scaleRatio = Qt.binding(function () {
-          return root.scaleRatio;
-        });
-      }
-      if ("showProgress" in item) {
-        item.showProgress = Qt.binding(function () {
-          return root.showProgress;
-        });
-      }
-    }
   }
 
   // Analog Clock Component
@@ -307,7 +258,7 @@ Item {
       }
 
       NText {
-        text: Qt.formatTime(digitalClock.now, "mm")
+        text: ClockUtils.minutes(digitalClock.now)
         pointSize: digitalClock.minutesFontSize
         font.weight: digitalClock.minutesFontWeight
         color: digitalClock.clockColor
@@ -436,16 +387,37 @@ Item {
 
   Component {
     id: analogClockComponent
-    NClockAnalog {}
+    NClockAnalog {
+      now: root.now
+      backgroundColor: root.backgroundColor
+      clockColor: root.clockColor
+      secondHandColor: root.secondHandColor
+      scaleRatio: root.scaleRatio
+    }
   }
 
   Component {
     id: digitalClockComponent
-    NClockDigital {}
+    NClockDigital {
+      now: root.now
+      backgroundColor: root.backgroundColor
+      clockColor: root.clockColor
+      progressColor: root.progressColor
+      hoursFontSize: root.hoursFontSize
+      minutesFontSize: root.minutesFontSize
+      hoursFontWeight: root.hoursFontWeight
+      minutesFontWeight: root.minutesFontWeight
+      scaleRatio: root.scaleRatio
+      showProgress: root.showProgress
+    }
   }
 
   Component {
     id: binaryClockComponent
-    NClockBinary {}
+    NClockBinary {
+      now: root.now
+      backgroundColor: root.backgroundColor
+      clockColor: root.clockColor
+    }
   }
 }

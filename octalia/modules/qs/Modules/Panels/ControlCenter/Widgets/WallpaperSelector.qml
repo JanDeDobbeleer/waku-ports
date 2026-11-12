@@ -8,6 +8,6 @@ NIconButtonHot {
 
   enabled: Settings.data.wallpaper.enabled
   icon: "wallpaper-selector"
-  onClicked: PanelService.getPanel("wallpaperPanel", screen)?.toggle()
+  onClicked: PanelService.invokePanel(PanelService.getPanel("wallpaperPanel", screen), "toggle", [])
   onRightClicked: WallpaperService.setRandomWallpaper()
 }

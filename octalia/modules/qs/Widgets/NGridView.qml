@@ -1,3 +1,5 @@
+import "NViewUtils.js" as ViewUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import qs.Commons
@@ -214,11 +216,25 @@ Item {
   }
 
   function incrementCurrentIndex() {
-    gridView.incrementCurrentIndex();
+    if (gridView.flow === GridView.FlowTopToBottom && gridView.verticalLayoutDirection === GridView.BottomToTop)
+      gridView.moveCurrentIndexUp();
+    else if (gridView.flow === GridView.FlowTopToBottom)
+      gridView.moveCurrentIndexDown();
+    else if (gridView.effectiveLayoutDirection === Qt.RightToLeft)
+      gridView.moveCurrentIndexLeft();
+    else
+      gridView.moveCurrentIndexRight();
   }
 
   function decrementCurrentIndex() {
-    gridView.decrementCurrentIndex();
+    if (gridView.flow === GridView.FlowTopToBottom && gridView.verticalLayoutDirection === GridView.BottomToTop)
+      gridView.moveCurrentIndexDown();
+    else if (gridView.flow === GridView.FlowTopToBottom)
+      gridView.moveCurrentIndexUp();
+    else if (gridView.effectiveLayoutDirection === Qt.RightToLeft)
+      gridView.moveCurrentIndexRight();
+    else
+      gridView.moveCurrentIndexLeft();
   }
 
   function indexAt(x: real, y: real): int {
@@ -387,7 +403,7 @@ Item {
     ScrollBar.vertical: ScrollBar {
       id: verticalScrollBar
       parent: root
-      x: root.mirrored ? 0 : root.width - width
+      x: ViewUtils.mirrored(root) ? 0 : root.width - width
       y: 0
       height: root.height
       policy: root.verticalPolicy

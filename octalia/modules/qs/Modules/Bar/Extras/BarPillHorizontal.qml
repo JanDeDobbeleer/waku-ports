@@ -277,14 +277,14 @@ Item {
         return;
       }
       if (!root.forceOpen) {
-        showDelayed();
+        root.showDelayed();
       }
     }
     onExited: {
       root.hovered = false;
       root.exited();
       if (!root.forceOpen && !root.forceClose) {
-        hide();
+        root.hide();
       }
     }
     onClicked: mouse => {

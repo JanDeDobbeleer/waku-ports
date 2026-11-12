@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
@@ -38,9 +39,9 @@ Item {
   }
 
   // Resolve settings: try user settings or defaults from BarWidgetRegistry
-  readonly property int visualizerWidth: widgetSettings.width !== undefined ? widgetSettings.width : widgetMetadata.width
-  readonly property bool hideWhenIdle: widgetSettings.hideWhenIdle !== undefined ? widgetSettings.hideWhenIdle : widgetMetadata.hideWhenIdle
-  readonly property string colorName: widgetSettings.colorName !== undefined ? widgetSettings.colorName : widgetMetadata.colorName
+  readonly property int visualizerWidth: BarWidgetHelpers.readProperty(widgetSettings, "width") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "width") : BarWidgetHelpers.readProperty(widgetMetadata, "width")
+  readonly property bool hideWhenIdle: BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") : BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenIdle")
+  readonly property string colorName: BarWidgetHelpers.readProperty(widgetSettings, "colorName") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "colorName") : BarWidgetHelpers.readProperty(widgetMetadata, "colorName")
 
   readonly property color fillColor: Color.resolveColorKey(colorName)
 
@@ -167,7 +168,7 @@ Item {
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
                    if (root.screen) {
-                     PanelService.showContextMenu(contextMenu, root, root.screen);
+                     PanelService.showContextMenu(contextMenu, root, root.screen, null);
                    }
                  } else {
                    const types = ["linear", "mirrored", "wave"];

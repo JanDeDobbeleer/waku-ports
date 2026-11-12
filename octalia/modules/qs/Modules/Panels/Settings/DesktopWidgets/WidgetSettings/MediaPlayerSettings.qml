@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -12,13 +13,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property string valueVisualizerType: widgetData.visualizerType ? widgetData.visualizerType : widgetMetadata.visualizerType
-  property string valueHideMode: widgetData.hideMode !== undefined ? widgetData.hideMode : widgetMetadata.hideMode
-  property bool valueShowButtons: widgetData.showButtons !== undefined ? widgetData.showButtons : widgetMetadata.showButtons
-  property bool valueShowAlbumArt: widgetData.showAlbumArt !== undefined ? widgetData.showAlbumArt : widgetMetadata.showAlbumArt
-  property bool valueShowVisualizer: widgetData.showVisualizer !== undefined ? widgetData.showVisualizer : widgetMetadata.showVisualizer
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property string valueVisualizerType: SettingsValue.truthyFallback(widgetData, widgetMetadata, "visualizerType")
+  property string valueHideMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideMode")
+  property bool valueShowButtons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showButtons")
+  property bool valueShowAlbumArt: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showAlbumArt")
+  property bool valueShowVisualizer: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showVisualizer")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -41,7 +42,7 @@ ColumnLayout {
                  root.valueShowBackground = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
@@ -53,7 +54,7 @@ ColumnLayout {
                  root.valueRoundedCorners = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 
   NToggle {
@@ -65,7 +66,7 @@ ColumnLayout {
                  root.valueShowAlbumArt = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showAlbumArt
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showAlbumArt")
   }
 
   NToggle {
@@ -77,7 +78,7 @@ ColumnLayout {
                  root.valueShowButtons = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showButtons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showButtons")
   }
 
   NComboBox {
@@ -103,6 +104,6 @@ ColumnLayout {
                   root.valueHideMode = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.hideMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideMode")
   }
 }

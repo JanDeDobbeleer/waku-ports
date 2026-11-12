@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "ShellStateUtils.js" as ShellStateUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -95,7 +97,7 @@ Singleton {
   }
 
   // Launcher usage
-  function getLauncherUsageCount(key) {
+  function getLauncherUsageCount(key: var): real {
     const m = adapter.launcherUsage;
     if (!m)
       return 0;
@@ -103,7 +105,7 @@ Singleton {
     return typeof v === 'number' && isFinite(v) ? v : 0;
   }
 
-  function recordLauncherUsage(key) {
+  function recordLauncherUsage(key: var): void {
     let counts = Object.assign({}, adapter.launcherUsage || {});
     counts[key] = getLauncherUsageCount(key) + 1;
     adapter.launcherUsage = counts;
@@ -111,12 +113,12 @@ Singleton {
   }
 
   // Migrate usage from one key to another, merging counts in a single save
-  function migrateLauncherUsage(fromKey, toKey) {
+  function migrateLauncherUsage(fromKey: var, toKey: var): void {
     let counts = Object.assign({}, adapter.launcherUsage || {});
     const fromCount = typeof counts[fromKey] === 'number' && isFinite(counts[fromKey]) ? counts[fromKey] : 0;
     const toCount = typeof counts[toKey] === 'number' && isFinite(counts[toKey]) ? counts[toKey] : 0;
     counts[toKey] = toCount + fromCount;
-    delete counts[fromKey];
+    ShellStateUtils.deleteKey(counts, fromKey);
     adapter.launcherUsage = counts;
     save();
   }
@@ -142,70 +144,60 @@ Singleton {
 
     saveQueued = false;
 
-    try {
-      // Ensure cache directory exists
-      Os.mkdirp(Settings.cacheDir);
+    ShellStateUtils.performSave(Settings, Os, root, Logger);
+  }
 
-      Qt.callLater(() => {
-                     try {
-                       stateFileView.writeAdapter();
-                       Logger.d("ShellState", "Saved state file");
-                     } catch (writeError) {
-                       Logger.e("ShellState", "Failed to write state file:", writeError);
-                     }
-                   });
-    } catch (error) {
-      Logger.e("ShellState", "Failed to save state:", error);
-    }
+  function scheduleStateWrite(): void {
+    Qt.callLater(() => { ShellStateUtils.writeAdapter(stateFileView, Logger); });
   }
 
   // Convenience functions for each service
 
   // Display state (CompositorService)
-  function setDisplay(displayData) {
+  function setDisplay(displayData: var) {
     adapter.display = displayData;
     save();
     displayStateChanged();
   }
 
-  function getDisplay() {
+  function getDisplay(): var {
     return adapter.display || {};
   }
 
   // Notifications state (NotificationService)
-  function setNotificationsState(stateData) {
+  function setNotificationsState(stateData: var) {
     adapter.notificationsState = stateData;
     save();
     notificationsStateChanged();
   }
 
-  function getNotificationsState() {
+  function getNotificationsState(): var {
     return adapter.notificationsState || {
       lastSeenTs: 0
     };
   }
 
   // Changelog state (UpdateService)
-  function setChangelogState(stateData) {
+  function setChangelogState(stateData: var) {
     adapter.changelogState = stateData;
     save();
     changelogStateChanged();
   }
 
-  function getChangelogState() {
+  function getChangelogState(): var {
     return adapter.changelogState || {
       lastSeenVersion: ""
     };
   }
 
   // Color schemes list (SchemeDownloader)
-  function setColorSchemesList(listData) {
+  function setColorSchemesList(listData: var) {
     adapter.colorSchemesList = listData;
     save();
     colorSchemesListChanged();
   }
 
-  function getColorSchemesList() {
+  function getColorSchemesList(): var {
     return adapter.colorSchemesList || {
       schemes: [],
       timestamp: 0
@@ -213,76 +205,47 @@ Singleton {
   }
 
   // UI state
-  function setUiState(stateData) {
+  function setUiState(stateData: var) {
     adapter.ui = stateData;
     save();
   }
 
-  function getUiState() {
+  function getUiState(): var {
     return adapter.ui || {
       settingsSidebarExpanded: true
     };
   }
 
-  function setSettingsSidebarExpanded(expanded) {
-    let uiState = getUiState();
-    uiState.settingsSidebarExpanded = expanded;
-    setUiState(uiState);
+  function setSettingsSidebarExpanded(expanded: var): void {
+    ShellStateUtils.setSettingsSidebarExpanded(root, expanded);
   }
 
-  function getSettingsSidebarExpanded() {
-    return getUiState().settingsSidebarExpanded !== false; // default to true
+  function getSettingsSidebarExpanded(): bool {
+    return ShellStateUtils.getSettingsSidebarExpanded(root);
   }
 
   // Telemetry state
-  function setTelemetryState(stateData) {
+  function setTelemetryState(stateData: var) {
     adapter.telemetry = stateData;
     save();
   }
 
-  function getTelemetryState() {
+  function getTelemetryState(): var {
     return adapter.telemetry || {
       instanceId: ""
     };
   }
 
-  function getTelemetryInstanceId() {
-    return getTelemetryState().instanceId || "";
+  function getTelemetryInstanceId(): string {
+    return ShellStateUtils.getTelemetryInstanceId(root);
   }
 
-  function setTelemetryInstanceId(instanceId) {
-    let state = getTelemetryState();
-    state.instanceId = instanceId;
-    setTelemetryState(state);
+  function setTelemetryInstanceId(instanceId: var): void {
+    ShellStateUtils.setTelemetryInstanceId(root, instanceId);
   }
 
   // -----------------------------------------------------
-  function buildStateSnapshot() {
-    try {
-      const settingsData = QtObj2JS.qtObjectToPlainObject(Settings.data);
-      const shellStateData = ShellState?.data ? QtObj2JS.qtObjectToPlainObject(ShellState.data) || {} : {};
-
-      return {
-        settings: settingsData,
-        state: {
-          doNotDisturb: NotificationService.doNotDisturb,
-          octaliaPerformanceMode: PowerProfileService.octaliaPerformanceMode,
-          barVisible: BarService.isVisible,
-          openedPanel: PanelService.openedPanel?.objectName || "",
-          lockScreenActive: PanelService.lockScreen?.active || false,
-          wallpapers: WallpaperService.getWallpapersEffectiveMap(),
-          desktopWidgetsEditMode: DesktopWidgetRegistry.editMode || false,
-          // -------------
-          display: shellStateData.display || {},
-          notificationsState: shellStateData.notificationsState || {},
-          changelogState: shellStateData.changelogState || {},
-          colorSchemesList: shellStateData.colorSchemesList || {},
-          ui: shellStateData.ui || {}
-        }
-      };
-    } catch (error) {
-      Logger.e("Settings", "Failed to build state snapshot:", error);
-      return null;
-    }
+  function buildStateSnapshot(): var {
+    return ShellStateUtils.buildStateSnapshot(QtObj2JS, Settings, ShellState, NotificationService, PowerProfileService, BarService, PanelService, WallpaperService, DesktopWidgetRegistry, Logger);
   }
 }

@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NSearchableComboBoxUtils.js" as ComboUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -36,31 +38,15 @@ RowLayout {
   property ListModel filteredModel: ListModel {}
   property string searchText: ""
 
-  function findIndexByKey(key) {
-    var i;
-    if (!root.model)
-      return -1;
-    for (i = 0; i < root.model.count; i++) {
-      if (root.model.get(i).key === key) {
-        return i;
-      }
-    }
-    return -1;
+  function findIndexByKey(key: var): int {
+    return ComboUtils.findIndexByKey(root.model, key);
   }
 
   // The active model used for the popup list (source model or filtered results)
-  readonly property var activeModel: isFiltered ? filteredModel : root.model
+  readonly property ListModel activeModel: isFiltered ? filteredModel : root.model
 
-  function findIndexInActiveModel(key) {
-    var i;
-    if (!activeModel || activeModel.count === undefined)
-      return -1;
-    for (i = 0; i < activeModel.count; i++) {
-      if (activeModel.get(i).key === key) {
-        return i;
-      }
-    }
-    return -1;
+  function findIndexInActiveModel(key: var): int {
+    return ComboUtils.findIndexInActiveModel(activeModel, key);
   }
 
   // Whether we're using filtered results or the source model directly
@@ -69,8 +55,8 @@ RowLayout {
   function filterModel() {
     var fuzzyResults, i, item, j, searchLower;
     // Check if model exists and has items
-    if (!root.model || root.model.count === undefined || root.model.count === 0) {
-      filteredModel.clear();
+    if (!root.model || ComboUtils.modelCount(root.model) === undefined || ComboUtils.modelCount(root.model) === 0) {
+      ComboUtils.clearModel(filteredModel);
       isFiltered = false;
       return;
     }
@@ -78,19 +64,19 @@ RowLayout {
     var query = searchText.trim();
     if (query === "") {
       // No search text - use source model directly, don't copy
-      filteredModel.clear();
+      ComboUtils.clearModel(filteredModel);
       isFiltered = false;
       return;
     }
 
     // We have search text - need to filter
     isFiltered = true;
-    filteredModel.clear();
+    ComboUtils.clearModel(filteredModel);
 
     // Convert ListModel to array for fuzzy search
     var items = [];
-    for (i = 0; i < root.model.count; i++) {
-      items.push(root.model.get(i));
+    for (i = 0; i < ComboUtils.modelCount(root.model); i++) {
+      items.push(ComboUtils.getItem(root.model, i));
     }
 
     // Use fuzzy search if available, fallback to simple search
@@ -102,15 +88,15 @@ RowLayout {
 
       // Add results in order of relevance
       for (j = 0; j < fuzzyResults.length; j++) {
-        filteredModel.append(fuzzyResults[j].obj);
+        ComboUtils.appendItem(filteredModel, fuzzyResults[j].obj);
       }
     } else {
       // Fallback to simple search
       searchLower = query.toLowerCase();
       for (i = 0; i < items.length; i++) {
         item = items[i];
-        if (item.name.toLowerCase().includes(searchLower)) {
-          filteredModel.append(item);
+        if (ComboUtils.modelName(item).toLowerCase().includes(searchLower)) {
+          ComboUtils.appendItem(filteredModel, item);
         }
       }
     }
@@ -141,10 +127,10 @@ RowLayout {
     implicitWidth: Layout.minimumWidth
     model: root.activeModel
     textRole: "name"
-    currentIndex: findIndexInActiveModel(root.currentKey)
+    currentIndex: root.findIndexInActiveModel(root.currentKey)
     onActivated: {
-      if (combo.currentIndex >= 0 && root.activeModel && combo.currentIndex < root.activeModel.count) {
-        root.selected(root.activeModel.get(combo.currentIndex).key);
+      if (combo.currentIndex >= 0 && root.activeModel && combo.currentIndex < ComboUtils.modelCount(root.activeModel)) {
+        root.selected(ComboUtils.modelKey(root.activeModel, combo.currentIndex));
       }
     }
 
@@ -172,10 +158,10 @@ RowLayout {
 
       // Look up current selection directly in source model by key
       readonly property int sourceIndex: root.findIndexByKey(root.currentKey)
-      readonly property bool hasSelection: root.model && sourceIndex >= 0 && sourceIndex < root.model.count
+      readonly property bool hasSelection: root.model && sourceIndex >= 0 && sourceIndex < ComboUtils.modelCount(root.model)
 
       color: hasSelection ? Color.mOnSurface : Color.mOnSurfaceVariant
-      text: hasSelection ? root.model.get(sourceIndex).name : root.placeholder
+      text: hasSelection ? ComboUtils.modelItemName(root.model, sourceIndex) : root.placeholder
     }
 
     indicator: NIcon {
@@ -207,13 +193,13 @@ RowLayout {
           Keys.onPressed: event => {
                             if (Keybinds.checkKey(event, 'enter', Settings)) {
                               selectHighlighted();
-                              combo.popup.close();
+                              ComboUtils.closePopup(combo.popup);
                               event.accepted = true;
                               return;
                             }
 
                             if (Keybinds.checkKey(event, 'escape', Settings)) {
-                              combo.popup.close();
+                              ComboUtils.closePopup(combo.popup);
                               event.accepted = true;
                               return;
                             }
@@ -241,8 +227,8 @@ RowLayout {
 
           function selectHighlighted() {
             var selectedKey;
-            if (listView.currentIndex >= 0 && listView.model && listView.currentIndex < listView.model.count) {
-              selectedKey = listView.model.get(listView.currentIndex).key;
+            if (listView.currentIndex >= 0 && listView.model && listView.currentIndex < ComboUtils.modelCount(listView.model)) {
+              selectedKey = ComboUtils.modelKey(listView.model, listView.currentIndex);
               root.selected(selectedKey);
             }
           }
@@ -276,18 +262,18 @@ RowLayout {
               topPadding: Style.marginS
               bottomPadding: Style.marginS
               hoverEnabled: true
-              highlighted: ListView.view.currentIndex === delegateRoot.index
+              highlighted: listView.currentIndex === delegateRoot.index
 
               onHoveredChanged: {
                 if (hovered) {
-                  ListView.view.currentIndex = delegateRoot.index;
+                  listView.currentIndex = delegateRoot.index;
                 }
               }
 
               onClicked: {
-                var selectedKey = listView.model.get(delegateRoot.index).key;
+                var selectedKey = ComboUtils.modelKey(listView.model, delegateRoot.index);
                 root.selected(selectedKey);
-                combo.popup.close();
+                ComboUtils.closePopup(combo.popup);
               }
 
               contentItem: RowLayout {
@@ -295,7 +281,7 @@ RowLayout {
                 spacing: Style.marginM
 
                 NText {
-                  text: delegateRoot.model.name
+                  text: ComboUtils.modelName(delegateRoot.model)
                   pointSize: Style.fontSizeM
                   color: delegateRoot.highlighted ? Color.mOnHover : Color.mOnSurface
                   verticalAlignment: Text.AlignVCenter
@@ -309,46 +295,19 @@ RowLayout {
 
                   // Generic badge renderer
                   Repeater {
-                    model: {
-                      if (typeof delegateRoot.model.badges === 'undefined' || delegateRoot.model.badges === null)
-                        return 0;
-                      // Handle both arrays and ListModels
-                      if (typeof delegateRoot.model.badges.length !== 'undefined')
-                        return delegateRoot.model.badges.length;
-                      if (typeof delegateRoot.model.badges.count !== 'undefined')
-                        return delegateRoot.model.badges.count;
-                      return 0;
-                    }
+                    model: ComboUtils.badgeCount(delegateRoot.model)
 
                     delegate: NIcon {
                       id: badgeIcon
                       required property int index
-                      readonly property var badgeData: {
-                        if (typeof delegateRoot.model.badges === 'undefined' || delegateRoot.model.badges === null)
-                          return null;
-                        // Handle both arrays and ListModels
-                        if (typeof delegateRoot.model.badges.length !== 'undefined')
-                          return delegateRoot.model.badges[badgeIcon.index];
-                        if (typeof delegateRoot.model.badges.get !== 'undefined')
-                          return delegateRoot.model.badges.get(badgeIcon.index);
-                        return null;
-                      }
+                      readonly property var badgeData: ComboUtils.badgeData(delegateRoot.model, badgeIcon.index)
 
-                      icon: badgeData && badgeData.icon ? badgeData.icon : ""
-                      pointSize: {
-                        if (!badgeData || !badgeData.size)
-                          return Style.fontSizeXS;
-                        if (badgeData.size === "xsmall")
-                          return Style.fontSizeXXS;
-                        else if (badgeData.size === "medium")
-                          return Style.fontSizeM;
-                        else
-                          return Style.fontSizeXS;
-                      }
-                      color: delegateRoot.highlighted ? Color.mOnHover : (badgeData && badgeData.color ? badgeData.color : Color.mOnSurface)
+                      icon: ComboUtils.badgeIcon(badgeData)
+                      pointSize: ComboUtils.badgeSize(badgeData, Style)
+                      color: delegateRoot.highlighted ? Color.mOnHover : (ComboUtils.badgeColor(badgeData, Color.mOnSurface))
                       Layout.preferredWidth: Math.round(Style.baseWidgetSize * 0.6)
                       Layout.preferredHeight: Math.round(Style.baseWidgetSize * 0.6)
-                      visible: badgeData && badgeData.icon !== undefined && badgeData.icon !== ""
+                      visible: ComboUtils.badgeVisible(badgeData)
                     }
                   }
                 }
@@ -385,12 +344,12 @@ RowLayout {
       function onVisibleChanged() {
         if (combo.popup.visible) {
           // Ensure the model is filtered when popup opens
-          filterModel();
+          root.filterModel();
           listView.currentIndex = Math.max(0, root.findIndexInActiveModel(root.currentKey));
           // Small delay to ensure the popup is fully rendered
           Qt.callLater(() => {
                          if (searchInput && searchInput.inputItem) {
-                           searchInput.inputItem.forceActiveFocus();
+                           ComboUtils.focusItem(searchInput.inputItem);
                          }
                        });
         } else {

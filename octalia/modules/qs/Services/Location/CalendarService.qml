@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "CalendarServiceUtils.js" as CalendarUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -58,21 +60,21 @@ Singleton {
     onTriggered: cacheFileView.writeAdapter()
   }
 
-  function setEvents(newEvents) {
+  function setEvents(newEvents: var) {
     root.events = newEvents;
     cacheAdapter.cachedEvents = newEvents;
     cacheAdapter.lastUpdate = new Date().toISOString();
     saveCache();
   }
 
-  function setCalendars(newCalendars) {
+  function setCalendars(newCalendars: var) {
     root.calendars = newCalendars;
     cacheAdapter.cachedCalendars = newCalendars;
     saveCache();
   }
 
   function loadCachedEvents() {
-    if (cacheAdapter.cachedEvents.length > 0) {
+    if (CalendarUtils.length(cacheAdapter.cachedEvents) > 0) {
       root.events = cacheAdapter.cachedEvents;
     }
   }
@@ -83,14 +85,14 @@ Singleton {
 
   // Load events and calendars from cache
   function loadFromCache() {
-    if (cacheAdapter.cachedEvents && cacheAdapter.cachedEvents.length > 0) {
+    if (cacheAdapter.cachedEvents && CalendarUtils.length(cacheAdapter.cachedEvents) > 0) {
       root.events = cacheAdapter.cachedEvents;
-      Logger.d("Calendar", `Loaded ${cacheAdapter.cachedEvents.length} cached event(s)`);
+      Logger.d("Calendar", `Loaded ${CalendarUtils.length(cacheAdapter.cachedEvents)} cached event(s)`);
     }
 
-    if (cacheAdapter.cachedCalendars && cacheAdapter.cachedCalendars.length > 0) {
+    if (cacheAdapter.cachedCalendars && CalendarUtils.length(cacheAdapter.cachedCalendars) > 0) {
       root.calendars = cacheAdapter.cachedCalendars;
-      Logger.d("Calendar", `Loaded ${cacheAdapter.cachedCalendars.length} cached calendar(s)`);
+      Logger.d("Calendar", `Loaded ${CalendarUtils.length(cacheAdapter.cachedCalendars)} cached calendar(s)`);
     }
 
     if (cacheAdapter.lastUpdate) {
@@ -104,7 +106,7 @@ Singleton {
     interval: 300000
     running: true
     repeat: true
-    onTriggered: root.loadEvents()
+    onTriggered: root.loadEvents(undefined, undefined)
   }
 
   // Core functions
@@ -126,11 +128,7 @@ Singleton {
 
     dataProvider.loadCalendars();
   }
-  function loadEvents(daysAhead = 31, daysBehind = 14) {
-    if (!root.available || !dataProvider) {
-      return;
-    }
-
-    dataProvider.loadEvents(daysAhead, daysBehind);
+  function loadEvents(daysAhead: var, daysBehind: var): void {
+    CalendarUtils.loadEvents(root, daysAhead, daysBehind);
   }
 }

@@ -33,7 +33,7 @@ Item {
   // Set the visible tab to idx without triggering a slide animation.
   // Call this BEFORE the bound currentIndex changes so that
   // onCurrentIndexChanged sees previousIndex === currentIndex and skips.
-  function setIndexWithoutAnimation(idx) {
+  function setIndexWithoutAnimation(idx: var): void {
     fromXAnim.stop();
     fromOpacityAnim.stop();
     toXAnim.stop();
@@ -62,7 +62,7 @@ Item {
     for (let i = 0; i < container.children.length; i++) {
       const child = container.children[i];
       contentItems.push(child);
-      child.width = Qt.binding(() => root.width);
+      child.width = Qt.binding(function (): real { return root.width; });
 
       if (i === currentIndex) {
         child.x = 0;
@@ -85,7 +85,7 @@ Item {
     previousIndex = currentIndex;
   }
 
-  function _animateTransition(fromIdx, toIdx) {
+  function _animateTransition(fromIdx: var, toIdx: var): void {
     // Stop any running animations
     fromXAnim.stop();
     fromOpacityAnim.stop();
@@ -148,8 +148,8 @@ Item {
     easing.type: Easing.OutCubic
     onFinished: {
       if (target && target !== root.contentItems[root.currentIndex]) {
-        target.visible = false;
-        target.opacity = 1.0;
+        (target as Item).visible = false;
+        (target as Item).opacity = 1.0;
       }
       root.animating = false;
     }

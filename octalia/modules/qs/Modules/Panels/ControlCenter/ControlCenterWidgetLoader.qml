@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import qs.Commons
 import qs.Services.UI
+import "./ControlCenterWidgetLoaderUtils.js" as ControlCenterWidgetLoaderUtils
 
 Item {
   id: root
@@ -9,16 +10,12 @@ Item {
   required property var widgetScreen
   required property var widgetProps
 
-  property string section: widgetProps && widgetProps.section || ""
-  property int sectionIndex: widgetProps && widgetProps.sectionWidgetIndex || 0
+  property string section: ControlCenterWidgetLoaderUtils.field(widgetProps, "section") || ""
+  property int sectionIndex: ControlCenterWidgetLoaderUtils.field(widgetProps, "sectionWidgetIndex") || 0
 
   // Don't reserve space unless the loaded widget is really visible
-  implicitWidth: getImplicitSize(loader.item, "implicitWidth")
-  implicitHeight: getImplicitSize(loader.item, "implicitHeight")
-
-  function getImplicitSize(item, prop) {
-    return (item && item.visible) ? item[prop] : 0;
-  }
+  implicitWidth: ControlCenterWidgetLoaderUtils.implicitSize(loader.item, "implicitWidth")
+  implicitHeight: ControlCenterWidgetLoaderUtils.implicitSize(loader.item, "implicitHeight")
 
   Loader {
     id: loader
@@ -26,33 +23,10 @@ Item {
     asynchronous: false
 
     Component.onCompleted: {
-      sourceComponent = Qt.binding(function () {
-        return ControlCenterWidgetRegistry.getWidget(root.widgetId);
-      });
+      sourceComponent = ControlCenterWidgetRegistry.getWidget(root.widgetId);
     }
 
-    onLoaded: {
-      var prop;
-      if (!item)
-        return;
-
-      // Apply properties to loaded widget
-      for (prop in root.widgetProps) {
-        if (item.hasOwnProperty(prop)) {
-          item[prop] = root.widgetProps[prop];
-        }
-      }
-
-      // Set screen property
-      if (item.hasOwnProperty("screen")) {
-        item.screen = root.widgetScreen;
-      }
-
-      // Call custom onLoaded if it exists
-      if (item.hasOwnProperty("onLoaded")) {
-        item.onLoaded();
-      }
-    }
+    onLoaded: ControlCenterWidgetLoaderUtils.configureWidget(item, root.widgetProps, root.widgetScreen)
 
     Component.onDestruction: {
       // Explicitly clear references

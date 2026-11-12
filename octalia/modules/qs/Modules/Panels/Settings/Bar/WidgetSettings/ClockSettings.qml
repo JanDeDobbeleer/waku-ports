@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -19,11 +20,11 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueClockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
-  property string valueFormatHorizontal: widgetData.formatHorizontal !== undefined ? widgetData.formatHorizontal : widgetMetadata.formatHorizontal
-  property string valueFormatVertical: widgetData.formatVertical !== undefined ? widgetData.formatVertical : widgetMetadata.formatVertical
+  property string valueClockColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockColor")
+  property bool valueUseCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useCustomFont")
+  property string valueCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customFont")
+  property string valueFormatHorizontal: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "formatHorizontal")
+  property string valueFormatVertical: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "formatVertical")
 
   readonly property color textColor: Color.resolveColorKey(valueClockColor)
 
@@ -43,32 +44,8 @@ ColumnLayout {
     settingsChanged(settings);
   }
 
-  // Function to insert token at cursor position in the focused input
-  function insertToken(token) {
-    var currentText, cursorPos, input, newText;
-    if (!focusedInput || !focusedInput.inputItem) {
-      // If no input is focused, default to horiz
-      if (inputHoriz.inputItem) {
-        inputHoriz.inputItem.focus = true;
-        focusedInput = inputHoriz;
-      }
-    }
-
-    if (focusedInput && focusedInput.inputItem) {
-      input = focusedInput.inputItem;
-      cursorPos = input.cursorPosition;
-      currentText = input.text;
-
-      // Insert token at cursor position
-      newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
-      input.text = newText + " ";
-
-      // Move cursor after the inserted token
-      input.cursorPosition = cursorPos + token.length + 1;
-
-      // Ensure the input keeps focus
-      input.focus = true;
-    }
+  function insertToken(token: string): void {
+    SettingsValue.insertToken(root, inputHoriz, token);
   }
 
   NColorChoice {
@@ -77,7 +54,7 @@ ColumnLayout {
                   root.valueClockColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.clockColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockColor")
   }
 
   NToggle {
@@ -89,7 +66,7 @@ ColumnLayout {
                  root.valueUseCustomFont = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.useCustomFont
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useCustomFont")
   }
 
   NSearchableComboBox {
@@ -144,16 +121,8 @@ ColumnLayout {
           root.valueFormatHorizontal = text;
           root.saveSettings();
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = inputHoriz;
-              }
-            });
-          }
-        }
-        defaultValue: root.widgetMetadata.formatHorizontal
+        Component.onCompleted: SettingsValue.watchInput(inputItem, root, inputHoriz)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "formatHorizontal")
       }
 
       Item {
@@ -172,16 +141,8 @@ ColumnLayout {
           root.valueFormatVertical = text;
           root.saveSettings();
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = inputVert;
-              }
-            });
-          }
-        }
-        defaultValue: root.widgetMetadata.formatVertical
+        Component.onCompleted: SettingsValue.watchInput(inputItem, root, inputVert)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "formatVertical")
       }
     }
 

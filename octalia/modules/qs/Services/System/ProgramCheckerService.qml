@@ -26,6 +26,6 @@ Singleton {
     checksCompleted();
   }
 
-  function checkProgram(programProperty) {
+  function checkProgram(programProperty: var) {
   }
 }

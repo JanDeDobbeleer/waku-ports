@@ -1,3 +1,5 @@
+import "NTabBarUtils.js" as TabBarUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -17,32 +19,8 @@ Rectangle {
   onDistributeEvenlyChanged: _applyDistribution()
   Component.onCompleted: _applyDistribution()
 
-  function _updateFirstLast() {
-    var child, i;
-    // Defensive check for QML initialization timing
-    if (!tabRow || !tabRow.children) {
-      return;
-    }
-    var kids = tabRow.children;
-    var len = kids.length;
-    var firstVisible = -1;
-    var lastVisible = -1;
-    for (i = 0; i < len; i++) {
-      child = kids[i];
-      // Only consider items that have isFirst/isLast (actual tab buttons, not Repeaters)
-      if (child.visible && "isFirst" in child) {
-        if (firstVisible === -1)
-          firstVisible = i;
-        lastVisible = i;
-      }
-    }
-    for (i = 0; i < len; i++) {
-      child = kids[i];
-      if ("isFirst" in child)
-        child.isFirst = (i === firstVisible);
-      if ("isLast" in child)
-        child.isLast = (i === lastVisible);
-    }
+  function _updateFirstLast(): void {
+    TabBarUtils.updateFirstLast(tabRow);
   }
 
   function _applyDistribution() {
@@ -53,15 +31,15 @@ Rectangle {
     if (!distributeEvenly) {
       for (i = 0; i < tabRow.children.length; i++) {
         child = tabRow.children[i];
-        child.Layout.fillWidth = true;
+        (child as Item).Layout.fillWidth = true;
       }
       return;
     }
 
     for (i = 0; i < tabRow.children.length; i++) {
       child = tabRow.children[i];
-      child.Layout.fillWidth = true;
-      child.Layout.preferredWidth = 1;
+      (child as Item).Layout.fillWidth = true;
+      (child as Item).Layout.preferredWidth = 1;
     }
   }
 

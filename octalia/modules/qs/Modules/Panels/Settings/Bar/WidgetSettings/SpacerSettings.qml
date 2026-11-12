@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,7 +17,7 @@ ColumnLayout {
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
-    settings.width = parseInt(widthInput.text) || widgetMetadata.width;
+    settings.width = parseInt(widthInput.text) || SettingsValue.read(widgetMetadata, "width");
     settingsChanged(settings);
   }
 
@@ -25,9 +26,9 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.width")
     description: I18n.tr("bar.spacer.width-description")
-    text: root.widgetData.width || root.widgetMetadata.width
+    text: SettingsValue.read(root.widgetData, "width") || SettingsValue.read(root.widgetMetadata, "width")
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     onTextChanged: root.saveSettings()
-    defaultValue: String(root.widgetMetadata.width)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "width"))
   }
 }

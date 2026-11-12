@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NReorderCheckboxesUtils.js" as ReorderUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -24,41 +26,15 @@ Item {
   signal dragPotentialEnded
 
   readonly property real itemHeight: root.baseSize
-  readonly property real contentHeight: root.model.length > 0 ? root.model.length * itemHeight + (root.model.length - 1) * root.spacing : 0
+  readonly property real contentHeight: ReorderUtils.length(root.model) > 0 ? ReorderUtils.length(root.model) * itemHeight + (ReorderUtils.length(root.model) - 1) * root.spacing : 0
   implicitHeight: contentHeight
 
-  function toggleItem(index) {
-    if (index < 0 || index >= root.model.length)
-      return;
-    var item = root.model[index];
-    if (item.required)
-      return;
-
-    // Create a new array to trigger binding update
-    var newModel = root.model.slice();
-    newModel[index] = Object.assign({}, item, {
-                                      "enabled": !item.enabled
-                                    });
-    root.model = newModel;
-
-    root.itemToggled(index, newModel[index].enabled);
+  function toggleItem(index: var): void {
+    ReorderUtils.toggleItem(root, index);
   }
 
-  function moveItem(fromIndex, toIndex) {
-    if (fromIndex === toIndex)
-      return;
-    if (fromIndex < 0 || fromIndex >= root.model.length)
-      return;
-    if (toIndex < 0 || toIndex >= root.model.length)
-      return;
-
-    // Create a new array with item moved
-    var newModel = root.model.slice();
-    var item = newModel.splice(fromIndex, 1)[0];
-    newModel.splice(toIndex, 0, item);
-    root.model = newModel;
-
-    root.itemsReordered(fromIndex, toIndex);
+  function moveItem(fromIndex: var, toIndex: var): void {
+    ReorderUtils.moveItem(root, fromIndex, toIndex);
   }
 
   Item {
@@ -79,10 +55,10 @@ Item {
         required property int index
         required property var modelData
 
-        property string text: delegateItem.modelData.text || ""
-        property bool itemEnabled: delegateItem.modelData.enabled || false
-        property bool required: delegateItem.modelData.required || false
-        readonly property bool isDisabled: (root.disabledIds || []).indexOf(delegateItem.modelData.id) !== -1
+        property string text: ReorderUtils.field(delegateItem.modelData, "text") || ""
+        property bool itemEnabled: ReorderUtils.field(delegateItem.modelData, "enabled") || false
+        property bool required: ReorderUtils.field(delegateItem.modelData, "required") || false
+        readonly property bool isDisabled: (root.disabledIds || []).indexOf(ReorderUtils.field(delegateItem.modelData, "id")) !== -1
         readonly property bool canDrag: !delegateItem.isDisabled
         property bool dragging: false
         property int dragStartY: 0

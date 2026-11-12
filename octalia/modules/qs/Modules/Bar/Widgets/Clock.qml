@@ -4,6 +4,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -39,11 +40,11 @@ Item {
   readonly property var now: Time.now
 
   // Resolve settings: try user settings or defaults from BarWidgetRegistry
-  readonly property string clockColor: widgetSettings.clockColor !== undefined ? widgetSettings.clockColor : widgetMetadata.clockColor
-  readonly property bool useCustomFont: widgetSettings.useCustomFont !== undefined ? widgetSettings.useCustomFont : widgetMetadata.useCustomFont
-  readonly property string customFont: widgetSettings.customFont !== undefined ? widgetSettings.customFont : widgetMetadata.customFont
-  readonly property string formatHorizontal: widgetSettings.formatHorizontal !== undefined ? widgetSettings.formatHorizontal : widgetMetadata.formatHorizontal
-  readonly property string formatVertical: widgetSettings.formatVertical !== undefined ? widgetSettings.formatVertical : widgetMetadata.formatVertical
+  readonly property string clockColor: BarWidgetHelpers.readProperty(widgetSettings, "clockColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "clockColor") : BarWidgetHelpers.readProperty(widgetMetadata, "clockColor")
+  readonly property bool useCustomFont: BarWidgetHelpers.readProperty(widgetSettings, "useCustomFont") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useCustomFont") : BarWidgetHelpers.readProperty(widgetMetadata, "useCustomFont")
+  readonly property string customFont: BarWidgetHelpers.readProperty(widgetSettings, "customFont") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "customFont") : BarWidgetHelpers.readProperty(widgetMetadata, "customFont")
+  readonly property string formatHorizontal: BarWidgetHelpers.readProperty(widgetSettings, "formatHorizontal") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "formatHorizontal") : BarWidgetHelpers.readProperty(widgetMetadata, "formatHorizontal")
+  readonly property string formatVertical: BarWidgetHelpers.readProperty(widgetSettings, "formatVertical") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "formatVertical") : BarWidgetHelpers.readProperty(widgetMetadata, "formatVertical")
 
   readonly property color textColor: Color.resolveColorKey(clockColor)
 
@@ -92,10 +93,10 @@ Item {
               family: root.useCustomFont && root.customFont ? root.customFont : Settings.data.ui.fontDefault
               Binding on pointSize {
                 value: {
-                  if (repeater.model.length == 1) {
+                  if (BarWidgetHelpers.readProperty(repeater.model, "length") == 1) {
                     // Single line: Full size
                     return root.barFontSize;
-                  } else if (repeater.model.length == 2) {
+                  } else if (BarWidgetHelpers.readProperty(repeater.model, "length") == 2) {
                     // Two lines: First line is bigger than the second
                     return (horizontalClockLine.index == 0) ? Math.round(root.barFontSize * 0.9) : Math.round(root.barFontSize * 0.75);
                   } else {
@@ -169,7 +170,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "open-calendar") {
-                     PanelService.getPanel("clockPanel", screen)?.toggle(root);
+                     PanelService.invokePanel(PanelService.getPanel("clockPanel", screen), "toggle", [root]);
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
@@ -184,9 +185,9 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, root.screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen, null);
                  } else {
-                   PanelService.getPanel("clockPanel", root.screen)?.toggle(this);
+                   BarWidgetHelpers.toggleIfPresent(PanelService.getPanel("clockPanel", root.screen), clockMouseArea);
                  }
                }
   }

@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "TemplateProcessorUtils.js" as TemplateUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -66,7 +68,7 @@ Singleton {
   ]
 
   // Only the methods the engine has a variant for.
-  readonly property var schemeTypes: allSchemeTypes.filter(t => S.ColorScheme.variants.includes(root.variantMap[t.key]))
+  readonly property var schemeTypes: TemplateUtils.schemeTypes(allSchemeTypes, S.ColorScheme.variants, root.variantMap)
 
   // The request in flight; a result that does not match it is stale and dropped.
   property string pendingPath: ""
@@ -74,30 +76,21 @@ Singleton {
   property string pendingVariant: ""
 
   // Check if a template is enabled in the activeTemplates array
-  function isTemplateEnabled(templateId): bool {
-    const activeTemplates = Settings.data.templates.activeTemplates;
-    if (!activeTemplates)
-      return false;
-    for (let i = 0; i < activeTemplates.length; i++) {
-      if (activeTemplates[i].id === templateId && activeTemplates[i].enabled) {
-        return true;
-      }
-    }
-    return false;
+  function isTemplateEnabled(templateId: var): bool {
+    return TemplateUtils.isTemplateEnabled(templateId, Settings);
   }
 
   // Get scheme type, defaulting to tonal-spot if not a recognized value
-  function getSchemeType() {
-    const method = Settings.data.colorSchemes.generationMethod;
-    return schemeTypes.some(s => s.key === method) ? method : "tonal-spot";
+  function getSchemeType(): var {
+    return TemplateUtils.getSchemeType(root, Settings);
   }
 
-  function samePath(a, b) {
+  function samePath(a: var, b: var): bool {
     return String(a).split("\\").join("/") === String(b).split("\\").join("/");
   }
 
   // Generates colors.json from the wallpaper image (debounced).
-  function processWallpaperColors(wallpaperPath, mode) {
+  function processWallpaperColors(wallpaperPath: var, mode: var): void {
     Logger.d("TemplateProcessor", `processWallpaperColors called: path=${wallpaperPath}, mode=${mode}`);
     pendingPath = String(wallpaperPath || "").replace(/^file:\/+(?=[A-Za-z]:)/, "");
     pendingDark = mode !== "light";
@@ -107,7 +100,7 @@ Singleton {
 
   // Predefined schemes need no generation here: ColorSchemeService writes colors.json itself and
   // the python app templates are not available on Windows.
-  function processPredefinedScheme(schemeData, mode, wallpaperPath) {
+  function processPredefinedScheme(schemeData: var, mode: var, wallpaperPath: var): void {
     cancelPending();
   }
 
@@ -125,28 +118,8 @@ Singleton {
   // Maps the M3 roles of an engine scheme onto Octalia's keys, with the roles the upstream
   // templates/octalia.json uses (surfaceContainer -> mSurfaceVariant, outlineVariant -> mOutline,
   // tertiary -> mHover).
-  function octaliaColors(c) {
-    function role(name, fallbackName) {
-      return c[name] !== undefined ? c[name] : c[fallbackName];
-    }
-    return {
-      "mPrimary": c.primary,
-      "mOnPrimary": c.onPrimary,
-      "mSecondary": c.secondary,
-      "mOnSecondary": c.onSecondary,
-      "mTertiary": c.tertiary,
-      "mOnTertiary": c.onTertiary,
-      "mError": c.error,
-      "mOnError": c.onError,
-      "mSurface": c.surface,
-      "mOnSurface": c.onSurface,
-      "mSurfaceVariant": role("surfaceContainer", "surfaceVariant"),
-      "mOnSurfaceVariant": c.onSurfaceVariant,
-      "mOutline": role("outlineVariant", "outline"),
-      "mShadow": role("shadow", "surface"),
-      "mHover": c.tertiary,
-      "mOnHover": c.onTertiary
-    };
+  function octaliaColors(c: var): var {
+    return TemplateUtils.octaliaColors(c);
   }
 
   function applyFallback() {
@@ -172,23 +145,11 @@ Singleton {
   Connections {
     target: S.ColorScheme
 
-    function onFromImageFinished(path, scheme) {
-      if (!root.pendingPath || !root.samePath(path, root.pendingPath) || !Settings.data.colorSchemes.useWallpaperColors)
-        return;
-      // A result asked for before a dark/light switch arrives with the old mode.
-      if (scheme.dark !== root.pendingDark)
-        return;
-      root.pendingPath = "";
-      if (!scheme.valid) {
-        Logger.w("TemplateProcessor", "Invalid scheme for", path);
-        root.applyFallback();
-      } else {
-        ColorSchemeService.writeColorsToDisk(root.octaliaColors(scheme.colors));
-      }
-      root.colorsGenerated();
+    function onFromImageFinished(path: var, scheme: var) {
+      TemplateUtils.onFromImageFinished(path, scheme, root, Settings, Logger, ColorSchemeService);
     }
 
-    function onFromImageFailed(path, error) {
+    function onFromImageFailed(path: var, error: var): void {
       if (!root.pendingPath || !root.samePath(path, root.pendingPath))
         return;
       Logger.w("TemplateProcessor", "No scheme for", path, error);

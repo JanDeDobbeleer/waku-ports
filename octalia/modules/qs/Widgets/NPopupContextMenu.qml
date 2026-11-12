@@ -1,3 +1,7 @@
+pragma ComponentBehavior: Bound
+
+import "NPopupContextMenuUtils.js" as MenuUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -17,7 +21,7 @@ PopupWindow {
   property int horizontalPolicy: ScrollBar.AsNeeded
 
   property var anchorItem: null
-  property ShellScreen screen: null
+  property ShellScreen targetScreen: null
   property real minWidth: 120
   property real calculatedWidth: 180
 
@@ -27,8 +31,8 @@ PopupWindow {
   property real targetWidth: 0
   property real targetHeight: 0
 
-  readonly property string barPosition: Settings.getBarPositionForScreen(screen?.name)
-  readonly property real barHeight: Style.getBarHeightForScreen(screen?.name)
+  readonly property string barPosition: Settings.getBarPositionForScreen(targetScreen?.name)
+  readonly property real barHeight: Style.getBarHeightForScreen(targetScreen?.name)
 
   signal triggered(string action, var item)
 
@@ -58,41 +62,18 @@ PopupWindow {
     Qt.callLater(calculateWidth);
   }
 
-  function calculateWidth() {
-    let maxWidth = 0;
-    if (model && model.length) {
-      for (let i = 0; i < model.length; i++) {
-        const item = model[i];
-        if (item && item.visible !== false) {
-          const label = item.label || item.text || "";
-          textMeasure.text = label;
-          textMeasure.forceLayout();
-
-          let itemWidth = textMeasure.contentWidth + 8;
-
-          if (item.icon !== undefined) {
-            itemWidth += iconMeasure.width + Style.marginS;
-          }
-
-          itemWidth += Style.margin2M;
-
-          if (itemWidth > maxWidth) {
-            maxWidth = itemWidth;
-          }
-        }
-      }
-    }
-    calculatedWidth = Math.max(maxWidth + Style.margin2S, minWidth);
+  function calculateWidth(): void {
+    MenuUtils.calculateWidth(root, textMeasure, iconMeasure, Style);
   }
 
   anchor.item: anchorItem
 
   anchor.rect.x: {
-    if (anchorItem && screen) {
+    if (anchorItem && targetScreen) {
       const anchorGlobalPos = anchorItem.mapToItem(null, 0, 0);
 
       // Use stored targetOffsetX and targetWidth for positioning
-      const effectiveWidth = targetWidth > 0 ? targetWidth : anchorItem.width;
+      const effectiveWidth = targetWidth > 0 ? targetWidth : (anchorItem as Item).width;
       const targetGlobalX = anchorGlobalPos.x + targetOffsetX;
 
       // For right bar: position menu to the left of target
@@ -115,8 +96,8 @@ PopupWindow {
       const menuRight = menuScreenX + implicitWidth;
 
       // Adjust if menu would clip on the right
-      if (menuRight > screen.width - Style.marginM) {
-        const overflow = menuRight - (screen.width - Style.marginM);
+      if (menuRight > targetScreen.width - Style.marginM) {
+        const overflow = menuRight - (targetScreen.width - Style.marginM);
         return baseX - overflow;
       }
       // Adjust if menu would clip on the left
@@ -128,9 +109,9 @@ PopupWindow {
     return 0;
   }
   anchor.rect.y: {
-    if (anchorItem && screen) {
+    if (anchorItem && targetScreen) {
       // Check if using absolute positioning (small anchor point item)
-      const isAbsolutePosition = anchorItem.width <= 1 && anchorItem.height <= 1;
+      const isAbsolutePosition = (anchorItem as Item).width <= 1 && (anchorItem as Item).height <= 1;
 
       if (isAbsolutePosition) {
         // For absolute positioning, show menu directly at anchor Y
@@ -138,7 +119,7 @@ PopupWindow {
         const anchorGlobalPos = anchorItem.mapToItem(null, 0, 0);
         const menuBottom = anchorGlobalPos.y + implicitHeight;
 
-        if (menuBottom > screen.height - Style.marginM) {
+        if (menuBottom > targetScreen.height - Style.marginM) {
           // Position above the click point instead
           return -implicitHeight;
         }
@@ -148,7 +129,7 @@ PopupWindow {
       const anchorGlobalPos = anchorItem.mapToItem(null, 0, 0);
 
       // Use target offset/height for vertical bars, anchor dimensions otherwise
-      const effectiveHeight = targetHeight > 0 ? targetHeight : anchorItem.height;
+      const effectiveHeight = targetHeight > 0 ? targetHeight : (anchorItem as Item).height;
       const effectiveOffsetY = targetOffsetY;
 
       // Calculate base Y position based on bar orientation
@@ -171,7 +152,7 @@ PopupWindow {
 
       // Define clipping boundaries based on bar position
       const topLimit = Style.marginM;
-      const bottomLimit = root.barPosition === "bottom" ? screen.height - barHeight - Style.marginS : screen.height - Style.marginM;
+      const bottomLimit = root.barPosition === "bottom" ? targetScreen.height - barHeight - Style.marginS : targetScreen.height - Style.marginM;
 
       // Adjust if menu would clip at top (skip for bottom bar - don't push menu down over bar)
       if (menuScreenY < topLimit && root.barPosition !== "bottom") {
@@ -251,8 +232,8 @@ PopupWindow {
           required property int index
 
           Layout.preferredWidth: parent.width
-          Layout.preferredHeight: modelData.visible !== false ? root.itemHeight : 0
-          visible: modelData.visible !== false
+          Layout.preferredHeight: MenuUtils.field(modelData, "visible") !== false ? root.itemHeight : 0
+          visible: MenuUtils.field(modelData, "visible") !== false
           color: "transparent"
 
           Rectangle {
@@ -260,7 +241,7 @@ PopupWindow {
             anchors.fill: parent
             color: mouseArea.containsMouse ? Color.mHover : "transparent"
             radius: Style.radiusS
-            opacity: menuItem.modelData.enabled !== false ? 1.0 : 0.5
+            opacity: MenuUtils.field(menuItem.modelData, "enabled") !== false ? 1.0 : 0.5
 
             Behavior on color {
               ColorAnimation {
@@ -275,8 +256,8 @@ PopupWindow {
               spacing: Style.marginS
 
               NIcon {
-                visible: menuItem.modelData.icon !== undefined
-                icon: menuItem.modelData.icon || ""
+                visible: MenuUtils.field(menuItem.modelData, "icon") !== undefined
+                icon: MenuUtils.field(menuItem.modelData, "icon") || ""
                 pointSize: Style.fontSizeS
                 applyUiScale: false
                 color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
@@ -290,7 +271,7 @@ PopupWindow {
               }
 
               NText {
-                text: menuItem.modelData.label || menuItem.modelData.text || ""
+                text: MenuUtils.label(menuItem.modelData)
                 pointSize: Style.fontSizeS
                 color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
                 verticalAlignment: Text.AlignVCenter
@@ -308,12 +289,12 @@ PopupWindow {
               id: mouseArea
               anchors.fill: parent
               hoverEnabled: true
-              enabled: (menuItem.modelData.enabled !== false) && root.visible
+              enabled: (MenuUtils.field(menuItem.modelData, "enabled") !== false) && root.visible
               cursorShape: Qt.PointingHandCursor
 
               onClicked: {
-                if (menuItem.modelData.enabled !== false) {
-                  root.triggered(menuItem.modelData.action || menuItem.modelData.key || menuItem.index.toString(), menuItem.modelData);
+                if (MenuUtils.field(menuItem.modelData, "enabled") !== false) {
+                  root.triggered(MenuUtils.action(menuItem.modelData, menuItem.index), menuItem.modelData);
                   // Don't call root.close() here - let the parent PopupMenuWindow handle closing
                 }
               }
@@ -327,7 +308,7 @@ PopupWindow {
   // Helper function to open context menu anchored to an item
   // Position is calculated automatically based on bar position and screen boundaries
   // Optional centerOnItem: if provided, menu will be horizontally centered on this item instead of anchorItem
-  function openAtItem(item, itemScreen, centerOnItem) {
+  function openAtItem(item: var, itemScreen: var, centerOnItem: var): void {
     if (!item) {
       Logger.w("NPopupContextMenu", "anchorItem is undefined, won't show menu.");
       return;
@@ -335,21 +316,10 @@ PopupWindow {
 
     // Set anchor and screen first
     anchorItem = item;
-    screen = itemScreen || null;
+    targetScreen = itemScreen || null;
 
     // Compute target offset and dimensions from centerOnItem
-    if (centerOnItem && centerOnItem !== item) {
-      const relPos = centerOnItem.mapToItem(item, 0, 0);
-      targetOffsetX = relPos.x;
-      targetOffsetY = relPos.y;
-      targetWidth = centerOnItem.width;
-      targetHeight = centerOnItem.height;
-    } else {
-      targetOffsetX = 0;
-      targetOffsetY = 0;
-      targetWidth = 0;
-      targetHeight = 0;
-    }
+    MenuUtils.setTarget(root, item, centerOnItem);
 
     // Calculate menu width after anchor is set
     calculateWidth();
@@ -358,7 +328,7 @@ PopupWindow {
 
     // Force anchor recalculation after showing
     Qt.callLater(() => {
-                   anchor.updateAnchor();
+                   MenuUtils.updateAnchor(anchor);
                  });
   }
 

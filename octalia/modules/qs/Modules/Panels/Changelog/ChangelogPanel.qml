@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.Octalia
 import qs.Widgets
+import "ChangelogPanelUtils.js" as ChangelogPanelUtils
 
 SmartPanel {
   id: root
@@ -28,13 +29,7 @@ SmartPanel {
     readonly property bool hasPreviousVersion: previousVersion && previousVersion.length > 0
     readonly property string releaseContent: UpdateService.releaseContent || ""
 
-    function colorizeHeaders(text) {
-      if (!text)
-        return "";
-      const color = Color.mPrimary;
-      return text.replace(/^# (.*)$/gm, `<br/><h1 style="color:${color}">$1</h1><br/>`).replace(/^## (.*)$/gm, `<br/><h2 style="color:${color}">$1</h2><br/>`);
-    }
-    readonly property string subtitleText: hasPreviousVersion ? I18n.tr("changelog.panel.subtitle-updated", {
+    readonly property string subtitleText: hasPreviousVersion ? I18n.trArgs("changelog.panel.subtitle-updated", {
                                                                           "previousVersion": previousVersion
                                                                         }) : I18n.tr("changelog.panel.subtitle-fresh")
 
@@ -58,7 +53,7 @@ SmartPanel {
           spacing: Style.marginXS
 
           NText {
-            text: I18n.tr("changelog.panel.title", {
+            text: I18n.trArgs("changelog.panel.title", {
                             "version": panelContent.currentVersion || UpdateService.currentVersion
                           })
             pointSize: Style.fontSizeXL
@@ -146,7 +141,7 @@ SmartPanel {
           NText {
             Layout.fillWidth: true
             visible: panelContent.releaseContent.length > 0
-            text: panelContent.colorizeHeaders(panelContent.releaseContent)
+            text: ChangelogPanelUtils.colorizeHeaders(panelContent.releaseContent, Color.mPrimary)
             wrapMode: Text.WordWrap
             elide: Text.ElideNone
             textFormat: Text.MarkdownText

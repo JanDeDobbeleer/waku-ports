@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -28,7 +29,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   enabled: Settings.data.wallpaper.enabled
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
@@ -71,12 +72,12 @@ NIconButton {
   onClicked: {
     var wallpaperPanel = PanelService.getPanel("wallpaperPanel", screen);
     if (Settings.data.wallpaper.panelPosition === "follow_bar") {
-      wallpaperPanel?.toggle(this);
+      PanelService.invokePanel(wallpaperPanel, "toggle", [this]);
     } else {
-      wallpaperPanel?.toggle();
+      PanelService.invokePanel(wallpaperPanel, "toggle", []);
     }
   }
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
 import qs.Commons
 import qs.Modules.DesktopWidgets
@@ -8,30 +11,30 @@ import qs.Widgets
 DraggableDesktopWidget {
   id: root
 
-  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (LocationService.data.weather !== null)
-  readonly property int currentWeatherCode: weatherReady ? LocationService.data.weather.current_weather.weathercode : 0
+  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (DesktopWidgetHelpers.field(LocationService.data, "weather") !== null)
+  readonly property int currentWeatherCode: weatherReady ? DesktopWidgetHelpers.currentWeatherField(DesktopWidgetHelpers.field(LocationService.data, "weather"), "weathercode") : 0
   readonly property real currentTemp: {
     if (!weatherReady)
       return 0;
-    var temp = LocationService.data.weather.current_weather.temperature;
+    var temp = DesktopWidgetHelpers.currentWeatherField(DesktopWidgetHelpers.field(LocationService.data, "weather"), "temperature");
     if (Settings.data.location.useFahrenheit) {
       temp = LocationService.celsiusToFahrenheit(temp);
     }
     return Math.round(temp);
   }
   readonly property real todayMax: {
-    if (!weatherReady || !LocationService.data.weather.daily || LocationService.data.weather.daily.temperature_2m_max.length === 0)
+    if (!weatherReady || !DesktopWidgetHelpers.hasDailyWeather(DesktopWidgetHelpers.field(LocationService.data, "weather"), "temperature_2m_max"))
       return 0;
-    var temp = LocationService.data.weather.daily.temperature_2m_max[0];
+    var temp = DesktopWidgetHelpers.dailyWeatherValue(DesktopWidgetHelpers.field(LocationService.data, "weather"), "temperature_2m_max");
     if (Settings.data.location.useFahrenheit) {
       temp = LocationService.celsiusToFahrenheit(temp);
     }
     return Math.round(temp);
   }
   readonly property real todayMin: {
-    if (!weatherReady || !LocationService.data.weather.daily || LocationService.data.weather.daily.temperature_2m_min.length === 0)
+    if (!weatherReady || !DesktopWidgetHelpers.hasDailyWeather(DesktopWidgetHelpers.field(LocationService.data, "weather"), "temperature_2m_min"))
       return 0;
-    var temp = LocationService.data.weather.daily.temperature_2m_min[0];
+    var temp = DesktopWidgetHelpers.dailyWeatherValue(DesktopWidgetHelpers.field(LocationService.data, "weather"), "temperature_2m_min");
     if (Settings.data.location.useFahrenheit) {
       temp = LocationService.celsiusToFahrenheit(temp);
     }
@@ -78,7 +81,7 @@ DraggableDesktopWidget {
             smooth: true
             mipmap: true
             asynchronous: true
-            source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(currentWeatherCode))
+            source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(root.currentWeatherCode))
           }
         }
       }

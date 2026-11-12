@@ -6,6 +6,8 @@ import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.Bar.Extras
 import qs.Services.Compositor
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
+import "WorkspaceHelpers.js" as WorkspaceHelpers
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
@@ -41,10 +43,10 @@ Item {
   readonly property real capsuleHeight: Style.getCapsuleHeightForScreen(screenName)
   readonly property real barFontSize: Style.getBarFontSizeForScreen(screenName)
 
-  readonly property string labelMode: (widgetSettings.labelMode !== undefined) ? widgetSettings.labelMode : widgetMetadata.labelMode
+  readonly property string labelMode: (BarWidgetHelpers.readProperty(widgetSettings, "labelMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "labelMode") : BarWidgetHelpers.readProperty(widgetMetadata, "labelMode")
   readonly property bool hasLabel: (labelMode !== "none")
   readonly property string fontWeight: {
-    var fontWeightSetting = (widgetSettings.fontWeight !== undefined) ? widgetSettings.fontWeight : widgetMetadata.fontWeight;
+    var fontWeightSetting = (BarWidgetHelpers.readProperty(widgetSettings, "fontWeight") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "fontWeight") : BarWidgetHelpers.readProperty(widgetMetadata, "fontWeight");
 
     if (fontWeightSetting === "regular")
       return Style.fontWeightRegular;
@@ -56,33 +58,33 @@ Item {
       return Style.fontWeightBold;
     return Style.fontWeightBold;
   }
-  readonly property bool hideUnoccupied: (widgetSettings.hideUnoccupied !== undefined) ? widgetSettings.hideUnoccupied : widgetMetadata.hideUnoccupied
-  readonly property bool followFocusedScreen: (widgetSettings.followFocusedScreen !== undefined) ? widgetSettings.followFocusedScreen : widgetMetadata.followFocusedScreen
+  readonly property bool hideUnoccupied: (BarWidgetHelpers.readProperty(widgetSettings, "hideUnoccupied") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "hideUnoccupied") : BarWidgetHelpers.readProperty(widgetMetadata, "hideUnoccupied")
+  readonly property bool followFocusedScreen: (BarWidgetHelpers.readProperty(widgetSettings, "followFocusedScreen") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "followFocusedScreen") : BarWidgetHelpers.readProperty(widgetMetadata, "followFocusedScreen")
   readonly property int characterCount: {
-    const count = (widgetSettings.characterCount !== undefined) ? widgetSettings.characterCount : widgetMetadata.characterCount;
+    const count = (BarWidgetHelpers.readProperty(widgetSettings, "characterCount") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "characterCount") : BarWidgetHelpers.readProperty(widgetMetadata, "characterCount");
     return isVertical ? Math.min(count, 2) : count;
   }
 
   // Pill size setting (0.5-1.0 range)
-  readonly property real pillSize: (widgetSettings.pillSize !== undefined) ? widgetSettings.pillSize : widgetMetadata.pillSize
+  readonly property real pillSize: (BarWidgetHelpers.readProperty(widgetSettings, "pillSize") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "pillSize") : BarWidgetHelpers.readProperty(widgetMetadata, "pillSize")
 
   // When no label the pills are smaller
   readonly property real baseDimensionRatio: pillSize
 
   // Grouped mode (show applications) settings
-  readonly property bool showApplications: (widgetSettings.showApplications !== undefined) ? widgetSettings.showApplications : widgetMetadata.showApplications
-  readonly property bool showApplicationsHover: (widgetSettings.showApplicationsHover !== undefined) ? widgetSettings.showApplicationsHover : widgetMetadata.showApplicationsHover
-  readonly property bool showLabelsOnlyWhenOccupied: (widgetSettings.showLabelsOnlyWhenOccupied !== undefined) ? widgetSettings.showLabelsOnlyWhenOccupied : widgetMetadata.showLabelsOnlyWhenOccupied
-  readonly property bool colorizeIcons: (widgetSettings.colorizeIcons !== undefined) ? widgetSettings.colorizeIcons : widgetMetadata.colorizeIcons
-  readonly property real unfocusedIconsOpacity: (widgetSettings.unfocusedIconsOpacity !== undefined) ? widgetSettings.unfocusedIconsOpacity : widgetMetadata.unfocusedIconsOpacity
-  readonly property real groupedBorderOpacity: (widgetSettings.groupedBorderOpacity !== undefined) ? widgetSettings.groupedBorderOpacity : widgetMetadata.groupedBorderOpacity
-  readonly property bool enableScrollWheel: (widgetSettings.enableScrollWheel !== undefined) ? widgetSettings.enableScrollWheel : widgetMetadata.enableScrollWheel
+  readonly property bool showApplications: (BarWidgetHelpers.readProperty(widgetSettings, "showApplications") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showApplications") : BarWidgetHelpers.readProperty(widgetMetadata, "showApplications")
+  readonly property bool showApplicationsHover: (BarWidgetHelpers.readProperty(widgetSettings, "showApplicationsHover") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showApplicationsHover") : BarWidgetHelpers.readProperty(widgetMetadata, "showApplicationsHover")
+  readonly property bool showLabelsOnlyWhenOccupied: (BarWidgetHelpers.readProperty(widgetSettings, "showLabelsOnlyWhenOccupied") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showLabelsOnlyWhenOccupied") : BarWidgetHelpers.readProperty(widgetMetadata, "showLabelsOnlyWhenOccupied")
+  readonly property bool colorizeIcons: (BarWidgetHelpers.readProperty(widgetSettings, "colorizeIcons") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "colorizeIcons") : BarWidgetHelpers.readProperty(widgetMetadata, "colorizeIcons")
+  readonly property real unfocusedIconsOpacity: (BarWidgetHelpers.readProperty(widgetSettings, "unfocusedIconsOpacity") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "unfocusedIconsOpacity") : BarWidgetHelpers.readProperty(widgetMetadata, "unfocusedIconsOpacity")
+  readonly property real groupedBorderOpacity: (BarWidgetHelpers.readProperty(widgetSettings, "groupedBorderOpacity") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "groupedBorderOpacity") : BarWidgetHelpers.readProperty(widgetMetadata, "groupedBorderOpacity")
+  readonly property bool enableScrollWheel: (BarWidgetHelpers.readProperty(widgetSettings, "enableScrollWheel") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "enableScrollWheel") : BarWidgetHelpers.readProperty(widgetMetadata, "enableScrollWheel")
   readonly property bool reverseScroll: Settings.data.general.reverseScroll
-  readonly property real iconScale: (widgetSettings.iconScale !== undefined) ? widgetSettings.iconScale : widgetMetadata.iconScale
-  readonly property string focusedColor: (widgetSettings.focusedColor !== undefined) ? widgetSettings.focusedColor : widgetMetadata.focusedColor
-  readonly property string occupiedColor: (widgetSettings.occupiedColor !== undefined) ? widgetSettings.occupiedColor : widgetMetadata.occupiedColor
-  readonly property string emptyColor: (widgetSettings.emptyColor !== undefined) ? widgetSettings.emptyColor : widgetMetadata.emptyColor
-  readonly property bool showBadge: (widgetSettings.showBadge !== undefined) ? widgetSettings.showBadge : widgetMetadata.showBadge
+  readonly property real iconScale: (BarWidgetHelpers.readProperty(widgetSettings, "iconScale") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "iconScale") : BarWidgetHelpers.readProperty(widgetMetadata, "iconScale")
+  readonly property string focusedColor: (BarWidgetHelpers.readProperty(widgetSettings, "focusedColor") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "focusedColor") : BarWidgetHelpers.readProperty(widgetMetadata, "focusedColor")
+  readonly property string occupiedColor: (BarWidgetHelpers.readProperty(widgetSettings, "occupiedColor") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "occupiedColor") : BarWidgetHelpers.readProperty(widgetMetadata, "occupiedColor")
+  readonly property string emptyColor: (BarWidgetHelpers.readProperty(widgetSettings, "emptyColor") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "emptyColor") : BarWidgetHelpers.readProperty(widgetMetadata, "emptyColor")
+  readonly property bool showBadge: (BarWidgetHelpers.readProperty(widgetSettings, "showBadge") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showBadge") : BarWidgetHelpers.readProperty(widgetMetadata, "showBadge")
 
   // Only for grouped mode / show apps
   readonly property int baseItemSize: Style.toOdd(capsuleHeight * 0.8)
@@ -94,19 +96,8 @@ Item {
   property string selectedAppId: ""
 
   // Helper to get the current window object from ID
-  function getSelectedWindow() {
-    var i, win;
-    if (!selectedWindowId)
-      return null;
-    // Search directly in CompositorService to get the live window object
-    for (i = 0; i < CompositorService.windows.count; i++) {
-      win = CompositorService.windows.get(i);
-      // Using loose equality on purpose (==)
-      if (win && (win.id == selectedWindowId || win.address == selectedWindowId)) {
-        return win;
-      }
-    }
-    return null;
+  function getSelectedWindow(): var {
+    return WorkspaceHelpers.getSelectedWindow(CompositorService.windows, selectedWindowId);
   }
 
   property bool isDestroying: false
@@ -160,121 +151,93 @@ Item {
   implicitWidth: appVisible ? (isVertical ? groupedGrid.implicitWidth : Math.round(groupedGrid.implicitWidth + horizontalPadding * hasLabel)) : (isVertical ? barHeight : computeWidth())
   implicitHeight: appVisible ? (isVertical ? Math.round(groupedGrid.implicitHeight + horizontalPadding * 0.6 * hasLabel) : barHeight) : (isVertical ? computeHeight() : barHeight)
 
-  function getWorkspaceWidth(ws, activeOverride) {
+  function getWorkspaceWidth(ws: var, activeOverride: var): real {
     const d = Math.round(capsuleHeight * root.baseDimensionRatio);
-    const isActive = activeOverride !== undefined ? activeOverride : ws.isActive;
+    const isActive = activeOverride !== undefined ? activeOverride : BarWidgetHelpers.readProperty(ws, "isActive");
     const factor = isActive ? 2.2 : 1;
 
-    // Don't calculate text width if labels are off
+    // Don t calculate text width if labels are off
     if (labelMode === "none") {
       return Style.toOdd(d * factor);
     }
 
-    var displayText = ws.idx.toString();
-
-    if (ws.name && ws.name.length > 0) {
-      if (root.labelMode === "name") {
-        displayText = ws.name.substring(0, characterCount);
-      } else if (root.labelMode === "index+name") {
-        displayText = ws.idx.toString() + " " + ws.name.substring(0, characterCount);
-      }
-    }
+    var displayText = BarWidgetHelpers.workspaceLabel(ws, root.labelMode, false, characterCount);
 
     const textWidth = displayText.length * (d * 0.4); // Approximate width per character
     const padding = d * 0.6;
     return Style.toOdd(Math.max(d * factor, textWidth + padding));
   }
 
-  function getWorkspaceHeight(ws, activeOverride) {
+  function getWorkspaceHeight(ws: var, activeOverride: var): real {
     const d = Math.round(capsuleHeight * root.baseDimensionRatio);
-    const isActive = activeOverride !== undefined ? activeOverride : ws.isActive;
+    const isActive = activeOverride !== undefined ? activeOverride : BarWidgetHelpers.readProperty(ws, "isActive");
     const factor = isActive ? 2.2 : 1;
     return Style.toOdd(d * factor);
   }
 
-  function computeWidth() {
+  function computeWidth(): real {
     var i;
     let total = 0;
-    for (i = 0; i < localWorkspaces.count; i++) {
-      const ws = localWorkspaces.get(i);
-      total += getWorkspaceWidth(ws);
+    for (i = 0; i < WorkspaceHelpers.count(localWorkspaces); i++) {
+      const ws = WorkspaceHelpers.get(localWorkspaces, i);
+      total += getWorkspaceWidth(ws, undefined);
     }
-    total += Math.max(localWorkspaces.count - 1, 0) * spacingBetweenPills;
+    total += Math.max(WorkspaceHelpers.count(localWorkspaces) - 1, 0) * spacingBetweenPills;
     total += horizontalPadding * 2;
     return Style.toOdd(total);
   }
 
-  function computeHeight() {
+  function computeHeight(): real {
     var i;
     let total = 0;
-    for (i = 0; i < localWorkspaces.count; i++) {
-      const ws = localWorkspaces.get(i);
-      total += getWorkspaceHeight(ws);
+    for (i = 0; i < WorkspaceHelpers.count(localWorkspaces); i++) {
+      const ws = WorkspaceHelpers.get(localWorkspaces, i);
+      total += getWorkspaceHeight(ws, undefined);
     }
-    total += Math.max(localWorkspaces.count - 1, 0) * spacingBetweenPills;
+    total += Math.max(WorkspaceHelpers.count(localWorkspaces) - 1, 0) * spacingBetweenPills;
     total += horizontalPadding * 2;
     return Style.toOdd(total);
   }
 
-  function getFocusedLocalIndex() {
-    var i;
-    for (i = 0; i < localWorkspaces.count; i++) {
-      if (localWorkspaces.get(i).isFocused === true)
-        return i;
-    }
-    return -1;
+  function getFocusedLocalIndex(): int {
+    return WorkspaceHelpers.focusedIndex(localWorkspaces);
   }
 
-  function switchByOffset(offset) {
-    if (localWorkspaces.count <= 1)
+  function switchByOffset(offset: int): void {
+    if (WorkspaceHelpers.count(localWorkspaces) <= 1)
       return;
     var current = getFocusedLocalIndex();
     if (current < 0)
       current = 0;
-    var next = (current + offset) % localWorkspaces.count;
+    var next = (current + offset) % WorkspaceHelpers.count(localWorkspaces);
     if (next < 0)
-      next = localWorkspaces.count - 1;
+      next = WorkspaceHelpers.count(localWorkspaces) - 1;
     if (next === current)
       return;
-    const ws = localWorkspaces.get(next);
-    if (ws && ws.idx !== undefined)
+    const ws = WorkspaceHelpers.get(localWorkspaces, next);
+    if (ws && BarWidgetHelpers.readProperty(ws, "idx") !== undefined)
       CompositorService.switchToWorkspace(ws);
   }
 
   // Helper function to normalize app IDs for case-insensitive matching
-  function normalizeAppId(appId) {
-    if (!appId || typeof appId !== 'string')
+  function normalizeAppId(appId: var): string {
+    if (!appId || typeof appId !== "string" )
       return "";
     return appId.toLowerCase().trim();
   }
 
   // Helper function to check if an app is pinned
-  function isAppPinned(appId) {
+  function isAppPinned(appId: string): bool {
     if (!appId)
       return false;
-    const pinnedApps = Settings.data.dock.pinnedApps || [];
-    const normalizedId = normalizeAppId(appId);
-    return pinnedApps.some(pinnedId => normalizeAppId(pinnedId) === normalizedId);
+    return WorkspaceHelpers.isAppPinned(Settings.data.dock.pinnedApps || [], appId);
   }
 
   // Helper function to toggle app pin/unpin
-  function toggleAppPin(appId) {
+  function toggleAppPin(appId: string): void {
     if (!appId)
       return;
-
-    const normalizedId = normalizeAppId(appId);
-    let pinnedApps = (Settings.data.dock.pinnedApps || []).slice();
-
-    const existingIndex = pinnedApps.findIndex(pinnedId => normalizeAppId(pinnedId) === normalizedId);
-    const isPinned = existingIndex >= 0;
-
-    if (isPinned) {
-      pinnedApps.splice(existingIndex, 1);
-    } else {
-      pinnedApps.push(appId);
-    }
-
-    Settings.data.dock.pinnedApps = pinnedApps;
+    Settings.data.dock.pinnedApps = WorkspaceHelpers.toggleAppPin(Settings.data.dock.pinnedApps || [], appId);
   }
 
   // Deferred via Qt.callLater to avoid synchronous ListModel mutations during
@@ -328,77 +291,9 @@ Item {
   }
 
   function refreshWorkspaces() {
-    var existing, i, target, workspaceData;
-    var targetList = [];
-    var focusedOutput = null;
-    if (followFocusedScreen) {
-      for (i = 0; i < CompositorService.workspaces.count; i++) {
-        const ws = CompositorService.workspaces.get(i);
-        if (ws.isFocused)
-          focusedOutput = ws.output.toLowerCase();
-      }
-    }
-
-    if (screen !== null) {
-      const screenName = screen.name.toLowerCase();
-      for (i = 0; i < CompositorService.workspaces.count; i++) {
-        const ws = CompositorService.workspaces.get(i);
-        // For global workspaces (e.g., LabWC), show all workspaces on all screens
-        const matchesScreen = CompositorService.globalWorkspaces || (followFocusedScreen && ws.output.toLowerCase() == focusedOutput) || (!followFocusedScreen && ws.output.toLowerCase() == screenName);
-
-        if (!matchesScreen)
-          continue;
-        if (hideUnoccupied && !ws.isOccupied && !ws.isFocused)
-          continue;
-
-        // Create a plain JS object for the workspace data
-        workspaceData = {
-          id: ws.id,
-          idx: ws.idx,
-          name: ws.name,
-          output: ws.output,
-          isFocused: ws.isFocused,
-          isActive: ws.isActive,
-          isUrgent: ws.isUrgent,
-          isOccupied: ws.isOccupied
-        };
-
-        if (ws.handle !== null && ws.handle !== undefined) {
-          workspaceData.handle = ws.handle;
-        }
-
-        // Windows are fetched live via liveWindows property in grouped mode
-        // to avoid Qt 6.9 ListModel nested array serialization issues
-
-        targetList.push(workspaceData);
-      }
-    }
-
+    const targetList = WorkspaceHelpers.workspaceList(CompositorService, screen, followFocusedScreen, hideUnoccupied);
     // In-place update to preserve delegates for animations
-    var i = 0;
-    while (i < localWorkspaces.count || i < targetList.length) {
-      if (i < localWorkspaces.count && i < targetList.length) {
-        existing = localWorkspaces.get(i);
-        target = targetList[i];
-        if (existing.id === target.id) {
-          // Use set() to update all properties, including arrays like 'windows'
-          // This is more reliable than repeated setProperty calls for complex types
-          localWorkspaces.set(i, target);
-          i++;
-        } else {
-          // ID mismatch, remove existing and re-evaluate this index
-          localWorkspaces.remove(i);
-        }
-      } else if (i < localWorkspaces.count) {
-        // Excess items in local, remove them
-        localWorkspaces.remove(i);
-      } else {
-        // More items in target, append them
-        localWorkspaces.append(targetList[i]);
-        i++;
-      }
-    }
-
+    WorkspaceHelpers.reconcile(localWorkspaces, targetList);
     updateWorkspaceFocus();
   }
 
@@ -408,17 +303,13 @@ Item {
   }
 
   function updateWorkspaceFocus() {
-    var i;
-    for (i = 0; i < localWorkspaces.count; i++) {
-      const ws = localWorkspaces.get(i);
-      if (ws.isFocused === true) {
-        if (root.lastFocusedWorkspaceId !== -1 && root.lastFocusedWorkspaceId !== ws.id) {
-          root.triggerUnifiedWave();
-        }
-        root.lastFocusedWorkspaceId = ws.id;
-        root.workspaceChanged(ws.id, Color.mPrimary);
-        break;
-      }
+    const index = WorkspaceHelpers.focusedIndex(localWorkspaces);
+    if (index >= 0) {
+      const workspaceId = BarWidgetHelpers.readProperty(WorkspaceHelpers.get(localWorkspaces, index), "id");
+      if (root.lastFocusedWorkspaceId !== -1 && root.lastFocusedWorkspaceId !== workspaceId)
+        root.triggerUnifiedWave();
+      root.lastFocusedWorkspaceId = workspaceId;
+      root.workspaceChanged(workspaceId, Color.mPrimary);
     }
   }
 
@@ -487,18 +378,9 @@ Item {
                    });
 
         // Add desktop entry actions
-        if (typeof DesktopEntries !== 'undefined' && DesktopEntries.byId && root.selectedAppId) {
+        if (typeof DesktopEntries !==  undefined  && DesktopEntries.byId && root.selectedAppId) {
           const entry = (DesktopEntries.heuristicLookup) ? DesktopEntries.heuristicLookup(root.selectedAppId) : DesktopEntries.byId(root.selectedAppId);
-          if (entry != null && entry.actions) {
-            entry.actions.forEach(function (action) {
-              items.push({
-                           "label": action.name,
-                           "action": "desktop-action-" + action.name,
-                           "icon": "chevron-right",
-                           "desktopAction": action
-                         });
-            });
-          }
+          WorkspaceHelpers.appendDesktopActions(items, entry);
         }
       }
       items.push({
@@ -523,12 +405,8 @@ Item {
                      CompositorService.closeWindow(selectedWindow);
                    } else if (action === "widget-settings") {
                      BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
-                   } else if (action.startsWith("desktop-action-") && item && item.desktopAction) {
-                     if (item.desktopAction.command && item.desktopAction.command.length > 0) {
-                       Quickshell.execDetached(item.desktopAction.command);
-                     } else if (item.desktopAction.execute) {
-                       item.desktopAction.execute();
-                     }
+                   } else if (action.startsWith("desktop-action-")) {
+                     WorkspaceHelpers.runDesktopAction(item, Quickshell);
                    }
                    root.selectedWindowId = "";
                    root.selectedAppId = "";
@@ -553,7 +431,7 @@ Item {
       acceptedButtons: Qt.RightButton
       onClicked: mouse => {
                    if (mouse.button === Qt.RightButton) {
-                     PanelService.showContextMenu(contextMenu, workspaceBackground, root.screen);
+                     PanelService.showContextMenu(contextMenu, workspaceBackground, root.screen, null);
                    }
                  }
     }
@@ -702,10 +580,10 @@ Item {
       property var workspaceModel: model
       // Fetch windows directly from service to avoid Qt 6.9 ListModel nested array issues
       property var liveWindows: []
-      property bool hasWindows: liveWindows.length > 0
+      property bool hasWindows: BarWidgetHelpers.readProperty(liveWindows, "length") > 0
 
       function updateWindows() {
-        var wsId = workspaceModel?.id;
+        var wsId = BarWidgetHelpers.optionalProperty(workspaceModel, "id");
         if (wsId !== undefined && wsId !== null) {
           liveWindows = CompositorService.getWindowsForWorkspace(wsId);
         } else {
@@ -732,7 +610,7 @@ Item {
       height: Style.toOdd((hasWindows ? groupedIconsFlow.implicitHeight : root.iconSize) + (root.isVertical ? Style.marginL : (root.baseItemSize - root.iconSize + Style.marginXS)))
       color: Style.capsuleColor
       radius: Style.radiusS
-      border.color: Settings.data.bar.showOutline ? Style.capsuleBorderColor : Qt.alpha((workspaceModel.isFocused ? Color.mPrimary : (groupHoverHandler.hovered ? Color.mHover : Color.mOutline)), root.groupedBorderOpacity)
+      border.color: Settings.data.bar.showOutline ? Style.capsuleBorderColor : Qt.alpha((BarWidgetHelpers.readProperty(workspaceModel, "isFocused") ? Color.mPrimary : (groupHoverHandler.hovered ? Color.mHover : Color.mOutline)), root.groupedBorderOpacity)
       border.width: Style.borderS
 
       Behavior on width {
@@ -785,7 +663,7 @@ Item {
             required property var modelData
             id: groupedTaskbarItem
 
-            readonly property bool isFocused: groupedTaskbarItem.modelData?.isFocused ?? false
+            readonly property bool isFocused: BarWidgetHelpers.optionalProperty(groupedTaskbarItem.modelData, "isFocused") ?? false
 
             width: root.iconSize
             height: root.iconSize
@@ -800,10 +678,7 @@ Item {
               width: parent.width
               height: parent.height
 
-              source: {
-                root.iconRevision; // Force re-evaluation when revision changes
-                return ThemeIcons.iconForAppId(groupedTaskbarItem.modelData?.appId?.toLowerCase());
-              }
+              source: root.iconRevision >= 0 ? ThemeIcons.iconForAppId(BarWidgetHelpers.lowerCaseAppId(groupedTaskbarItem.modelData), undefined) : ""
               smooth: true
               asynchronous: true
               opacity: groupedTaskbarItem.isFocused ? Style.opacityFull : root.unfocusedIconsOpacity
@@ -844,8 +719,8 @@ Item {
               onReleased: mouse => {
                             if (mouse.button === Qt.RightButton && groupedTaskbarItem.modelData) {
                               mouse.accepted = true;
-                              root.selectedWindowId = groupedTaskbarItem.modelData.id || groupedTaskbarItem.modelData.address || "";
-                              root.selectedAppId = groupedTaskbarItem.modelData.appId;
+                              root.selectedWindowId = BarWidgetHelpers.readProperty(groupedTaskbarItem.modelData, "id") || BarWidgetHelpers.readProperty(groupedTaskbarItem.modelData, "address") || "";
+                              root.selectedAppId = BarWidgetHelpers.readProperty(groupedTaskbarItem.modelData, "appId");
                               root.openGroupedContextMenu(groupedTaskbarItem);
                             }
                           }
@@ -857,7 +732,7 @@ Item {
       Item {
         id: groupedWorkspaceNumberContainer
 
-        visible: root.labelMode !== "none" && root.showBadge && (!root.showLabelsOnlyWhenOccupied || groupedContainer.hasWindows || groupedContainer.workspaceModel.isFocused)
+        visible: root.labelMode !== "none" && root.showBadge && (!root.showLabelsOnlyWhenOccupied || groupedContainer.hasWindows || BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isFocused"))
 
         anchors {
           left: parent.left
@@ -876,9 +751,9 @@ Item {
           radius: Math.min(Style.radiusL, width / 2)
 
           color: {
-            if (groupedContainer.workspaceModel.isFocused)
+            if (BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isFocused"))
               return Color.resolveColorKey(root.focusedColor);
-            if (groupedContainer.workspaceModel.isUrgent)
+            if (BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isUrgent"))
               return Color.mError;
             if (groupedContainer.hasWindows)
               return Color.resolveColorKey(root.occupiedColor);
@@ -886,7 +761,7 @@ Item {
             return Color.resolveColorKey(root.emptyColor);
           }
 
-          scale: groupedContainer.workspaceModel.isActive ? 1.0 : 0.8
+          scale: BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isActive") ? 1.0 : 0.8
 
           Behavior on scale {
             NumberAnimation {
@@ -914,8 +789,8 @@ Item {
           color: "transparent"
           border.color: root.effectColor
           border.width: Math.max(1, Math.round((2 + 4 * (1.0 - root.masterProgress))))
-          opacity: root.effectsActive && groupedContainer.workspaceModel.isFocused ? (1.0 - root.masterProgress) * 0.7 : 0
-          visible: root.effectsActive && groupedContainer.workspaceModel.isFocused
+          opacity: root.effectsActive && BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isFocused") ? (1.0 - root.masterProgress) * 0.7 : 0
+          visible: root.effectsActive && BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isFocused")
           z: 1
         }
 
@@ -924,17 +799,7 @@ Item {
 
           anchors.centerIn: parent
 
-          text: {
-            if (groupedContainer.workspaceModel.name && groupedContainer.workspaceModel.name.length > 0) {
-              if (root.labelMode === "name") {
-                return groupedContainer.workspaceModel.name.substring(0, root.characterCount);
-              }
-              if (root.labelMode === "index+name") {
-                return (groupedContainer.workspaceModel.idx.toString() + groupedContainer.workspaceModel.name.substring(0, 1));
-              }
-            }
-            return groupedContainer.workspaceModel.idx.toString();
-          }
+          text: BarWidgetHelpers.workspaceLabel(groupedContainer.workspaceModel, root.labelMode, true, root.characterCount)
 
           family: Settings.data.ui.fontFixed
           font {
@@ -945,9 +810,9 @@ Item {
           applyUiScale: false
 
           color: {
-            if (groupedContainer.workspaceModel.isFocused)
+            if (BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isFocused"))
               return Color.resolveOnColorKey(root.focusedColor);
-            if (groupedContainer.workspaceModel.isUrgent)
+            if (BarWidgetHelpers.readProperty(groupedContainer.workspaceModel, "isUrgent"))
               return Color.mOnError;
             if (groupedContainer.hasWindows)
               return Color.resolveOnColorKey(root.occupiedColor);
@@ -997,7 +862,7 @@ Item {
     }
   }
 
-  function openGroupedContextMenu(item) {
+  function openGroupedContextMenu(item: var): void {
     // Anchor to root (stable) but center horizontally on the clicked item
     PanelService.showContextMenu(contextMenu, root, screen, item);
   }

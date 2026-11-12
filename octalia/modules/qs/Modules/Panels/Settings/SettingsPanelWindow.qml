@@ -2,6 +2,7 @@ import QtQuick 6.10
 import Quickshell
 import qs.Commons
 import qs.Services.UI
+import "SettingsPanelWindow.js" as SettingsPanelWindowData
 
 FloatingWindow {
   id: root
@@ -20,38 +21,16 @@ FloatingWindow {
   }
 
   property bool isInitialized: false
+  property var settingsContentItem: settingsContent
 
   // Navigate to a specific tab and optional subtab.
   // Works whether the window is already visible or just becoming visible.
-  function navigateTo(tab, subTab) {
-    const tabId = tab !== undefined ? tab : 0;
-    const subTabId = (subTab !== undefined && subTab !== null && subTab >= 0) ? subTab : -1;
-    if (isInitialized) {
-      settingsContent.navigateToTab(tabId, subTabId);
-    } else {
-      settingsContent.requestedTab = tabId;
-      if (subTabId >= 0)
-        settingsContent._pendingSubTab = subTabId;
-      settingsContent.initialize();
-      isInitialized = true;
-      // Tab content persists in window mode; if no subtab specified and the
-      // tab content is still loaded (same tab), reset to first subtab
-      if (subTabId < 0 && settingsContent.activeTabContent)
-        settingsContent.setSubTabIndex(0);
-    }
+  function navigateTo(tab: var, subTab: var): void {
+    SettingsPanelWindowData.navigateTo(root.settingsContentItem, root, tab, subTab);
   }
 
-  // Navigate to a search result entry.
-  // Works whether the window is already visible or just becoming visible.
-  function navigateToEntry(entry) {
-    if (isInitialized) {
-      Qt.callLater(() => settingsContent.navigateToResult(entry));
-    } else {
-      settingsContent.requestedTab = entry.tab;
-      settingsContent.initialize();
-      Qt.callLater(() => settingsContent.navigateToResult(entry));
-      isInitialized = true;
-    }
+  function navigateToEntry(entry: var): void {
+    SettingsPanelWindowData.navigateToEntry(root.settingsContentItem, entry, root);
   }
 
   // Sync visibility with service
@@ -74,40 +53,34 @@ FloatingWindow {
   Shortcut {
     sequence: "Tab"
     enabled: !PanelService.isKeybindRecording
-    onActivated: settingsContent.selectNextTab()
+    onActivated: SettingsPanelWindowData.selectNextTab(root.settingsContentItem)
   }
 
   Shortcut {
     sequence: "Backtab"
     enabled: !PanelService.isKeybindRecording
-    onActivated: settingsContent.selectPreviousTab()
+    onActivated: SettingsPanelWindowData.selectPreviousTab(root.settingsContentItem)
   }
 
   Instantiator {
-    model: Settings.data.general.keybinds.keyUp || []
+    model: SettingsPanelWindowData.keybindModel(Settings.data.general.keybinds.keyUp || [], root.settingsContentItem)
     Shortcut {
-      sequence: modelData
+      required property string key
+      required property var content
+      sequence: key
       enabled: !PanelService.isKeybindRecording
-      onActivated: {
-        if (settingsContent.searchText.trim() !== "")
-          settingsContent.searchSelectPrevious();
-        else
-          settingsContent.scrollUp();
-      }
+      onActivated: SettingsPanelWindowData.moveSearchSelection(content, true)
     }
   }
 
   Instantiator {
-    model: Settings.data.general.keybinds.keyDown || []
+    model: SettingsPanelWindowData.keybindModel(Settings.data.general.keybinds.keyDown || [], root.settingsContentItem)
     Shortcut {
-      sequence: modelData
+      required property string key
+      required property var content
+      sequence: key
       enabled: !PanelService.isKeybindRecording
-      onActivated: {
-        if (settingsContent.searchText.trim() !== "")
-          settingsContent.searchSelectNext();
-        else
-          settingsContent.scrollDown();
-      }
+      onActivated: SettingsPanelWindowData.moveSearchSelection(content, false)
     }
   }
 

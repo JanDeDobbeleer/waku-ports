@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
 import qs.Commons
 import qs.Modules.DesktopWidgets
@@ -11,21 +12,21 @@ DraggableDesktopWidget {
   id: root
 
   readonly property var now: Time.now
-  readonly property var widgetMetadata: DesktopWidgetRegistry.widgetMetadata["Clock"]
+  readonly property var widgetMetadata: DesktopWidgetHelpers.field(DesktopWidgetRegistry.widgetMetadata, "Clock")
 
   readonly property color clockTextColor: Color.resolveColorKey(clockColor)
   readonly property real fontSize: Math.round(Style.fontSizeXXXL * 2.5 * widgetScale)
-  readonly property real widgetOpacity: widgetData.opacity !== undefined ? widgetData.opacity : 1.0
-  readonly property string clockStyle: widgetData.clockStyle !== undefined ? widgetData.clockStyle : widgetMetadata.clockStyle
-  readonly property string clockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  readonly property bool useCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  readonly property string customFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
-  readonly property string format: widgetData.format !== undefined ? widgetData.format : widgetMetadata.format
+  readonly property real widgetOpacity: DesktopWidgetHelpers.field(widgetData, "opacity") !== undefined ? DesktopWidgetHelpers.field(widgetData, "opacity") : 1.0
+  readonly property string clockStyle: DesktopWidgetHelpers.field(widgetData, "clockStyle") !== undefined ? DesktopWidgetHelpers.field(widgetData, "clockStyle") : DesktopWidgetHelpers.field(widgetMetadata, "clockStyle")
+  readonly property string clockColor: DesktopWidgetHelpers.field(widgetData, "clockColor") !== undefined ? DesktopWidgetHelpers.field(widgetData, "clockColor") : DesktopWidgetHelpers.field(widgetMetadata, "clockColor")
+  readonly property bool useCustomFont: DesktopWidgetHelpers.field(widgetData, "useCustomFont") !== undefined ? DesktopWidgetHelpers.field(widgetData, "useCustomFont") : DesktopWidgetHelpers.field(widgetMetadata, "useCustomFont")
+  readonly property string customFont: DesktopWidgetHelpers.field(widgetData, "customFont") !== undefined ? DesktopWidgetHelpers.field(widgetData, "customFont") : DesktopWidgetHelpers.field(widgetMetadata, "customFont")
+  readonly property string format: DesktopWidgetHelpers.field(widgetData, "format") !== undefined ? DesktopWidgetHelpers.field(widgetData, "format") : DesktopWidgetHelpers.field(widgetMetadata, "format")
 
   readonly property Item clockContent: contentLoader.item as Item
   readonly property real contentPadding: Math.round((clockStyle === "minimal" ? Style.marginL : Style.marginXL) * widgetScale)
-  implicitWidth: clockContent ? Math.round((clockContent.implicitWidth || clockContent.width || 0) + contentPadding * 2) : 0
-  implicitHeight: clockContent ? Math.round((clockContent.implicitHeight || clockContent.height || 0) + contentPadding * 2) : 0
+  implicitWidth: clockContent ? Math.round((DesktopWidgetHelpers.field(clockContent, "implicitWidth") || clockContent.width || 0) + contentPadding * 2) : 0
+  implicitHeight: clockContent ? Math.round((DesktopWidgetHelpers.field(clockContent, "implicitHeight") || clockContent.height || 0) + contentPadding * 2) : 0
   width: implicitWidth
   height: implicitHeight
 
@@ -35,13 +36,13 @@ DraggableDesktopWidget {
       now: root.now
       clockStyle: root.clockStyle
       backgroundColor: "transparent"
-      clockColor: clockTextColor
+      clockColor: root.clockTextColor
       progressColor: Color.mPrimary
       opacity: root.widgetOpacity
-      height: Math.round(fontSize * 1.9)
+      height: Math.round(root.fontSize * 1.9)
       width: height
-      hoursFontSize: fontSize * 0.6
-      minutesFontSize: fontSize * 0.4
+      hoursFontSize: root.fontSize * 0.6
+      minutesFontSize: root.fontSize * 0.4
       scaleRatio: root.widgetScale
     }
   }

@@ -12,6 +12,7 @@ import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "DockHelpers.js" as DockHelpers
 
 Item {
   id: root
@@ -26,18 +27,13 @@ Item {
   Rectangle {
     id: dockContainer
     // For vertical dock, swap width and height logic
-    width: root.dockRoot.isVertical ? Math.round(root.dockRoot.iconSize * 1.5) : Math.min(dockLayout.implicitWidth + Style.marginXL, root.dockRoot.maxWidth)
-    height: root.dockRoot.isVertical ? Math.min(dockLayout.implicitHeight + Style.marginXL, root.dockRoot.maxHeight) : Math.round(root.dockRoot.iconSize * 1.5)
+    width: DockHelpers.getProperty(root.dockRoot, "isVertical") ? Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 1.5) : Math.min(dockLayout.implicitWidth + Style.marginXL, DockHelpers.getProperty(root.dockRoot, "maxWidth"))
+    height: DockHelpers.getProperty(root.dockRoot, "isVertical") ? Math.min(dockLayout.implicitHeight + Style.marginXL, DockHelpers.getProperty(root.dockRoot, "maxHeight")) : Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 1.5)
     color: Qt.alpha(Color.mSurface, (root.isAttachedMode ? 0 : Color.adaptiveOpacity(Settings.data.dock.backgroundOpacity)))
 
     // Anchor based on padding to achieve centering shift
-    anchors.horizontalCenter: root.extraLeft > 0 || root.extraRight > 0 ? undefined : parent.horizontalCenter
-    anchors.right: root.extraLeft > 0 ? parent.right : undefined
-    anchors.left: root.extraRight > 0 ? parent.left : undefined
-
-    anchors.verticalCenter: root.extraTop > 0 || root.extraBottom > 0 ? undefined : parent.verticalCenter
-    anchors.bottom: root.extraTop > 0 ? parent.bottom : undefined
-    anchors.top: root.extraBottom > 0 ? parent.top : undefined
+    x: root.extraLeft > 0 ? parent.width - width : (root.extraRight > 0 ? 0 : (parent.width - width) / 2)
+    y: root.extraTop > 0 ? parent.height - height : (root.extraBottom > 0 ? 0 : (parent.height - height) / 2)
 
     radius: Style.radiusL
     border.width: Style.borderS
@@ -49,19 +45,19 @@ Item {
       hoverEnabled: true
 
       onEntered: {
-        root.dockRoot.dockHovered = true;
-        if (root.dockRoot.autoHide) {
-          root.dockRoot.showTimer.stop();
-          root.dockRoot.hideTimer.stop();
-          root.dockRoot.unloadTimer.stop(); // Cancel unload if hovering
-          root.dockRoot.hidden = false; // Make sure dock is visible
+        DockHelpers.setProperty(root.dockRoot, "dockHovered", true);
+        if (DockHelpers.getProperty(root.dockRoot, "autoHide")) {
+          DockHelpers.timerAction(root.dockRoot, "showTimer", "stop");
+          DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
+          DockHelpers.timerAction(root.dockRoot, "unloadTimer", "stop"); // Cancel unload if hovering
+          DockHelpers.setProperty(root.dockRoot, "hidden", false); // Make sure dock is visible
         }
       }
 
       onExited: {
-        root.dockRoot.dockHovered = false;
-        if (root.dockRoot.autoHide && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
-          root.dockRoot.hideTimer.restart();
+        DockHelpers.setProperty(root.dockRoot, "dockHovered", false);
+        if (DockHelpers.getProperty(root.dockRoot, "autoHide") && !DockHelpers.getProperty(root.dockRoot, "anyAppHovered") && !DockHelpers.getProperty(root.dockRoot, "peekHovered") && !DockHelpers.getProperty(root.dockRoot, "menuHovered") && DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === -1) {
+          DockHelpers.timerAction(root.dockRoot, "hideTimer", "restart");
         }
       }
 
@@ -74,28 +70,28 @@ Item {
     Flickable {
       id: dock
       // Use parent dimensions more directly to avoid clipping
-      width: root.dockRoot.isVertical ? parent.width : Math.min(dockLayout.implicitWidth, parent.width - Style.marginXL)
-      height: !root.dockRoot.isVertical ? parent.height : Math.min(dockLayout.implicitHeight, parent.height - Style.marginXL)
+      width: DockHelpers.getProperty(root.dockRoot, "isVertical") ? parent.width : Math.min(dockLayout.implicitWidth, parent.width - Style.marginXL)
+      height: !DockHelpers.getProperty(root.dockRoot, "isVertical") ? parent.height : Math.min(dockLayout.implicitHeight, parent.height - Style.marginXL)
       contentWidth: dockLayout.implicitWidth
       contentHeight: dockLayout.implicitHeight
       anchors.centerIn: parent
       clip: true
 
-      flickableDirection: root.dockRoot.isVertical ? Flickable.VerticalFlick : Flickable.HorizontalFlick
+      flickableDirection: DockHelpers.getProperty(root.dockRoot, "isVertical") ? Flickable.VerticalFlick : Flickable.HorizontalFlick
 
       // Keep interactive dependent on overflow
-      interactive: root.dockRoot.isVertical ? contentHeight > height : contentWidth > width
+      interactive: DockHelpers.getProperty(root.dockRoot, "isVertical") ? contentHeight > height : contentWidth > width
 
       // Centering margins
-      contentX: root.dockRoot.isVertical && contentWidth < width ? (contentWidth - width) / 2 : 0
-      contentY: !root.dockRoot.isVertical && contentHeight < height ? (contentHeight - height) / 2 : 0
+      contentX: DockHelpers.getProperty(root.dockRoot, "isVertical") && contentWidth < width ? (contentWidth - width) / 2 : 0
+      contentY: !DockHelpers.getProperty(root.dockRoot, "isVertical") && contentHeight < height ? (contentHeight - height) / 2 : 0
 
       WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
           var hDelta;
                    var delta = (event.angleDelta.y !== 0) ? event.angleDelta.y : event.angleDelta.x;
-                   if (root.dockRoot.isVertical) {
+                   if (DockHelpers.getProperty(root.dockRoot, "isVertical")) {
                      dock.contentY = Math.max(-dock.topMargin, Math.min(dock.contentHeight - dock.height + dock.bottomMargin, dock.contentY - delta));
                    } else {
                      // For horizontal dock, we want to scroll contentX with BOTH x and y wheels
@@ -107,30 +103,22 @@ Item {
       }
 
       ScrollBar.horizontal: ScrollBar {
-        visible: !root.dockRoot.isVertical && dock.interactive
+        visible: !DockHelpers.getProperty(root.dockRoot, "isVertical") && dock.interactive
         policy: ScrollBar.AsNeeded
       }
       ScrollBar.vertical: ScrollBar {
-        visible: root.dockRoot.isVertical && dock.interactive
+        visible: DockHelpers.getProperty(root.dockRoot, "isVertical") && dock.interactive
         policy: ScrollBar.AsNeeded
       }
 
-      function getAppIcon(appData): string {
-        if (!appData || !appData.appId)
+      function getAppIcon(appData: var): string {
+        if (!appData || !DockHelpers.getProperty(appData, "appId"))
           return "";
-        return ThemeIcons.iconForAppId(appData.appId?.toLowerCase());
+        return ThemeIcons.iconForAppId(DockHelpers.lowerCaseAppId(appData), undefined);
       }
 
-      function getValidToplevels(appData) {
-        if (!appData || !ToplevelManager || !ToplevelManager.toplevels)
-          return [];
-        const source = appData.toplevels && appData.toplevels.length > 0 ? appData.toplevels : (appData.toplevel ? [appData.toplevel] : []);
-        const allToplevels = ToplevelManager.toplevels.values || [];
-        return source.filter(toplevel => toplevel && allToplevels.includes(toplevel));
-      }
-
-      function getPrimaryToplevel(appData) {
-        const toplevels = getValidToplevels(appData);
+      function getPrimaryToplevel(appData: var): var {
+        const toplevels = DockHelpers.getValidToplevels(appData, ToplevelManager);
         if (toplevels.length === 0)
           return null;
         if (ToplevelManager && ToplevelManager.activeToplevel && toplevels.includes(ToplevelManager.activeToplevel))
@@ -138,7 +126,7 @@ Item {
         return toplevels[0];
       }
 
-      function launchAppById(appId) {
+      function launchAppById(appId: string): void {
         if (!appId)
           return;
 
@@ -151,26 +139,26 @@ Item {
         if (Settings.data.appLauncher.customLaunchPrefixEnabled && Settings.data.appLauncher.customLaunchPrefix.trim() !== "") {
           const prefix = Settings.data.appLauncher.customLaunchPrefix.trim().split(" ");
 
-          if (app.runInTerminal && Settings.data.appLauncher.terminalCommand.trim() !== "") {
+          if (DockHelpers.getProperty(app, "runInTerminal") && Settings.data.appLauncher.terminalCommand.trim() !== "") {
             const terminal = Settings.data.appLauncher.terminalCommand.trim().split(" ");
-            const command = prefix.concat(terminal.concat(app.command));
+            const command = prefix.concat(terminal.concat(DockHelpers.getProperty(app, "command")));
             Quickshell.execDetached(command);
           } else {
-            const command = prefix.concat(app.command);
+            const command = prefix.concat(DockHelpers.getProperty(app, "command"));
             Quickshell.execDetached(command);
           }
         } else {
-          if (app.runInTerminal && Settings.data.appLauncher.terminalCommand.trim() !== "") {
-            Logger.d("Dock", "Executing terminal app manually: " + app.name);
+          if (DockHelpers.getProperty(app, "runInTerminal") && Settings.data.appLauncher.terminalCommand.trim() !== "") {
+            Logger.d("Dock", "Executing terminal app manually: " + DockHelpers.getProperty(app, "name"));
             const terminal = Settings.data.appLauncher.terminalCommand.trim().split(" ");
-            const command = terminal.concat(app.command);
+            const command = terminal.concat(DockHelpers.getProperty(app, "command"));
             CompositorService.spawn(command);
-          } else if (app.command && app.command.length > 0) {
-            CompositorService.spawn(app.command);
-          } else if (app.execute) {
+          } else if (DockHelpers.getProperty(app, "command") && DockHelpers.getProperty(DockHelpers.getProperty(app, "command"), "length") > 0) {
+            CompositorService.spawn(DockHelpers.getProperty(app, "command"));
+          } else if (DockHelpers.getProperty(app, "execute")) {
             app.execute();
           } else {
-            Logger.w("Dock", `Could not launch: ${app.name}. No valid launch method.`);
+            Logger.w("Dock", `Could not launch: ${DockHelpers.getProperty(app, "name")}. No valid launch method.`);
           }
         }
       }
@@ -178,8 +166,8 @@ Item {
       // Use GridLayout for flexible horizontal/vertical arrangement
       GridLayout {
         id: dockLayout
-        columns: root.dockRoot.isVertical ? 1 : -1
-        rows: root.dockRoot.isVertical ? -1 : 1
+        columns: DockHelpers.getProperty(root.dockRoot, "isVertical") ? 1 : -1
+        rows: DockHelpers.getProperty(root.dockRoot, "isVertical") ? -1 : 1
         rowSpacing: Style.marginS
         columnSpacing: Style.marginS
 
@@ -193,7 +181,7 @@ Item {
           Item {
             id: launcherButton
             anchors.fill: parent
-            readonly property string screenName: root.dockRoot.modelData ? root.dockRoot.modelData.name : (root.dockRoot.screen ? root.dockRoot.screen.name : "")
+            readonly property string screenName: DockHelpers.getProperty(root.dockRoot, "modelData") ? DockHelpers.getProperty(root.dockRoot, "modelData").name : (DockHelpers.getProperty(root.dockRoot, "screen") ? DockHelpers.getProperty(root.dockRoot, "screen").name : "")
             readonly property var launcherWidgetSettings: {
               const widgetsBySection = screenName ? Settings.getBarWidgetsForScreen(screenName) : Settings.data.bar.widgets;
               if (!widgetsBySection)
@@ -239,21 +227,21 @@ Item {
               }
               return -1;
             }
-            readonly property var launcherMetadata: BarWidgetRegistry.widgetMetadata["Launcher"]
+            readonly property var launcherMetadata: DockHelpers.getProperty(BarWidgetRegistry.widgetMetadata, "Launcher")
             readonly property string launcherIcon: {
               if (Settings.data.dock.launcherIcon !== undefined && Settings.data.dock.launcherIcon !== "")
                 return Settings.data.dock.launcherIcon;
-              if (launcherWidgetSettings.icon !== undefined && launcherWidgetSettings.icon !== "")
-                return launcherWidgetSettings.icon;
-              return (launcherMetadata && launcherMetadata.icon) ? launcherMetadata.icon : "search";
+              if (DockHelpers.getProperty(launcherWidgetSettings, "icon") !== undefined && DockHelpers.getProperty(launcherWidgetSettings, "icon") !== "")
+                return DockHelpers.getProperty(launcherWidgetSettings, "icon");
+              return (launcherMetadata && DockHelpers.getProperty(launcherMetadata, "icon")) ? DockHelpers.getProperty(launcherMetadata, "icon") : "search";
             }
             readonly property string launcherIconColorKey: {
               if (Settings.data.dock.launcherIconColor !== undefined)
                 return Settings.data.dock.launcherIconColor;
-              if (launcherWidgetSettings.iconColor !== undefined)
-                return launcherWidgetSettings.iconColor;
-              if (launcherMetadata && launcherMetadata.iconColor !== undefined)
-                return launcherMetadata.iconColor;
+              if (DockHelpers.getProperty(launcherWidgetSettings, "iconColor") !== undefined)
+                return DockHelpers.getProperty(launcherWidgetSettings, "iconColor");
+              if (launcherMetadata && DockHelpers.getProperty(launcherMetadata, "iconColor") !== undefined)
+                return DockHelpers.getProperty(launcherMetadata, "iconColor");
               return "none";
             }
             // No distro logo on Windows (HostService.osLogo is empty).
@@ -261,8 +249,8 @@ Item {
 
             Item {
               id: launcherIconContainer
-              width: root.dockRoot.iconSize
-              height: root.dockRoot.iconSize
+              width: DockHelpers.getProperty(root.dockRoot, "iconSize")
+              height: DockHelpers.getProperty(root.dockRoot, "iconSize")
               anchors.centerIn: parent
 
               scale: launcherMouseArea.containsMouse ? 1.15 : 1.0
@@ -277,14 +265,14 @@ Item {
               NIcon {
                 anchors.centerIn: parent
                 icon: launcherButton.launcherIcon
-                pointSize: root.dockRoot.iconSize * 0.7
+                pointSize: DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.7
                 color: Color.resolveColorKey(launcherButton.launcherIconColorKey)
                 visible: !launcherButton.launcherUseDistroLogo
               }
 
               IconImage {
                 anchors.centerIn: parent
-                width: root.dockRoot.iconSize * 0.8
+                width: DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.8
                 height: width
                 source: launcherButton.launcherUseDistroLogo ? HostService.osLogo : ""
                 visible: source !== ""
@@ -308,30 +296,30 @@ Item {
               acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
               onEntered: {
-                root.dockRoot.anyAppHovered = true;
-                if (root.dockRoot.autoHide) {
-                  root.dockRoot.showTimer.stop();
-                  root.dockRoot.hideTimer.stop();
-                  root.dockRoot.unloadTimer.stop();
-                  root.dockRoot.hidden = false;
+                DockHelpers.setProperty(root.dockRoot, "anyAppHovered", true);
+                if (DockHelpers.getProperty(root.dockRoot, "autoHide")) {
+                  DockHelpers.timerAction(root.dockRoot, "showTimer", "stop");
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
+                  DockHelpers.timerAction(root.dockRoot, "unloadTimer", "stop");
+                  DockHelpers.setProperty(root.dockRoot, "hidden", false);
                 }
               }
 
               onExited: {
-                root.dockRoot.anyAppHovered = false;
-                if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
-                  root.dockRoot.hideTimer.restart();
+                DockHelpers.setProperty(root.dockRoot, "anyAppHovered", false);
+                if (DockHelpers.getProperty(root.dockRoot, "autoHide") && !DockHelpers.getProperty(root.dockRoot, "dockHovered") && !DockHelpers.getProperty(root.dockRoot, "peekHovered") && !DockHelpers.getProperty(root.dockRoot, "menuHovered") && DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === -1) {
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "restart");
                 }
               }
 
               onClicked: mouse => {
-                           const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
+                           const targetScreen = DockHelpers.getProperty(root.dockRoot, "modelData") || DockHelpers.getProperty(root.dockRoot, "screen") || null;
                            if (!targetScreen) {
                              return;
                            }
 
                            if (mouse.button === Qt.RightButton) {
-                             if (root.dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
+                             if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === launcherContextMenu && launcherContextMenu.visible) {
                                root.dockRoot.closeAllContextMenus();
                                return;
                              }
@@ -349,40 +337,40 @@ Item {
 
             DockMenu {
               id: launcherContextMenu
-              dockPosition: root.dockRoot.dockPosition
+              dockPosition: DockHelpers.getProperty(root.dockRoot, "dockPosition")
               menuMode: "launcher"
               launcherWidgetSection: launcherButton.launcherWidgetSection
               launcherWidgetIndex: launcherButton.launcherWidgetIndex
               launcherWidgetSettings: launcherButton.launcherWidgetSettings
 
               onHoveredChanged: {
-                if (root.dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
-                  root.dockRoot.menuHovered = hovered;
+                if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === launcherContextMenu && launcherContextMenu.visible) {
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", hovered);
                 } else {
-                  root.dockRoot.menuHovered = false;
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
                 }
               }
 
               Connections {
                 target: launcherContextMenu
                 function onRequestClose() {
-                  root.dockRoot.currentContextMenu = null;
-                  root.dockRoot.hideTimer.stop();
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", null);
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
                   launcherContextMenu.hide();
-                  root.dockRoot.menuHovered = false;
-                  root.dockRoot.anyAppHovered = false;
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
+                  DockHelpers.setProperty(root.dockRoot, "anyAppHovered", false);
                 }
               }
 
               onVisibleChanged: {
                 if (visible) {
-                  root.dockRoot.currentContextMenu = launcherContextMenu;
-                } else if (root.dockRoot.currentContextMenu === launcherContextMenu) {
-                  root.dockRoot.currentContextMenu = null;
-                  root.dockRoot.hideTimer.stop();
-                  root.dockRoot.menuHovered = false;
-                  if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered) {
-                    root.dockRoot.hideTimer.restart();
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", launcherContextMenu);
+                } else if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === launcherContextMenu) {
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", null);
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
+                  if (DockHelpers.getProperty(root.dockRoot, "autoHide") && !DockHelpers.getProperty(root.dockRoot, "dockHovered") && !DockHelpers.getProperty(root.dockRoot, "anyAppHovered") && !DockHelpers.getProperty(root.dockRoot, "peekHovered") && !DockHelpers.getProperty(root.dockRoot, "menuHovered")) {
+                    DockHelpers.timerAction(root.dockRoot, "hideTimer", "restart");
                   }
                 }
               }
@@ -395,9 +383,9 @@ Item {
           active: Settings.data.dock.showLauncherIcon && Settings.data.dock.launcherPosition === "start"
           visible: active
           sourceComponent: launcherButtonComponent
-          readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
-          Layout.preferredWidth: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize) : 0
-          Layout.preferredHeight: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2) : 0
+          readonly property real indicatorMargin: Math.max(3, Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.18))
+          Layout.preferredWidth: active ? (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2 : DockHelpers.getProperty(root.dockRoot, "iconSize")) : 0
+          Layout.preferredHeight: active ? (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") : DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2) : 0
           Layout.minimumWidth: active ? Layout.preferredWidth : 0
           Layout.minimumHeight: active ? Layout.preferredHeight : 0
           Layout.maximumWidth: active ? Layout.preferredWidth : 0
@@ -406,22 +394,22 @@ Item {
         }
 
         Repeater {
-          model: root.dockRoot.dockApps
+          model: DockHelpers.getProperty(root.dockRoot, "dockApps")
 
           delegate: Item {
             required property var modelData
             required property int index
             id: appButton
-            readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
-            Layout.preferredWidth: root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize
-            Layout.preferredHeight: root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2
+            readonly property real indicatorMargin: Math.max(3, Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.18))
+            Layout.preferredWidth: DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2 : DockHelpers.getProperty(root.dockRoot, "iconSize")
+            Layout.preferredHeight: DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") : DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2
             Layout.alignment: Qt.AlignCenter
 
-            property var toplevels: dock.getValidToplevels(appButton.modelData)
+            property var toplevels: DockHelpers.getValidToplevels(appButton.modelData, ToplevelManager)
             property bool isActive: ToplevelManager && ToplevelManager.activeToplevel && toplevels.includes(ToplevelManager.activeToplevel)
             property bool hovered: appMouseArea.containsMouse
-            property string appId: appButton.modelData ? appButton.modelData.appId : ""
-            property int groupedCount: toplevels.length
+            property string appId: appButton.modelData ? DockHelpers.getProperty(appButton.modelData, "appId") : ""
+            property int groupedCount: DockHelpers.getProperty(toplevels, "length")
             property int focusedWindowIndex: {
               if (!ToplevelManager || !ToplevelManager.activeToplevel)
                 return -1;
@@ -433,17 +421,17 @@ Item {
                 return "";
               const primaryToplevel = dock.getPrimaryToplevel(appButton.modelData);
               if (primaryToplevel) {
-                const toplevelTitle = primaryToplevel.title || "";
+                const toplevelTitle = DockHelpers.getProperty(primaryToplevel, "title") || "";
                 // If title is "Loading..." or empty, use desktop entry name
                 if (!toplevelTitle || toplevelTitle === "Loading..." || toplevelTitle.trim() === "") {
-                  return root.dockRoot.getAppNameFromDesktopEntry(appButton.modelData.appId) || appButton.modelData.appId;
+                  return root.dockRoot.getAppNameFromDesktopEntry(DockHelpers.getProperty(appButton.modelData, "appId")) || DockHelpers.getProperty(appButton.modelData, "appId");
                 }
                 return toplevelTitle;
               }
               // For pinned apps that aren't running, use the stored title
-              return appButton.modelData.title || appButton.modelData.appId || "";
+              return DockHelpers.getProperty(appButton.modelData, "title") || DockHelpers.getProperty(appButton.modelData, "appId") || "";
             }
-            property bool isRunning: toplevels.length > 0
+            property bool isRunning: DockHelpers.getProperty(toplevels, "length") > 0
             readonly property bool baseIndicatorVisible: Settings.data.dock.inactiveIndicators ? isRunning : isActive
             // Grouped indicators should be visible whenever grouped windows are running, even if none is focused.
             readonly property bool showGroupedIndicator: Settings.data.dock.groupApps && groupedCount > 1 && isRunning
@@ -456,37 +444,37 @@ Item {
               anchors.fill: parent
               keys: ["dock-app"]
               onEntered: function (drag) {
-                if (drag.source && drag.source.objectName === "dockAppButton") {
-                  root.dockRoot.dragTargetIndex = appButton.modelIndex;
+                if (drag.source && DockHelpers.getProperty(drag.source, "objectName") === "dockAppButton") {
+                  DockHelpers.setProperty(root.dockRoot, "dragTargetIndex", appButton.modelIndex);
                 }
               }
               onExited: function () {
-                if (root.dockRoot.dragTargetIndex === appButton.modelIndex) {
-                  root.dockRoot.dragTargetIndex = -1;
+                if (DockHelpers.getProperty(root.dockRoot, "dragTargetIndex") === appButton.modelIndex) {
+                  DockHelpers.setProperty(root.dockRoot, "dragTargetIndex", -1);
                 }
               }
               onDropped: function (drop) {
-                root.dockRoot.dragSourceIndex = -1;
-                root.dockRoot.dragTargetIndex = -1;
-                if (drop.source && drop.source.objectName === "dockAppButton" && drop.source !== appButton) {
-                  root.dockRoot.reorderApps(drop.source.modelIndex, appButton.modelIndex);
+                DockHelpers.setProperty(root.dockRoot, "dragSourceIndex", -1);
+                DockHelpers.setProperty(root.dockRoot, "dragTargetIndex", -1);
+                if (drop.source && DockHelpers.getProperty(drop.source, "objectName") === "dockAppButton" && drop.source !== appButton) {
+                  root.dockRoot.reorderApps(DockHelpers.getProperty(drop.source, "modelIndex"), appButton.modelIndex);
                 }
               }
             }
 
             // Listen for the toplevel being closed
             Connections {
-              target: appButton.modelData?.toplevel
+              target: DockHelpers.getProperty(appButton.modelData, "toplevel")
               function onClosed() {
-                Qt.callLater(root.dockRoot.updateDockApps);
+                Qt.callLater(DockHelpers.getProperty(root.dockRoot, "updateDockApps"));
               }
             }
 
             // Draggable container for the icon
             Item {
               id: iconContainer
-              width: root.dockRoot.iconSize
-              height: root.dockRoot.iconSize
+              width: DockHelpers.getProperty(root.dockRoot, "iconSize")
+              height: DockHelpers.getProperty(root.dockRoot, "iconSize")
 
               // When dragging, remove anchors so MouseArea can position it
               anchors.centerIn: dragging ? undefined : parent
@@ -494,13 +482,13 @@ Item {
               property bool dragging: appMouseArea.drag.active
               onDraggingChanged: {
                 if (dragging) {
-                  root.dockRoot.dragSourceIndex = appButton.index;
+                  DockHelpers.setProperty(root.dockRoot, "dragSourceIndex", appButton.index);
                 } else {
                   // Reset if not handled by drop (e.g. dropped outside)
                   Qt.callLater(() => {
-                                 if (!appMouseArea.drag.active && root.dockRoot.dragSourceIndex === appButton.index) {
-                                   root.dockRoot.dragSourceIndex = -1;
-                                   root.dockRoot.dragTargetIndex = -1;
+                                 if (!appMouseArea.drag.active && DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === appButton.index) {
+                                   DockHelpers.setProperty(root.dockRoot, "dragSourceIndex", -1);
+                                   DockHelpers.setProperty(root.dockRoot, "dragTargetIndex", -1);
                                  }
                                });
                 }
@@ -512,7 +500,7 @@ Item {
               Drag.hotSpot.y: height / 2
               Drag.keys: ["dock-app"]
 
-              z: (root.dockRoot.dragSourceIndex === appButton.index) ? 1000 : ((dragging ? 1000 : 0))
+              z: (DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === appButton.index) ? 1000 : ((dragging ? 1000 : 0))
               scale: dragging ? 1.1 : (appButton.hovered ? 1.15 : 1.0)
               Behavior on scale {
                 NumberAnimation {
@@ -523,21 +511,21 @@ Item {
               }
 
               // Visual shifting logic
-              readonly property bool isDragged: root.dockRoot.dragSourceIndex === appButton.index
-              property real shiftOffset: 0
+              readonly property bool isDragged: DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === appButton.index
+              property real shiftOffset
 
               Binding on shiftOffset {
                 value: {
-                  if (root.dockRoot.dragSourceIndex !== -1 && root.dockRoot.dragTargetIndex !== -1 && !iconContainer.isDragged) {
-                    if (root.dockRoot.dragSourceIndex < root.dockRoot.dragTargetIndex) {
+                  if (DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") !== -1 && DockHelpers.getProperty(root.dockRoot, "dragTargetIndex") !== -1 && !iconContainer.isDragged) {
+                    if (DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") < DockHelpers.getProperty(root.dockRoot, "dragTargetIndex")) {
                       // Dragging Forward: Items between source and target shift Backward
-                      if (appButton.index > root.dockRoot.dragSourceIndex && appButton.index <= root.dockRoot.dragTargetIndex) {
-                        return -1 * (root.dockRoot.isVertical ? root.dockRoot.iconSize + Style.marginS : root.dockRoot.iconSize + Style.marginS);
+                      if (appButton.index > DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") && appButton.index <= DockHelpers.getProperty(root.dockRoot, "dragTargetIndex")) {
+                        return -1 * (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") + Style.marginS : DockHelpers.getProperty(root.dockRoot, "iconSize") + Style.marginS);
                       }
-                    } else if (root.dockRoot.dragSourceIndex > root.dockRoot.dragTargetIndex) {
+                    } else if (DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") > DockHelpers.getProperty(root.dockRoot, "dragTargetIndex")) {
                       // Dragging Backward: Items between target and source shift Forward
-                      if (appButton.index >= root.dockRoot.dragTargetIndex && appButton.index < root.dockRoot.dragSourceIndex) {
-                        return (root.dockRoot.isVertical ? root.dockRoot.iconSize + Style.marginS : root.dockRoot.iconSize + Style.marginS);
+                      if (appButton.index >= DockHelpers.getProperty(root.dockRoot, "dragTargetIndex") && appButton.index < DockHelpers.getProperty(root.dockRoot, "dragSourceIndex")) {
+                        return (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") + Style.marginS : DockHelpers.getProperty(root.dockRoot, "iconSize") + Style.marginS);
                       }
                     }
                   }
@@ -546,8 +534,8 @@ Item {
               }
 
               transform: Translate {
-                x: !root.dockRoot.isVertical ? iconContainer.shiftOffset : 0
-                y: root.dockRoot.isVertical ? iconContainer.shiftOffset : 0
+                x: !DockHelpers.getProperty(root.dockRoot, "isVertical") ? iconContainer.shiftOffset : 0
+                y: DockHelpers.getProperty(root.dockRoot, "isVertical") ? iconContainer.shiftOffset : 0
 
                 Behavior on x {
                   NumberAnimation {
@@ -567,8 +555,8 @@ Item {
                 id: appIcon
                 anchors.fill: parent
                 source: {
-                  root.dockRoot.iconRevision; // Force re-evaluation when revision changes
-                  return dock.getAppIcon(appButton.modelData);
+                  DockHelpers.getProperty(root.dockRoot, "iconRevision") >= 0 ? dock.getAppIcon(appButton.modelData) : ""; // Force re-evaluation when revision changes
+                  return DockHelpers.getProperty(root.dockRoot, "iconRevision") >= 0 ? dock.getAppIcon(appButton.modelData) : "";
                 }
                 visible: source.toString() !== ""
                 smooth: true
@@ -600,7 +588,7 @@ Item {
                 anchors.centerIn: parent
                 visible: !appIcon.visible
                 icon: "question-mark"
-                pointSize: root.dockRoot.iconSize * 0.7
+                pointSize: DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.7
                 color: appButton.isActive ? Color.mPrimary : Color.mOnSurfaceVariant
                 opacity: appButton.isRunning ? 1.0 : 0.6
 
@@ -616,13 +604,13 @@ Item {
             // Context menu popup
             DockMenu {
               id: contextMenu
-              dockPosition: root.dockRoot.dockPosition // Pass dock position for menu placement
+              dockPosition: DockHelpers.getProperty(root.dockRoot, "dockPosition") // Pass dock position for menu placement
               onHoveredChanged: {
                 // Only update menuHovered if this menu is current and visible
-                if (root.dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
-                  root.dockRoot.menuHovered = hovered;
+                if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === contextMenu && contextMenu.visible) {
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", hovered);
                 } else {
-                  root.dockRoot.menuHovered = false;
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
                 }
               }
 
@@ -630,24 +618,24 @@ Item {
                 target: contextMenu
                 function onRequestClose() {
                   // Clear current menu immediately to prevent hover updates
-                  root.dockRoot.currentContextMenu = null;
-                  root.dockRoot.hideTimer.stop();
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", null);
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
                   contextMenu.hide();
-                  root.dockRoot.menuHovered = false;
-                  root.dockRoot.anyAppHovered = false;
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
+                  DockHelpers.setProperty(root.dockRoot, "anyAppHovered", false);
                 }
               }
-              onAppClosed: root.dockRoot.updateDockApps // Force immediate dock update when app is closed
+              onAppClosed: DockHelpers.getProperty(root.dockRoot, "updateDockApps") // Force immediate dock update when app is closed
               onVisibleChanged: {
                 if (visible) {
-                  root.dockRoot.currentContextMenu = contextMenu;
-                } else if (root.dockRoot.currentContextMenu === contextMenu) {
-                  root.dockRoot.currentContextMenu = null;
-                  root.dockRoot.hideTimer.stop();
-                  root.dockRoot.menuHovered = false;
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", contextMenu);
+                } else if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === contextMenu) {
+                  DockHelpers.setProperty(root.dockRoot, "currentContextMenu", null);
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
                   // Restart hide timer after menu closes
-                  if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered) {
-                    root.dockRoot.hideTimer.restart();
+                  if (DockHelpers.getProperty(root.dockRoot, "autoHide") && !DockHelpers.getProperty(root.dockRoot, "dockHovered") && !DockHelpers.getProperty(root.dockRoot, "anyAppHovered") && !DockHelpers.getProperty(root.dockRoot, "peekHovered") && !DockHelpers.getProperty(root.dockRoot, "menuHovered")) {
+                    DockHelpers.timerAction(root.dockRoot, "hideTimer", "restart");
                   }
                 }
               }
@@ -663,7 +651,7 @@ Item {
 
               // Only allow left-click dragging via axis control
               drag.target: iconContainer
-              drag.axis: (pressedButtons & Qt.LeftButton) ? (root.dockRoot.isVertical ? Drag.YAxis : Drag.XAxis) : Drag.None
+              drag.axis: (pressedButtons & Qt.LeftButton) ? (DockHelpers.getProperty(root.dockRoot, "isVertical") ? Drag.YAxis : Drag.XAxis) : Drag.None
 
               onPressed: {
                 var p1 = appButton.mapFromItem(dockContainer, 0, 0);
@@ -681,31 +669,31 @@ Item {
               }
 
               onEntered: {
-                root.dockRoot.anyAppHovered = true;
-                if (root.dockRoot.autoHide) {
-                  root.dockRoot.showTimer.stop();
-                  root.dockRoot.hideTimer.stop();
-                  root.dockRoot.unloadTimer.stop(); // Cancel unload if hovering app
-                  root.dockRoot.hidden = false; // Make sure dock is visible
+                DockHelpers.setProperty(root.dockRoot, "anyAppHovered", true);
+                if (DockHelpers.getProperty(root.dockRoot, "autoHide")) {
+                  DockHelpers.timerAction(root.dockRoot, "showTimer", "stop");
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "stop");
+                  DockHelpers.timerAction(root.dockRoot, "unloadTimer", "stop"); // Cancel unload if hovering app
+                  DockHelpers.setProperty(root.dockRoot, "hidden", false); // Make sure dock is visible
                 }
               }
 
               onExited: {
-                root.dockRoot.anyAppHovered = false;
+                DockHelpers.setProperty(root.dockRoot, "anyAppHovered", false);
                 // Clear menuHovered if no current menu or menu not visible
-                if (!root.dockRoot.currentContextMenu || !root.dockRoot.currentContextMenu.visible) {
-                  root.dockRoot.menuHovered = false;
+                if (!DockHelpers.getProperty(root.dockRoot, "currentContextMenu") || !DockHelpers.getProperty(root.dockRoot, "currentContextMenu").visible) {
+                  DockHelpers.setProperty(root.dockRoot, "menuHovered", false);
                 }
-                if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
-                  root.dockRoot.hideTimer.restart();
+                if (DockHelpers.getProperty(root.dockRoot, "autoHide") && !DockHelpers.getProperty(root.dockRoot, "dockHovered") && !DockHelpers.getProperty(root.dockRoot, "peekHovered") && !DockHelpers.getProperty(root.dockRoot, "menuHovered") && DockHelpers.getProperty(root.dockRoot, "dragSourceIndex") === -1) {
+                  DockHelpers.timerAction(root.dockRoot, "hideTimer", "restart");
                 }
               }
 
               onClicked: mouse => {
                            if (mouse.button === Qt.RightButton) {
-                             const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
+                             const targetScreen = DockHelpers.getProperty(root.dockRoot, "modelData") || DockHelpers.getProperty(root.dockRoot, "screen") || null;
                              // If right-clicking on the same app with an open context menu, close it
-                             if (root.dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
+                             if (DockHelpers.getProperty(root.dockRoot, "currentContextMenu") === contextMenu && contextMenu.visible) {
                                root.dockRoot.closeAllContextMenus();
                                return;
                              }
@@ -718,22 +706,22 @@ Item {
                            // Close any existing context menu for non-right-click actions
                            root.dockRoot.closeAllContextMenus();
 
-                           const runningToplevels = dock.getValidToplevels(appButton.modelData);
+                           const runningToplevels = DockHelpers.getValidToplevels(appButton.modelData, ToplevelManager);
                            const primaryToplevel = dock.getPrimaryToplevel(appButton.modelData);
 
                            if (mouse.button === Qt.MiddleButton) {
-                             if (primaryToplevel && primaryToplevel.close) {
+                             if (primaryToplevel && DockHelpers.getProperty(primaryToplevel, "close")) {
                                primaryToplevel.close();
-                               Qt.callLater(root.dockRoot.updateDockApps);
+                               Qt.callLater(DockHelpers.getProperty(root.dockRoot, "updateDockApps"));
                              }
                            } else if (mouse.button === Qt.LeftButton) {
                              if (runningToplevels.length === 0) {
-                               dock.launchAppById(appButton.modelData?.appId);
+                               dock.launchAppById(DockHelpers.getProperty(appButton.modelData, "appId"));
                                return;
                              }
 
                              if (!Settings.data.dock.groupApps || runningToplevels.length <= 1) {
-                               if (primaryToplevel && primaryToplevel.activate) {
+                               if (primaryToplevel && DockHelpers.getProperty(primaryToplevel, "activate")) {
                                  primaryToplevel.activate();
                                }
                                return;
@@ -741,19 +729,19 @@ Item {
 
                              const clickAction = Settings.data.dock.groupClickAction || "cycle";
                              if (clickAction === "list") {
-                               const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
+                               const targetScreen = DockHelpers.getProperty(root.dockRoot, "modelData") || DockHelpers.getProperty(root.dockRoot, "screen") || null;
                                // Left-click list should always open the grouped window list view.
                                contextMenu.show(appButton, appButton.modelData, targetScreen, "list");
                              } else {
-                               const appKey = appButton.modelData?.appId || "";
-                               const state = root.dockRoot.groupCycleIndices || {};
+                               const appKey = DockHelpers.getProperty(appButton.modelData, "appId") || "";
+                               const state = DockHelpers.getProperty(root.dockRoot, "groupCycleIndices") || {};
                                const nextIndex = (state[appKey] || 0) % runningToplevels.length;
                                const nextToplevel = runningToplevels[nextIndex];
                                if (nextToplevel && nextToplevel.activate) {
                                  nextToplevel.activate();
                                }
                                state[appKey] = (nextIndex + 1) % runningToplevels.length;
-                               root.dockRoot.groupCycleIndices = Object.assign({}, state);
+                               DockHelpers.setProperty(root.dockRoot, "groupCycleIndices", Object.assign({}, state));
                              }
                            }
                          }
@@ -762,40 +750,21 @@ Item {
             // Active indicator - positioned at the edge of the delegate area
             Rectangle {
               visible: appButton.baseIndicatorVisible && !appButton.showGroupedIndicator
-              width: root.dockRoot.isVertical ? appButton.indicatorMargin * 0.6 : root.dockRoot.iconSize * 0.2
-              height: root.dockRoot.isVertical ? root.dockRoot.iconSize * 0.2 : appButton.indicatorMargin * 0.6
+              width: DockHelpers.getProperty(root.dockRoot, "isVertical") ? appButton.indicatorMargin * 0.6 : DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.2
+              height: DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.2 : appButton.indicatorMargin * 0.6
               color: Color.mPrimary
               radius: Style.radiusXS
 
               // Anchor to the edge facing the screen center
-              anchors.bottom: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
-              anchors.top: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? parent.top : undefined
-              anchors.left: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? parent.left : undefined
-              anchors.right: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? parent.right : undefined
-
-              anchors.horizontalCenter: root.dockRoot.isVertical ? undefined : parent.horizontalCenter
-              anchors.verticalCenter: root.dockRoot.isVertical ? parent.verticalCenter : undefined
-
-              // Offset slightly from the edge
-              anchors.bottomMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? 2 : 0
-              anchors.topMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? 2 : 0
-              anchors.leftMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? 2 : 0
-              anchors.rightMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? 2 : 0
+              x: DockHelpers.getProperty(root.dockRoot, "dockPosition") === "left" ? 2 : (DockHelpers.getProperty(root.dockRoot, "dockPosition") === "right" ? parent.width - width - 2 : (parent.width - width) / 2)
+              y: DockHelpers.getProperty(root.dockRoot, "dockPosition") === "top" ? 2 : (DockHelpers.getProperty(root.dockRoot, "dockPosition") === "bottom" ? parent.height - height - 2 : (parent.height - height) / 2)
             }
 
             Loader {
               id: groupedIndicatorLoader
               active: appButton.showGroupedIndicator
-              anchors.bottom: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
-              anchors.top: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? parent.top : undefined
-              anchors.left: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? parent.left : undefined
-              anchors.right: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? parent.right : undefined
-              anchors.horizontalCenter: root.dockRoot.isVertical ? undefined : parent.horizontalCenter
-              anchors.verticalCenter: root.dockRoot.isVertical ? parent.verticalCenter : undefined
-              anchors.bottomMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? 1 : 0
-              anchors.topMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? 1 : 0
-              anchors.leftMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? 1 : 0
-              anchors.rightMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? 1 : 0
+              x: DockHelpers.getProperty(root.dockRoot, "dockPosition") === "left" ? 1 : (DockHelpers.getProperty(root.dockRoot, "dockPosition") === "right" ? parent.width - width - 1 : (parent.width - width) / 2)
+              y: DockHelpers.getProperty(root.dockRoot, "dockPosition") === "top" ? 1 : (DockHelpers.getProperty(root.dockRoot, "dockPosition") === "bottom" ? parent.height - height - 1 : (parent.height - height) / 2)
 
               sourceComponent: Settings.data.dock.groupIndicatorStyle === "dots" ? groupDotsIndicatorComponent : groupNumberIndicatorComponent
             }
@@ -828,7 +797,7 @@ Item {
                 readonly property int totalCount: Math.max(0, appButton.groupedCount)
                 readonly property int focusedIndex: appButton.focusedWindowIndex >= 0 ? appButton.focusedWindowIndex : 0
                 readonly property int visibleCount: Math.min(totalCount, maxVisibleDots)
-                readonly property int dotSize: Math.max(2, Math.round(root.dockRoot.iconSize * 0.1))
+                readonly property int dotSize: Math.max(2, Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.1))
                 readonly property int dotSpacing: Math.max(1, Math.round(dotSize * 0.7))
                 readonly property int pitch: dotSize + dotSpacing
                 readonly property int windowStart: {
@@ -840,8 +809,8 @@ Item {
                 }
                 readonly property bool hasHiddenLeft: windowStart > 0
                 readonly property bool hasHiddenRight: (windowStart + visibleCount) < totalCount
-                width: root.dockRoot.isVertical ? dotSize : (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing)
-                height: root.dockRoot.isVertical ? (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing) : dotSize
+                width: DockHelpers.getProperty(root.dockRoot, "isVertical") ? dotSize : (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing)
+                height: DockHelpers.getProperty(root.dockRoot, "isVertical") ? (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing) : dotSize
 
                 Repeater {
                   model: groupDots.visibleCount
@@ -854,8 +823,8 @@ Item {
                     width: isOverflowHint && !isFocusedDot ? Math.max(2, Math.round(groupDots.dotSize * 0.72)) : groupDots.dotSize
                     height: width
                     radius: width / 2
-                    x: root.dockRoot.isVertical ? Math.round((groupDots.dotSize - width) / 2) : (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2))
-                    y: root.dockRoot.isVertical ? (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2)) : Math.round((groupDots.dotSize - width) / 2)
+                    x: DockHelpers.getProperty(root.dockRoot, "isVertical") ? Math.round((groupDots.dotSize - width) / 2) : (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2))
+                    y: DockHelpers.getProperty(root.dockRoot, "isVertical") ? (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2)) : Math.round((groupDots.dotSize - width) / 2)
                     color: isFocusedDot ? Color.mPrimary : Qt.alpha(Color.mOutline, 0.9)
                     opacity: isOverflowHint && !isFocusedDot ? 0.55 : 1.0
                   }
@@ -870,9 +839,9 @@ Item {
           active: Settings.data.dock.showLauncherIcon && Settings.data.dock.launcherPosition === "end"
           visible: active
           sourceComponent: launcherButtonComponent
-          readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
-          Layout.preferredWidth: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize) : 0
-          Layout.preferredHeight: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2) : 0
+          readonly property real indicatorMargin: Math.max(3, Math.round(DockHelpers.getProperty(root.dockRoot, "iconSize") * 0.18))
+          Layout.preferredWidth: active ? (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2 : DockHelpers.getProperty(root.dockRoot, "iconSize")) : 0
+          Layout.preferredHeight: active ? (DockHelpers.getProperty(root.dockRoot, "isVertical") ? DockHelpers.getProperty(root.dockRoot, "iconSize") : DockHelpers.getProperty(root.dockRoot, "iconSize") + indicatorMargin * 2) : 0
           Layout.minimumWidth: active ? Layout.preferredWidth : 0
           Layout.minimumHeight: active ? Layout.preferredHeight : 0
           Layout.maximumWidth: active ? Layout.preferredWidth : 0

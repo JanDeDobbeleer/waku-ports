@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Widgets
+import "./CustomButtonUtils.js" as CustomButtonUtils
 
 Item {
   id: root
@@ -32,27 +33,22 @@ Item {
   Connections {
     target: root
 
-    function _updatePropertiesFromSettings() {
+    function _updatePropertiesFromSettings(): void {
       if (!root.widgetSettings) {
         return;
       }
 
-      root.onClickedCommand = root.widgetSettings.onClicked || "";
-      root.onRightClickedCommand = root.widgetSettings.onRightClicked || "";
-      root.onMiddleClickedCommand = root.widgetSettings.onMiddleClicked || "";
-      root.stateChecksJson = root.widgetSettings.stateChecksJson || "[]"; // Populate from widgetSettings
-      try {
-        root._parsedStateChecks = JSON.parse(root.stateChecksJson);
-      } catch (e) {
-        Logger.e("CustomButton", "Failed to parse stateChecksJson:", e.message);
-        root._parsedStateChecks = [];
-      }
-      root.enableOnStateLogic = root.widgetSettings.enableOnStateLogic || false;
+      root.onClickedCommand = CustomButtonUtils.field(root.widgetSettings, "onClicked") || "";
+      root.onRightClickedCommand = CustomButtonUtils.field(root.widgetSettings, "onRightClicked") || "";
+      root.onMiddleClickedCommand = CustomButtonUtils.field(root.widgetSettings, "onMiddleClicked") || "";
+      root.stateChecksJson = CustomButtonUtils.field(root.widgetSettings, "stateChecksJson") || "[]"; // Populate from widgetSettings
+      root._parsedStateChecks = CustomButtonUtils.parseStateChecks(root.stateChecksJson, Logger);
+      root.enableOnStateLogic = CustomButtonUtils.field(root.widgetSettings, "enableOnStateLogic") || false;
 
       root.updateState();
     }
 
-    function onWidgetSettingsChanged() {
+    function onWidgetSettingsChanged(): void {
       if (root.widgetSettings) {
         _updatePropertiesFromSettings();
       }
@@ -62,14 +58,14 @@ Item {
   Process {
     id: stateCheckProcessExecutor
     running: false
-    command: root._currentStateCheckIndex !== -1 && root._parsedStateChecks.length > root._currentStateCheckIndex ? ["cmd", "/c", root._parsedStateChecks[root._currentStateCheckIndex].command] : []
+    command: root._currentStateCheckIndex !== -1 && CustomButtonUtils.arrayLength(root._parsedStateChecks) > root._currentStateCheckIndex ? ["cmd", "/c", root._parsedStateChecks[root._currentStateCheckIndex].command] : []
     onExited: function (exitCode) {
       var currentCheckItem = root._parsedStateChecks[root._currentStateCheckIndex];
       var currentCommand = currentCheckItem.command;
       if (exitCode === 0) {
         // Command succeeded, this is the active state
         root._isHot = true;
-        root._activeStateIcon = currentCheckItem.icon || root.widgetSettings.icon || "heart";
+        root._activeStateIcon = currentCheckItem.icon || CustomButtonUtils.field(root.widgetSettings, "icon") || "heart";
       } else {
         // Command failed, try next one
         root._currentStateCheckIndex++;
@@ -84,20 +80,20 @@ Item {
     running: false
     repeat: false
     onTriggered: {
-      if (root.enableOnStateLogic && root._parsedStateChecks.length > 0) {
+      if (root.enableOnStateLogic && CustomButtonUtils.arrayLength(root._parsedStateChecks) > 0) {
         root._currentStateCheckIndex = 0;
         root._checkNextState();
       } else {
         root._isHot = false;
-        root._activeStateIcon = root.widgetSettings.icon || "heart";
+        root._activeStateIcon = CustomButtonUtils.field(root.widgetSettings, "icon") || "heart";
       }
     }
   }
 
-  function _checkNextState() {
+  function _checkNextState(): void {
     var currentCheckItem;
-    if (_currentStateCheckIndex < _parsedStateChecks.length) {
-      currentCheckItem = _parsedStateChecks[_currentStateCheckIndex];
+    if (root._currentStateCheckIndex < CustomButtonUtils.arrayLength(root._parsedStateChecks)) {
+      currentCheckItem = root._parsedStateChecks[root._currentStateCheckIndex];
       if (currentCheckItem && currentCheckItem.command) {
         stateCheckProcessExecutor.running = true;
       } else {
@@ -107,14 +103,14 @@ Item {
     } else {
       // All checks failed
       _isHot = false;
-      _activeStateIcon = widgetSettings.icon || "heart";
+      root._activeStateIcon = CustomButtonUtils.field(root.widgetSettings, "icon") || "heart";
     }
   }
 
-  function updateState() {
-    if (!enableOnStateLogic || _parsedStateChecks.length === 0) {
+  function updateState(): void {
+    if (!root.enableOnStateLogic || CustomButtonUtils.arrayLength(root._parsedStateChecks) === 0) {
       _isHot = false;
-      _activeStateIcon = widgetSettings.icon || "heart";
+      root._activeStateIcon = CustomButtonUtils.field(root.widgetSettings, "icon") || "heart";
       return;
     }
     stateUpdateTimer.restart();

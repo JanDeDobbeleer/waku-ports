@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+import "NSectionEditorUtils.js" as SectionEditorUtils
 
 import QtQuick 6.10
 import QtQuick.Controls.Basic
@@ -24,7 +25,7 @@ NBox {
   property alias dropTargetArea: gridContainer
 
   // Get display label for a section
-  function getSectionLabel(sectionId) {
+  function getSectionLabel(sectionId: var): var {
     if (sectionLabels && sectionLabels[sectionId]) {
       return sectionLabels[sectionId];
     }
@@ -32,7 +33,7 @@ NBox {
   }
 
   // Get icon for a section
-  function getSectionIcon(sectionId) {
+  function getSectionIcon(sectionId: var): var {
     if (sectionIcons && sectionIcons[sectionId]) {
       return sectionIcons[sectionId];
     }
@@ -45,51 +46,15 @@ NBox {
   property var _activeDialog: null
   property bool crossDropHoverActive: false
 
-  function clearCrossSectionHover() {
-    var candidate, i;
-    crossDropHoverActive = false;
-
-    var parentItem = root.parent;
-    if (!parentItem || !parentItem.children) {
-      return;
-    }
-
-    for (i = 0; i < parentItem.children.length; i++) {
-      candidate = parentItem.children[i];
-      if (!candidate || candidate.crossDropHoverActive === undefined)
-        continue;
-      candidate.crossDropHoverActive = false;
-    }
+  function clearCrossSectionHover(): void {
+    SectionEditorUtils.clearCrossSectionHover(root);
   }
 
-  function updateCrossSectionHover(globalX, globalY) {
-    var area, candidate, i, localPoint, shouldHighlight;
-    var parentItem = root.parent;
-    if (!parentItem || !parentItem.children) {
-      crossDropHoverActive = false;
-      return;
-    }
-
-    crossDropHoverActive = false;
-
-    for (i = 0; i < parentItem.children.length; i++) {
-      candidate = parentItem.children[i];
-      if (!candidate || candidate.sectionId === undefined || candidate.crossDropHoverActive === undefined) {
-        continue;
-      }
-
-      shouldHighlight = false;
-      if (candidate !== root && candidate.visible && candidate.enabled) {
-        localPoint = candidate.mapFromGlobal(globalX, globalY);
-        area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
-        shouldHighlight = localPoint.x >= area.x && localPoint.y >= area.y && localPoint.x <= area.x + area.width && localPoint.y <= area.y + area.height;
-      }
-
-      candidate.crossDropHoverActive = shouldHighlight;
-    }
+  function updateCrossSectionHover(globalX: var, globalY: var): void {
+    SectionEditorUtils.updateCrossSectionHover(root, globalX, globalY);
   }
 
-  function isPointInsideSelf(globalX, globalY) {
+  function isPointInsideSelf(globalX: var, globalY: var): bool {
     if (globalX < 0 || globalY < 0)
       return false;
     var localPoint = root.mapFromGlobal(globalX, globalY);
@@ -99,18 +64,12 @@ NBox {
   readonly property bool showCrossSectionDropHint: crossDropHoverActive
 
   Component.onDestruction: {
-    var dialog;
-    if (_activeDialog && _activeDialog.close) {
-      dialog = _activeDialog;
-      _activeDialog = null;
-      dialog.close();
-      dialog.destroy();
-    }
+    SectionEditorUtils.closeActiveDialog(root);
   }
 
   readonly property int gridColumns: 3
   readonly property real miniButtonSize: Style.baseWidgetSize * 0.65
-  readonly property bool isAtMaxCapacity: maxWidgets >= 0 && widgetModel.length >= maxWidgets
+  readonly property bool isAtMaxCapacity: maxWidgets >= 0 && SectionEditorUtils.length(widgetModel) >= maxWidgets
   readonly property real widgetItemHeight: Style.baseWidgetSize * 1.3 * Style.uiScaleRatio
 
   signal addWidget(string widgetId, string section)
@@ -126,45 +85,21 @@ NBox {
   z: flowDragArea.dragStarted ? 5000 : 0
 
   // Calculate width to fit gridColumns widgets with spacing
-  function calculateWidgetWidth(gridWidth) {
+  function calculateWidgetWidth(gridWidth: var): real {
     var columnSpacing = (root.gridColumns - 1) * Style.marginM;
     var widgetWidth = (gridWidth - columnSpacing) / root.gridColumns;
     return Math.floor(widgetWidth);
   }
 
-  function findSectionAtGlobalPosition(globalX, globalY) {
-    var area, candidate, i, localPoint;
-    var parentItem = root.parent;
-    if (!parentItem || !parentItem.children) {
-      return "";
-    }
-
-    for (i = 0; i < parentItem.children.length; i++) {
-      candidate = parentItem.children[i];
-      if (!candidate || candidate === root) {
-        continue;
-      }
-
-      // Only consider sibling section editors
-      if (candidate.sectionId === undefined || !candidate.visible || !candidate.enabled) {
-        continue;
-      }
-
-      localPoint = candidate.mapFromGlobal(globalX, globalY);
-      area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
-      if (localPoint.x >= area.x && localPoint.y >= area.y && localPoint.x <= area.x + area.width && localPoint.y <= area.y + area.height) {
-        return candidate.sectionId;
-      }
-    }
-
-    return "";
+  function findSectionAtGlobalPosition(globalX: var, globalY: var): var {
+    return SectionEditorUtils.findSectionAtGlobalPosition(root, globalX, globalY);
   }
 
   Layout.minimumHeight: {
     // header + minimal content area
     var absoluteMin = Style.margin2L + (Style.fontSizeL * 2) + Style.marginM + (65 * Style.uiScaleRatio);
 
-    var widgetCount = widgetModel.length;
+    var widgetCount = SectionEditorUtils.length(widgetModel);
     if (widgetCount === 0) {
       return absoluteMin;
     }
@@ -189,12 +124,12 @@ NBox {
   }
 
   // Generate widget color from name checksum
-  function getWidgetColor(widget) {
+  function getWidgetColor(widget: var): var {
     return [Color.mPrimary, Color.mOnPrimary];
   }
 
   // Check if widget has settings (core widget with metadata)
-  function widgetHasSettings(widgetId) {
+  function widgetHasSettings(widgetId: var): bool {
     // Check if it's a core widget with user settings
     if (root.widgetRegistry && root.widgetRegistry.widgetHasUserSettings(widgetId)) {
       return true;
@@ -204,59 +139,9 @@ NBox {
   }
 
   // Open settings for a widget
-  function openWidgetSettings(index, widgetData) {
-    var component;
-    // Handle core widget settings
-    {
-      component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
-
-      function instantiateAndOpen() {
-        if (root._activeDialog) {
-          try {
-            root._activeDialog.close();
-            root._activeDialog.destroy();
-          } catch (e) {}
-          root._activeDialog = null;
-        }
-
-        var dialog = component.createObject(Overlay.overlay, {
-                                              "widgetIndex": index,
-                                              "widgetData": widgetData,
-                                              "widgetId": widgetData.id,
-                                              "sectionId": root.sectionId,
-                                              "screen": root.screen,
-                                              "barIsVertical": root.barIsVertical
-                                            });
-
-        if (dialog) {
-          root._activeDialog = dialog;
-          dialog.updateWidgetSettings.connect(root.updateWidgetSettings);
-          dialog.closed.connect(() => {
-                                  if (root._activeDialog === dialog) {
-                                    root._activeDialog = null;
-                                    dialog.destroy();
-                                  }
-                                });
-          dialog.open();
-        } else {
-          Logger.e("NSectionEditor", "Failed to create settings dialog instance");
-        }
-      }
-
-      if (component.status === Component.Ready) {
-        instantiateAndOpen();
-      } else if (component.status === Component.Error) {
-        Logger.e("NSectionEditor", component.errorString());
-      } else {
-        component.statusChanged.connect(function () {
-          if (component.status === Component.Ready) {
-            instantiateAndOpen();
-          } else if (component.status === Component.Error) {
-            Logger.e("NSectionEditor", component.errorString());
-          }
-        });
-      }
-    }
+  function openWidgetSettings(index: var, widgetData: var): void {
+    const component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
+    SectionEditorUtils.openWidgetSettings(root, component, function (): Item { return Overlay.overlay; }, index, widgetData, Logger, Component.Ready, Component.Error);
   }
 
   ColumnLayout {
@@ -310,7 +195,7 @@ NBox {
       // Widget count indicator (when max is set)
       NText {
         visible: root.maxWidgets >= 0
-        text: root.maxWidgets === 0 ? "(LOCKED)" : "(" + root.widgetModel.length + "/" + root.maxWidgets + ")"
+        text: root.maxWidgets === 0 ? "(LOCKED)" : "(" + SectionEditorUtils.length(root.widgetModel) + "/" + root.maxWidgets + ")"
         pointSize: Style.fontSizeS
         color: root.isAtMaxCapacity ? Color.mError : Color.mOnSurfaceVariant
         Layout.alignment: Qt.AlignVCenter
@@ -359,7 +244,7 @@ NBox {
         Layout.leftMargin: Style.marginS
         onClicked: {
           if (comboBox.currentKey !== "" && !root.isAtMaxCapacity) {
-            addWidget(comboBox.currentKey, root.sectionId);
+            root.addWidget(comboBox.currentKey, root.sectionId);
             comboBox.currentKey = "";
           }
         }
@@ -371,19 +256,19 @@ NBox {
       id: gridContainer
       Layout.fillWidth: true
       Layout.preferredHeight: {
-        if (root.widgetModel.length === 0) {
+        if (SectionEditorUtils.length(root.widgetModel) === 0) {
           return 65 * Style.uiScaleRatio;
         }
         // Use actual width, fallback to a reasonable default if not yet available
         var containerWidth = width > 0 ? width : (parent ? parent.width : 400);
-        var rows = Math.ceil(root.widgetModel.length / root.gridColumns);
+        var rows = Math.ceil(SectionEditorUtils.length(root.widgetModel) / root.gridColumns);
         // Calculate height: (rows * item height) + (row spacing between items) + grid margins
         var gridTopMargin = Style.marginS;
         var gridBottomMargin = Style.marginS;
         var calculatedHeight = gridTopMargin + (rows * root.widgetItemHeight) + ((rows - 1) * Style.marginS) + gridBottomMargin;
         return calculatedHeight;
       }
-      Layout.minimumHeight: root.widgetModel.length === 0 ? (65 * Style.uiScaleRatio) : (Style.margin2S + root.widgetItemHeight)
+      Layout.minimumHeight: SectionEditorUtils.length(root.widgetModel) === 0 ? (65 * Style.uiScaleRatio) : (Style.margin2S + root.widgetItemHeight)
       clip: !flowDragArea.dragStarted
 
       Rectangle {
@@ -429,7 +314,7 @@ NBox {
             // Store the widget index for drag operations
             property int widgetIndex: index
             readonly property int buttonsWidth: Math.round(20)
-            readonly property int buttonsCount: root.widgetHasSettings(modelData.id) ? 1 : 0
+            readonly property int buttonsCount: root.widgetHasSettings(SectionEditorUtils.field(modelData, "id")) ? 1 : 0
 
             // Visual feedback during drag
             opacity: flowDragArea.draggedIndex === index ? 0.5 : 1.0
@@ -456,7 +341,7 @@ NBox {
                 var displayLabel, i, label, positionKey, section;
                 var items = [];
                 // Add move options for each available section (except current)
-                for (i = 0; i < root.availableSections.length; i++) {
+                for (i = 0; i < SectionEditorUtils.length(root.availableSections); i++) {
                   section = root.availableSections[i];
                   if (section !== root.sectionId) {
                     label = root.getSectionLabel(section);
@@ -476,7 +361,7 @@ NBox {
                     }
 
                     items.push({
-                                 "label": I18n.tr("tooltips.move-to-section", {
+                                 "label": I18n.trArgs("tooltips.move-to-section", {
                                                     "section": displayLabel
                                                   }),
                                  "action": section,
@@ -517,8 +402,8 @@ NBox {
                            mouse.accepted = true;
                            // Check if click is not on the settings button area (if visible)
                            const localX = mouse.x;
-                           const buttonsStartX = parent.width - (parent.buttonsCount * parent.buttonsWidth);
-                           if (localX < buttonsStartX || parent.buttonsCount === 0) {
+                           const buttonsStartX = widgetItem.width - (widgetItem.buttonsCount * widgetItem.buttonsWidth);
+                           if (localX < buttonsStartX || widgetItem.buttonsCount === 0) {
                              contextMenu.openAtItem(widgetItem, mouse.x, mouse.y);
                            }
                          }
@@ -533,7 +418,7 @@ NBox {
 
               NText {
                 text: {
-                  return widgetItem.modelData.id;
+                  return SectionEditorUtils.field(widgetItem.modelData, "id");
                 }
                 pointSize: Style.fontSizeXS
                 color: root.getWidgetColor(widgetItem.modelData)[1]
@@ -548,7 +433,7 @@ NBox {
 
               // CPU intensive indicator icon
               NIcon {
-                visible: root.widgetRegistry && root.widgetRegistry.isCpuIntensive(widgetItem.modelData.id)
+                visible: root.widgetRegistry && root.widgetRegistry.isCpuIntensive(SectionEditorUtils.field(widgetItem.modelData, "id"))
                 icon: "cpu-intensive"
                 pointSize: Style.fontSizeXXS
                 color: root.getWidgetColor(widgetItem.modelData)[1]
@@ -562,10 +447,10 @@ NBox {
                 Layout.preferredHeight: parent.height
 
                 Loader {
-                  active: root.widgetHasSettings(widgetItem.modelData.id) && root.enabled
+                  active: root.widgetHasSettings(SectionEditorUtils.field(widgetItem.modelData, "id")) && root.enabled
                   sourceComponent: NIconButton {
                     icon: "settings"
-                    baseSize: miniButtonSize
+                    baseSize: root.miniButtonSize
                     colorBorder: Qt.alpha(Color.mOutline, Style.opacityLight)
                     colorBg: Color.mOnSurface
                     colorFg: Color.mOnPrimary
@@ -670,101 +555,12 @@ NBox {
 
         // Drop position calculation
         // Map widget coordinates from grid-local to gridContainer coordinates
-        function mapWidgetCoords(widget) {
-          return {
-            x: widget.x + widgetGrid.x,
-            y: widget.y + widgetGrid.y,
-            width: widget.width,
-            height: widget.height
-          };
+        function mapWidgetCoords(widget: var): var {
+          return SectionEditorUtils.mapWidgetCoords(widget, widgetGrid);
         }
 
-        function updateDropIndicator(mouseX, mouseY) {
-          var i;
-          if (!dragStarted || draggedIndex === -1) {
-            dropIndicator.opacity = 0;
-            pulseAnimation.running = false;
-            return;
-          }
-
-          let bestIndex = -1;
-          let bestPosition = null;
-          let minDistance = Infinity;
-
-          // Check position relative to each widget
-          for (i = 0; i < root.widgetModel.length; i++) {
-            if (i === draggedIndex)
-              continue;
-            const widget = widgetRepeater.itemAt(i);
-            if (!widget || widget.widgetIndex === undefined)
-              continue;
-
-            const mapped = mapWidgetCoords(widget);
-
-            // Check distance to left edge (insert before)
-            const leftDist = Math.sqrt(Math.pow(mouseX - mapped.x, 2) + Math.pow(mouseY - (mapped.y + mapped.height / 2), 2));
-
-            // Check distance to right edge (insert after)
-            const rightDist = Math.sqrt(Math.pow(mouseX - (mapped.x + mapped.width), 2) + Math.pow(mouseY - (mapped.y + mapped.height / 2), 2));
-
-            if (leftDist < minDistance) {
-              minDistance = leftDist;
-              bestIndex = i;
-              bestPosition = Qt.point(mapped.x - dropIndicator.width / 2 - Style.marginXS, mapped.y);
-            }
-
-            if (rightDist < minDistance) {
-              minDistance = rightDist;
-              bestIndex = i + 1;
-              bestPosition = Qt.point(mapped.x + mapped.width + Style.marginXS - dropIndicator.width / 2, mapped.y);
-            }
-          }
-
-          // Check if we should insert at position 0 (very beginning)
-          if (root.widgetModel.length > 0 && draggedIndex !== 0) {
-            const firstWidget = widgetRepeater.itemAt(0);
-            if (firstWidget) {
-              const mapped = mapWidgetCoords(firstWidget);
-              const dist = Math.sqrt(Math.pow(mouseX - mapped.x, 2) + Math.pow(mouseY - mapped.y, 2));
-              if (dist < minDistance && mouseX < mapped.x + mapped.width / 2) {
-                minDistance = dist;
-                bestIndex = 0;
-                // Position indicator to the left of the first widget
-                bestPosition = Qt.point(mapped.x - dropIndicator.width / 2 - Style.marginXS, mapped.y);
-              }
-            }
-          }
-
-          // Only show indicator if we're close enough and it's a different position
-          if (minDistance < 80 && bestIndex !== -1) {
-            // Adjust index if we're moving forward
-            let adjustedIndex = bestIndex;
-            if (bestIndex > draggedIndex) {
-              adjustedIndex = bestIndex - 1;
-            }
-
-            // Don't show if it's the same position
-            if (adjustedIndex === draggedIndex) {
-              dropIndicator.opacity = 0;
-              pulseAnimation.running = false;
-              dropTargetIndex = -1;
-              return;
-            }
-
-            dropTargetIndex = adjustedIndex;
-            if (bestPosition) {
-              dropIndicator.x = bestPosition.x;
-              dropIndicator.y = bestPosition.y;
-              dropIndicator.opacity = 1;
-              if (!pulseAnimation.running) {
-                pulseAnimation.running = true;
-              }
-            }
-          } else {
-            dropIndicator.opacity = 0;
-            pulseAnimation.running = false;
-            dropTargetIndex = -1;
-          }
+        function updateDropIndicator(mouseX: var, mouseY: var): void {
+          SectionEditorUtils.updateDropIndicator(root, flowDragArea, widgetRepeater, widgetGrid, dropIndicator, pulseAnimation, mouseX, mouseY, Style.marginXS, Qt);
         }
 
         function resetDragState() {
@@ -794,23 +590,23 @@ NBox {
                      isOverButtonArea = false;
 
                      // Find which widget was clicked
-                     for (i = 0; i < root.widgetModel.length; i++) {
+                     for (i = 0; i < SectionEditorUtils.length(root.widgetModel); i++) {
                        const widget = widgetRepeater.itemAt(i);
-                       if (widget && widget.widgetIndex !== undefined) {
+                       if (widget && SectionEditorUtils.field(widget, "widgetIndex") !== undefined) {
                          if (mouse.x >= widget.x && mouse.x <= widget.x + widget.width && mouse.y >= widget.y && mouse.y <= widget.y + widget.height) {
                            const localX = mouse.x - widget.x;
-                           const buttonsStartX = widget.width - (widget.buttonsCount * widget.buttonsWidth * Style.uiScaleRatio);
+                           const buttonsStartX = widget.width - (SectionEditorUtils.field(widget, "buttonsCount") * SectionEditorUtils.field(widget, "buttonsWidth") * Style.uiScaleRatio);
 
-                           if (localX >= buttonsStartX && widget.buttonsCount > 0) {
+                           if (localX >= buttonsStartX && SectionEditorUtils.field(widget, "buttonsCount") > 0) {
                              // Click is on button area - don't start drag, propagate event
                              isOverButtonArea = true;
                              mouse.accepted = false;
                              return;
                            } else {
                              // This is a draggable area
-                             draggedIndex = widget.widgetIndex;
+                             draggedIndex = SectionEditorUtils.field(widget, "widgetIndex");
                              draggedWidget = widget;
-                             draggedModelData = widget.modelData;
+                             draggedModelData = SectionEditorUtils.field(widget, "modelData");
                              potentialDrag = true;
                              mouse.accepted = true;
 
@@ -841,7 +637,7 @@ NBox {
                                  if (draggedWidget) {
                                    dragGhost.width = draggedWidget.width;
                                    dragGhost.color = root.getWidgetColor(draggedModelData)[0];
-                                   ghostText.text = draggedModelData.id;
+                                   ghostText.text = SectionEditorUtils.field(draggedModelData, "id");
                                  }
 
                                  startGlobal = flowDragArea.mapToGlobal(mouse.x, mouse.y);
@@ -866,7 +662,7 @@ NBox {
           var globalPos, targetSectionId;
                       if (root.draggable && dragStarted && dropTargetIndex !== -1 && dropTargetIndex !== draggedIndex) {
                         // Perform the reorder
-                        reorderWidget(root.sectionId, draggedIndex, dropTargetIndex);
+                        root.reorderWidget(root.sectionId, draggedIndex, dropTargetIndex);
                       } else if (dragStarted && draggedIndex !== -1) {
                         globalPos = flowDragArea.mapToGlobal(mouse.x, mouse.y);
                         targetSectionId = root.findSectionAtGlobalPosition(globalPos.x, globalPos.y);

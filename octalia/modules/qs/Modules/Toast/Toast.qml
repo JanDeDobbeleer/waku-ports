@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "ToastUtils.js" as ToastUtils
 
 Item {
   id: root
@@ -47,7 +48,7 @@ Item {
     y: root.swipeOffsetY
   }
 
-  function clampSwipeDelta(deltaX) {
+  function clampSwipeDelta(deltaX: real): real {
     if (isRight)
       return Math.max(0, deltaX);
     if (isLeft)
@@ -55,7 +56,7 @@ Item {
     return deltaX;
   }
 
-  function clampVerticalSwipeDelta(deltaY) {
+  function clampVerticalSwipeDelta(deltaY: real): real {
     if (location === "bottom")
       return Math.max(0, deltaY);
     if (location === "top")
@@ -353,7 +354,7 @@ Item {
 
         onClicked: {
           if (root.actionCallback) {
-            root.actionCallback();
+            ToastUtils.invoke(root.actionCallback);
             root.hide();
           }
         }
@@ -361,7 +362,7 @@ Item {
     }
   }
 
-  function show(msgTitle, msgDescription, msgIcon, msgType, msgDuration, msgActionLabel, msgActionCallback) {
+  function show(msgTitle: string, msgDescription: string, msgIcon: string, msgType: string, msgDuration: int, msgActionLabel: string, msgActionCallback: var): void {
     // Stop all timers first
     progressAnimation.stop();
     hideAnimation.stop();

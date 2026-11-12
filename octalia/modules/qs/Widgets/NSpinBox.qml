@@ -57,7 +57,7 @@ RowLayout {
     }
   }
 
-  function changeValue(direction, step) {
+  function changeValue(direction: var, step: var) {
     var currentStep = step || root.stepSize;
 
     if (direction === 1 && root.value < root.to) {

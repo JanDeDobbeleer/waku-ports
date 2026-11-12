@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "VPNUtils.js" as VPNUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -12,18 +14,7 @@ import qs.Commons
 Singleton {
   id: root
 
-  readonly property var connections: {
-    const map = {};
-    for (const v of (S.Network.vpnConnections || [])) {
-      map[v.name] = {
-        "uuid": v.name,
-        "name": v.name,
-        "type": "vpn",
-        "active": !!v.connected
-      };
-    }
-    return map;
-  }
+  readonly property var connections: VPNUtils.connections(S.Network.vpnConnections)
   readonly property bool refreshing: false
   readonly property bool connecting: S.Network.vpnBusy && connectingUuid !== ""
   readonly property bool disconnecting: S.Network.vpnBusy && disconnectingUuid !== ""
@@ -32,9 +23,9 @@ Singleton {
   readonly property string lastError: S.Network.vpnError
   property bool refreshPending: false
 
-  readonly property var activeConnections: Object.values(connections).filter(c => c.active)
-  readonly property var inactiveConnections: Object.values(connections).filter(c => !c.active)
-  readonly property bool hasActiveConnection: activeConnections.length > 0
+  readonly property var activeConnections: VPNUtils.filterConnections(connections, true)
+  readonly property var inactiveConnections: VPNUtils.filterConnections(connections, false)
+  readonly property bool hasActiveConnection: VPNUtils.hasActive(activeConnections)
 
   Component.onCompleted: Logger.i("VPN", "Service started")
 
@@ -53,7 +44,7 @@ Singleton {
     S.Network.refresh();
   }
 
-  function connect(uuid) {
+  function connect(uuid: var): void {
     if (!uuid || S.Network.vpnBusy)
       return;
     connectingUuid = uuid;
@@ -61,7 +52,7 @@ Singleton {
       connectingUuid = "";
   }
 
-  function disconnect(uuid) {
+  function disconnect(uuid: var): void {
     if (!uuid || S.Network.vpnBusy)
       return;
     disconnectingUuid = uuid;
@@ -69,7 +60,7 @@ Singleton {
       disconnectingUuid = "";
   }
 
-  function toggle(uuid) {
+  function toggle(uuid: var): void {
     const conn = connections[uuid];
     if (!conn)
       return;
@@ -80,10 +71,10 @@ Singleton {
   }
 
   // Upstream edits a profile in place; a RAS entry has nothing to edit here.
-  function setConnection(uuid, data) {
+  function setConnection(uuid: var, data: var): void {
   }
 
-  function scheduleRefresh(interval) {
+  function scheduleRefresh(interval: var): void {
     refresh();
   }
 }

@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Keyboard
 import qs.Services.UI
 import qs.Widgets
@@ -39,14 +40,14 @@ Item {
   readonly property real contentWidth: isVertical ? capsuleHeight : Math.round(layout.implicitWidth + Style.margin2M)
   readonly property real contentHeight: isVertical ? Math.round(layout.implicitHeight + Style.margin2M) : capsuleHeight
 
-  readonly property bool hideWhenOff: (widgetSettings.hideWhenOff !== undefined) ? widgetSettings.hideWhenOff : (widgetMetadata.hideWhenOff !== undefined ? widgetMetadata.hideWhenOff : false)
+  readonly property bool hideWhenOff: (BarWidgetHelpers.readProperty(widgetSettings, "hideWhenOff") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenOff") : (BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenOff") !== undefined ? BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenOff") : false)
 
-  readonly property string capsIcon: widgetSettings.capsLockIcon !== undefined ? widgetSettings.capsLockIcon : widgetMetadata.capsLockIcon
-  readonly property string numIcon: widgetSettings.numLockIcon !== undefined ? widgetSettings.numLockIcon : widgetMetadata.numLockIcon
-  readonly property string scrollIcon: widgetSettings.scrollLockIcon !== undefined ? widgetSettings.scrollLockIcon : widgetMetadata.scrollLockIcon
-  readonly property bool showCaps: (widgetSettings.showCapsLock !== undefined) ? widgetSettings.showCapsLock : widgetMetadata.showCapsLock
-  readonly property bool showNum: (widgetSettings.showNumLock !== undefined) ? widgetSettings.showNumLock : widgetMetadata.showNumLock
-  readonly property bool showScroll: (widgetSettings.showScrollLock !== undefined) ? widgetSettings.showScrollLock : widgetMetadata.showScrollLock
+  readonly property string capsIcon: BarWidgetHelpers.readProperty(widgetSettings, "capsLockIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "capsLockIcon") : BarWidgetHelpers.readProperty(widgetMetadata, "capsLockIcon")
+  readonly property string numIcon: BarWidgetHelpers.readProperty(widgetSettings, "numLockIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "numLockIcon") : BarWidgetHelpers.readProperty(widgetMetadata, "numLockIcon")
+  readonly property string scrollIcon: BarWidgetHelpers.readProperty(widgetSettings, "scrollLockIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "scrollLockIcon") : BarWidgetHelpers.readProperty(widgetMetadata, "scrollLockIcon")
+  readonly property bool showCaps: (BarWidgetHelpers.readProperty(widgetSettings, "showCapsLock") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showCapsLock") : BarWidgetHelpers.readProperty(widgetMetadata, "showCapsLock")
+  readonly property bool showNum: (BarWidgetHelpers.readProperty(widgetSettings, "showNumLock") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showNumLock") : BarWidgetHelpers.readProperty(widgetMetadata, "showNumLock")
+  readonly property bool showScroll: (BarWidgetHelpers.readProperty(widgetSettings, "showScrollLock") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showScrollLock") : BarWidgetHelpers.readProperty(widgetMetadata, "showScrollLock")
 
   visible: !root.hideWhenOff || (root.showCaps && LockKeysService.capsLockOn) || (root.showNum && LockKeysService.numLockOn) || (root.showScroll && LockKeysService.scrollLockOn)
 
@@ -155,7 +156,7 @@ Item {
 
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, root.screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen, null);
                  }
                }
   }

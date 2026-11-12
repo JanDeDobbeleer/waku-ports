@@ -1205,7 +1205,7 @@ Singleton {
 
       if (message !== "") {
         const toastTitle = isPlaying ? I18n.tr("common.play") : I18n.tr("common.pause");
-        ToastService.showNotice(toastTitle, message, icon, 3000);
+        ToastService.showNoticeDetailed(toastTitle, message, icon, 3000, undefined, undefined);
       }
     }
 

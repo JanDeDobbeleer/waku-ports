@@ -10,6 +10,7 @@ import qs.Services.Compositor
 import qs.Services.Hardware
 import qs.Services.UI
 import qs.Widgets
+import "./BrightnessPanelUtils.js" as BrightnessPanelUtils
 
 SmartPanel {
   id: root
@@ -22,15 +23,11 @@ SmartPanel {
     property real contentPreferredHeight: mainColumn.implicitHeight + Style.margin2L
 
     property var brightnessWidgetInstance: BarService.lookupWidget("Brightness", root.screen ? root.screen.name : null)
-    readonly property var brightnessWidgetSettings: brightnessWidgetInstance ? brightnessWidgetInstance.widgetSettings : null
-    readonly property var brightnessWidgetMetadata: BarWidgetRegistry.widgetMetadata["Brightness"]
+    readonly property var brightnessWidgetSettings: BrightnessPanelUtils.field(brightnessWidgetInstance, "widgetSettings")
+    readonly property var brightnessWidgetMetadata: BrightnessPanelUtils.field(BarWidgetRegistry.widgetMetadata, "Brightness")
 
-    function resolveWidgetSetting(key, defaultValue) {
-      if (brightnessWidgetSettings && brightnessWidgetSettings[key] !== undefined)
-        return brightnessWidgetSettings[key];
-      if (brightnessWidgetMetadata && brightnessWidgetMetadata[key] !== undefined)
-        return brightnessWidgetMetadata[key];
-      return defaultValue;
+    function resolveWidgetSetting(key: string, defaultValue: var): var {
+      return BrightnessPanelUtils.resolveWidgetSetting(brightnessWidgetSettings, brightnessWidgetMetadata, key, defaultValue);
     }
 
     Connections {
@@ -44,49 +41,26 @@ SmartPanel {
     property bool globalBrightnessChanging: false
     property int globalBrightnessCapableMonitors: 0
 
-    function getIcon(brightness) {
+    function getIcon(brightness: real): string {
       return brightness <= 0.5 ? "brightness-low" : "brightness-high";
     }
 
-    function getControllableMonitors() {
-      var monitors = BrightnessService.monitors || [];
-      return monitors.filter(m => m && m.brightnessControlAvailable);
+    function updateGlobalBrightness(): void {
+      const state = BrightnessPanelUtils.globalBrightnessState(BrightnessService.monitors, panelContent.globalBrightnessChanging);
+      panelContent.globalBrightnessCapableMonitors = state.count;
+      if (state.update)
+        panelContent.globalBrightness = state.value;
     }
 
-    function updateGlobalBrightness() {
-      var monitors = getControllableMonitors();
-      panelContent.globalBrightnessCapableMonitors = monitors.length;
-
-      if (panelContent.globalBrightnessChanging)
-        return;
-
-      if (monitors.length === 0) {
-        panelContent.globalBrightness = 0;
-        return;
-      }
-
-      var total = 0;
-      monitors.forEach(m => {
-                         var brightnessValue = isNaN(m.brightness) ? 0 : m.brightness;
-                         total += brightnessValue;
-                       });
-      panelContent.globalBrightness = total / monitors.length;
-    }
-
-    function applyGlobalBrightness(value) {
-      var monitors = BrightnessService.monitors || [];
-      monitors.forEach(m => {
-                         if (m && m.brightnessControlAvailable) {
-                           m.setBrightness(value);
-                         }
-                       });
+    function applyGlobalBrightness(value: real): void {
+      BrightnessPanelUtils.applyGlobalBrightness(BrightnessService.monitors, value);
     }
 
     Component.onCompleted: updateGlobalBrightness()
 
     Connections {
       target: BrightnessService
-      function onMonitorBrightnessChanged(monitor, newBrightness) {
+      function onMonitorBrightnessChanged(monitor: var, newBrightness: real): void {
         panelContent.updateGlobalBrightness();
       }
       function onMonitorsChanged() {
@@ -221,8 +195,8 @@ SmartPanel {
 
               property var brightnessMonitor: BrightnessService.getMonitorForScreen(monitorControl.modelData)
               readonly property real compositorScale: {
-                const info = CompositorService.displayScales[monitorControl.modelData.name];
-                return (info && info.scale) ? info.scale : 1.0;
+                const info = CompositorService.displayScales[BrightnessPanelUtils.field(monitorControl.modelData, "name")];
+                return BrightnessPanelUtils.field(info, "scale") || 1.0;
               }
 
               ColumnLayout {
@@ -234,13 +208,13 @@ SmartPanel {
                 spacing: Style.marginS
 
                 NLabel {
-                  label: monitorControl.modelData.name || "Unknown"
+                  label: BrightnessPanelUtils.field(monitorControl.modelData, "name") || "Unknown"
                   labelColor: Color.mPrimary
                   description: {
-                    I18n.tr("system.monitor-description", {
-                              "model": monitorControl.modelData.model,
-                              "width": monitorControl.modelData.width * monitorControl.compositorScale,
-                              "height": monitorControl.modelData.height * monitorControl.compositorScale,
+                    I18n.trArgs("system.monitor-description", {
+                              "model": BrightnessPanelUtils.field(monitorControl.modelData, "model"),
+                              "width": BrightnessPanelUtils.field(monitorControl.modelData, "width") * monitorControl.compositorScale,
+                              "height": BrightnessPanelUtils.field(monitorControl.modelData, "height") * monitorControl.compositorScale,
                               "scale": monitorControl.compositorScale
                             });
                   }
@@ -251,7 +225,7 @@ SmartPanel {
                   Layout.fillWidth: true
                   spacing: Style.marginS
                   NIcon {
-                    icon: panelContent.getIcon(monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightness : 0)
+                    icon: panelContent.getIcon(BrightnessPanelUtils.brightness(monitorControl.brightnessMonitor, 0))
                     pointSize: Style.fontSizeXL
                     color: Color.mOnSurface
                   }
@@ -260,17 +234,17 @@ SmartPanel {
                     id: brightnessSlider
                     from: 0
                     to: 1
-                    value: monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightness : 0.5
+                    value: BrightnessPanelUtils.brightness(monitorControl.brightnessMonitor, 0.5)
                     stepSize: 0.01
-                    enabled: monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightnessControlAvailable : false
+                    enabled: BrightnessPanelUtils.controlAvailable(monitorControl.brightnessMonitor)
                     onMoved: value => {
-                               if (monitorControl.brightnessMonitor && monitorControl.brightnessMonitor.brightnessControlAvailable) {
-                                 monitorControl.brightnessMonitor.setBrightness(value);
+                               if (BrightnessPanelUtils.controlAvailable(monitorControl.brightnessMonitor)) {
+                                 BrightnessPanelUtils.setBrightness(monitorControl.brightnessMonitor, value);
                                }
                              }
                     onPressedChanged: (pressed, value) => {
-                                        if (monitorControl.brightnessMonitor && monitorControl.brightnessMonitor.brightnessControlAvailable) {
-                                          monitorControl.brightnessMonitor.setBrightness(value);
+                                        if (BrightnessPanelUtils.controlAvailable(monitorControl.brightnessMonitor)) {
+                                          BrightnessPanelUtils.setBrightness(monitorControl.brightnessMonitor, value);
                                         }
                                       }
                     Layout.fillWidth: true

@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "KhalUtils.js" as KhalUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -17,18 +19,8 @@ Singleton {
   function loadCalendars() {
     listCalendarsProcess.running = true;
   }
-  function loadEvents(daysAhead = 31, daysBehind = 14) {
-    CalendarService.loading = true;
-    CalendarService.lastError = "";
-
-    const now = new Date();
-    const startDate = new Date(now.getTime() - (daysBehind * 24 * 60 * 60 * 1000));
-
-    loadEventsProcess.startTime = formatDateYMD(startDate);
-    loadEventsProcess.duration = `${daysAhead + daysBehind}d`;
-    loadEventsProcess.running = true;
-
-    Logger.d("Calendar", `Loading events (${daysBehind} days behind, ${daysAhead} days ahead): ${loadEventsProcess.startTime}  ${loadEventsProcess.duration}`);
+  function loadEvents(daysAhead: var, daysBehind: var): void {
+    KhalUtils.loadEvents(root, CalendarService, loadEventsProcess, Logger, daysAhead, daysBehind);
   }
 
   // Process to check for khal installation
@@ -59,21 +51,9 @@ Singleton {
     command: ["khal", "printcalendars"]
 
     stdout: StdioCollector {
+      id: calendarsOutput
       onStreamFinished: {
-        try {
-          const calendars = text.trim().split("\n");
-          CalendarService.setCalendars(calendars);
-
-          Logger.d("Calendar", `Found ${calendars.length} calendar(s)`);
-
-          // Auto-load events after discovering calendars
-          if (calendars.length > 0) {
-            root.loadEvents();
-          }
-        } catch (e) {
-          Logger.d("Calendar", "Failed to parse calendars: " + e);
-          CalendarService.lastError = "Failed to parse calendar list";
-        }
+        KhalUtils.calendarsLoaded(calendarsOutput, root, CalendarService, Logger);
       }
     }
 
@@ -97,20 +77,11 @@ Singleton {
     command: ["python3", root.khalEventsScript, startTime, duration]
 
     stdout: StdioCollector {
+      id: eventsOutput
       onStreamFinished: {
         CalendarService.loading = false;
 
-        try {
-          const events = root.parseEvents(text.trim());
-          CalendarService.setEvents(events);
-          Logger.d("Calendar", `Loaded ${events.length} events(s)`);
-        } catch (e) {
-          Logger.d("Calendar", "Failed to parse events: " + e);
-          CalendarService.lastError = "Failed to parse events";
-          // Fall back to cached events
-          CalendarService.loadCachedEvents();
-          Logger.d("Calendar", "Using cached events");
-        }
+        KhalUtils.eventsLoaded(eventsOutput, root, CalendarService, Logger);
       }
     }
 
@@ -129,51 +100,16 @@ Singleton {
     }
   }
 
-  function parseEvents(text) {
-    const result = [];
-    const duplicates = new Set();
-
-    for (const line of text.split("\n")) {
-      if (!line.trim())
-        continue;
-      const dayEvents = JSON.parse(line);
-      for (const event of dayEvents) {
-        if (event["repeat-pattern"] !== "") {
-          // if there is a repeat pattern, the event must be included each time
-          result.push({
-                        uid: event.uid,
-                        calendar: event.calendar,
-                        summary: event.title,
-                        start: parseTimestamp(event["start-long-full"]),
-                        end: parseTimestamp(event["end-long-full"]),
-                        location: event.location,
-                        description: event.description
-                      });
-        } else if (!duplicates.has(event.uid)) {
-          // in any other cases, we must remove duplicates using the uid of the event
-          result.push({
-                        uid: event.uid,
-                        calendar: event.calendar,
-                        summary: event.title,
-                        start: parseTimestamp(event["start-long-full"]),
-                        end: parseTimestamp(event["end-long-full"]),
-                        location: event.location,
-                        description: event.description
-                      });
-          duplicates.add(event.uid);
-        }
-      }
-    }
-
-    return result;
+  function parseEvents(text: var): var {
+    return KhalUtils.parseEvents(text, root);
   }
 
-  function parseTimestamp(timeStr) {
+  function parseTimestamp(timeStr: var): real {
     // expects ISO8601 format
     return Math.floor((Date.parse(timeStr)).valueOf() / 1000);
   }
 
-  function formatDateYMD(date) {
+  function formatDateYMD(date: var): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
     const d = String(date.getDate()).padStart(2, "0");

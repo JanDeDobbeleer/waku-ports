@@ -1,5 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
+import "Backgrounds/BackgroundHelpers.js" as BackgroundHelpers
 
 import qs.Commons
 import qs.Modules.MainScreen
@@ -24,7 +27,7 @@ Variants {
       if (!Settings.data.general.allowPanelsOnScreenWithoutBar) {
         // Check if bar is configured for this screen
         monitors = Settings.data.bar.monitors || [];
-        shouldLoad = monitors.length === 0 || monitors.includes(modelData?.name);
+        shouldLoad = BackgroundHelpers.includesScreen(monitors, modelData?.name);
       }
 
       if (shouldLoad) {
@@ -38,14 +41,14 @@ Variants {
     // Main Screen loader - Bar and panels backgrounds
     Loader {
       id: windowLoader
-      active: parent.shouldBeActive
+      active: windowItem.shouldBeActive
       asynchronous: false
 
       property ShellScreen loaderScreen: windowItem.modelData
 
       onLoaded: {
         // Signal that window is loaded so exclusion zone can be created
-        parent.windowLoaded = true;
+        windowItem.windowLoaded = true;
       }
 
       sourceComponent: MainScreen {
@@ -57,7 +60,7 @@ Variants {
     // Always loaded when auto-hide is enabled (it's just 1px, no performance impact)
     Loader {
       active: {
-        if (!parent.windowLoaded || !parent.shouldBeActive)
+        if (!windowItem.windowLoaded || !windowItem.shouldBeActive)
           return false;
         if (!BarService.effectivelyVisible)
           return false;
@@ -66,12 +69,12 @@ Variants {
 
         // Check if bar is configured for this screen
         var monitors = Settings.data.bar.monitors || [];
-        return monitors.length === 0 || monitors.includes(windowItem.modelData?.name);
+        return BackgroundHelpers.includesScreen(monitors, windowItem.modelData?.name);
       }
       asynchronous: false
 
       sourceComponent: BarTriggerZone {
-        screen: modelData
+        screen: windowItem.modelData
       }
 
       onLoaded: {
@@ -87,19 +90,21 @@ Variants {
     Repeater {
       model: Settings.data.bar.barType === "framed" ? ["top", "bottom", "left", "right"] : [Settings.getBarPositionForScreen(windowItem.modelData?.name)]
       delegate: Loader {
+        id: exclusionLoader
+        required property var modelData
         active: {
           if (!windowItem.windowLoaded || !windowItem.shouldBeActive)
             return false;
 
           // Check if bar is configured for this screen
           var monitors = Settings.data.bar.monitors || [];
-          return monitors.length === 0 || monitors.includes(windowItem.modelData?.name);
+          return BackgroundHelpers.includesScreen(monitors, windowItem.modelData?.name);
         }
         asynchronous: false
 
         sourceComponent: BarExclusionZone {
           screen: windowItem.modelData
-          edge: modelData
+          edge: exclusionLoader.modelData
         }
 
         onLoaded: {
@@ -119,17 +124,17 @@ Variants {
         }
 
         // Normal bar-based condition
-        if (!parent.windowLoaded || !parent.shouldBeActive)
+        if (!windowItem.windowLoaded || !windowItem.shouldBeActive)
           return false;
 
         // Check if bar is configured for this screen
         var monitors = Settings.data.bar.monitors || [];
-        return monitors.length === 0 || monitors.includes(windowItem.modelData?.name);
+        return BackgroundHelpers.includesScreen(monitors, windowItem.modelData?.name);
       }
       asynchronous: false
 
       sourceComponent: PopupMenuWindow {
-        screen: modelData
+        screen: windowItem.modelData
       }
 
       onLoaded: {

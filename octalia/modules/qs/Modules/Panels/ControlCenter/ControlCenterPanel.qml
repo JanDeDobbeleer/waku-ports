@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Modules.Cards
 import qs.Modules.MainScreen
 import qs.Services.Media
+import "./ControlCenterPanelUtils.js" as ControlCenterPanelUtils
 
 SmartPanel {
   id: root
@@ -16,7 +17,7 @@ SmartPanel {
   // Check if there's a bar on this screen
   readonly property bool hasBarOnScreen: {
     var monitors = Settings.data.bar.monitors || [];
-    return monitors.length === 0 || monitors.includes(screen?.name);
+    return ControlCenterPanelUtils.hasBar(monitors, screen?.name);
   }
 
   // When position is "close_to_bar_button" but there's no bar, fall back to center
@@ -30,43 +31,14 @@ SmartPanel {
   panelAnchorTop: !shouldCenter && controlCenterPosition !== "close_to_bar_button" && controlCenterPosition.startsWith("top_")
 
   preferredWidth: Math.round(440 * Style.uiScaleRatio)
-  preferredHeight: {
-    var i;
-    var height = 0;
-    var count = 0;
-    for (i = 0; i < Settings.data.controlCenter.cards.length; i++) {
-      const card = Settings.data.controlCenter.cards[i];
-      if (!card.enabled)
-        continue;
-      const contributes = (card.id !== "weather-card" || Settings.data.location.weatherEnabled);
-      if (!contributes)
-        continue;
-      count++;
-      switch (card.id) {
-      case "profile-card":
-        height += profileHeight;
-        break;
-      case "shortcuts-card":
-        height += shortcutsHeight;
-        break;
-      case "audio-card":
-        height += audioHeight;
-        break;
-      case "brightness-card":
-        height += brightnessHeight;
-        break;
-      case "weather-card":
-        height += weatherHeight;
-        break;
-      case "media-sysmon-card":
-        height += mediaSysMonHeight;
-        break;
-      default:
-        break;
-      }
-    }
-    return height + (count + 1) * Style.marginL;
-  }
+  preferredHeight: ControlCenterPanelUtils.preferredHeight(Settings.data.controlCenter.cards, Settings.data.location.weatherEnabled, Style.marginL, {
+    "profile-card": profileHeight,
+    "shortcuts-card": shortcutsHeight,
+    "audio-card": audioHeight,
+    "brightness-card": brightnessHeight,
+    "weather-card": weatherHeight,
+    "media-sysmon-card": mediaSysMonHeight
+  })
 
   readonly property int profileHeight: Math.round(64 * Style.uiScaleRatio)
   readonly property int shortcutsHeight: Math.round(52 * Style.uiScaleRatio)
@@ -96,47 +68,22 @@ SmartPanel {
       spacing: Style.marginL
 
       Repeater {
-        model: Settings.data.controlCenter.cards
+        model: ControlCenterPanelUtils.cardModels(Settings.data.controlCenter.cards, Settings.data.location.weatherEnabled, {
+          "profile-card": { "height": root.profileHeight, "component": profileCard },
+          "shortcuts-card": { "height": root.shortcutsHeight, "component": shortcutsCard },
+          "audio-card": { "height": root.audioHeight, "component": audioCard },
+          "brightness-card": { "height": root.brightnessHeight, "component": brightnessCard },
+          "weather-card": { "height": root.weatherHeight, "component": weatherCard },
+          "media-sysmon-card": { "height": root.mediaSysMonHeight, "component": mediaSysMonCard }
+        })
         Loader {
           id: cardLoader
           required property var modelData
-          active: cardLoader.modelData.enabled && (cardLoader.modelData.id !== "weather-card" || Settings.data.location.weatherEnabled)
+          active: ControlCenterPanelUtils.field(cardLoader.modelData, "active")
           visible: active
           Layout.fillWidth: true
-          Layout.preferredHeight: {
-            switch (cardLoader.modelData.id) {
-            case "profile-card":
-              return profileHeight;
-            case "shortcuts-card":
-              return shortcutsHeight;
-            case "audio-card":
-              return audioHeight;
-            case "brightness-card":
-              return brightnessHeight;
-            case "weather-card":
-              return weatherHeight;
-            case "media-sysmon-card":
-              return mediaSysMonHeight;
-            default:
-              return 0;
-            }
-          }
-          sourceComponent: {
-            switch (cardLoader.modelData.id) {
-            case "profile-card":
-              return profileCard;
-            case "shortcuts-card":
-              return shortcutsCard;
-            case "audio-card":
-              return audioCard;
-            case "brightness-card":
-              return brightnessCard;
-            case "weather-card":
-              return weatherCard;
-            case "media-sysmon-card":
-              return mediaSysMonCard;
-            }
-          }
+          Layout.preferredHeight: ControlCenterPanelUtils.field(cardLoader.modelData, "height")
+          sourceComponent: ControlCenterPanelUtils.field(cardLoader.modelData, "component")
         }
       }
     }
@@ -148,7 +95,10 @@ SmartPanel {
 
     Component {
       id: shortcutsCard
-      ShortcutsCard {}
+      ShortcutsCard {
+        shortcutsHeight: root.shortcutsHeight
+        screen: root.screen
+      }
     }
 
     Component {

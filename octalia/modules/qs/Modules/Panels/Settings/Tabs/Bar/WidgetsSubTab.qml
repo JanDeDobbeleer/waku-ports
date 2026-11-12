@@ -4,6 +4,7 @@ import qs.Commons
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "WidgetsSubTab.js" as WidgetsSubTabData
 
 ColumnLayout {
   id: root
@@ -24,7 +25,7 @@ ColumnLayout {
   readonly property string barPosition: Settings.data.bar.position
   readonly property bool barIsVertical: barPosition === "left" || barPosition === "right"
 
-  function getSectionIcons() {
+  function getSectionIcons(): var {
     return {
       "left": "arrow-bar-to-up",
       "center": "layout-distribute-horizontal",
@@ -48,11 +49,11 @@ ColumnLayout {
     widgetModel: Settings.data.bar.widgets.left
     sectionIcons: root.getSectionIcons()
     availableWidgets: root.availableWidgets
-    onAddWidget: (widgetId, section) => root.addWidgetToSection(widgetId, section)
-    onRemoveWidget: (section, index) => root.removeWidgetFromSection(section, index)
-    onReorderWidget: (section, fromIndex, toIndex) => root.reorderWidgetInSection(section, fromIndex, toIndex)
-    onUpdateWidgetSettings: (section, index, settings) => root.updateWidgetSettingsInSection(section, index, settings)
-    onMoveWidget: (fromSection, index, toSection) => root.moveWidgetBetweenSections(fromSection, index, toSection)
+    onAddWidget: (widgetId, section) => WidgetsSubTabData.invoke(root, "addWidgetToSection", widgetId, section)
+    onRemoveWidget: (section, index) => WidgetsSubTabData.invoke(root, "removeWidgetFromSection", section, index)
+    onReorderWidget: (section, fromIndex, toIndex) => WidgetsSubTabData.invoke(root, "reorderWidgetInSection", section, fromIndex, toIndex)
+    onUpdateWidgetSettings: (section, index, settings) => WidgetsSubTabData.invoke(root, "updateWidgetSettingsInSection", section, index, settings)
+    onMoveWidget: (fromSection, index, toSection) => WidgetsSubTabData.invoke(root, "moveWidgetBetweenSections", fromSection, index, toSection)
   }
 
   // Center Section
@@ -65,11 +66,11 @@ ColumnLayout {
     widgetModel: Settings.data.bar.widgets.center
     sectionIcons: root.getSectionIcons()
     availableWidgets: root.availableWidgets
-    onAddWidget: (widgetId, section) => root.addWidgetToSection(widgetId, section)
-    onRemoveWidget: (section, index) => root.removeWidgetFromSection(section, index)
-    onReorderWidget: (section, fromIndex, toIndex) => root.reorderWidgetInSection(section, fromIndex, toIndex)
-    onUpdateWidgetSettings: (section, index, settings) => root.updateWidgetSettingsInSection(section, index, settings)
-    onMoveWidget: (fromSection, index, toSection) => root.moveWidgetBetweenSections(fromSection, index, toSection)
+    onAddWidget: (widgetId, section) => WidgetsSubTabData.invoke(root, "addWidgetToSection", widgetId, section)
+    onRemoveWidget: (section, index) => WidgetsSubTabData.invoke(root, "removeWidgetFromSection", section, index)
+    onReorderWidget: (section, fromIndex, toIndex) => WidgetsSubTabData.invoke(root, "reorderWidgetInSection", section, fromIndex, toIndex)
+    onUpdateWidgetSettings: (section, index, settings) => WidgetsSubTabData.invoke(root, "updateWidgetSettingsInSection", section, index, settings)
+    onMoveWidget: (fromSection, index, toSection) => WidgetsSubTabData.invoke(root, "moveWidgetBetweenSections", fromSection, index, toSection)
   }
 
   // Right Section
@@ -82,10 +83,10 @@ ColumnLayout {
     widgetModel: Settings.data.bar.widgets.right
     sectionIcons: root.getSectionIcons()
     availableWidgets: root.availableWidgets
-    onAddWidget: (widgetId, section) => root.addWidgetToSection(widgetId, section)
-    onRemoveWidget: (section, index) => root.removeWidgetFromSection(section, index)
-    onReorderWidget: (section, fromIndex, toIndex) => root.reorderWidgetInSection(section, fromIndex, toIndex)
-    onUpdateWidgetSettings: (section, index, settings) => root.updateWidgetSettingsInSection(section, index, settings)
-    onMoveWidget: (fromSection, index, toSection) => root.moveWidgetBetweenSections(fromSection, index, toSection)
+    onAddWidget: (widgetId, section) => WidgetsSubTabData.invoke(root, "addWidgetToSection", widgetId, section)
+    onRemoveWidget: (section, index) => WidgetsSubTabData.invoke(root, "removeWidgetFromSection", section, index)
+    onReorderWidget: (section, fromIndex, toIndex) => WidgetsSubTabData.invoke(root, "reorderWidgetInSection", section, fromIndex, toIndex)
+    onUpdateWidgetSettings: (section, index, settings) => WidgetsSubTabData.invoke(root, "updateWidgetSettingsInSection", section, index, settings)
+    onMoveWidget: (fromSection, index, toSection) => WidgetsSubTabData.invoke(root, "moveWidgetBetweenSections", fromSection, index, toSection)
   }
 }

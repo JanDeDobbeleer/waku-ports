@@ -6,14 +6,15 @@ import Quickshell
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "TrayMenuHelpers.js" as TrayMenuHelpers
 
 PopupWindow {
   id: root
 
-  property ShellScreen screen
+  property ShellScreen menuScreen: null
 
   property var trayItem: null
-  property var anchorItem: null
+  property Item anchorItem: null
   property real anchorX
   property real anchorY
   property bool isSubMenu: false
@@ -21,40 +22,23 @@ PopupWindow {
   property int widgetIndex: -1
 
   // Derive menu from trayItem (only used for non-submenus)
-  readonly property var menu: isSubMenu ? null : (trayItem ? trayItem.menu : null)
+  readonly property var menu: isSubMenu ? null : (trayItem ? TrayMenuHelpers.field(trayItem, "menu") : null)
 
   // Compute if current tray item is pinned
-  readonly property bool isPinned: {
-    var i;
-    if (!trayItem || widgetSection === "" || widgetIndex < 0)
-      return false;
-    var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[widgetSection];
-    if (!widgets || widgetIndex >= widgets.length)
-      return false;
-    var widgetSettings = widgets[widgetIndex];
-    if (!widgetSettings || widgetSettings.id !== "Tray")
-      return false;
-    var pinnedList = widgetSettings.pinned || [];
-    const itemName = trayItem.tooltipTitle || trayItem.name || trayItem.id || "";
-    for (i = 0; i < pinnedList.length; i++) {
-      if (pinnedList[i] === itemName)
-        return true;
-    }
-    return false;
-  }
+  readonly property bool isPinned: TrayMenuHelpers.isTrayItemPinned(trayItem, root.menuScreen?.name, widgetSection, widgetIndex, Settings)
 
   readonly property int menuWidth: 220
 
   implicitWidth: menuWidth
 
   // Use the content height of the Flickable for implicit height
-  implicitHeight: Math.min(screen?.height * 0.9, flickable.contentHeight + Style.margin2S)
+  implicitHeight: Math.min(menuScreen?.height * 0.9, flickable.contentHeight + Style.margin2S)
 
   // When implicitHeight changes (menu content loads), force anchor recalculation
   onImplicitHeightChanged: {
     if (visible && anchorItem) {
       Qt.callLater(() => {
-                     anchor.updateAnchor();
+                     TrayMenuHelpers.updateAnchor(root.anchor);
                    });
     }
   }
@@ -63,24 +47,23 @@ PopupWindow {
   color: "transparent"
   anchor.item: anchorItem
   anchor.rect.x: {
-    if (anchorItem && screen) {
+    if (anchorItem && menuScreen) {
       let baseX = anchorX;
 
       // Calculate position relative to current screen
       let menuScreenX;
       if (isSubMenu && anchorItem.Window && anchorItem.Window.window) {
-        const posInPopup = anchorItem.mapToItem(null, 0, 0);
+        const posInPopupX = TrayMenuHelpers.mappedCoordinate(anchorItem, "x");
         const parentWindow = anchorItem.Window.window;
-        const windowXOnScreen = parentWindow.x - screen.x;
-        menuScreenX = windowXOnScreen + posInPopup.x + baseX;
+        const windowXOnScreen = TrayMenuHelpers.strictField(parentWindow, "x") - menuScreen.x;
+        menuScreenX = windowXOnScreen + posInPopupX + baseX;
       } else {
-        const anchorGlobalPos = anchorItem.mapToItem(null, 0, 0);
-        const anchorScreenX = anchorGlobalPos.x;
+        const anchorScreenX = TrayMenuHelpers.mappedCoordinate(anchorItem, "x");
         menuScreenX = anchorScreenX + baseX;
       }
 
       const menuRight = menuScreenX + implicitWidth;
-      const screenRight = screen.width;
+      const screenRight = menuScreen.width;
       const menuLeft = menuScreenX;
 
       // Only adjust if menu would clip off screen boundaries
@@ -99,8 +82,8 @@ PopupWindow {
     return anchorX;
   }
   anchor.rect.y: {
-    if (anchorItem && screen) {
-      const barPosition = Settings.getBarPositionForScreen(root.screen?.name);
+    if (anchorItem && menuScreen) {
+      const barPosition = Settings.getBarPositionForScreen(root.menuScreen?.name);
 
       let baseY = anchorY;
 
@@ -115,20 +98,20 @@ PopupWindow {
         baseY = -(implicitHeight + Style.marginS);
       } else if (barPosition === "top" && !isSubMenu && anchorY >= 0) {
         // For top bar: position menu below bar with margin
-        const barHeight = Style.getBarHeightForScreen(root.screen?.name);
+        const barHeight = Style.getBarHeightForScreen(root.menuScreen?.name);
         baseY = barHeight + Style.marginS;
       }
 
       // Use a robust way to get screen coordinates
-      const posInWindow = anchorItem.mapToItem(null, 0, 0);
+      const posInWindowY = TrayMenuHelpers.mappedCoordinate(anchorItem, "y");
       const parentWindow = anchorItem.Window.window;
 
       // Calculate screen-relative Y of the window
-      let windowYOnScreen = (parentWindow && screen) ? (parentWindow.y - screen.y) : 0;
+      let windowYOnScreen = (parentWindow && menuScreen) ? (TrayMenuHelpers.strictField(parentWindow, "y") - menuScreen.y) : 0;
 
       // If window reported 0 but bar is at bottom, assume it's at screen bottom
-      if (windowYOnScreen === 0 && barPosition === "bottom" && screen) {
-        windowYOnScreen = screen.height - (parentWindow ? parentWindow.height : Style.getBarHeightForScreen(screen.name));
+      if (windowYOnScreen === 0 && barPosition === "bottom" && menuScreen) {
+        windowYOnScreen = menuScreen.height - (parentWindow ? TrayMenuHelpers.strictField(parentWindow, "height") : Style.getBarHeightForScreen(menuScreen.name));
       }
 
       // Calculate the screen Y of the menu top
@@ -136,9 +119,9 @@ PopupWindow {
       const effectiveHeight = implicitHeight > 0 ? implicitHeight : 200;
       const effectiveBaseY = shouldApplyBottomBarLogic ? -(effectiveHeight + Style.marginS) : baseY;
 
-      const menuScreenY = windowYOnScreen + posInWindow.y + effectiveBaseY;
+      const menuScreenY = windowYOnScreen + posInWindowY + effectiveBaseY;
       const menuBottom = menuScreenY + (implicitHeight > 0 ? implicitHeight : effectiveHeight);
-      const screenHeight = screen ? screen.height : 1080;
+      const screenHeight = menuScreen ? menuScreen.height : 1080;
 
       // Adjust the final baseY (the actual value returned to anchor.rect.y)
       let finalBaseY = shouldApplyBottomBarLogic ? -(implicitHeight + Style.marginS) : baseY;
@@ -162,10 +145,10 @@ PopupWindow {
     if (isSubMenu) {
       return anchorY;
     }
-    return anchorY + (Settings.getBarPositionForScreen(root.screen?.name) === "bottom" ? -implicitHeight : Style.getBarHeightForScreen(root.screen?.name));
+    return anchorY + (Settings.getBarPositionForScreen(root.menuScreen?.name) === "bottom" ? -implicitHeight : Style.getBarHeightForScreen(root.menuScreen?.name));
   }
 
-  function showAt(item, x, y) {
+  function showAt(item: Item, x: real, y: real): void {
     if (!item) {
       Logger.w("TrayMenu", "anchorItem is undefined, won't show menu.");
       return;
@@ -182,27 +165,19 @@ PopupWindow {
     anchorY = y;
 
     visible = true;
-    forceActiveFocus();
+    TrayMenuHelpers.focusItem(root.contentItem);
 
     // Force update after showing.
     Qt.callLater(() => {
-                   root.anchor.updateAnchor();
+                   TrayMenuHelpers.updateAnchor(root.anchor);
                  });
   }
 
-  function hideMenu() {
-    var i;
+  function hideMenu(): void {
     visible = false;
 
     // Clean up all submenus recursively
-    for (i = 0; i < columnLayout.children.length; i++) {
-      const child = columnLayout.children[i];
-      if (child?.subMenu) {
-        child.subMenu.hideMenu();
-        child.subMenu.destroy();
-        child.subMenu = null;
-      }
-    }
+    TrayMenuHelpers.closeSubMenus(columnLayout.children, null);
   }
 
   Item {
@@ -257,7 +232,7 @@ PopupWindow {
       spacing: 0
 
       Repeater {
-        model: opener.children ? [...opener.children.values] : []
+        model: TrayMenuHelpers.copyChildren(opener.children)
 
         delegate: Rectangle {
           id: entry
@@ -265,7 +240,7 @@ PopupWindow {
 
           Layout.preferredWidth: parent.width
           Layout.preferredHeight: {
-            if (entry.modelData?.isSeparator) {
+            if (TrayMenuHelpers.field(entry.modelData, "isSeparator")) {
               return 8;
             } else {
               // Calculate based on text content
@@ -275,12 +250,12 @@ PopupWindow {
           }
 
           color: "transparent"
-          property var subMenu: null
+          property TrayMenu subMenu: null
 
           NDivider {
             anchors.centerIn: parent
             width: parent.width - Style.margin2M
-            visible: entry.modelData?.isSeparator ?? false
+            visible: TrayMenuHelpers.field(entry.modelData, "isSeparator") ?? false
           }
 
           Rectangle {
@@ -288,7 +263,7 @@ PopupWindow {
             anchors.fill: parent
             color: mouseArea.containsMouse ? Color.mHover : "transparent"
             radius: Style.radiusS
-            visible: !(entry.modelData?.isSeparator ?? false)
+            visible: !(TrayMenuHelpers.field(entry.modelData, "isSeparator") ?? false)
 
             RowLayout {
               anchors.fill: parent
@@ -298,16 +273,17 @@ PopupWindow {
 
               // Indicator Container
               Item {
-                visible: (entry.modelData?.buttonType ?? QsMenuButtonType.None) !== QsMenuButtonType.None
+                id: indicatorContainer
+                visible: (TrayMenuHelpers.field(entry.modelData, "buttonType") ?? QsMenuButtonType.None) !== QsMenuButtonType.None
 
                 implicitWidth: Math.round(Style.baseWidgetSize * 0.5)
                 implicitHeight: Math.round(Style.baseWidgetSize * 0.5)
                 Layout.alignment: Qt.AlignVCenter
 
                 // Helper properties
-                readonly property int type: entry.modelData?.buttonType ?? QsMenuButtonType.None
+                readonly property int type: TrayMenuHelpers.field(entry.modelData, "buttonType") ?? QsMenuButtonType.None
                 readonly property bool isRadio: type === QsMenuButtonType.RadioButton
-                readonly property bool isChecked: entry.modelData?.checkState === Qt.Checked || (entry.modelData?.checked ?? false)
+                readonly property bool isChecked: TrayMenuHelpers.field(entry.modelData, "checkState") === Qt.Checked || (TrayMenuHelpers.field(entry.modelData, "checked") ?? false)
 
                 // Color Logic
                 readonly property color activeColor: mouseArea.containsMouse ? Color.mOnHover : Color.mPrimary
@@ -316,13 +292,13 @@ PopupWindow {
 
                 // Checkbox Visuals
                 Rectangle {
-                  visible: !parent.isRadio
+                  visible: !indicatorContainer.isRadio
                   anchors.centerIn: parent
                   width: Math.round(Style.baseWidgetSize * 0.5)
                   height: Math.round(Style.baseWidgetSize * 0.5)
                   radius: Style.iRadiusXS
                   color: "transparent" // Transparent to match RadioButton style
-                  border.color: parent.borderColor
+                  border.color: indicatorContainer.borderColor
                   border.width: Style.borderM
 
                   Behavior on border.color {
@@ -332,24 +308,24 @@ PopupWindow {
                   }
 
                   NIcon {
-                    visible: parent.parent.isChecked
+                    visible: indicatorContainer.isChecked
                     anchors.centerIn: parent
                     anchors.horizontalCenterOffset: -1
                     icon: "check"
-                    color: parent.parent.activeColor
+                    color: indicatorContainer.activeColor
                     pointSize: Math.max(Style.fontSizeXXS, parent.width * 0.6)
                   }
                 }
 
                 // RadioButton Visuals
                 Rectangle {
-                  visible: parent.isRadio
+                  visible: indicatorContainer.isRadio
                   anchors.centerIn: parent
                   width: Style.toOdd(Style.baseWidgetSize * 0.5)
                   height: Style.toOdd(Style.baseWidgetSize * 0.5)
                   radius: width / 2
                   color: "transparent"
-                  border.color: parent.borderColor
+                  border.color: indicatorContainer.borderColor
                   border.width: Style.borderM // Slightly thicker for radio look
 
                   Behavior on border.color {
@@ -359,12 +335,12 @@ PopupWindow {
                   }
 
                   Rectangle {
-                    visible: parent.parent.isChecked
+                    visible: indicatorContainer.isChecked
                     anchors.centerIn: parent
                     width: Style.toOdd(parent.width * 0.5)
                     height: Style.toOdd(parent.height * 0.5)
                     radius: width / 2
-                    color: parent.parent.activeColor
+                    color: indicatorContainer.activeColor
 
                     Behavior on color {
                       ColorAnimation {
@@ -378,8 +354,8 @@ PopupWindow {
               NText {
                 id: text
                 Layout.fillWidth: true
-                color: (entry.modelData?.enabled ?? true) ? (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface) : Color.mOnSurfaceVariant
-                text: entry.modelData?.text !== "" ? entry.modelData?.text.replace(/[\n\r]+/g, ' ') : "..."
+                color: (TrayMenuHelpers.field(entry.modelData, "enabled") ?? true) ? (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface) : Color.mOnSurfaceVariant
+                text: TrayMenuHelpers.menuText(entry.modelData)
                 pointSize: Style.fontSizeS
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
@@ -388,17 +364,17 @@ PopupWindow {
               Image {
                 Layout.preferredWidth: Style.marginL
                 Layout.preferredHeight: Style.marginL
-                source: entry.modelData?.icon ?? ""
-                visible: (entry.modelData?.icon ?? "") !== ""
+                source: TrayMenuHelpers.field(entry.modelData, "icon") ?? ""
+                visible: (TrayMenuHelpers.field(entry.modelData, "icon") ?? "") !== ""
                 fillMode: Image.PreserveAspectFit
               }
 
               NIcon {
-                icon: entry.modelData?.hasChildren ? "menu" : ""
+                icon: TrayMenuHelpers.field(entry.modelData, "hasChildren") ? "menu" : ""
                 pointSize: Style.fontSizeS
                 applyUiScale: false
                 verticalAlignment: Text.AlignVCenter
-                visible: entry.modelData?.hasChildren ?? false
+                visible: TrayMenuHelpers.field(entry.modelData, "hasChildren") ?? false
                 color: (mouseArea.containsMouse ? Color.mOnTertiary : Color.mOnSurface)
               }
             }
@@ -407,33 +383,25 @@ PopupWindow {
               id: mouseArea
               anchors.fill: parent
               hoverEnabled: true
-              enabled: (entry.modelData?.enabled ?? true) && !(entry.modelData?.isSeparator ?? false) && root.visible
+              enabled: (TrayMenuHelpers.field(entry.modelData, "enabled") ?? true) && !(TrayMenuHelpers.field(entry.modelData, "isSeparator") ?? false) && root.visible
               acceptedButtons: Qt.LeftButton | Qt.RightButton
 
               onClicked: mouse => {
                 var i;
-                           if (entry.modelData && !entry.modelData.isSeparator) {
-                             if (entry.modelData.hasChildren) {
+                           if (entry.modelData && !TrayMenuHelpers.field(entry.modelData, "isSeparator")) {
+                             if (TrayMenuHelpers.field(entry.modelData, "hasChildren")) {
                                // Click on items with children toggles submenu
                                if (entry.subMenu) {
                                  // Close existing submenu
-                                 entry.subMenu.hideMenu();
-                                 entry.subMenu.destroy();
+                                 TrayMenuHelpers.closeAndDestroyMenu(entry.subMenu);
                                  entry.subMenu = null;
                                } else {
                                  // Close any other open submenus first
-                                 for (i = 0; i < columnLayout.children.length; i++) {
-                                   const sibling = columnLayout.children[i];
-                                   if (sibling !== entry && sibling.subMenu) {
-                                     sibling.subMenu.hideMenu();
-                                     sibling.subMenu.destroy();
-                                     sibling.subMenu = null;
-                                   }
-                                 }
+                                 TrayMenuHelpers.closeSubMenus(columnLayout.children, entry);
 
                                  // Determine submenu opening direction
                                  let openLeft = false;
-                                 const barPosition = Settings.getBarPositionForScreen(root.screen?.name);
+                                 const barPosition = Settings.getBarPositionForScreen(root.menuScreen?.name);
                                  const globalPos = entry.mapToItem(null, 0, 0);
 
                                  if (barPosition === "right") {
@@ -445,21 +413,14 @@ PopupWindow {
                                  }
 
                                  // Open new submenu
-                                 entry.subMenu = Qt.createComponent("TrayMenu.qml").createObject(root, {
-                                                                                                   "menu": entry.modelData,
-                                                                                                   "isSubMenu": true,
-                                                                                                   "screen": root.screen
-                                                                                                 });
+                                 entry.subMenu = TrayMenuHelpers.createSubMenu(Qt.createComponent("TrayMenu.qml"), root, entry.modelData, root.menuScreen) as TrayMenu;
 
                                  if (entry.subMenu) {
                                    const overlap = 60;
-                                   entry.subMenu.anchorItem = entry;
-                                   entry.subMenu.anchorX = openLeft ? -overlap : overlap;
-                                   entry.subMenu.anchorY = 0;
-                                   entry.subMenu.visible = true;
+                                   TrayMenuHelpers.positionSubMenu(entry.subMenu, entry, openLeft ? -overlap : overlap);
                                    // Force anchor update with new position
                                    Qt.callLater(() => {
-                                                  entry.subMenu.anchor.updateAnchor();
+                                                  TrayMenuHelpers.updateAnchor(TrayMenuHelpers.field(entry.subMenu, "anchor"));
                                                 });
                                  }
                                }
@@ -469,10 +430,10 @@ PopupWindow {
                                root.hideMenu();
 
                                // Close the drawer if it's open
-                               if (root.screen) {
-                                 const panel = PanelService.getPanel("trayDrawerPanel", root.screen);
-                                 if (panel && panel.visible) {
-                                   panel.close();
+                               if (root.menuScreen) {
+                                 const panel = PanelService.getPanel("trayDrawerPanel", root.menuScreen);
+                                 if (PanelService.isPanelVisible(panel)) {
+                                   PanelService.invokePanel(panel, "close", []);
                                  }
                                }
                              }
@@ -483,7 +444,7 @@ PopupWindow {
 
           Component.onDestruction: {
             if (subMenu) {
-              subMenu.destroy();
+              TrayMenuHelpers.destroyItem(subMenu);
               subMenu = null;
             }
           }
@@ -495,7 +456,7 @@ PopupWindow {
         visible: {
           if (root.widgetSection === "" || root.widgetIndex < 0)
             return false;
-          var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[root.widgetSection];
+          var widgets = Settings.getBarWidgetsForScreen(root.menuScreen?.name)[root.widgetSection];
           if (!widgets || root.widgetIndex >= widgets.length)
             return false;
           var widgetSettings = widgets[root.widgetIndex];
@@ -551,18 +512,18 @@ PopupWindow {
     }
   }
 
-  function addToPinned() {
+  function addToPinned(): void {
     var overrideWidgets;
     if (!trayItem || widgetSection === "" || widgetIndex < 0) {
       Logger.w("TrayMenu", "Cannot pin: missing tray item or widget info");
       return;
     }
-    const itemName = trayItem.tooltipTitle || trayItem.name || trayItem.id || "";
+    const itemName = TrayMenuHelpers.trayItemName(trayItem);
     if (!itemName) {
       Logger.w("TrayMenu", "Cannot pin: tray item has no name");
       return;
     }
-    var screenName = root.screen?.name || "";
+    var screenName = root.menuScreen?.name || "";
     var widgets = Settings.getBarWidgetsForScreen(screenName)[widgetSection];
     if (!widgets || widgetIndex >= widgets.length) {
       Logger.w("TrayMenu", "Cannot pin: invalid widget index");
@@ -591,25 +552,25 @@ PopupWindow {
     Settings.saveImmediate();
 
     // Close drawer when pinning (drawer needs to resize)
-    if (screen) {
-      const panel = PanelService.getPanel("trayDrawerPanel", screen);
+    if (root.menuScreen) {
+      const panel = PanelService.getPanel("trayDrawerPanel", root.menuScreen);
       if (panel)
         panel.close();
     }
   }
 
-  function removeFromPinned() {
-    var i, overrideWidgets;
+  function removeFromPinned(): void {
+    var overrideWidgets;
     if (!trayItem || widgetSection === "" || widgetIndex < 0) {
       Logger.w("TrayMenu", "Cannot unpin: missing tray item or widget info");
       return;
     }
-    const itemName = trayItem.tooltipTitle || trayItem.name || trayItem.id || "";
+    const itemName = TrayMenuHelpers.trayItemName(trayItem);
     if (!itemName) {
       Logger.w("TrayMenu", "Cannot unpin: tray item has no name");
       return;
     }
-    var screenName = root.screen?.name || "";
+    var screenName = root.menuScreen?.name || "";
     var widgets = Settings.getBarWidgetsForScreen(screenName)[widgetSection];
     if (!widgets || widgetIndex >= widgets.length) {
       Logger.w("TrayMenu", "Cannot unpin: invalid widget index");
@@ -621,12 +582,7 @@ PopupWindow {
       return;
     }
     var pinnedList = widgetSettings.pinned || [];
-    var newPinned = [];
-    for (i = 0; i < pinnedList.length; i++) {
-      if (pinnedList[i] !== itemName) {
-        newPinned.push(pinnedList[i]);
-      }
-    }
+    var newPinned = TrayMenuHelpers.withoutItem(pinnedList, itemName);
     var newSettings = Object.assign({}, widgetSettings);
     newSettings.pinned = newPinned;
     widgets[widgetIndex] = newSettings;

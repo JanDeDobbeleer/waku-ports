@@ -9,6 +9,7 @@ import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
 import qs.Widgets.AudioSpectrum
+import "MediaPlayerPanelUtils.js" as MediaPlayerPanelUtils
 
 SmartPanel {
   id: root
@@ -19,12 +20,12 @@ SmartPanel {
 
   property var mediaMiniSettings: {
     const widget = BarService.lookupWidget("MediaMini", screen?.name);
-    return widget ? widget.widgetSettings : null;
+    return MediaPlayerPanelUtils.field(widget, "widgetSettings");
   }
 
   function refreshMediaMiniSettings() {
     const widget = BarService.lookupWidget("MediaMini", screen?.name);
-    root.mediaMiniSettings = widget ? widget.widgetSettings : null;
+    root.mediaMiniSettings = widget ? MediaPlayerPanelUtils.field(widget, "widgetSettings") : null;
   }
 
   Connections {
@@ -41,12 +42,12 @@ SmartPanel {
     }
   }
 
-  readonly property string visualizerType: (mediaMiniSettings && mediaMiniSettings.visualizerType !== undefined) ? mediaMiniSettings.visualizerType : "linear"
-  readonly property bool showArtistFirst: !!(mediaMiniSettings && mediaMiniSettings.showArtistFirst !== undefined ? mediaMiniSettings.showArtistFirst : true)
-  readonly property bool showAlbumArt: !!(mediaMiniSettings && mediaMiniSettings.panelShowAlbumArt !== undefined ? mediaMiniSettings.panelShowAlbumArt : true)
-  readonly property bool showVisualizer: !!(mediaMiniSettings && mediaMiniSettings.showVisualizer !== undefined ? mediaMiniSettings.showVisualizer : true)
-  readonly property bool compactMode: !!(mediaMiniSettings && mediaMiniSettings.compactMode !== undefined ? mediaMiniSettings.compactMode : false)
-  readonly property string scrollingMode: (mediaMiniSettings && mediaMiniSettings.scrollingMode !== undefined) ? mediaMiniSettings.scrollingMode : "hover"
+  readonly property string visualizerType: MediaPlayerPanelUtils.setting(mediaMiniSettings, "visualizerType", "linear")
+  readonly property bool showArtistFirst: !!MediaPlayerPanelUtils.setting(mediaMiniSettings, "showArtistFirst", true)
+  readonly property bool showAlbumArt: !!MediaPlayerPanelUtils.setting(mediaMiniSettings, "panelShowAlbumArt", true)
+  readonly property bool showVisualizer: !!MediaPlayerPanelUtils.setting(mediaMiniSettings, "showVisualizer", true)
+  readonly property bool compactMode: !!MediaPlayerPanelUtils.setting(mediaMiniSettings, "compactMode", false)
+  readonly property string scrollingMode: MediaPlayerPanelUtils.setting(mediaMiniSettings, "scrollingMode", "hover")
 
   readonly property bool isSideBySide: root.compactMode && root.showAlbumArt
 
@@ -124,7 +125,7 @@ SmartPanel {
             color: playerSelectorMouse.containsMouse ? Color.mPrimary : "transparent"
             implicitWidth: playerRow.implicitWidth + Style.marginM
             implicitHeight: Style.baseWidgetSize * 0.8
-            visible: MediaService.getAvailablePlayers().length > 1
+            visible: MediaPlayerPanelUtils.arrayLength(MediaService.getAvailablePlayers()) > 1
 
             RowLayout {
               id: playerRow
@@ -132,7 +133,7 @@ SmartPanel {
               spacing: Style.marginXS
 
               NText {
-                text: MediaService.currentPlayer ? MediaService.currentPlayer.identity : "Select Player"
+                text: MediaService.currentPlayer ? MediaPlayerPanelUtils.field(MediaService.currentPlayer, "identity") : "Select Player"
                 pointSize: Style.fontSizeXS
                 color: playerSelectorMouse.containsMouse ? Color.mOnPrimary : Color.mOnSurfaceVariant
               }
@@ -188,14 +189,14 @@ SmartPanel {
                       spacing: Style.marginS
 
                       NIcon {
-                        visible: MediaService.currentPlayer && MediaService.currentPlayer.identity === playerOption.modelData.identity
+                        visible: MediaService.currentPlayer && MediaPlayerPanelUtils.field(MediaService.currentPlayer, "identity") === MediaPlayerPanelUtils.field(playerOption.modelData, "identity")
                         icon: "check"
                         color: itemMouse.containsMouse ? Color.mOnPrimary : Color.mPrimary
                         pointSize: Style.fontSizeS
                       }
 
                       NText {
-                        text: playerOption.modelData.identity
+                        text: MediaPlayerPanelUtils.field(playerOption.modelData, "identity")
                         pointSize: Style.fontSizeS
                         color: itemMouse.containsMouse ? Color.mOnPrimary : Color.mOnSurface
                         Layout.fillWidth: true
@@ -494,6 +495,7 @@ SmartPanel {
               }
 
               Rectangle {
+                id: playPauseButton
                 implicitWidth: root.compactMode ? (Style.baseWidgetSize * 1.3) : (Style.baseWidgetSize * 1.8)
                 implicitHeight: root.compactMode ? (Style.baseWidgetSize * 1.3) : (Style.baseWidgetSize * 1.8)
                 radius: root.compactMode ? Style.iRadiusM : Style.iRadiusL
@@ -510,7 +512,7 @@ SmartPanel {
                   anchors.fill: parent
                   cursorShape: Qt.PointingHandCursor
                   hoverEnabled: true
-                  onEntered: parent.color = Color.mPrimary
+                  onEntered: playPauseButton.color = Color.mPrimary
                   onClicked: MediaService.playPause()
                 }
               }

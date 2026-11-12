@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.Media
 import qs.Widgets
+import "./AudioPanelUtils.js" as AudioPanelUtils
 
 SmartPanel {
   id: root
@@ -38,10 +39,10 @@ SmartPanel {
       var inputVol = AudioService.inputVolume;
       localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
       if (AudioService.sink) {
-        lastSinkName = AudioService.sink.name;
+        lastSinkName = AudioPanelUtils.field(AudioService.sink, "name");
       }
       if (AudioService.source) {
-        lastSourceName = AudioService.source.name;
+        lastSourceName = AudioPanelUtils.field(AudioService.source, "name");
       }
     }
 
@@ -51,7 +52,7 @@ SmartPanel {
       function onSinkChanged() {
         var vol;
         if (AudioService.sink) {
-          const newSinkName = AudioService.sink.name;
+          const newSinkName = AudioPanelUtils.field(AudioService.sink, "name");
           if (newSinkName !== panelContent.lastSinkName) {
             panelContent.lastSinkName = newSinkName;
             // Immediately set local volume to current device's volume
@@ -70,7 +71,7 @@ SmartPanel {
       function onSourceChanged() {
         var vol;
         if (AudioService.source) {
-          const newSourceName = AudioService.source.name;
+          const newSourceName = AudioPanelUtils.field(AudioService.source, "name");
           if (newSourceName !== panelContent.lastSourceName) {
             panelContent.lastSourceName = newSourceName;
             // Immediately set local volume to current device's volume
@@ -89,7 +90,7 @@ SmartPanel {
       target: AudioService
       function onVolumeChanged() {
         var vol;
-        if (!panelContent.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
+        if (!panelContent.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioPanelUtils.field(AudioService.sink, "name") === panelContent.lastSinkName) {
           vol = AudioService.volume;
           panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -100,7 +101,7 @@ SmartPanel {
       target: AudioService
       function onInputVolumeChanged() {
         var vol;
-        if (!panelContent.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
+        if (!panelContent.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioPanelUtils.field(AudioService.source, "name") === panelContent.lastSourceName) {
           vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -111,7 +112,7 @@ SmartPanel {
       target: outputVolumeSlider
       function onSliderActiveChanged() {
         var vol;
-        if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
+        if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioPanelUtils.field(AudioService.sink, "name") === panelContent.lastSinkName) {
           vol = AudioService.volume;
           panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -122,7 +123,7 @@ SmartPanel {
       target: inputVolumeSlider
       function onSliderActiveChanged() {
         var vol;
-        if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
+        if (!inputVolumeSlider.sliderActive && AudioService.source && AudioPanelUtils.field(AudioService.source, "name") === panelContent.lastSourceName) {
           vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -137,13 +138,13 @@ SmartPanel {
       repeat: true
       onTriggered: {
         // Only sync if sink hasn't changed
-        if (AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
+        if (AudioService.sink && AudioPanelUtils.field(AudioService.sink, "name") === panelContent.lastSinkName) {
           if (Math.abs(panelContent.localOutputVolume - AudioService.volume) >= 0.01) {
             AudioService.setVolume(panelContent.localOutputVolume);
           }
         }
         // Only sync if source hasn't changed
-        if (AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
+        if (AudioService.source && AudioPanelUtils.field(AudioService.source, "name") === panelContent.lastSourceName) {
           if (Math.abs(panelContent.localInputVolume - AudioService.inputVolume) >= 0.01) {
             AudioService.setInputVolume(panelContent.localInputVolume);
           }
@@ -194,9 +195,7 @@ SmartPanel {
             NIconButton {
               icon: "close"
               baseSize: Style.baseWidgetSize * 0.8
-              onClicked: {
-                root.close();
-              }
+              onClicked: AudioPanelUtils.closePanel(parent)
             }
           }
 
@@ -266,7 +265,7 @@ SmartPanel {
                   }
 
                   NText {
-                    text: AudioService.sink ? (" - " + (AudioService.sink.description || AudioService.sink.name || "")) : ""
+                    text: AudioService.sink ? (" - " + (AudioPanelUtils.field(AudioService.sink, "description") || AudioPanelUtils.field(AudioService.sink, "name") || "")) : ""
                     pointSize: Style.fontSizeS
                     color: Color.mOnSurfaceVariant
                     elide: Text.ElideRight
@@ -341,7 +340,7 @@ SmartPanel {
                   }
 
                   NText {
-                    text: AudioService.source ? (" - " + (AudioService.source.description || AudioService.source.name || "")) : ""
+                    text: AudioService.source ? (" - " + (AudioPanelUtils.field(AudioService.source, "description") || AudioPanelUtils.field(AudioService.source, "name") || "")) : ""
                     pointSize: Style.fontSizeS
                     color: Color.mOnSurfaceVariant
                     elide: Text.ElideRight
@@ -418,211 +417,13 @@ SmartPanel {
                 property bool appMuted: (nodeAudio && nodeAudio.muted !== undefined) ? nodeAudio.muted : false
 
                 // Check if this is a capture stream (after node is bound)
-                readonly property bool isCaptureStream: {
-                  if (!modelData || !modelData.properties)
-                    return false;
-                  const props = modelData.properties;
-                  // Exclude capture streams - check for stream.capture.sink property
-                  if (props["stream.capture.sink"] !== undefined) {
-                    return true;
-                  }
-                  const mediaClass = props["media.class"] || "";
-                  // Exclude Stream/Input (capture) but allow Stream/Output (playback)
-                  if (mediaClass.includes("Capture") || mediaClass === "Stream/Input" || mediaClass === "Stream/Input/Audio") {
-                    return true;
-                  }
-                  const mediaRole = props["media.role"] || "";
-                  if (mediaRole === "Capture") {
-                    return true;
-                  }
-                  return false;
-                }
+                readonly property bool isCaptureStream: AudioPanelUtils.isCaptureStream(modelData)
 
-                // Helper function to validate if a fuzzy match is actually related
-                function isValidMatch(searchTerm, entry) {
-                  if (!entry)
-                    return false;
-                  var search = searchTerm.toLowerCase();
-                  var id = (entry.id || "").toLowerCase();
-                  var name = (entry.name || "").toLowerCase();
-                  var icon = (entry.icon || "").toLowerCase();
-                  // Match is valid if search term appears in entry or entry appears in search
-                  return id.includes(search) || name.includes(search) || icon.includes(search) || search.includes(id.split('.').pop()) || search.includes(name.replace(/\s+/g, ''));
-                }
+                readonly property string appName: AudioPanelUtils.appName(modelData, ThemeIcons)
 
-                readonly property string appName: {
-                  var binName, binParts, entry, nameParts, parts;
-                  if (!modelData)
-                    return "Unknown App";
+                readonly property string appStreamTitle: AudioPanelUtils.appStreamTitle(modelData, appName)
 
-                  var props = modelData.properties;
-                  var desc = modelData.description || "";
-                  var name = modelData.name || "";
-
-                  if (!props) {
-                    if (desc)
-                      return desc;
-                    if (name) {
-                      nameParts = name.split(/[-_]/);
-                      if (nameParts.length > 0 && nameParts[0])
-                        return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
-                      return name;
-                    }
-                    return "Unknown App";
-                  }
-
-                  var binaryName = props["application.process.binary"] || "";
-
-                  // Try binary name first (fixes Electron apps like vesktop)
-                  if (binaryName) {
-                    binParts = binaryName.split("/");
-                    if (binParts.length > 0) {
-                      binName = binParts[binParts.length - 1].toLowerCase();
-                      entry = ThemeIcons.findAppEntry(binName);
-                      // Only use entry if it's actually related to binary name
-                      if (entry && entry.name && isValidMatch(binName, entry))
-                        return entry.name;
-                    }
-                  }
-
-                  var computedAppName = props["application.name"] || "";
-                  var mediaName = props["media.name"] || "";
-                  var mediaTitle = props["media.title"] || "";
-                  var appId = props["application.id"] || "";
-
-                  if (appId) {
-                    entry = ThemeIcons.findAppEntry(appId);
-                    if (entry && entry.name && isValidMatch(appId, entry))
-                      return entry.name;
-                    if (!computedAppName) {
-                      parts = appId.split(".");
-                      if (parts.length > 0 && parts[0])
-                        computedAppName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-                    }
-                  }
-
-                  if (!computedAppName && binaryName) {
-                    binParts = binaryName.split("/");
-                    if (binParts.length > 0 && binParts[binParts.length - 1])
-                      computedAppName = binParts[binParts.length - 1].charAt(0).toUpperCase() + binParts[binParts.length - 1].slice(1);
-                  }
-
-                  var result = computedAppName || mediaTitle || mediaName || binaryName || desc || name;
-
-                  if (!result || result === "" || result === "Unknown App") {
-                    if (name) {
-                      nameParts = name.split(/[-_]/);
-                      if (nameParts.length > 0 && nameParts[0])
-                        result = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
-                    }
-                  }
-
-                  return result || "Unknown App";
-                }
-
-                // Tab / page / track label (browsers: media.title/name; players: artist+title when PW exposes it).
-                // Many apps (notably some Spotify builds) only set a generic media.name — then there is nothing useful to show.
-                readonly property string appStreamTitle: {
-                  if (!modelData) {
-                    return "";
-                  }
-                  var props = modelData.properties;
-                  var artist = "";
-                  var title = "";
-                  var mediaName = "";
-                  if (props) {
-                    artist = (props["media.artist"] || "").trim();
-                    title = (props["media.title"] || "").trim();
-                    mediaName = (props["media.name"] || "").trim();
-                  }
-                  var raw = "";
-                  if (title && artist) {
-                    raw = artist + " — " + title;
-                  } else if (title) {
-                    raw = title;
-                  } else if (artist) {
-                    raw = artist;
-                  } else if (mediaName) {
-                    raw = mediaName;
-                  }
-                  if (!raw) {
-                    raw = (modelData.description || "").trim();
-                  }
-                  if (!raw) {
-                    return "";
-                  }
-                  var norm = raw.toLowerCase();
-                  var mainNorm = appName.trim().toLowerCase();
-                  if (norm === mainNorm) {
-                    return "";
-                  }
-                  return raw;
-                }
-
-                readonly property string appIcon: {
-                  var binName, binParts, entry, iconPath, name, nameParts;
-                  if (!modelData)
-                    return ThemeIcons.iconFromName("application-x-executable", "application-x-executable");
-
-                  var props = modelData.properties;
-
-                  if (!props) {
-                    name = modelData.name || "";
-                    if (name) {
-                      nameParts = name.split(/[-_]/);
-                      if (nameParts.length > 0) {
-                        entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
-                        if (entry && entry.icon && isValidMatch(nameParts[0].toLowerCase(), entry))
-                          return ThemeIcons.iconFromName(entry.icon, "application-x-executable");
-                      }
-                    }
-                    return ThemeIcons.iconFromName("application-x-executable", "application-x-executable");
-                  }
-
-                  var binaryName = props["application.process.binary"] || "";
-                  if (binaryName) {
-                    binParts = binaryName.split("/");
-                    if (binParts.length > 0) {
-                      binName = binParts[binParts.length - 1].toLowerCase();
-                      entry = ThemeIcons.findAppEntry(binName);
-                      if (entry && entry.icon && isValidMatch(binName, entry))
-                        return ThemeIcons.iconFromName(entry.icon, "");
-                    }
-                  }
-
-                  var iconName = props["application.icon-name"] || "";
-                  if (iconName && ThemeIcons.iconExists(iconName)) {
-                    iconPath = ThemeIcons.iconFromName(iconName, "");
-                    if (iconPath && iconPath !== "")
-                      return iconPath;
-                  }
-
-                  var appId = props["application.id"] || "";
-                  if (appId) {
-                    entry = ThemeIcons.findAppEntry(appId);
-                    if (entry && entry.icon && isValidMatch(appId, entry))
-                      return ThemeIcons.iconFromName(entry.icon, "");
-                  }
-
-                  var appName = props["application.name"] || "";
-                  if (appName) {
-                    entry = ThemeIcons.findAppEntry(appName.toLowerCase());
-                    if (entry && entry.icon && isValidMatch(appName.toLowerCase(), entry))
-                      return ThemeIcons.iconFromName(entry.icon, "");
-                  }
-
-                  var name = modelData.name || "";
-                  if (name) {
-                    nameParts = name.split(/[-_]/);
-                    if (nameParts.length > 0) {
-                      entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
-                      if (entry && entry.icon && isValidMatch(nameParts[0].toLowerCase(), entry))
-                        return ThemeIcons.iconFromName(entry.icon, "");
-                    }
-                  }
-
-                  return ThemeIcons.iconFromName("application-x-executable", "application-x-executable");
-                }
+                readonly property string appIcon: AudioPanelUtils.appIcon(modelData, ThemeIcons)
 
                 RowLayout {
                   id: appRow
@@ -727,7 +528,7 @@ SmartPanel {
 
             // Empty state
             NText {
-              visible: panelContent.appStreams.length === 0
+              visible: AudioPanelUtils.arrayLength(panelContent.appStreams) === 0
               text: I18n.tr("panels.audio.panel-applications-empty")
               pointSize: Style.fontSizeM
               color: Color.mOnSurfaceVariant
@@ -777,16 +578,16 @@ SmartPanel {
                 }
 
                 Repeater {
-                  model: AudioService.sinks
+                  model: AudioPanelUtils.devicesWithGroup(AudioService.sinks, sinks, panelContent)
                   NRadioButton {
-                    ButtonGroup.group: sinks
-                    required property PwNode modelData
+                    required property var modelData
+                    ButtonGroup.group: AudioPanelUtils.field(modelData, "group")
                     pointSize: Style.fontSizeS
-                    text: modelData.description
-                    checked: AudioService.sink?.id === modelData.id
+                    text: AudioPanelUtils.field(AudioPanelUtils.field(modelData, "node"), "description")
+                    checked: AudioPanelUtils.sameNode(AudioService.sink, AudioPanelUtils.field(modelData, "node"))
                     onClicked: {
-                      AudioService.setAudioSink(modelData);
-                      localOutputVolume = AudioService.volume;
+                      AudioService.setAudioSink(AudioPanelUtils.field(modelData, "node"));
+                      AudioPanelUtils.setOutputVolume(modelData, AudioService.volume);
                     }
                     Layout.fillWidth: true
                   }
@@ -820,14 +621,14 @@ SmartPanel {
                 }
 
                 Repeater {
-                  model: AudioService.sources
+                  model: AudioPanelUtils.devicesWithGroup(AudioService.sources, sources, panelContent)
                   NRadioButton {
-                    ButtonGroup.group: sources
-                    required property PwNode modelData
+                    required property var modelData
+                    ButtonGroup.group: AudioPanelUtils.field(modelData, "group")
                     pointSize: Style.fontSizeS
-                    text: modelData.description
-                    checked: AudioService.source?.id === modelData.id
-                    onClicked: AudioService.setAudioSource(modelData)
+                    text: AudioPanelUtils.field(AudioPanelUtils.field(modelData, "node"), "description")
+                    checked: AudioPanelUtils.sameNode(AudioService.source, AudioPanelUtils.field(modelData, "node"))
+                    onClicked: AudioService.setAudioSource(AudioPanelUtils.field(modelData, "node"))
                     Layout.fillWidth: true
                   }
                 }

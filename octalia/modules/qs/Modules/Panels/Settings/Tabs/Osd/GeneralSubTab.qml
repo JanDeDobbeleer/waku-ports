@@ -6,6 +6,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -123,7 +124,7 @@ ColumnLayout {
       }
       label: monitorOption.modelData.name || I18n.tr("common.unknown")
       description: {
-        I18n.tr("system.monitor-description", {
+        I18n.trArgs("system.monitor-description", {
                   "model": monitorOption.modelData.model,
                   "width": monitorOption.modelData.width * compositorScale,
                   "height": monitorOption.modelData.height * compositorScale,
@@ -133,9 +134,9 @@ ColumnLayout {
       checked: (Settings.data.osd.monitors || []).indexOf(monitorOption.modelData.name) !== -1
       onToggled: checked => {
                    if (checked) {
-                     Settings.data.osd.monitors = root.addMonitor(Settings.data.osd.monitors, monitorOption.modelData.name);
+                     Settings.data.osd.monitors = SettingsValue.invoke(root, "addMonitor", Settings.data.osd.monitors, monitorOption.modelData.name);
                    } else {
-                     Settings.data.osd.monitors = root.removeMonitor(Settings.data.osd.monitors, monitorOption.modelData.name);
+                     Settings.data.osd.monitors = SettingsValue.invoke(root, "removeMonitor", Settings.data.osd.monitors, monitorOption.modelData.name);
                    }
                  }
     }

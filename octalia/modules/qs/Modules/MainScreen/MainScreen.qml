@@ -1,7 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Wayland
 import "Backgrounds" as Backgrounds
+import "Backgrounds/BackgroundHelpers.js" as BackgroundHelpers
 
 import qs.Commons
 
@@ -55,7 +58,7 @@ PanelWindow {
       if (CompositorService.isHyprland) {
         return PanelService.isInitializingKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand;
       }
-      return PanelService.openedPanel.exclusiveKeyboard ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand;
+      return BackgroundHelpers.field(PanelService.openedPanel, "exclusiveKeyboard") ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand;
     }
     // Panel open on ANOTHER screen: OnDemand allows receiving pointer events for click-to-close
     return WlrKeyboardFocus.OnDemand;
@@ -70,8 +73,8 @@ PanelWindow {
 
   // Desktop dimming when panels are open
   property real dimmerOpacity: Settings.data.general.dimmerOpacity ?? 0.8
-  property bool isPanelOpen: (PanelService.openedPanel !== null) && (PanelService.openedPanel.screen === screen)
-  property bool isPanelClosing: (PanelService.openedPanel !== null) && PanelService.openedPanel.isClosing
+  property bool isPanelOpen: (PanelService.openedPanel !== null) && (BackgroundHelpers.field(PanelService.openedPanel, "screen") === screen)
+  property bool isPanelClosing: (PanelService.openedPanel !== null) && BackgroundHelpers.field(PanelService.openedPanel, "isClosing")
   property bool isAnyPanelOpen: PanelService.openedPanel !== null
 
   color: {
@@ -108,7 +111,7 @@ PanelWindow {
 
     // If no monitors specified, show on all screens
     // If monitors specified, only show if this screen is in the list
-    return monitors.length === 0 || monitors.includes(screenName);
+    return BackgroundHelpers.includesScreen(monitors, screenName);
   }
 
   // Click mask, built like Celeste's drawers: the window is click-through except where a Subtract
@@ -360,7 +363,7 @@ PanelWindow {
 
       Connections {
         target: BarService
-        function onBarAutoHideStateChanged(screenName, hidden) {
+        function onBarAutoHideStateChanged(screenName: string, hidden: bool): void {
           if (screenName === barPlaceholder.screen?.name) {
             barPlaceholder.isHidden = hidden;
           }
@@ -473,19 +476,19 @@ PanelWindow {
       // Panel background geometry (from the currently open panel on this screen)
       readonly property var panelBg: {
         var op = PanelService.openedPanel;
-        if (!op || op.screen !== root.screen || op.blurEnabled === false)
+        if (!op || BackgroundHelpers.field(op, "screen") !== root.screen || BackgroundHelpers.field(op, "blurEnabled") === false)
           return null;
-        var region = op.panelRegion;
-        return (region && region.visible) ? region.panelItem : null;
+        var region = BackgroundHelpers.field(op, "panelRegion");
+        return (region && BackgroundHelpers.field(region, "visible")) ? BackgroundHelpers.field(region, "panelItem") : null;
       }
 
       // Panel background geometry for the closing panel (may coexist with panelBg)
       readonly property var closingPanelBg: {
         var cp = PanelService.closingPanel;
-        if (!cp || cp.screen !== root.screen || cp.blurEnabled === false)
+        if (!cp || BackgroundHelpers.field(cp, "screen") !== root.screen || BackgroundHelpers.field(cp, "blurEnabled") === false)
           return null;
-        var region = cp.panelRegion;
-        return (region && region.visible) ? region.panelItem : null;
+        var region = BackgroundHelpers.field(cp, "panelRegion");
+        return (region && BackgroundHelpers.field(region, "visible")) ? BackgroundHelpers.field(region, "panelItem") : null;
       }
 
       // Framed bar: inner hole boundary (where the hole begins on each axis)
@@ -519,29 +522,31 @@ PanelWindow {
   Instantiator {
     model: Settings.data.general.keybinds.keyEscape || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onEscapePressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onEscapePressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onEscapePressed()
     }
   }
 
   Shortcut {
     sequence: "Tab"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onTabPressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onTabPressed") !== undefined)
     onActivated: PanelService.openedPanel.onTabPressed()
   }
 
   Shortcut {
     sequence: "Backtab"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onBackTabPressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onBackTabPressed") !== undefined)
     onActivated: PanelService.openedPanel.onBackTabPressed()
   }
 
   Instantiator {
     model: Settings.data.general.keybinds.keyUp || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onUpPressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onUpPressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onUpPressed()
     }
   }
@@ -549,8 +554,9 @@ PanelWindow {
   Instantiator {
     model: Settings.data.general.keybinds.keyDown || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onDownPressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onDownPressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onDownPressed()
     }
   }
@@ -558,8 +564,9 @@ PanelWindow {
   Instantiator {
     model: Settings.data.general.keybinds.keyEnter || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onEnterPressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onEnterPressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onEnterPressed()
     }
   }
@@ -567,8 +574,9 @@ PanelWindow {
   Instantiator {
     model: Settings.data.general.keybinds.keyLeft || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onLeftPressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onLeftPressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onLeftPressed()
     }
   }
@@ -576,33 +584,34 @@ PanelWindow {
   Instantiator {
     model: Settings.data.general.keybinds.keyRight || []
     Shortcut {
+      required property var modelData
       sequence: modelData
-      enabled: root.isPanelOpen && (PanelService.openedPanel.onRightPressed !== undefined) && !PanelService.isKeybindRecording
+      enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onRightPressed") !== undefined) && !PanelService.isKeybindRecording
       onActivated: PanelService.openedPanel.onRightPressed()
     }
   }
 
   Shortcut {
     sequence: "Home"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onHomePressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onHomePressed") !== undefined)
     onActivated: PanelService.openedPanel.onHomePressed()
   }
 
   Shortcut {
     sequence: "End"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onEndPressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onEndPressed") !== undefined)
     onActivated: PanelService.openedPanel.onEndPressed()
   }
 
   Shortcut {
     sequence: "PgUp"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onPageUpPressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onPageUpPressed") !== undefined)
     onActivated: PanelService.openedPanel.onPageUpPressed()
   }
 
   Shortcut {
     sequence: "PgDown"
-    enabled: root.isPanelOpen && (PanelService.openedPanel.onPageDownPressed !== undefined)
+    enabled: root.isPanelOpen && (BackgroundHelpers.field(PanelService.openedPanel, "onPageDownPressed") !== undefined)
     onActivated: PanelService.openedPanel.onPageDownPressed()
   }
 }

@@ -1,3 +1,5 @@
+import "NTabButtonUtils.js" as TabButtonUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -98,9 +100,7 @@ Rectangle {
     onClicked: {
       root.clicked();
       // Update parent NTabBar's currentIndex
-      if (root.parent && root.parent.parent && root.parent.parent.currentIndex !== undefined) {
-        root.parent.parent.currentIndex = root.tabIndex;
-      }
+      TabButtonUtils.selectInParent(root);
     }
   }
 }

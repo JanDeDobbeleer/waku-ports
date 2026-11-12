@@ -5,6 +5,7 @@ import QtQuick 6.10
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Widgets
+import "LauncherUtils.js" as LauncherUtils
 
 SmartPanel {
   id: root
@@ -14,28 +15,28 @@ SmartPanel {
   visible: !Settings.data.appLauncher.overviewLayer
 
   // Reference to core (set after panelContent loads)
-  property var launcherCoreRef: null
+  property LauncherCore launcherCoreRef
 
   // Expose core launcher for external access (e.g., IPC)
-  readonly property string searchText: launcherCoreRef ? launcherCoreRef.searchText : ""
-  readonly property int selectedIndex: launcherCoreRef ? launcherCoreRef.selectedIndex : 0
-  readonly property var results: launcherCoreRef ? launcherCoreRef.results : []
-  readonly property var activeProvider: launcherCoreRef ? launcherCoreRef.activeProvider : null
-  readonly property var currentProvider: launcherCoreRef ? launcherCoreRef.currentProvider : null
-  readonly property bool isGridView: launcherCoreRef ? launcherCoreRef.isGridView : false
-  readonly property int gridColumns: launcherCoreRef ? launcherCoreRef.gridColumns : 5
+  readonly property string searchText: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "searchText") : ""
+  readonly property int selectedIndex: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "selectedIndex") : 0
+  readonly property var results: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "results") : []
+  readonly property var activeProvider: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "activeProvider") : null
+  readonly property var currentProvider: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "currentProvider") : null
+  readonly property bool isGridView: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "isGridView") : false
+  readonly property int gridColumns: launcherCoreRef ? LauncherUtils.field(launcherCoreRef, "gridColumns") : 5
 
-  function setSearchText(text) {
+  function setSearchText(text: string): void {
     if (launcherCoreRef)
-      launcherCoreRef.setSearchText(text);
+      LauncherUtils.setSearchText(launcherCoreRef, text);
   }
 
   // Preview panel support
   readonly property bool previewActive: {
     if (!launcherCoreRef)
       return false;
-    var provider = launcherCoreRef.activeProvider;
-    if (!provider || !provider.hasPreview)
+    var provider = root.activeProvider;
+    if (!provider || !LauncherUtils.field(provider, "hasPreview"))
       return false;
     if (!Settings.data.appLauncher.enableClipPreview)
       return false;
@@ -108,8 +109,8 @@ SmartPanel {
           return Style.marginL;
         var row = launcherCore.isGridView ? Math.floor(launcherCore.selectedIndex / launcherCore.gridColumns) : launcherCore.selectedIndex;
         var gridCellSize = Math.floor((root.listPanelWidth - Style.margin2XS - ((launcherCore.targetGridColumns - 1) * Style.marginS)) / launcherCore.targetGridColumns);
-        var itemHeight = launcherCore.isGridView ? (gridCellSize + Style.marginXXS) : (launcherCore.entryHeight + (view.spacing || 0));
-        var yPos = row * itemHeight - (view.contentY || 0);
+        var itemHeight = launcherCore.isGridView ? (gridCellSize + Style.marginXXS) : (launcherCore.entryHeight + (LauncherUtils.field(view, "spacing") || 0));
+        var yPos = row * itemHeight - (LauncherUtils.field(view, "contentY") || 0);
         var mapped = view.mapToItem(ui, 0, yPos);
         return Math.max(Style.marginL, Math.min(mapped.y, ui.height - previewBox.height - Style.marginL));
       }
@@ -136,8 +137,8 @@ SmartPanel {
           if (!active)
             return "";
           var provider = launcherCore.activeProvider;
-          if (provider && provider.previewComponentPath)
-            return provider.previewComponentPath;
+          if (provider && LauncherUtils.field(provider, "previewComponentPath"))
+            return LauncherUtils.field(provider, "previewComponentPath");
           return "";
         }
 
@@ -148,11 +149,10 @@ SmartPanel {
           if (!item || launcherCore.selectedIndex < 0 || !launcherCore.results[launcherCore.selectedIndex])
             return;
           var provider = launcherCore.activeProvider;
-          if (provider && provider.getPreviewData) {
-            item.currentItem = provider.getPreviewData(launcherCore.results[launcherCore.selectedIndex]);
-          } else {
-            item.currentItem = launcherCore.results[launcherCore.selectedIndex];
-          }
+          var previewData = launcherCore.results[launcherCore.selectedIndex];
+          if (provider && LauncherUtils.field(provider, "getPreviewData"))
+            previewData = LauncherUtils.previewData(provider, previewData);
+          LauncherUtils.setCurrentItem(item, previewData);
         }
       }
     }

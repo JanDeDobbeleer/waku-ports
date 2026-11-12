@@ -5,10 +5,10 @@ import qs.Widgets
 
 NIconButtonHot {
   property ShellScreen screen
-  icon: NetworkService.getIcon()
+  icon: NetworkService.getIcon(undefined)
   onClicked: {
     var panel = PanelService.getPanel("networkPanel", screen);
-    panel?.toggle(this);
+    PanelService.invokePanel(panel, "toggle", [this]);
   }
   onRightClicked: {
     if (!NetworkService.airplaneModeEnabled) {

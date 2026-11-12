@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Hardware
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,17 +17,17 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueDisplayMode: widgetData.displayMode !== undefined ? widgetData.displayMode : widgetMetadata.displayMode
-  property string valueDeviceNativePath: widgetData.deviceNativePath !== undefined ? widgetData.deviceNativePath : widgetMetadata.deviceNativePath
-  property bool valueShowPowerProfiles: widgetData.showPowerProfiles !== undefined ? widgetData.showPowerProfiles : widgetMetadata.showPowerProfiles
-  property bool valueShowOctaliaPerformance: widgetData.showOctaliaPerformance !== undefined ? widgetData.showOctaliaPerformance : widgetMetadata.showOctaliaPerformance
-  property bool valueHideIfNotDetected: widgetData.hideIfNotDetected !== undefined ? widgetData.hideIfNotDetected : widgetMetadata.hideIfNotDetected
-  property bool valueHideIfIdle: widgetData.hideIfIdle !== undefined ? widgetData.hideIfIdle : widgetMetadata.hideIfIdle
+  property string valueDisplayMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "displayMode")
+  property string valueDeviceNativePath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "deviceNativePath")
+  property bool valueShowPowerProfiles: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showPowerProfiles")
+  property bool valueShowOctaliaPerformance: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showOctaliaPerformance")
+  property bool valueHideIfNotDetected: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideIfNotDetected")
+  property bool valueHideIfIdle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideIfIdle")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
-    if (widgetData && widgetData.id) {
-      settings.id = widgetData.id;
+    if (widgetData && SettingsValue.read(widgetData, "id")) {
+      settings.id = SettingsValue.read(widgetData, "id");
     }
     settings.displayMode = valueDisplayMode;
     settings.showPowerProfiles = valueShowPowerProfiles;
@@ -49,7 +50,7 @@ ColumnLayout {
                   root.valueDeviceNativePath = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.deviceNativePath
+    defaultValue: SettingsValue.read(root.widgetMetadata, "deviceNativePath")
   }
 
   NComboBox {
@@ -84,7 +85,7 @@ ColumnLayout {
                   root.valueDisplayMode = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.displayMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "displayMode")
   }
 
   NToggle {
@@ -95,7 +96,7 @@ ColumnLayout {
                  root.valueHideIfNotDetected = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideIfNotDetected
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideIfNotDetected")
   }
 
   NToggle {
@@ -106,7 +107,7 @@ ColumnLayout {
                  root.valueHideIfIdle = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideIfIdle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideIfIdle")
   }
 
   NDivider {
@@ -121,7 +122,7 @@ ColumnLayout {
                  root.valueShowPowerProfiles = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showPowerProfiles
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showPowerProfiles")
   }
 
   NToggle {
@@ -132,6 +133,6 @@ ColumnLayout {
                  root.valueShowOctaliaPerformance = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showOctaliaPerformance
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showOctaliaPerformance")
   }
 }

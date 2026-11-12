@@ -4,6 +4,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
@@ -39,28 +40,28 @@ Item {
   readonly property real capsuleHeight: Style.getCapsuleHeightForScreen(screenName)
   readonly property real barFontSize: Style.getBarFontSizeForScreen(screenName)
 
-  readonly property bool compactMode: widgetSettings.compactMode !== undefined ? widgetSettings.compactMode : widgetMetadata.compactMode
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property bool compactMode: BarWidgetHelpers.readProperty(widgetSettings, "compactMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "compactMode") : BarWidgetHelpers.readProperty(widgetMetadata, "compactMode")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
-  readonly property bool useMonospaceFont: widgetSettings.useMonospaceFont !== undefined ? widgetSettings.useMonospaceFont : widgetMetadata.useMonospaceFont
-  readonly property bool usePadding: !compactMode && !isVertical && useMonospaceFont && ((widgetSettings.usePadding !== undefined) ? widgetSettings.usePadding : widgetMetadata.usePadding)
+  readonly property bool useMonospaceFont: BarWidgetHelpers.readProperty(widgetSettings, "useMonospaceFont") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useMonospaceFont") : BarWidgetHelpers.readProperty(widgetMetadata, "useMonospaceFont")
+  readonly property bool usePadding: !compactMode && !isVertical && useMonospaceFont && ((BarWidgetHelpers.readProperty(widgetSettings, "usePadding") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "usePadding") : BarWidgetHelpers.readProperty(widgetMetadata, "usePadding"))
 
-  readonly property bool showCpuUsage: (widgetSettings.showCpuUsage !== undefined) ? widgetSettings.showCpuUsage : widgetMetadata.showCpuUsage
-  readonly property bool showCpuCores: (widgetSettings.showCpuCores !== undefined) ? widgetSettings.showCpuCores : widgetMetadata.showCpuCores
-  readonly property bool showCpuFreq: (widgetSettings.showCpuFreq !== undefined) ? widgetSettings.showCpuFreq : widgetMetadata.showCpuFreq
-  readonly property bool showCpuTemp: (widgetSettings.showCpuTemp !== undefined) ? widgetSettings.showCpuTemp : widgetMetadata.showCpuTemp
-  readonly property bool showGpuTemp: (widgetSettings.showGpuTemp !== undefined) ? widgetSettings.showGpuTemp : widgetMetadata.showGpuTemp
-  readonly property bool showMemoryUsage: (widgetSettings.showMemoryUsage !== undefined) ? widgetSettings.showMemoryUsage : widgetMetadata.showMemoryUsage
-  readonly property bool showMemoryAsPercent: (widgetSettings.showMemoryAsPercent !== undefined) ? widgetSettings.showMemoryAsPercent : widgetMetadata.showMemoryAsPercent
-  readonly property bool showSwapUsage: (widgetSettings.showSwapUsage !== undefined) ? widgetSettings.showSwapUsage : widgetMetadata.showSwapUsage
-  readonly property bool showNetworkStats: (widgetSettings.showNetworkStats !== undefined) ? widgetSettings.showNetworkStats : widgetMetadata.showNetworkStats
-  readonly property bool showDiskUsage: (widgetSettings.showDiskUsage !== undefined) ? widgetSettings.showDiskUsage : widgetMetadata.showDiskUsage
-  readonly property bool showDiskUsageAsPercent: (widgetSettings.showDiskUsageAsPercent !== undefined) ? widgetSettings.showDiskUsageAsPercent : widgetMetadata.showDiskUsageAsPercent
-  readonly property bool showDiskAvailable: (widgetSettings.showDiskAvailable !== undefined) ? widgetSettings.showDiskAvailable : widgetMetadata.showDiskAvailable
+  readonly property bool showCpuUsage: (BarWidgetHelpers.readProperty(widgetSettings, "showCpuUsage") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showCpuUsage") : BarWidgetHelpers.readProperty(widgetMetadata, "showCpuUsage")
+  readonly property bool showCpuCores: (BarWidgetHelpers.readProperty(widgetSettings, "showCpuCores") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showCpuCores") : BarWidgetHelpers.readProperty(widgetMetadata, "showCpuCores")
+  readonly property bool showCpuFreq: (BarWidgetHelpers.readProperty(widgetSettings, "showCpuFreq") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showCpuFreq") : BarWidgetHelpers.readProperty(widgetMetadata, "showCpuFreq")
+  readonly property bool showCpuTemp: (BarWidgetHelpers.readProperty(widgetSettings, "showCpuTemp") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showCpuTemp") : BarWidgetHelpers.readProperty(widgetMetadata, "showCpuTemp")
+  readonly property bool showGpuTemp: (BarWidgetHelpers.readProperty(widgetSettings, "showGpuTemp") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showGpuTemp") : BarWidgetHelpers.readProperty(widgetMetadata, "showGpuTemp")
+  readonly property bool showMemoryUsage: (BarWidgetHelpers.readProperty(widgetSettings, "showMemoryUsage") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showMemoryUsage") : BarWidgetHelpers.readProperty(widgetMetadata, "showMemoryUsage")
+  readonly property bool showMemoryAsPercent: (BarWidgetHelpers.readProperty(widgetSettings, "showMemoryAsPercent") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showMemoryAsPercent") : BarWidgetHelpers.readProperty(widgetMetadata, "showMemoryAsPercent")
+  readonly property bool showSwapUsage: (BarWidgetHelpers.readProperty(widgetSettings, "showSwapUsage") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showSwapUsage") : BarWidgetHelpers.readProperty(widgetMetadata, "showSwapUsage")
+  readonly property bool showNetworkStats: (BarWidgetHelpers.readProperty(widgetSettings, "showNetworkStats") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showNetworkStats") : BarWidgetHelpers.readProperty(widgetMetadata, "showNetworkStats")
+  readonly property bool showDiskUsage: (BarWidgetHelpers.readProperty(widgetSettings, "showDiskUsage") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showDiskUsage") : BarWidgetHelpers.readProperty(widgetMetadata, "showDiskUsage")
+  readonly property bool showDiskUsageAsPercent: (BarWidgetHelpers.readProperty(widgetSettings, "showDiskUsageAsPercent") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showDiskUsageAsPercent") : BarWidgetHelpers.readProperty(widgetMetadata, "showDiskUsageAsPercent")
+  readonly property bool showDiskAvailable: (BarWidgetHelpers.readProperty(widgetSettings, "showDiskAvailable") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showDiskAvailable") : BarWidgetHelpers.readProperty(widgetMetadata, "showDiskAvailable")
   // Load average does not exist on Windows (always 0), so the block stays hidden
   readonly property bool showLoadAverage: false
-  readonly property string diskPath: (widgetSettings.diskPath !== undefined) ? widgetSettings.diskPath : widgetMetadata.diskPath
+  readonly property string diskPath: (BarWidgetHelpers.readProperty(widgetSettings, "diskPath") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "diskPath") : BarWidgetHelpers.readProperty(widgetMetadata, "diskPath")
   readonly property string fontFamily: useMonospaceFont ? Settings.data.ui.fontFixed : Settings.data.ui.fontDefault
 
   readonly property int paddingPercent: usePadding ? String("100%").length : 0
@@ -101,8 +102,8 @@ Item {
   readonly property bool memCritical: showMemoryUsage && SystemStatService.memCritical
   readonly property bool swapWarning: showSwapUsage && SystemStatService.swapWarning
   readonly property bool swapCritical: showSwapUsage && SystemStatService.swapCritical
-  readonly property bool diskWarning: showDiskUsage && SystemStatService.isDiskWarning(diskPath)
-  readonly property bool diskCritical: showDiskUsage && SystemStatService.isDiskCritical(diskPath)
+  readonly property bool diskWarning: showDiskUsage && SystemStatService.isDiskWarning(diskPath, undefined)
+  readonly property bool diskCritical: showDiskUsage && SystemStatService.isDiskCritical(diskPath, undefined)
 
   NPopupContextMenu {
     id: contextMenu
@@ -233,8 +234,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuUsage / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.cpuColor);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.cpuUsage / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.cpuColor; });
             }
           }
 
@@ -316,7 +317,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuFreqRatio);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.cpuFreqRatio; });
             }
           }
         }
@@ -383,8 +384,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuTemp / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.tempColor);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.cpuTemp / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.tempColor; });
             }
           }
         }
@@ -451,8 +452,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.gpuTemp / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.gpuColor);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.gpuTemp / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.gpuColor; });
             }
           }
         }
@@ -519,7 +520,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => Math.min(1, SystemStatService.loadAvg1 / SystemStatService.nproc));
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return Math.min(1, SystemStatService.loadAvg1 / SystemStatService.nproc); });
             }
           }
         }
@@ -589,8 +590,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.memPercent / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.memColor);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.memPercent / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.memColor; });
             }
           }
         }
@@ -661,8 +662,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.swapPercent / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.swapColor);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.swapPercent / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.swapColor; });
             }
           }
         }
@@ -728,7 +729,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.rxRatio);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.rxRatio; });
             }
           }
         }
@@ -794,7 +795,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.txRatio);
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return SystemStatService.txRatio; });
             }
           }
         }
@@ -832,7 +833,7 @@ Item {
               applyUiScale: false
               x: Style.pixelAlignCenter(parent.width, width)
               y: Style.pixelAlignCenter(parent.height, contentHeight)
-              color: (root.diskWarning || root.diskCritical) ? SystemStatService.getDiskColor(root.diskPath) : root.iconColor
+              color: (root.diskWarning || root.diskCritical) ? SystemStatService.getDiskColor(root.diskPath, undefined) : root.iconColor
             }
           }
 
@@ -850,7 +851,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            color: (root.diskWarning || root.diskCritical) ? SystemStatService.getDiskColor(root.diskPath) : root.textColor
+            color: (root.diskWarning || root.diskCritical) ? SystemStatService.getDiskColor(root.diskPath, undefined) : root.textColor
             Layout.row: root.isVertical ? 0 : 0
             Layout.column: root.isVertical ? 0 : 1
           }
@@ -865,8 +866,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              (item as NLinearGauge).ratio = Qt.binding(() => (root.showDiskAvailable ? SystemStatService.diskAvailPercents[root.diskPath] : SystemStatService.diskPercents[root.diskPath] ?? 0) / 100);
-              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.getDiskColor(root.diskPath, root.showDiskAvailable));
+              (item as NLinearGauge).ratio = Qt.binding(function (): real { return (root.showDiskAvailable ? SystemStatService.diskAvailPercents[root.diskPath] : SystemStatService.diskPercents[root.diskPath] ?? 0) / 100; });
+              (item as NLinearGauge).fillColor = Qt.binding(function (): color { return SystemStatService.getDiskColor(root.diskPath, root.showDiskAvailable); });
             }
           }
         }
@@ -883,9 +884,9 @@ Item {
     hoverEnabled: true
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   PanelService.getPanel("systemStatsPanel", root.screen)?.toggle(root);
+                   PanelService.invokePanel(PanelService.getPanel("systemStatsPanel", root.screen), "toggle", [root]);
                  } else if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, root.screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen, null);
                  } else if (mouse.button === Qt.MiddleButton) {
                    root.openExternalMonitor();
                  }

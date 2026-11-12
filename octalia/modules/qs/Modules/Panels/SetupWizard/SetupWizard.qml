@@ -8,6 +8,7 @@ import qs.Services.Octalia
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "SetupWizardUtils.js" as SetupWizardUtils
 
 SmartPanel {
   id: root
@@ -70,57 +71,8 @@ SmartPanel {
       }
     }
 
-    function completeSetup() {
-      if (isCompleting) {
-        Logger.w("SetupWizard", "completeSetup() called while already completing, ignoring");
-        return;
-      }
-
-      try {
-        Logger.i("SetupWizard", root.telemetryOnlyMode ? "Completing telemetry wizard" : "Completing setup with selected options");
-        isCompleting = true;
-
-        // In telemetry-only mode, we only need to save the telemetry setting
-        if (!root.telemetryOnlyMode) {
-          if (typeof WallpaperService !== "undefined" && WallpaperService.refreshWallpapersList) {
-            if (selectedWallpaperDirectory !== Settings.data.wallpaper.directory) {
-              Settings.data.wallpaper.directory = selectedWallpaperDirectory;
-              WallpaperService.refreshWallpapersList();
-            }
-
-            if (selectedWallpaper !== "") {
-              WallpaperService.changeWallpaper(selectedWallpaper, undefined);
-            }
-          }
-
-          Settings.data.general.scaleRatio = selectedScaleRatio;
-          Settings.data.bar.position = selectedBarPosition;
-        }
-
-        // Mark the current version as seen to prevent telemetry wizard on next startup
-        // (only for full setup wizard - telemetry wizard lets changelog mark it seen)
-        if (!root.telemetryOnlyMode) {
-          UpdateService.markChangelogSeen(UpdateService.currentVersion);
-        }
-
-        // Initialize telemetry now that user has made their choice
-        TelemetryService.init();
-
-        // Save settings immediately and wait for settingsSaved signal before closing
-        Settings.saveImmediate();
-        Logger.i("SetupWizard", "Setup completed successfully, waiting for settings save confirmation");
-
-        // Emit signal for telemetry wizard completion (shell.qml will show changelog)
-        if (root.telemetryOnlyMode) {
-          root.telemetryWizardCompleted();
-        }
-
-        // Fallback: if settingsSaved signal doesn't fire within 2 seconds, close anyway
-        closeTimer.start();
-      } catch (error) {
-        Logger.e("SetupWizard", "Error completing setup:", error);
-        isCompleting = false;
-      }
+    function completeSetup(): void {
+      SetupWizardUtils.completeSetup(panelContent, root, closeTimer, Settings, typeof WallpaperService !== "undefined" ? WallpaperService : null, UpdateService, TelemetryService, Logger);
     }
 
     function applyWallpaperSettings() {
@@ -182,6 +134,7 @@ SmartPanel {
                 }
 
                 Image {
+                  id: welcomeLogo
                   anchors.centerIn: parent
                   width: 110
                   height: 110
@@ -195,7 +148,7 @@ SmartPanel {
                     radius: width / 2
                     border.color: Color.mOutline
                     border.width: Style.borderM
-                    visible: parent.status === Image.Error
+                    visible: welcomeLogo.status === Image.Error
 
                     NIcon {
                       icon: "sparkles"
@@ -357,7 +310,8 @@ SmartPanel {
             ]
             delegate: RowLayout {
               id: progressStep
-              required property var modelData
+              required property string icon
+              required property string label
               required property int index
               spacing: Style.marginS
 
@@ -370,7 +324,7 @@ SmartPanel {
                 border.width: progressStep.index === panelContent.currentStep ? 2 : 0
 
                 NIcon {
-                  icon: progressStep.modelData.icon
+                  icon: progressStep.icon
                   pointSize: Style.fontSizeS
                   color: progressStep.index <= panelContent.currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
                   anchors.centerIn: parent
@@ -384,7 +338,7 @@ SmartPanel {
               }
 
               NText {
-                text: progressStep.modelData.label
+                text: progressStep.label
                 pointSize: Style.fontSizeS
                 color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
                 font.weight: progressStep.index === panelContent.currentStep ? Style.fontWeightBold : Style.fontWeightRegular

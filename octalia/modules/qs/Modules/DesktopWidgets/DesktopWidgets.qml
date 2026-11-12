@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -25,22 +26,14 @@ Variants {
     // Reactive property for widgets on this specific screen
     // Returns a fresh array whenever Settings changes
     property var screenWidgets: {
-      var i;
-      if (!modelData || !modelData.name) {
+      if (!modelData || !modelData.name)
         return [];
-      }
-      var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-      for (i = 0; i < monitorWidgets.length; i++) {
-        if (monitorWidgets[i].name === modelData.name) {
-          return monitorWidgets[i].widgets || [];
-        }
-      }
-      return [];
+      return DesktopWidgetHelpers.widgetsForScreen(Settings.data.desktopWidgets.monitorWidgets || [], modelData.name);
     }
 
     // Only create PanelWindow if enabled AND (screen has widgets OR in edit mode)
     // During compositor overview, show widgets only when overviewEnabled is true.
-    active: modelData && Settings.data.desktopWidgets.enabled && (screenWidgets.length > 0 || DesktopWidgetRegistry.editMode) && (!CompositorService.overviewActive || Settings.data.desktopWidgets.overviewEnabled) && (!PowerProfileService.octaliaPerformanceMode || !Settings.data.octaliaPerformance.disableDesktopWidgets) && !PanelService.lockScreen?.active
+    active: modelData && Settings.data.desktopWidgets.enabled && (DesktopWidgetHelpers.field(screenWidgets, "length") > 0 || DesktopWidgetRegistry.editMode) && (!CompositorService.overviewActive || Settings.data.desktopWidgets.overviewEnabled) && (!PowerProfileService.octaliaPerformanceMode || !Settings.data.octaliaPerformance.disableDesktopWidgets) && !DesktopWidgetHelpers.optionalField(PanelService.lockScreen, "active")
 
     sourceComponent: PanelWindow {
       id: window
@@ -77,7 +70,7 @@ Variants {
       }
 
       // Add a new widget to the current screen
-      function addWidgetToCurrentScreen(widgetId) {
+      function addWidgetToCurrentScreen(widgetId: string): void {
         var i, widgets;
         var monitorName = window.screen.name;
         var newWidget = {
@@ -86,11 +79,7 @@ Variants {
 
         // Load default metadata if available
         var metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
-        if (metadata) {
-          Object.keys(metadata).forEach(function (key) {
-            newWidget[key] = metadata[key];
-          });
-        }
+        DesktopWidgetHelpers.copyWidgetMetadata(newWidget, metadata);
 
         // Place at screen center
         newWidget.x = (window.screen.width / 2) - 100;
@@ -188,18 +177,8 @@ Variants {
               // If we found a perfect match, it would have returned already
               // Otherwise, try to find a divisor of both centerX and centerY
               // that's close to our best size
-              var gcd = function (a, b) {
-                var temp;
-                while (b !== 0) {
-                  temp = b;
-                  b = a % b;
-                  a = temp;
-                }
-                return a;
-              };
-
               // Find common divisors of centerX and centerY
-              var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
+              var centerGcd = DesktopWidgetHelpers.gcd(Math.round(centerX), Math.round(centerY));
               if (centerGcd > 0) {
                 // Find a divisor of centerGcd that's close to bestSize
                 for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
@@ -274,7 +253,7 @@ Variants {
 
           delegate: Loader {
             id: widgetLoader
-            active: widgetLoader.modelData.id in root.registeredWidgets
+            active: DesktopWidgetHelpers.field(widgetLoader.modelData, "id") in root.registeredWidgets
 
             required property var modelData
             required property int index
@@ -292,7 +271,7 @@ Variants {
             }
 
             function _loadWidget() {
-              var widgetId = widgetLoader.modelData.id;
+              var widgetId = DesktopWidgetHelpers.field(widgetLoader.modelData, "id");
               var comp = root.registeredWidgets[widgetId];
               if (!comp)
                 return;
@@ -313,11 +292,12 @@ Variants {
             onLoaded: {
               var newRegions;
               if (item) {
-                item.parent = widgetsContainer;
+                const widgetItem = item as Item;
+                widgetItem.parent = widgetsContainer;
 
                 // Create mask region so this widget receives mouse input
                 _maskRegion = maskRegionComponent.createObject(window);
-                _maskRegion.item = item;
+                DesktopWidgetHelpers.writeField(_maskRegion, "item", widgetItem);
                 newRegions = window._maskRegions.slice();
                 newRegions.push(_maskRegion);
                 window._maskRegions = newRegions;
@@ -330,9 +310,7 @@ Variants {
               if (!item && _maskRegion) {
                 region = _maskRegion;
                 _maskRegion = null;
-                window._maskRegions = window._maskRegions.filter(function (r) {
-                  return r !== region;
-                });
+                window._maskRegions = DesktopWidgetHelpers.withoutRegion(window._maskRegions, region);
                 region.destroy();
               }
             }
@@ -473,8 +451,8 @@ Variants {
                                  });
                     }
                     globalPos = addWidgetButton.mapToItem(null, 0, addWidgetButton.height + Style.marginS);
-                    popupMenuWindow.showDynamicContextMenu(items, globalPos.x, globalPos.y, function (widgetId) {
-                      addWidgetToCurrentScreen(widgetId);
+                    popupMenuWindow.showDynamicContextMenu(items, globalPos.x, globalPos.y, function (widgetId: string): bool {
+                      window.addWidgetToCurrentScreen(widgetId);
                       return false;
                     });
                   }

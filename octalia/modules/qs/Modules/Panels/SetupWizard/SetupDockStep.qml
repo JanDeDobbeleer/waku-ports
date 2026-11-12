@@ -6,6 +6,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "SetupDockStepUtils.js" as SetupDockStepUtils
 
 ColumnLayout {
   id: root
@@ -187,7 +188,7 @@ ColumnLayout {
         label: monitorOption.modelData.name || "Unknown"
         visible: Settings.data.dock.enabled
         description: {
-          I18n.tr("system.monitor-description", {
+          I18n.trArgs("system.monitor-description", {
                     "model": monitorOption.modelData.model,
                     "width": monitorOption.modelData.width * compositorScale,
                     "height": monitorOption.modelData.height * compositorScale,
@@ -196,16 +197,7 @@ ColumnLayout {
         }
         checked: (Settings.data.dock.monitors || []).indexOf(monitorOption.modelData.name) !== -1
         onToggled: checked => {
-                     if (checked) {
-                       const arr = (Settings.data.dock.monitors || []).slice();
-                       if (arr.indexOf(monitorOption.modelData.name) === -1)
-                       arr.push(monitorOption.modelData.name);
-                       Settings.data.dock.monitors = arr;
-                     } else {
-                       Settings.data.dock.monitors = (Settings.data.dock.monitors || []).filter(function (n) {
-                         return n !== monitorOption.modelData.name;
-                       });
-                     }
+                     Settings.data.dock.monitors = SetupDockStepUtils.updateMonitors(Settings.data.dock.monitors, monitorOption.modelData.name, checked);
                    }
       }
     }

@@ -10,6 +10,7 @@ import qs.Services.Compositor
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 
 Item {
   id: root
@@ -41,15 +42,15 @@ Item {
   }
 
   // Widget settings - matching MediaMini pattern
-  readonly property bool showIcon: (widgetSettings.showIcon !== undefined) ? widgetSettings.showIcon : (widgetMetadata.showIcon || false)
-  readonly property bool showText: (widgetSettings.showText !== undefined) ? widgetSettings.showText : (widgetMetadata.showText || false)
-  readonly property string hideMode: (widgetSettings.hideMode !== undefined) ? widgetSettings.hideMode : (widgetMetadata.hideMode || "hidden")
-  readonly property string scrollingMode: (widgetSettings.scrollingMode !== undefined) ? widgetSettings.scrollingMode : (widgetMetadata.scrollingMode || "hover")
+  readonly property bool showIcon: (BarWidgetHelpers.readProperty(widgetSettings, "showIcon") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showIcon") : (BarWidgetHelpers.readProperty(widgetMetadata, "showIcon") || false)
+  readonly property bool showText: (BarWidgetHelpers.readProperty(widgetSettings, "showText") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "showText") : (BarWidgetHelpers.readProperty(widgetMetadata, "showText") || false)
+  readonly property string hideMode: (BarWidgetHelpers.readProperty(widgetSettings, "hideMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "hideMode") : (BarWidgetHelpers.readProperty(widgetMetadata, "hideMode") || "hidden")
+  readonly property string scrollingMode: (BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") : (BarWidgetHelpers.readProperty(widgetMetadata, "scrollingMode") || "hover")
 
   // Maximum widget width with user settings support
-  readonly property real maxWidth: (widgetSettings.maxWidth !== undefined) ? widgetSettings.maxWidth : Math.max(widgetMetadata.maxWidth || 0, screen ? screen.width * 0.06 : 0)
-  readonly property bool useFixedWidth: (widgetSettings.useFixedWidth !== undefined) ? widgetSettings.useFixedWidth : (widgetMetadata.useFixedWidth || false)
-  readonly property string textColorKey: (widgetSettings.textColor !== undefined) ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property real maxWidth: (BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") : Math.max(BarWidgetHelpers.readProperty(widgetMetadata, "maxWidth") || 0, screen ? screen.width * 0.06 : 0)
+  readonly property bool useFixedWidth: (BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") : (BarWidgetHelpers.readProperty(widgetMetadata, "useFixedWidth") || false)
+  readonly property string textColorKey: (BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
   readonly property color textColor: Color.resolveColorKey(textColorKey)
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
@@ -93,7 +94,7 @@ Item {
     }
   }
 
-  function calculateContentWidth() {
+  function calculateContentWidth(): real {
     // Calculate the actual content width based on visible elements
     var contentWidth = 0;
     var margins = Style.margin2S; // Left and right margins
@@ -133,47 +134,8 @@ Item {
     return Math.min(calculateContentWidth(), maxWidth);
   }
 
-  function getAppIcon() {
-    try {
-      // Try CompositorService first
-      const focusedWindow = CompositorService.getFocusedWindow();
-      if (focusedWindow && focusedWindow.appId) {
-        try {
-          const idValue = focusedWindow.appId;
-          const normalizedId = (typeof idValue === 'string') ? idValue : String(idValue);
-          const iconResult = ThemeIcons.iconForAppId(normalizedId.toLowerCase());
-          if (iconResult && iconResult !== "") {
-            return iconResult;
-          }
-        } catch (iconError) {
-          Logger.w("ActiveWindow", "Error getting icon from CompositorService:", iconError);
-        }
-      }
-
-      if (CompositorService.isHyprland) {
-        // Fallback to ToplevelManager
-        if (ToplevelManager && ToplevelManager.activeToplevel) {
-          try {
-            const activeToplevel = ToplevelManager.activeToplevel;
-            if (activeToplevel.appId) {
-              const idValue2 = activeToplevel.appId;
-              const normalizedId2 = (typeof idValue2 === 'string') ? idValue2 : String(idValue2);
-              const iconResult2 = ThemeIcons.iconForAppId(normalizedId2.toLowerCase());
-              if (iconResult2 && iconResult2 !== "") {
-                return iconResult2;
-              }
-            }
-          } catch (fallbackError) {
-            Logger.w("ActiveWindow", "Error getting icon from ToplevelManager:", fallbackError);
-          }
-        }
-      }
-
-      return ThemeIcons.iconFromName(fallbackIcon);
-    } catch (e) {
-      Logger.w("ActiveWindow", "Error in getAppIcon:", e);
-      return ThemeIcons.iconFromName(fallbackIcon);
-    }
+  function getAppIcon(): string {
+    return BarWidgetHelpers.getActiveWindowIcon(CompositorService, ToplevelManager, ThemeIcons, root.fallbackIcon, Logger);
   }
 
   NPopupContextMenu {
@@ -247,7 +209,7 @@ Item {
             visible: source !== ""
 
             // Apply dock shader to active window icon (always themed)
-            layer.enabled: root.widgetSettings.colorizeIcons !== false
+            layer.enabled: BarWidgetHelpers.readProperty(root.widgetSettings, "colorizeIcons") !== false
             layer.effect: ShaderEffect {
               property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
               property real colorizeMode: 0.0 // Dock mode (grayscale)
@@ -321,7 +283,7 @@ Item {
             visible: source !== ""
 
             // Apply dock shader to active window icon (always themed)
-            layer.enabled: root.widgetSettings.colorizeIcons !== false
+            layer.enabled: BarWidgetHelpers.readProperty(root.widgetSettings, "colorizeIcons") !== false
             layer.effect: ShaderEffect {
               property color targetColor: Color.mOnSurface
               property real colorizeMode: 0.0 // Dock mode (grayscale)
@@ -352,7 +314,7 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, root.screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen, null);
                  }
                }
   }
@@ -360,20 +322,10 @@ Item {
   Connections {
     target: CompositorService
     function onActiveWindowChanged() {
-      try {
-        windowIcon.source = Qt.binding(root.getAppIcon);
-        windowIconVertical.source = Qt.binding(root.getAppIcon);
-      } catch (e) {
-        Logger.w("ActiveWindow", "Error in onActiveWindowChanged:", e);
-      }
+      BarWidgetHelpers.updateWindowIcons(windowIcon, windowIconVertical, Qt, root.getAppIcon, Logger, "onActiveWindowChanged");
     }
     function onWindowListChanged() {
-      try {
-        windowIcon.source = Qt.binding(root.getAppIcon);
-        windowIconVertical.source = Qt.binding(root.getAppIcon);
-      } catch (e) {
-        Logger.w("ActiveWindow", "Error in onWindowListChanged:", e);
-      }
+      BarWidgetHelpers.updateWindowIcons(windowIcon, windowIconVertical, Qt, root.getAppIcon, Logger, "onWindowListChanged");
     }
   }
 }

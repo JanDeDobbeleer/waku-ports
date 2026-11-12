@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 
 Item {
@@ -31,7 +32,7 @@ Item {
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
   readonly property real barHeight: Style.getBarHeightForScreen(screenName)
-  readonly property int spacerSize: widgetSettings.width !== undefined ? widgetSettings.width : widgetMetadata.width
+  readonly property int spacerSize: BarWidgetHelpers.readProperty(widgetSettings, "width") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "width") : BarWidgetHelpers.readProperty(widgetMetadata, "width")
 
   implicitWidth: isBarVertical ? barHeight : spacerSize
   implicitHeight: isBarVertical ? spacerSize : barHeight

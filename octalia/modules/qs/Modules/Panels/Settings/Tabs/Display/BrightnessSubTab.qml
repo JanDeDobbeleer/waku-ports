@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Services.Compositor
 import qs.Services.Hardware
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -28,44 +29,17 @@ ColumnLayout {
         property var brightnessMonitor: BrightnessService.getMonitorForScreen(monitorSettings.modelData)
         property real localBrightness: 0.5
         property bool localBrightnessChanging: false
-        readonly property string automaticOptionLabel: {
-          var baseLabel = I18n.tr("panels.display.monitors-backlight-device-auto-option");
-          var autoDevicePath = (BrightnessService.availableBacklightDevices && BrightnessService.availableBacklightDevices.length > 0) ? BrightnessService.availableBacklightDevices[0] : "";
-          if (autoDevicePath === "")
-            return baseLabel;
-
-          var autoDeviceName = BrightnessService.getBacklightDeviceName(autoDevicePath) || autoDevicePath;
-          return baseLabel + "(" + autoDeviceName + ")";
-        }
-        readonly property var backlightDeviceOptions: {
-          var deviceName, devicePath, i;
-          var options = [
-                {
-                  "key": "",
-                  "name": automaticOptionLabel
-                }
-              ];
-
-          var devices = BrightnessService.availableBacklightDevices || [];
-          for (i = 0; i < devices.length; i++) {
-            devicePath = devices[i];
-            deviceName = BrightnessService.getBacklightDeviceName(devicePath) || devicePath;
-            options.push({
-                           "key": devicePath,
-                           "name": deviceName
-                         });
-          }
-          return options;
-        }
+        readonly property string automaticOptionLabel: SettingsValue.automaticBacklightLabel(I18n.tr("panels.display.monitors-backlight-device-auto-option"), BrightnessService.availableBacklightDevices, BrightnessService)
+        readonly property var backlightDeviceOptions: SettingsValue.backlightDeviceOptions(BrightnessService.availableBacklightDevices, BrightnessService, automaticOptionLabel)
 
         onBrightnessMonitorChanged: {
           if (brightnessMonitor && !localBrightnessChanging)
-            localBrightness = brightnessMonitor.brightness || 0.5;
+            localBrightness = SettingsValue.read(brightnessMonitor, "brightness") || 0.5;
         }
 
         Connections {
           target: BrightnessService
-          function onMonitorBrightnessChanged(monitor, newBrightness) {
+          function onMonitorBrightnessChanged(monitor: var, newBrightness: real): void {
             if (monitor === monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
               monitorSettings.localBrightness = newBrightness;
             }
@@ -76,7 +50,7 @@ ColumnLayout {
           ignoreUnknownSignals: true
           function onBrightnessUpdated() {
             if (monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
-              monitorSettings.localBrightness = monitorSettings.brightnessMonitor.brightness || 0;
+              monitorSettings.localBrightness = SettingsValue.read(monitorSettings.brightnessMonitor, "brightness") || 0;
             }
           }
         }
@@ -85,8 +59,8 @@ ColumnLayout {
           interval: 120
           repeat: false
           onTriggered: {
-            if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable && Math.abs(monitorSettings.localBrightness - monitorSettings.brightnessMonitor.brightness) >= 0.005) {
-              monitorSettings.brightnessMonitor.setBrightness(monitorSettings.localBrightness);
+            if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") && Math.abs(monitorSettings.localBrightness - SettingsValue.read(monitorSettings.brightnessMonitor, "brightness")) >= 0.005) {
+              SettingsValue.invoke(monitorSettings.brightnessMonitor, "setBrightness", monitorSettings.localBrightness);
             }
           }
         }
@@ -116,7 +90,7 @@ ColumnLayout {
                 return (info && info.scale) ? info.scale : 1.0;
               }
               text: {
-                I18n.tr("system.monitor-description", {
+                I18n.trArgs("system.monitor-description", {
                           "model": monitorSettings.modelData.model,
                           "width": monitorSettings.modelData.width * compositorScale,
                           "height": monitorSettings.modelData.height * compositorScale,
@@ -152,16 +126,16 @@ ColumnLayout {
                 to: 1
                 value: monitorSettings.localBrightness
                 stepSize: 0.01
-                enabled: monitorSettings.brightnessMonitor ? monitorSettings.brightnessMonitor.brightnessControlAvailable : false
+                enabled: monitorSettings.brightnessMonitor ? SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") : false
                 onMoved: value => {
-                           if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable) {
+                           if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable")) {
                              monitorSettings.localBrightness = value;
                              debounceTimer.restart();
                            }
                          }
                 onPressedChanged: (pressed, value) => {
                                     monitorSettings.localBrightnessChanging = pressed;
-                                    if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable) {
+                                    if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable")) {
                                       if (pressed) {
                                         monitorSettings.localBrightness = value;
                                         debounceTimer.restart();
@@ -179,23 +153,23 @@ ColumnLayout {
                 Layout.preferredWidth: 55
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignVCenter
-                opacity: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                opacity: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") ? 0.5 : 1.0
               }
 
               Item {
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 NIcon {
-                  icon: monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.method == "internal" ? "device-laptop" : "device-desktop"
+                  icon: monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "method") == "internal" ? "device-laptop" : "device-desktop"
                   anchors.right: parent.right
                   anchors.verticalCenter: parent.verticalCenter
-                  opacity: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                  opacity: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") ? 0.5 : 1.0
                 }
               }
             }
 
             NText {
-              visible: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable && !(monitorSettings.brightnessMonitor.method === "internal" && monitorSettings.brightnessMonitor.initInProgress)
+              visible: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") && !(SettingsValue.read(monitorSettings.brightnessMonitor, "method") === "internal" && SettingsValue.read(monitorSettings.brightnessMonitor, "initInProgress"))
               text: I18n.tr("panels.display.monitors-brightness-unavailable-generic")
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
@@ -205,7 +179,7 @@ ColumnLayout {
 
             NComboBox {
               Layout.fillWidth: true
-              visible: monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.method === "internal"
+              visible: monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "method") === "internal"
               label: I18n.tr("panels.display.monitors-backlight-device-label")
               description: I18n.tr("panels.display.monitors-backlight-device-description")
               model: monitorSettings.backlightDeviceOptions

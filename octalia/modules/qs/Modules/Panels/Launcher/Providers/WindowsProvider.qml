@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import qs.Commons
 import qs.Services.Compositor
+import "WindowsProviderUtils.js" as WindowsProviderUtils
 
 Item {
   id: root
@@ -11,17 +12,17 @@ Item {
   property string supportedLayouts: "list"
   property string iconMode: Settings.data.appLauncher.iconMode
 
-  function init() {
+  function init(): void {
     Logger.d("WindowsProvider", "Initialized");
   }
 
   // Check if this provider handles the command
-  function handleCommand(searchText) {
+  function handleCommand(searchText: string): bool {
     return searchText.startsWith(">win");
   }
 
   // Return available commands when user types ">"
-  function commands() {
+  function commands(): var {
     return [
           {
             "name": ">win",
@@ -30,13 +31,13 @@ Item {
             "isTablerIcon": true,
             "isImage": false,
             "onActivate": function () {
-              launcher.setSearchText(">win ");
+              WindowsProviderUtils.setSearchText(launcher, ">win ");
             }
           }
         ];
   }
 
-  function getResults(query) {
+  function getResults(query: string): var {
     var appEntry, entry, i, iconName, j, score, searchTerm, win;
     if (!query)
       return [];
@@ -62,8 +63,8 @@ Item {
     var items = [];
 
     // Collect all windows from CompositorService
-    for (i = 0; i < CompositorService.windows.count; i++) {
-      win = CompositorService.windows.get(i);
+    for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+      win = WindowsProviderUtils.windowAt(CompositorService, i);
       items.push({
                    "id": win.id,
                    "title": win.title || "",
@@ -88,9 +89,9 @@ Item {
 
       // Get icon name from DesktopEntry if available, otherwise use appId
       iconName = entry.appId;
-      appEntry = ThemeIcons.findAppEntry(entry.appId);
-      if (appEntry && appEntry.icon) {
-        iconName = appEntry.icon;
+      appEntry = WindowsProviderUtils.iconForApp(ThemeIcons, entry.appId);
+      if (appEntry) {
+        iconName = appEntry;
       }
 
       launcherItems.push({
@@ -109,17 +110,17 @@ Item {
     return launcherItems;
   }
 
-  function getAllWindows() {
+  function getAllWindows(): var {
     var appEntry, i, iconName, win;
     var launcherItems = [];
 
-    for (i = 0; i < CompositorService.windows.count; i++) {
-      win = CompositorService.windows.get(i);
+    for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+      win = WindowsProviderUtils.windowAt(CompositorService, i);
 
       iconName = win.appId;
-      appEntry = ThemeIcons.findAppEntry(win.appId);
-      if (appEntry && appEntry.icon) {
-        iconName = appEntry.icon;
+      appEntry = WindowsProviderUtils.iconForApp(ThemeIcons, win.appId);
+      if (appEntry) {
+        iconName = appEntry;
       }
 
       launcherItems.push({
@@ -140,7 +141,7 @@ Item {
     return launcherItems;
   }
 
-  function createActivateHandler(windowEntry) {
+  function createActivateHandler(windowEntry: var): var {
     return function () {
       if (launcher)
         launcher.close();
@@ -148,8 +149,8 @@ Item {
       Qt.callLater(() => {
         var i, win;
                      // Find the actual window object to pass to focusWindow
-                     for (i = 0; i < CompositorService.windows.count; i++) {
-                       win = CompositorService.windows.get(i);
+                     for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+                       win = WindowsProviderUtils.windowAt(CompositorService, i);
                        if (win.id === windowEntry.id) {
                          CompositorService.focusWindow(win);
                          break;

@@ -1,7 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -14,23 +17,18 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property var localBlacklist: widgetData.blacklist || []
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property string valueChevronColor: widgetData.chevronColor !== undefined ? widgetData.chevronColor : widgetMetadata.chevronColor
-  property bool valueDrawerEnabled: widgetData.drawerEnabled !== undefined ? widgetData.drawerEnabled : widgetMetadata.drawerEnabled
-  property bool valueHidePassive: widgetData.hidePassive !== undefined ? widgetData.hidePassive : widgetMetadata.hidePassive
+  property var localBlacklist: SettingsValue.read(widgetData, "blacklist") || []
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property string valueChevronColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "chevronColor")
+  property bool valueDrawerEnabled: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "drawerEnabled")
+  property bool valueHidePassive: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hidePassive")
 
   ListModel {
     id: blacklistModel
   }
 
-  function populateBlacklist() {
-    var i;
-    for (i = 0; i < localBlacklist.length; i++) {
-      blacklistModel.append({
-                              "rule": localBlacklist[i]
-                            });
-    }
+  function populateBlacklist(): void {
+    SettingsValue.populateModel(localBlacklist, blacklistModel);
   }
 
   Component.onCompleted: {
@@ -48,7 +46,7 @@ ColumnLayout {
                  root.valueDrawerEnabled = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.drawerEnabled
+    defaultValue: SettingsValue.read(root.widgetMetadata, "drawerEnabled")
   }
 
   NColorChoice {
@@ -60,7 +58,7 @@ ColumnLayout {
                   root.saveSettings();
                 }
     visible: root.valueDrawerEnabled
-    defaultValue: root.widgetMetadata.chevronColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "chevronColor")
   }
 
   NToggle {
@@ -72,7 +70,7 @@ ColumnLayout {
                  root.valueColorizeIcons = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.colorizeIcons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeIcons")
   }
 
   NToggle {
@@ -84,7 +82,7 @@ ColumnLayout {
                  root.valueHidePassive = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hidePassive
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hidePassive")
   }
 
   ColumnLayout {
@@ -131,6 +129,7 @@ ColumnLayout {
 
   // List of current blacklist items
   NListView {
+    id: blacklistView
     Layout.fillWidth: true
     Layout.preferredHeight: 150
     Layout.topMargin: Style.marginL // Increased top margin
@@ -138,7 +137,10 @@ ColumnLayout {
 
     model: blacklistModel
     delegate: Item {
-      width: ListView.width
+      id: blacklistItem
+      required property int index
+      required property string rule
+      width: blacklistView.width
       height: 40
 
       Rectangle {
@@ -149,7 +151,7 @@ ColumnLayout {
         border.color: Color.mOutline
         border.width: Style.borderS
         radius: Style.radiusS
-        visible: model.rule !== undefined && model.rule !== "" // Only visible if rule exists
+        visible: blacklistItem.rule !== undefined && blacklistItem.rule !== "" // Only visible if rule exists
       }
 
       Row {
@@ -160,7 +162,7 @@ ColumnLayout {
 
         NText {
           anchors.verticalCenter: parent.verticalCenter
-          text: model.rule
+          text: blacklistItem.rule
           elide: Text.ElideRight
         }
 
@@ -173,7 +175,7 @@ ColumnLayout {
           colorBgHover: Color.mError
           colorFgHover: Color.mOnError
           onClicked: {
-            blacklistModel.remove(index);
+            blacklistModel.remove(blacklistItem.index);
             root.saveSettings();
           }
         }

@@ -87,13 +87,13 @@ Item {
   // React to auto-hide state changes from BarService
   Connections {
     target: BarService
-    function onBarAutoHideStateChanged(screenName, hidden) {
+    function onBarAutoHideStateChanged(screenName: string, hidden: bool): void {
       Logger.d("BarContent", "onBarAutoHideStateChanged:", screenName, hidden, "my screen:", barWindow.screen?.name);
       if (screenName === barWindow.screen?.name) {
         barWindow.isHidden = hidden;
       }
     }
-    function onBarHoverStateChanged(screenName, hovered) {
+    function onBarHoverStateChanged(screenName: string, hovered: bool): void {
       if (screenName === barWindow.screen?.name && barWindow.autoHide) {
         if (hovered) {
           hideTimer.stop();

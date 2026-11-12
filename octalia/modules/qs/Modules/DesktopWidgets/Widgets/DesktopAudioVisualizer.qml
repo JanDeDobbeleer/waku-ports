@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.Media
@@ -12,13 +13,13 @@ DraggableDesktopWidget {
 
   defaultY: 280
 
-  readonly property var widgetMetadata: DesktopWidgetRegistry.widgetMetadata["AudioVisualizer"]
+  readonly property var widgetMetadata: DesktopWidgetHelpers.field(DesktopWidgetRegistry.widgetMetadata, "AudioVisualizer")
 
-  readonly property int visualizerWidth: (widgetData && widgetData.width !== undefined) ? widgetData.width : (widgetMetadata?.width ?? 320)
-  readonly property int visualizerHeight: (widgetData && widgetData.height !== undefined) ? widgetData.height : (widgetMetadata?.height ?? 72)
-  readonly property string visualizerType: (widgetData && widgetData.visualizerType !== undefined) ? widgetData.visualizerType : (widgetMetadata?.visualizerType ?? "linear")
-  readonly property bool hideWhenIdle: (widgetData && widgetData.hideWhenIdle !== undefined) ? widgetData.hideWhenIdle : (widgetMetadata?.hideWhenIdle ?? false)
-  readonly property string colorName: (widgetData && widgetData.colorName !== undefined) ? widgetData.colorName : (widgetMetadata?.colorName ?? "primary")
+  readonly property int visualizerWidth: (widgetData && DesktopWidgetHelpers.field(widgetData, "width") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "width") : (DesktopWidgetHelpers.optionalField(widgetMetadata, "width") ?? 320)
+  readonly property int visualizerHeight: (widgetData && DesktopWidgetHelpers.field(widgetData, "height") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "height") : (DesktopWidgetHelpers.optionalField(widgetMetadata, "height") ?? 72)
+  readonly property string visualizerType: (widgetData && DesktopWidgetHelpers.field(widgetData, "visualizerType") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "visualizerType") : (DesktopWidgetHelpers.optionalField(widgetMetadata, "visualizerType") ?? "linear")
+  readonly property bool hideWhenIdle: (widgetData && DesktopWidgetHelpers.field(widgetData, "hideWhenIdle") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "hideWhenIdle") : (DesktopWidgetHelpers.optionalField(widgetMetadata, "hideWhenIdle") ?? false)
+  readonly property string colorName: (widgetData && DesktopWidgetHelpers.field(widgetData, "colorName") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "colorName") : (DesktopWidgetHelpers.optionalField(widgetMetadata, "colorName") ?? "primary")
 
   readonly property color fillColor: Color.resolveColorKey(colorName)
 

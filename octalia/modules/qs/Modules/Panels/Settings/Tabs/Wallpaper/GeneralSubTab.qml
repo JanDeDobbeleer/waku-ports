@@ -40,7 +40,7 @@ ColumnLayout {
 
       NIconButton {
         icon: "wallpaper-selector"
-        onClicked: PanelService.getPanel("wallpaperPanel", root.screen)?.toggle()
+        onClicked: PanelService.invokePanel(PanelService.getPanel("wallpaperPanel", root.screen), "toggle", [])
       }
     }
 
@@ -203,7 +203,7 @@ ColumnLayout {
       outlined: true
       onClicked: {
         ImageCacheService.clearLarge();
-        ToastService.showNotice(I18n.tr("panels.wallpaper.settings-clear-cache-toast"));
+        ToastService.showNotice(I18n.tr("panels.wallpaper.settings-clear-cache-toast"), undefined, undefined);
       }
     }
   }

@@ -4,6 +4,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -122,7 +123,7 @@ ColumnLayout {
               onReleased: {
                 preventStealing = false;
                 if (delegateItem.dragStartIndex !== -1 && delegateItem.dragTargetIndex !== -1 && delegateItem.dragStartIndex !== delegateItem.dragTargetIndex) {
-                  root.reorderEntries(delegateItem.dragStartIndex, delegateItem.dragTargetIndex);
+                  SettingsValue.invoke(root, "reorderEntries", delegateItem.dragStartIndex, delegateItem.dragTargetIndex);
                 }
                 delegateItem.dragging = false;
                 delegateItem.dragStartIndex = -1;
@@ -146,7 +147,7 @@ ColumnLayout {
             Layout.preferredHeight: Style.baseWidgetSize * 0.7
             Layout.alignment: Qt.AlignVCenter
             radius: Style.radiusXS
-            color: delegateItem.modelData.enabled ? Color.mPrimary : Color.mSurface
+            color: SettingsValue.read(delegateItem.modelData, "enabled") ? Color.mPrimary : Color.mSurface
             border.color: Color.mOutline
             border.width: Style.borderS
 
@@ -157,7 +158,7 @@ ColumnLayout {
             }
 
             NIcon {
-              visible: delegateItem.modelData.enabled
+              visible: SettingsValue.read(delegateItem.modelData, "enabled")
               anchors.centerIn: parent
               anchors.horizontalCenterOffset: -1
               icon: "check"
@@ -169,8 +170,8 @@ ColumnLayout {
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
               onClicked: {
-                root.updateEntry(delegateItem.index, {
-                                   "enabled": !delegateItem.modelData.enabled
+                SettingsValue.invoke(root, "updateEntry", delegateItem.index, {
+                                   "enabled": !SettingsValue.read(delegateItem.modelData, "enabled")
                                  });
               }
             }
@@ -179,7 +180,7 @@ ColumnLayout {
           // Label
           NText {
             Layout.fillWidth: true
-            text: delegateItem.modelData.text
+            text: SettingsValue.read(delegateItem.modelData, "text")
             color: Color.mOnSurface
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -189,11 +190,11 @@ ColumnLayout {
           NIconButtonHot {
             visible: Settings.data.sessionMenu.enableCountdown
             icon: "clock"
-            hot: delegateItem.modelData.countdownEnabled !== undefined ? delegateItem.modelData.countdownEnabled : true
+            hot: SettingsValue.read(delegateItem.modelData, "countdownEnabled") !== undefined ? SettingsValue.read(delegateItem.modelData, "countdownEnabled") : true
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
-            onClicked: root.updateEntry(delegateItem.index, {
-                                          "countdownEnabled": !(delegateItem.modelData.countdownEnabled !== undefined ? delegateItem.modelData.countdownEnabled : true)
+            onClicked: SettingsValue.invoke(root, "updateEntry", delegateItem.index, {
+                                          "countdownEnabled": !(SettingsValue.read(delegateItem.modelData, "countdownEnabled") !== undefined ? SettingsValue.read(delegateItem.modelData, "countdownEnabled") : true)
                                         })
           }
 
@@ -202,7 +203,7 @@ ColumnLayout {
             icon: "settings"
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
-            onClicked: root.openEntrySettingsDialog(delegateItem.index)
+            onClicked: SettingsValue.invoke(root, "openEntrySettingsDialog", delegateItem.index)
           }
         }
 
@@ -217,9 +218,9 @@ ColumnLayout {
           var targetIndex = -1;
           for (i = 0; i < listView.count; i++) {
             item = listView.itemAtIndex(i);
-            if (item && item.dragging) {
-              draggedIndex = item.dragStartIndex;
-              targetIndex = item.dragTargetIndex;
+            if (item && SettingsValue.read(item, "dragging")) {
+              draggedIndex = SettingsValue.read(item, "dragStartIndex");
+              targetIndex = SettingsValue.read(item, "dragTargetIndex");
               break;
             }
           }

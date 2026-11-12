@@ -2,6 +2,7 @@ import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Power
 import qs.Services.UI
 import qs.Widgets
@@ -30,13 +31,13 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
   customRadius: Style.radiusL
   visible: PowerProfileService.available
-  icon: PowerProfileService.getIcon()
+  icon: PowerProfileService.getIcon(undefined)
   colorBg: (PowerProfileService.profile === PowerProfile.Balanced) ? Style.capsuleColor : Color.mPrimary
   colorFg: (PowerProfileService.profile === PowerProfile.Balanced) ? Color.resolveColorKey(iconColorKey) : Color.mOnPrimary
   border.color: Style.capsuleBorderColor
@@ -65,6 +66,6 @@ NIconButton {
   }
 
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

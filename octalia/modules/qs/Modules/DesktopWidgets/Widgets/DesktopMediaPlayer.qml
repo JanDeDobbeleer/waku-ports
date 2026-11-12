@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Effects
 import QtQuick.Layouts
 import qs.Commons
@@ -16,12 +17,11 @@ DraggableDesktopWidget {
   defaultY: 200
 
   // Widget settings - check widgetData exists before accessing properties
-  readonly property string hideMode: (widgetData && widgetData.hideMode !== undefined) ? widgetData.hideMode : "visible"
-  readonly property bool showButtons: (widgetData && widgetData.showButtons !== undefined) ? widgetData.showButtons : true
-  readonly property bool showAlbumArt: (widgetData && widgetData.showAlbumArt !== undefined) ? widgetData.showAlbumArt : true
-  readonly property bool showVisualizer: (widgetData && widgetData.showVisualizer !== undefined) ? widgetData.showVisualizer : true
-  readonly property string visualizerType: (widgetData && widgetData.visualizerType && widgetData.visualizerType !== "") ? widgetData.visualizerType : "linear"
-  readonly property bool roundedCorners: (widgetData && widgetData.roundedCorners !== undefined) ? widgetData.roundedCorners : true
+  readonly property string hideMode: (widgetData && DesktopWidgetHelpers.field(widgetData, "hideMode") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "hideMode") : "visible"
+  readonly property bool showButtons: (widgetData && DesktopWidgetHelpers.field(widgetData, "showButtons") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showButtons") : true
+  readonly property bool showAlbumArt: (widgetData && DesktopWidgetHelpers.field(widgetData, "showAlbumArt") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showAlbumArt") : true
+  readonly property bool showVisualizer: (widgetData && DesktopWidgetHelpers.field(widgetData, "showVisualizer") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showVisualizer") : true
+  readonly property string visualizerType: (widgetData && DesktopWidgetHelpers.field(widgetData, "visualizerType") && DesktopWidgetHelpers.field(widgetData, "visualizerType") !== "") ? DesktopWidgetHelpers.field(widgetData, "visualizerType") : "linear"
   readonly property bool hasPlayer: MediaService.currentPlayer !== null
   readonly property bool isPlaying: MediaService.isPlaying
   readonly property bool hasActiveTrack: hasPlayer && (MediaService.trackTitle || MediaService.trackArtist)
@@ -59,8 +59,8 @@ DraggableDesktopWidget {
   readonly property bool showNext: hasPlayer && MediaService.canGoNext
   readonly property int visibleButtonCount: root.showButtons ? (1 + (showPrev ? 1 : 0) + (showNext ? 1 : 0)) : 0
 
-  implicitWidth: Math.round(400 * widgetScale)
-  implicitHeight: Math.round(64 * widgetScale + Style.margin2M * widgetScale)
+  implicitWidth: Math.round(400 * root.widgetScale)
+  implicitHeight: Math.round(64 * root.widgetScale + Style.margin2M * root.widgetScale)
   width: implicitWidth
   height: implicitHeight
 
@@ -90,9 +90,9 @@ DraggableDesktopWidget {
       maskEnabled: root.roundedCorners
       maskSource: ShaderEffectSource {
         sourceItem: Rectangle {
-          width: root.width - Math.round(Style.marginXS * widgetScale) * 2
-          height: root.height - Math.round(Style.marginXS * widgetScale)
-          radius: root.roundedCorners ? Math.round(Math.max(0, (Style.radiusL - Style.marginXS) * widgetScale)) : 0
+          width: root.width - Math.round(Style.marginXS * root.widgetScale) * 2
+          height: root.height - Math.round(Style.marginXS * root.widgetScale)
+          radius: root.roundedCorners ? Math.round(Math.max(0, (Style.radiusL - Style.marginXS) * root.widgetScale)) : 0
           color: "white"
         }
       }

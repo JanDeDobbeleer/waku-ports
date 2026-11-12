@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
 import qs.compat
+import "SessionMenuTab.js" as SessionMenuData
 
 ColumnLayout {
   id: root
@@ -56,170 +57,30 @@ ColumnLayout {
     }
   ]
 
-  function saveEntries() {
-    var i, keybind;
-    var toSave = [];
-    var enabledNumber = 1;
-
-    for (i = 0; i < entriesModel.length; i++) {
-      keybind = entriesModel[i].keybind || "";
-
-      if (entriesModel[i].enabled) {
-        // For enabled entries with numeric or empty keybinds, assign sequential number
-        if (keybind === "" || /^\d+$/.test(keybind)) {
-          keybind = String(enabledNumber);
-        }
-        enabledNumber++;
-      } else {
-        // For disabled entries with numeric keybinds, clear them
-        if (/^\d+$/.test(keybind)) {
-          keybind = "";
-        }
-      }
-
-      toSave.push({
-                    "action": entriesModel[i].id,
-                    "enabled": entriesModel[i].enabled,
-                    "countdownEnabled": entriesModel[i].countdownEnabled !== undefined ? entriesModel[i].countdownEnabled : true,
-                    "command": entriesModel[i].command || "",
-                    "keybind": keybind
-                  });
-    }
-
-    // Update local model with renumbered keybinds
-    var newModel = [];
-    for (i = 0; i < entriesModel.length; i++) {
-      newModel.push(Object.assign({}, entriesModel[i], {
-                                    "keybind": toSave[i].keybind
-                                  }));
-    }
-    entriesModel = newModel;
-
-    Settings.data.sessionMenu.powerOptions = toSave;
+  function saveEntries(): void {
+    const result = SessionMenuData.saveEntries(entriesModel);
+    entriesModel = result.model;
+    Settings.data.sessionMenu.powerOptions = result.settings;
   }
 
-  function updateEntry(idx, properties) {
-    var newModel = entriesModel.slice();
-    newModel[idx] = Object.assign({}, newModel[idx], properties);
-    entriesModel = newModel;
+  function updateEntry(idx: int, properties: var): void {
+    entriesModel = SessionMenuData.updateEntry(entriesModel, idx, properties);
     saveEntries();
   }
 
-  function reorderEntries(fromIndex, toIndex) {
-    var newModel = entriesModel.slice();
-    var item = newModel.splice(fromIndex, 1)[0];
-    newModel.splice(toIndex, 0, item);
-    entriesModel = newModel;
+  function reorderEntries(fromIndex: int, toIndex: int): void {
+    entriesModel = SessionMenuData.reorderEntries(entriesModel, fromIndex, toIndex);
     saveEntries();
   }
 
-  Component.onDestruction: {
-    var dialog;
-    if (_activeDialog && _activeDialog.close) {
-      dialog = _activeDialog;
-      _activeDialog = null;
-      dialog.close();
-      dialog.destroy();
-    }
-  }
+  Component.onDestruction: SessionMenuData.closeActiveDialog(root)
 
-  function openEntrySettingsDialog(index) {
-    if (index < 0 || index >= entriesModel.length) {
-      return;
-    }
-
-    var entry = entriesModel[index];
-    var component = Qt.createComponent(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/Tabs/SessionMenu/SessionMenuEntrySettingsDialog.qml");
-
-    function instantiateAndOpen() {
-      if (root._activeDialog) {
-        root._activeDialog.close();
-        root._activeDialog.destroy();
-        root._activeDialog = null;
-      }
-
-      var dialog = component.createObject(Overlay.overlay, {
-                                            "entryIndex": index,
-                                            "entryData": entry,
-                                            "entryId": entry.id,
-                                            "entryText": entry.text
-                                          });
-
-      if (dialog) {
-        root._activeDialog = dialog;
-        dialog.updateEntryProperties.connect((idx, properties) => {
-                                               root.updateEntry(idx, properties);
-                                             });
-        dialog.closed.connect(() => {
-                                if (root._activeDialog === dialog) {
-                                  root._activeDialog = null;
-                                  dialog.destroy();
-                                }
-                              });
-        dialog.open();
-      } else {
-        Logger.e("SessionMenuTab", "Failed to create entry settings dialog");
-      }
-    }
-
-    if (component.status === Component.Ready) {
-      instantiateAndOpen();
-    } else if (component.status === Component.Error) {
-      Logger.e("SessionMenuTab", "Error loading entry settings dialog:", component.errorString());
-    } else {
-      component.statusChanged.connect(function () {
-        if (component.status === Component.Ready) {
-          instantiateAndOpen();
-        } else if (component.status === Component.Error) {
-          Logger.e("SessionMenuTab", "Error loading entry settings dialog:", component.errorString());
-        }
-      });
-    }
+  function openEntrySettingsDialog(index: int): void {
+    SessionMenuData.openEntrySettingsDialog(root, index, entriesModel, ShellUrl.dir, Overlay.overlay, Logger, Component.Ready, Component.Error);
   }
 
   Component.onCompleted: {
-    var entry, found, i, j;
-    entriesModel = [];
-
-    // Add the entries available in settings
-    for (i = 0; i < Settings.data.sessionMenu.powerOptions.length; i++) {
-      const settingEntry = Settings.data.sessionMenu.powerOptions[i];
-
-      for (j = 0; j < entriesDefault.length; j++) {
-        if (settingEntry.action === entriesDefault[j].id) {
-          entry = entriesDefault[j];
-          entry.enabled = settingEntry.enabled;
-          // Default countdownEnabled to true for backward compatibility
-          entry.countdownEnabled = settingEntry.countdownEnabled !== undefined ? settingEntry.countdownEnabled : true;
-          // Load custom command if defined
-          entry.command = settingEntry.command || "";
-          entry.keybind = settingEntry.keybind || "";
-          entriesModel.push(entry);
-        }
-      }
-    }
-
-    // Add any missing entries from default
-    for (i = 0; i < entriesDefault.length; i++) {
-      found = false;
-      for (j = 0; j < entriesModel.length; j++) {
-        if (entriesModel[j].id === entriesDefault[i].id) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        entry = entriesDefault[i];
-        // Default countdownEnabled to true for new entries
-        entry.countdownEnabled = true;
-        // Default command to empty string for new entries
-        entry.command = "";
-        entry.keybind = "";
-        entriesModel.push(entry);
-      }
-    }
-
+    entriesModel = SessionMenuData.initializeEntries(Settings.data.sessionMenu.powerOptions, entriesDefault);
     saveEntries();
   }
 

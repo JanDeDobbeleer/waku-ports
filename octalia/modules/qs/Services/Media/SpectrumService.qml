@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "SpectrumUtils.js" as SpectrumUtils
+
 import QtQuick 6.10
 import Quickshell
 
@@ -13,17 +15,17 @@ Singleton {
   property var values: []
   property bool isIdle: true
 
-  function registerComponent(componentId) {
+  function registerComponent(componentId: var): void {
     root._registeredComponents[componentId] = true;
     root._registeredComponents = Object.assign({}, root._registeredComponents);
   }
 
-  function unregisterComponent(componentId) {
-    delete root._registeredComponents[componentId];
+  function unregisterComponent(componentId: var): void {
+    SpectrumUtils.unregister(root._registeredComponents, componentId);
     root._registeredComponents = Object.assign({}, root._registeredComponents);
   }
 
-  function isRegistered(componentId) {
+  function isRegistered(componentId: var): bool {
     return root._registeredComponents[componentId] === true;
   }
 }

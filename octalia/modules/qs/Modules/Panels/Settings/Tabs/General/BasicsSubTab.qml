@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 import qs.compat
 
 ColumnLayout {
@@ -55,11 +56,7 @@ ColumnLayout {
     selectionMode: "files"
     initialPath: Settings.preprocessPath(Settings.data.general.avatarImage).substr(0, Settings.preprocessPath(Settings.data.general.avatarImage).lastIndexOf("/")) || Quickshell.env("HOME")
     nameFilters: ImageCacheService.basicImageFilters
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    Settings.data.general.avatarImage = paths[0];
-                  }
-                }
+    onAccepted: paths => SettingsValue.assignFirstPath(paths, Settings.data.general, "avatarImage")
   }
 
   NDivider {
@@ -173,25 +170,7 @@ ColumnLayout {
       text: I18n.tr("panels.general.launch-setup-wizard")
       outlined: true
       Layout.fillWidth: true
-      onClicked: {
-        var targetScreen = PanelService.openedPanel ? PanelService.openedPanel.screen : (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
-        if (!targetScreen) {
-          return;
-        }
-        var setupPanel = PanelService.getPanel("setupWizardPanel", targetScreen);
-        if (setupPanel) {
-          setupPanel.telemetryOnlyMode = false;
-          setupPanel.open();
-        } else {
-          Qt.callLater(() => {
-                         var sp = PanelService.getPanel("setupWizardPanel", targetScreen);
-                         if (sp) {
-                           sp.telemetryOnlyMode = false;
-                           sp.open();
-                         }
-                       });
-        }
-      }
+      onClicked: SettingsValue.openSetupWizard(PanelService, Quickshell.screens, PanelService.openedPanel)
     }
 
     NButton {
@@ -213,7 +192,7 @@ ColumnLayout {
         var plainData = QtObj2JS.qtObjectToPlainObject(Settings.data);
         var json = JSON.stringify(plainData, null, 2);
         Os.copy(json);
-        ToastService.showNotice(I18n.tr("panels.general.settings-copied"));
+        ToastService.showNotice(I18n.tr("panels.general.settings-copied"), undefined, undefined);
       }
     }
   }

@@ -1,17 +1,18 @@
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
+import "CommandProviderUtils.js" as CommandProviderUtils
 
 Item {
   property var launcher: null
   property string name: I18n.tr("common.command")
   property string iconMode: Settings.data.appLauncher.iconMode
 
-  function handleCommand(query) {
+  function handleCommand(query: string): bool {
     return query.startsWith(">cmd");
   }
 
-  function commands() {
+  function commands(): var {
     return [
           {
             "name": ">cmd",
@@ -20,32 +21,16 @@ Item {
             "isTablerIcon": true,
             "isImage": false,
             "onActivate": function () {
-              launcher.setSearchText(">cmd ");
+              CommandProviderUtils.setSearchText(launcher, ">cmd ");
             }
           }
         ];
   }
 
-  function getResults(query) {
+  function getResults(query: string): var {
     if (!query.startsWith(">cmd"))
       return [];
 
-    let expression = query.substring(4).trim();
-    return [
-          {
-            "name": I18n.tr("common.command"),
-            "description": I18n.tr("launcher.providers.command-description"),
-            "icon": iconMode === "tabler" ? "terminal" : "utilities-terminal",
-            "isTablerIcon": true,
-            "isImage": false,
-            "onActivate": function () {
-              launcher.closeImmediately();
-              Qt.callLater(() => {
-                             Logger.d("CommandProvider", "Executing shell command: " + expression);
-                             Quickshell.execDetached(["cmd", "/c", expression]);
-                           });
-            }
-          }
-        ];
+    return [CommandProviderUtils.commandResult(query, launcher, Quickshell, Logger, I18n.tr("common.command"), I18n.tr("launcher.providers.command-description"), iconMode === "tabler" ? "terminal" : "utilities-terminal")];
   }
 }

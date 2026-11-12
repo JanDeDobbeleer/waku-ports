@@ -1,4 +1,6 @@
 pragma Singleton
+import "ColorSchemeServiceUtils.js" as ColorSchemeUtils
+
 import Qt.labs.folderlistmodel
 
 import QtQuick 6.10
@@ -65,7 +67,7 @@ Singleton {
     collectSchemes();
   }
 
-  function getBasename(path) {
+  function getBasename(path: var): string {
     if (!path)
       return "";
     var chunks = path.split("/");
@@ -85,7 +87,7 @@ Singleton {
     return schemeName;
   }
 
-  function resolveSchemePath(nameOrPath) {
+  function resolveSchemePath(nameOrPath: var): var {
     var i;
     if (!nameOrPath)
       return "";
@@ -107,7 +109,7 @@ Singleton {
     var preinstalledPath = schemesDirectory + "/" + schemeName + "/" + schemeName + ".json";
     var downloadedPath = downloadedSchemesDirectory + "/" + schemeName + "/" + schemeName + ".json";
     // Try to find the scheme in the loaded schemes list to determine which directory it's in
-    for (i = 0; i < schemes.length; i++) {
+    for (i = 0; i < ColorSchemeUtils.length(schemes); i++) {
       if (schemes[i].indexOf("/" + schemeName + "/") !== -1 || schemes[i].indexOf("/" + schemeName + ".json") !== -1) {
         return schemes[i];
       }
@@ -116,14 +118,14 @@ Singleton {
     return preinstalledPath;
   }
 
-  function applyScheme(nameOrPath) {
+  function applyScheme(nameOrPath: var): void {
     // Force reload by bouncing the path
     var filePath = resolveSchemePath(nameOrPath);
     schemeReader.path = "";
     schemeReader.path = filePath;
   }
 
-  function setPredefinedScheme(schemeName) {
+  function setPredefinedScheme(schemeName: var): void {
     var i;
     Logger.i("ColorScheme", "Attempting to set predefined scheme to:", schemeName);
 
@@ -132,7 +134,7 @@ Singleton {
 
     // Check if the scheme actually exists in the loaded schemes list
     var schemeExists = false;
-    for (i = 0; i < schemes.length; i++) {
+    for (i = 0; i < ColorSchemeUtils.length(schemes); i++) {
       if (getBasename(schemes[i]) === basename) {
         schemeExists = true;
         break;
@@ -171,84 +173,22 @@ Singleton {
     onCountChanged: root.collectSchemes()
   }
 
-  function collectSchemes() {
-    var basename;
+  function collectSchemes(): void {
     if (!scanning || bundledSchemes.status !== FolderListModel.Ready || downloadedSchemes.status === FolderListModel.Loading)
       return;
-    var files = [];
-    const sources = [[bundledSchemes, schemesDirectory], [downloadedSchemes, downloadedSchemesDirectory]];
-    for (const [model, dir] of sources) {
-      // A folder that does not exist yet (Os.mkdirp is asynchronous) lists some other directory, so
-      // keep only the entries that really sit in this one.
-      const prefix = dir.toLowerCase() + "/";
-      for (let k = 0; k < model.count; k++) {
-        const name = model.get(k, "fileName");
-        const path = String(model.get(k, "filePath")).replace(/\\/g, "/");
-        if (path.toLowerCase() !== prefix + name.toLowerCase())
-          continue;
-        files.push(dir + "/" + name + "/" + name + ".json");
-      }
-    }
-    files.sort(function (a, b) {
-      return getBasename(a).toLowerCase().localeCompare(getBasename(b).toLowerCase());
-    });
-    schemes = files;
-    scanning = false;
-    Logger.d("ColorScheme", "Listed", schemes.length, "schemes");
-    // Normalize stored scheme to basename and re-apply if necessary
-    var stored = Settings.data.colorSchemes.predefinedScheme;
-    if (stored) {
-      basename = getBasename(stored);
-      if (basename !== stored) {
-        Settings.data.colorSchemes.predefinedScheme = basename;
-      }
-      if (!Settings.data.colorSchemes.useWallpaperColors) {
-        applyScheme(basename);
-      }
-    }
+    ColorSchemeUtils.collectSchemes(root, bundledSchemes, downloadedSchemes, Settings, Logger);
   }
   // Internal loader to read a scheme file
   FileView {
     id: schemeReader
     onLoaded: {
-      var data, variant;
-      try {
-        data = JSON.parse(text());
-        variant = data;
-        // If scheme provides dark/light variants, pick based on settings
-        if (data && (data.dark || data.light)) {
-          if (Settings.data.colorSchemes.darkMode) {
-            variant = data.dark || data.light;
-          } else {
-            variant = data.light || data.dark;
-          }
-        }
-        root.writeColorsToDisk(variant);
-        root.lastPredefinedSchemeData = data;
-        Logger.i("ColorScheme", "Applying color scheme:", root.getBasename(path));
-
-        // Generate templates for predefined color schemes
-        if (root.hasEnabledTemplates() || Settings.data.templates.enableUserTheming) {
-          AppThemeService.generateFromPredefinedScheme(data);
-        }
-      } catch (e) {
-        Logger.e("ColorScheme", "Failed to parse scheme JSON:", path, e);
-      }
+      ColorSchemeUtils.loadScheme(root, schemeReader, Settings, AppThemeService, Logger);
     }
   }
 
   // Check if any templates are enabled
   function hasEnabledTemplates(): bool {
-    const activeTemplates = Settings.data.templates.activeTemplates;
-    if (!activeTemplates || activeTemplates.length === 0) {
-      return false;
-    }
-    for (let i = 0; i < activeTemplates.length; i++) {
-      if (activeTemplates[i].enabled) {
-        return true;
-      }
-    }
-    return false;
+    return ColorSchemeUtils.hasEnabledTemplates(Settings.data.templates.activeTemplates);
   }
 
   // Writer to colors.json using a JsonAdapter for safety
@@ -281,30 +221,7 @@ Singleton {
     }
   }
 
-  function writeColorsToDisk(obj) {
-    function pick(o, a, b, fallback) {
-      return (o && (o[a] || o[b])) || fallback;
-    }
-    out.mPrimary = pick(obj, "mPrimary", "primary", out.mPrimary);
-    out.mOnPrimary = pick(obj, "mOnPrimary", "onPrimary", out.mOnPrimary);
-    out.mSecondary = pick(obj, "mSecondary", "secondary", out.mSecondary);
-    out.mOnSecondary = pick(obj, "mOnSecondary", "onSecondary", out.mOnSecondary);
-    out.mTertiary = pick(obj, "mTertiary", "tertiary", out.mTertiary);
-    out.mOnTertiary = pick(obj, "mOnTertiary", "onTertiary", out.mOnTertiary);
-    out.mError = pick(obj, "mError", "error", out.mError);
-    out.mOnError = pick(obj, "mOnError", "onError", out.mOnError);
-    out.mSurface = pick(obj, "mSurface", "surface", out.mSurface);
-    out.mOnSurface = pick(obj, "mOnSurface", "onSurface", out.mOnSurface);
-    out.mSurfaceVariant = pick(obj, "mSurfaceVariant", "surfaceVariant", out.mSurfaceVariant);
-    out.mOnSurfaceVariant = pick(obj, "mOnSurfaceVariant", "onSurfaceVariant", out.mOnSurfaceVariant);
-    out.mOutline = pick(obj, "mOutline", "outline", out.mOutline);
-    out.mShadow = pick(obj, "mShadow", "shadow", out.mShadow);
-    out.mHover = pick(obj, "mHover", "hover", out.mHover);
-    out.mOnHover = pick(obj, "mOnHover", "onHover", out.mOnHover);
-
-    // Force a rewrite by updating the path
-    colorsWriter.path = "";
-    colorsWriter.path = colorsJsonFilePath;
-    colorsWriter.writeAdapter();
+  function writeColorsToDisk(obj: var): void {
+    ColorSchemeUtils.writeColorsToDisk(obj, out, colorsWriter, root);
   }
 }

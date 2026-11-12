@@ -2,14 +2,18 @@ import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Layouts
+import Quickshell
 import qs.Commons
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
 import qs.Widgets.AudioSpectrum
+import "./MediaCardUtils.js" as MediaCardUtils
 
 NBox {
   id: root
+
+  property ShellScreen screen
 
   // Track whether we have an active media player
   readonly property bool hasActivePlayer: MediaService.currentPlayer && MediaService.canPlay
@@ -36,21 +40,21 @@ NBox {
     SpectrumService.unregisterComponent("mediacard");
   }
 
-  property string wallpaper: WallpaperService.getWallpaper(screen.name)
+  property string wallpaper: WallpaperService.getWallpaper(root.screen ? root.screen.name : "")
   property string cachedWallpaper: ""
 
   // External state management
   Connections {
     target: WallpaperService
-    function onWallpaperChanged(screenName, path) {
-      if (screenName === screen.name) {
+    function onWallpaperChanged(screenName: string, path: string): void {
+      if (root.screen && screenName === root.screen.name) {
         root.wallpaper = path;
-        updateCachedWallpaper();
+        root.updateCachedWallpaper();
       }
     }
   }
 
-  function updateCachedWallpaper() {
+  function updateCachedWallpaper(): void {
     // Handle solid color mode - no wallpaper to cache
     if (Settings.data.wallpaper.useSolidColor || WallpaperService.isSolidColorPath(wallpaper)) {
       cachedWallpaper = "";
@@ -67,30 +71,34 @@ NBox {
       return;
     }
 
-    ImageCacheService.getThumbnail(wallpaper, function (cachedPath, success) {
-      if (!root)
-        return;
-      cachedWallpaper = success ? cachedPath : wallpaper;
+    ImageCacheService.getThumbnail(wallpaper, function (cachedPath: string, success: bool): void {
+      root.cachedWallpaper = success ? cachedPath : root.wallpaper;
     });
   }
 
   // Wrapper - rounded rect clipper
   Item {
+    id: clippingWrapper
     anchors.fill: parent
     layer.enabled: true
     layer.smooth: true
+    Rectangle {
+      id: clippingMask
+      anchors.fill: parent
+      radius: Style.radiusM
+      color: "white"
+    }
+    ShaderEffectSource {
+      id: clippingMaskSource
+      objectName: "mediaCardClipSource"
+      sourceItem: clippingMask
+      hideSource: true
+    }
     layer.effect: MultiEffect {
       maskEnabled: true
       maskThresholdMin: 0.95
       maskSpreadAtMin: 0.15
-      maskSource: ShaderEffectSource {
-        sourceItem: Rectangle {
-          width: root.width
-          height: root.height
-          radius: Style.radiusM
-          color: "white"
-        }
-      }
+      maskSource: MediaCardUtils.findChild(parent, "mediaCardClipSource")
     }
 
     // Solid color background (always present as base layer)
@@ -197,7 +205,7 @@ NBox {
     anchors.leftMargin: Style.marginM
     anchors.rightMargin: Style.marginM
     height: Style.baseWidgetSize
-    visible: MediaService.getAvailablePlayers().length > 1
+    visible: MediaCardUtils.arrayLength(MediaService.getAvailablePlayers()) > 1
     radius: Style.radiusM
     color: "transparent"
 
@@ -214,7 +222,7 @@ NBox {
       }
 
       NText {
-        text: playerSelectorButton.currentPlayer ? playerSelectorButton.currentPlayer.identity : ""
+        text: playerSelectorButton.currentPlayer ? MediaCardUtils.field(playerSelectorButton.currentPlayer, "identity") : ""
         pointSize: Style.fontSizeXS
         color: Color.mOnSurfaceVariant
         Layout.fillWidth: true
@@ -231,7 +239,7 @@ NBox {
         var i;
         var menuItems = [];
         var players = MediaService.getAvailablePlayers();
-        for (i = 0; i < players.length; i++) {
+        for (i = 0; i < MediaCardUtils.arrayLength(players); i++) {
           menuItems.push({
                            "label": players[i].identity,
                            "action": i.toString(),

@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,12 +16,12 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueHideWhenIdle: widgetData.hideWhenIdle !== undefined ? widgetData.hideWhenIdle : widgetMetadata.hideWhenIdle
-  property string valueColorName: widgetData.colorName !== undefined ? widgetData.colorName : widgetMetadata.colorName
+  property bool valueHideWhenIdle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenIdle")
+  property string valueColorName: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorName")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
-    settings.width = parseInt(widthInput.text) || widgetMetadata.width;
+    settings.width = parseInt(widthInput.text) || SettingsValue.read(widgetMetadata, "width");
     settings.hideWhenIdle = valueHideWhenIdle;
     settings.colorName = valueColorName;
     settingsChanged(settings);
@@ -31,10 +32,10 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.width")
     description: I18n.tr("bar.audio-visualizer.width-description")
-    text: root.widgetData.width || root.widgetMetadata.width
+    text: SettingsValue.read(root.widgetData, "width") || SettingsValue.read(root.widgetMetadata, "width")
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     onTextChanged: root.saveSettings()
-    defaultValue: String(root.widgetMetadata.width)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "width"))
   }
 
   NColorChoice {
@@ -46,7 +47,7 @@ ColumnLayout {
                   root.valueColorName = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.colorName
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorName")
   }
 
   NToggle {
@@ -57,6 +58,6 @@ ColumnLayout {
                  root.valueHideWhenIdle = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.hideWhenIdle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenIdle")
   }
 }

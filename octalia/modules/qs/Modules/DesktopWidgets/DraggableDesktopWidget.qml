@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Effects
 import Quickshell
 import qs.Commons
@@ -22,9 +23,9 @@ Item {
   readonly property bool isScaling: internal.isScaling
 
   // All Desktop widgets have these settings, but fallback just in case
-  readonly property var _metadata: widgetData?.id ? DesktopWidgetRegistry.widgetMetadata[widgetData.id] : null
-  property bool showBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : (_metadata?.showBackground ?? true)
-  property bool roundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : (_metadata?.roundedCorners ?? true)
+  readonly property var _metadata: DesktopWidgetHelpers.optionalField(widgetData, "id") ? DesktopWidgetRegistry.widgetMetadata[DesktopWidgetHelpers.field(widgetData, "id")] : null
+  property bool showBackground: DesktopWidgetHelpers.field(widgetData, "showBackground") !== undefined ? DesktopWidgetHelpers.field(widgetData, "showBackground") : (DesktopWidgetHelpers.optionalField(_metadata, "showBackground") ?? true)
+  property bool roundedCorners: DesktopWidgetHelpers.field(widgetData, "roundedCorners") !== undefined ? DesktopWidgetHelpers.field(widgetData, "roundedCorners") : (DesktopWidgetHelpers.optionalField(_metadata, "roundedCorners") ?? true)
 
   property real widgetScale: 1.0
   property real minScale: 0.5
@@ -66,17 +67,7 @@ Item {
       }
     }
 
-    var gcd = function (a, b) {
-      var temp;
-      while (b !== 0) {
-        temp = b;
-        b = a % b;
-        a = temp;
-      }
-      return a;
-    };
-
-    var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
+    var centerGcd = DesktopWidgetHelpers.gcd(Math.round(centerX), Math.round(centerY));
     if (centerGcd > 0) {
       for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
         if (centerGcd % divisor !== 0)
@@ -99,8 +90,8 @@ Item {
     property bool isScaling: false
     property real dragOffsetX: 0
     property real dragOffsetY: 0
-    property real baseX: (root.widgetData && root.widgetData.x !== undefined) ? root.widgetData.x : root.defaultX
-    property real baseY: (root.widgetData && root.widgetData.y !== undefined) ? root.widgetData.y : root.defaultY
+    property real baseX: (root.widgetData && DesktopWidgetHelpers.field(root.widgetData, "x") !== undefined) ? DesktopWidgetHelpers.field(root.widgetData, "x") : root.defaultX
+    property real baseY: (root.widgetData && DesktopWidgetHelpers.field(root.widgetData, "y") !== undefined) ? DesktopWidgetHelpers.field(root.widgetData, "y") : root.defaultY
     property real initialWidth: 0
     property real initialHeight: 0
     property point initialMousePos: Qt.point(0, 0)
@@ -110,14 +101,14 @@ Item {
     property string operationType: ""  // "drag" or "scale" or ""
   }
 
-  function snapToGrid(coord) {
+  function snapToGrid(coord: real): real {
     if (!Settings.data.desktopWidgets.gridSnap) {
       return coord;
     }
     return Math.round(coord / root.gridSize) * root.gridSize;
   }
 
-  function snapScaleToGrid(scale) {
+  function snapScaleToGrid(scale: real): real {
     if (!Settings.data.desktopWidgets.gridSnap || !Settings.data.desktopWidgets.gridSnapScale) {
       return scale;
     }
@@ -146,7 +137,7 @@ Item {
     return Math.max(minScale, Math.min(maxScale, snappedScale));
   }
 
-  function updateWidgetData(properties) {
+  function updateWidgetData(properties: var): void {
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -228,10 +219,10 @@ Item {
   }
 
   function openWidgetSettings() {
-    DesktopWidgetRegistry.openWidgetSettings(screen, widgetIndex, widgetData.id, widgetData);
+    DesktopWidgetRegistry.openWidgetSettings(screen, widgetIndex, DesktopWidgetHelpers.field(widgetData, "id"), widgetData);
   }
 
-  function handleContextMenuAction(action) {
+  function handleContextMenuAction(action: string): bool {
     if (action === "widget-settings") {
       // Don't close - openWidgetSettings will use the popup window for the dialog
       root.openWidgetSettings();
@@ -269,17 +260,17 @@ Item {
 
   Component.onCompleted: {
     // Initialize scale from widgetData when component is first created
-    if (widgetData && widgetData.scale !== undefined) {
-      widgetScale = widgetData.scale;
+    if (widgetData && DesktopWidgetHelpers.field(widgetData, "scale") !== undefined) {
+      widgetScale = DesktopWidgetHelpers.field(widgetData, "scale");
     }
   }
 
   onWidgetDataChanged: {
     if (!internal.isDragging && !internal.isScaling) {
-      internal.baseX = (widgetData && widgetData.x !== undefined) ? widgetData.x : defaultX;
-      internal.baseY = (widgetData && widgetData.y !== undefined) ? widgetData.y : defaultY;
-      if (widgetData && widgetData.scale !== undefined) {
-        widgetScale = widgetData.scale;
+      internal.baseX = (widgetData && DesktopWidgetHelpers.field(widgetData, "x") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "x") : defaultX;
+      internal.baseY = (widgetData && DesktopWidgetHelpers.field(widgetData, "y") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "y") : defaultY;
+      if (widgetData && DesktopWidgetHelpers.field(widgetData, "scale") !== undefined) {
+        widgetScale = DesktopWidgetHelpers.field(widgetData, "scale");
       } else if (widgetData) {
         // If widgetData exists but scale is not set, default to 1.0
         widgetScale = 1.0;
@@ -333,8 +324,8 @@ Item {
   property var contextMenuModel: {
     var widgetId;
     var hasSettings = false;
-    if (widgetData && widgetData.id) {
-      widgetId = widgetData.id;
+    if (widgetData && DesktopWidgetHelpers.field(widgetData, "id")) {
+      widgetId = DesktopWidgetHelpers.field(widgetData, "id");
       hasSettings = DesktopWidgetRegistry.widgetSettingsMap[widgetId] !== undefined;
     }
 
@@ -536,8 +527,8 @@ Item {
 
       visible: DesktopWidgetRegistry.editMode && !internal.isDragging
       // Position handles at corners of decoration rectangle (which extends by outlineMargin)
-      x: modelData.xMult === 0 ? -root.outlineMargin : (root.width + root.outlineMargin - root.cornerHandleSize)
-      y: modelData.yMult === 0 ? -root.outlineMargin : (root.height + root.outlineMargin - root.cornerHandleSize)
+      x: DesktopWidgetHelpers.field(modelData, "xMult") === 0 ? -root.outlineMargin : (root.width + root.outlineMargin - root.cornerHandleSize)
+      y: DesktopWidgetHelpers.field(modelData, "yMult") === 0 ? -root.outlineMargin : (root.height + root.outlineMargin - root.cornerHandleSize)
       width: root.cornerHandleSize
       height: root.cornerHandleSize
       z: 2000
@@ -547,9 +538,9 @@ Item {
         ctx.reset();
         ctx.fillStyle = root.colorHandle;
         ctx.beginPath();
-        ctx.moveTo(modelData.points[0][0] * root.cornerHandleSize, modelData.points[0][1] * root.cornerHandleSize);
-        ctx.lineTo(modelData.points[1][0] * root.cornerHandleSize, modelData.points[1][1] * root.cornerHandleSize);
-        ctx.lineTo(modelData.points[2][0] * root.cornerHandleSize, modelData.points[2][1] * root.cornerHandleSize);
+        ctx.moveTo(DesktopWidgetHelpers.pointCoordinate(modelData, 0, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 0, 1) * root.cornerHandleSize);
+        ctx.lineTo(DesktopWidgetHelpers.pointCoordinate(modelData, 1, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 1, 1) * root.cornerHandleSize);
+        ctx.lineTo(DesktopWidgetHelpers.pointCoordinate(modelData, 2, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 2, 1) * root.cornerHandleSize);
         ctx.closePath();
         ctx.fill();
       }
@@ -574,7 +565,7 @@ Item {
         id: scaleMouseArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        cursorShape: cornerHandle.modelData.cursor
+        cursorShape: DesktopWidgetHelpers.field(cornerHandle.modelData, "cursor")
         property point pressPos: Qt.point(0, 0)
 
         onPressed: mouse => {
@@ -599,7 +590,7 @@ Item {
 
                                // Project delta onto the diagonal direction for this corner
                                // xDir/yDir indicate which direction increases scale
-                               diagonalDelta = (deltaX * cornerHandle.modelData.xDir + deltaY * cornerHandle.modelData.yDir) / Math.sqrt(2);
+                               diagonalDelta = (deltaX * DesktopWidgetHelpers.field(cornerHandle.modelData, "xDir") + deltaY * DesktopWidgetHelpers.field(cornerHandle.modelData, "yDir")) / Math.sqrt(2);
 
                                // Scale sensitivity: pixels of drag per 1.0 scale change
                                sensitivity = 150;

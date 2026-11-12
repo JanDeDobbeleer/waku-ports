@@ -2,21 +2,13 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
   spacing: Style.marginL
-  function insertToken(token) {
-    var currentText, cursorPos, input, newText;
-    if (formatInput.inputItem) {
-      input = formatInput.inputItem;
-      cursorPos = input.cursorPosition;
-      currentText = input.text;
-      newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
-      input.text = newText + " ";
-      input.cursorPosition = cursorPos + token.length + 1;
-      input.forceActiveFocus();
-    }
+  function insertToken(token: string): void {
+    SettingsValue.insertTokenIntoInput(formatInput, token);
   }
 
   NComboBox {

@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NTagFilterUtils.js" as TagFilterUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -13,7 +15,7 @@ NCollapsible {
   property string selectedTag: ""
 
   // Formatting function for tag display (optional override)
-  property var formatTag: function (tag) {
+  property var formatTag: function (tag: var): string {
     if (tag === "")
       return I18n.tr("launcher.categories.all");
     // Default: capitalize first letter
@@ -34,7 +36,7 @@ NCollapsible {
       delegate: NButton {
         id: tagButton
         required property string modelData
-        text: root.formatTag(tagButton.modelData)
+        text: TagFilterUtils.formatTag(root, tagButton.modelData)
         backgroundColor: root.selectedTag === tagButton.modelData ? Color.mPrimary : Color.mSurfaceVariant
         textColor: root.selectedTag === tagButton.modelData ? Color.mOnPrimary : Color.mOnSurfaceVariant
         onClicked: root.selectedTag = tagButton.modelData

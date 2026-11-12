@@ -19,7 +19,7 @@ ColumnLayout {
   signal updateWidgetSettingsInSection(string section, int index, var settings)
   signal moveWidgetBetweenSections(string fromSection, int index, string toSection)
 
-  function getSectionIcons() {
+  function getSectionIcons(): var {
     return {
       "left": "arrow-bar-to-up",
       "right": "arrow-bar-to-down"

@@ -7,6 +7,7 @@ import Quickshell.Io
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "SetupWallpaperStepUtils.js" as SetupWallpaperStepUtils
 
 ColumnLayout {
   id: root
@@ -24,7 +25,7 @@ ColumnLayout {
       return;
     }
     if (ImageCacheService.initialized) {
-      ImageCacheService.getLarge(selectedWallpaper, Screen.width, Screen.height, function (path, success) {
+      ImageCacheService.getLarge(selectedWallpaper, Screen.width, Screen.height, function (path: string, success: bool) {
         if (root)
           root.previewCachedPath = success ? path : selectedWallpaper;
       });
@@ -152,20 +153,7 @@ ColumnLayout {
         target: galleryScroll.contentItem
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
-                   const flick = galleryScroll.contentItem;
-                   if (!flick)
-                   return;
-                   const delta = event.pixelDelta.x !== 0 || event.pixelDelta.y !== 0 ? (event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.pixelDelta.x) : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
-                   // Move opposite of wheel to scroll content to the right for wheel down
-                   const step = -delta;
-                   const maxX = Math.max(0, flick.contentWidth - flick.width);
-                   let newX = flick.contentX + step;
-                   if (newX < 0)
-                   newX = 0;
-                   if (newX > maxX)
-                   newX = maxX;
-                   flick.contentX = newX;
-                   event.accepted = true;
+                   SetupWallpaperStepUtils.scrollHorizontally(galleryScroll.contentItem, event);
                  }
       }
 
@@ -188,7 +176,7 @@ ColumnLayout {
 
             Component.onCompleted: {
               if (ImageCacheService.initialized) {
-                ImageCacheService.getThumbnail(thumbDelegate.modelData, function (path, success) {
+                ImageCacheService.getThumbnail(thumbDelegate.modelData, function (path: string, success: bool) {
                   if (thumbDelegate)
                     thumbDelegate.cachedPath = success ? path : thumbDelegate.modelData;
                 });
@@ -308,7 +296,7 @@ ColumnLayout {
           color: Color.mOnSurfaceVariant
         }
         NText {
-          text: root.selectedDirectory !== "" ? I18n.tr("setup.wallpaper.no-valid", {
+          text: root.selectedDirectory !== "" ? I18n.trArgs("setup.wallpaper.no-valid", {
                                                      "dir": root.selectedDirectory
                                                    }) : I18n.tr("setup.wallpaper.choose-dir")
           pointSize: Style.fontSizeS
@@ -368,12 +356,12 @@ ColumnLayout {
     }
   }
 
-  function readDirectoryImages(directoryPath) {
+  function readDirectoryImages(directoryPath: string): list<string> {
     var i;
     // Build find command args dynamically from ImageCacheService filters
     var filters = ImageCacheService.imageFilters;
     var findArgs = ["find", directoryPath, "-type", "f", "("];
-    for (i = 0; i < filters.length; i++) {
+    for (i = 0; i < SetupWallpaperStepUtils.arrayLength(filters); i++) {
       if (i > 0) {
         findArgs.push("-o");
       }
@@ -399,7 +387,7 @@ ColumnLayout {
   Connections {
     target: WallpaperService
     enabled: typeof WallpaperService !== "undefined"
-    function onWallpaperListChanged(screenName, count) {
+    function onWallpaperListChanged(screenName: string, count: int): void {
       if (screenName === Screen.name) {
         Qt.callLater(root.refreshWallpapers);
       }
@@ -420,8 +408,8 @@ ColumnLayout {
     } else {
       selectedDirectory = Settings.defaultWallpapersDirectory;
     }
-    if (typeof WallpaperService !== "undefined" && WallpaperService.currentWallpaper) {
-      selectedWallpaper = WallpaperService.currentWallpaper;
+    if (typeof WallpaperService !== "undefined" && SetupWallpaperStepUtils.field(WallpaperService, "currentWallpaper")) {
+      selectedWallpaper = SetupWallpaperStepUtils.field(WallpaperService, "currentWallpaper");
     }
     initialRefreshTimer.start();
   }
@@ -432,9 +420,9 @@ ColumnLayout {
     title: I18n.tr("setup.wallpaper.dir-select-title")
     initialPath: root.selectedDirectory || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
-                  if (paths.length > 0) {
-                    root.selectedDirectory = paths[0];
-                    root.directoryChanged(paths[0]);
+                  if (SetupWallpaperStepUtils.arrayLength(paths) > 0) {
+                    root.selectedDirectory = SetupWallpaperStepUtils.arrayAt(paths, 0);
+                    root.directoryChanged(SetupWallpaperStepUtils.arrayAt(paths, 0));
                   }
                 }
   }
@@ -445,18 +433,9 @@ ColumnLayout {
     running: false
     stdout: StdioCollector {}
     stderr: StdioCollector {}
-    onExited: function (exitCode) {
-      var i, images, line, lines;
+    onExited: function (exitCode: int): void {
       if (exitCode === 0) {
-        lines = stdout.text.split('\n');
-        images = [];
-        for (i = 0; i < lines.length; i++) {
-          line = lines[i].trim();
-          if (line !== '') {
-            images.push(line);
-          }
-        }
-        root.wallpapersList = images;
+        root.wallpapersList = SetupWallpaperStepUtils.imageLines(directoryScanner);
         root.updateFilteredWallpapers();
         if (root.wallpapersList.length > 0 && root.selectedWallpaper === "") {
           root.selectedWallpaper = root.wallpapersList[0];

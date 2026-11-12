@@ -144,7 +144,7 @@ Item {
       color: root.textFgColor
       visible: root.revealed
 
-      function getVerticalCenterOffset() {
+      function getVerticalCenterOffset(): real {
         // A small, symmetrical offset to push the text slightly away from the icon's edge.
         return root.openDownward ? Style.marginXS : -Style.marginXS;
       }
@@ -301,14 +301,14 @@ Item {
         return;
       }
       if (!root.forceOpen) {
-        showDelayed();
+        root.showDelayed();
       }
     }
     onExited: {
       root.hovered = false;
       root.exited();
       if (!root.forceOpen && !root.forceClose) {
-        hide();
+        root.hide();
       }
     }
     onClicked: mouse => {

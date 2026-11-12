@@ -2,6 +2,7 @@ import QtQuick 6.10
 import qs.Commons
 import qs.Services.UI
 import qs.compat
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 
 Item {
   id: root
@@ -11,8 +12,8 @@ Item {
   required property var widgetProps
 
   // Extract section info from widgetProps
-  readonly property string section: widgetProps ? (widgetProps.section || "") : ""
-  readonly property int sectionIndex: widgetProps ? (widgetProps.sectionWidgetIndex || 0) : 0
+  readonly property string section: widgetProps ? (BarWidgetHelpers.readProperty(widgetProps, "section") || "") : ""
+  readonly property int sectionIndex: widgetProps ? (BarWidgetHelpers.readProperty(widgetProps, "sectionWidgetIndex") || 0) : 0
 
   // Store registration key at registration time so unregistration always uses the correct key,
   // even if binding properties (section, sectionIndex) have changed by destruction time
@@ -29,9 +30,9 @@ Item {
   }
 
   // Bar orientation and height for extended click areas
-  readonly property string barPosition: Settings.getBarPositionForScreen(widgetScreen?.name)
+  readonly property string barPosition: Settings.getBarPositionForScreen(BarWidgetHelpers.optionalProperty(widgetScreen, "name"))
   readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
-  readonly property real barHeight: Style.getBarHeightForScreen(widgetScreen?.name)
+  readonly property real barHeight: Style.getBarHeightForScreen(BarWidgetHelpers.optionalProperty(widgetScreen, "name"))
 
   // Request full bar dimension from layout to extend click areas above/below widgets
   // For horizontal bars: full bar height, widget's content width
@@ -40,9 +41,9 @@ Item {
   implicitHeight: isVerticalBar ? getImplicitSize(loader.item, "implicitHeight") : barHeight
 
   // Remove layout space left by hidden widgets
-  visible: loader.item ? ((loader.item.opacity > 0.0) || (loader.item.hasOwnProperty("hideMode") && loader.item.hideMode === "transparent")) : false
+  visible: loader.item ? (((loader.item as Item).opacity > 0.0) || (BarWidgetHelpers.hasProperty(loader.item, "hideMode") && BarWidgetHelpers.getProperty(loader.item, "hideMode") === "transparent")) : false
 
-  function getImplicitSize(item, prop) {
+  function getImplicitSize(item: Item, prop: string): real {
     return (item && item.visible) ? Math.round(item[prop]) : 0;
   }
 
@@ -54,13 +55,13 @@ Item {
   // Build initial properties that must be available during Component.onCompleted.
   // This prevents registration-key mismatches in widgets that build IDs from
   // screen.name, section, or sectionWidgetIndex.
-  function _initialProps() {
+  function _initialProps(): var {
     return {
       "screen": widgetScreen,
-      "widgetId": widgetProps.widgetId || "",
-      "section": widgetProps.section || "",
-      "sectionWidgetIndex": widgetProps.sectionWidgetIndex || 0,
-      "sectionWidgetsCount": widgetProps.sectionWidgetsCount || 0
+      "widgetId": BarWidgetHelpers.readProperty(widgetProps, "widgetId") || "",
+      "section": BarWidgetHelpers.readProperty(widgetProps, "section") || "",
+      "sectionWidgetIndex": BarWidgetHelpers.readProperty(widgetProps, "sectionWidgetIndex") || 0,
+      "sectionWidgetsCount": BarWidgetHelpers.readProperty(widgetProps, "sectionWidgetsCount") || 0
     };
   }
 
@@ -102,26 +103,27 @@ Item {
       var prop;
       if (!item)
         return;
+      const widgetItem = item as Item;
 
-      Logger.d("BarWidgetLoader", "Loading widget", root.widgetId, "on screen:", root.widgetScreen.name);
+      Logger.d("BarWidgetLoader", "Loading widget", root.widgetId, "on screen:", BarWidgetHelpers.readProperty(root.widgetScreen, "name"));
 
       // Extend widget to fill full bar dimension for extended click areas
       // For horizontal bars: widget fills bar height (content width preserved)
       // For vertical bars: widget fills bar width (content height preserved)
       if (root.isVerticalBar) {
-        item.width = Qt.binding(function () {
+        widgetItem.width = Qt.binding(function (): real {
           return root.barHeight;
         });
       } else {
-        item.height = Qt.binding(function () {
+        widgetItem.height = Qt.binding(function (): real {
           return root.barHeight;
         });
       }
 
       // Apply remaining widget properties (screen is already set as initial prop)
       for (prop in root.widgetProps) {
-        if (item.hasOwnProperty(prop)) {
-          item[prop] = root.widgetProps[prop];
+        if (BarWidgetHelpers.hasProperty(widgetItem, prop)) {
+          widgetItem[prop] = root.widgetProps[prop];
         }
       }
 
@@ -129,16 +131,14 @@ Item {
       root._unregister();
 
       // Register and store the key for reliable unregistration
-      BarService.registerWidget(root.widgetScreen.name, root.section, root.widgetId, root.sectionIndex, item);
-      root._regScreen = root.widgetScreen.name;
+      BarService.registerWidget(BarWidgetHelpers.readProperty(root.widgetScreen, "name"), root.section, root.widgetId, root.sectionIndex, widgetItem);
+      root._regScreen = BarWidgetHelpers.readProperty(root.widgetScreen, "name");
       root._regSection = root.section;
       root._regWidgetId = root.widgetId;
       root._regIndex = root.sectionIndex;
 
       // Call custom onLoaded if it exists
-      if (item.hasOwnProperty("onLoaded")) {
-        item.onLoaded();
-      }
+      BarWidgetHelpers.callProperty(widgetItem, "onLoaded");
     }
 
     Component.onDestruction: {

@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,18 +16,18 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueShowIcon: widgetData.showIcon !== undefined ? widgetData.showIcon : widgetMetadata.showIcon
-  property bool valueShowText: widgetData.showText !== undefined ? widgetData.showText : widgetMetadata.showText
-  property string valueHideMode: widgetData.hideMode !== undefined ? widgetData.hideMode : widgetMetadata.hideMode
-  property string valueScrollingMode: widgetData.scrollingMode || widgetMetadata.scrollingMode
-  property int valueMaxWidth: widgetData.maxWidth !== undefined ? widgetData.maxWidth : widgetMetadata.maxWidth
-  property bool valueUseFixedWidth: widgetData.useFixedWidth !== undefined ? widgetData.useFixedWidth : widgetMetadata.useFixedWidth
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property string valueTextColor: widgetData.textColor !== undefined ? widgetData.textColor : widgetMetadata.textColor
+  property bool valueShowIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showIcon")
+  property bool valueShowText: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showText")
+  property string valueHideMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideMode")
+  property string valueScrollingMode: SettingsValue.truthyFallback(widgetData, widgetMetadata, "scrollingMode")
+  property int valueMaxWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "maxWidth")
+  property bool valueUseFixedWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useFixedWidth")
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property string valueTextColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "textColor")
 
   Component.onCompleted: {
-    if (widgetData && widgetData.hideMode !== undefined) {
-      valueHideMode = widgetData.hideMode;
+    if (widgetData && SettingsValue.read(widgetData, "hideMode") !== undefined) {
+      valueHideMode = SettingsValue.read(widgetData, "hideMode");
     }
   }
 
@@ -36,7 +37,7 @@ ColumnLayout {
     settings.showIcon = valueShowIcon;
     settings.showText = valueShowText;
     settings.scrollingMode = valueScrollingMode;
-    settings.maxWidth = parseInt(widthInput.text) || widgetMetadata.maxWidth;
+    settings.maxWidth = parseInt(widthInput.text) || SettingsValue.read(widgetMetadata, "maxWidth");
     settings.useFixedWidth = valueUseFixedWidth;
     settings.colorizeIcons = valueColorizeIcons;
     settings.textColor = valueTextColor;
@@ -66,7 +67,7 @@ ColumnLayout {
                   root.valueHideMode = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.hideMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideMode")
   }
 
   NColorChoice {
@@ -76,7 +77,7 @@ ColumnLayout {
                   root.valueTextColor = key;
                   root.saveSettings();
                 }
-    defaultValue: root.widgetMetadata.textColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "textColor")
   }
 
   NToggle {
@@ -88,7 +89,7 @@ ColumnLayout {
                  root.valueShowText = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showText
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showText")
   }
 
   NToggle {
@@ -100,7 +101,7 @@ ColumnLayout {
                  root.valueShowIcon = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.showIcon
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showIcon")
   }
 
   NToggle {
@@ -113,7 +114,7 @@ ColumnLayout {
                  root.saveSettings();
                }
     visible: root.valueShowIcon
-    defaultValue: root.widgetMetadata.colorizeIcons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeIcons")
   }
 
   NTextInput {
@@ -121,10 +122,10 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.max-width-label")
     description: I18n.tr("bar.media-mini.max-width-description")
-    placeholderText: root.widgetMetadata.maxWidth
+    placeholderText: SettingsValue.read(root.widgetMetadata, "maxWidth")
     text: root.valueMaxWidth
     onTextChanged: root.saveSettings()
-    defaultValue: String(root.widgetMetadata.maxWidth)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "maxWidth"))
   }
 
   NToggle {
@@ -136,7 +137,7 @@ ColumnLayout {
                  root.valueUseFixedWidth = checked;
                  root.saveSettings();
                }
-    defaultValue: root.widgetMetadata.useFixedWidth
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useFixedWidth")
   }
 
   NComboBox {
@@ -157,7 +158,7 @@ ColumnLayout {
       }
     ]
     currentKey: root.valueScrollingMode
-    defaultValue: root.widgetMetadata.scrollingMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "scrollingMode")
     onSelected: key => {
                   root.valueScrollingMode = key;
                   root.saveSettings();

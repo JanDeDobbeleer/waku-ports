@@ -11,6 +11,8 @@ pragma ComponentBehavior: Bound
 //@ pragma Env QT_FFMPEG_ENCODING_HW_DEVICE_TYPES=vaapi,vdpau
 
 // Qt & Quickshell Core
+import "ShellUtils.js" as ShellUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -108,7 +110,7 @@ ShellRoot {
         // Defer non-critical services to unblock first frame
         Qt.callLater(function () {
           LocationService.init();
-          NightLightService.apply();
+          NightLightService.apply(undefined);
           IdleInhibitorService.init();
           IdleService.init();
           PowerProfileService.init();
@@ -167,7 +169,7 @@ ShellRoot {
       HooksService.init();
       FontService.init();
       UpdateService.init();
-      showWizardOrChangelog();
+      shellRoot.showWizardOrChangelog();
     }
   }
 
@@ -177,7 +179,7 @@ ShellRoot {
     running: false
     interval: 500
     property string pendingWizardType: "" // "setup", "telemetry", or ""
-    onTriggered: showWizardOrChangelog()
+    onTriggered: shellRoot.showWizardOrChangelog()
   }
 
 
@@ -216,20 +218,20 @@ ShellRoot {
     wizardRetryTimer.pendingWizardType = "";
 
     if (wizardType === "telemetry") {
-      setupPanel.telemetryOnlyMode = true;
+      ShellUtils.setTelemetryOnlyMode(setupPanel, true);
 
       // Connect to completion signal to show changelog afterward
       if (telemetryWizardConnection) {
-        setupPanel.telemetryWizardCompleted.disconnect(telemetryWizardConnection);
+        ShellUtils.disconnectTelemetryCompleted(setupPanel, telemetryWizardConnection);
       }
       telemetryWizardConnection = function () {
         UpdateService.showLatestChangelog();
       };
-      setupPanel.telemetryWizardCompleted.connect(telemetryWizardConnection);
+      ShellUtils.connectTelemetryCompleted(setupPanel, telemetryWizardConnection);
     } else {
-      setupPanel.telemetryOnlyMode = false;
+      ShellUtils.setTelemetryOnlyMode(setupPanel, false);
     }
 
-    setupPanel.open();
+    PanelService.invokePanel(setupPanel, "open", []);
   }
 }

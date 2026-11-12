@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "./SetupCustomizeStepUtils.js" as SetupCustomizeStepUtils
 
 ColumnLayout {
   id: root
@@ -117,53 +118,62 @@ ColumnLayout {
               {
                 "key": "top",
                 "name": I18n.tr("positions.top"),
-                "icon": "arrow-up"
+                "icon": "arrow-up",
+                "active": root.selectedBarPosition === "top",
+                "select": function() { root.selectedBarPosition = "top"; root.barPositionChanged("top"); }
               },
               {
                 "key": "bottom",
                 "name": I18n.tr("positions.bottom"),
-                "icon": "arrow-down"
+                "icon": "arrow-down",
+                "active": root.selectedBarPosition === "bottom",
+                "select": function() { root.selectedBarPosition = "bottom"; root.barPositionChanged("bottom"); }
               },
               {
                 "key": "left",
                 "name": I18n.tr("positions.left"),
-                "icon": "arrow-left"
+                "icon": "arrow-left",
+                "active": root.selectedBarPosition === "left",
+                "select": function() { root.selectedBarPosition = "left"; root.barPositionChanged("left"); }
               },
               {
                 "key": "right",
                 "name": I18n.tr("positions.right"),
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "active": root.selectedBarPosition === "right",
+                "select": function() { root.selectedBarPosition = "right"; root.barPositionChanged("right"); }
               }
             ]
             delegate: Rectangle {
+              id: positionOption
+              required property var modelData
               Layout.fillWidth: true
               Layout.preferredHeight: 40
               radius: Style.radiusM
               border.width: Style.borderS
 
-              property bool isActive: selectedBarPosition === modelData.key
+              property bool isActive: SetupCustomizeStepUtils.field(positionOption.modelData, "active")
 
-              color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
-              border.color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
-              opacity: (hoverHandler.hovered || isActive) ? 1.0 : 0.8
+              color: (barPositionHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
+              border.color: (barPositionHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
+              opacity: (barPositionHoverHandler.hovered || isActive) ? 1.0 : 0.8
 
               NText {
-                text: modelData.name
+                text: SetupCustomizeStepUtils.field(positionOption.modelData, "name")
                 pointSize: Style.fontSizeM
-                font.weight: (hoverHandler.hovered || parent.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
-                color: (hoverHandler.hovered || parent.isActive) ? Color.mOnPrimary : Color.mOnSurface
+                font.weight: (barPositionHoverHandler.hovered || positionOption.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
+                color: (barPositionHoverHandler.hovered || positionOption.isActive) ? Color.mOnPrimary : Color.mOnSurface
                 anchors.centerIn: parent
               }
 
               HoverHandler {
-                id: hoverHandler
+                id: barPositionHoverHandler
               }
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                  selectedBarPosition = modelData.key;
-                  barPositionChanged(modelData.key);
+                  SetupCustomizeStepUtils.select(positionOption.modelData);
                 }
               }
 
@@ -259,34 +269,36 @@ ColumnLayout {
               }
             ]
             delegate: Rectangle {
+              id: densityOption
+              required property var modelData
               radius: Style.radiusM
               border.width: Style.borderS
               Layout.preferredHeight: 32
               Layout.preferredWidth: Math.max(90, densityText.implicitWidth + Style.margin2XL)
 
-              property bool isActive: Settings.data.bar.density === modelData.key
+              property bool isActive: Settings.data.bar.density === SetupCustomizeStepUtils.field(densityOption.modelData, "key")
 
-              color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
-              border.color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
-              opacity: (hoverHandler.hovered || isActive) ? 1.0 : 0.8
+              color: (densityHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
+              border.color: (densityHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
+              opacity: (densityHoverHandler.hovered || isActive) ? 1.0 : 0.8
 
               NText {
                 id: densityText
-                text: modelData.name
+                text: SetupCustomizeStepUtils.field(densityOption.modelData, "name")
                 pointSize: Style.fontSizeS
-                font.weight: (hoverHandler.hovered || parent.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
-                color: (hoverHandler.hovered || parent.isActive) ? Color.mOnPrimary : Color.mOnSurface
+                font.weight: (densityHoverHandler.hovered || densityOption.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
+                color: (densityHoverHandler.hovered || densityOption.isActive) ? Color.mOnPrimary : Color.mOnSurface
                 anchors.centerIn: parent
               }
 
               HoverHandler {
-                id: hoverHandler
+                id: densityHoverHandler
               }
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                  Settings.data.bar.density = modelData.key;
+                  Settings.data.bar.density = SetupCustomizeStepUtils.field(densityOption.modelData, "key");
                 }
               }
 
@@ -362,12 +374,12 @@ ColumnLayout {
           from: 0.8
           to: 1.2
           stepSize: 0.05
-          value: selectedScaleRatio
+          value: root.selectedScaleRatio
           onMoved: function (value) {
-            selectedScaleRatio = value;
-            scaleRatioChanged(value);
+            root.selectedScaleRatio = value;
+            root.scaleRatioChanged(value);
           }
-          text: Math.floor(selectedScaleRatio * 100) + "%"
+          text: Math.floor(root.selectedScaleRatio * 100) + "%"
         }
       }
 
@@ -443,33 +455,35 @@ ColumnLayout {
               }
             ]
             delegate: Rectangle {
+              id: barTypeOption
+              required property var modelData
               Layout.fillWidth: true
               Layout.preferredHeight: 40
               radius: Style.radiusM
               border.width: Style.borderS
 
-              property bool isActive: Settings.data.bar.barType === modelData.key
+              property bool isActive: Settings.data.bar.barType === SetupCustomizeStepUtils.field(barTypeOption.modelData, "key")
 
-              color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
-              border.color: (hoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
-              opacity: (hoverHandler.hovered || isActive) ? 1.0 : 0.8
+              color: (barTypeHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mSurfaceVariant
+              border.color: (barTypeHoverHandler.hovered || isActive) ? Color.mPrimary : Color.mOutline
+              opacity: (barTypeHoverHandler.hovered || isActive) ? 1.0 : 0.8
 
               NText {
-                text: modelData.name
+                text: SetupCustomizeStepUtils.field(barTypeOption.modelData, "name")
                 pointSize: Style.fontSizeM
-                font.weight: (hoverHandler.hovered || parent.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
-                color: (hoverHandler.hovered || parent.isActive) ? Color.mOnPrimary : Color.mOnSurface
+                font.weight: (barTypeHoverHandler.hovered || barTypeOption.isActive) ? Style.fontWeightBold : Style.fontWeightMedium
+                color: (barTypeHoverHandler.hovered || barTypeOption.isActive) ? Color.mOnPrimary : Color.mOnSurface
                 anchors.centerIn: parent
               }
 
               HoverHandler {
-                id: hoverHandler
+                id: barTypeHoverHandler
               }
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                  Settings.data.bar.barType = modelData.key;
+                  Settings.data.bar.barType = SetupCustomizeStepUtils.field(barTypeOption.modelData, "key");
                 }
               }
 

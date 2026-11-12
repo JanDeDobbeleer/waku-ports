@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "ClipboardUtils.js" as ClipboardUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -81,7 +83,7 @@ Singleton {
         root.cliphistAvailable = false;
         // Show toast notification if feature is enabled but cliphist is missing
         if (Settings.data.appLauncher.enableClipboardHistory) {
-          ToastService.showWarning(I18n.tr("toast.clipboard.unavailable"), I18n.tr("toast.clipboard.unavailable-desc"), 6000);
+          ToastService.showWarningDetailed(I18n.tr("toast.clipboard.unavailable"), I18n.tr("toast.clipboard.unavailable-desc"), 6000, undefined, undefined);
         }
       }
     }
@@ -103,7 +105,7 @@ Singleton {
     interval: 5000
     repeat: true
     running: root.active
-    onTriggered: root.list()
+    onTriggered: root.list(undefined)
   }
 
   // Internal process objects
@@ -233,7 +235,7 @@ Singleton {
     stdout: StdioCollector {}
     onExited: (exitCode, exitStatus) => {
       revision++;
-      Qt.callLater(() => list());
+      Qt.callLater(() => list(undefined));
     }
   }
 
@@ -361,7 +363,7 @@ Singleton {
     captureTextProc.running = true;
   }
 
-  function list(maxPreviewWidth) {
+  function list(maxPreviewWidth: var): void {
     if (!root.active || !root.cliphistAvailable) {
       return;
     }
@@ -374,7 +376,7 @@ Singleton {
   }
 
   // Get content for an ID - uses cache first, falls back to cliphist decode
-  function getContent(id) {
+  function getContent(id: var): var {
     if (root.contentCache[id]) {
       return root.contentCache[id];
     }
@@ -382,82 +384,26 @@ Singleton {
   }
 
   // Async decode - checks cache first, then falls back to cliphist
-  function decode(id, cb) {
-    if (!root.cliphistAvailable) {
-      if (cb)
-        cb("");
-      return;
-    }
-
-    // Check cache first
-    const cached = root.contentCache[id];
-    if (cached) {
-      if (cb)
-        cb(cached);
-      return;
-    }
-
-    // Fall back to cliphist decode
-    if (decodeProc.running) {
-      decodeProc.running = false;
-    }
-    root._decodeRequestId++;
-    decodeProc.requestId = root._decodeRequestId;
-    root._decodeCallback = function (content) {
-      // Cache the result if successful
-      if (content && content.trim()) {
-        root.contentCache[id] = content;
-      }
-      if (cb)
-        cb(content);
-    };
-    const idStr = String(id);
-    decodeProc.command = ["cliphist", "decode", idStr];
-    decodeProc.running = true;
+  function decode(id: var, cb: var) {
+    ClipboardUtils.decode(id, cb, root, decodeProc);
   }
 
-  function decodeToDataUrl(id, mime, cb) {
-    if (!root.cliphistAvailable) {
-      if (cb)
-        cb("");
-      return;
-    }
-    // If cached, return immediately
-    if (root.imageDataById[id]) {
-      if (cb)
-        cb(root.imageDataById[id]);
-      return;
-    }
-    // Queue request; ensures single process handles sequentially
-    root._b64Queue.push({
-                          "id": id,
-                          "mime": mime || "image/*",
-                          "cb": cb
-                        });
-    if (!decodeB64Proc.running && root._b64CurrentCb === null) {
-      _startNextB64();
-    }
+  function decodeToDataUrl(id: var, mime: var, cb: var) {
+    ClipboardUtils.decodeToDataUrl(id, mime, cb, root, decodeB64Proc);
   }
 
-  function getImageData(id) {
+  function getImageData(id: var): var {
     if (id === undefined) {
       return null;
     }
     return root.imageDataById[id];
   }
 
-  function _startNextB64() {
-    if (root._b64Queue.length === 0 || !root.cliphistAvailable)
-      return;
-    const job = root._b64Queue.shift();
-    root._b64CurrentCb = job.cb;
-    root._b64CurrentMime = job.mime;
-    root._b64CurrentId = job.id;
-    decodeB64Proc.command = ["sh", "-c", `cliphist decode ${job.id} | base64 -w 0`];
-    decodeB64Proc.running = true;
+  function _startNextB64(): void {
+    ClipboardUtils._startNextB64(root, decodeB64Proc);
   }
 
-  function copyToClipboard(id) {
+  function copyToClipboard(id: var): void {
     if (!root.cliphistAvailable) {
       return;
     }
@@ -465,7 +411,7 @@ Singleton {
     copyProc.running = true;
   }
 
-  function pasteFromClipboard(id, mime) {
+  function pasteFromClipboard(id: var, mime: var): void {
     if (!root.cliphistAvailable) {
       return;
     }
@@ -477,7 +423,7 @@ Singleton {
     pasteProc.running = true;
   }
 
-  function pasteText(text) {
+  function pasteText(text: var): void {
     if (!text)
       return;
     const escaped = text.replace(/'/g, "'\\''");
@@ -486,22 +432,8 @@ Singleton {
     pasteProc.running = true;
   }
 
-  function deleteById(id) {
-    if (!root.cliphistAvailable) {
-      return;
-    }
-    if (deleteProc.running) {
-      return;
-    }
-    const idStr = String(id).trim();
-    // Remove from caches
-    delete root.contentCache[idStr];
-    delete root.imageDataById[idStr];
-    const orderIdx = root._imageDataInsertOrder.indexOf(idStr);
-    if (orderIdx !== -1)
-      root._imageDataInsertOrder.splice(orderIdx, 1);
-    deleteProc.command = ["sh", "-c", `echo ${idStr} | cliphist delete`];
-    deleteProc.running = true;
+  function deleteById(id: var): void {
+    ClipboardUtils.deleteById(id, root, deleteProc);
   }
 
   function wipeAll() {
@@ -517,20 +449,11 @@ Singleton {
 
     Quickshell.execDetached(["cliphist", "wipe"]);
     revision++;
-    Qt.callLater(() => list());
+    Qt.callLater(() => list(undefined));
   }
 
   // Parse image metadata from cliphist preview string
-  function parseImageMeta(preview) {
-    const re = /\[\[\s*binary data\s+([\d\.]+\s*(?:KiB|MiB|GiB|B))\s+(\w+)\s+(\d+)x(\d+)\s*\]\]/i;
-    const match = (preview || "").match(re);
-    if (!match)
-      return null;
-    return {
-      "size": match[1],
-      "fmt": (match[2] || "").toUpperCase(),
-      "w": Number(match[3]),
-      "h": Number(match[4])
-    };
+  function parseImageMeta(preview: var): var {
+    return ClipboardUtils.parseImageMeta(preview);
   }
 }

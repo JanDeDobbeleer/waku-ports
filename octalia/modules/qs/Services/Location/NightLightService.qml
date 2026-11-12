@@ -12,7 +12,7 @@ Singleton {
   readonly property var params: Settings.data.nightLight
   property var lastCommand: []
 
-  function apply(force = false) {
+  function apply(force: var): void {
     Logger.d("NightLight", "Not available on Windows");
   }
 }

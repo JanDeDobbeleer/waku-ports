@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import "NDateTimeTokensUtils.js" as TokensUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -230,7 +232,7 @@ Rectangle {
               cursorShape: Qt.PointingHandCursor
 
               onClicked: {
-                root.tokenClicked(tokenDelegate.modelData.token);
+                root.tokenClicked(TokensUtils.field(tokenDelegate.modelData, "token"));
                 clickAnimation.start();
               }
             }
@@ -263,7 +265,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredWidth: 70
                 Layout.preferredHeight: 22
-                color: root.getCategoryColor(tokenDelegate.modelData.category)[0]
+                color: root.getCategoryColor(TokensUtils.field(tokenDelegate.modelData, "category"))[0]
                 radius: Style.iRadiusS
                 opacity: tokenMouseArea.containsMouse ? 0.9 : 1.0
 
@@ -275,8 +277,8 @@ Rectangle {
 
                 NText {
                   anchors.centerIn: parent
-                  text: tokenDelegate.modelData.category
-                  color: root.getCategoryColor(tokenDelegate.modelData.category)[1]
+                  text: TokensUtils.field(tokenDelegate.modelData, "category")
+                  color: root.getCategoryColor(TokensUtils.field(tokenDelegate.modelData, "category"))[1]
                   pointSize: Style.fontSizeXS
                 }
               }
@@ -298,7 +300,7 @@ Rectangle {
 
                 NText {
                   anchors.centerIn: parent
-                  text: tokenDelegate.modelData.token
+                  text: TokensUtils.field(tokenDelegate.modelData, "token")
                   color: tokenMouseArea.containsMouse ? Color.mOnPrimary : Color.mSurface
                   pointSize: Style.fontSizeS
                   font.weight: Style.fontWeightBold
@@ -315,7 +317,7 @@ Rectangle {
               NText {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter // Added this line
-                text: tokenDelegate.modelData.description
+                text: TokensUtils.field(tokenDelegate.modelData, "description")
                 color: tokenMouseArea.containsMouse ? Color.mOnSurface : Color.mOnSurfaceVariant
                 pointSize: Style.fontSizeS
                 wrapMode: Text.WordWrap
@@ -351,7 +353,7 @@ Rectangle {
 
                 NText {
                   anchors.centerIn: parent
-                  text: I18n.locale.toString(root.sampleDate, tokenDelegate.modelData.token)
+                  text: I18n.locale.toString(root.sampleDate, TokensUtils.field(tokenDelegate.modelData, "token"))
                   color: tokenMouseArea.containsMouse ? Color.mOnPrimary : Color.mSurfaceVariant
                   pointSize: Style.fontSizeS
 
@@ -369,28 +371,7 @@ Rectangle {
     }
   }
 
-  function getCategoryColor(category) {
-    switch (category) {
-    case "Year":
-      return [Color.mPrimary, Color.mOnPrimary];
-    case "Month":
-      return [Color.mSecondary, Color.mOnSecondary];
-    case "Day":
-      return [Color.mTertiary, Color.mOnTertiary];
-    case "Hour":
-      return [Color.mPrimary, Color.mOnPrimary];
-    case "Minute":
-      return [Color.mSecondary, Color.mOnSecondary];
-    case "Second":
-      return [Color.mTertiary, Color.mOnTertiary];
-    case "AM/PM":
-      return [Color.mError, Color.mOnError];
-    case "Timezone":
-      return [Color.mOnSurface, Color.mSurface];
-    case "Common":
-      return [Color.mError, Color.mOnError];
-    default:
-      return [Color.mOnSurfaceVariant, Color.mSurfaceVariant];
-    }
+  function getCategoryColor(category: var): var {
+    return TokensUtils.getCategoryColor(category, Color);
   }
 }

@@ -7,6 +7,7 @@ import Quickshell.Widgets
 
 import qs.Commons
 import qs.Widgets
+import "./LauncherDelegateUtils.js" as LauncherDelegateUtils
 
 NBox {
   id: entry
@@ -15,21 +16,16 @@ NBox {
   required property int index
   required property var launcher
 
-  property bool isSelected: (!launcher.ignoreMouseHover && mouseArea.containsMouse) || (index === launcher.selectedIndex)
+  property bool isSelected: (!LauncherDelegateUtils.field(launcher, "ignoreMouseHover") && mouseArea.containsMouse) || (index === LauncherDelegateUtils.field(launcher, "selectedIndex"))
 
   width: ListView.view.width
-  implicitHeight: launcher.entryHeight
+  implicitHeight: LauncherDelegateUtils.field(launcher, "entryHeight")
   clip: true
   color: entry.isSelected ? Color.mHover : Color.mSurfaceVariant
   forceOpaque: entry.isSelected
 
   // Prepare item when it becomes visible (e.g., decode images)
-  Component.onCompleted: {
-    var provider = modelData.provider;
-    if (provider && provider.prepareItem) {
-      provider.prepareItem(modelData);
-    }
-  }
+  Component.onCompleted: LauncherDelegateUtils.prepareItem(modelData)
 
   Behavior on color {
     ColorAnimation {
@@ -41,54 +37,47 @@ NBox {
   ColumnLayout {
     id: contentLayout
     anchors.fill: parent
-    anchors.margins: entry.launcher.isCompactDensity ? Style.marginXS : Style.marginM
-    spacing: entry.launcher.isCompactDensity ? Style.marginXS : Style.marginM
+    anchors.margins: LauncherDelegateUtils.field(entry.launcher, "isCompactDensity") ? Style.marginXS : Style.marginM
+    spacing: LauncherDelegateUtils.field(entry.launcher, "isCompactDensity") ? Style.marginXS : Style.marginM
 
     // Top row - Main entry content with action buttons
     RowLayout {
       Layout.fillWidth: true
-      spacing: entry.launcher.isCompactDensity ? Style.marginS : Style.marginM
+      spacing: LauncherDelegateUtils.field(entry.launcher, "isCompactDensity") ? Style.marginS : Style.marginM
 
       // Icon badge or Image preview or Emoji
       Item {
-        visible: !entry.modelData.hideIcon
-        Layout.preferredWidth: entry.modelData.hideIcon ? 0 : entry.launcher.badgeSize
-        Layout.preferredHeight: entry.modelData.hideIcon ? 0 : entry.launcher.badgeSize
+        visible: !LauncherDelegateUtils.field(entry.modelData, "hideIcon")
+        Layout.preferredWidth: LauncherDelegateUtils.field(entry.modelData, "hideIcon") ? 0 : LauncherDelegateUtils.field(entry.launcher, "badgeSize")
+        Layout.preferredHeight: LauncherDelegateUtils.field(entry.modelData, "hideIcon") ? 0 : LauncherDelegateUtils.field(entry.launcher, "badgeSize")
 
         // Icon background
         Rectangle {
           anchors.fill: parent
           radius: Style.radiusXS
           color: Color.mSurface
-          visible: Settings.data.appLauncher.showIconBackground && !entry.modelData.isImage
+          visible: Settings.data.appLauncher.showIconBackground && !LauncherDelegateUtils.field(entry.modelData, "isImage")
         }
 
         // Image preview - uses provider's getImageUrl if available
         NImageRounded {
           id: imagePreview
           anchors.fill: parent
-          visible: !!entry.modelData.isImage && !entry.modelData.displayString
+          visible: !!LauncherDelegateUtils.field(entry.modelData, "isImage") && !LauncherDelegateUtils.field(entry.modelData, "displayString")
           radius: Style.radiusXS
           borderColor: Color.mOnSurface
           borderWidth: Style.borderM
           imageFillMode: Image.PreserveAspectCrop
 
           // Use provider's image revision for reactive updates
-          readonly property int _rev: entry.modelData.provider && entry.modelData.provider.imageRevision ? entry.modelData.provider.imageRevision : 0
+          readonly property int _rev: LauncherDelegateUtils.imageRevision(entry.modelData)
 
           // Get image URL from provider
-          imagePath: {
-            _rev;
-            var provider = entry.modelData.provider;
-            if (provider && provider.getImageUrl) {
-              return provider.getImageUrl(entry.modelData);
-            }
-            return "";
-          }
+          imagePath: LauncherDelegateUtils.imageUrl(entry.modelData, _rev)
 
           Rectangle {
             anchors.fill: parent
-            visible: parent.status === Image.Loading
+            visible: imagePreview.status === Image.Loading
             color: Color.mSurfaceVariant
 
             BusyIndicator {
@@ -99,20 +88,20 @@ NBox {
             }
           }
 
-          onStatusChanged: status => {
-                             if (status === Image.Error) {
-                               iconLoader.visible = true;
-                               imagePreview.visible = false;
-                             }
-                           }
+          onStatusChanged: {
+            if (imagePreview.status === Image.Error) {
+              iconLoader.visible = true;
+              imagePreview.visible = false;
+            }
+          }
         }
 
         // Color swatch - shown for clipboard color entries
         Rectangle {
           anchors.fill: parent
           radius: Style.radiusXS
-          color: entry.modelData.colorHex || "transparent"
-          visible: !!entry.modelData.colorHex
+          color: LauncherDelegateUtils.field(entry.modelData, "colorHex") || "transparent"
+          visible: !!LauncherDelegateUtils.field(entry.modelData, "colorHex")
           border.color: Color.mOnSurface
           border.width: Style.borderM
         }
@@ -122,22 +111,22 @@ NBox {
           anchors.fill: parent
           anchors.margins: Style.marginXS
 
-          visible: (!entry.modelData.isImage && !entry.modelData.displayString && !entry.modelData.colorHex) || (!!entry.modelData.isImage && imagePreview.status === Image.Error)
+          visible: (!LauncherDelegateUtils.field(entry.modelData, "isImage") && !LauncherDelegateUtils.field(entry.modelData, "displayString") && !LauncherDelegateUtils.field(entry.modelData, "colorHex")) || (!!LauncherDelegateUtils.field(entry.modelData, "isImage") && imagePreview.status === Image.Error)
           active: visible
 
           sourceComponent: Component {
             Loader {
               anchors.fill: parent
-              sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && entry.modelData.isTablerIcon ? tablerIconComponent : systemIconComponent
+              sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && LauncherDelegateUtils.field(entry.modelData, "isTablerIcon") ? tablerIconComponent : systemIconComponent
             }
           }
 
           Component {
             id: tablerIconComponent
             NIcon {
-              icon: entry.modelData.icon
+              icon: LauncherDelegateUtils.field(entry.modelData, "icon")
               pointSize: Style.fontSizeXXXL
-              visible: entry.modelData.icon && !entry.modelData.displayString
+              visible: LauncherDelegateUtils.field(entry.modelData, "icon") && !LauncherDelegateUtils.field(entry.modelData, "displayString")
               color: (entry.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface
             }
           }
@@ -146,8 +135,8 @@ NBox {
             id: systemIconComponent
             IconImage {
               anchors.fill: parent
-              source: entry.modelData.icon ? ThemeIcons.iconFromName(entry.modelData.icon, "application-x-executable") : ""
-              visible: entry.modelData.icon && source !== "" && !entry.modelData.displayString
+              source: LauncherDelegateUtils.field(entry.modelData, "icon") ? ThemeIcons.iconFromName(LauncherDelegateUtils.field(entry.modelData, "icon"), "application-x-executable") : ""
+              visible: LauncherDelegateUtils.field(entry.modelData, "icon") && source !== "" && !LauncherDelegateUtils.field(entry.modelData, "displayString")
               asynchronous: true
             }
           }
@@ -157,16 +146,16 @@ NBox {
         NText {
           id: stringDisplay
           anchors.centerIn: parent
-          visible: !!entry.modelData.displayString || (!imagePreview.visible && !iconLoader.visible)
-          text: entry.modelData.displayString ? entry.modelData.displayString : (entry.modelData.name ? entry.modelData.name.charAt(0).toUpperCase() : "?")
-          pointSize: entry.modelData.displayString ? (entry.modelData.displayStringSize || Style.fontSizeXXXL) : Style.fontSizeXXL
+          visible: !!LauncherDelegateUtils.field(entry.modelData, "displayString") || (!imagePreview.visible && !iconLoader.visible)
+          text: LauncherDelegateUtils.field(entry.modelData, "displayString") ? LauncherDelegateUtils.field(entry.modelData, "displayString") : (LauncherDelegateUtils.field(entry.modelData, "name") ? LauncherDelegateUtils.firstLetter(LauncherDelegateUtils.field(entry.modelData, "name")) : "?")
+          pointSize: LauncherDelegateUtils.field(entry.modelData, "displayString") ? (LauncherDelegateUtils.field(entry.modelData, "displayStringSize") || Style.fontSizeXXXL) : Style.fontSizeXXL
           font.weight: Style.fontWeightBold
-          color: entry.modelData.displayString ? Color.mOnSurface : Color.mOnPrimary
+          color: LauncherDelegateUtils.field(entry.modelData, "displayString") ? Color.mOnSurface : Color.mOnPrimary
         }
 
         // Image type indicator overlay
         Rectangle {
-          visible: !!entry.modelData.isImage && imagePreview.visible
+          visible: !!LauncherDelegateUtils.field(entry.modelData, "isImage") && imagePreview.visible
           anchors.bottom: parent.bottom
           anchors.right: parent.right
           anchors.margins: 2
@@ -178,9 +167,9 @@ NBox {
             id: formatLabel
             anchors.centerIn: parent
             text: {
-              if (!entry.modelData.isImage)
+              if (!LauncherDelegateUtils.field(entry.modelData, "isImage"))
                 return "";
-              const desc = entry.modelData.description || "";
+              const desc = LauncherDelegateUtils.field(entry.modelData, "description") || "";
               const parts = desc.split(" \u2022 ");
               return parts[0] || "IMG";
             }
@@ -191,7 +180,7 @@ NBox {
 
         // Badge icon overlay (generic indicator for any provider)
         Rectangle {
-          visible: !!entry.modelData.badgeIcon
+          visible: !!LauncherDelegateUtils.field(entry.modelData, "badgeIcon")
           anchors.bottom: parent.bottom
           anchors.right: parent.right
           anchors.margins: 2
@@ -201,7 +190,7 @@ NBox {
           radius: Style.radiusXXS
           NIcon {
             anchors.centerIn: parent
-            icon: entry.modelData.badgeIcon || ""
+            icon: LauncherDelegateUtils.field(entry.modelData, "badgeIcon") || ""
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
           }
@@ -214,7 +203,7 @@ NBox {
         spacing: 0
 
         NText {
-          text: entry.modelData.name || "Unknown"
+          text: LauncherDelegateUtils.field(entry.modelData, "name") || "Unknown"
           pointSize: Style.fontSizeL
           font.weight: Style.fontWeightBold
           color: entry.isSelected ? Color.mOnHover : Color.mOnSurface
@@ -226,44 +215,37 @@ NBox {
         }
 
         NText {
-          text: entry.modelData.description || ""
+          text: LauncherDelegateUtils.field(entry.modelData, "description") || ""
           pointSize: Style.fontSizeS
           color: entry.isSelected ? Color.mOnHover : Color.mOnSurfaceVariant
           elide: Text.ElideRight
           maximumLineCount: 1
           Layout.fillWidth: true
-          visible: text !== "" && !entry.launcher.isCompactDensity
+          visible: text !== "" && !LauncherDelegateUtils.field(entry.launcher, "isCompactDensity")
         }
       }
 
       // Action buttons row - dynamically populated from provider
       RowLayout {
+        id: contentActions
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
         spacing: Style.marginXS
-        visible: entry.isSelected && itemActions.length > 0
+        visible: entry.isSelected && LauncherDelegateUtils.arrayLength(itemActions) > 0
 
         property var itemActions: {
-          if (!entry.isSelected)
-            return [];
-          var provider = entry.modelData.provider || entry.launcher.currentProvider;
-          if (provider && provider.getItemActions) {
-            return provider.getItemActions(entry.modelData);
-          }
-          return [];
+          return entry.isSelected ? LauncherDelegateUtils.itemActions(entry.modelData, entry.launcher) : [];
         }
 
         Repeater {
-          model: parent.itemActions
+          model: contentActions.itemActions
           NIconButton {
             required property var modelData
-            icon: modelData.icon
+            icon: LauncherDelegateUtils.field(modelData, "icon")
             baseSize: Style.baseWidgetSize * 0.75
             z: 1
             handleWheel: true
             onClicked: {
-              if (modelData.action) {
-                modelData.action();
-              }
+              LauncherDelegateUtils.runAction(modelData)
             }
           }
         }
@@ -279,14 +261,14 @@ NBox {
     cursorShape: Qt.PointingHandCursor
     enabled: !Settings.data.appLauncher.ignoreMouseInput
     onEntered: {
-      if (!entry.launcher.ignoreMouseHover) {
-        entry.launcher.selectedIndex = entry.index;
+      if (!LauncherDelegateUtils.field(entry.launcher, "ignoreMouseHover")) {
+        LauncherDelegateUtils.setField(entry.launcher, "selectedIndex", entry.index);
       }
     }
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   entry.launcher.selectedIndex = entry.index;
-                   entry.launcher.activate();
+                   LauncherDelegateUtils.setField(entry.launcher, "selectedIndex", entry.index);
+                   LauncherDelegateUtils.activate(entry.launcher);
                    mouse.accepted = true;
                  }
                }

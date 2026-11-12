@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "SettingsPanelServiceUtils.js" as SettingsPanelUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -26,122 +28,37 @@ Singleton {
   signal windowOpened
   signal windowClosed
 
-  function openToEntry(entry, screen) {
-    var settingsPanel;
-    if (Settings.data.ui.settingsPanelMode === "window") {
-      requestedEntry = entry;
-      if (settingsWindow) {
-        settingsWindow.visible = true;
-        isWindowOpen = true;
-        windowOpened();
-        settingsWindow.navigateToEntry(entry);
-      }
-    } else {
-      if (!screen) {
-        Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
-        return;
-      }
-      settingsPanel = PanelService.getPanel("settingsPanel", screen);
-      if (settingsPanel) {
-        settingsPanel.requestedEntry = entry;
-        settingsPanel.open();
-      }
-    }
+  function openToEntry(entry: var, screen: var): void {
+    SettingsPanelUtils.openToEntry(root, Settings, PanelService, Logger, entry, screen);
   }
 
   // Unified function to open settings to a specific tab and subtab
   // Respects user's settingsPanelMode setting (window vs panel)
   // For panel mode, screen parameter is required
-  function openToTab(tab, subTab, screen) {
-    var settingsPanel;
-    const tabId = tab !== undefined ? tab : 0;
-    const subTabId = subTab !== undefined ? subTab : -1;
-
-    if (Settings.data.ui.settingsPanelMode === "window") {
-      requestedTab = tabId;
-      requestedSubTab = subTabId;
-      if (settingsWindow) {
-        settingsWindow.visible = true;
-        isWindowOpen = true;
-        windowOpened();
-        settingsWindow.navigateTo(tabId, subTabId);
-      }
-    } else {
-      if (!screen) {
-        Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
-        return;
-      }
-      settingsPanel = PanelService.getPanel("settingsPanel", screen);
-      if (settingsPanel) {
-        settingsPanel.openToTab(tabId, subTabId);
-      }
-    }
+  function openToTab(tab: var, subTab: var, screen: var): void {
+    SettingsPanelUtils.openToTab(root, Settings, PanelService, Logger, tab, subTab, screen);
   }
 
-  function openWindow(tab) {
-    requestedTab = tab !== undefined ? tab : 0;
-    requestedSubTab = -1;
-    if (settingsWindow) {
-      settingsWindow.visible = true;
-      isWindowOpen = true;
-      windowOpened();
-      settingsWindow.navigateTo(requestedTab, -1);
-    }
+  function openWindow(tab: var): void {
+    SettingsPanelUtils.openWindow(root, Settings, PanelService, Logger, tab);
   }
 
-  function closeWindow() {
-    if (settingsWindow) {
-      settingsWindow.visible = false;
-      isWindowOpen = false;
-      windowClosed();
-    }
+  function closeWindow(): void {
+    SettingsPanelUtils.closeWindow(root, Settings, PanelService, Logger);
   }
 
-  function toggleWindow(tab) {
-    if (isWindowOpen) {
-      closeWindow();
-    } else {
-      openWindow(tab);
-    }
+  function toggleWindow(tab: var): void {
+    SettingsPanelUtils.toggleWindow(root, Settings, PanelService, Logger, tab);
   }
 
   // Unified toggle: opens to tab/subtab if closed, closes if open
   // Respects settingsPanelMode setting
-  function toggle(tab, subTab, screen) {
-    var settingsPanel;
-    const tabId = tab !== undefined ? tab : 0;
-    const subTabId = subTab !== undefined ? subTab : -1;
-
-    if (Settings.data.ui.settingsPanelMode === "window") {
-      if (isWindowOpen) {
-        closeWindow();
-      } else {
-        openToTab(tabId, subTabId);
-      }
-    } else {
-      if (!screen) {
-        Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
-        return;
-      }
-      settingsPanel = PanelService.getPanel("settingsPanel", screen);
-      if (settingsPanel?.isPanelOpen) {
-        settingsPanel.close();
-      } else {
-        settingsPanel?.openToTab(tabId, subTabId);
-      }
-    }
+  function toggle(tab: var, subTab: var, screen: var): void {
+    SettingsPanelUtils.toggle(root, Settings, PanelService, Logger, tab, subTab, screen);
   }
 
   // Unified close for both modes
-  function close(screen) {
-    var settingsPanel;
-    if (Settings.data.ui.settingsPanelMode === "window") {
-      closeWindow();
-    } else {
-      if (!screen)
-        return;
-      settingsPanel = PanelService.getPanel("settingsPanel", screen);
-      settingsPanel?.close();
-    }
+  function close(screen: var): void {
+    SettingsPanelUtils.close(root, Settings, PanelService, Logger, screen);
   }
 }

@@ -1,21 +1,23 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
+import "DesktopSystemStatHelpers.js" as DesktopSystemStatHelpers
 
 DraggableDesktopWidget {
   id: root
 
   // Widget settings
-  readonly property var widgetMetadata: DesktopWidgetRegistry.widgetMetadata["SystemStat"]
-  readonly property string statType: (widgetData && widgetData.statType !== undefined) ? widgetData.statType : (widgetMetadata.statType !== undefined ? widgetMetadata.statType : "CPU")
-  readonly property string diskPath: (widgetData && widgetData.diskPath !== undefined) ? widgetData.diskPath : "/"
-  readonly property string layout: (widgetData && widgetData.layout !== undefined) ? widgetData.layout : (widgetMetadata.layout !== undefined ? widgetMetadata.layout : "side")
+  readonly property var widgetMetadata: DesktopWidgetHelpers.field(DesktopWidgetRegistry.widgetMetadata, "SystemStat")
+  readonly property string statType: (widgetData && DesktopWidgetHelpers.field(widgetData, "statType") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "statType") : (DesktopWidgetHelpers.field(widgetMetadata, "statType") !== undefined ? DesktopWidgetHelpers.field(widgetMetadata, "statType") : "CPU")
+  readonly property string diskPath: (widgetData && DesktopWidgetHelpers.field(widgetData, "diskPath") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "diskPath") : "/"
+  readonly property string layout: (widgetData && DesktopWidgetHelpers.field(widgetData, "layout") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "layout") : (DesktopWidgetHelpers.field(widgetMetadata, "layout") !== undefined ? DesktopWidgetHelpers.field(widgetMetadata, "layout") : "side")
 
   // Fixed colors
   readonly property color color: Color.mPrimary
@@ -227,22 +229,22 @@ DraggableDesktopWidget {
           spacing: Math.round(Style.marginXXS * root.widgetScale)
 
           NIcon {
-            visible: !!sideLegendItem.modelData.icon
-            icon: sideLegendItem.modelData.icon || ""
-            color: sideLegendItem.modelData.color
+            visible: !!DesktopWidgetHelpers.field(sideLegendItem.modelData, "icon")
+            icon: DesktopWidgetHelpers.field(sideLegendItem.modelData, "icon") || ""
+            color: DesktopSystemStatHelpers.field(sideLegendItem.modelData, "color")
             pointSize: Style.fontSizeS * root.widgetScale
-            opacity: sideLegendItem.modelData.opacity !== undefined ? sideLegendItem.modelData.opacity : 1.0
+            opacity: DesktopSystemStatHelpers.fieldOrDefault(sideLegendItem.modelData, "opacity", 1.0)
           }
 
           NText {
-            text: sideLegendItem.modelData.text
-            color: sideLegendItem.modelData.color
+            text: DesktopWidgetHelpers.field(sideLegendItem.modelData, "text")
+            color: DesktopSystemStatHelpers.field(sideLegendItem.modelData, "color")
             pointSize: Style.fontSizeS * root.widgetScale
             font.family: Settings.data.ui.fontFixed
-            font.weight: sideLegendItem.modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
-            opacity: sideLegendItem.modelData.opacity !== undefined ? sideLegendItem.modelData.opacity : 1.0
-            elide: sideLegendItem.modelData.elide ? Text.ElideMiddle : Text.ElideNone
-            Layout.maximumWidth: sideLegendItem.modelData.elide ? Math.round(56 * root.widgetScale) : -1
+            font.weight: DesktopWidgetHelpers.field(sideLegendItem.modelData, "bold") ? Style.fontWeightBold : Style.fontWeightRegular
+            opacity: DesktopSystemStatHelpers.fieldOrDefault(sideLegendItem.modelData, "opacity", 1.0)
+            elide: DesktopWidgetHelpers.field(sideLegendItem.modelData, "elide") ? Text.ElideMiddle : Text.ElideNone
+            Layout.maximumWidth: DesktopWidgetHelpers.field(sideLegendItem.modelData, "elide") ? Math.round(56 * root.widgetScale) : -1
             horizontalAlignment: Text.AlignHCenter
           }
         }
@@ -286,23 +288,23 @@ DraggableDesktopWidget {
 
           NIcon {
             Layout.alignment: Qt.AlignVCenter
-            visible: !!bottomLegendItem.modelData.icon
-            icon: bottomLegendItem.modelData.icon || ""
-            color: bottomLegendItem.modelData.color
+            visible: !!DesktopWidgetHelpers.field(bottomLegendItem.modelData, "icon")
+            icon: DesktopWidgetHelpers.field(bottomLegendItem.modelData, "icon") || ""
+            color: DesktopSystemStatHelpers.field(bottomLegendItem.modelData, "color")
             pointSize: Style.fontSizeS * root.widgetScale
-            opacity: bottomLegendItem.modelData.opacity !== undefined ? bottomLegendItem.modelData.opacity : 1.0
+            opacity: DesktopSystemStatHelpers.fieldOrDefault(bottomLegendItem.modelData, "opacity", 1.0)
           }
 
           NText {
             Layout.alignment: Qt.AlignVCenter
-            text: bottomLegendItem.modelData.text
-            color: bottomLegendItem.modelData.color
+            text: DesktopWidgetHelpers.field(bottomLegendItem.modelData, "text")
+            color: DesktopSystemStatHelpers.field(bottomLegendItem.modelData, "color")
             pointSize: Style.fontSizeS * root.widgetScale
             font.family: Settings.data.ui.fontFixed
-            font.weight: bottomLegendItem.modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
-            opacity: bottomLegendItem.modelData.opacity !== undefined ? bottomLegendItem.modelData.opacity : 1.0
-            elide: bottomLegendItem.modelData.elide ? Text.ElideMiddle : Text.ElideNone
-            Layout.maximumWidth: bottomLegendItem.modelData.elide ? Math.round(56 * root.widgetScale) : -1
+            font.weight: DesktopWidgetHelpers.field(bottomLegendItem.modelData, "bold") ? Style.fontWeightBold : Style.fontWeightRegular
+            opacity: DesktopSystemStatHelpers.fieldOrDefault(bottomLegendItem.modelData, "opacity", 1.0)
+            elide: DesktopWidgetHelpers.field(bottomLegendItem.modelData, "elide") ? Text.ElideMiddle : Text.ElideNone
+            Layout.maximumWidth: DesktopWidgetHelpers.field(bottomLegendItem.modelData, "elide") ? Math.round(56 * root.widgetScale) : -1
           }
         }
       }

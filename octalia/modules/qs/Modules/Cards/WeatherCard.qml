@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Services.Location
 import qs.Widgets
 import qs.compat
+import "./WeatherCardUtils.js" as WeatherCardUtils
 
 // Weather overview card (placeholder data)
 NBox {
@@ -14,14 +15,15 @@ NBox {
   property int forecastDays: 6
   property bool showLocation: true
   property bool showEffects: Settings.data.location.weatherShowEffects
-  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (LocationService.data.weather !== null)
+  readonly property var weatherData: WeatherCardUtils.weatherData(LocationService)
+  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (weatherData !== null)
 
   // Test mode: set to "clear_day", "clear_night", "rain", "snow", "cloud" or "fog"
   property string testEffects: ""
 
   // Weather condition detection
-  readonly property int currentWeatherCode: weatherReady ? LocationService.data.weather.current_weather.weathercode : 0
-  readonly property bool isDayTime: weatherReady ? LocationService.data.weather.current_weather.is_day : true
+  readonly property int currentWeatherCode: weatherReady ? WeatherCardUtils.currentWeatherValue(root.weatherData, "weathercode") : 0
+  readonly property bool isDayTime: weatherReady ? WeatherCardUtils.currentWeatherValue(weatherData, "is_day") : true
   readonly property bool isRaining: testEffects === "rain" || (testEffects === "" && ((currentWeatherCode >= 51 && currentWeatherCode <= 67) || (currentWeatherCode >= 80 && currentWeatherCode <= 82)))
   readonly property bool isSnowing: testEffects === "snow" || (testEffects === "" && ((currentWeatherCode >= 71 && currentWeatherCode <= 77) || (currentWeatherCode >= 85 && currentWeatherCode <= 86)))
   readonly property bool isCloudy: testEffects === "cloud" || (testEffects === "" && (currentWeatherCode === 3))
@@ -42,8 +44,12 @@ NBox {
       anchors.fill: parent
 
       // Animated time for shaders
+      id: weatherEffectContainer
       property real shaderTime: 0
-      NumberAnimation on shaderTime {
+      NumberAnimation {
+        target: weatherEffectContainer
+        property: "shaderTime"
+        running: true
         loops: Animation.Infinite
         from: 0
         to: root.isSnowing ? 900 : 3000
@@ -62,7 +68,7 @@ NBox {
         }
 
         // Limit update rate to avoid using too much processing power
-        property real time: parent.shaderTime - (parent.shaderTime % (1 / (root.isRaining ? 3 : root.isSnowing ? 6 : 2)))
+        property real time: weatherEffectContainer.shaderTime - (weatherEffectContainer.shaderTime % (1 / (root.isRaining ? 3 : root.isSnowing ? 6 : 2)))
         property real itemWidth: weatherEffect.width
         property real itemHeight: weatherEffect.height
         property color bgColor: root.color
@@ -119,7 +125,7 @@ NBox {
           NIcon {
             visible: !LocationService.taliaWeatherMascotActive
             anchors.centerIn: parent
-            icon: root.weatherReady ? LocationService.weatherSymbolFromCode(LocationService.data.weather.current_weather.weathercode) : ""
+            icon: root.weatherReady ? LocationService.weatherSymbolFromCode(WeatherCardUtils.currentWeatherValue(root.weatherData, "weathercode")) : ""
             pointSize: Style.fontSizeXXXL * 1.75
             color: Color.mPrimary
           }
@@ -134,7 +140,7 @@ NBox {
                 smooth: true
                 mipmap: true
                 asynchronous: true
-                source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(currentWeatherCode))
+                source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(root.currentWeatherCode))
               }
             }
           }
@@ -159,7 +165,7 @@ NBox {
                 var suffix;
                 if (!root.weatherReady)
                   return "";
-                var temp = LocationService.data.weather.current_weather.temperature;
+                var temp = WeatherCardUtils.currentWeatherValue(root.weatherData, "temperature");
                 var suffix = "C";
                 if (Settings.data.location.useFahrenheit) {
                   temp = LocationService.celsiusToFahrenheit(temp);
@@ -173,10 +179,10 @@ NBox {
             }
 
             NText {
-              text: root.weatherReady ? `(${LocationService.data.weather.timezone_abbreviation})` : ""
+              text: root.weatherReady ? `(${WeatherCardUtils.field(root.weatherData, "timezone_abbreviation")})` : ""
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
-              visible: LocationService.data.weather && root.showLocation && !Settings.data.location.hideWeatherTimezone
+              visible: root.weatherData && root.showLocation && !Settings.data.location.hideWeatherTimezone
             }
           }
         }
@@ -195,7 +201,7 @@ NBox {
       spacing: Style.marginM
 
       Repeater {
-        model: root.weatherReady ? Math.min(root.forecastDays, LocationService.data.weather.daily.time.length) : 0
+        model: root.weatherReady ? Math.min(root.forecastDays, WeatherCardUtils.forecastLength(root.weatherData)) : 0
         delegate: ColumnLayout {
           id: forecastDay
           required property int index
@@ -207,7 +213,7 @@ NBox {
           NText {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             text: {
-              var weatherDate = new Date(LocationService.data.weather.daily.time[forecastDay.index].replace(/-/g, "/"));
+              var weatherDate = new Date(WeatherCardUtils.forecastValue(root.weatherData, forecastDay.index, "time").replace(/-/g, "/"));
               return I18n.locale.toString(weatherDate, "ddd");
             }
             color: Color.mOnSurface
@@ -221,7 +227,7 @@ NBox {
             NIcon {
               visible: !LocationService.taliaWeatherMascotActive
               anchors.centerIn: parent
-              icon: LocationService.weatherSymbolFromCode(LocationService.data.weather.daily.weathercode[forecastDay.index])
+              icon: WeatherCardUtils.weatherSymbol(LocationService, WeatherCardUtils.forecastValue(root.weatherData, forecastDay.index, "weathercode"))
               pointSize: Style.fontSizeXXL * 1.6
               color: Color.mPrimary
             }
@@ -236,7 +242,7 @@ NBox {
                   smooth: true
                   mipmap: true
                   asynchronous: true
-                  source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(LocationService.data.weather.daily.weathercode[forecastDay.index]))
+                  source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(WeatherCardUtils.forecastValue(root.weatherData, forecastDay.index, "weathercode")))
                 }
               }
             }
@@ -244,8 +250,8 @@ NBox {
           NText {
             Layout.alignment: Qt.AlignHCenter
             text: {
-              var max = LocationService.data.weather.daily.temperature_2m_max[forecastDay.index];
-              var min = LocationService.data.weather.daily.temperature_2m_min[forecastDay.index];
+              var max = WeatherCardUtils.forecastValue(root.weatherData, forecastDay.index, "temperature_2m_max");
+              var min = WeatherCardUtils.forecastValue(root.weatherData, forecastDay.index, "temperature_2m_min");
               if (Settings.data.location.useFahrenheit) {
                 max = LocationService.celsiusToFahrenheit(max);
                 min = LocationService.celsiusToFahrenheit(min);

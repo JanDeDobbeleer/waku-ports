@@ -1,3 +1,5 @@
+import "NRadioButtonUtils.js" as RadioUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import qs.Commons
@@ -8,7 +10,7 @@ RadioButton {
 
   property real pointSize: Style.fontSizeM
 
-  implicitWidth: outerCircle.implicitWidth + Style.marginS + contentItem.implicitWidth
+  implicitWidth: outerCircle.implicitWidth + Style.marginS + RadioUtils.implicitWidth(contentItem)
 
   indicator: Rectangle {
     id: outerCircle

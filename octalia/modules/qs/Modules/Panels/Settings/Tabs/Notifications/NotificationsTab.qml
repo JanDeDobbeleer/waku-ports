@@ -3,23 +3,15 @@ import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
   spacing: 0
 
   // Helper functions to update arrays immutably
-  function addMonitor(list, name) {
-    const arr = (list || []).slice();
-    if (!arr.includes(name))
-      arr.push(name);
-    return arr;
-  }
-  function removeMonitor(list, name) {
-    return (list || []).filter(function (n) {
-      return n !== name;
-    });
-  }
+  function addMonitor(list: var, name: string): var { return SettingsValue.addUniqueValue(list, name); }
+  function removeMonitor(list: var, name: string): var { return SettingsValue.removeValue(list, name); }
 
   // File pickers for sound sub-tab
   function openUnifiedSoundPicker() {
@@ -106,14 +98,7 @@ ColumnLayout {
     selectionMode: "files"
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    const soundPath = paths[0];
-                    Settings.data.notifications.sounds.normalSoundFile = soundPath;
-                    Settings.data.notifications.sounds.lowSoundFile = soundPath;
-                    Settings.data.notifications.sounds.criticalSoundFile = soundPath;
-                  }
-                }
+    onAccepted: paths => SettingsValue.applySelectedPaths(paths, Settings.data.notifications.sounds, ["normalSoundFile", "lowSoundFile", "criticalSoundFile"])
   }
 
   NFilePicker {
@@ -122,11 +107,7 @@ ColumnLayout {
     selectionMode: "files"
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    Settings.data.notifications.sounds.lowSoundFile = paths[0];
-                  }
-                }
+    onAccepted: paths => SettingsValue.applySelectedPaths(paths, Settings.data.notifications.sounds, ["lowSoundFile"])
   }
 
   NFilePicker {
@@ -135,11 +116,7 @@ ColumnLayout {
     selectionMode: "files"
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    Settings.data.notifications.sounds.normalSoundFile = paths[0];
-                  }
-                }
+    onAccepted: paths => SettingsValue.applySelectedPaths(paths, Settings.data.notifications.sounds, ["normalSoundFile"])
   }
 
   NFilePicker {
@@ -148,10 +125,6 @@ ColumnLayout {
     selectionMode: "files"
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     nameFilters: ["*.wav", "*.mp3", "*.ogg", "*.flac", "*.m4a", "*.aac"]
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    Settings.data.notifications.sounds.criticalSoundFile = paths[0];
-                  }
-                }
+    onAccepted: paths => SettingsValue.applySelectedPaths(paths, Settings.data.notifications.sounds, ["criticalSoundFile"])
   }
 }

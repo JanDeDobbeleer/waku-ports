@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -85,12 +86,7 @@ ColumnLayout {
                                                }
                                              })
 
-    model: Object.keys(shadowOptionsMap).map(function (k) {
-      return {
-        "key": k,
-        "name": shadowOptionsMap[k].name
-      };
-    })
+    model: SettingsValue.mapOptions(shadowOptionsMap)
 
     currentKey: Settings.data.general.shadowDirection
     defaultValue: Settings.getDefaultValue("general.shadowDirection")

@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import qs.Commons
 import qs.Services.Compositor
+import "SessionProviderUtils.js" as SessionProviderUtils
 
 Item {
   id: root
@@ -58,23 +59,23 @@ Item {
     }
   ]
 
-  function init() {
+  function init(): void {
     Logger.d("SessionProvider", "Initialized");
   }
 
-  function getEnabledActions() {
+  function getEnabledActions(): var {
     var action, i, j;
     var powerOptions = Settings.data.sessionMenu.powerOptions || [];
     var enabledSet = {};
 
-    for (i = 0; i < powerOptions.length; i++) {
+    for (i = 0; i < SessionProviderUtils.arrayLength(powerOptions); i++) {
       if (powerOptions[i].enabled) {
         enabledSet[powerOptions[i].action] = powerOptions[i];
       }
     }
 
     var enabled = [];
-    for (j = 0; j < sessionActions.length; j++) {
+    for (j = 0; j < SessionProviderUtils.arrayLength(sessionActions); j++) {
       action = sessionActions[j];
       if (enabledSet[action.action]) {
         enabled.push({
@@ -90,7 +91,7 @@ Item {
     return enabled;
   }
 
-  function getResults(query) {
+  function getResults(query: string): var {
     var action, entry, i, j, label, score;
     if (!query)
       return [];
@@ -100,12 +101,12 @@ Item {
       return [];
 
     var enabledActions = getEnabledActions();
-    if (enabledActions.length === 0)
+    if (SessionProviderUtils.arrayLength(enabledActions) === 0)
       return [];
 
     // Build searchable items with resolved translations
     var items = [];
-    for (i = 0; i < enabledActions.length; i++) {
+    for (i = 0; i < SessionProviderUtils.arrayLength(enabledActions); i++) {
       action = enabledActions[i];
       label = I18n.tr(action.labelKey);
       items.push({
@@ -142,7 +143,7 @@ Item {
     return launcherItems;
   }
 
-  function createActivateHandler(action, command) {
+  function createActivateHandler(action: string, command: string): var {
     return function () {
       if (launcher)
         launcher.close();

@@ -6,13 +6,14 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "./LauncherOverlayWindowUtils.js" as LauncherOverlayWindowUtils
 
 // Standalone launcher window for Overlay layer mode.
 // This window appears above fullscreen windows and does not attach to the bar.
 Variants {
   id: launcherVariants
 
-  model: Quickshell.screens.filter(screen => Settings.data.appLauncher.overviewLayer)
+  model: LauncherOverlayWindowUtils.screensForOverview(Quickshell.screens, Settings.data.appLauncher.overviewLayer)
 
   delegate: Loader {
     id: windowLoader
@@ -20,10 +21,10 @@ Variants {
     required property ShellScreen modelData
 
     active: PanelService.overlayLauncherOpen && PanelService.overlayLauncherScreen === modelData
+    onLoaded: LauncherOverlayWindowUtils.setScreen(item, modelData)
 
     sourceComponent: PanelWindow {
       id: launcherWindow
-      screen: windowLoader.modelData
 
       anchors {
         top: true
@@ -64,7 +65,7 @@ Variants {
         if (!launcherCore)
           return false;
         var provider = launcherCore.activeProvider;
-        if (!provider || !provider.hasPreview)
+        if (!LauncherOverlayWindowUtils.hasPreview(provider))
           return false;
         if (!Settings.data.appLauncher.enableClipPreview)
           return false;
@@ -129,21 +130,8 @@ Variants {
           }
         }
 
-        // Horizontal positioning
-        anchors.horizontalCenter: (launcherWindow.panelPosition === "center" || launcherWindow.panelPosition.endsWith("_center")) ? parent.horizontalCenter : undefined
-        anchors.left: launcherWindow.panelPosition.endsWith("_left") ? parent.left : undefined
-        anchors.right: launcherWindow.panelPosition.endsWith("_right") ? parent.right : undefined
-
-        // Vertical positioning
-        anchors.verticalCenter: (launcherWindow.panelPosition === "center" || launcherWindow.panelPosition.startsWith("center_")) ? parent.verticalCenter : undefined
-        anchors.top: launcherWindow.panelPosition.startsWith("top_") ? parent.top : undefined
-        anchors.bottom: launcherWindow.panelPosition.startsWith("bottom_") ? parent.bottom : undefined
-
-        // Margins - only add bar clearance on the bar's edge
-        anchors.leftMargin: launcherWindow.barPosition === "left" ? launcherWindow.barThickness : 0
-        anchors.rightMargin: launcherWindow.barPosition === "right" ? launcherWindow.barThickness : 0
-        anchors.topMargin: launcherWindow.barPosition === "top" ? launcherWindow.barThickness : 0
-        anchors.bottomMargin: launcherWindow.barPosition === "bottom" ? launcherWindow.barThickness : 0
+        x: launcherWindow.panelPosition.endsWith("_left") ? (launcherWindow.barPosition === "left" ? launcherWindow.barThickness : 0) : launcherWindow.panelPosition.endsWith("_right") ? parent.width - width - (launcherWindow.barPosition === "right" ? launcherWindow.barThickness : 0) : (parent.width - width) / 2
+        y: launcherWindow.panelPosition.startsWith("top_") ? (launcherWindow.barPosition === "top" ? launcherWindow.barThickness : 0) : launcherWindow.panelPosition.startsWith("bottom_") ? parent.height - height - (launcherWindow.barPosition === "bottom" ? launcherWindow.barThickness : 0) : (parent.height - height) / 2
 
         // Edge detection - based on position setting and bar location
         readonly property bool touchingLeft: launcherWindow.panelPosition.endsWith("_left") && launcherWindow.barPosition !== "left"
@@ -209,13 +197,13 @@ Variants {
           readonly property real panelH: launcherPanel.height
 
           // Helper functions for corner rendering
-          function getMultX(state) {
+          function getMultX(state: int): int {
             return state === 1 ? -1 : 1;
           }
-          function getMultY(state) {
+          function getMultY(state: int): int {
             return state === 2 ? -1 : 1;
           }
-          function getArcDir(multX, multY) {
+          function getArcDir(multX: real, multY: real): int {
             return ((multX < 0) !== (multY < 0)) ? PathArc.Counterclockwise : PathArc.Clockwise;
           }
 
@@ -304,8 +292,7 @@ Variants {
         LauncherCore {
           id: launcherCore
           anchors.fill: parent
-          screen: windowLoader.modelData
-          isOpen: true
+              isOpen: true
           onRequestClose: PanelService.closeOverlayLauncher()
           onRequestCloseImmediately: PanelService.closeOverlayLauncherImmediately()
 
@@ -340,8 +327,8 @@ Variants {
             return launcherPanel.y + Style.marginL;
           var row = launcherCore.isGridView ? Math.floor(launcherCore.selectedIndex / launcherCore.gridColumns) : launcherCore.selectedIndex;
           var gridCellSize = Math.floor((launcherWindow.listPanelWidth - Style.margin2XS - ((launcherCore.targetGridColumns - 1) * Style.marginS)) / launcherCore.targetGridColumns);
-          var itemHeight = launcherCore.isGridView ? (gridCellSize + Style.marginXXS) : (launcherCore.entryHeight + (view.spacing || 0));
-          var yPos = row * itemHeight - (view.contentY || 0);
+          var itemHeight = launcherCore.isGridView ? (gridCellSize + Style.marginXXS) : (launcherCore.entryHeight + (LauncherOverlayWindowUtils.field(view, "spacing") || 0));
+          var yPos = row * itemHeight - (LauncherOverlayWindowUtils.field(view, "contentY") || 0);
           var mapped = view.mapToItem(launcherWindow.contentItem, 0, yPos);
           return Math.max(launcherPanel.y + Style.marginL, Math.min(mapped.y, launcherPanel.y + launcherPanel.height - previewBox.height - Style.marginL));
         }
@@ -366,24 +353,14 @@ Variants {
           source: {
             if (!active)
               return "";
-            var provider = launcherCore.activeProvider;
-            if (provider && provider.previewComponentPath)
-              return provider.previewComponentPath;
-            return "";
+            return LauncherOverlayWindowUtils.previewComponentPath(launcherCore.activeProvider);
           }
 
           onLoaded: updatePreviewItem()
           onItemChanged: updatePreviewItem()
 
-          function updatePreviewItem() {
-            if (!item || launcherCore.selectedIndex < 0 || !launcherCore.results[launcherCore.selectedIndex])
-              return;
-            var provider = launcherCore.activeProvider;
-            if (provider && provider.getPreviewData) {
-              item.currentItem = provider.getPreviewData(launcherCore.results[launcherCore.selectedIndex]);
-            } else {
-              item.currentItem = launcherCore.results[launcherCore.selectedIndex];
-            }
+          function updatePreviewItem(): void {
+            LauncherOverlayWindowUtils.updatePreviewItem(item, launcherCore);
           }
         }
       }

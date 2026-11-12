@@ -8,6 +8,6 @@ NIconButtonHot {
 
   icon: NotificationService.doNotDisturb ? "bell-off" : "bell"
   hot: NotificationService.doNotDisturb
-  onClicked: PanelService.getPanel("notificationHistoryPanel", screen)?.toggle(this)
+  onClicked: PanelService.invokePanel(PanelService.getPanel("notificationHistoryPanel", screen), "toggle", [this])
   onRightClicked: NotificationService.doNotDisturb = !NotificationService.doNotDisturb
 }

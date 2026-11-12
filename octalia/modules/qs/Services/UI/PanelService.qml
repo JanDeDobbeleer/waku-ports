@@ -1,9 +1,12 @@
 pragma Singleton
 
+import "PanelServiceUtils.js" as PanelUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
+import "../../Modules/Bar/Extras/TrayMenuHelpers.js" as TrayMenuHelpers
 
 Singleton {
   id: root
@@ -36,7 +39,7 @@ Singleton {
   property var backgroundSlotAssignments: [null, null]
   signal slotAssignmentChanged(int slotIndex, var panel)
 
-  function assignToSlot(slotIndex, panel) {
+  function assignToSlot(slotIndex: var, panel: var): void {
     var newAssignments;
     if (backgroundSlotAssignments[slotIndex] !== panel) {
       newAssignments = backgroundSlotAssignments.slice();
@@ -51,40 +54,28 @@ Singleton {
   signal popupMenuWindowRegistered(var screen)
 
   // Register this panel (called after panel is loaded)
-  function registerPanel(panel) {
-    registeredPanels[panel.objectName] = panel;
-    Logger.d("PanelService", "Registered panel:", panel.objectName);
+  function registerPanel(panel: var): void {
+    PanelUtils.registerPanel(panel, root, Logger);
   }
 
   // Register popup menu window for a screen
-  function registerPopupMenuWindow(screen, window) {
-    if (!screen || !window)
-      return;
-    var key = screen.name;
-    popupMenuWindows[key] = window;
-    Logger.d("PanelService", "Registered popup menu window for screen:", key);
-    popupMenuWindowRegistered(screen);
+  function registerPopupMenuWindow(screen: var, window: var): void {
+    PanelUtils.registerPopupMenuWindow(screen, window, root, Logger);
   }
 
   // Unregister popup menu window for a screen (called on destruction)
-  function unregisterPopupMenuWindow(screen) {
-    if (!screen)
-      return;
-    var key = screen.name;
-    delete popupMenuWindows[key];
-    Logger.d("PanelService", "Unregistered popup menu window for screen:", key);
+  function unregisterPopupMenuWindow(screen: var): void {
+    PanelUtils.unregisterPopupMenuWindow(screen, root, Logger);
   }
 
   // Get popup menu window for a screen
-  function getPopupMenuWindow(screen) {
-    if (!screen)
-      return null;
-    return popupMenuWindows[screen.name] || null;
+  function getPopupMenuWindow(screen: var): var {
+    return PanelUtils.getPopupMenuWindow(screen, root);
   }
 
   // Show a context menu with proper handling for all compositors
   // Optional targetItem: if provided, menu will be horizontally centered on this item instead of anchorItem
-  function showContextMenu(contextMenu, anchorItem, screen, targetItem) {
+  function showContextMenu(contextMenu: var, anchorItem: var, screen: var, targetItem: var): void {
     if (!contextMenu || !anchorItem)
       return;
 
@@ -99,38 +90,18 @@ Singleton {
   }
 
   // Close any open context menu or popup menu window
-  function closeContextMenu(screen) {
-    var popupMenuWindow = getPopupMenuWindow(screen);
-    if (popupMenuWindow && popupMenuWindow.visible) {
-      popupMenuWindow.close();
-    }
+  function closeContextMenu(screen: var): void {
+    PanelUtils.closeContextMenu(screen, root);
   }
 
   // Show a tray menu with proper handling for all compositors
   // Returns true if menu was shown successfully
-  function showTrayMenu(screen, trayItem, trayMenu, anchorItem, menuX, menuY, widgetSection, widgetIndex): bool {
-    if (!trayItem || !trayMenu || !anchorItem)
-      return false;
-
-    // Close any previously opened menu first
-    closeContextMenu(screen);
-
-    trayMenu.trayItem = trayItem;
-    trayMenu.widgetSection = widgetSection;
-    trayMenu.widgetIndex = widgetIndex;
-
-    var popupMenuWindow = getPopupMenuWindow(screen);
-    if (popupMenuWindow) {
-      popupMenuWindow.open();
-      trayMenu.showAt(anchorItem, menuX, menuY);
-    } else {
-      return false;
-    }
-    return true;
+  function showTrayMenu(screen: var, trayItem: var, trayMenu: var, anchorItem: var, menuX: var, menuY: var, widgetSection: var, widgetIndex: var): bool {
+    return PanelUtils.showTrayMenu(screen, trayItem, trayMenu, anchorItem, menuX, menuY, widgetSection, widgetIndex, root, TrayMenuHelpers);
   }
 
   // Close tray menu
-  function closeTrayMenu(screen) {
+  function closeTrayMenu(screen: var): void {
     var popupMenuWindow = getPopupMenuWindow(screen);
     if (popupMenuWindow) {
       // This closes both the window and calls hideMenu on the tray menu
@@ -139,93 +110,50 @@ Singleton {
   }
 
   // Find a fallback screen, prioritizing 0x0 position (primary)
-  function findFallbackScreen() {
-    let primaryCandidate = null;
-    let firstScreen = null;
-
-    for (let i = 0; i < Quickshell.screens.length; i++) {
-      const s = Quickshell.screens[i];
-      if (s.x === 0 && s.y === 0) {
-        primaryCandidate = s;
-      }
-      if (!firstScreen) {
-        firstScreen = s;
-      }
-    }
-
-    return primaryCandidate || firstScreen || null;
+  function findFallbackScreen(): ShellScreen {
+    return PanelUtils.findFallbackScreen(root, Quickshell);
   }
 
   // Returns a panel (loads it on-demand if not yet loaded)
   // By default, if panel not found on screen, tries other screens (favoring 0x0)
   // Pass fallback=false to disable this behavior
-  function getPanel(name, screen, fallback = true) {
-    var key;
-    var fallbackKey, fallbackScreen;
-    if (!screen) {
-      Logger.d("PanelService", "missing screen for getPanel:", name);
-      // If no screen specified, return the first matching panel
-      for (key in registeredPanels) {
-        if (key.startsWith(name + "-")) {
-          return registeredPanels[key];
-        }
-      }
-      return null;
-    }
+  function getPanel(name: var, screen: var): var {
+    return PanelUtils.getPanel(name, screen, undefined, root, Logger);
+  }
 
-    var panelKey = `${name}-${screen.name}`;
+  function getPanelWithFallback(name: var, screen: var, fallback: var): var {
+    return PanelUtils.getPanel(name, screen, fallback, root, Logger);
+  }
 
-    // Check if panel is already loaded
-    if (registeredPanels[panelKey]) {
-      return registeredPanels[panelKey];
-    }
+  function invokePanel(panel: var, method: string, args: var): void {
+    PanelUtils.invokePanel(panel, method, args);
+  }
 
-    // If fallback enabled, try to find panel on another screen
-    if (fallback) {
-      // First try the primary screen (0x0)
-      fallbackScreen = findFallbackScreen();
-      if (fallbackScreen && fallbackScreen.name !== screen.name) {
-        fallbackKey = `${name}-${fallbackScreen.name}`;
-        if (registeredPanels[fallbackKey]) {
-          Logger.d("PanelService", "Panel fallback from", screen.name, "to", fallbackScreen.name);
-          return registeredPanels[fallbackKey];
-        }
-      }
+  function setPanelProperties(panel: var, properties: var): void {
+    PanelUtils.setPanelProperties(panel, properties);
+  }
 
-      // Try any other screen
-      for (key in registeredPanels) {
-        if (key.startsWith(name + "-")) {
-          Logger.d("PanelService", "Panel fallback to first available:", key);
-          return registeredPanels[key];
-        }
-      }
-    }
+  function isPanelVisible(panel: var): bool {
+    return PanelUtils.isPanelVisible(panel);
+  }
 
-    Logger.w("PanelService", "Panel not found:", panelKey);
-    return null;
+  function openSettingsPanel(panel: var, tab: int): void {
+    PanelUtils.openSettingsPanel(panel, tab);
   }
 
   // Check if a panel exists
-  function hasPanel(name): bool {
+  function hasPanel(name: var): bool {
     return name in registeredPanels;
   }
 
   // Check if panels can be shown on a given screen (has bar enabled or allowPanelsOnScreenWithoutBar)
-  function canShowPanelsOnScreen(screen) {
-    const name = screen?.name || "";
-    const monitors = Settings.data.bar.monitors || [];
-    const allowPanelsOnScreenWithoutBar = Settings.data.general.allowPanelsOnScreenWithoutBar;
-    return allowPanelsOnScreenWithoutBar || monitors.length === 0 || monitors.includes(name);
+  function canShowPanelsOnScreen(screen: var): var {
+    return PanelUtils.canShowPanelsOnScreen(screen, root, Settings);
   }
 
   // Find a screen that can show panels
-  function findScreenForPanels() {
-    for (let i = 0; i < Quickshell.screens.length; i++) {
-      if (canShowPanelsOnScreen(Quickshell.screens[i])) {
-        return Quickshell.screens[i];
-      }
-    }
-    return null;
+  function findScreenForPanels(): ShellScreen {
+    return PanelUtils.findScreenForPanels(root, Quickshell);
   }
 
   // Timer to switch from Exclusive to OnDemand keyboard focus on Hyprland
@@ -239,36 +167,12 @@ Singleton {
   }
 
   // Helper to keep only one panel open at any time
-  function willOpenPanel(panel) {
-    // Close overlay launcher if open
-    if (overlayLauncherOpen) {
-      overlayLauncherOpen = false;
-      overlayLauncherScreen = null;
-    }
-
-    if (openedPanel && openedPanel !== panel) {
-      // Move current panel to closing slot before closing it
-      closingPanel = openedPanel;
-      assignToSlot(1, closingPanel);
-      openedPanel.close();
-    }
-
-    // Assign new panel to open slot
-    openedPanel = panel;
-    assignToSlot(0, panel);
-
-    // Start keyboard initialization period (for Hyprland workaround)
-    if (panel && panel.exclusiveKeyboard) {
-      isInitializingKeyboard = true;
-      keyboardInitTimer.restart();
-    }
-
-    // emit signal
-    willOpen();
+  function willOpenPanel(panel: var): void {
+    PanelUtils.willOpenPanel(panel, root, keyboardInitTimer);
   }
 
   // Open launcher panel (handles both normal and overlay mode)
-  function openLauncher(screen) {
+  function openLauncher(screen: var): void {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       // Close any regular panel first
@@ -291,7 +195,7 @@ Singleton {
   }
 
   // Toggle launcher panel
-  function toggleLauncher(screen) {
+  function toggleLauncher(screen: var): void {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       if (overlayLauncherOpen && overlayLauncherScreen === screen) {
@@ -328,27 +232,21 @@ Singleton {
   // ==================== Unified Launcher API ====================
   // These methods work for both normal (SmartPanel) and overlay modes
 
-  function isLauncherOpen(screen) {
+  function isLauncherOpen(screen: var): var {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       return overlayLauncherOpen && overlayLauncherScreen === screen;
     } else {
       panel = getPanel("launcherPanel", screen);
-      return panel ? panel.isPanelOpen : false;
+      return PanelUtils.isPanelOpen(panel);
     }
   }
 
-  function getLauncherSearchText(screen) {
-    var panel;
-    if (Settings.data.appLauncher.overviewLayer) {
-      return overlayLauncherCore ? overlayLauncherCore.searchText : "";
-    } else {
-      panel = getPanel("launcherPanel", screen);
-      return panel ? panel.searchText : "";
-    }
+  function getLauncherSearchText(screen: var): var {
+    return PanelUtils.getLauncherSearchText(screen, root, Settings);
   }
 
-  function setLauncherSearchText(screen, text) {
+  function setLauncherSearchText(screen: var, text: var): void {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       if (overlayLauncherCore)
@@ -360,7 +258,7 @@ Singleton {
     }
   }
 
-  function openLauncherWithSearch(screen, searchText) {
+  function openLauncherWithSearch(screen: var, searchText: var): void {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       openLauncher(screen);
@@ -378,7 +276,7 @@ Singleton {
     }
   }
 
-  function closeLauncher(screen) {
+  function closeLauncher(screen: var): void {
     var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       closeOverlayLauncher();
@@ -391,14 +289,10 @@ Singleton {
 
   // Close any open panel (for general use)
   function closePanel() {
-    if (overlayLauncherOpen) {
-      closeOverlayLauncher();
-    } else if (openedPanel && openedPanel.close) {
-      openedPanel.close();
-    }
+    PanelUtils.closePanel(root);
   }
 
-  function closedPanel(panel) {
+  function closedPanel(panel: var): void {
     if (openedPanel && openedPanel === panel) {
       openedPanel = null;
       assignToSlot(0, null);

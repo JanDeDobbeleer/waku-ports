@@ -8,6 +8,7 @@ import qs.Modules.Bar.Extras
 import qs.Services.Compositor
 import qs.Services.Media
 import qs.Services.UI
+import "BarWidgetHelpers.js" as BarWidgetHelpers
 
 // Bar Component
 Item {
@@ -21,43 +22,23 @@ Item {
   function filterValidWidgets(widgets: list<var>): list<var> {
     if (!widgets)
       return [];
-    return widgets.filter(function (w) {
-      return w && w.id && BarWidgetRegistry.hasWidget(w.id);
+    return widgets.filter(function (w: var): bool {
+      return w && BarWidgetHelpers.getProperty(w, "id") && BarWidgetRegistry.hasWidget(BarWidgetHelpers.getProperty(w, "id"));
     });
   }
 
   // Hot corner: trigger click on first widget in a section
-  function triggerFirstWidgetInSection(sectionName: string) {
-    var i, widget;
-    var widgets = BarService.getWidgetsBySection(sectionName, screen?.name);
-    for (i = 0; i < widgets.length; i++) {
-      widget = widgets[i];
-      if (widget && widget.visible && widget.widgetId !== "Spacer") {
-        if (typeof widget.clicked === "function") {
-          widget.clicked();
-        }
-        return;
-      }
-    }
+  function triggerFirstWidgetInSection(sectionName: string): void {
+    BarWidgetHelpers.triggerWidgetInSection(BarService, sectionName, screen?.name, false);
   }
 
   // Hot corner: trigger click on last widget in a section
-  function triggerLastWidgetInSection(sectionName: string) {
-    var i, widget;
-    var widgets = BarService.getWidgetsBySection(sectionName, screen?.name);
-    for (i = widgets.length - 1; i >= 0; i--) {
-      widget = widgets[i];
-      if (widget && widget.visible && widget.widgetId !== "Spacer") {
-        if (typeof widget.clicked === "function") {
-          widget.clicked();
-        }
-        return;
-      }
-    }
+  function triggerLastWidgetInSection(sectionName: string): void {
+    BarWidgetHelpers.triggerWidgetInSection(BarService, sectionName, screen?.name, true);
   }
 
   // Expose bar region for click-through mask
-  readonly property var barRegion: barContentLoader.item?.children[0] || null
+  readonly property var barRegion: BarWidgetHelpers.firstChild(barContentLoader.item as Item)
 
   // Expose the actual bar Item for unified background system
   readonly property var barItem: barRegion
@@ -91,40 +72,8 @@ Item {
   Component.onDestruction: root._destroyed = true
 
   // Sync a ListModel with widget data, preserving delegates when only settings change
-  function syncWidgetModel(model, newWidgets) {
-    var i;
-    var validWidgets = filterValidWidgets(newWidgets);
-
-    // Build list of current IDs in model
-    var currentIds = [];
-    for (i = 0; i < model.count; i++) {
-      currentIds.push(model.get(i).id);
-    }
-
-    // Build list of new IDs
-    var newIds = validWidgets.map(w => w.id);
-
-    // Check if structure changed (different IDs or order)
-    var structureChanged = currentIds.length !== newIds.length;
-    if (!structureChanged) {
-      for (i = 0; i < currentIds.length; i++) {
-        if (currentIds[i] !== newIds[i]) {
-          structureChanged = true;
-          break;
-        }
-      }
-    }
-
-    Logger.d("Bar", "syncWidgetModel:", currentIds.join("|"), "→", newIds.join("|"), "changed:", structureChanged);
-
-    if (structureChanged) {
-      // Rebuild model - IDs changed
-      model.clear();
-      for (i = 0; i < validWidgets.length; i++) {
-        model.append(validWidgets[i]);
-      }
-    }
-    // If structure didn't change, delegates are preserved and will read fresh settings
+  function syncWidgetModel(model: ListModel, newWidgets: var): void {
+    BarWidgetHelpers.syncWidgetModel(model, filterValidWidgets(newWidgets), Logger);
   }
 
   // Sync models when widget revision changes
@@ -142,12 +91,7 @@ Item {
   function _syncFromRevision() {
     if (root._destroyed)
       return;
-    var widgets = Settings.getBarWidgetsForScreen(screen?.name);
-    if (widgets) {
-      syncWidgetModel(leftWidgetsModel, widgets.left);
-      syncWidgetModel(centerWidgetsModel, widgets.center);
-      syncWidgetModel(rightWidgetsModel, widgets.right);
-    }
+    BarWidgetHelpers.syncFromSettings(root, Settings, screen?.name);
   }
 
   // Initialize models — deferred to next event-loop tick via Qt.callLater to avoid
@@ -162,12 +106,7 @@ Item {
   function _initModels() {
     if (root._destroyed)
       return;
-    var widgets = Settings.getBarWidgetsForScreen(screen?.name);
-    if (widgets) {
-      syncWidgetModel(leftWidgetsModel, widgets.left);
-      syncWidgetModel(centerWidgetsModel, widgets.center);
-      syncWidgetModel(rightWidgetsModel, widgets.right);
-    }
+    BarWidgetHelpers.syncFromSettings(root, Settings, screen?.name);
   }
 
   // Fill the parent (the Loader)
@@ -192,7 +131,7 @@ Item {
       }
 
       var monitors = Settings.data.bar.monitors || [];
-      var result = monitors.length === 0 || monitors.includes(root.screen.name);
+      var result = BarWidgetHelpers.includesScreen(monitors, root.screen.name);
       return result;
     }
 
@@ -294,121 +233,41 @@ Item {
           return -1;
         }
 
-        function isPointOverWidget(xPos, yPos) {
-          var i, localPos, widget;
-          var widgets = BarService.getAllWidgetInstances(null, root.screen.name);
-          for (i = 0; i < widgets.length; i++) {
-            widget = widgets[i];
-            if (!widget || !widget.visible || widget.widgetId === "Spacer") {
-              continue;
-            }
-            localPos = mapToItem(widget, xPos, yPos);
-
-            if (root.barIsVertical) {
-              if (localPos.y >= -Style.marginS && localPos.y <= widget.height + Style.marginS) {
-                return true;
-              }
-            } else {
-              if (localPos.x >= -Style.marginS && localPos.x <= widget.width + Style.marginS) {
-                return true;
-              }
-            }
-          }
-          return false;
+        function isPointOverWidget(xPos: real, yPos: real): bool {
+          return BarWidgetHelpers.isPointOverWidget(bar, root, BarService, Style.marginS, xPos, yPos);
         }
 
-        function switchWorkspaceByOffset(offset) {
-          var i, j, matchesScreen, ws;
-          if (!root.screen || CompositorService.workspaces.count === 0)
-            return;
-
-          var screenName = root.screen.name.toLowerCase();
-          var candidates = [];
-          for (i = 0; i < CompositorService.workspaces.count; i++) {
-            ws = CompositorService.workspaces.get(i);
-            matchesScreen = CompositorService.globalWorkspaces || (ws.output && ws.output.toLowerCase() === screenName);
-            if (matchesScreen)
-              candidates.push(ws);
-          }
-
-          if (candidates.length <= 1)
-            return;
-
-          var current = -1;
-          for (j = 0; j < candidates.length; j++) {
-            if (candidates[j].isFocused) {
-              current = j;
-              break;
-            }
-          }
-          if (current < 0)
-            current = 0;
-
-          var next = current + offset;
-          if (Settings.data.bar.mouseWheelWrap) {
-            next = next % candidates.length;
-            if (next < 0)
-              next = candidates.length - 1;
-          } else {
-            if (next < 0 || next >= candidates.length)
-              return;
-          }
-
-          if (next === current)
-            return;
-          CompositorService.switchToWorkspace(candidates[next]);
+        function switchWorkspaceByOffset(offset: int): void {
+          BarWidgetHelpers.switchWorkspaceByOffset(CompositorService, root.screen, Settings.data.bar.mouseWheelWrap, offset);
         }
 
-        function handleEmptyBarClick(action, followMouse, command, mouse) {
+        function handleEmptyBarClick(action: string, followMouse: bool, command: string, mouse: var): void {
           var controlCenterPanel, launcherPanel, settingsPanel;
           if (action === "none")
             return;
           if (action === "controlCenter") {
             controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.screen);
-            controlCenterPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : "ControlCenter");
-            mouse.accepted = true;
+            if (controlCenterPanel)
+              BarWidgetHelpers.togglePanel(controlCenterPanel, null, followMouse ? mapToItem(null, BarWidgetHelpers.readProperty(mouse, "x"), BarWidgetHelpers.readProperty(mouse, "y")) : "ControlCenter");
+            BarWidgetHelpers.writeProperty(mouse, "accepted", true);
           } else if (action === "settings") {
             settingsPanel = PanelService.getPanel("settingsPanel", root.screen);
-            settingsPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
-            mouse.accepted = true;
+            if (settingsPanel)
+              BarWidgetHelpers.togglePanel(settingsPanel, null, followMouse ? mapToItem(null, BarWidgetHelpers.readProperty(mouse, "x"), BarWidgetHelpers.readProperty(mouse, "y")) : null);
+            BarWidgetHelpers.writeProperty(mouse, "accepted", true);
           } else if (action === "launcherPanel") {
             launcherPanel = PanelService.getPanel("launcherPanel", root.screen);
-            launcherPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
-            mouse.accepted = true;
+            if (launcherPanel)
+              BarWidgetHelpers.togglePanel(launcherPanel, null, followMouse ? mapToItem(null, BarWidgetHelpers.readProperty(mouse, "x"), BarWidgetHelpers.readProperty(mouse, "y")) : null);
+            BarWidgetHelpers.writeProperty(mouse, "accepted", true);
           } else if (action === "command") {
             runCustomCommand(command);
-            mouse.accepted = true;
+            BarWidgetHelpers.writeProperty(mouse, "accepted", true);
           }
         }
 
-        function runCustomCommand(command) {
-          if (!command || command.trim() === "")
-            return;
-
-          const processString = "import QtQuick; import Quickshell.Io; Process { command: [\"sh\", \"-lc\", \"\"] }";
-
-          try {
-            const processObj = Qt.createQmlObject(processString, root, "BarCommandProcess_" + Date.now());
-            processObj.command = ["cmd", "/c", command];
-
-            processObj.exited.connect(function (exitCode) {
-              if (exitCode !== 0) {
-                ToastService.showError(I18n.tr("toast.custom-command-failed.title"), I18n.tr("toast.custom-command-failed.description", {
-                                                                                               command: command,
-                                                                                               code: exitCode
-                                                                                             }));
-              }
-              processObj.destroy();
-            });
-
-            processObj.running = true;
-          } catch (e) {
-            Logger.e("Bar", "Failed to start custom command:", e);
-            ToastService.showError(I18n.tr("toast.custom-command-failed.title"), I18n.tr("toast.custom-command-failed.description", {
-                                                                                           command: command,
-                                                                                           code: "start_error"
-                                                                                         }));
-          }
+        function runCustomCommand(command: string): void {
+          BarWidgetHelpers.runCustomCommand(Qt, root, command, ToastService, I18n, Logger);
         }
 
         MouseArea {
@@ -517,6 +376,7 @@ Item {
   Component {
     id: verticalBarComponent
     Item {
+      id: verticalBarRoot
       anchors.fill: parent
       clip: true
 
@@ -559,7 +419,7 @@ Item {
       ColumnLayout {
         x: Style.pixelAlignCenter(parent.width, width)
         anchors.top: parent.top
-        anchors.topMargin: verticalBarMargin + Settings.data.bar.contentPadding
+        anchors.topMargin: verticalBarRoot.verticalBarMargin + Settings.data.bar.contentPadding
         spacing: Settings.data.bar.widgetSpacing
 
         Repeater {
@@ -568,13 +428,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "left",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.leftWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.leftWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignHCenter
           }
@@ -593,13 +453,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "center",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.centerWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.centerWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignHCenter
           }
@@ -610,7 +470,7 @@ Item {
       ColumnLayout {
         x: Style.pixelAlignCenter(parent.width, width)
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: verticalBarMargin + Settings.data.bar.contentPadding
+        anchors.bottomMargin: verticalBarRoot.verticalBarMargin + Settings.data.bar.contentPadding
         spacing: Settings.data.bar.widgetSpacing
 
         Repeater {
@@ -619,13 +479,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "right",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.rightWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.rightWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignHCenter
           }
@@ -638,6 +498,7 @@ Item {
   Component {
     id: horizontalBarComponent
     Item {
+      id: horizontalBarRoot
       anchors.fill: parent
       clip: true
 
@@ -681,7 +542,7 @@ Item {
         id: leftSection
         objectName: "leftSection"
         anchors.left: parent.left
-        anchors.leftMargin: horizontalBarMargin + Settings.data.bar.contentPadding
+        anchors.leftMargin: horizontalBarRoot.horizontalBarMargin + Settings.data.bar.contentPadding
         y: Style.pixelAlignCenter(parent.height, height)
         spacing: Settings.data.bar.widgetSpacing
 
@@ -691,13 +552,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "left",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.leftWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.leftWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignVCenter
           }
@@ -718,13 +579,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "center",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.centerWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.centerWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignVCenter
           }
@@ -736,7 +597,7 @@ Item {
         id: rightSection
         objectName: "rightSection"
         anchors.right: parent.right
-        anchors.rightMargin: horizontalBarMargin + Settings.data.bar.contentPadding
+        anchors.rightMargin: horizontalBarRoot.horizontalBarMargin + Settings.data.bar.contentPadding
         y: Style.pixelAlignCenter(parent.height, height)
         spacing: Settings.data.bar.widgetSpacing
 
@@ -746,13 +607,13 @@ Item {
             required property var model
             required property int index
 
-            widgetId: model.id || ""
+            widgetId: BarWidgetHelpers.readProperty(model, "id") || ""
             widgetScreen: root.screen
             widgetProps: ({
-                            "widgetId": model.id,
+                            "widgetId": BarWidgetHelpers.readProperty(model, "id"),
                             "section": "right",
                             "sectionWidgetIndex": index,
-                            "sectionWidgetsCount": root.rightWidgetsModel.count
+                            "sectionWidgetsCount": BarWidgetHelpers.readProperty(root.rightWidgetsModel, "count")
                           })
             Layout.alignment: Qt.AlignVCenter
           }

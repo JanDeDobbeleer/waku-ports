@@ -1,5 +1,6 @@
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 import waku.services as S
@@ -30,7 +31,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   readonly property var layouts: ({
       "mainStack": { "icon": "layout-sidebar", "title": "Main and stack" },
@@ -45,7 +46,7 @@ NIconButton {
   readonly property var info: layouts[layoutName] || ({ "icon": "layout", "title": layoutName })
 
   visible: S.Tiling.active && layoutName !== ""
-  icon: info.icon
+  icon: BarWidgetHelpers.readProperty(info, "icon")
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
   applyUiScale: false
   customRadius: Style.radiusL

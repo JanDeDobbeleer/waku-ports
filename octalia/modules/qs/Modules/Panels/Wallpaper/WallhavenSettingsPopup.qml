@@ -5,6 +5,7 @@ import Quickshell
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "./WallhavenSettingsPopupUtils.js" as WallhavenSettingsPopupUtils
 
 Popup {
   id: root
@@ -26,30 +27,26 @@ Popup {
   dim: false
   closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-  function showAt(item) {
+  function showAt(item: var): void {
     open();
   }
 
   onOpened: {
-    var parentPos;
-    // Center on screen after popup is opened and parent position is known
-    if (screen && parent) {
-      parentPos = parent.mapToItem(null, 0, 0);
-      x = Math.round((screen.width - width) / 2 - parentPos.x);
-      y = Math.round((screen.height - height) / 2 - parentPos.y);
+    const position = WallhavenSettingsPopupUtils.centerPosition(parent, screen, width, height);
+    if (position) {
+      x = position.x;
+      y = position.y;
     }
     Qt.callLater(() => {
-                   if (resolutionWidthInput.inputItem) {
-                     resolutionWidthInput.inputItem.forceActiveFocus();
-                   }
-                 });
+      WallhavenSettingsPopupUtils.focusInput(resolutionWidthInput);
+    });
   }
 
   function hide() {
     close();
   }
 
-  function updateResolution(triggerSearch) {
+  function updateResolution(triggerSearch: bool): void {
     var resolution;
     if (typeof WallhavenService === "undefined") {
       return;
@@ -145,9 +142,7 @@ Popup {
 
         // Fix for password echo mode
         Component.onCompleted: {
-          if (apiKeyInput.inputItem) {
-            apiKeyInput.inputItem.echoMode = TextInput.Password;
-          }
+          WallhavenSettingsPopupUtils.setInputEchoMode(apiKeyInput, TextInput.Password)
         }
 
         onEditingFinished: {
@@ -281,12 +276,12 @@ Popup {
         id: purityRow
         spacing: Style.marginL
 
-        function getPurityValue(index) {
+        function getPurityValue(index: int): bool {
           var purity = Settings.data.wallpaper.wallhavenPurity || "100";
           return purity.length > index && purity.charAt(index) === "1";
         }
 
-        function updatePurity(sfw, sketchy, nsfw) {
+        function updatePurity(sfw: bool, sketchy: bool, nsfw: bool): void {
           var purity = (sfw ? "1" : "0") + (sketchy ? "1" : "0") + (nsfw ? "1" : "0");
           Settings.data.wallpaper.wallhavenPurity = purity;
           // Update checkboxes immediately
@@ -607,12 +602,12 @@ Popup {
         id: categoriesRow
         spacing: Style.marginL
 
-        function getCategoryValue(index) {
+        function getCategoryValue(index: int): bool {
           var cats = Settings.data.wallpaper.wallhavenCategories || "111";
           return cats.length > index && cats.charAt(index) === "1";
         }
 
-        function updateCategories(general, anime, people) {
+        function updateCategories(general: bool, anime: bool, people: bool): void {
           var categories = (general ? "1" : "0") + (anime ? "1" : "0") + (people ? "1" : "0");
           Settings.data.wallpaper.wallhavenCategories = categories;
           // Update checkboxes immediately
@@ -866,7 +861,7 @@ Popup {
 
           onSelected: key => {
                         Settings.data.wallpaper.wallhavenResolutionMode = key;
-                        updateResolution(false);
+                        root.updateResolution(false);
                       }
         }
       }
@@ -883,18 +878,13 @@ Popup {
           text: Settings.data.wallpaper.wallhavenResolutionWidth || ""
 
           Component.onCompleted: {
-            if (resolutionWidthInput.inputItem) {
-              resolutionWidthInput.inputItem.focusPolicy = Qt.StrongFocus;
-              // Ensure the TextField can receive keyboard input
-              resolutionWidthInput.inputItem.activeFocusOnPress = true;
-            }
+            WallhavenSettingsPopupUtils.configureInputFocus(resolutionWidthInput, Qt.StrongFocus)
           }
 
           // Ensure focus when clicked
           onActiveFocusChanged: {
-            if (activeFocus && resolutionWidthInput.inputItem) {
-              resolutionWidthInput.inputItem.forceActiveFocus();
-            }
+            if (activeFocus)
+              WallhavenSettingsPopupUtils.focusInput(resolutionWidthInput)
           }
 
           Connections {
@@ -908,7 +898,7 @@ Popup {
 
           onEditingFinished: {
             Settings.data.wallpaper.wallhavenResolutionWidth = text;
-            updateResolution(false);
+            root.updateResolution(false);
           }
         }
 
@@ -927,17 +917,13 @@ Popup {
           text: Settings.data.wallpaper.wallhavenResolutionHeight || ""
 
           Component.onCompleted: {
-            if (resolutionHeightInput.inputItem) {
-              resolutionHeightInput.inputItem.focusPolicy = Qt.StrongFocus;
-              resolutionHeightInput.inputItem.activeFocusOnPress = true;
-            }
+            WallhavenSettingsPopupUtils.configureInputFocus(resolutionHeightInput, Qt.StrongFocus)
           }
 
           // Ensure focus when clicked
           onActiveFocusChanged: {
-            if (activeFocus && resolutionHeightInput.inputItem) {
-              resolutionHeightInput.inputItem.forceActiveFocus();
-            }
+            if (activeFocus)
+              WallhavenSettingsPopupUtils.focusInput(resolutionHeightInput)
           }
 
           Connections {
@@ -951,7 +937,7 @@ Popup {
 
           onEditingFinished: {
             Settings.data.wallpaper.wallhavenResolutionHeight = text;
-            updateResolution(false);
+            root.updateResolution(false);
           }
         }
       }
@@ -975,10 +961,9 @@ Popup {
           WallhavenService.sorting = Settings.data.wallpaper.wallhavenSorting;
           WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
           WallhavenService.ratios = Settings.data.wallpaper.wallhavenRatios;
-          WallhavenService.apiKey = Settings.data.wallpaper.wallhavenApiKey;
 
           // Update resolution settings (without triggering search)
-          updateResolution(false);
+          root.updateResolution(false);
 
           // Refresh the wallpaper search with current settings
           WallhavenService.search(Settings.data.wallpaper.wallhavenQuery || "", 1);

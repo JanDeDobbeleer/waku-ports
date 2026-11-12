@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import qs.Commons
 import qs.Services.Keyboard
+import "EmojiProviderUtils.js" as EmojiProviderUtils
 
 Item {
   id: root
@@ -38,7 +39,7 @@ Item {
 
   property var categories: ["all", "recent", "people", "animals", "nature", "food", "activity", "travel", "objects", "symbols", "flags"]
 
-  function getCategoryName(category) {
+  function getCategoryName(category: string): string {
     const names = {
       "all": I18n.tr("launcher.categories.all"),
       "recent": I18n.tr("launcher.categories.emoji-recent"),
@@ -70,7 +71,7 @@ Item {
     Logger.d("EmojiProvider", "Initialized");
   }
 
-  function selectCategory(category) {
+  function selectCategory(category: string): void {
     selectedCategory = category;
     if (launcher) {
       launcher.updateResults();
@@ -83,12 +84,12 @@ Item {
   }
 
   // Check if this provider handles the command
-  function handleCommand(searchText) {
+  function handleCommand(searchText: string): bool {
     return searchText.startsWith(">emoji");
   }
 
   // Return available commands when user types ">"
-  function commands() {
+  function commands(): var {
     return [
           {
             "name": ">emoji",
@@ -104,7 +105,7 @@ Item {
   }
 
   // Get search results
-  function getResults(searchText) {
+  function getResults(searchText: string): var {
     if (!searchText.startsWith(">emoji")) {
       return [];
     }
@@ -130,35 +131,7 @@ Item {
     } else {
       emojis = EmojiService.getEmojisByCategory(selectedCategory);
     }
-    return emojis.map(formatEmojiEntry);
+    return EmojiProviderUtils.formatEntries(emojis, root, EmojiService, launcher);
   }
 
-  // Format an emoji entry for the results list
-  function formatEmojiEntry(emoji) {
-    let title = emoji.name;
-    let description = emoji.keywords.join(", ");
-
-    if (emoji.category) {
-      description += " • Category: " + emoji.category;
-    }
-
-    const emojiChar = emoji.emoji;
-
-    return {
-      "name": title,
-      "description": description,
-      "icon": null,
-      "isImage": false,
-      "displayString": emojiChar,
-      "autoPasteText": emojiChar,
-      "provider": root,
-      "onAutoPaste": function () {
-        EmojiService.recordUsage(emojiChar);
-      },
-      "onActivate": function () {
-        EmojiService.copy(emojiChar);
-        launcher.close();
-      }
-    };
-  }
 }
