@@ -1,6 +1,4 @@
-import QtQuick.Layouts
 import Quickshell
-import qs.Commons
 import qs.Services.Power
 import qs.Widgets
 
