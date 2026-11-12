@@ -444,7 +444,7 @@ Panel {
   // span ~10–20 points so casual tweaks change the label, while small
   // nudges within one band don't.
   function brightnessName(percent: real): string {
-    return Model.brightnessName(percent, Commons.I18n.t)
+    return Model.brightnessName(percent, Commons.I18n.translator())
   }
 
   // Brightness is taken from every poll, so a level set elsewhere replaces one
@@ -832,7 +832,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(860))
 
     panelContent: PanelKeyCatcher {

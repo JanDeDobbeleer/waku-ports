@@ -8,6 +8,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "TrayModel.js" as TrayModel
+import "../I18nModel.js" as I18nModel
 
 BarWidget {
   id: root
@@ -73,7 +74,7 @@ BarWidget {
   // model, so collapsing the stack to a single opener would destroy the very
   // entry being displayed (submenu turns up empty).
   property var submenuStack: []
-  readonly property int submenuDepth: submenuStack.length
+  readonly property int submenuDepth: TrayModel.stackDepth(submenuStack)
   readonly property string currentTitle: TrayModel.currentTitle(submenuStack)
   readonly property var currentChildren: TrayModel.currentChildren(submenuStack, trayMenuOpener)
 
@@ -122,11 +123,11 @@ BarWidget {
     trayMenuOpen = false
   }
 
-  function openTrayMenu(item: var, anchorItem: var, mouse: var): void {
-    if (!item || !item.menu) {
+  function openTrayMenu(item: var, anchorItem: Item, mouse: var): void {
+    if (!item || !TrayModel.hasMenu(item)) {
       // Attached QsWindow only resolves in QML scope, not in TrayModel.js.
       let anchor = anchorItem as Item
-      let point = anchor.QsWindow.contentItem.mapFromItem(anchor, mouse.x, mouse.y)
+      let point = TrayModel.mapAnchor(anchor.QsWindow.contentItem, anchor, TrayModel.mouseX(mouse), TrayModel.mouseY(mouse))
       item.display(anchor.QsWindow.window, point.x, point.y)
       return
     }
@@ -433,7 +434,7 @@ BarWidget {
       spacing: Style.space(8)
 
       Text {
-        text: Commons.I18n.t("tray.title")
+        text: I18nModel.translate(Commons.I18n, "tray.title")
         textFormat: Text.PlainText
         color: root.foreground
         font.family: root.fontFamily
@@ -442,7 +443,7 @@ BarWidget {
       }
 
       Text {
-        text: Commons.I18n.t("tray.help")
+        text: I18nModel.translate(Commons.I18n, "tray.help")
         textFormat: Text.PlainText
         color: Qt.darker(root.foreground, 1.4)
         font.family: root.fontFamily
@@ -453,7 +454,7 @@ BarWidget {
 
       Text {
         visible: root.allItems.length === 0
-        text: Commons.I18n.t("tray.empty")
+        text: I18nModel.translate(Commons.I18n, "tray.empty")
         textFormat: Text.PlainText
         color: Qt.darker(root.foreground, 1.5)
         font.family: root.fontFamily
@@ -471,7 +472,7 @@ BarWidget {
           implicitHeight: 28
 
           readonly property string itemId: TrayModel.fieldString(modelData, "id")
-          readonly property string displayName: TrayModel.displayName(modelData, Commons.I18n.t("tray.unknown"))
+          readonly property string displayName: TrayModel.displayName(modelData, I18nModel.translate(Commons.I18n, "tray.unknown"))
           readonly property bool isPinned: root.pinnedIds.indexOf(itemId) !== -1
           readonly property bool isHidden: root.hiddenIds.indexOf(itemId) !== -1
 
@@ -503,7 +504,7 @@ BarWidget {
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
             iconText: "\uf08d"
-            text: rowRoot.isPinned ? Commons.I18n.t("tray.unpin") : Commons.I18n.t("tray.pin")
+            text: rowRoot.isPinned ? I18nModel.translate(Commons.I18n, "tray.unpin") : I18nModel.translate(Commons.I18n, "tray.pin")
             foreground: root.foreground
             horizontalPadding: 8
             verticalPadding: 3
@@ -518,7 +519,7 @@ BarWidget {
             anchors.right: rowPinBtn.left
             anchors.rightMargin: Style.space(6)
             iconText: "\uf06e"
-            text: rowRoot.isHidden ? Commons.I18n.t("tray.show") : Commons.I18n.t("tray.hide")
+            text: rowRoot.isHidden ? I18nModel.translate(Commons.I18n, "tray.show") : I18nModel.translate(Commons.I18n, "tray.hide")
             foreground: root.foreground
             horizontalPadding: 8
             verticalPadding: 3
@@ -591,7 +592,7 @@ BarWidget {
             horizontalAlignment: Text.AlignHCenter
             textFormat: Text.PlainText
             // Back points against the reading direction.
-            text: Commons.I18n.rightToLeft ? "\u203a" : "\u2039"
+            text: I18nModel.value(Commons.I18n, "rightToLeft") ? "\u203a" : "\u2039"
             color: root.foreground
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -753,7 +754,7 @@ BarWidget {
                 anchors.right: parent.right
                 anchors.rightMargin: Style.space(10)
                 textFormat: Text.PlainText
-                text: Commons.I18n.rightToLeft ? "\u2039" : "\u203a"
+                text: I18nModel.value(Commons.I18n, "rightToLeft") ? "\u2039" : "\u203a"
                 color: root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.bodySmall
@@ -852,13 +853,13 @@ BarWidget {
       cursorShape: Qt.PointingHandCursor
       onEntered: if (root.bar) BarValues.showTooltip(root.bar, trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
       onExited: if (root.bar) BarValues.hideTooltip(root.bar, trayItemRoot)
-      onPressed: function(mouse: QQuickMouseEvent): var {
+      onPressed: function(mouse: MouseEvent): var {
         if (mouse.button === Qt.RightButton) {
           trayItemRoot.displayMenu(mouse)
           mouse.accepted = true
         }
       }
-      onClicked: function(mouse: QQuickMouseEvent): var {
+      onClicked: function(mouse: MouseEvent): var {
         if (mouse.button === Qt.RightButton) {
           mouse.accepted = true
         } else if (mouse.button === Qt.MiddleButton) {
@@ -869,7 +870,7 @@ BarWidget {
           TrayModel.activate(trayItemRoot.modelData, "activate")
         }
       }
-      onWheel: function(wheel: QQuickWheelEvent): var {
+      onWheel: function(wheel: WheelEvent): var {
         TrayModel.scroll(trayItemRoot.modelData, wheel.angleDelta.y, false)
       }
     }

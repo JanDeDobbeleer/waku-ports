@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell.Io
-import "Plural.js" as Plural
 import "Catalog.js" as Catalog
+import "I18nUtils.js" as I18nUtils
 
 // Strings for a plugin that ships its own catalogs, following the language
 // picked under Setup > Language the same way the shell's I18n does. Point it
@@ -37,7 +37,7 @@ QtObject {
   property var failedPaths: ({})
   function bump(): void { root.rev++ }
   function fileLoaded(key: string): void {
-    delete root.failedPaths[key]
+    I18nUtils.clearFailure(root.failedPaths, key)
     Qt.callLater(root.bump)
   }
   function fileFailed(key: string, path: string): void {
@@ -45,9 +45,9 @@ QtObject {
     root.failedPaths[key] = path
     Qt.callLater(root.bump)
   }
-  readonly property var englishStrings: readCatalog(root.rev, englishFile.text())
-  readonly property var baseStrings: readCatalog(root.rev, baseFile.text())
-  readonly property var languageStrings: readCatalog(root.rev, languageFile.text())
+  readonly property var englishStrings: readCatalog(root.rev, I18nUtils.fileText(englishFile))
+  readonly property var baseStrings: readCatalog(root.rev, I18nUtils.fileText(baseFile))
+  readonly property var languageStrings: readCatalog(root.rev, I18nUtils.fileText(languageFile))
   readonly property var strings: {
     var merged = ({})
     var layers = [root.englishStrings, root.baseStrings, root.languageStrings]
@@ -57,28 +57,22 @@ QtObject {
     return merged
   }
 
-  function t(key, fallback) {
-    var value = root.strings[key]
-    if (value && typeof value === "object") value = value.other
-    if (typeof value === "string" && value.length > 0) return value
-    return fallback !== undefined ? fallback : key
+  // Model callbacks can supply an optional fallback through these helpers.
+  function translator(): var { return I18nUtils.translator(root) }
+  function pluralTranslator(): var { return I18nUtils.layeredPluralTranslator(root) }
+
+  function t(key: var): string {
+    return I18nUtils.translate(root, key, undefined)
   }
 
-  // The form of a plural entry for count, by the language's plural rules.
-  // The layer that carries the entry decides which language's rules apply.
-  function tn(key, count, fallback) {
-    var layers = [[root.languageStrings, root.language], [root.baseStrings, root.baseLanguage], [root.englishStrings, "en"]]
-    for (let i = 0; i < layers.length; i++) {
-      let value = Plural.pick(layers[i][0][key], layers[i][1], count)
-      if (typeof value === "string" && value.length > 0) return value
-    }
-    return fallback !== undefined ? fallback : key
+  function tn(key: var, count: var): string {
+    return I18nUtils.translateLayeredPlural(root, key, count, undefined)
   }
 
   function parseCatalog(raw: var): var { return Catalog.parse(raw) }
   function readCatalog(revision: int, raw: var): var { return Catalog.parse(raw) }
 
-  function catalogPath(code) {
+  function catalogPath(code: string): string {
     return root.directoryPath !== "" ? root.directoryPath + "/" + code + ".json" : ""
   }
 

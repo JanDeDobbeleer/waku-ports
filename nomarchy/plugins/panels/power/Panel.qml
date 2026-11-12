@@ -31,7 +31,7 @@ Panel {
     return !!(device && device.isPresent)
   }
 
-  function upowerStates() {
+  function upowerStates(): var {
     return {
       Charging: UPowerDeviceState.Charging,
       Discharging: UPowerDeviceState.Discharging,
@@ -40,7 +40,7 @@ Panel {
     }
   }
 
-  function profileValues() {
+  function profileValues(): var {
     return {
       PowerSaver: PowerProfile.PowerSaver,
       Balanced: PowerProfile.Balanced,
@@ -48,26 +48,26 @@ Panel {
     }
   }
 
-  function selectProfileByDelta(delta) {
+  function selectProfileByDelta(delta: int): void {
     profileIndex = Model.selectProfileIndex(profileIndex, delta, profiles)
   }
 
-  function activateSelectedProfile() {
-    if (profileIndex < 0 || profileIndex >= profiles.length) return
-    setProfile(profiles[profileIndex])
+  function activateSelectedProfile(): void {
+    if (profileIndex < 0 || profileIndex >= Model.sequenceLength(profiles)) return
+    setProfile(Model.sequenceItem(profiles, profileIndex))
   }
 
-  function batteryIcon() {
+  function batteryIcon(): string {
     var device = UPower.displayDevice
     return Model.batteryIcon(device, root.discharging, upowerStates())
   }
 
-  function modeLabel() {
+  function modeLabel(): string {
     var device = UPower.displayDevice
-    return Model.modeLabel(device, root.discharging, upowerStates(), Commons.I18n.t)
+    return Model.modeLabel(device, root.discharging, upowerStates(), Commons.I18n.translator())
   }
 
-  function profileIcon(name) {
+  function profileIcon(name: string): string {
     return Model.profileIcon(name)
   }
 
@@ -134,28 +134,28 @@ Panel {
     if (discharging) return onBatteryPhrases
     return []
   }
-  readonly property bool rotatingPhrases: activePhrases.length > 0
+  readonly property bool rotatingPhrases: Model.sequenceLength(activePhrases) > 0
 
   // The battery script's readings in the current language's digits; the
   // time field already comes translated, so it is shown as it arrives.
-  function reading(raw) {
-    return Model.localizeReading(raw, Commons.I18n.formatNumber)
+  function reading(raw: var): string {
+    return Model.localizeReading(raw, Commons.I18n.numberFormatter())
   }
 
   readonly property string heroStatusText: {
     if (fullyCharged) return Commons.I18n.t("power.fullyCharged")
-    if (rotatingPhrases) return activePhrases[phraseIndex % activePhrases.length]
+    if (rotatingPhrases) return activePhrases[phraseIndex % Model.sequenceLength(activePhrases)]
     return modeLabel()
   }
 
   // The battery readings and power modes are live properties of the engine's
   // UPower and PowerProfiles, so there is nothing to poll.
-  function setProfile(profile) {
+  function setProfile(profile: string): void {
     if (!profile) return
     PowerProfiles.profile = Model.profileValue(profile, profileValues())
   }
 
-  function togglePercentage() {
+  function togglePercentage(): void {
     root.settings = Object.assign({}, root.settings, { showPercentage: !root.showPercentage })
     if (BarValues.hasShell(root.bar)) BarValues.updateEntryInline(root.bar, root.moduleName, root.settings)
   }
@@ -168,7 +168,7 @@ Panel {
     function show() { root.open() }
     function hide() { root.close() }
     function toggle() { root.toggle() }
-    function togglePercentage() { root.togglePercentage() }
+    function togglePercentage(): void { root.togglePercentage() }
   }
 
   onOpenedChanged: {
@@ -208,17 +208,17 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent, "statusText") : null; property: "opacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: {
-        var n = root.activePhrases.length
+        var n = Model.sequenceLength(root.activePhrases)
         if (n > 0) root.phraseIndex = (root.phraseIndex + 1) % n
       }
     }
     PropertyAnimation {
-      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent, "statusText") : null; property: "opacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -231,7 +231,7 @@ Panel {
     function onRotatingPhrasesChanged() {
       if (!root.rotatingPhrases) {
         phraseSwap.stop()
-        if (panel.loadedContent) (panel.loadedContent as LazyContent).heroStatus.opacity = 1.0
+        if (panel.loadedContent) Model.setContentOpacity(panel.loadedContent, "statusText", 1.0)
       }
     }
   }
@@ -265,7 +265,7 @@ Panel {
 
     component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      final property alias heroStatus: heroStatus
+      final property alias statusText: heroStatus
       anchors.fill: parent
       implicitHeight: column.implicitHeight
       onMoveRequested: function(dx, dy) {
@@ -339,7 +339,7 @@ Panel {
           Text {
             id: heroPercent
             textFormat: Text.PlainText
-            text: root.reading(root.batteryInfo.percentage) || "—"
+            text: root.reading(Model.field(root.batteryInfo, "percentage")) || "—"
             color: root.contentForeground
             font.family: root.contentFontFamily
             font.pixelSize: Style.font.displayLarge
@@ -393,27 +393,28 @@ Panel {
         // the battery sits above the charge-control start threshold, and we
         // refuse to flicker the whole panel for that ~1s window.
         Row {
-          visible: root.batteryInfo.percentage !== undefined
+          id: statsRow
+          visible: Model.field(root.batteryInfo, "percentage") !== undefined
           width: parent.width
           spacing: Style.space(20)
 
           Column {
-            width: (parent.width - parent.spacing) / 2
+            width: (statsRow.width - statsRow.spacing) / 2
             spacing: Style.spacing.labelGap
-            InfoPair { label: Commons.I18n.t("power.batterySize"); value: root.reading(root.batteryInfo.size) }
-            InfoPair { label: Commons.I18n.t("power.chargeCycles"); value: root.reading(root.batteryInfo.cycles) || "—" }
+            InfoPair { label: Commons.I18n.t("power.batterySize"); value: root.reading(Model.field(root.batteryInfo, "size")) }
+            InfoPair { label: Commons.I18n.t("power.chargeCycles"); value: root.reading(Model.field(root.batteryInfo, "cycles")) || "—" }
           }
 
           Column {
-            width: (parent.width - parent.spacing) / 2
+            width: (statsRow.width - statsRow.spacing) / 2
             spacing: Style.spacing.labelGap
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.chargeLimit") : (root.discharging ? Commons.I18n.t("power.timeLeft") : Commons.I18n.t("power.timeToFull"))
-              value: root.chargeThresholdActive ? (root.reading(root.batteryInfo.threshold) || "-") : (root.batteryFlowIdle ? "-" : (root.reading(root.batteryInfo.time) || "—"))
+              value: root.chargeThresholdActive ? (root.reading(Model.field(root.batteryInfo, "threshold")) || "-") : (root.batteryFlowIdle ? "-" : (root.reading(Model.field(root.batteryInfo, "time")) || "—"))
             }
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.batteryState") : (root.discharging ? Commons.I18n.t("power.discharging") : Commons.I18n.t("power.charging"))
-              value: root.chargeThresholdActive ? Commons.I18n.t("power.holding") : (root.batteryFull ? "-" : root.reading(root.batteryInfo.rate))
+              value: root.chargeThresholdActive ? Commons.I18n.t("power.holding") : (root.batteryFull ? "-" : root.reading(Model.field(root.batteryInfo, "rate")))
             }
           }
         }
@@ -421,12 +422,12 @@ Panel {
         // ---------- Power profile picker ----------
         // The Windows power modes, through the engine's PowerProfiles.
         PanelSeparator {
-          visible: root.profiles.length > 0
+          visible: Model.sequenceLength(root.profiles) > 0
           foreground: root.contentForeground
         }
 
         Column {
-          visible: root.profiles.length > 0
+          visible: Model.sequenceLength(root.profiles) > 0
           width: parent.width
           spacing: Style.space(10)
 
@@ -441,8 +442,8 @@ Panel {
             width: parent.width
             spacing: Style.space(6)
 
-            readonly property real cellWidth: root.profiles.length > 0
-              ? (width - spacing * (root.profiles.length - 1)) / root.profiles.length
+            readonly property real cellWidth: Model.sequenceLength(root.profiles) > 0
+              ? (width - spacing * (Model.sequenceLength(root.profiles) - 1)) / Model.sequenceLength(root.profiles)
               : 0
 
             Repeater {
@@ -453,7 +454,7 @@ Panel {
                 width: profileRow.cellWidth
                 iconText: root.profileIcon(String(modelData))
                 iconSize: Style.font.title
-                text: Model.profileLabel(modelData, Commons.I18n.t)
+                text: Model.profileLabel(modelData, Commons.I18n.translator())
                 fontSize: Style.font.bodySmall
                 foreground: root.contentForeground
                 fontFamily: root.contentFontFamily
@@ -486,7 +487,7 @@ Panel {
     spacing: Style.space(8)
 
     InfoLabel { text: infoPair.label }
-    Item { width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth - parent.spacing * 2); height: 1 }
+    Item { width: Math.max(0, infoPair.width - infoPair.children[0].implicitWidth - infoPair.children[2].implicitWidth - infoPair.spacing * 2); height: 1 }
     InfoValue { text: infoPair.value }
   }
 

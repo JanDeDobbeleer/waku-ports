@@ -54,9 +54,9 @@ Panel {
   // The words the model's clocks and dates read in, from the shell's language.
   readonly property var words: {
     return {
-      t: Commons.I18n.t,
-      tn: Commons.I18n.tn,
-      fmt: Commons.I18n.formatNumber,
+      t: Commons.I18n.translator(),
+      tn: Commons.I18n.pluralTranslator(),
+      fmt: Commons.I18n.numberFormatter(),
       am: Dynamic.value(formatLocale, "amText"),
       pm: Dynamic.value(formatLocale, "pmText"),
       date: function(parts: var): string {
@@ -971,7 +971,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(340))
+    contentWidth: panel.fittedContentWidth(Style.space(340), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(680))
 
     panelContent: LazyContent {}
@@ -1242,13 +1242,13 @@ Panel {
                 globe.jumpOptions = Qt.binding(function(): var { return root.allZoneOptions })
                 globe.placesFor = function(text: string): var { return root.placesFor(text) }
                 globe.placesPending = function(text: string): bool { return root.placesPending(text) }
-                globe.placeSearchRequested.connect(function(text: string): void { root.requestPlaces(text) })
-                globe.offsetModeToggleRequested.connect(function(): void { root.toggleOffsetMode() })
-                globe.jumpRequested.connect(function(label: string, zone: string, place: var): void { root.addSessionCity(label, zone, place) })
-                globe.exitRequested.connect(function(): void { root.setGlobeMode(false, false) })
-                globe.jumpDismissed.connect(function(): void { Qt.callLater(function(): void { if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus") }) })
-                globe.citySelected.connect(function(label: string, zone: string): void { root.focusFromGlobe(label, zone) })
-                globe.cityTapped.connect(function(label: string, zone: string): void { root.claimHome(label, zone) })
+                Dynamic.connect(globe, "placeSearchRequested", function(text: string): void { root.requestPlaces(text) })
+                Dynamic.connect(globe, "offsetModeToggleRequested", function(): void { root.toggleOffsetMode() })
+                Dynamic.connect(globe, "jumpRequested", function(label: string, zone: string, place: var): void { root.addSessionCity(label, zone, place) })
+                Dynamic.connect(globe, "exitRequested", function(): void { root.setGlobeMode(false, false) })
+                Dynamic.connect(globe, "jumpDismissed", function(): void { Qt.callLater(function(): void { if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus") }) })
+                Dynamic.connect(globe, "citySelected", function(label: string, zone: string): void { root.focusFromGlobe(label, zone) })
+                Dynamic.connect(globe, "cityTapped", function(label: string, zone: string): void { root.claimHome(label, zone) })
                 // A cold start can finish loading after the mode switched on.
                 if (root.globeMode) root.showFocusOnGlobe()
               }

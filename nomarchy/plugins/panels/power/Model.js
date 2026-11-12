@@ -1,3 +1,14 @@
+function field(value, key) { return value === undefined || value === null ? undefined : value[key] }
+function sequenceLength(value) {
+  var length = value === undefined || value === null ? 0 : Number(value.length)
+  return isFinite(length) && length > 0 ? Math.floor(length) : 0
+}
+function sequenceItem(value, index) { return value === undefined || value === null ? undefined : value[index] }
+function setContentOpacity(content, key, opacity) {
+  var target = content === undefined || content === null ? null : content[key]
+  if (target) target.opacity = opacity
+}
+
 function clampIndex(index, length) {
   if (length <= 0) return 0
   return Math.max(0, Math.min(length - 1, index))
@@ -117,6 +128,10 @@ function profileLabel(name, tr) {
 
 if (typeof module !== "undefined") {
   module.exports = {
+    field: field,
+    sequenceLength: sequenceLength,
+    sequenceItem: sequenceItem,
+    setContentOpacity: setContentOpacity,
     clampIndex: clampIndex,
     selectProfileIndex: selectProfileIndex,
     batteryReadings: batteryReadings,

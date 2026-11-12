@@ -5,6 +5,7 @@
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
+import "Delivery.js" as Delivery
 
 Item {
   id: button
@@ -19,14 +20,14 @@ Item {
   property bool leftRule: false
 
   // Matched on the value: a card with two codes has two Copy buttons.
-  readonly property bool taken: toast && deed.kind === "code" && toast.copiedCode === String(deed.value)
+  readonly property bool taken: toast && Delivery.field(deed, "kind") === "code" && Delivery.field(toast, "copiedCode") === String(Delivery.field(deed, "value"))
 
   // The deck's hover region sits above every card, so hover is worked out
   // from the pointer position the deck hands down.
   readonly property bool hot: toast ? toast.pointerOver(button) : false
 
   // A tick rather than a past-tense verb, so the width does not change.
-  readonly property string labelText: taken ? "\u{f012c}" : String(deed.label || "")
+  readonly property string labelText: taken ? "\u{f012c}" : String(Delivery.field(deed, "label") || "")
 
   Rectangle {
     anchors { fill: parent; topMargin: button.rule; leftMargin: button.leftRule ? button.rule : 0 }

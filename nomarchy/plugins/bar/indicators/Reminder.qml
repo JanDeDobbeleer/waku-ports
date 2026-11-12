@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Ui
+import "Dynamic.js" as Dynamic
 
 BarIndicator {
   id: root
@@ -25,8 +26,8 @@ BarIndicator {
 
   function update(raw: string): void {
     var data = extractData(raw)
-    reminderCount = Number(data.count || 0)
-    tooltip = String(data.tooltip || "")
+    reminderCount = Number(Dynamic.value(data, "count") || 0)
+    tooltip = String(Dynamic.value(data, "tooltip") || "")
   }
 
   Component.onCompleted: refresh()

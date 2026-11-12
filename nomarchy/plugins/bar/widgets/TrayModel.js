@@ -102,6 +102,7 @@ function settingArray(settings, key) {
 
 function field(item, key) { return item ? item[key] : undefined }
 function fieldString(item, key) { return String(field(item, key) || "") }
+function stackDepth(stack) { return stack.length }
 function currentTitle(stack) {
   return stack && stack.length > 0 ? (stack[stack.length - 1].title || "") : ""
 }
@@ -174,3 +175,9 @@ function displayName(item, fallback) {
 function isActive(item, passiveStatus) { return !!item && item.status !== passiveStatus }
 function activate(item, method) { if (item && typeof item[method] === "function") item[method]() }
 function scroll(item, delta, horizontal) { if (item && typeof item.scroll === "function") item.scroll(delta, horizontal) }
+
+function hasMenu(item) { return !!item && !!item.menu }
+function mouseX(mouse) { return mouse ? Number(mouse.x) : 0 }
+function mouseY(mouse) { return mouse ? Number(mouse.y) : 0 }
+
+function mapAnchor(contentItem, anchor, x, y) { return contentItem.mapFromItem(anchor, x, y) }

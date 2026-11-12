@@ -19,6 +19,7 @@ import "Security.js" as Security
 import "Layout.js" as Layout
 import "Markup.js" as Markup
 import "Delivery.js" as Delivery
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: service
@@ -1370,7 +1371,7 @@ Item {
   function replayHistory() {
     var rows = currentHistory().slice(0, replayCount)
     // Replaying nothing at all looks like a dead keybinding, so say so.
-    if (rows.length === 0) showPlaceholder(I18n.t("notifications.noneRecent"))
+    if (rows.length === 0) showPlaceholder(I18nModel.translate(I18n, "notifications.noneRecent"))
     else restoreRows(rows, true)
   }
 

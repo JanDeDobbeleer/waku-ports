@@ -16,9 +16,9 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Flickable panelFlick: panel.loadedContent ? (panel.loadedContent as LazyContent).panelFlick : null
-  readonly property PanelHero hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
-  readonly property Column fileColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).fileColumn : null
+  readonly property Flickable panelFlick: panel.loadedContent ? Model.field(panel.loadedContent, "panelFlick") as Flickable : null
+  readonly property PanelHero hero: panel.loadedContent ? Model.field(panel.loadedContent, "hero") as PanelHero : null
+  readonly property Column fileColumn: panel.loadedContent ? Model.field(panel.loadedContent, "fileColumn") as Column : null
 
   property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
   property string focusSection: "login"
@@ -50,28 +50,28 @@ Panel {
   // "header" stays navigable, but an absent CLI leaves nothing to highlight.
   readonly property bool headerHasCursor: cursorActive && focusSection === "header" && dropbox.installed
 
-  function ensureCursor() {
+  function ensureCursor(): void {
     if (!dropbox.authenticated) {
       focusSection = "login"
       fileIndex = 0
       return
     }
-    if (dropbox.files.length === 0) {
+    if (Model.length(dropbox.files) === 0) {
       focusSection = "header"
       fileIndex = 0
       return
     }
     if (focusSection !== "files" && focusSection !== "header") focusSection = "files"
-    if (fileIndex >= dropbox.files.length) fileIndex = Math.max(0, dropbox.files.length - 1)
+    if (fileIndex >= Model.length(dropbox.files)) fileIndex = Math.max(0, Model.length(dropbox.files) - 1)
     if (fileIndex < 0) fileIndex = 0
   }
 
-  function moveCursor(dx, dy) {
+  function moveCursor(dx: int, dy: int): void {
     cursorActive = true
     ensureCursor()
     if (dy === 0) return
     if (focusSection === "header") {
-      if (dy > 0 && dropbox.files.length > 0) {
+      if (dy > 0 && Model.length(dropbox.files) > 0) {
         focusSection = "files"
         fileIndex = 0
         scrollCursorIntoView()
@@ -83,59 +83,59 @@ Panel {
         setHeaderCursor()
         return
       }
-      fileIndex = Math.max(0, Math.min(dropbox.files.length - 1, fileIndex + dy))
+      fileIndex = Math.max(0, Math.min(Model.length(dropbox.files) - 1, fileIndex + dy))
       scrollCursorIntoView()
     }
   }
 
-  function setHeaderCursor() {
+  function setHeaderCursor(): void {
     cursorActive = true
     focusSection = "header"
-    if (panelFlick) panelFlick.contentY = 0
+    if (root.panelFlick) Model.set(root.panelFlick, "contentY", 0)
   }
 
-  function toggleRunning() {
+  function toggleRunning(): void {
     if (dropbox.installed && !dropbox.busy) dropbox.toggleRunning()
   }
 
-  function activateCursor() {
+  function activateCursor(): void {
     ensureCursor()
     if (focusSection === "login") dropbox.login()
     else if (focusSection === "header") toggleRunning()
     else if (focusSection === "files") dropbox.openFile(selectedFile())
   }
 
-  function selectedFile() {
-    if (dropbox.files.length === 0) return null
-    return dropbox.files[Math.max(0, Math.min(fileIndex, dropbox.files.length - 1))]
+  function selectedFile(): var {
+    if (Model.length(dropbox.files) === 0) return null
+    return dropbox.files[Math.max(0, Math.min(fileIndex, Model.length(dropbox.files) - 1))]
   }
 
-  function setFileCursor(index) {
+  function setFileCursor(index: int): void {
     cursorActive = true
     focusSection = "files"
     fileIndex = index
     scrollCursorIntoView()
   }
 
-  function scrollItemIntoView(item) {
-    if (!panelFlick || !item) return
+  function scrollItemIntoView(item: Item): void {
+    if (!root.panelFlick || !item) return
     Qt.callLater(function() {
       if (!item) return
       var margin = Style.space(6)
-      var point = item.mapToItem(panelFlick.contentItem, 0, 0)
+      var point = item.mapToItem(Model.field(root.panelFlick, "contentItem"), 0, 0)
       var top = point.y
       var bottom = top + item.height
-      var viewTop = panelFlick.contentY
-      var viewBottom = viewTop + panelFlick.height
-      var maxY = Math.max(0, panelFlick.contentHeight - panelFlick.height)
-      if (top < viewTop + margin) panelFlick.contentY = Math.max(0, top - margin)
-      else if (bottom > viewBottom - margin) panelFlick.contentY = Math.min(maxY, bottom + margin - panelFlick.height)
+      var viewTop = Model.field(root.panelFlick, "contentY")
+      var viewBottom = viewTop + root.panelFlick.height
+      var maxY = Math.max(0, Model.field(root.panelFlick, "contentHeight") - root.panelFlick.height)
+      if (top < viewTop + margin) Model.set(root.panelFlick, "contentY", Math.max(0, top - margin))
+      else if (bottom > viewBottom - margin) Model.set(root.panelFlick, "contentY", Math.min(maxY, bottom + margin - root.panelFlick.height))
     })
   }
 
-  function scrollCursorIntoView() {
-    if (focusSection === "files" && fileColumn && fileIndex >= 0 && fileIndex < fileColumn.children.length) {
-      scrollItemIntoView(fileColumn.children[fileIndex])
+  function scrollCursorIntoView(): void {
+    if (focusSection === "files" && root.fileColumn && fileIndex >= 0 && fileIndex < Model.length(Model.field(root.fileColumn, "children"))) {
+      scrollItemIntoView(Model.field(root.fileColumn, "children")[fileIndex])
     }
   }
 
@@ -144,9 +144,9 @@ Panel {
 
   onOpenedChanged: if (opened) {
     cursorActive = false
-    if (panelFlick) panelFlick.contentY = 0
+    if (root.panelFlick) Model.set(root.panelFlick, "contentY", 0)
     dropbox.refresh()
-    Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
+    Qt.callLater(function() { if (panel.loadedContent) Model.call(panel.loadedContent, "forceActiveFocus") })
   }
   onFileIndexChanged: scrollCursorIntoView()
 
@@ -319,7 +319,7 @@ Panel {
             Column {
               width: parent.width
               spacing: Style.spacing.labelGap
-              InfoPair { label: Commons.I18n.t("dropbox.stored"); value: Model.usageText(dropbox.usedBytes, dropbox.quotaBytes, dropbox.quotaKnown, Commons.I18n.t, Commons.I18n.formatNumber) }
+              InfoPair { label: Commons.I18n.t("dropbox.stored"); value: Model.usageText(dropbox.usedBytes, dropbox.quotaBytes, dropbox.quotaKnown, Commons.I18n.translator(), Commons.I18n.numberFormatter()) }
             }
           }
 
@@ -340,7 +340,7 @@ Panel {
             }
 
             Text {
-              visible: dropbox.files.length === 0
+              visible: Model.length(dropbox.files) === 0
               width: parent.width
               text: Commons.I18n.t("dropbox.noFiles")
               textFormat: Text.PlainText
@@ -352,7 +352,7 @@ Panel {
 
             Column {
               id: fileColumn
-              visible: dropbox.files.length > 0
+              visible: Model.length(dropbox.files) > 0
               width: parent.width
               spacing: Style.space(6)
 
@@ -473,7 +473,7 @@ Panel {
     id: fileRow
     property var file: null
     property int rowIndex: 0
-    readonly property string fileName: file ? String(file.name || Commons.I18n.t("dropbox.untitled")) : Commons.I18n.t("dropbox.untitled")
+    readonly property string fileName: file ? String(Model.field(file, "name") || Commons.I18n.t("dropbox.untitled")) : Commons.I18n.t("dropbox.untitled")
 
     hasCursor: root.cursorActive && root.focusSection === "files" && root.fileIndex === rowIndex
     foreground: root.foreground
@@ -523,7 +523,7 @@ Panel {
         Text {
           textFormat: Text.PlainText
           Layout.fillWidth: true
-          text: Model.fileMeta(fileRow.file, undefined, Commons.I18n.t, Commons.I18n.formatNumber)
+          text: Model.fileMeta(fileRow.file, undefined, Commons.I18n.translator(), Commons.I18n.numberFormatter())
           color: root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
@@ -541,9 +541,9 @@ Panel {
     width: parent.width
     spacing: Style.space(8)
 
-    InfoLabel { text: infoPair.label }
-    Item { width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth - parent.spacing * 2); height: 1 }
-    InfoValue { text: infoPair.value }
+    InfoLabel { id: infoLabel; text: infoPair.label }
+    Item { width: Math.max(0, infoPair.width - infoLabel.implicitWidth - infoValue.implicitWidth - infoPair.spacing * 2); height: 1 }
+    InfoValue { id: infoValue; text: infoPair.value }
   }
 
   component InfoLabel: Text {

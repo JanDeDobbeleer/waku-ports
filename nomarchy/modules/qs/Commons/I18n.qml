@@ -2,9 +2,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "Plural.js" as Plural
-import "Numbers.js" as Numbers
 import "Catalog.js" as Catalog
+import "I18nUtils.js" as I18nUtils
 
 // Display-language strings for the shell. The selected code lives in
 // ~/.config/nomarchy/language (nomarchy-language owns it); a missing file
@@ -13,6 +12,7 @@ import "Catalog.js" as Catalog
 // per string. Use as I18n.t("common.search"), with .arg(...) for %1 holes,
 // and I18n.tn(key, count).arg(I18n.formatNumber(count)) for an
 // entry with plural forms.
+// Use formatNumberWithDecimals(value, decimals) when a fixed precision is needed.
 // The language file is watched, so switching language under Setup
 // re-renders the shell without a restart.
 QtObject {
@@ -30,7 +30,7 @@ QtObject {
   property var failedPaths: ({})
   function bump(): void { root.rev++ }
   function fileLoaded(key: string): void {
-    delete root.failedPaths[key]
+    I18nUtils.clearFailure(root.failedPaths, key)
     Qt.callLater(root.bump)
   }
   function fileFailed(key: string, path: string): void {
@@ -38,18 +38,18 @@ QtObject {
     root.failedPaths[key] = path
     Qt.callLater(root.bump)
   }
-  readonly property string language: readLanguage(root.rev, languageFile.path, languageFile.text())
-  readonly property var localeSettings: readCatalog(root.rev, registryFile.path, registryFile.text())[root.language] || ({})
-  readonly property string formatLocale: localeSettings.formatLocale || "en-US"
+  readonly property string language: readLanguage(root.rev, languageFile.path, I18nUtils.fileText(languageFile))
+  readonly property var localeSettings: readCatalog(root.rev, registryFile.path, I18nUtils.fileText(registryFile))[root.language] || ({})
+  readonly property string formatLocale: I18nUtils.localeField(root.localeSettings, "formatLocale", "en-US")
   // From the registry: how numbers are written and which way text runs.
-  readonly property string decimal: localeSettings.decimal || "."
-  readonly property string zeroDigit: localeSettings.zeroDigit || "0"
-  readonly property bool rightToLeft: localeSettings.direction === "rtl"
+  readonly property string decimal: I18nUtils.localeField(root.localeSettings, "decimal", ".")
+  readonly property string zeroDigit: I18nUtils.localeField(root.localeSettings, "zeroDigit", "0")
+  readonly property bool rightToLeft: I18nUtils.localeField(root.localeSettings, "direction", "") === "rtl"
 
   // Reading text() makes blockLoading take effect on the first lookup.
   // These bindings also rebuild the maps when a watched catalog changes.
-  readonly property var englishStrings: readCatalog(root.rev, englishCatalogFile.path, englishCatalogFile.text())
-  readonly property var languageStrings: readCatalog(root.rev, languageCatalogFile.path, languageCatalogFile.text())
+  readonly property var englishStrings: readCatalog(root.rev, englishCatalogFile.path, I18nUtils.fileText(englishCatalogFile))
+  readonly property var languageStrings: readCatalog(root.rev, languageCatalogFile.path, I18nUtils.fileText(languageCatalogFile))
   readonly property var strings: {
     var merged = ({})
     for (let k in root.englishStrings) merged[k] = root.englishStrings[k]
@@ -57,30 +57,25 @@ QtObject {
     return merged
   }
 
-  // The optional fallback is what imperative callers (the JS models) pass
-  // as their English text: for a key the catalogs do not carry, they keep
-  // sensible English instead of a raw key.
-  function t(key, fallback) {
-    var value = root.strings[key]
-    if (value && typeof value === "object") value = value.other
-    if (typeof value === "string" && value.length > 0) return value
-    return fallback !== undefined ? fallback : key
+  // Model callbacks preserve optional fallback and decimal arguments through these helpers.
+  function translator(): var { return I18nUtils.translator(root) }
+  function pluralTranslator(): var { return I18nUtils.pluralTranslator(root) }
+  function numberFormatter(): var { return I18nUtils.numberFormatter(root) }
+
+  function t(key: var): string {
+    return I18nUtils.translate(root, key, undefined)
   }
 
-  // The form of a plural entry for count, by the language's plural rules
-  // (Plural.js). The English entry answers when the translation has none.
-  function tn(key, count, fallback) {
-    var value = Plural.pick(root.languageStrings[key], root.language, count)
-    if (typeof value !== "string" || value.length === 0) value = Plural.pick(root.englishStrings[key], "en", count)
-    if (typeof value === "string" && value.length > 0) return value
-    return fallback !== undefined ? fallback : key
+  function tn(key: var, count: var): string {
+    return I18nUtils.translatePlural(root, key, count, undefined)
   }
 
-  // A number with the language's decimal separator and digits, ungrouped:
-  // formatNumber(13.14, 1) is "13,1" in Danish. Pass decimals to round;
-  // without them the value is written as it is.
-  function formatNumber(value, decimals) {
-    return Numbers.format(value, decimals, root.decimal, root.zeroDigit)
+  function formatNumber(value: var): string {
+    return I18nUtils.formatNumber(root, value, undefined)
+  }
+
+  function formatNumberWithDecimals(value: var, decimals: var): string {
+    return I18nUtils.formatNumber(root, value, decimals)
   }
 
   function parseCatalog(raw: var): var { return Catalog.parse(raw) }

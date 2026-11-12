@@ -153,11 +153,11 @@ Panel {
   readonly property int refreshMinutes: Math.max(1, parseInt(setting("refreshMinutes", 15), 10) || 15)
 
   readonly property string reportLocation: Model.locationLabel(configuredLocation, autoLocation, detectedLocationState, areaInfo)
-  readonly property string reportTempNum:   current ? Model.temperature(current, useImperial ? "temp_F" : "temp_C", Commons.I18n.formatNumber) : ""
+  readonly property string reportTempNum:   current ? Model.temperature(current, useImperial ? "temp_F" : "temp_C", Commons.I18n.numberFormatter()) : ""
   readonly property string tempUnit:        "°" + (useImperial ? "F" : "C")
-  readonly property string reportFeels:     current ? Model.temperatureWithUnit(current, useImperial ? "FeelsLikeF" : "FeelsLikeC", useImperial, Commons.I18n.formatNumber) : ""
-  readonly property string reportWind:      current ? Model.windSpeed(current, useImperial, Commons.I18n.formatNumber) : ""
-  readonly property string reportHumidity:  current ? (Model.temperature(current, "humidity", Commons.I18n.formatNumber) + "%") : ""
+  readonly property string reportFeels:     current ? Model.temperatureWithUnit(current, useImperial ? "FeelsLikeF" : "FeelsLikeC", useImperial, Commons.I18n.numberFormatter()) : ""
+  readonly property string reportWind:      current ? Model.windSpeed(current, useImperial, Commons.I18n.numberFormatter()) : ""
+  readonly property string reportHumidity:  current ? (Model.temperature(current, "humidity", Commons.I18n.numberFormatter()) + "%") : ""
 
   // The report's numbers arrive as strings ("13"), and blank when missing.
   function displayNumber(value: var): string {
@@ -338,7 +338,7 @@ Panel {
   }
 
   function formatTemp(value: var): string {
-    return Model.formatTemp(value, useImperial, Commons.I18n.formatNumber)
+    return Model.formatTemp(value, useImperial, Commons.I18n.numberFormatter())
   }
 
   function dayName(dateString: string): string {
@@ -347,7 +347,7 @@ Panel {
 
   // Bare degree value (no unit letter), used in the forecast row.
   function bareTempForDay(day: var, kind: string): string {
-    return Model.bareTempForDay(day, kind, useImperial, Commons.I18n.formatNumber)
+    return Model.bareTempForDay(day, kind, useImperial, Commons.I18n.numberFormatter())
   }
 
   // Representative icon for a forecast day: the hourly entry nearest noon.
@@ -545,8 +545,8 @@ Panel {
     // popup follows wherever the widget is placed.
     centerOnBar: false
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(480))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(480), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
     panelContent: LazyContent {}
 

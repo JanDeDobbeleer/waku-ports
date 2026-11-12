@@ -78,23 +78,8 @@ BarWidget {
     return -1
   }
 
-  function copyActiveStates(): var {
-    var states = {}
-    for (let id in indicatorActiveStates) {
-      if (indicatorActiveStates[id] === true) states[id] = true
-    }
-    return states
-  }
-
   function orderedActiveIds(states: var, preferredOrder: var): var {
-    var ids = []
-
-    for (let i = 0; i < preferredOrder.length; i++) {
-      let id = preferredOrder[i]
-      if (ids.indexOf(id) === -1 && hasIndicatorId(id) && states[id] === true) ids.push(id)
-    }
-
-    return ids
+    return IndicatorModel.orderedActiveIds(states, preferredOrder, indicatorEntries)
   }
 
   function syncActiveIndicatorModel(): var {
@@ -115,9 +100,7 @@ BarWidget {
     var id = entryId(entry)
     if (id === "") return
 
-    var states = copyActiveStates()
-    if (active) states[id] = true
-    else delete states[id]
+    var states = IndicatorModel.updatedActiveStates(indicatorActiveStates, id, active)
 
     indicatorActiveStates = states
 
@@ -138,7 +121,7 @@ BarWidget {
   }
 
   function syncInactiveIndicatorModel(): var {
-    var json = JSON.stringify(indicatorEntries)
+    var json = JSON.stringify(Array.from(indicatorEntries))
     if (json !== inactiveIndicatorJson) {
       inactiveIndicatorJson = json
       inactiveIndicatorModel.clear()
@@ -164,8 +147,8 @@ BarWidget {
   // implicit size still follows the blocks synchronously rather than waiting
   // on a positioner's polish.
   readonly property Item orientationItem: orientationLoader.item as Item
-  implicitWidth: orientationItem ? orientationItem.implicitWidth : 0
-  implicitHeight: orientationItem ? orientationItem.implicitHeight : 0
+  implicitWidth: IndicatorModel.itemImplicitWidth(orientationItem)
+  implicitHeight: IndicatorModel.itemImplicitHeight(orientationItem)
 
   Commons.ShellIpc {
     target: "nomarchy.indicators"
@@ -311,8 +294,8 @@ BarWidget {
     property bool reportActiveState: false
 
     readonly property Item blockItem: blockLoader.item as Item
-    implicitWidth: blockItem ? blockItem.implicitWidth : 0
-    implicitHeight: blockItem ? blockItem.implicitHeight : 0
+    implicitWidth: IndicatorModel.itemImplicitWidth(blockItem)
+    implicitHeight: IndicatorModel.itemImplicitHeight(blockItem)
     width: implicitWidth
     height: implicitHeight
 
@@ -374,8 +357,8 @@ BarWidget {
     property bool reportActiveState: false
 
     readonly property Item blockItem: blockLoader.item as Item
-    implicitWidth: blockItem ? blockItem.implicitWidth : 0
-    implicitHeight: blockItem ? blockItem.implicitHeight : 0
+    implicitWidth: IndicatorModel.itemImplicitWidth(blockItem)
+    implicitHeight: IndicatorModel.itemImplicitHeight(blockItem)
     width: implicitWidth
     height: implicitHeight
 
@@ -440,8 +423,8 @@ BarWidget {
     readonly property var barRef: root.bar
 
     readonly property Item indicatorItem: indicatorSource.item as Item
-    implicitWidth: indicatorItem && indicatorItem.visible ? indicatorItem.implicitWidth : 0
-    implicitHeight: indicatorItem && indicatorItem.visible ? indicatorItem.implicitHeight : 0
+    implicitWidth: indicatorItem && indicatorItem.visible ? IndicatorModel.itemImplicitWidth(indicatorItem) : 0
+    implicitHeight: indicatorItem && indicatorItem.visible ? IndicatorModel.itemImplicitHeight(indicatorItem) : 0
     width: implicitWidth
     height: implicitHeight
     onEntryChanged: {
@@ -481,7 +464,7 @@ BarWidget {
     }
 
     function syncActiveState(): var {
-      if (!reportActiveState || !indicatorsModule || !indicatorsModule.setIndicatorActive) return
+      if (!reportActiveState || !IndicatorModel.hasActiveSetter(indicatorsModule)) return
 
       var active = IndicatorModel.isActive(indicatorSource.item)
       if (indicatorBlock === "active") {
@@ -489,7 +472,7 @@ BarWidget {
         else if (!activeStateObserved) return
       }
 
-      indicatorsModule.setIndicatorActive(entry, active)
+      IndicatorModel.setIndicatorActive(indicatorsModule, entry, active)
     }
   }
 }

@@ -502,7 +502,7 @@ Panel {
   // panel's brightnessName ladder; bands are wide enough that small
   // tweaks don't rename the room you're in.
   function outputVolumeName(volume: real, muted: bool): string {
-    return Model.outputVolumeName(volume, muted, Commons.I18n.t)
+    return Model.outputVolumeName(volume, muted, Commons.I18n.translator())
   }
 
   function setOutputVolume(v: real): real {
@@ -586,7 +586,7 @@ Panel {
   }
 
   function nodeLabel(node: var): string {
-    return Model.nodeLabel(node, Commons.I18n.t)
+    return Model.nodeLabel(node, Commons.I18n.translator())
   }
 
   function nodeProps(node: var): var {
@@ -652,7 +652,7 @@ Panel {
   // displayAudioStreams carries primitives now, and resolving each row back
   // would only rebuild what audioStreams already is.
   function streamLabel(node: var): string {
-    return Model.streamLabel(node, mprisPlayers, audioStreams, Commons.I18n.t)
+    return Model.streamLabel(node, mprisPlayers, audioStreams, Commons.I18n.translator())
   }
 
   function streamRepresentsPlayer(node: var, player: MprisPlayer): bool {
@@ -739,7 +739,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
     panelContent: PanelKeyCatcher {

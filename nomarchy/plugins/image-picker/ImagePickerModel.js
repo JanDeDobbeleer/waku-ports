@@ -193,3 +193,47 @@ if (typeof module !== "undefined") {
     syncWindow: syncWindow
   }
 }
+function payloadObject(payload) {
+  try { return payload ? JSON.parse(payload) || {} : {} }
+  catch (error) { return {} }
+}
+
+function payloadSource(payload) { return String(payloadObject(payload).source || "") }
+function payloadString(payload, key, fallback) {
+  var value = payloadObject(payload)[key]
+  return String(value || fallback || "")
+}
+function payloadBoolean(payload, key) {
+  var value = payloadObject(payload)[key]
+  return value === true || value === "true"
+}
+
+function filePathAt(images, index) {
+  var values = Array.from(images || [])
+  var image = values[index]
+  return image ? String(image.filePath || "") : ""
+}
+
+function pathField(image, key) {
+  return image ? String(image[key] || "") : ""
+}
+
+function sequenceLength(values) { return Array.from(values || []).length }
+
+function normalizedLines(text) {
+  return String(text || "").split("\n").map(function(line) { return line.trim().replace(/\\/g, "/") })
+    .filter(function(line) { return line.length > 0 }).sort()
+}
+
+function prewarmOrder(paths, current) {
+  var values = Array.from(paths || [])
+  var count = values.length
+  if (count === 0) return []
+  var start = Math.max(0, values.indexOf(current))
+  var order = [values[start]]
+  for (var distance = 1; order.length < count; distance++) {
+    if (order.length < count) order.push(values[(start + distance) % count])
+    if (order.length < count && 2 * distance < count) order.push(values[(start - distance + count) % count])
+  }
+  return order
+}

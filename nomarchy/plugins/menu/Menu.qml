@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "MenuModel.js" as MenuModel
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: root
@@ -26,7 +27,7 @@ Item {
     if (payload.fontFamily) root.fontFamily = payload.fontFamily
     // A shell that started mid-update may never have read the shipped menu
     // whole; reading it again here keeps the menu from opening empty.
-    if (root.defaultMenuItems.length === 0) defaultMenuFile.reload()
+    if (MenuModel.isEmpty(root.defaultMenuItems)) defaultMenuFile.reload()
 
     if (payload.mode === "select" || payload.mode === "input") {
       root.openDmenu(payload)
@@ -337,9 +338,9 @@ Item {
       // Profile names are powerprofilesctl ids; only the label is translated,
       // and the id stays searchable through searchTerms.
       labelFor: function(value: var): var {
-        if (value === "power-saver") return Commons.I18n.t("menu.powerProfilePowerSaver")
-        if (value === "balanced") return Commons.I18n.t("menu.powerProfileBalanced")
-        if (value === "performance") return Commons.I18n.t("menu.powerProfilePerformance")
+        if (value === "power-saver") return I18nModel.translate(Commons.I18n, "menu.powerProfilePowerSaver")
+        if (value === "balanced") return I18nModel.translate(Commons.I18n, "menu.powerProfileBalanced")
+        if (value === "performance") return I18nModel.translate(Commons.I18n, "menu.powerProfilePerformance")
         return value
       },
       actionFor: function(value: var): var { return "nomarchy-powerprofiles-set autodetect " + Util.shellQuote(value) }
@@ -593,8 +594,8 @@ Item {
     if (root.dmenuMultiple && root.dmenuOnChange.length === 0) {
       displayModel.append({
         itemId: "dmenu.apply", disabled: false, kind: "dmenu", icon: "", iconFont: "",
-        appIcon: "", appId: "", label: Commons.I18n.t("common.apply"), target: "",
-        detail: Commons.I18n.tn("menu.selectedCount", root.dmenuSelected.length).arg(Commons.I18n.formatNumber(root.dmenuSelected.length)), path: "", childCount: 0,
+        appIcon: "", appId: "", label: I18nModel.translate(Commons.I18n, "common.apply"), target: "",
+        detail: I18nModel.translatePlural(Commons.I18n, "menu.selectedCount", root.dmenuSelected.length).arg(I18nModel.formatNumber(Commons.I18n, root.dmenuSelected.length)), path: "", childCount: 0,
         action: "", provider: "", score: -1, section: ""
       })
     }
@@ -645,7 +646,7 @@ Item {
     for (let i = 0; i < displayModel.count; i++) {
       let row = displayModel.get(i)
       if (row.itemId === "dmenu.apply") {
-        displayModel.setProperty(i, "detail", Commons.I18n.tn("menu.selectedCount", root.dmenuSelected.length).arg(Commons.I18n.formatNumber(root.dmenuSelected.length)))
+        displayModel.setProperty(i, "detail", I18nModel.translatePlural(Commons.I18n, "menu.selectedCount", root.dmenuSelected.length).arg(I18nModel.formatNumber(Commons.I18n, root.dmenuSelected.length)))
       } else if (row.kind === "dmenu") {
         let value = MenuModel.dmenuValue(root.dmenuOptions[Number(row.itemId.substring(6))])
         displayModel.setProperty(i, "icon", root.dmenuSelected.indexOf(value) !== -1 ? "✓" : "○")
@@ -705,7 +706,7 @@ Item {
   function setActiveMenu(id: var, pushHistory: var, fromPointer: var): var {
     panel.freezeCardTop()
     if (!root.item(id)) id = "root"
-    if (pushHistory && id !== root.activeMenu) root.navStack = [...root.navStack, root.activeMenu]
+    if (pushHistory && id !== root.activeMenu) root.navStack = Array.from(root.navStack).concat([root.activeMenu])
     root.activeMenu = id
     root.filterText = ""
     root.selectedIndex = 0
@@ -1127,7 +1128,7 @@ Item {
         z: root.deleteConfirmOpen ? 20 : 0
 
         // Focus is on filterInput, which forwards every key here first.
-        Keys.onPressed: function(event: QQuickKeyEvent): var {
+        Keys.onPressed: function(event: KeyEvent): var {
           if (root.deleteConfirmOpen) {
             // Swallow the rest too, or it would type into the search line behind the dialog.
             deleteConfirm.handleKey(event)
@@ -1176,8 +1177,8 @@ Item {
           anchors.fill: parent
           opened: root.deleteConfirmOpen
           z: 10
-          message: Commons.I18n.t("common.uninstallConfirm").arg(MenuModel.deleteTargetMessage(root.deleteTarget))
-          confirmText: Commons.I18n.t("common.uninstall")
+          message: I18nModel.translate(Commons.I18n, "common.uninstallConfirm").arg(MenuModel.deleteTargetMessage(root.deleteTarget))
+          confirmText: I18nModel.translate(Commons.I18n, "common.uninstall")
           background: root.background
           foreground: root.foreground
           scrim: root.scrim
@@ -1247,7 +1248,7 @@ Item {
 
             WheelHandler {
               target: null
-              onWheel: function(event: QQuickWheelEvent): var {
+              onWheel: function(event: WheelEvent): var {
                 var delta = event.pixelDelta.y || event.angleDelta.y / 120 * root.rowHeightForDetail("") * 3
                 var bottom = resultList.originY + Math.max(0, resultList.contentHeight - resultList.height)
                 resultList.contentY = Math.max(resultList.originY, Math.min(bottom, resultList.contentY - delta))
@@ -1424,7 +1425,7 @@ Item {
                   x: mouseArea.mouseX,
                   y: mouseArea.mouseY
                 })
-                onPositionChanged: function(mouse: QQuickMouseEvent): var {
+                onPositionChanged: function(mouse: MouseEvent): var {
                   root.selectFromPointer(row.index, row, mouse)
                 }
                 onClicked: {
@@ -1490,7 +1491,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: root.filterText ? Commons.I18n.t("common.noMatchesFor").arg(root.filterText) : Commons.I18n.t("menu.nothingHere")
+              text: root.filterText ? I18nModel.translate(Commons.I18n, "common.noMatchesFor").arg(root.filterText) : I18nModel.translate(Commons.I18n, "menu.nothingHere")
               color: root.foreground
               opacity: 0.7
               font.family: root.fontFamily

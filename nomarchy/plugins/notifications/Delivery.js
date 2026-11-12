@@ -106,3 +106,15 @@ function pointerOver(item, card, x, y) {
   return x >= origin.x && x <= origin.x + item.width
     && y >= origin.y && y <= origin.y + item.height
 }
+
+
+function length(value) {
+  return value == null ? 0 : value.length
+}
+
+function uniqueTruthy(values) {
+  var out = []
+  for (var i = 0; i < values.length; i++)
+    if (values[i] && out.indexOf(values[i]) === -1) out.push(values[i])
+  return out
+}

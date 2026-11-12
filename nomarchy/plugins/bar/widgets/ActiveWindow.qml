@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "ActiveWindowModel.js" as ActiveWindowModel
 
 BarWidget {
   id: root
@@ -10,7 +11,22 @@ BarWidget {
 
 
   readonly property var toplevel: ToplevelManager.activeToplevel
-  readonly property string title: toplevel ? (toplevel.title || toplevel.appId || "") : ""
+  property string currentTitle: ""
+  readonly property string title: currentTitle
+
+  function updateTitle(): void {
+    currentTitle = ActiveWindowModel.title(toplevel)
+  }
+
+  onToplevelChanged: updateTitle()
+  Component.onCompleted: updateTitle()
+
+  Connections {
+    target: root.toplevel
+    ignoreUnknownSignals: true
+    function onTitleChanged(): void { root.updateTitle() }
+    function onAppIdChanged(): void { root.updateTitle() }
+  }
   readonly property int maxLabelWidth: Number(setting("maxWidth", 280))
 
   visible: title !== "" && !vertical

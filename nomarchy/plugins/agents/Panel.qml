@@ -124,56 +124,10 @@ Panel {
   // header, its Sign-in required link or switchable accounts, and the starter
   // tiles, or the agents to add while picking one. Up and down change rows, left and right move along one.
   // Hovering moves the same cursor, so only one thing is lit.
-  readonly property var keyRows: {
-    var rows = []
-    var hero = []
-    if (addButtonShown) hero.push({ kind: "add", index: 0 })
-    if (Dynamic.value(hero, "length") > 0) rows.push(hero)
-    if (picking) {
-      let choices = []
-      for (let k = 0; k < Dynamic.value(addProviders, "length"); k++) choices.push({ kind: "choice", index: k })
-      rows.push(choices)
-    } else if (addStage === "local") {
-      for (let r = 0; r < Dynamic.value(localAddRecipes, "length"); r++) rows.push([{ kind: "localAdd", index: r }])
-    } else if (addStage === "") {
-      // Accounts count in the same order as accountEntries. Only what can be
-      // done is a stop: one that isn't active offers Autoswitch beside Use, a
-      // lapsed sign-in comes first, and the active account with nothing to
-      // fix is skipped.
-      let entry = 0
-      let p
-      for (p = 0; p < Dynamic.value(providers, "length"); p++) {
-        if (providers[p].localModel) {
-          let actions = localActions(providers[p].localModel)
-          rows.push(Dynamic.value(actions, "length") > 0 ? actions.map(function(action: string): var { return { kind: action === "toggle" ? "modelToggle" : "modelLaunch", index: p } }) : [{ kind: "modelHeader", index: p }])
-          continue
-        }
-        // Every agent's line is a stop, so Ctrl+Up/Down can move it: its
-        // terminal button when it has a harness of its own, else its mark.
-        rows.push([{ kind: lineStop(p), index: p }])
-        let accounts = providerAccounts(providers[p])
-        if (Dynamic.value(accounts, "length") < 2) {
-          if (needsSignIn(providers[p])) rows.push([{ kind: "providerSignin", index: p }])
-          continue
-        }
-        for (let a = 0; a < Dynamic.value(accounts, "length"); a++, entry++) {
-          let row = []
-          if (needsSignIn(accounts[a])) row.push({ kind: "signin", index: entry })
-          if (!accounts[a].active) {
-            row.push({ kind: "autoswitch", index: entry })
-            row.push({ kind: "account", index: entry })
-          }
-          if (Dynamic.value(row, "length") > 0) rows.push(row)
-        }
-      }
-      if (!blankSlate) {
-        let tiles = []
-        for (let j = 0; j < Dynamic.value(starterPrompts, "length"); j++) tiles.push({ kind: "starter", index: j })
-        rows.push(tiles)
-      }
-    }
-    return rows
-  }
+  readonly property var keyRows: Dynamic.buildKeyRows(
+    addButtonShown, picking, addStage, addProviders, localAddRecipes,
+    providers, blankSlate, starterPrompts, root
+  )
   property int keyRow: 0
   property int keyColumn: 0
   readonly property var keyTarget: {
@@ -258,7 +212,7 @@ Panel {
     var to = clamp(from + dy, 0, Dynamic.value(providers, "length") - 1)
     if (to === from) return
     usage.moveProvider(providers[from].providerId, to)
-    Qt.callLater(function() { pointAt(lineStop(to), to) })
+    Qt.callLater(Dynamic.pointAtCallback(root, to))
   }
 
   // As in Elsewhen, keep the layout fixed until the lifted section settles.
@@ -312,7 +266,7 @@ Panel {
     dragIndex = -1
     if (moved) usage.moveProvider(id, to)
     resetProviderDrag()
-    if (moved) Qt.callLater(function() { pointAt(lineStop(to), to) })
+    if (moved) Qt.callLater(Dynamic.pointAtCallback(root, to))
   }
 
   function settleProviderDrag(cancel: bool): void {
@@ -407,9 +361,9 @@ Panel {
     var facts = []
     if (Dynamic.value(recipe, "architecture") === "moe") facts.push(Commons.I18n.t("agents.localMoe"))
     else if (Dynamic.value(recipe, "architecture") === "dense") facts.push(Commons.I18n.t("agents.localDense"))
-    if (Dynamic.value(recipe, "memory_gib") != null) facts.push(Commons.I18n.t("agents.localMemoryFact").arg(Commons.I18n.formatNumber(Dynamic.value(recipe, "memory_gib"), 0)))
-    if (Dynamic.value(recipe, "context") != null) facts.push(Commons.I18n.t("agents.localContextFact").arg(Commons.I18n.formatNumber(Math.round(Dynamic.value(recipe, "context") / 1024), 0)))
-    if (Dynamic.value(recipe, "decode_tok_s") != null) facts.push(Commons.I18n.t("agents.localSpeedFact").arg(Commons.I18n.formatNumber(Math.round(Dynamic.value(recipe, "decode_tok_s")), 0)))
+    if (Dynamic.value(recipe, "memory_gib") != null) facts.push(Commons.I18n.t("agents.localMemoryFact").arg(Commons.I18n.formatNumberWithDecimals(Dynamic.value(recipe, "memory_gib"), 0)))
+    if (Dynamic.value(recipe, "context") != null) facts.push(Commons.I18n.t("agents.localContextFact").arg(Commons.I18n.formatNumberWithDecimals(Math.round(Dynamic.value(recipe, "context") / 1024), 0)))
+    if (Dynamic.value(recipe, "decode_tok_s") != null) facts.push(Commons.I18n.t("agents.localSpeedFact").arg(Commons.I18n.formatNumberWithDecimals(Math.round(Dynamic.value(recipe, "decode_tok_s")), 0)))
     return facts.join(" · ")
   }
 
@@ -910,7 +864,7 @@ Panel {
   function formatMoney(value: var, currency: var): string {
     var amount = Number(value)
     if (!isFinite(amount)) amount = 0
-    return currencyPrefix(currency) + Commons.I18n.formatNumber(amount, 2)
+    return currencyPrefix(currency) + Commons.I18n.formatNumberWithDecimals(amount, 2)
   }
 
   function balanceDetailText(b: var): string {
@@ -1216,7 +1170,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(860))
 
     panelContent: LazyContent {}

@@ -875,9 +875,9 @@ Item {
 
   function formatTokenCount(n) {
     if (n === undefined || n === null) return I18n.formatNumber(0)
-    if (n >= 1e9) return I18n.formatNumber(n / 1e9, 1) + "B"
-    if (n >= 1e6) return I18n.formatNumber(n / 1e6, 1) + "M"
-    if (n >= 1e3) return I18n.formatNumber(n / 1e3, 1) + "K"
+    if (n >= 1e9) return I18n.formatNumberWithDecimals(n / 1e9, 1) + "B"
+    if (n >= 1e6) return I18n.formatNumberWithDecimals(n / 1e6, 1) + "M"
+    if (n >= 1e3) return I18n.formatNumberWithDecimals(n / 1e3, 1) + "K"
     return I18n.formatNumber(n)
   }
 

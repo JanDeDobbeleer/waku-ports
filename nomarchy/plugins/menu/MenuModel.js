@@ -79,6 +79,8 @@ function readMenuJsonc(raw) {
 // rows with nothing, so it keeps the previous ones until a later read finds
 // the file whole. The shipped menu is never legitimately empty, so for it
 // (required) an empty read is mid-write too.
+function isEmpty(items) { return items.length === 0 }
+
 function keepMenuRows(previous, raw, required) {
   var items = readMenuJsonc(raw)
   if (!items || (required && items.length === 0)) return previous

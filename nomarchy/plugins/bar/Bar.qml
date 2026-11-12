@@ -19,6 +19,7 @@ Item {
   property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
   // Injected by the host shell so bar slots can resolve enabled widgets.
   property var barWidgetRegistry: fallbackBarWidgetRegistry
+  property int barWidgetRegistryRevision: 0
   // Read-only registry view for third-party full bars; the built-in bar does
   // not otherwise need it, but declaring it keeps clone construction atomic.
   property var pluginRegistry: null
@@ -33,6 +34,11 @@ Item {
   // Manifest for the active bar option. Present for custom bars and useful for
   // diagnostics; the built-in bar does not otherwise need it.
   property var manifest: null
+  Connections {
+    target: root.barWidgetRegistry
+    ignoreUnknownSignals: true
+    function onRevisionChanged(): void { root.barWidgetRegistryRevision++ }
+  }
   QtObject {
     id: fallbackBarWidgetRegistry
     property var widgets: ({})
@@ -327,37 +333,24 @@ Item {
     root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")], undefined)
   }
 
-  function pluginBarApiFor(pluginId: var, moduleName: var, registered: var): var {
-    var key = String(pluginId || "")
-    if (!key) return null
+  function pluginBarApiFor(pluginId: string, moduleName: var, registered: bool): var {
+    if (!pluginId) return null
 
-    var pluginShell = null
-    if (registered && root.shell && typeof root.shell.pluginShellForId === "function") {
-      // Only the trusted built-in bar receives ShellRoot and can request a
-      // service-capable facade for the widget it is instantiating.
-      pluginShell = root.shell.pluginShellForId(moduleName)
-    } else if (root.shell && typeof root.shell.pluginShellForBarEntry === "function") {
-      // Replacement bars receive a service-less entry facade. Giving an
-      // untrusted bar a generic facade factory would let it retrieve another
-      // third-party plugin's live service object.
-      pluginShell = root.shell.pluginShellForBarEntry(key, moduleName)
-    }
-
-    if (pluginBarApis[key]) {
-      pluginBarApis[key].shell = pluginShell
-      return pluginBarApis[key]
+    if (pluginBarApis[pluginId]) {
+      pluginBarApis[pluginId].shell = BarModel.pluginShell(root.shell, pluginId, moduleName, registered)
+      return pluginBarApis[pluginId]
     }
 
     var api = pluginBarApiComponent.createObject(null, {
-      pluginId: key,
+      pluginId: pluginId,
       moduleName: String(moduleName || ""),
-      shell: pluginShell,
+      shell: BarModel.pluginShell(root.shell, pluginId, moduleName, registered),
       _showTooltip: function(target: var, text: var): var { root.showTooltip(target, text) },
       _hideTooltip: function(target: var): var { root.hideTooltip(target) },
-      _registerClickTarget: function(target: var): var { root.registerPluginClickTarget(key, target) },
-      _unregisterClickTarget: function(target: var): var { root.unregisterPluginClickTarget(key, target) },
-      _requestPopout: function(owner: var): var { root.requestPluginPopout(key, owner) },
-      _releasePopout: function(owner: var): var { root.releasePluginPopout(key, owner) },
+      _registerClickTarget: function(target: var): var { root.registerPluginClickTarget(pluginId, target) },
+      _unregisterClickTarget: function(target: var): var { root.unregisterPluginClickTarget(pluginId, target) },
+      _requestPopout: function(owner: var): var { root.requestPluginPopout(pluginId, owner) },
+      _releasePopout: function(owner: var): var { root.releasePluginPopout(pluginId, owner) },
       _switchPanelFrom: function(owner: var, direction: var): var { return root.switchPanelFrom(owner, direction) },
       _notePopoutCard: function(card: var): var { root.notePopoutCard(card) },
       _popoutCardFor: function(owner: var): var { return root.popoutCardFor(owner) },
@@ -374,10 +367,7 @@ Item {
     if (!api) return null
     root.bindPluginBarApi(api)
 
-    var next = ({})
-    for (let id in pluginBarApis) next[id] = pluginBarApis[id]
-    next[key] = api
-    pluginBarApis = next
+    pluginBarApis = BarModel.withValue(pluginBarApis, pluginId, api)
     return api
   }
 
@@ -448,7 +438,7 @@ Item {
 
   function registerModuleSlot(slot: var): void {
     if (!slot || moduleSlots.indexOf(slot) !== -1) return
-    moduleSlots = [...moduleSlots, slot]
+    moduleSlots = Array.from(moduleSlots).concat([slot])
   }
 
   function unregisterModuleSlot(slot: var): void {
@@ -458,7 +448,7 @@ Item {
 
   function registerWidgetHost(host: var): void {
     if (!host || widgetHosts.indexOf(host) !== -1) return
-    widgetHosts = [...widgetHosts, host]
+    widgetHosts = Array.from(widgetHosts).concat([host])
   }
 
   function unregisterWidgetHost(host: var): void {
@@ -467,7 +457,7 @@ Item {
 
   function registerCenterBox(box: var): void {
     if (!box || centerBoxes.indexOf(box) !== -1) return
-    centerBoxes = [...centerBoxes, box]
+    centerBoxes = Array.from(centerBoxes).concat([box])
   }
 
   function unregisterCenterBox(box: var): void {
@@ -742,7 +732,14 @@ Item {
   // hands it to the slot of whichever section shows it (WidgetPool).
   property var widgetMemo: ({})
   readonly property var layoutWidgets: BarModel.layoutWidgets(layoutConfig, widgetMemo)
-  readonly property var layoutSections: layoutWidgets.sections
+  readonly property var layoutSections: BarModel.layoutSections(layoutWidgets)
+
+  readonly property var leftLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "left")
+  readonly property var rightLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "right")
+  readonly property var centerBeginLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "centerBegin")
+  readonly property var centerEndLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "centerEnd")
+  readonly property var centerLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "center")
+  readonly property var trayLayoutKeys: BarModel.layoutSection(BarModel.layoutSections(layoutWidgets), "tray")
 
   onBarConfigChanged: applyBarConfig()
 
@@ -1042,7 +1039,7 @@ Item {
   }
 
   function registerDragSpacer(spacer: var): var {
-    dragSpacers = [...dragSpacers, spacer]
+    dragSpacers = Array.from(dragSpacers).concat([spacer])
   }
 
   function unregisterDragSpacer(spacer: var): var {
@@ -1930,13 +1927,13 @@ Item {
   }
 
   component LeftModules: ModuleList {
-    keys: root.layoutWidgets.sections.left
+    keys: root.leftLayoutKeys
     region: "left"
     fixedEdge: "start"
   }
 
   component RightModules: ModuleList {
-    keys: root.layoutWidgets.sections.right
+    keys: root.rightLayoutKeys
     region: "right"
     fixedEdge: "end"
   }
@@ -1999,7 +1996,7 @@ Item {
 
     ModuleList {
       id: beginList
-      keys: sections.active ? root.layoutWidgets.sections.centerBegin : []
+      keys: sections.active ? root.centerBeginLayoutKeys : []
       window: sections.active ? sections.window : null
       pool: sections.pool
       region: "centerBegin"
@@ -2010,7 +2007,7 @@ Item {
 
     ModuleList {
       id: endList
-      keys: sections.active ? root.layoutWidgets.sections.centerEnd : []
+      keys: sections.active ? root.centerEndLayoutKeys : []
       window: sections.active ? sections.window : null
       pool: sections.pool
       region: "centerEnd"
@@ -2059,7 +2056,7 @@ Item {
 
     ModuleList {
       id: boxList
-      keys: box.active ? root.layoutWidgets.sections.center : []
+      keys: box.active ? root.centerLayoutKeys : []
       window: box.active ? box.window : null
       pool: box.pool
       region: "center"
@@ -2164,21 +2161,21 @@ Item {
       root.updateBarMove(root.windowScreenPoint(scenePoint, root.barMoveWindow))
     }
 
-    onPressed: function(mouse: QQuickMouseEvent): var {
+    onPressed: function(mouse: MouseEvent): var {
       dragging = false
       suppressClick = false
       pressedX = mouse.x
       pressedY = mouse.y
     }
 
-    onPressAndHold: function(mouse: QQuickMouseEvent): var {
+    onPressAndHold: function(mouse: MouseEvent): var {
       // A widget above us propagates its composed press-and-hold down here without
       // ever handing over the grab, so we'd get no release or cancel to end the move.
       if (!gestureArea.pressed) return
       startDrag(mouse.x, mouse.y)
     }
 
-    onPositionChanged: function(mouse: QQuickMouseEvent): var {
+    onPositionChanged: function(mouse: MouseEvent): var {
       if (!(mouse.buttons & Qt.LeftButton)) return
 
       if (!dragging) {
@@ -2192,7 +2189,7 @@ Item {
       root.updateBarMove(root.windowScreenPoint(scenePoint, root.barMoveWindow))
     }
 
-    onReleased: function(mouse: QQuickMouseEvent): var {
+    onReleased: function(mouse: MouseEvent): var {
       if (!dragging) return
       dragging = false
       suppressClick = true
@@ -2206,14 +2203,14 @@ Item {
       root.clearBarMove()
     }
 
-    onClicked: function(mouse: QQuickMouseEvent): var {
+    onClicked: function(mouse: MouseEvent): var {
       if (suppressClick) {
         suppressClick = false
         mouse.accepted = true
       }
     }
 
-    onDoubleClicked: function(mouse: QQuickMouseEvent): var {
+    onDoubleClicked: function(mouse: MouseEvent): var {
       if (suppressClick) {
         suppressClick = false
         return
@@ -2232,7 +2229,7 @@ Item {
     id: moduleListRoot
 
     // The widgets the list shows, by their keys (root.layoutWidgets).
-    property list<string> keys: []
+    property var keys: []
     property string region: ""
     // The edge of each module that stays put when the module grows: the side
     // this list is anchored by. The centered box grows both ways.
@@ -2286,7 +2283,7 @@ Item {
             required property var modelData
             widgetKey: BarModel.rowKey(modelData)
             region: moduleListRoot.region
-            fixedEdge: BarModel.slotEdge(moduleListRoot.keys.length, moduleListRoot.keys.indexOf(BarModel.rowKey(modelData)), moduleListRoot.fixedEdge, moduleListRoot.firstEdge, moduleListRoot.lastEdge)
+            fixedEdge: BarModel.slotEdge(BarModel.keyCount(moduleListRoot.keys), BarModel.keyIndex(moduleListRoot.keys, BarModel.rowKey(modelData)), moduleListRoot.fixedEdge, moduleListRoot.firstEdge, moduleListRoot.lastEdge)
             pool: moduleListRoot.pool
             window: moduleListRoot.window
           }
@@ -2301,7 +2298,7 @@ Item {
     id: traySectionComponent
 
     ModuleList {
-      keys: root.layoutWidgets.sections.tray
+      keys: root.trayLayoutKeys
       region: "tray"
     }
   }
@@ -2346,7 +2343,7 @@ Item {
     // Keys alone, in a fixed order: a widget's row never moves or changes,
     // and is added and removed with its entry.
     Instantiator {
-      model: ScriptModel { values: root.layoutWidgets.keys }
+      model: ScriptModel { values: BarModel.layoutWidgetKeys(root.layoutWidgets) }
       delegate: WidgetHost { pool: widgetPool }
     }
   }
@@ -2360,7 +2357,7 @@ Item {
     required property string modelData
     property var pool: null
     readonly property string key: modelData
-    readonly property var entry: root.layoutWidgets.entries[key] || null
+    final readonly property var entry: BarModel.layoutEntry(root.layoutWidgets, key)
     // The slot showing it, set by the pool; null while it waits there.
     property var owner: null
     // Whether a slot has held it yet. The widget is loaded only then, so it
@@ -2369,31 +2366,31 @@ Item {
     readonly property bool dragSource: BarModel.hostDragSource(owner)
     // The edge it grows from, as the slot that last held it says.
     property string fixedEdge: "center"
-    readonly property string moduleName: root.entryId(entry)
+    final readonly property string moduleName: root.entryId(entry)
     readonly property var moduleSettings: root.entrySettings(entry)
     readonly property string customType: root.customModuleType(entry)
     readonly property var registryMetadata: root.barWidgetRegistry.metadataFor(root.canonicalWidgetId(moduleName))
-    readonly property bool firstParty: registryMetadata && registryMetadata.firstParty === true
+    readonly property bool firstParty: BarModel.metadataFirstParty(registryMetadata)
     readonly property string pluginApiId: registered ? root.canonicalWidgetId(moduleName) : "bar-entry:" + moduleName
     // Re-evaluate when the registry mutates (Component reference changes,
-    // plugin enabled/disabled, etc.). Reading the `widgets` property creates
-    // the binding dependency — the wrapped function call alone wouldn't.
+    // plugin enabled/disabled, etc.). Its revision signal supplies the QML
+    // binding dependency while the model reads the dynamic widget map.
     readonly property var registryComponent: {
-      var w = root.barWidgetRegistry.widgets
+      var revision = root.barWidgetRegistryRevision
       if (customType) return null
       var registryName = root.canonicalWidgetId(moduleName)
-      return w[registryName] ? w[registryName].component : null
+      return BarModel.registryComponent(root.barWidgetRegistry, registryName)
     }
     readonly property bool qmlCustom: customType === "qml"
     readonly property bool commandCustom: customType === "command"
     readonly property bool registered: registryComponent !== null
-    readonly property var activeItem: {
+    final readonly property var activeItem: {
       if (registered) return registryLoader.item
       if (qmlCustom) return qmlLoader.item
       return componentLoader.item
     }
-    readonly property real widgetWidth: BarModel.widgetWidth(activeItem, root.vertical, root.barSize)
-    readonly property real widgetHeight: BarModel.widgetHeight(activeItem)
+    final readonly property real widgetWidth: BarModel.widgetWidth(activeItem, root.vertical, root.barSize)
+    final readonly property real widgetHeight: BarModel.widgetHeight(activeItem)
 
     parent: BarModel.widgetParent(owner, pool)
     width: widgetWidth
@@ -2478,11 +2475,11 @@ Item {
     function injectProps(): void {
       var target = activeItem
       if (!target) return
-      if ("fixedEdge" in target) target.fixedEdge = fixedEdge
-      if ("bar" in target) target.bar = firstParty
-        ? root : root.pluginBarApiFor(pluginApiId, moduleName, registered)
-      if ("moduleName" in target) target.moduleName = moduleName
-      if ("settings" in target) target.settings = moduleSettings
+      BarModel.setProperty(target, "fixedEdge", fixedEdge)
+      if (BarModel.hasProperty(target, "bar"))
+        BarModel.setProperty(target, "bar", firstParty ? root : root.pluginBarApiFor(pluginApiId, moduleName, registered))
+      BarModel.setProperty(target, "moduleName", moduleName)
+      BarModel.setProperty(target, "settings", moduleSettings)
     }
 
     Component {
@@ -2504,7 +2501,7 @@ Item {
     // The bar surface its section is drawn on.
     property var window: null
     // The widget, while the slot holds it (WidgetPool.claim).
-    property var host: null
+    property WidgetHost host: null
     readonly property var entry: host ? host.entry : null
     readonly property string moduleName: host ? host.moduleName : ""
     readonly property var activeItem: host ? host.activeItem : null
@@ -2530,15 +2527,14 @@ Item {
     // A module holding several things a panel can open from (the tray's
     // icons) names the one whose panel is open, and the mark sits under it
     // rather than under the middle of the module.
-    readonly property Item panelIndicatorItem: activeItem ? activeItem["openPanelIndicatorItem"] || null : null
+    readonly property Item panelIndicatorItem: BarModel.field(activeItem, "openPanelIndicatorItem") || null
     readonly property real panelIndicatorCenter: {
       var mark = panelIndicatorItem
       if (!mark) return (root.vertical ? widgetArea.height : widgetArea.width) / 2
       // A menu opened while the drawer is still sliding open moves with it;
       // mapToItem alone would not re-run as the item moves.
-      var reveal = activeItem ? activeItem["revealProgress"] || 0 : 0
-      var point = mark.mapToItem(widgetArea, mark.width / 2, mark.height / 2)
-      return root.vertical ? point.y : point.x
+      var reveal = BarModel.field(activeItem, "revealProgress") || 0
+      return BarModel.mappedCenter(mark, widgetArea, root.vertical)
     }
     // The tray, or a clone of it, hosts the tray section in its drawer; one
     // inside the drawer does not, so the section never holds itself.
@@ -2560,8 +2556,8 @@ Item {
     function traySectionContains(x: real, y: real): bool {
       return BarModel.slotTraySectionContains(slot, x, y)
     }
-    readonly property real widgetWidth: BarModel.widgetWidthFromHost(host)
-    readonly property real widgetHeight: BarModel.widgetHeightFromHost(host)
+    final readonly property real widgetWidth: BarModel.widgetWidthFromHost(host)
+    final readonly property real widgetHeight: BarModel.widgetHeightFromHost(host)
     // Its length along the bar. The dragged widget keeps its place's share
     // of the room: all of it until the room moves away.
     readonly property real alongLength: removalPending ? 0 : dragSource
@@ -2682,7 +2678,7 @@ Item {
     // module slots, so one declared in here would make the types a cycle.
     Loader {
       id: traySectionLoader
-      readonly property Item host: slot.hostsTraySection ? slot.activeItem["sectionHost"] : null
+      readonly property Item host: slot.hostsTraySection ? BarModel.field(slot.activeItem, "sectionHost") : null
       parent: host || slot
       active: !!host
       sourceComponent: traySectionComponent
@@ -2690,7 +2686,7 @@ Item {
     Binding { target: traySectionLoader.item; property: "window"; value: slot.window }
     Binding { target: traySectionLoader.item; property: "pool"; value: slot.pool }
     // Its widgets grow from the edge the tray anchors the section by.
-    Binding { target: traySectionLoader.item; property: "fixedEdge"; value: slot.hostsTraySection && slot.activeItem["sectionEdge"] || "center" }
+    Binding { target: traySectionLoader.item; property: "fixedEdge"; value: slot.hostsTraySection && BarModel.field(slot.activeItem, "sectionEdge") || "center" }
 
     MouseArea {
       id: modulePointer
@@ -2718,7 +2714,7 @@ Item {
       // ModuleSlot, and moving slot.x/slot.y by hand fights it. The ghost
       // follows the pointer instead.
 
-      onPressed: function(mouse: QQuickMouseEvent): var {
+      onPressed: function(mouse: MouseEvent): var {
         // A press on a widget in the tray's drawer belongs to that widget's
         // own slot, underneath this one, so it drags that widget, not the tray.
         if (slot.traySectionContains(mouse.x, mouse.y)) {
@@ -2738,7 +2734,7 @@ Item {
         heldTarget = BarModel.holdTarget(heldTarget, target, button, Qt.NoButton)
       }
 
-      onPositionChanged: function(mouse: QQuickMouseEvent): var {
+      onPositionChanged: function(mouse: MouseEvent): var {
         if (!canReorder || !(mouse.buttons & Qt.LeftButton)) return
 
         var distance = Math.abs(mouse.x - pressedX) + Math.abs(mouse.y - pressedY)
@@ -2766,7 +2762,7 @@ Item {
         }
       }
 
-      onReleased: function(mouse: QQuickMouseEvent): var {
+      onReleased: function(mouse: MouseEvent): var {
         var wasDragging = dragging
         hold(null, Qt.NoButton)
 
@@ -2790,7 +2786,7 @@ Item {
         root.clearBarDrag()
       }
 
-      onClicked: function(mouse: QQuickMouseEvent): var {
+      onClicked: function(mouse: MouseEvent): var {
         if (suppressClick) {
           suppressClick = false
           mouse.accepted = true

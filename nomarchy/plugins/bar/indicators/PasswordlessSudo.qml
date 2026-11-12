@@ -3,6 +3,7 @@ import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "../I18nModel.js" as I18nModel
 
 BarIndicator {
   id: root
@@ -13,8 +14,8 @@ BarIndicator {
   active: granted
   activeText: "󰟵"
   inactiveText: "󰟵"
-  activeTooltipText: I18n.t("bar.disablePasswordlessSudo")
-  inactiveTooltipText: I18n.t("bar.passwordlessSudo")
+  activeTooltipText: I18nModel.translate(I18n, "bar.disablePasswordlessSudo")
+  inactiveTooltipText: I18nModel.translate(I18n, "bar.passwordlessSudo")
   useActiveColor: true
   activeColor: Commons.Color.urgent
 
@@ -54,7 +55,7 @@ BarIndicator {
     command: ["nomarchy-sudo-passwordless", "--disable"]
     onExited: function(exitCode, exitStatus) {
       if ((exitCode !== 0 || exitStatus !== 0) && root.bar)
-        Util.execArgv(["nomarchy-notification-send", I18n.t("bar.passwordlessSudoDisableFailed"), I18n.t("bar.passwordlessSudoDisableFailedBody")])
+        Util.execArgv(["nomarchy-notification-send", I18nModel.translate(I18n, "bar.passwordlessSudoDisableFailed"), I18nModel.translate(I18n, "bar.passwordlessSudoDisableFailedBody")])
       if (root.indicatorHost) root.indicatorHost.refresh()
       else root.refresh()
     }

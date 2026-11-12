@@ -323,3 +323,30 @@ if (typeof module !== "undefined") {
     isoWeekLiteral: isoWeekLiteral
   }
 }
+
+function field(value, key) { return value === undefined || value === null ? undefined : value[key] }
+function localeWeekStart(locale) { return locale ? locale.firstDayOfWeek : undefined }
+function hasField(value, key) { return !!value && key in value }
+function setField(value, key, fieldValue) { if (value) value[key] = fieldValue }
+function showController(controller) { controller.show() }
+function hideController(controller) { controller.hide() }
+function initializeLifeFields(content, birthYear, expectancy) {
+  var born = content.bornField
+  var expected = content.expectancyField
+  born.text = birthYear > 0 ? String(birthYear) : ""
+  expected.text = String(expectancy)
+  born.selectAll()
+  born.forceActiveFocus()
+}
+function lifeFieldText(content, key) {
+  var field = content ? content[key] : null
+  return field ? field.text : ""
+}
+function selectAndFocus(field) {
+  if (!field) return
+  field.selectAll()
+  field.forceActiveFocus()
+}
+function forceActiveFocus(item) {
+  if (item && typeof item.forceActiveFocus === "function") item.forceActiveFocus()
+}

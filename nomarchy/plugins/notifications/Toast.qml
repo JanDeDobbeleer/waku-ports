@@ -13,6 +13,7 @@ import "Security.js" as Security
 import "Delivery.js" as Delivery
 import "Store.js" as Store
 import "Icons.js" as Icons
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: card
@@ -47,13 +48,13 @@ Item {
     if (!t) return ""
     var s = Math.max(0, (now - t) / 1000)
     if (s < 300) return ""
-    if (s < 3600) return I18n.t("notifications.minutesAgo").arg(I18n.formatNumber(Math.round(s / 60)))
+    if (s < 3600) return I18nModel.translate(I18n, "notifications.minutesAgo").arg(I18nModel.formatNumber(I18n, Math.round(s / 60)))
     var then = new Date(t)
-    var locale = Qt.locale(I18n.formatLocale)
+    var locale = Qt.locale(I18nModel.value(I18n, "formatLocale"))
     var sameDay = new Date(now).toDateString() === then.toDateString()
     if (sameDay) return locale.toString(then, "HH:mm")
     var yest = new Date(now - 86400000).toDateString() === then.toDateString()
-    if (yest) return I18n.t("notifications.yesterday")
+    if (yest) return I18nModel.translate(I18n, "notifications.yesterday")
     return locale.toString(then, "ddd")
   }
 
@@ -89,7 +90,7 @@ Item {
   property real contentOpacity: expanded || Delivery.field(place, "front") ? 1 : 0
   Behavior on contentOpacity {
     id: contentFade
-    enabled: !(card.scene && card.scene.jumping)
+    enabled: !(card.scene && Delivery.field(card.scene, "jumping"))
     NumberAnimation {
       duration: contentFade.targetValue > 0 ? card.fade : card.fade / 2
       easing.type: Easing.OutCubic
@@ -118,8 +119,8 @@ Item {
     var out = Delivery.deeds(row, actions)
     for (let i = 0; i < out.length; i++)
       if (out[i].kind === "code")
-        out[i].label = foundCodes.length > 1 ? I18n.t("notifications.copyThisCode").arg(out[i].value)
-                                             : I18n.t("notifications.copyCode")
+        out[i].label = foundCodes.length > 1 ? I18nModel.translate(I18n, "notifications.copyThisCode").arg(out[i].value)
+                                             : I18nModel.translate(I18n, "notifications.copyCode")
     return out
   }
 
@@ -282,17 +283,17 @@ Item {
         function firstOf(names: var, look: var): var {
           return Icons.firstOf(names, look)
         }
-        readonly property var sources: {
-          var appsRevision = DesktopEntries.applications.values.length
-          var want = Icons.candidates(card.row)
-          var found = [sent,
-            firstOf(want.themed, function(name: var): var { return Quickshell.iconPath(name, true) }),
-            firstOf(want.entries, function(name: var): var {
-              var entry = DesktopEntries.heuristicLookup(name)
-              return entry ? thumb.entryIcon(entry.icon) : ""
-            })]
-          return found.filter(function(url: var, i: var): var { return url && found.indexOf(url) === i })
-        }
+        readonly property var applications: Delivery.field(DesktopEntries.applications, "values")
+        readonly property int applicationsCount: Delivery.length(applications)
+        readonly property var candidates: Icons.candidates(card.row)
+        readonly property var sources: applicationsCount >= 0 ? Delivery.uniqueTruthy([
+          sent,
+          firstOf(Delivery.field(candidates, "themed"), function(name: var): var { return Quickshell.iconPath(name, true) }),
+          firstOf(Delivery.field(candidates, "entries"), function(name: var): var {
+            var entry = DesktopEntries.heuristicLookup(name)
+            return entry ? thumb.entryIcon(Delivery.field(entry, "icon")) : ""
+          })
+        ]) : []
         readonly property string sourcesKey: sources.join("\n")
         property int failed: 0
         onSourcesKeyChanged: failed = 0
@@ -333,7 +334,7 @@ Item {
           anchors.fill: parent
           visible: thumb.pictured
           source: card.reloading ? "" : thumb.best
-          onStatusChanged: if (status === Image.Error && thumb.failed < thumb.sources.length) thumb.failed += 1
+          onStatusChanged: if (status === Image.Error && thumb.failed < Delivery.length(thumb.sources)) thumb.failed += 1
           // A photo fills its square; an app icon keeps its own shape.
           fillMode: thumb.photo ? Image.PreserveAspectCrop : Image.PreserveAspectFit
           // Constant, so the slot resizing never reloads the image.
@@ -388,7 +389,7 @@ Item {
             width: Math.max(1, parent.width - rightSide.width
                    - (titleMarks.visible ? titleMarks.width + Style.space(7) : 0)
                    - Style.space(8))
-            text: card.redacted ? I18n.t("notifications.redactedSummary") : String(Delivery.field(card.row, "summary") || "")
+            text: card.redacted ? I18nModel.translate(I18n, "notifications.redactedSummary") : String(Delivery.field(card.row, "summary") || "")
             color: Commons.Color.notifications.text
             font.family: "Liberation Sans"
             font.pixelSize: Style.font.title
@@ -498,7 +499,7 @@ Item {
           opacity: card.contentOpacity
 
           textFormat: Text.StyledText
-          text: card.redacted ? I18n.t("notifications.redactedBody") : String(Delivery.field(card.row, "bodyRich") || "")
+          text: card.redacted ? I18nModel.translate(I18n, "notifications.redactedBody") : String(Delivery.field(card.row, "bodyRich") || "")
           color: card.bodyColor
           linkColor: Commons.Color.notifications.countdown
           font.family: "Liberation Sans"
@@ -583,7 +584,7 @@ Item {
       acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
       cursorShape: Qt.PointingHandCursor
 
-      onClicked: function(mouse: QQuickMouseEvent): var {
+      onClicked: function(mouse: MouseEvent): var {
         if (mouse.button === Qt.LeftButton) card.activated()
         else card.dismissed()
       }

@@ -56,7 +56,7 @@ Item {
   }
 
   function show(iconName: var, rawMessage: var, rawValue: var, rawMax: var, rawProgressText: var, rawDuration: var): void {
-    var next = OsdModel.stateForShow(iconName, rawMessage, rawValue, rawMax, rawProgressText, rawDuration, Commons.I18n.formatNumber)
+    var next = OsdModel.stateForShow(iconName, rawMessage, rawValue, rawMax, rawProgressText, rawDuration, Commons.I18n.numberFormatter())
     // Update before opening so a fresh OSD starts at its new value; only
     // subsequent updates while it remains open animate the progress bar.
     iconKey = next.iconKey

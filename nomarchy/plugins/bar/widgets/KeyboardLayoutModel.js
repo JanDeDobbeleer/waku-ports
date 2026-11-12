@@ -132,6 +132,75 @@ function layoutIndex(keyboard) {
   return (keyboard && keyboard.active_layout_index) || 0
 }
 
+function hasMultipleInputs(state) {
+  var methods = state && state.methods ? Array.from(state.methods) : []
+  return methods.length > 1
+}
+
+function typedKeyboards(keyboards) {
+  return Array.from(keyboards || []).filter(function(keyboard) {
+    return isTypedKeyboard(keyboard && keyboard.name)
+  })
+}
+
+function switchCommand(names, index) {
+  return Array.from(names || []).map(function(name) {
+    return "hyprctl switchxkblayout " + quoteShell(name) + " " + index
+  }).join("; ")
+}
+
+function quoteShell(value) {
+  var text = String(value || "")
+  return "'" + text.replace(/'/g, "'\''") + "'"
+}
+
+function applyReading(root, raw) {
+  var listed
+  try {
+    listed = JSON.parse(String(raw || "{}")).keyboards
+  } catch (error) {
+    root.keyboardUnresolved = true
+    return
+  }
+
+  if (!Array.isArray(listed)) {
+    root.keyboardUnresolved = true
+    return
+  }
+
+  var typed = typedKeyboards(listed)
+  var keyboard = selectKeyboard(typed, root.typedKeyboardName)
+  if (!keyboard || !keyboard.active_keymap) {
+    root.keyboardUnresolved = true
+    if (typed.length === 0) {
+      root.layoutFull = ""
+      root.keyboardName = ""
+    }
+    return
+  }
+
+  root.keyboardUnresolved = false
+  root.keyboardName = String(keyboard.name || "")
+  root.multipleLayouts = keyboard.layout === undefined || String(keyboard.layout).indexOf(",") !== -1
+  root.layoutsRead = true
+  root.layoutIndex = keyboard.active_layout_index || 0
+  root.layoutCount = keyboard.layout === undefined ? 0 : String(keyboard.layout).split(",").length
+  root.syncNames = listed.filter(function(item) { return String(item.layout) === String(keyboard.layout) })
+    .map(function(item) { return String(item.name || "") })
+    .filter(function(name) { return name !== "" })
+  root.layoutFull = keyboard.active_keymap
+}
+
+function handleHyprlandEvent(root, event) {
+  if (!event || !event.name) return
+  var name = String(event.name)
+  if (name === "activelayout") {
+    var named = eventKeyboardName(event)
+    if (named) root.typedKeyboardName = named
+  }
+  if (name.indexOf("activelayout") !== -1 || name === "configreloaded") root.refresh()
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     eventKeyboardName: eventKeyboardName,
@@ -141,6 +210,11 @@ if (typeof module !== "undefined") {
     shortLabel: shortLabel,
     inputLabel: inputLabel,
     inputTooltip: inputTooltip,
-    showIndicator: showIndicator
+    showIndicator: showIndicator,
+    hasMultipleInputs: hasMultipleInputs,
+    typedKeyboards: typedKeyboards,
+    switchCommand: switchCommand,
+    applyReading: applyReading,
+    handleHyprlandEvent: handleHyprlandEvent
   }
 }

@@ -5,6 +5,7 @@ import Quickshell
 import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
+import "GalleryModel.js" as GalleryModel
 
 // Visual reference + live playground for nomarchy-shell's common UI
 // components. Summon with `nomarchy dev ui-preview`, or directly via:
@@ -20,38 +21,23 @@ Item {
   // ---- plugin lifecycle ---------------------------------------------------
   property bool closingFromHost: false
 
-  function open(payloadJson) {
+  function open(payloadJson: string): void {
     closingFromHost = false
     window.visible = true
+    Qt.callLater(GalleryModel.openCallback(root, GalleryModel.requestedSection(payloadJson)))
+  }
 
-    // Optional { section: "button" } in the payload lets `nomarchy dev
-    // ui-preview <section>` open the gallery with the cursor already on
-    // a specific component, so iterating on one widget doesn't require
-    // scrolling from the top each time. Unknown section names are
-    // ignored — the gallery opens at its default position.
-    var requested = ""
-    if (payloadJson) {
-      try {
-        let parsed = JSON.parse(String(payloadJson))
-        if (parsed && typeof parsed.section === "string") requested = parsed.section
-      } catch (e) { /* ignore */ }
+  function finishOpen(requested: string): void {
+    if (requested && visibleSections.indexOf(requested) !== -1) {
+      focusSection = requested
+      selectedIndex = sectionFirstIndex(requested)
     }
-
-    // Defer the section assignment + focus so the FloatingWindow's
-    // content tree is mounted. The hasCursor bindings on each demo
-    // target then scroll themselves into view via onHasCursorChanged.
-    Qt.callLater(function() {
-      if (requested && visibleSections.indexOf(requested) !== -1) {
-        focusSection = requested
-        selectedIndex = sectionFirstIndex(requested)
-      }
-      if (keyCatcher) keyCatcher.forceActiveFocus()
-    })
+    if (keyCatcher) keyCatcher.forceActiveFocus()
   }
 
   // Host-initiated close (`shell hide`). Visibility flips without
   // notifying the host back — it already knows.
-  function close() {
+  function close(): void {
     closingFromHost = true
     window.visible = false
     closingFromHost = false
@@ -59,8 +45,8 @@ Item {
 
   // User-initiated close (Esc, window close button). Tell the shell so its
   // openPanelIds map stays consistent and `toggle` works on the next call.
-  function requestClose() {
-    if (shell && typeof shell.hide === "function") shell.hide("nomarchy.dev-gallery")
+  function requestClose(): void {
+    if (shell && typeof GalleryModel.value(shell, "hide") === "function") GalleryModel.call(shell, "hide", ["nomarchy.dev-gallery"])
     else window.visible = false
   }
 
@@ -153,10 +139,10 @@ Item {
   }
 
   // Where to land when entering a section from above / below.
-  function sectionFirstIndex(section) { return 0 }
-  function sectionLastIndex(section) { return Math.max(0, sectionCount(section) - 1) }
+  function sectionFirstIndex(section: string): int { return 0 }
+  function sectionLastIndex(section: string): real { return Math.max(0, sectionCount(section) - 1) }
 
-  function moveCursor(delta) {
+  function moveCursor(delta: int): void {
     var sections = visibleSections
     var sIdx = sections.indexOf(focusSection)
     if (sIdx < 0) {
@@ -194,7 +180,7 @@ Item {
     }
   }
 
-  function moveCursorH(delta) {
+  function moveCursorH(delta: int): void {
     if (sectionAdjustsValue(focusSection)) {
       // h/l on the slider section nudges the demo volume by 5%.
       sliderRow.demoVolume = Math.max(0, Math.min(1, sliderRow.demoVolume + delta * 0.05))
@@ -208,7 +194,7 @@ Item {
     selectedIndex = next
   }
 
-  function activateCursor() {
+  function activateCursor(): void {
     if (focusSection === "button-group") {
       let opts = ["top", "right", "bottom", "left"]
       if (selectedIndex >= 0 && selectedIndex < opts.length)
@@ -239,14 +225,14 @@ Item {
       return
     }
     if (focusSection === "number-field") {
-      numberDemo.field.forceActiveFocus()
+      GalleryModel.call(numberDemo.field, "forceActiveFocus", [])
       return
     }
     // pill / panel-action-button / cursor-surface / composed: nothing to
     // mutate in a demo, but real consumers would call their clicked().
   }
 
-  function clampCursor() {
+  function clampCursor(): void {
     var sections = visibleSections
     if (sections.indexOf(focusSection) < 0) {
       focusSection = sections[0]
@@ -264,16 +250,18 @@ Item {
   function ensureCursorVisible(item: Item): void {
     if (!item || !scrollArea) return
     var flick = scrollArea.contentItem as Flickable
-    if (!flick || flick.contentY === undefined) return
-    var pt = item.mapToItem(flick.contentItem || flick, 0, 0)
-    var top = pt.y
+    var contentY = GalleryModel.value(flick, "contentY")
+    if (!flick || contentY === undefined) return
+    var contentItem = GalleryModel.value(flick, "contentItem")
+    var point = GalleryModel.call(item, "mapToItem", [contentItem || flick, 0, 0])
+    var top = GalleryModel.value(point, "y")
     var bottom = top + (item.height || 0)
-    var viewTop = flick.contentY
+    var viewTop = contentY
     var viewBottom = viewTop + flick.height
     var margin = 12
-    if (top < viewTop + margin) flick.contentY = Math.max(0, top - margin)
+    if (top < viewTop + margin) GalleryModel.set(flick, "contentY", Math.max(0, top - margin))
     else if (bottom > viewBottom - margin)
-      flick.contentY = bottom + margin - flick.height
+      GalleryModel.set(flick, "contentY", bottom + margin - flick.height)
   }
 
   FloatingWindow {
@@ -285,8 +273,8 @@ Item {
     minimumSize: Qt.size(560, 520)
 
     onVisibleChanged: {
-      if (!visible && !root.closingFromHost && root.shell && typeof root.shell.hide === "function")
-        root.shell.hide("nomarchy.dev-gallery")
+      if (!visible && !root.closingFromHost && root.shell && typeof GalleryModel.value(root.shell, "hide") === "function")
+        GalleryModel.call(root.shell, "hide", ["nomarchy.dev-gallery"])
     }
 
     FocusScope {
@@ -294,7 +282,7 @@ Item {
       anchors.fill: parent
       focus: true
 
-      function scrollBy(dy) {
+      function scrollBy(dy: real): void {
         var sb = scrollArea.ScrollBar.vertical
         if (!sb || scrollArea.contentHeight <= scrollArea.height) return
         var newPos = sb.position + dy / scrollArea.contentHeight
@@ -523,14 +511,14 @@ Item {
                       spacing: Style.space(1)
                       Text {
                         textFormat: Text.PlainText
-                        text: "Style.font." + fontSampleRow.modelData.key
+                        text: "Style.font." + GalleryModel.value(fontSampleRow.modelData, "key")
                         color: root.foreground
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.bodySmall
                       }
                       Text {
                         textFormat: Text.PlainText
-                        text: fontSampleRow.modelData.size + " px"
+                        text: GalleryModel.value(fontSampleRow.modelData, "size") + " px"
                         color: Qt.darker(root.foreground, 1.5)
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -544,10 +532,10 @@ Item {
                       anchors.right: parent.right
                       anchors.verticalCenter: parent.verticalCenter
                       anchors.leftMargin: Style.space(16)
-                      text: fontSampleRow.modelData.sample
+                      text: GalleryModel.value(fontSampleRow.modelData, "sample")
                       color: root.foreground
                       font.family: root.fontFamily
-                      font.pixelSize: fontSampleRow.modelData.size
+                      font.pixelSize: GalleryModel.value(fontSampleRow.modelData, "size")
                       elide: Text.ElideRight
                     }
                   }
@@ -838,7 +826,7 @@ Item {
                       anchors.verticalCenter: parent.verticalCenter
                       anchors.leftMargin: Style.space(10)
                       anchors.rightMargin: Style.space(10)
-                      text: cursorExample.modelData.label
+                      text: GalleryModel.value(cursorExample.modelData, "label")
                       color: root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.body
@@ -851,7 +839,7 @@ Item {
                       cursorShape: Qt.PointingHandCursor
                       onContainsMouseChanged: if (containsMouse) {
                         root.focusSection = "cursor-surface"
-                        root.selectedIndex = parent.index
+                        root.selectedIndex = cursorExample.index
                       }
                     }
                   }

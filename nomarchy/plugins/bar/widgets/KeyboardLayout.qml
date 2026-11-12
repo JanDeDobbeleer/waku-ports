@@ -46,7 +46,7 @@ BarWidget {
   }
   readonly property string layoutLabel: KeyboardLayoutModel.shortLabel(layoutFull, layoutBriefs)
   readonly property var inputState: InputMethodState.state
-  readonly property bool multipleInputs: (inputState.methods || []).length > 1
+  readonly property bool multipleInputs: KeyboardLayoutModel.hasMultipleInputs(inputState)
   readonly property string inputLabel: KeyboardLayoutModel.inputLabel(inputState, layoutLabel)
 
   // A query already in flight was started before this event, so it may read the
@@ -66,18 +66,6 @@ BarWidget {
 
   // Keyboards someone can actually type on, which is not everything Hyprland
   // calls a keyboard.
-  function typedKeyboards(keyboards: var): var {
-    return keyboards.filter(k => KeyboardLayoutModel.isTypedKeyboard(k.name))
-  }
-
-  // The main flag names no keyboard for long: fcitx5 takes it with the virtual
-  // keyboard it binds to inject, which leaves no typed keyboard holding it and
-  // nothing to read at all, and once that unbinds it lands on whichever device
-  // Hyprland saw last, a power button included. Go by layout progress instead,
-  // and by the keyboard activelayout named.
-  function selectKeyboard(typed: var): var {
-    return KeyboardLayoutModel.selectKeyboard(typed, root.typedKeyboardName)
-  }
 
   // switchxkblayout is a hyprctl command rather than a dispatcher, so it has to
   // be run rather than sent over the dispatch socket.
@@ -100,11 +88,9 @@ BarWidget {
   //
   // Keyboards given their own kb_layout hold a different list and are left out:
   // an index into this list would not mean the same layout to them.
-  function cycleLayout(): var {
+  function cycleLayout(): void {
     if (!root.bar || root.layoutCount < 2 || root.syncNames.length === 0) return
-    const next = (root.layoutIndex + 1) % root.layoutCount
-    BarValues.run(root.bar, root.syncNames.map(name =>
-      "hyprctl switchxkblayout " + Util.shellQuote(name) + " " + next).join("; "))
+    BarValues.run(root.bar, KeyboardLayoutModel.switchCommand(root.syncNames, (root.layoutIndex + 1) % root.layoutCount))
     refreshTimer.restart()
   }
 
@@ -112,20 +98,8 @@ BarWidget {
 
   Connections {
     target: Hyprland
-    function onRawEvent(event: var): var {
-      if (!event || !event.name) return
-      var name = String(event.name)
-      // The event names the keyboard that switched ahead of the layout it moved
-      // to, and that is the keyboard being typed on whatever holds the main flag.
-      if (name === "activelayout") {
-        const named = KeyboardLayoutModel.eventKeyboardName(event)
-        if (named) root.typedKeyboardName = named
-      }
-
-      // A reload that adds a layout to kb_layout decides whether the widget
-      // shows at all, and leaves every keyboard on the layout it was already
-      // reading, so it raises no activelayout to notice it by.
-      if (name.indexOf("activelayout") !== -1 || name === "configreloaded") root.refresh()
+    function onRawEvent(event: var): void {
+      KeyboardLayoutModel.handleHyprlandEvent(root, event)
     }
   }
 
@@ -143,57 +117,7 @@ BarWidget {
     }
     stdout: StdioCollector {
       waitForEnd: true
-      onStreamFinished: {
-        // A reading that failed leaves the seat in doubt, so the timer below
-        // asks again: a device change is announced once, and nothing else
-        // would bring the label back to it.
-        let listed
-        try {
-          listed = JSON.parse(text || "{}").keyboards
-        } catch (e) {
-          root.keyboardUnresolved = true
-          return
-        }
-
-        // A query the watchdog killed reports nothing at all, and an empty
-        // string parses into the same shape a seat with no keyboards would.
-        // Tell them apart by the list itself, so only a reading that reached
-        // hyprctl gets to speak for the seat.
-        if (!Array.isArray(listed)) {
-          root.keyboardUnresolved = true
-          return
-        }
-
-        const typed = root.typedKeyboards(listed)
-        const kb = root.selectKeyboard(typed)
-        if (!kb || !kb.active_keymap) {
-          // Either the last keyboard has been unplugged, which the label has to
-          // stop describing and the click has to stop naming, or keyboards are
-          // there and none of them reports a keymap. Both leave the shape in
-          // doubt, so keep asking rather than letting a count from before it
-          // changed settle the poll.
-          root.keyboardUnresolved = true
-          if (typed.length === 0) {
-            root.layoutFull = ""
-            root.keyboardName = ""
-          }
-          return
-        }
-
-        root.keyboardUnresolved = false
-        root.keyboardName = String(kb.name || "")
-        root.multipleLayouts = kb.layout === undefined || String(kb.layout).indexOf(",") !== -1
-        root.layoutsRead = true
-        root.layoutIndex = kb.active_layout_index || 0
-        root.layoutCount = kb.layout === undefined ? 0 : String(kb.layout).split(",").length
-        // Buttons and virtual keyboards are included on purpose: they hold the
-        // same list, and leaving them behind is what lets a reading drift onto
-        // one of them later.
-        root.syncNames = listed.filter(k => String(k.layout) === String(kb.layout))
-                               .map(k => String(k.name || ""))
-                               .filter(name => name !== "")
-        root.layoutFull = kb.active_keymap
-      }
+      onStreamFinished: KeyboardLayoutModel.applyReading(root, text)
     }
   }
 
@@ -264,7 +188,7 @@ BarWidget {
     tooltipText: KeyboardLayoutModel.inputTooltip(root.inputState, root.layoutFull, root.multipleLayouts)
     onPressed: function(button: int): var {
       if (root.multipleInputs && button === Qt.LeftButton) {
-        InputMethodState.cycle()
+        InputMethodState.cycle(false)
       } else if (root.multipleLayouts) {
         root.cycleLayout()
       }

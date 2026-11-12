@@ -1,5 +1,11 @@
 function field(object, key) { return object ? object[key] : undefined }
 
+function length(value) { return value ? value.length || 0 : 0 }
+
+function set(object, key, value) { if (object) object[key] = value }
+
+function call(object, key, args) { return object && typeof object[key] === "function" ? object[key].apply(object, args || []) : undefined }
+
 var IMAGE_EXTENSIONS = {
   jpg: true, jpeg: true, png: true, gif: true, webp: true, avif: true, heic: true,
   svg: true, bmp: true, tif: true, tiff: true

@@ -375,7 +375,7 @@ PanelWindow {
         textFormat: Text.PlainText
         anchors.horizontalCenter: parent.horizontalCenter
         // Written in the interface language's decimal separator and digits.
-        text: Commons.I18n.formatNumber(dial.reading, dial.reading < 10 ? 1 : 0)
+        text: Commons.I18n.formatNumberWithDecimals(dial.reading, dial.reading < 10 ? 1 : 0)
         color: root.onScrim
         font.family: root.fontFamily
         font.pixelSize: Style.font.display

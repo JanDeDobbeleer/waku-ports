@@ -133,7 +133,7 @@ Item {
   }
 
   function displayHostName(hostName: var, dnsName: var): string {
-    return Model.displayHostName(hostName, dnsName, I18n.t)
+    return Model.displayHostName(hostName, dnsName, I18n.translator())
   }
 
   function osIcon(os: var): string {
@@ -141,7 +141,7 @@ Item {
   }
 
   function accountLabel(account: var): string {
-    return Model.accountLabel(account, I18n.t)
+    return Model.accountLabel(account, I18n.translator())
   }
 
   function copyToClipboard(value: string, label: string): void {
@@ -274,7 +274,7 @@ Item {
   }
 
   function parseStatus(raw: string): void {
-    var parsed = Model.parseStatus(raw, I18n.t)
+    var parsed = Model.parseStatus(raw, I18n.translator())
     if (!parsed.ok) {
       resetUnavailable(parsed.message || "Status error")
       lastError = I18n.t("tailscale.statusParseFailed")
@@ -329,7 +329,7 @@ Item {
   }
 
   function parseAccounts(raw: string): void {
-    var parsed = Model.parseAccounts(raw, I18n.t)
+    var parsed = Model.parseAccounts(raw, I18n.translator())
     accounts = parsed.accounts
     selectedAccountId = parsed.selectedAccountId
     selectedAccountLabel = parsed.selectedAccountLabel

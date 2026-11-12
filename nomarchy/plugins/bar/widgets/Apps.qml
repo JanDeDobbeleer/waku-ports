@@ -104,10 +104,10 @@ BarWidget {
     onTriggered: if (!preview.containsMouse) root.close()
   }
 
-  readonly property var shown: groups.length > maxVisible ? groups.slice(0, maxVisible) : groups
-  readonly property int hidden: Math.max(0, groups.length - AppsModel.length(shown))
+  readonly property var shown: AppsModel.shown(groups, maxVisible)
+  readonly property int hidden: Math.max(0, AppsModel.length(groups) - AppsModel.length(shown))
 
-  visible: !vertical && groups.length > 0
+  visible: !vertical && AppsModel.length(groups) > 0
   implicitWidth: visible ? row.implicitWidth + Style.space(8) : 0
   implicitHeight: barSize
 
@@ -241,7 +241,7 @@ BarWidget {
           hoverEnabled: true
           acceptedButtons: Qt.LeftButton | Qt.MiddleButton
           cursorShape: Qt.PointingHandCursor
-          onClicked: function(mouse: QQuickMouseEvent): var { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
+          onClicked: function(mouse: MouseEvent): var { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
           onEntered: root.hoverEnter(app.modelData, app)
           onExited: root.hoverLeave()
         }

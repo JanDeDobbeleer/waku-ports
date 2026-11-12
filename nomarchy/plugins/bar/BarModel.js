@@ -336,6 +336,35 @@ function entryJson(value) {
 // dropped keeps its entry there too, as it was, so it isn't handed empty
 // settings on its way out. Maps keyed by id have no prototype, so an id like
 // "constructor" is just an id.
+function keyCount(keys) { return Array.from(keys || []).length }
+function keyIndex(keys, key) { return Array.from(keys || []).indexOf(key) }
+function withValue(values, key, value) {
+  var next = ({})
+  for (var existing in values || {}) next[existing] = values[existing]
+  next[key] = value
+  return next
+}
+function layoutEntry(layout, key) { return layout && layout.entries ? layout.entries[key] || null : null }
+function metadataFirstParty(metadata) { return !!metadata && metadata.firstParty === true }
+function registryComponent(registry, name) {
+  var widgets = registry ? registry.widgets : null
+  var entry = widgets ? widgets[name] : null
+  return entry ? entry.component : null
+}
+function pluginShell(shell, key, moduleName, registered) {
+  if (registered && shell && typeof shell.pluginShellForId === "function") return shell.pluginShellForId(moduleName)
+  if (shell && typeof shell.pluginShellForBarEntry === "function") return shell.pluginShellForBarEntry(key, moduleName)
+  return null
+}
+function hasProperty(target, key) { return !!target && key in target }
+function setProperty(target, key, value) { if (hasProperty(target, key)) target[key] = value }
+function field(target, key) { return target ? target[key] : undefined }
+function mappedCenter(mark, target, vertical) {
+  if (!mark) return 0
+  var point = mark.mapToItem(target, mark.width / 2, mark.height / 2)
+  return vertical ? point.y : point.x
+}
+
 function layoutWidgets(layout, memo) {
   var source = isPlainObject(layout) ? layout : {}
   var state = memo || {}
@@ -709,6 +738,17 @@ if (typeof module !== "undefined") {
     dropRoom: dropRoom,
     sectionRows: sectionRows,
     layoutWidgets: layoutWidgets,
+    keyCount: keyCount,
+    keyIndex: keyIndex,
+    withValue: withValue,
+    layoutEntry: layoutEntry,
+    metadataFirstParty: metadataFirstParty,
+    registryComponent: registryComponent,
+    pluginShell: pluginShell,
+    hasProperty: hasProperty,
+    setProperty: setProperty,
+    field: field,
+    mappedCenter: mappedCenter,
     fadeShares: fadeShares,
     roomLengths: roomLengths,
     moveEntry: moveEntry,

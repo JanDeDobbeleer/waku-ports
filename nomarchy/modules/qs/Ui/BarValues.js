@@ -71,3 +71,19 @@ function traySectionCount(bar) {
 function showTooltip(bar, target, text) { bar.showTooltip(target, text) }
 function hideTooltip(bar, target) { bar.hideTooltip(target) }
 function run(bar, command) { bar.run(command) }
+
+function field(object, key) { return object === undefined || object === null ? undefined : object[key] }
+function itemImplicitHeight(item) { return item ? item.implicitHeight : 0 }
+function forceActiveFocus(item) {
+  if (item && typeof item.forceActiveFocus === "function") item.forceActiveFocus()
+}
+function targetPressable(target) {
+  return !!(target && target.triggerPress && target.visible !== false && target.opacity !== 0 && target.mapToItem)
+}
+function triggerPress(target, button) { target.triggerPress(button) }
+function hasHeldButtons(target) { return !!(target && "heldButtons" in target) }
+function setHeldButtons(target, buttons) {
+  if (hasHeldButtons(target)) target.heldButtons = buttons
+}
+function screenName(screen) { return screen ? screen.name : "" }
+function mapToItem(item, target, x, y) { return item.mapToItem(target, x, y) }

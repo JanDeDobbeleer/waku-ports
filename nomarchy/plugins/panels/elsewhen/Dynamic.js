@@ -15,3 +15,7 @@ function call(object, key, args) {
 function set(object, key, value) {
   object[key] = value
 }
+
+function connect(object, key, callback) {
+  object[key].connect(callback)
+}

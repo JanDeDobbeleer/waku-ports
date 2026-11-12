@@ -178,7 +178,7 @@ Panel {
   // Under Automatic there is nothing to pick, so the pills collapse away and
   // the header states the live band instead.
   readonly property bool bandPillsVisible: canSelectBand && bandPinned
-  readonly property string bandSectionTitle: Model.bandSectionTitle(bandEffective, bandCurrent, Commons.I18n.t, Commons.I18n.formatNumber)
+  readonly property string bandSectionTitle: Model.bandSectionTitle(bandEffective, bandCurrent, Commons.I18n.translator(), Commons.I18n.numberFormatter())
   readonly property bool bandBusy: pendingBand !== ""
   // The DNS pills show a choice the moment it's made, and fall back if it fails.
   readonly property string dnsEffective: pendingDnsProvider !== "" ? pendingDnsProvider : dnsProvider
@@ -300,11 +300,11 @@ Panel {
   }
 
   function bandLabel(band: string): string {
-    return Model.bandLabel(band, Commons.I18n.t, Commons.I18n.formatNumber)
+    return Model.bandLabel(band, Commons.I18n.translator(), Commons.I18n.numberFormatter())
   }
 
   function bandTooltip(band: string): string {
-    return Model.bandTooltip(band, Commons.I18n.t, Commons.I18n.formatNumber)
+    return Model.bandTooltip(band, Commons.I18n.translator(), Commons.I18n.numberFormatter())
   }
 
   // Single cursor model: exactly one highlighted spot across the whole
@@ -611,15 +611,15 @@ Panel {
   }
 
   function formatHeaderSpeed(mbps: real): string {
-    return Model.formatHeaderSpeed(mbps, Commons.I18n.formatNumber)
+    return Model.formatHeaderSpeed(mbps, Commons.I18n.numberFormatter())
   }
 
   function formatHeaderFreq(mhz: real): string {
-    return Model.formatHeaderFreq(mhz, Commons.I18n.formatNumber)
+    return Model.formatHeaderFreq(mhz, Commons.I18n.numberFormatter())
   }
 
   function headerDetail(): string {
-    return Model.headerDetail(info, Commons.I18n.formatNumber)
+    return Model.headerDetail(info, Commons.I18n.numberFormatter())
   }
 
   // The text nomarchy-network-status --verbose prints, from the engine: key=value lines.
@@ -693,19 +693,19 @@ Panel {
   }
 
   function formatBytes(bytes: real): string {
-    return Model.formatBytes(bytes, Commons.I18n.formatNumber)
+    return Model.formatBytes(bytes, Commons.I18n.numberFormatter())
   }
 
   function formatRate(bytesPerSec: real): string {
-    return Model.formatRate(bytesPerSec, Commons.I18n.formatNumber)
+    return Model.formatRate(bytesPerSec, Commons.I18n.numberFormatter())
   }
 
   function formatPingLatency(ms: real): string {
-    return Model.formatPingLatency(ms, hasInternetPing, Commons.I18n.t, Commons.I18n.formatNumber)
+    return Model.formatPingLatency(ms, hasInternetPing, Commons.I18n.translator(), Commons.I18n.numberFormatter())
   }
 
   function formatPacketLoss(percent: real): string {
-    return Model.formatPacketLoss(percent, hasInternetPing, Commons.I18n.formatNumber)
+    return Model.formatPacketLoss(percent, hasInternetPing, Commons.I18n.numberFormatter())
   }
 
   // Prefer a connected device: a machine can expose several NICs of the
@@ -748,7 +748,7 @@ Panel {
   }
 
   function wifiSectionTitle(index: int): string {
-    return Model.wifiSectionTitle(wifiNetworks, index, Commons.I18n.t)
+    return Model.wifiSectionTitle(wifiNetworks, index, Commons.I18n.translator())
   }
 
   function wifiIconFor(strength: int): string {
@@ -882,7 +882,7 @@ Panel {
   }
 
   function networkFailureReason(reason: var, needsCredentials: bool): string {
-    return Model.networkFailureReason(reason, needsCredentials, connectionFailReasons, Commons.I18n.t)
+    return Model.networkFailureReason(reason, needsCredentials, connectionFailReasons, Commons.I18n.translator())
   }
 
   function shouldRepromptPassphrase(reason: var, needsCredentials: bool): bool {

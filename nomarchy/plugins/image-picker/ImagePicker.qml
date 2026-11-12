@@ -11,6 +11,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "ImagePickerModel.js" as ImagePickerModel
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: root
@@ -35,6 +36,8 @@ Item {
   property bool requestActive: false
   property int requestSerial: 0
   property int applySerial: 0
+  property int deferredRowsSerial: 0
+  property string deferredRows: ""
   property string doneFile: ""
   property string filterText: ""
   property list<var> doneFilesToRelease: []
@@ -124,7 +127,7 @@ Item {
 
   function currentPath(): var {
     if (imageArray.length === 0 || !itemMatches(selectedIndex)) return ""
-    return imageArray[selectedIndex].filePath
+    return ImagePickerModel.filePathAt(imageArray, selectedIndex)
   }
 
   function nameForPath(path: var): var {
@@ -137,7 +140,7 @@ Item {
 
   function currentLabel(): var {
     var path = currentPath()
-    if (!path) return filterText ? Commons.I18n.t("common.noMatches") : ""
+    if (!path) return filterText ? I18nModel.translate(Commons.I18n, "common.noMatches") : ""
 
     return labelForPath(path)
   }
@@ -161,7 +164,7 @@ Item {
   }
 
   function selectAdjacent(direction: var): var {
-    var count = imageArray.length
+    var count = ImagePickerModel.sequenceLength(imageArray)
     if (count === 0) return
 
     var index = selectedIndex
@@ -260,6 +263,10 @@ Item {
     root.opened = false
   }
 
+  function loadDeferredRows(): void {
+    if (deferredRowsSerial === requestSerial) root.loadRows(deferredRows, true)
+  }
+
   function loadRows(rows: var, reveal: var): var {
     var newImages = ImagePickerModel.loadRows(rows)
 
@@ -310,16 +317,13 @@ Item {
     }
 
     if (imageRows) {
-      let rowsToLoad = imageRows
-      let rowsSerial = requestSerial
       imageArray = []
       selectedIndex = 0
       imagesLoaded = true
       opened = true
-      Qt.callLater(function(): var {
-        if (rowsSerial === root.requestSerial)
-          root.loadRows(rowsToLoad, true)
-      })
+      deferredRows = imageRows
+      deferredRowsSerial = requestSerial
+      deferredRowsTimer.restart()
       return
     }
 
@@ -328,6 +332,12 @@ Item {
     imagesLoaded = false
     opened = false
     startImageScan(requestSerial, imageDirs)
+  }
+
+  Timer {
+    id: deferredRowsTimer
+    interval: 0
+    onTriggered: root.loadDeferredRows()
   }
 
   property list<var> imageArray: []
@@ -418,14 +428,8 @@ Item {
   // Fills the thumbnail cache in the background, the current wallpaper first and then its
   // neighbours outward, so the picker opens on images that are ready.
   function prewarmWallpapers(paths: var, current: var): var {
-    var n = paths.length
-    if (n === 0) return
-    var start = Math.max(0, paths.indexOf(current))
-    var order = [paths[start]]
-    for (let d = 1; order.length < n; d++) {
-      if (order.length < n) order.push(paths[(start + d) % n])
-      if (order.length < n && 2 * d < n) order.push(paths[(start - d + n) % n])
-    }
+    var order = ImagePickerModel.prewarmOrder(paths, current)
+    if (order.length === 0) return
     W.Thumbnails.cancelPrewarm()
     W.Thumbnails.prewarm(order, thumbnailWidth)
   }
@@ -476,9 +480,8 @@ Item {
     id: wallpaperRowsProc
     stdout: StdioCollector {
       onStreamFinished: {
-        var list = String(text || "").split("\n").map(function(l: var): var { return l.trim().replace(/\\/g, "/") })
-          .filter(function(l: var): var { return l.length > 0 }).sort()
-        if (list.length === 0) return
+        var list = ImagePickerModel.normalizedLines(text)
+        if (ImagePickerModel.sequenceLength(list) === 0) return
         var current = root.wallpaperPending || String(S.Wallpapers.current || "").replace(/\\/g, "/")
         root.wallpaperCache = list
         root.wallpaperCacheDir = root.wallpaperDir()
@@ -590,8 +593,7 @@ Item {
     property bool queued: false
     command: [root.gitFind, root.previewsPath, "-maxdepth", "1", "-type", "f", "-name", "*.png"]
     stdout: StdioCollector {
-      onStreamFinished: root.updateThemeRows(String(text || "").split("\n").map(function(l: var): var { return l.trim().replace(/\\/g, "/") })
-        .filter(function(l: var): var { return l.length > 0 }).sort().join("\n"))
+      onStreamFinished: root.updateThemeRows(ImagePickerModel.normalizedLines(text).join("\n"))
     }
     onExited: {
       if (queued) {
@@ -695,26 +697,24 @@ Item {
   // The shell host owns the stable `image-selector` IPC target and forwards
   // those lower-level positional calls here.
   function open(payload: var): var {
-    var args = {}
-    if (payload) {
-      try { args = JSON.parse(payload) || {} } catch (e) { args = {} }
-    }
-    if (args.source === "themes") {
+    var source = ImagePickerModel.payloadSource(payload)
+    if (source === "themes") {
       openThemes()
       return
     }
-    if (args.source === "wallpapers") {
+    if (source === "wallpapers") {
       openWallpapers()
       return
     }
-    var dirs = String(args.imageDirs || imageDirs)
-    var rows = String(args.imageRows || "")
-    var sel = String(args.selectedImage || selectedImage)
-    var selFile = String(args.selectionFile || "")
-    var doneF = String(args.doneFile || "")
-    var labels = args.showLabels === true || args.showLabels === "true"
-    var filter = args.filterable === true || args.filterable === "true"
-    openSelector(dirs, rows, sel, selFile, doneF, labels, filter)
+    openSelector(
+      ImagePickerModel.payloadString(payload, "imageDirs", imageDirs),
+      ImagePickerModel.payloadString(payload, "imageRows", ""),
+      ImagePickerModel.payloadString(payload, "selectedImage", selectedImage),
+      ImagePickerModel.payloadString(payload, "selectionFile", ""),
+      ImagePickerModel.payloadString(payload, "doneFile", ""),
+      ImagePickerModel.payloadBoolean(payload, "showLabels"),
+      ImagePickerModel.payloadBoolean(payload, "filterable")
+    )
   }
 
   // PORTDBG: pick row `index` as Enter would, for `wakuc call shell call nomarchy.image-picker debugApply 1`
@@ -728,7 +728,7 @@ Item {
   // PORTDBG: state dump for `wakuc call shell call nomarchy.image-picker debugState x`
   function debugState(): var {
     var names = []
-    for (let i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(imageArray[i].filePath))
+    for (let i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(ImagePickerModel.filePathAt(imageArray, i)))
     return JSON.stringify({ opened: opened, themeMode: themeMode, wallpaperMode: wallpaperMode, count: imageArray.length,
       selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("\n").length, wallDir: wallpaperDir() })
   }
@@ -831,7 +831,7 @@ Item {
           readonly property bool mirrored: LayoutMirroring.enabled
 
           Keys.priority: Keys.BeforeItem
-          Keys.onPressed: function(event: QQuickKeyEvent): var {
+          Keys.onPressed: function(event: KeyEvent): var {
             if (root.deleteConfirmOpen) {
               if (deleteConfirm.handleKey(event)) event.accepted = true
               return
@@ -886,9 +886,9 @@ Item {
               required property int relativeIndex
 
               readonly property var imageData: root.imageArray[imageIndex]
-              readonly property string filePath: imageData ? imageData.filePath : ""
-              readonly property string fileName: imageData ? imageData.fileName : ""
-              readonly property string thumbnailPath: imageData ? imageData.thumbnailPath : ""
+              readonly property string filePath: ImagePickerModel.pathField(imageData, "filePath")
+              readonly property string fileName: ImagePickerModel.pathField(imageData, "fileName")
+              readonly property string thumbnailPath: ImagePickerModel.pathField(imageData, "thumbnailPath")
 
               readonly property bool selected: imageIndex === root.selectedIndex
               readonly property bool previewReady: image.status === Image.Ready || image.status === Image.Error
@@ -1042,8 +1042,8 @@ Item {
       anchors.fill: parent
       opened: root.deleteConfirmOpen
       z: 10
-      message: Commons.I18n.t("imagePicker.deleteTheme").arg(root.pendingDeleteTheme ? root.labelForPath(root.pendingDeleteTheme) : "")
-      confirmText: Commons.I18n.t("common.delete")
+      message: I18nModel.translate(Commons.I18n, "imagePicker.deleteTheme").arg(root.pendingDeleteTheme ? root.labelForPath(root.pendingDeleteTheme) : "")
+      confirmText: I18nModel.translate(Commons.I18n, "common.delete")
       background: root.dimColor
       foreground: root.foreground
       onCanceled: root.cancelDeleteTheme()

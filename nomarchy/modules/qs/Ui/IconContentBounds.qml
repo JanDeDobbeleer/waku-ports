@@ -11,11 +11,11 @@ Item {
   property rect mappedBounds: Qt.rect(0, 0, 0, 0)
   visible: false
 
-  readonly property bool textItem: sourceItem instanceof Text
-  readonly property bool imageItem: sourceItem instanceof Image
-  readonly property bool shapeItem: sourceItem instanceof Shape
-  readonly property bool boxItem: sourceItem instanceof Rectangle
-    || sourceItem instanceof Canvas || sourceItem instanceof ShaderEffect
+  readonly property bool textItem: (sourceItem as Text) !== null
+  readonly property bool imageItem: (sourceItem as Image) !== null
+  readonly property bool shapeItem: (sourceItem as Shape) !== null
+  readonly property bool boxItem: (sourceItem as Rectangle) !== null
+    || (sourceItem as Canvas) !== null || (sourceItem as ShaderEffect) !== null
 
   function unionBounds(a: rect, b: rect): rect {
     if (b.width <= 0 || b.height <= 0) return a
@@ -26,83 +26,46 @@ Item {
       Math.max(a.y + a.height, b.y + b.height) - y)
   }
 
-  function shapeBounds(item: Shape): rect {
-    var bounds = item.boundingRect
-    var sx = 1
-    var sy = 1
-    if (item.fillMode !== Shape.NoResize && item.implicitWidth > 0 && item.implicitHeight > 0) {
-      sx = item.width / item.implicitWidth
-      sy = item.height / item.implicitHeight
-      if (item.fillMode === Shape.PreserveAspectFit) sx = sy = Math.min(sx, sy)
-      else if (item.fillMode === Shape.PreserveAspectCrop) sx = sy = Math.max(sx, sy)
-    }
-    var spareWidth = item.width - item.implicitWidth * sx
-    var spareHeight = item.height - item.implicitHeight * sy
-    var x = item.horizontalAlignment === Shape.AlignHCenter ? spareWidth / 2
-      : (item.horizontalAlignment === Shape.AlignRight ? spareWidth : 0)
-    var y = item.verticalAlignment === Shape.AlignVCenter ? spareHeight / 2
-      : (item.verticalAlignment === Shape.AlignBottom ? spareHeight : 0)
-    return Qt.rect(x + bounds.x * sx, y + bounds.y * sy, bounds.width * sx, bounds.height * sy)
-  }
 
   readonly property rect paintedBounds: {
     var item = sourceItem
     var bounds = Qt.rect(0, 0, 0, 0)
     if (!item || !item.visible || item.opacity <= 0) return bounds
     if (textItem) {
-      let text = item as Text
-      let ink = textMetrics.tightBoundingRect
-      let spareWidth = text.width - text.leftPadding - text.rightPadding - text.contentWidth
-      let textX = text.leftPadding
-      if (text.effectiveHorizontalAlignment === Text.AlignHCenter) textX += spareWidth / 2
-      else if (text.effectiveHorizontalAlignment === Text.AlignRight) textX += spareWidth
-      bounds = Qt.rect(textX + ink.x, text.baselineOffset + ink.y, ink.width, ink.height)
+      let values = BoundsValues.textBounds(item, textMetrics.tightBoundingRect, Text.AlignHCenter, Text.AlignRight)
+      bounds = Qt.rect(values[0], values[1], values[2], values[3])
     } else if (imageItem) {
-      let image = item as Image
-      let w = image.paintedWidth
-      let h = image.paintedHeight
-      let x = image.horizontalAlignment === Image.AlignLeft ? 0
-        : (image.horizontalAlignment === Image.AlignRight ? item.width - w : (item.width - w) / 2)
-      let y = image.verticalAlignment === Image.AlignTop ? 0
-        : (image.verticalAlignment === Image.AlignBottom ? item.height - h : (item.height - h) / 2)
-      if (image.fillMode === Image.PreserveAspectFit) {
-        bounds = Qt.rect(x, y, w, h)
-      } else if (image.fillMode === Image.Pad) {
-        let left = Math.max(0, x)
-        let top = Math.max(0, y)
-        bounds = Qt.rect(left, top, Math.max(0, Math.min(item.width, x + w) - left),
-          Math.max(0, Math.min(item.height, y + h) - top))
-      } else {
-        bounds = Qt.rect(0, 0, item.width, item.height)
-      }
+      let values = BoundsValues.imageBounds(item, Image.AlignLeft, Image.AlignRight, Image.AlignTop,
+        Image.AlignBottom, Image.PreserveAspectFit, Image.Pad)
+      bounds = Qt.rect(values[0], values[1], values[2], values[3])
     } else if (shapeItem) {
-      bounds = shapeBounds(item as Shape)
+      let values = BoundsValues.shapeBounds(item, Shape.NoResize, Shape.PreserveAspectFit, Shape.PreserveAspectCrop,
+        Shape.AlignHCenter, Shape.AlignRight, Shape.AlignVCenter, Shape.AlignBottom)
+      bounds = Qt.rect(values[0], values[1], values[2], values[3])
     } else if (boxItem) {
-      bounds = Qt.rect(0, 0, item.width, item.height)
+      let values = BoundsValues.boxBounds(item)
+      bounds = Qt.rect(values[0], values[1], values[2], values[3])
     }
     for (let i = 0; i < childrenBounds.count; i++) {
       let child = childrenBounds.itemAt(i)
       if (child) bounds = unionBounds(bounds, BoundsValues.mappedBounds(child))
     }
-    if (item.clip && bounds.width > 0 && bounds.height > 0) {
-      let left = Math.max(0, bounds.x)
-      let top = Math.max(0, bounds.y)
-      bounds = Qt.rect(left, top,
-        Math.max(0, Math.min(item.width, bounds.x + bounds.width) - left),
-        Math.max(0, Math.min(item.height, bounds.y + bounds.height) - top))
+    if (BoundsValues.isClipped(item) && bounds.width > 0 && bounds.height > 0) {
+      let clipped = BoundsValues.clipBounds(item, bounds)
+      bounds = Qt.rect(clipped[0], clipped[1], clipped[2], clipped[3])
     }
     return bounds
   }
 
-  function updateMappedBounds() {
+  function updateMappedBounds(): void {
     var b = paintedBounds
     mappedBounds = sourceItem && boundsParent && b.width > 0 && b.height > 0
-      ? sourceItem.mapToItem(boundsParent, b.x, b.y, b.width, b.height)
+      ? BoundsValues.mapBounds(sourceItem, boundsParent, b)
       : b
   }
 
-  function configureSource() {
-    if (sourceItem instanceof Text) (sourceItem as Text).renderType = Text.CurveRendering
+  function configureSource(): void {
+    if (textItem) BoundsValues.setTextRendering(sourceItem, Text.CurveRendering)
     updateMappedBounds()
   }
 
@@ -113,8 +76,8 @@ Item {
 
   TextMetrics {
     id: textMetrics
-    font: root.textItem ? (root.sourceItem as Text).font : Qt.font({ pixelSize: 12 })
-    text: root.textItem ? (root.sourceItem as Text).text : ""
+    font: root.textItem ? BoundsValues.textFont(root.sourceItem) : Qt.font({ pixelSize: 12 })
+    text: root.textItem ? BoundsValues.textValue(root.sourceItem) : ""
   }
 
   Connections {
@@ -130,17 +93,14 @@ Item {
 
   Repeater {
     id: childrenBounds
-    model: root.sourceItem ? root.sourceItem.children : []
+    model: root.sourceItem ? BoundsValues.childrenOf(root.sourceItem) : []
     delegate: Loader {
       id: childLoader
       required property var modelData
       readonly property rect mappedBounds: item ? BoundsValues.mappedBounds(item) : Qt.rect(0, 0, 0, 0)
       source: Qt.resolvedUrl("IconContentBounds.qml")
-      onLoaded: {
-        BoundsValues.configure(item,
-          Qt.binding(function() { return childLoader.modelData }),
-          Qt.binding(function() { return root.sourceItem }))
-      }
+      Binding { target: childLoader.item; property: "sourceItem"; value: childLoader.modelData }
+      Binding { target: childLoader.item; property: "boundsParent"; value: root.sourceItem }
     }
   }
 }
