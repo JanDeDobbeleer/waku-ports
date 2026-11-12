@@ -97,3 +97,34 @@ Not tracked (see `.gitignore`): `*.bundle`, the root
 `bin/`, and each port's `state/`, `logs/` and `shots/`. `bin/` is one copy of an engine build shared by all ports; copy
 one in before using `-Dev`. The tool scripts under `<port>\tools\` take the engine folder from `$env:WAKU_BIN`, else that `bin\`.
 
+## Checks
+
+`tools\check.ps1` validates the ports in three steps. Any finding fails the step.
+
+- **lint**: `qmllint` on every `.qml` and `.js` file with every category on, including the qmlsc
+  `compiler` category. Code that qmlsc cannot compile runs in the slower JavaScript interpreter, so a
+  compiler warning is a performance finding.
+- **runtime**: loads every component of the port, then starts its real `shell.qml` with empty state and drives
+  it through `<port>\tools\smoke.txt`. Any QML warning, error, binding loop or failed smoke command fails.
+- **perf**: starts the shell again and measures start-up time, idle CPU, memory and handles against
+  `tools\perf-budget.json`.
+
+```powershell
+.\tools\check.ps1                                  # every port, every step
+.\tools\check.ps1 -Port celeste -Step lint         # one port, one step
+.\tools\check.ps1 -File celeste\shell.qml          # lint just these files
+```
+
+The engine and its QML type metadata come from the waku release pinned in `tools\waku.json`.
+`tools\fetch-waku.ps1` downloads them into `.cache\`. `WAKU_CHECK_EXE` and `WAKU_QML_TYPES` point the
+check at a local engine build instead. `qmllint` comes from Qt (the version in `tools\waku.json`) under
+`C:\Qt`, or from `QT_BIN`.
+
+Fix findings in the code. Do not add `qmllint disable` comments. Values qmlsc cannot type (JSON, `var`
+objects, `try`/`catch`, `for...of`) belong in a `.pragma library` JavaScript helper next to the QML that
+uses it, as `start12\Data.js` does.
+
+`.github/workflows/qml.yml` runs the same check on every pull request, one job per port. For Copilot CLI
+sessions, `.github/hooks/qml-checks.json` lints each QML or JavaScript file an agent edits and reports
+findings straight back. When the agent ends a turn, it runs lint, runtime and perf for every port the branch
+changed and sends the agent back while they fail.

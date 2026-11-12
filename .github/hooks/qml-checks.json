@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "matcher": "edit|create|apply_patch|str_replace_editor",
+        "powershell": "& ./tools/hooks/agent-lint.ps1",
+        "timeoutSec": 180
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "powershell": "& ./tools/hooks/agent-stop.ps1",
+        "timeoutSec": 1800
+      }
+    ]
+  }
+}
