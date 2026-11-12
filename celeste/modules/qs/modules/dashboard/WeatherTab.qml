@@ -4,6 +4,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "WeatherTabHelpers.js" as WeatherTabHelpers
 import qs.utils
 
 Item {
@@ -168,7 +169,7 @@ Item {
 
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
-                            text: forecastItem.index === 0 ? Tr.trCtx("Today", "forecast column") : Tr.formatDateTime(new Date(forecastItem.modelData.date), "ddd")
+                            text: forecastItem.index === 0 ? Tr.trCtx("Today", "forecast column") : Tr.formatDateTime(new Date(WeatherTabHelpers.date(forecastItem.modelData)), "ddd")
                             font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
                             color: Colours.palette.m3primary
                         }
@@ -176,7 +177,7 @@ Item {
                         StyledText {
                             Layout.topMargin: -Tokens.spacing.extraSmall
                             Layout.alignment: Qt.AlignHCenter
-                            text: Tr.formatDateTime(new Date(forecastItem.modelData.date), "MMM d")
+                            text: Tr.formatDateTime(new Date(WeatherTabHelpers.date(forecastItem.modelData)), "MMM d")
                             font: Tokens.font.body.small
                             opacity: 0.7
                             color: Colours.palette.m3onSurfaceVariant
@@ -184,7 +185,7 @@ Item {
 
                         MaterialIcon {
                             Layout.alignment: Qt.AlignHCenter
-                            text: forecastItem.modelData.icon
+                            text: WeatherTabHelpers.icon(forecastItem.modelData)
                             fontStyle: Tokens.font.icon.extraLarge
                             color: Colours.palette.m3secondary
                         }
@@ -192,8 +193,8 @@ Item {
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
                             text: {
-                                const min = Weather.formatTemp(forecastItem.modelData.minTempC, true);
-                                const max = Weather.formatTemp(forecastItem.modelData.maxTempC, true);
+                                const min = WeatherTabHelpers.formatTemp(Weather, forecastItem.modelData, true);
+                                const max = WeatherTabHelpers.formatTemp(Weather, forecastItem.modelData, false);
                                 return Tr.trCtx("%1 / %2", "min/max temperature").arg(min).arg(max);
                             }
                             font: Tokens.styled("body", "small", { weight: Font.DemiBold })

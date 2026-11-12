@@ -7,6 +7,7 @@ import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledProgressBarHelpers.js" as StyledProgressBarHelpers
 
 ProgressBar {
     id: root
@@ -101,9 +102,7 @@ ProgressBar {
             }
 
             Line {
-                final property real implicitSize
-
-                Component.onCompleted: implicitSize = Qt.binding(() => parent.width - wave.implicitWidth < parent.height ? parent.height : 4)
+                final property real implicitSize: parent.width - wave.implicitWidth < parent.height ? parent.height : 4
 
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -126,7 +125,7 @@ ProgressBar {
                 id: wave
 
                 anchors.left: parent.left
-                Component.onCompleted: implicitWidth = Qt.binding(() => parent.width * root.visualPosition)
+                implicitWidth: parent.width * root.visualPosition
 
                 Behavior on implicitWidth {
                     Anim {}
@@ -143,25 +142,25 @@ ProgressBar {
 
             Line {
                 bounds: {
-                    const i = manager.activeIndicators[0];
+                    const i = StyledProgressBarHelpers.indicatorAt(manager.activeIndicators, 0);
                     return i ? root.toBounds(0, i.startFraction, i.gapSize / 2) : Qt.point(0, 0);
                 }
             }
 
             Line {
                 bounds: {
-                    const i = manager.activeIndicators[manager.activeIndicators.length - 1];
+                    const i = StyledProgressBarHelpers.indicatorAt(manager.activeIndicators, StyledProgressBarHelpers.length(manager.activeIndicators) - 1);
                     return i ? root.toBounds(i.endFraction, 1, i.gapSize / 2) : Qt.point(0, 0);
                 }
             }
 
             Instantiator {
-                model: Math.max(manager.activeIndicators.length, 1) - 1
+                model: Math.max(StyledProgressBarHelpers.length(manager.activeIndicators), 1) - 1
 
                 delegate: Line {
                     required final property int index
-                    readonly final property LinearIndicatorSegment cur: manager.activeIndicators[index]
-                    readonly final property LinearIndicatorSegment next: manager.activeIndicators[index + 1 % manager.activeIndicators.length]
+                    readonly final property LinearIndicatorSegment cur: StyledProgressBarHelpers.indicatorAt(manager.activeIndicators, index)
+                    readonly final property LinearIndicatorSegment next: StyledProgressBarHelpers.indicatorAt(manager.activeIndicators, (index + 1) % StyledProgressBarHelpers.length(manager.activeIndicators))
 
                     bounds: root.toBounds(cur.endFraction, next.startFraction, cur.gapSize / 2)
                 }

@@ -50,3 +50,27 @@ function iconText(dialog, file) {
     }
     return "folder";
 }
+
+function filtersText(dialog, separator) {
+    var filters = dialog.filters;
+    var patterns = [];
+    for (var i = 0; i < filters.length; i++)
+        patterns.push("*." + filters[i]);
+    return patterns.join(separator);
+}
+function filterLabel(dialog) { return dialog.filterLabel; }
+function validSelection(dialog, currentItem) {
+    return selectionValid(currentItem ? currentItem.modelData : null, dialog.filters);
+}
+function acceptCurrent(dialog, currentItem) {
+    if (currentItem)
+        dialog.accepted(currentItem.modelData.path);
+}
+function reject(dialog) { dialog.rejected(); }
+function isLocationSelected(dialog, location) {
+    var cwd = dialog.cwd;
+    return location === cwd[cwd.length - 1];
+}
+function selectLocation(dialog, location) {
+    dialog.cwd = location === "Home" ? ["Home"] : ["Home", location];
+}

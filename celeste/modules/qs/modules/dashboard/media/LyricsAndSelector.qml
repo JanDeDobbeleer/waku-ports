@@ -7,6 +7,7 @@ import Celeste.I18n
 import qs.components
 import qs.components.controls
 import qs.services
+import "LyricsAndSelectorHelpers.js" as LyricsAndSelectorHelpers
 
 Item {
     ColumnLayout {
@@ -46,15 +47,15 @@ Item {
 
             type: SplitButton.Tonal
             disabled: !Players.list.length
-            active: menuItems.find(m => m.modelData === Players.active) ?? menuItems[0] ?? null
+            active: LyricsAndSelectorHelpers.activePlayer(menuItems, Players.active)
             menu.onItemSelected: item => Players.manualActive = (item as PlayerItem).modelData
 
             menuItems: playerList.instances
             fallbackIcon: "music_off"
             fallbackText: Tr.trCtx("No players", "no media players active")
 
-            minLeftWidth: layout.width - expandBtn.implicitWidth - spacing
-            label.Layout.maximumWidth: minLeftWidth - iconLabel.implicitWidth - textRow.spacing - textRow.anchors.horizontalCenterOffset / 2 - horizontalPadding * 2
+            minLeftWidth: LyricsAndSelectorHelpers.minimumLeftWidth(layout.width, expandBtn, spacing)
+            label.Layout.maximumWidth: LyricsAndSelectorHelpers.maximumLabelWidth(minLeftWidth, iconLabel, textRow, horizontalPadding)
             label.elide: Text.ElideRight
 
             stateLayer.disabled: true

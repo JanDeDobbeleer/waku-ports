@@ -7,6 +7,7 @@ import Celeste.I18n
 import qs.components
 import qs.components.filedialog
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 
 StyledRect {
     id: root
@@ -43,7 +44,7 @@ StyledRect {
                 id: place
 
                 required final property string modelData
-                readonly final property bool selected: modelData === root.dialog.cwd[root.dialog.cwd.length - 1]
+                readonly final property bool selected: FileDialogHelpers.isLocationSelected(root.dialog, modelData)
 
                 Layout.fillWidth: true
                 implicitHeight: placeInner.implicitHeight + Tokens.padding.medium * 2
@@ -54,10 +55,7 @@ StyledRect {
                 StateLayer {
                     color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                     onClicked: {
-                        if (place.modelData === "Home")
-                            root.dialog.cwd = ["Home"];
-                        else
-                            root.dialog.cwd = ["Home", place.modelData];
+                        FileDialogHelpers.selectLocation(root.dialog, place.modelData);
                     }
                 }
 

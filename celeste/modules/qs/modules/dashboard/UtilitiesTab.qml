@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Celeste.Config
 import qs.components
 import qs.services
+import "UtilitiesTabHelpers.js" as UtilitiesTabHelpers
 
 // Port: the Utilities tab. Buttons that open Windows' own windows, flyouts and settings pages
 // (UtilitiesActions); a click launches the target and closes the dashboard.
@@ -35,15 +36,15 @@ Item {
                 id: group
 
                 required final property var modelData
-                readonly final property var items: UtilitiesActions.inGroup(modelData.id)
+                readonly final property var items: UtilitiesTabHelpers.groupItems(UtilitiesActions, modelData)
 
                 Layout.fillWidth: true
-                visible: items.length > 0
+                visible: UtilitiesTabHelpers.hasItems(items)
                 spacing: Tokens.spacing.small
 
                 StyledText {
                     Layout.leftMargin: Tokens.padding.medium
-                    text: group.modelData.label
+                    text: UtilitiesTabHelpers.label(group.modelData)
                     font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
                     color: Colours.palette.m3onSurface
                 }
@@ -77,7 +78,7 @@ Item {
             color: Colours.palette.m3onSurface
             onClicked: {
                 root.screenState.dashboard = false;
-                UtilitiesActions.launch(tile.modelData.id);
+                UtilitiesTabHelpers.launch(UtilitiesActions, tile.modelData);
             }
         }
 
@@ -88,7 +89,7 @@ Item {
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text: tile.modelData.icon
+                text: UtilitiesTabHelpers.icon(tile.modelData)
                 color: Colours.palette.m3primary
                 fontStyle: Tokens.font.icon.large
             }
@@ -99,7 +100,7 @@ Item {
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
-                text: tile.modelData.label
+                text: UtilitiesTabHelpers.label(tile.modelData)
                 font: Tokens.font.body.small
                 color: Colours.palette.m3onSurfaceVariant
             }
