@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls.Basic as QQC
-import QtQuick.Window
 import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons

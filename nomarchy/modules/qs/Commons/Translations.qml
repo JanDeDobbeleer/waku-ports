@@ -31,6 +31,19 @@ QtObject {
   // Read through FileView so blockLoading applies to the first lookup, and
   // keep the maps bound to the watched files for subsequent updates.
   property int rev: 0
+  // Reading text() on a missing file retries the load and fails again. Bumping rev on every failure
+  // would re-run the bindings that read it, forever, so a failure only counts once per path.
+  property var failedPaths: ({})
+  function bump(): void { root.rev++ }
+  function fileLoaded(key: string): void {
+    delete root.failedPaths[key]
+    Qt.callLater(root.bump)
+  }
+  function fileFailed(key: string, path: string): void {
+    if (root.failedPaths[key] === path) return
+    root.failedPaths[key] = path
+    Qt.callLater(root.bump)
+  }
   readonly property var englishStrings: (root.rev, parseCatalog(englishFile.text()))
   readonly property var baseStrings: (root.rev, parseCatalog(baseFile.text()))
   readonly property var languageStrings: (root.rev, parseCatalog(languageFile.text()))
@@ -80,8 +93,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("englishFile")
+    onLoadFailed: root.fileFailed("englishFile", String(root.englishFile.path))
   }
 
   // Only read for a regional code; for "da" the language file covers it.
@@ -91,8 +104,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("baseFile")
+    onLoadFailed: root.fileFailed("baseFile", String(root.baseFile.path))
   }
 
   property FileView languageFile: FileView {
@@ -101,7 +114,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("languageFile")
+    onLoadFailed: root.fileFailed("languageFile", String(root.languageFile.path))
   }
 }

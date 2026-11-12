@@ -1857,6 +1857,9 @@ Item {
       color: "transparent"
       implicitWidth: Math.ceil(tooltipBubble.implicitWidth)
       implicitHeight: Math.ceil(tooltipBubble.implicitHeight)
+      // The base sizes from contentItem.childrenRect, which loops while the bubble resizes the window.
+      contentWidth: implicitWidth
+      contentHeight: implicitHeight
 
       // Each show maps a fresh surface at a whole-number scale before Qt receives
       // the output's fractional one. Keep the bubble transparent until it matches the bar.

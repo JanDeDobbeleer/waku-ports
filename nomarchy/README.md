@@ -38,11 +38,12 @@ uses its own home, `state\home`, not your user profile.
 | Background switcher | the images of the current wallpaper's folder (or `NOMARCHY_WALLPAPER_DIR`); a choice calls the engine's `Wallpapers.setWallpaper`, the service Celeste's port uses. It also sets the lock screen picture unless the service is told not to |
 | Emoji, clipboard | Windows' own panels, opened by `tools\winkeys.ps1` (clipboard history must be on in Windows settings) |
 | Wi-Fi | the engine's `Network` service behind `qs.compat.Networking`: networks, signal, saved-network connect, radio switch. A new network or password opens Windows' Wi-Fi settings; disconnect and forget use `netsh` |
-| Audio, Bluetooth, battery | the engine's Pipewire, Bluetooth and UPower modules |
+| Audio, Bluetooth, battery | the engine's Pipewire, Bluetooth and UPower modules; the power panel's profiles are the Windows power modes (`PowerProfiles`) |
 
 Dropped (they run `nomarchy-*`, `hyprctl`, `timedatectl` or other Linux commands): the indicators, world
 clock, system-update, keyboard-layout, agents, monitor, Tailscale, Dropbox, Wi-Fi QR, speed-test, the
-Linux emoji/clipboard/reminders overlays, night light, remote session, idle, lock screen, polkit prompt
+Linux emoji/clipboard/reminders overlays, the low-battery warning (Windows shows its own), night light,
+remote session, idle, lock screen, polkit prompt
 and the Unix-socket IPC. Switched off by default: the background layer (Windows or another shell draws the
 wallpaper) and the dock.
 
@@ -50,7 +51,7 @@ wallpaper) and the dock.
 
 | Tool | What it does |
 |---|---|
-| `tools\loadcheck.ps1` | Compiles every QML file; 0 errors expected |
+| `..\tools\check.ps1 -Port nomarchy` | Lints, compiles every QML file, boots the shell and checks its performance budget (see the root README) |
 | `tools\run.ps1 -Seconds 12` | Boots the shell, reports status and log problems, then quits. `-Call 'shell call nomarchy.menu open {"menu":"apps"}'` runs `wakuc call` lines |
 | `tools\menu-state.ps1 -Menu apps -Rows 8` | Opens a menu and prints its state and rows, no screenshot |
 | `tools\winshot.ps1` | Saves each shell window as a PNG (transparency is lost; desktop captures can contain private content) |

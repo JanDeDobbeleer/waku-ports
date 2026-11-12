@@ -270,7 +270,7 @@ Item {
 
   Process {
     id: startupBackground
-    command: ["readlink", "-f", (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/current/background"]
+    command: ["readlink", "-e", (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/current/background"]
     stdout: StdioCollector { id: startupBackgroundOut }
     onExited: function(exitCode) {
       var path = String(startupBackgroundOut.text || "").trim()

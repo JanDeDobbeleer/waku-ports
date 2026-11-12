@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import waku.services as S
+import qs.Commons
 import qs.Ui
 
 // Windows port: the layout of waku's built-in tiler for the focused workspace (each desktop and

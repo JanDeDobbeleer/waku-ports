@@ -70,6 +70,8 @@ ShellRoot {
   property var shellConfig: builtinShellConfig
   // shell.json has text the shell could not use; persisting would replace it with defaults.
   property bool userConfigUnreadable: false
+  // Calling text() on a missing file retries the load and fires loadFailed again, so the config is cached here.
+  property string userConfigText: ""
   property bool pluginReloading: false
   property bool pluginReloadPending: false
 
@@ -90,7 +92,7 @@ ShellRoot {
     // defaults entirely; otherwise fall back to defaults. We do not deep-merge.
     var defaults = Util.isPlainObject(defaultsConfig) ? defaultsConfig : builtinShellConfig
     var user = null
-    var userText = userConfigFile.text() || ""
+    var userText = shell.userConfigText
     if (userText.trim()) {
       try {
         var parsed = JSON.parse(userText)
@@ -130,7 +132,8 @@ ShellRoot {
       console.warn("shell.json is unreadable, not overwriting it; fix it to save bar changes")
       return
     }
-    userConfigFile.setText(JSON.stringify(payload, null, 2) + "\n")
+    shell.userConfigText = JSON.stringify(payload, null, 2) + "\n"
+    userConfigFile.setText(shell.userConfigText)
   }
 
   readonly property var barConfig: shellConfig && Util.isPlainObject(shellConfig.bar) ? shellConfig.bar : builtinShellConfig.bar
@@ -157,8 +160,14 @@ ShellRoot {
     watchChanges: true
     atomicWrites: true
     printErrors: false
-    onLoaded: shell.applyShellConfig()
-    onLoadFailed: function(error) { shell.applyShellConfig() }
+    onLoaded: {
+      shell.userConfigText = text() || ""
+      shell.applyShellConfig()
+    }
+    onLoadFailed: function(error) {
+      shell.userConfigText = ""
+      shell.applyShellConfig()
+    }
     onFileChanged: reload()
   }
 

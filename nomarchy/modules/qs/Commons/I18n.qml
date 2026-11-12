@@ -21,10 +21,24 @@ QtObject {
   readonly property string configHome: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")).replace(/\\/g, "/")
 
   // Windows port: the engine does not re-run a binding when a FileView finishes loading, so every
-  // read below also depends on `rev`, which each FileView bumps when it loads or changes.
+  // read below also depends on `rev`, which each FileView bumps when it loads or changes, and on the
+  // FileView's path, which binds after these do on creation.
   property int rev: 0
-  readonly property string language: (root.rev, languageCode(languageFile.text()))
-  readonly property var localeSettings: (root.rev, parseCatalog(registryFile.text()))[root.language] || ({})
+  // Reading text() on a missing file retries the load and fails again. Bumping rev on every failure
+  // would re-run the bindings that read it, forever, so a failure only counts once per path.
+  property var failedPaths: ({})
+  function bump(): void { root.rev++ }
+  function fileLoaded(key: string): void {
+    delete root.failedPaths[key]
+    Qt.callLater(root.bump)
+  }
+  function fileFailed(key: string, path: string): void {
+    if (root.failedPaths[key] === path) return
+    root.failedPaths[key] = path
+    Qt.callLater(root.bump)
+  }
+  readonly property string language: (root.rev, languageFile.path, languageCode(languageFile.text()))
+  readonly property var localeSettings: (root.rev, registryFile.path, parseCatalog(registryFile.text()))[root.language] || ({})
   readonly property string formatLocale: localeSettings.formatLocale || "en-US"
   // From the registry: how numbers are written and which way text runs.
   readonly property string decimal: localeSettings.decimal || "."
@@ -33,8 +47,8 @@ QtObject {
 
   // Reading text() makes blockLoading take effect on the first lookup.
   // These bindings also rebuild the maps when a watched catalog changes.
-  readonly property var englishStrings: (root.rev, parseCatalog(englishCatalogFile.text()))
-  readonly property var languageStrings: (root.rev, parseCatalog(languageCatalogFile.text()))
+  readonly property var englishStrings: (root.rev, englishCatalogFile.path, parseCatalog(englishCatalogFile.text()))
+  readonly property var languageStrings: (root.rev, languageCatalogFile.path, parseCatalog(languageCatalogFile.text()))
   readonly property var strings: {
     var merged = ({})
     for (var k in root.englishStrings) merged[k] = root.englishStrings[k]
@@ -93,8 +107,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("languageFile")
+    onLoadFailed: root.fileFailed("languageFile", String(root.languageFile.path))
   }
 
   property FileView englishCatalogFile: FileView {
@@ -103,8 +117,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("englishCatalogFile")
+    onLoadFailed: root.fileFailed("englishCatalogFile", String(root.englishCatalogFile.path))
   }
 
   property FileView languageCatalogFile: FileView {
@@ -113,8 +127,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("languageCatalogFile")
+    onLoadFailed: root.fileFailed("languageCatalogFile", String(root.languageCatalogFile.path))
   }
 
   property FileView registryFile: FileView {
@@ -123,7 +137,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("registryFile")
+    onLoadFailed: root.fileFailed("registryFile", String(root.registryFile.path))
   }
 }

@@ -67,7 +67,7 @@ PopupWindow {
     else root.open = false
   }
 
-  default property alias contentItem: contentHolder.children
+  default property alias cardContent: contentHolder.children
 
   visible: open || card.opacity > 0
   color: "transparent"

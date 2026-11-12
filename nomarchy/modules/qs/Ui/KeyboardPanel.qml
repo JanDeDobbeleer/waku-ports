@@ -20,7 +20,7 @@ import qs.Commons as Commons
 // reach the dismissal surfaces below.
 //
 // API is a subset of Common.PopupCard: anchorItem, owner, bar, open,
-// padding, margin, contentWidth/Height, centerOnBar, default contentItem.
+// padding, margin, contentWidth/Height, centerOnBar, default cardContent.
 // Missing on purpose (for now): triggerMode ("hover"), containsMouse.
 //
 // Positioning: full-screen layer-shell with the card placed inside at
@@ -82,7 +82,7 @@ PanelWindow {
   // mapped and child items have completed layout.
   property Item focusTarget: null
 
-  default property alias contentItem: contentHolder.children
+  default property alias cardContent: contentHolder.children
 
   // Lazy content. A panel that sets `content` to a Component gets it built
   // the first time the panel opens instead of at shell startup, which is

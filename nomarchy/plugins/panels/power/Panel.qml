@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
@@ -15,10 +14,9 @@ Panel {
   // manageIpc: false so this panel can own the single IpcHandler the target
   // permits — needed for the togglePercentage method below.
   manageIpc: false
-  property var batteryInfo: ({})
-  property var systemInfo: ({})
-  property var profiles: []
-  property string activeProfile: ""
+  readonly property var batteryInfo: Model.batteryReadings(UPower.displayDevice)
+  readonly property var profiles: Model.profileNames(PowerProfiles.hasPerformanceProfile)
+  readonly property string activeProfile: Model.profileName(PowerProfiles.profile, profileValues())
   property int profileIndex: 0
   property bool cursorActive: false
   readonly property bool showPercentage: setting("showPercentage", false) === true
@@ -37,6 +35,14 @@ Panel {
       Discharging: UPowerDeviceState.Discharging,
       FullyCharged: UPowerDeviceState.FullyCharged,
       PendingCharge: UPowerDeviceState.PendingCharge
+    }
+  }
+
+  function profileValues() {
+    return {
+      PowerSaver: PowerProfile.PowerSaver,
+      Balanced: PowerProfile.Balanced,
+      Performance: PowerProfile.Performance
     }
   }
 
@@ -140,41 +146,11 @@ Panel {
     return modeLabel()
   }
 
-  function refresh() {
-    if (!batteryPresent) return
-
-    if (!batteryProc.running) batteryProc.running = true
-    if (!profilesProc.running) profilesProc.running = true
-    if (!systemProc.running) systemProc.running = true
-  }
-
-  function updateKeyValue(raw, targetName) {
-    var next = Model.parseKeyValue(raw)
-    // Keep last known good data if a refresh briefly returns nothing — happens
-    // around AC plug/unplug events. Avoids the section collapsing mid-transition.
-    if (Object.keys(next).length === 0) return
-    if (targetName === "battery") batteryInfo = next
-    else systemInfo = next
-  }
-
-  function updateProfiles(raw) {
-    var parsed = Model.parseProfiles(raw, profileIndex)
-    // Same guard as battery: preserve the last known profile list across
-    // transient empty payloads so the buttons don't blink out.
-    if (parsed.profiles.length === 0) return
-    profiles = parsed.profiles
-    activeProfile = parsed.activeProfile
-    profileIndex = parsed.profileIndex
-    if (opened && !cursorActive) {
-      var idx = profiles.indexOf(activeProfile)
-      if (idx >= 0) profileIndex = idx
-    }
-  }
-
+  // The battery readings and power modes are live properties of the engine's
+  // UPower and PowerProfiles, so there is nothing to poll.
   function setProfile(profile) {
-    if (!profile || actionProc.running) return
-    actionProc.command = ["nomarchy-powerprofiles-set", root.discharging ? "battery" : "ac", profile]
-    actionProc.running = true
+    if (!profile) return
+    PowerProfiles.profile = Model.profileValue(profile, profileValues())
   }
 
   function togglePercentage() {
@@ -203,7 +179,6 @@ Panel {
         return
       }
 
-      refresh()
       var idx = profiles.indexOf(activeProfile)
       profileIndex = idx >= 0 ? idx : 0
       cursorActive = false
@@ -215,31 +190,6 @@ Panel {
   visible: batteryPresent
   implicitWidth: batteryPresent ? button.implicitWidth : 0
   implicitHeight: batteryPresent ? button.implicitHeight : 0
-
-  Process {
-    id: batteryProc
-    command: ["nomarchy-battery-status", "--shell"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateKeyValue(text, "battery") }
-  }
-
-  Process {
-    id: profilesProc
-    command: ["nomarchy-powerprofiles-list", "--active-state"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateProfiles(text) }
-  }
-
-  Process {
-    id: systemProc
-    command: ["nomarchy-system-stats"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateKeyValue(text, "system") }
-  }
-
-  Process {
-    id: actionProc
-    onExited: root.refresh()
-  }
-
-  Timer { interval: 5000; running: root.opened; repeat: true; onTriggered: root.refresh() }
 
   // Rotate the status phrase while the panel is open and we're in a
   // rotating state (charging or on battery). The text swap is wrapped in a
@@ -455,7 +405,7 @@ Panel {
             spacing: Style.spacing.labelGap
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.chargeLimit") : (root.discharging ? Commons.I18n.t("power.timeLeft") : Commons.I18n.t("power.timeToFull"))
-              value: root.chargeThresholdActive ? (root.reading(root.batteryInfo.threshold) || "-") : (root.batteryFlowIdle ? "-" : (root.batteryInfo.time || "—"))
+              value: root.chargeThresholdActive ? (root.reading(root.batteryInfo.threshold) || "-") : (root.batteryFlowIdle ? "-" : (root.reading(root.batteryInfo.time) || "—"))
             }
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.batteryState") : (root.discharging ? Commons.I18n.t("power.discharging") : Commons.I18n.t("power.charging"))
@@ -465,7 +415,7 @@ Panel {
         }
 
         // ---------- Power profile picker ----------
-        // Windows port: no profiles to list, so no header and no separator either.
+        // The Windows power modes, through the engine's PowerProfiles.
         PanelSeparator {
           visible: root.profiles.length > 0
           foreground: root.bar.foreground

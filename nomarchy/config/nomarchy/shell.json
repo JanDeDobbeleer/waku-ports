@@ -59,6 +59,7 @@
   "disabledPlugins": [
     "nomarchy.agents",
     "nomarchy.background",
+    "nomarchy.battery",
     "nomarchy.clipboard",
     "nomarchy.disk-speedtest",
     "nomarchy.dropbox",

@@ -72,9 +72,9 @@ Panel {
     return list
   }
 
-  property var sinkAvailability: ({})
-  property bool sinkAvailabilityLoaded: false
-  property var sourceAvailability: ({})
+  readonly property var sinkAvailability: ({})
+  readonly property bool sinkAvailabilityLoaded: false
+  readonly property var sourceAvailability: ({})
 
   // Identify true playback streams without reading node.properties here:
   // PwNode.properties is invalid until the node is bound, and reading it while
@@ -575,11 +575,6 @@ Panel {
     return sinkAvailability[name] !== false
   }
 
-  function updateSinkAvailability(raw) {
-    sinkAvailability = Model.parseSinkAvailability(raw)
-    sinkAvailabilityLoaded = true
-  }
-
   function friendlyDeviceLabel(text) {
     return Model.friendlyDeviceLabel(text)
   }
@@ -671,23 +666,9 @@ Panel {
     enabled: root.opened && !!root.inputPeakNode
   }
 
-  Process {
-    id: sinkAvailabilityProc
-    command: ["cmd.exe", "/c", "rem"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.updateSinkAvailability(text)
-    }
-  }
-
-  Process {
-    id: sourceAvailabilityProc
-    command: ["nomarchy-audio-sink-availability", "sources"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.sourceAvailability = Model.parseSinkAvailability(text)
-    }
-  }
+  // Windows reports no per-port availability (Linux reads it from the ALSA
+  // jacks), so sinkAvailability and sourceAvailability stay empty and every
+  // device counts as available.
 
   Process {
     id: volumeSinkProc
@@ -703,17 +684,6 @@ Panel {
       root.volumeSinkStale = false
       // Deferred: the process still reports running while it signals exit.
       Qt.callLater(root.resolveVolumeSink)
-    }
-  }
-
-  Timer {
-    interval: 5000
-    running: root.opened
-    repeat: true
-    triggeredOnStart: true
-    onTriggered: {
-      if (!sinkAvailabilityProc.running) sinkAvailabilityProc.running = true
-      if (!sourceAvailabilityProc.running) sourceAvailabilityProc.running = true
     }
   }
 
