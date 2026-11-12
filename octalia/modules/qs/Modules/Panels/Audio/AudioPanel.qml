@@ -451,6 +451,7 @@ SmartPanel {
                 }
 
                 readonly property string appName: {
+                  var binName, binParts, entry, nameParts, parts;
                   if (!modelData)
                     return "Unknown App";
 
@@ -462,7 +463,7 @@ SmartPanel {
                     if (desc)
                       return desc;
                     if (name) {
-                      var nameParts = name.split(/[-_]/);
+                      nameParts = name.split(/[-_]/);
                       if (nameParts.length > 0 && nameParts[0])
                         return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
                       return name;
@@ -474,10 +475,10 @@ SmartPanel {
 
                   // Try binary name first (fixes Electron apps like vesktop)
                   if (binaryName) {
-                    var binParts = binaryName.split("/");
+                    binParts = binaryName.split("/");
                     if (binParts.length > 0) {
-                      var binName = binParts[binParts.length - 1].toLowerCase();
-                      var entry = ThemeIcons.findAppEntry(binName);
+                      binName = binParts[binParts.length - 1].toLowerCase();
+                      entry = ThemeIcons.findAppEntry(binName);
                       // Only use entry if it's actually related to binary name
                       if (entry && entry.name && isValidMatch(binName, entry))
                         return entry.name;
@@ -490,18 +491,18 @@ SmartPanel {
                   var appId = props["application.id"] || "";
 
                   if (appId) {
-                    var entry = ThemeIcons.findAppEntry(appId);
+                    entry = ThemeIcons.findAppEntry(appId);
                     if (entry && entry.name && isValidMatch(appId, entry))
                       return entry.name;
                     if (!computedAppName) {
-                      var parts = appId.split(".");
+                      parts = appId.split(".");
                       if (parts.length > 0 && parts[0])
                         computedAppName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
                     }
                   }
 
                   if (!computedAppName && binaryName) {
-                    var binParts = binaryName.split("/");
+                    binParts = binaryName.split("/");
                     if (binParts.length > 0 && binParts[binParts.length - 1])
                       computedAppName = binParts[binParts.length - 1].charAt(0).toUpperCase() + binParts[binParts.length - 1].slice(1);
                   }
@@ -510,7 +511,7 @@ SmartPanel {
 
                   if (!result || result === "" || result === "Unknown App") {
                     if (name) {
-                      var nameParts = name.split(/[-_]/);
+                      nameParts = name.split(/[-_]/);
                       if (nameParts.length > 0 && nameParts[0])
                         result = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
                     }
@@ -559,17 +560,18 @@ SmartPanel {
                 }
 
                 readonly property string appIcon: {
+                  var binName, binParts, entry, iconPath, name, nameParts;
                   if (!modelData)
                     return ThemeIcons.iconFromName("application-x-executable", "application-x-executable");
 
                   var props = modelData.properties;
 
                   if (!props) {
-                    var name = modelData.name || "";
+                    name = modelData.name || "";
                     if (name) {
-                      var nameParts = name.split(/[-_]/);
+                      nameParts = name.split(/[-_]/);
                       if (nameParts.length > 0) {
-                        var entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
+                        entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
                         if (entry && entry.icon && isValidMatch(nameParts[0].toLowerCase(), entry))
                           return ThemeIcons.iconFromName(entry.icon, "application-x-executable");
                       }
@@ -579,10 +581,10 @@ SmartPanel {
 
                   var binaryName = props["application.process.binary"] || "";
                   if (binaryName) {
-                    var binParts = binaryName.split("/");
+                    binParts = binaryName.split("/");
                     if (binParts.length > 0) {
-                      var binName = binParts[binParts.length - 1].toLowerCase();
-                      var entry = ThemeIcons.findAppEntry(binName);
+                      binName = binParts[binParts.length - 1].toLowerCase();
+                      entry = ThemeIcons.findAppEntry(binName);
                       if (entry && entry.icon && isValidMatch(binName, entry))
                         return ThemeIcons.iconFromName(entry.icon, "");
                     }
@@ -590,30 +592,30 @@ SmartPanel {
 
                   var iconName = props["application.icon-name"] || "";
                   if (iconName && ThemeIcons.iconExists(iconName)) {
-                    var iconPath = ThemeIcons.iconFromName(iconName, "");
+                    iconPath = ThemeIcons.iconFromName(iconName, "");
                     if (iconPath && iconPath !== "")
                       return iconPath;
                   }
 
                   var appId = props["application.id"] || "";
                   if (appId) {
-                    var entry = ThemeIcons.findAppEntry(appId);
+                    entry = ThemeIcons.findAppEntry(appId);
                     if (entry && entry.icon && isValidMatch(appId, entry))
                       return ThemeIcons.iconFromName(entry.icon, "");
                   }
 
                   var appName = props["application.name"] || "";
                   if (appName) {
-                    var entry = ThemeIcons.findAppEntry(appName.toLowerCase());
+                    entry = ThemeIcons.findAppEntry(appName.toLowerCase());
                     if (entry && entry.icon && isValidMatch(appName.toLowerCase(), entry))
                       return ThemeIcons.iconFromName(entry.icon, "");
                   }
 
                   var name = modelData.name || "";
                   if (name) {
-                    var nameParts = name.split(/[-_]/);
+                    nameParts = name.split(/[-_]/);
                     if (nameParts.length > 0) {
-                      var entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
+                      entry = ThemeIcons.findAppEntry(nameParts[0].toLowerCase());
                       if (entry && entry.icon && isValidMatch(nameParts[0].toLowerCase(), entry))
                         return ThemeIcons.iconFromName(entry.icon, "");
                     }
@@ -709,8 +711,9 @@ SmartPanel {
                         baseSize: Style.baseWidgetSize * 0.7
                         enabled: !!(appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true)
                         onClicked: {
+                          var newMuted;
                           if (appBox.nodeAudio && appBox.modelData && appBox.modelData.ready === true) {
-                            var newMuted = !appBox.appMuted;
+                            newMuted = !appBox.appMuted;
                             appBox.nodeAudio.muted = newMuted;
                             AudioService.setPanelAppStreamMuted(appBox.modelData, newMuted);
                           }

@@ -228,9 +228,10 @@ NBox {
       cursorShape: Qt.PointingHandCursor
 
       onClicked: {
+        var i;
         var menuItems = [];
         var players = MediaService.getAvailablePlayers();
-        for (var i = 0; i < players.length; i++) {
+        for (i = 0; i < players.length; i++) {
           menuItems.push({
                            "label": players[i].identity,
                            "action": i.toString(),

@@ -55,8 +55,9 @@ Singleton {
     watchChanges: true
     onFileChanged: reload()
     onLoaded: {
+      var data;
       try {
-        var data = JSON.parse(text());
+        data = JSON.parse(text());
         root.translations = data;
         Logger.i("I18n", `Loaded translations for "${root.langCode}"`);
 
@@ -113,8 +114,9 @@ Singleton {
     watchChanges: true
     onFileChanged: reload()
     onLoaded: {
+      var data;
       try {
-        var data = JSON.parse(text());
+        data = JSON.parse(text());
         root.fallbackTranslations = data;
         Logger.d("I18n", `Loaded english fallback translations`);
       } catch (e) {
@@ -272,13 +274,14 @@ Singleton {
   // -------------------------------------------
   // Get all translation keys (useful for debugging)
   function getAllKeys(obj, prefix) {
+    var key;
     if (typeof obj === "undefined")
       obj = translations;
     if (typeof prefix === "undefined")
       prefix = "";
 
     var keys = [];
-    for (var key in (obj || {})) {
+    for (key in (obj || {})) {
       const value = obj[key];
       const fullKey = prefix ? `${prefix}.${key}` : key;
       if (typeof value === "object" && value !== null) {
@@ -300,6 +303,7 @@ Singleton {
   // -------------------------------------------
   // Main translation function
   function tr(key, interpolations) {
+    var placeholder;
     var i;
     if (typeof interpolations === "undefined")
       interpolations = {};
@@ -349,7 +353,7 @@ Singleton {
 
     // Handle interpolations (e.g., "Hello {name}!")
     var result = value;
-    for (var placeholder in interpolations) {
+    for (placeholder in interpolations) {
       const regex = new RegExp(`\\{${placeholder}\\}`, 'g');
       result = result.replace(regex, interpolations[placeholder]);
     }
@@ -360,6 +364,7 @@ Singleton {
   // -------------------------------------------
   // Plural translation function
   function trp(key, count, interpolations) {
+    var prop;
     if (typeof interpolations === "undefined") {
       interpolations = {};
     }
@@ -371,7 +376,7 @@ Singleton {
     var finalInterpolations = {
       "count": count
     };
-    for (var prop in interpolations) {
+    for (prop in interpolations) {
       finalInterpolations[prop] = interpolations[prop];
     }
 

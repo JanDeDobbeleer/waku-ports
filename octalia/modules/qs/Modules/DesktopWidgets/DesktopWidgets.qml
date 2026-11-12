@@ -23,11 +23,12 @@ Variants {
     // Reactive property for widgets on this specific screen
     // Returns a fresh array whenever Settings changes
     property var screenWidgets: {
+      var i;
       if (!modelData || !modelData.name) {
         return [];
       }
       var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-      for (var i = 0; i < monitorWidgets.length; i++) {
+      for (i = 0; i < monitorWidgets.length; i++) {
         if (monitorWidgets[i].name === modelData.name) {
           return monitorWidgets[i].widgets || [];
         }
@@ -144,6 +145,7 @@ Variants {
             // Grid size calculated based on screen resolution - matches DraggableDesktopWidget
             // Ensures grid lines pass through the screen center on both axes
             readonly property int gridSize: {
+              var candidate, distance, divisor, offset, remainderX, remainderY;
               if (!window.screen)
                 return 30; // Fallback
               var baseSize = Math.round(window.screen.width * 0.015);
@@ -159,14 +161,14 @@ Variants {
               var bestDistance = Infinity;
 
               // Try values around baseSize to find one that divides evenly into both centers
-              for (var offset = -10; offset <= 10; offset++) {
-                var candidate = baseSize + offset;
+              for (offset = -10; offset <= 10; offset++) {
+                candidate = baseSize + offset;
                 if (candidate < 20 || candidate > 60)
                   continue;
 
                 // Check if this size divides evenly into both center coordinates
-                var remainderX = centerX % candidate;
-                var remainderY = centerY % candidate;
+                remainderX = centerX % candidate;
+                remainderY = centerY % candidate;
 
                 // If both remainders are 0, this is perfect - center is on grid lines
                 if (remainderX === 0 && remainderY === 0) {
@@ -174,7 +176,7 @@ Variants {
                 }
 
                 // Otherwise, find the closest to perfect alignment
-                var distance = Math.abs(remainderX) + Math.abs(remainderY);
+                distance = Math.abs(remainderX) + Math.abs(remainderY);
                 if (distance < bestDistance) {
                   bestDistance = distance;
                   bestSize = candidate;
@@ -198,10 +200,10 @@ Variants {
               var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
               if (centerGcd > 0) {
                 // Find a divisor of centerGcd that's close to bestSize
-                for (var divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
+                for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
                   if (centerGcd % divisor !== 0)
                     continue;
-                  var candidate = centerGcd / divisor;
+                  candidate = centerGcd / divisor;
                   if (candidate >= 20 && candidate <= 60) {
                     if (Math.abs(candidate - baseSize) < Math.abs(bestSize - baseSize)) {
                       bestSize = candidate;
@@ -307,13 +309,14 @@ Variants {
             }
 
             onLoaded: {
+              var newRegions;
               if (item) {
                 item.parent = widgetsContainer;
 
                 // Create mask region so this widget receives mouse input
                 _maskRegion = maskRegionComponent.createObject(window);
                 _maskRegion.item = item;
-                var newRegions = window._maskRegions.slice();
+                newRegions = window._maskRegions.slice();
                 newRegions.push(_maskRegion);
                 window._maskRegions = newRegions;
               }
@@ -321,8 +324,9 @@ Variants {
 
             // Clean up mask region when widget unloads
             onItemChanged: {
+              var region;
               if (!item && _maskRegion) {
-                var region = _maskRegion;
+                region = _maskRegion;
                 _maskRegion = null;
                 window._maskRegions = window._maskRegions.filter(function (r) {
                   return r !== region;
@@ -452,19 +456,21 @@ Variants {
                 id: addWidgetButton
                 icon: "layout-grid-add"
                 onClicked: {
+                  var id;
+                  var globalPos, items, widgets;
                   var popupMenuWindow = PanelService.getPopupMenuWindow(window.screen);
                   if (popupMenuWindow) {
                     // Build menu items from registry
-                    var items = [];
-                    var widgets = DesktopWidgetRegistry.widgets;
-                    for (var id in widgets) {
+                    items = [];
+                    widgets = DesktopWidgetRegistry.widgets;
+                    for (id in widgets) {
                       items.push({
                                    action: id,
                                    text: DesktopWidgetRegistry.getWidgetDisplayName(id),
                                    icon: "layout-grid-add"
                                  });
                     }
-                    var globalPos = addWidgetButton.mapToItem(null, 0, addWidgetButton.height + Style.marginS);
+                    globalPos = addWidgetButton.mapToItem(null, 0, addWidgetButton.height + Style.marginS);
                     popupMenuWindow.showDynamicContextMenu(items, globalPos.x, globalPos.y, function (widgetId) {
                       addWidgetToCurrentScreen(widgetId);
                       return false;

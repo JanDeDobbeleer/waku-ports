@@ -41,9 +41,10 @@ ColumnLayout {
       text: DesktopWidgetRegistry.editMode ? I18n.tr("panels.desktop-widgets.edit-mode-exit-button") : I18n.tr("panels.desktop-widgets.edit-mode-button-label")
       icon: "edit"
       onClicked: {
+        var item;
         DesktopWidgetRegistry.editMode = !DesktopWidgetRegistry.editMode;
         if (DesktopWidgetRegistry.editMode && Settings.data.ui.settingsPanelMode !== "window") {
-          var item = root.parent;
+          item = root.parent;
           while (item) {
             if (item.closeRequested !== undefined) {
               item.closeRequested();

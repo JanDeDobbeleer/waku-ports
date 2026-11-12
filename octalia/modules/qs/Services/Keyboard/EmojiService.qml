@@ -79,6 +79,7 @@ Singleton {
   }
 
   function getCategoriesWithCounts() {
+    var cat;
     var category, emoji, i;
     if (!loaded) {
       return [];
@@ -96,7 +97,7 @@ Singleton {
     }
 
     var categories = [];
-    for (var cat in categoryCounts) {
+    for (cat in categoryCounts) {
       categories.push({
                         name: cat,
                         count: categoryCounts[cat]

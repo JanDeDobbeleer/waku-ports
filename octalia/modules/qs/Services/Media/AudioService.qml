@@ -236,6 +236,8 @@ Singleton {
 
   // Find application streams that are connected to the default sink
   readonly property var appStreams: {
+    var linkGroup;
+    var allNodes, i, j, node, sourceNode, streamId;
     if (!Pipewire.ready || !root.sink) {
       return [];
     }
@@ -264,8 +266,8 @@ Singleton {
     var intermediateNodeIds = {};
     var nodesToCheck = [];
 
-    for (var i = 0; i < linkGroupsCount; i++) {
-      var linkGroup;
+    for (i = 0; i < linkGroupsCount; i++) {
+
       if (sinkLinkTracker.linkGroups.get) {
         linkGroup = sinkLinkTracker.linkGroups.get(i);
       } else {
@@ -276,7 +278,7 @@ Singleton {
         continue;
       }
 
-      var sourceNode = linkGroup.source;
+      sourceNode = linkGroup.source;
 
       // Filter out quickshell
       const name = sourceNode.name || "";
@@ -303,11 +305,11 @@ Singleton {
     // If we found intermediate nodes, we need to find streams connected to them
     if (nodesToCheck.length > 0 || connectedStreams.length === 0) {
       try {
-        var allNodes = Pipewire.nodes.values || [];
+        allNodes = Pipewire.nodes.values || [];
 
         // Find all stream nodes
-        for (var j = 0; j < allNodes.length; j++) {
-          var node = allNodes[j];
+        for (j = 0; j < allNodes.length; j++) {
+          node = allNodes[j];
           if (!node || !node.isStream || !node.audio) {
             continue;
           }
@@ -325,7 +327,7 @@ Singleton {
             continue;
           }
 
-          var streamId = node.id;
+          streamId = node.id;
           if (connectedStreamIds[streamId]) {
             continue;
           }
@@ -526,8 +528,9 @@ Singleton {
   }
 
   function _cloneStrMap(m) {
+    var k;
     var d = {};
-    for (var k in m) {
+    for (k in m) {
       if (Object.prototype.hasOwnProperty.call(m, k)) {
         d[k] = m[k];
       }
@@ -536,9 +539,10 @@ Singleton {
   }
 
   function _cloneOverrideMap(ovSrc) {
+    var ok;
     var inner;
     var out = {};
-    for (var ok in ovSrc) {
+    for (ok in ovSrc) {
       if (!Object.prototype.hasOwnProperty.call(ovSrc, ok)) {
         continue;
       }
@@ -627,6 +631,7 @@ Singleton {
   }
 
   function _migrateBasePanelLocksToPerStreamIfNeeded(): void {
+    var base;
     var b, i, j, key, muteB, s, volB;
     var streams = root.appStreams;
     if (!streams || streams.length === 0) {
@@ -648,7 +653,7 @@ Singleton {
     var oNew = _cloneOverrideMap(appVolumeOverrides);
     var changed = false;
 
-    for (var base in bases) {
+    for (base in bases) {
       if (!Object.prototype.hasOwnProperty.call(bases, base)) {
         continue;
       }

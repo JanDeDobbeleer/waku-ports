@@ -20,6 +20,7 @@ Item {
   property color clockColor: Color.mOnPrimary
 
   property color secondHandColor: {
+    var candidate, contrastBg, contrastClock, currentWorstContrast, i;
     var defaultColor = Color.mError;
     var bestContrast = 1.0; // 1.0 is "no contrast"
     var bestColor = defaultColor;
@@ -27,18 +28,18 @@ Item {
 
     const minContrast = 1.149;
 
-    for (var i = 0; i < candidates.length; i++) {
-      var candidate = candidates[i];
-      var contrastClock = ColorsConvert.getContrastRatio(candidate.toString(), clockColor.toString());
+    for (i = 0; i < candidates.length; i++) {
+      candidate = candidates[i];
+      contrastClock = ColorsConvert.getContrastRatio(candidate.toString(), clockColor.toString());
       if (contrastClock < minContrast) {
         continue;
       }
-      var contrastBg = ColorsConvert.getContrastRatio(candidate.toString(), backgroundColor.toString());
+      contrastBg = ColorsConvert.getContrastRatio(candidate.toString(), backgroundColor.toString());
       if (contrastBg < minContrast) {
         continue;
       }
 
-      var currentWorstContrast = Math.min(contrastBg, contrastClock);
+      currentWorstContrast = Math.min(contrastBg, contrastClock);
 
       if (currentWorstContrast > bestContrast) {
         bestContrast = currentWorstContrast;
@@ -149,6 +150,7 @@ Item {
       }
 
       onPaint: {
+        var i, scaleFactor;
         var currentTime = Time.now;
         var hours = currentTime.getHours();
         var minutes = currentTime.getMinutes();
@@ -165,8 +167,8 @@ Item {
         ctx.lineWidth = 2 * scaleRatio;
         var scaleFactor = 0.7;
 
-        for (var i = 0; i < 12; i++) {
-          var scaleFactor = 0.8;
+        for (i = 0; i < 12; i++) {
+          scaleFactor = 0.8;
           if (i % 3 === 0) {
             scaleFactor = 0.65;
           }

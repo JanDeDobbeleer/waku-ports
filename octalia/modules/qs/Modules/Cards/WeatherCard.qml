@@ -154,13 +154,14 @@ NBox {
           RowLayout {
             NText {
               text: {
+                var suffix;
                 if (!weatherReady)
                   return "";
                 var temp = LocationService.data.weather.current_weather.temperature;
                 var suffix = "C";
                 if (Settings.data.location.useFahrenheit) {
                   temp = LocationService.celsiusToFahrenheit(temp);
-                  var suffix = "F";
+                  suffix = "F";
                 }
                 temp = Math.round(temp);
                 return `${temp}°${suffix}`;

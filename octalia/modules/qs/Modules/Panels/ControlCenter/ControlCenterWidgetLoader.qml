@@ -32,11 +32,12 @@ Item {
     }
 
     onLoaded: {
+      var prop;
       if (!item)
         return;
 
       // Apply properties to loaded widget
-      for (var prop in widgetProps) {
+      for (prop in widgetProps) {
         if (item.hasOwnProperty(prop)) {
           item[prop] = widgetProps[prop];
         }

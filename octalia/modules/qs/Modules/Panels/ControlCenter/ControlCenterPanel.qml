@@ -29,9 +29,10 @@ SmartPanel {
 
   preferredWidth: Math.round(440 * Style.uiScaleRatio)
   preferredHeight: {
+    var i;
     var height = 0;
     var count = 0;
-    for (var i = 0; i < Settings.data.controlCenter.cards.length; i++) {
+    for (i = 0; i < Settings.data.controlCenter.cards.length; i++) {
       const card = Settings.data.controlCenter.cards[i];
       if (!card.enabled)
         continue;

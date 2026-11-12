@@ -99,6 +99,7 @@ Item {
     }
 
     onLoaded: {
+      var prop;
       if (!item)
         return;
 
@@ -118,7 +119,7 @@ Item {
       }
 
       // Apply remaining widget properties (screen is already set as initial prop)
-      for (var prop in widgetProps) {
+      for (prop in widgetProps) {
         if (item.hasOwnProperty(prop)) {
           item[prop] = widgetProps[prop];
         }

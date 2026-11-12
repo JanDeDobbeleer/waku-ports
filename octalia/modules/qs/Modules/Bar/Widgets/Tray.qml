@@ -43,8 +43,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -78,16 +79,17 @@ Item {
   }
 
   readonly property var statusSignature: {
+    var i, item, s;
     if (!SystemTray.items || !SystemTray.items.values) {
       return "";
     }
     var sig = "";
     var items = SystemTray.items.values;
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
+    for (i = 0; i < items.length; i++) {
+      item = items[i];
       if (item) {
         // Direct property access creates reactive binding
-        var s = item.status;
+        s = item.status;
         sig += (item.id || i) + ":" + (s !== undefined ? s : -1);
       }
     }

@@ -94,12 +94,13 @@ Singleton {
   function substituteWheelDelta(command, delta) {
     var normalizedDelta = delta > 0 ? 1 : -1;
     return command.replace(/\$delta([+\-*/]\d+)?/g, function (match, operation) {
+      var result;
       var operand, operator;
       if (operation) {
         try {
           operator = operation.charAt(0);
           operand = parseInt(operation.substring(1));
-          var result;
+
           switch (operator) {
           case '+':
             result = normalizedDelta + operand;

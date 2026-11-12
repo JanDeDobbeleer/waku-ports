@@ -10,6 +10,7 @@ QtObject {
     let changed = false;
 
     function migrateArray(contextName, rawArr, adapterArr, setItem) {
+      var key;
       var newObj;
       if (!adapterArr)
         return;
@@ -35,7 +36,7 @@ QtObject {
         let id = item.id !== undefined ? item.id : (item.widgetId !== undefined ? item.widgetId : undefined);
         if (id === "WiFi") {
           newObj = {};
-          for (var key in item)
+          for (key in item)
             newObj[key] = item[key];
           if (newObj.id !== undefined)
             newObj.id = "Network";

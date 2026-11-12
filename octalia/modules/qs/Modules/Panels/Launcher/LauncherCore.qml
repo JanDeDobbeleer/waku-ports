@@ -863,12 +863,13 @@ Rectangle {
       NText {
         Layout.fillWidth: true
         text: {
+          var provider;
           if (root.results.length === 0) {
             if (root.searchText) {
               return I18n.tr("common.no-results");
             }
             // Use provider's empty browsing message if available
-            var provider = root.currentProvider;
+            provider = root.currentProvider;
             if (provider && provider.emptyBrowsingMessage) {
               return provider.emptyBrowsingMessage;
             }

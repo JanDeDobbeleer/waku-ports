@@ -34,6 +34,7 @@ ColumnLayout {
           return baseLabel + "(" + autoDeviceName + ")";
         }
         readonly property var backlightDeviceOptions: {
+          var deviceName, devicePath, i;
           var options = [
                 {
                   "key": "",
@@ -42,9 +43,9 @@ ColumnLayout {
               ];
 
           var devices = BrightnessService.availableBacklightDevices || [];
-          for (var i = 0; i < devices.length; i++) {
-            var devicePath = devices[i];
-            var deviceName = BrightnessService.getBacklightDeviceName(devicePath) || devicePath;
+          for (i = 0; i < devices.length; i++) {
+            devicePath = devices[i];
+            deviceName = BrightnessService.getBacklightDeviceName(devicePath) || devicePath;
             options.push({
                            "key": devicePath,
                            "name": deviceName

@@ -112,6 +112,7 @@ Item {
                       running: false
                       interval: 40
                       onTriggered: {
+                        var callback, monitors;
                         Logger.d("CurrentScreenDetector", "Screen debounced to:", root.detectedScreen?.name || "null");
 
                         // Execute pending callback if any
@@ -119,7 +120,7 @@ Item {
                           if (!root.pendingSkipBarCheck && !Settings.data.general.allowPanelsOnScreenWithoutBar) {
                             // If we explicitly disabled panels on screen without bar, check if bar is configured
                             // for this screen, and fallback to primary screen if necessary
-                            var monitors = Settings.data.bar.monitors || [];
+                            monitors = Settings.data.bar.monitors || [];
                             const hasBar = monitors.length === 0 || monitors.includes(root.detectedScreen?.name);
                             if (!hasBar) {
                               root.detectedScreen = findScreenWithBar();
@@ -129,7 +130,7 @@ Item {
                           Logger.d("CurrentScreenDetector", "Executing callback on screen:", root.detectedScreen.name);
                           // Store callback locally and clear pendingCallback first to prevent deadlock
                           // if the callback throws an error
-                          var callback = root.pendingCallback;
+                          callback = root.pendingCallback;
                           root.pendingCallback = null;
                           root.pendingSkipBarCheck = false;
                           try {

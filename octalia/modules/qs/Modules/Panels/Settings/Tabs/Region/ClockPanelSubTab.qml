@@ -43,16 +43,17 @@ ColumnLayout {
   }
 
   Component.onCompleted: {
+    var card, found, i, j;
     // Starts empty
     cardsModel = [];
 
     // Add the cards available in settings
-    for (var i = 0; i < Settings.data.calendar.cards.length; i++) {
+    for (i = 0; i < Settings.data.calendar.cards.length; i++) {
       const settingCard = Settings.data.calendar.cards[i];
 
-      for (var j = 0; j < cardsDefault.length; j++) {
+      for (j = 0; j < cardsDefault.length; j++) {
         if (settingCard.id === cardsDefault[j].id) {
-          var card = cardsDefault[j];
+          card = cardsDefault[j];
           card.enabled = settingCard.enabled;
           // Auto-disable weather card if weather is disabled
           if (card.id === "weather-card" && !Settings.data.location.weatherEnabled) {
@@ -64,9 +65,9 @@ ColumnLayout {
     }
 
     // Add any missing cards from default
-    for (var i = 0; i < cardsDefault.length; i++) {
-      var found = false;
-      for (var j = 0; j < cardsModel.length; j++) {
+    for (i = 0; i < cardsDefault.length; i++) {
+      found = false;
+      for (j = 0; j < cardsModel.length; j++) {
         if (cardsModel[j].id === cardsDefault[i].id) {
           found = true;
           break;
@@ -74,7 +75,7 @@ ColumnLayout {
       }
 
       if (!found) {
-        var card = cardsDefault[i];
+        card = cardsDefault[i];
         // Auto-disable weather card if weather is disabled
         if (card.id === "weather-card" && !Settings.data.location.weatherEnabled) {
           card.enabled = false;

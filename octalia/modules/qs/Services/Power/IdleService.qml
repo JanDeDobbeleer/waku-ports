@@ -253,9 +253,10 @@ Singleton {
   }
 
   function _applyCustomMonitors() {
+    var key;
     var i;
     // Destroy all existing custom monitors
-    for (var key in _customMonitors) {
+    for (key in _customMonitors) {
       if (_customMonitors[key]) {
         _customMonitors[key].destroy();
       }

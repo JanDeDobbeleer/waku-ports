@@ -261,6 +261,7 @@ Item {
 
         // Position binding for non-dragging state
         y: {
+          var currentIndex, i, item;
           if (delegateItem.dragging) {
             return delegateItem.y;
           }
@@ -268,8 +269,8 @@ Item {
           // Check if any item is being dragged
           var draggedIndex = -1;
           var targetIndex = -1;
-          for (var i = 0; i < repeater.count; i++) {
-            var item = repeater.itemAt(i);
+          for (i = 0; i < repeater.count; i++) {
+            item = repeater.itemAt(i);
             if (item && item.dragging) {
               draggedIndex = item.dragStartIndex;
               targetIndex = item.dragTargetIndex;
@@ -279,7 +280,7 @@ Item {
 
           // If an item is being dragged, adjust positions
           if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
-            var currentIndex = delegateItem.index;
+            currentIndex = delegateItem.index;
 
             if (draggedIndex < targetIndex) {
               // Dragging down: shift items up between draggedIndex and targetIndex

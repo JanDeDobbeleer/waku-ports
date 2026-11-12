@@ -21,6 +21,7 @@ DraggableDesktopWidget {
 
   // Legend items model - each item has: text, color, icon (optional), bold (optional), opacity (optional), elide (optional)
   readonly property var legendItems: {
+    var items;
     switch (root.statType) {
     case "CPU":
       return [
@@ -58,7 +59,7 @@ DraggableDesktopWidget {
             }
           ];
     case "Disk":
-      var items = [
+      items = [
             {
               icon: "storage",
               text: Math.round(SystemStatService.diskPercents[root.diskPath] || 0) + "%",

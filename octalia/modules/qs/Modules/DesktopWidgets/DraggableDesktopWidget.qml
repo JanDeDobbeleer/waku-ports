@@ -34,6 +34,7 @@ Item {
 
   // Grid size ensures lines pass through screen center on both axes
   readonly property int gridSize: {
+    var candidate, distance, divisor, offset, remainderX, remainderY;
     if (!screen)
       return 30;
     var baseSize = Math.round(screen.width * 0.015);
@@ -44,19 +45,19 @@ Item {
     var bestSize = baseSize;
     var bestDistance = Infinity;
 
-    for (var offset = -10; offset <= 10; offset++) {
-      var candidate = baseSize + offset;
+    for (offset = -10; offset <= 10; offset++) {
+      candidate = baseSize + offset;
       if (candidate < 20 || candidate > 60)
         continue;
 
-      var remainderX = centerX % candidate;
-      var remainderY = centerY % candidate;
+      remainderX = centerX % candidate;
+      remainderY = centerY % candidate;
 
       if (remainderX === 0 && remainderY === 0) {
         return candidate;
       }
 
-      var distance = Math.abs(remainderX) + Math.abs(remainderY);
+      distance = Math.abs(remainderX) + Math.abs(remainderY);
       if (distance < bestDistance) {
         bestDistance = distance;
         bestSize = candidate;
@@ -75,10 +76,10 @@ Item {
 
     var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
     if (centerGcd > 0) {
-      for (var divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
+      for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
         if (centerGcd % divisor !== 0)
           continue;
-        var candidate = centerGcd / divisor;
+        candidate = centerGcd / divisor;
         if (candidate >= 20 && candidate <= 60) {
           if (Math.abs(candidate - baseSize) < Math.abs(bestSize - baseSize)) {
             bestSize = candidate;
@@ -328,9 +329,10 @@ Item {
 
   // Context menu model and handler - menu is created dynamically in PopupMenuWindow
   property var contextMenuModel: {
+    var widgetId;
     var hasSettings = false;
     if (widgetData && widgetData.id) {
-      var widgetId = widgetData.id;
+      widgetId = widgetData.id;
       hasSettings = DesktopWidgetRegistry.widgetSettingsMap[widgetId] !== undefined;
     }
 

@@ -224,11 +224,12 @@ NBox {
         spacing: Style.marginXXS
 
         property var weekNumbers: {
+          var i;
           if (!grid.daysModel || grid.daysModel.length === 0)
             return [];
           const weeks = [];
           const numWeeks = Math.ceil(grid.daysModel.length / 7);
-          for (var i = 0; i < numWeeks; i++) {
+          for (i = 0; i < numWeeks; i++) {
             const dayIndex = i * 7;
             if (dayIndex < grid.daysModel.length) {
               const weekDay = grid.daysModel[dayIndex];
@@ -276,6 +277,7 @@ NBox {
         property int year: root.calendarYear
 
         property var daysModel: {
+          var day, i;
           const firstOfMonth = new Date(year, month, 1);
           const lastOfMonth = new Date(year, month + 1, 0);
           const daysInMonth = lastOfMonth.getDate();
@@ -290,7 +292,7 @@ NBox {
           // Previous month days
           const prevMonth = new Date(year, month, 0);
           const prevMonthDays = prevMonth.getDate();
-          for (var i = daysBefore - 1; i >= 0; i--) {
+          for (i = daysBefore - 1; i >= 0; i--) {
             const day = prevMonthDays - i;
             days.push({
                         "day": day,
@@ -302,7 +304,7 @@ NBox {
           }
 
           // Current month days
-          for (var day = 1; day <= daysInMonth; day++) {
+          for (day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const isToday = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
             days.push({
@@ -315,7 +317,7 @@ NBox {
           }
 
           // Next month days
-          for (var i = 1; i <= daysAfter; i++) {
+          for (i = 1; i <= daysAfter; i++) {
             days.push({
                         "day": i,
                         "month": month + 1,

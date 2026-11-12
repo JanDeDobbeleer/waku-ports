@@ -149,8 +149,9 @@ RowLayout {
       elide: Text.ElideRight
       color: combo.currentIndex >= 0 ? Color.mOnSurface : Color.mOnSurfaceVariant
       text: {
+        var item;
         if (combo.currentIndex >= 0 && combo.currentIndex < root.itemCount()) {
-          var item = root.getItem(combo.currentIndex);
+          item = root.getItem(combo.currentIndex);
           return item ? item.name : root.placeholder;
         }
         return root.placeholder;

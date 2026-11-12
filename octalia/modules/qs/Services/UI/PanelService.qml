@@ -160,11 +160,12 @@ Singleton {
   // By default, if panel not found on screen, tries other screens (favoring 0x0)
   // Pass fallback=false to disable this behavior
   function getPanel(name, screen, fallback = true) {
+    var key;
     var fallbackKey, fallbackScreen;
     if (!screen) {
       Logger.d("PanelService", "missing screen for getPanel:", name);
       // If no screen specified, return the first matching panel
-      for (var key in registeredPanels) {
+      for (key in registeredPanels) {
         if (key.startsWith(name + "-")) {
           return registeredPanels[key];
         }
@@ -192,7 +193,7 @@ Singleton {
       }
 
       // Try any other screen
-      for (var key in registeredPanels) {
+      for (key in registeredPanels) {
         if (key.startsWith(name + "-")) {
           Logger.d("PanelService", "Panel fallback to first available:", key);
           return registeredPanels[key];

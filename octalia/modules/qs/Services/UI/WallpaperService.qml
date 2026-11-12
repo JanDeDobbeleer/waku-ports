@@ -1563,6 +1563,7 @@ Singleton {
 
   // -------------------------------------------------------------------
   function toggleFavorite(path, appearanceSlot, screenName) {
+    var scr;
     var existingSlot;
     var slot;
     if (appearanceSlot !== undefined && appearanceSlot !== null && appearanceSlot !== "") {
@@ -1622,7 +1623,7 @@ Singleton {
     root.favoritesRevision++;
 
     if (applyWallpaperForSlot) {
-      var scr;
+
       if (Settings.data.wallpaper.setWallpaperOnAllMonitors) {
         scr = undefined;
       } else if (screenName !== undefined && screenName !== null && screenName !== "") {

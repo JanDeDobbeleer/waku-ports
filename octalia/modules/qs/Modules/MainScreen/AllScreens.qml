@@ -15,6 +15,7 @@ Variants {
     required property ShellScreen modelData
 
     property bool shouldBeActive: {
+      var monitors;
       if (!modelData || !modelData.name) {
         return false;
       }
@@ -22,7 +23,7 @@ Variants {
       let shouldLoad = true;
       if (!Settings.data.general.allowPanelsOnScreenWithoutBar) {
         // Check if bar is configured for this screen
-        var monitors = Settings.data.bar.monitors || [];
+        monitors = Settings.data.bar.monitors || [];
         shouldLoad = monitors.length === 0 || monitors.includes(modelData?.name);
       }
 

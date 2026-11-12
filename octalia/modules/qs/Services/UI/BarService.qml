@@ -91,10 +91,11 @@ Singleton {
   // state without touching isVisible (so hover-to-show still works).
   // For non-auto-hide screens, toggles the global isVisible flag.
   function toggleVisibility() {
+    var screenName;
     // Check if any auto-hide screen is currently visible
     var anyAutoHideVisible = false;
     var hasAutoHideScreens = false;
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         hasAutoHideScreens = true;
         if (!screenAutoHideState[screenName].hidden) {
@@ -106,7 +107,7 @@ Singleton {
 
     // Toggle auto-hide screens (per-screen hidden state only)
     if (hasAutoHideScreens) {
-      for (var screenName in screenAutoHideState) {
+      for (screenName in screenAutoHideState) {
         if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
           setScreenHidden(screenName, anyAutoHideVisible);
         }
@@ -123,8 +124,9 @@ Singleton {
   // Show bar. In auto-hide mode, un-hides on screens with auto-hide enabled.
   // The bar stays visible until the user hovers and moves away.
   function show() {
+    var screenName;
     // Show auto-hide screens
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, false);
       }
@@ -137,8 +139,9 @@ Singleton {
   // isVisible so hover-to-show still works. For non-auto-hide screens, sets
   // global visibility to false.
   function hide() {
+    var screenName;
     var hasAutoHideScreens = false;
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, true);
         hasAutoHideScreens = true;
@@ -155,7 +158,8 @@ Singleton {
   // Uses the same pattern as workspace switch: show, then emit unhover
   // to start the hide timer.
   function peek() {
-    for (var screenName in screenAutoHideState) {
+    var screenName;
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, false);
         if (!isBarHovered(screenName)) {
@@ -314,10 +318,11 @@ Singleton {
 
   // Lookup a specific widget instance (returns the actual QML instance)
   function lookupWidget(widgetId, screenName = null, section = null, index = null) {
+    var key;
     var widget;
     // If looking for a specific instance
     if (screenName && section !== null) {
-      for (var key in widgetInstances) {
+      for (key in widgetInstances) {
         widget = widgetInstances[key];
         if (!widget)
           continue;
@@ -332,7 +337,7 @@ Singleton {
     }
 
     // Return first match if no specific screen/section specified
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;
@@ -350,10 +355,11 @@ Singleton {
 
   // Get all instances of a widget type
   function getAllWidgetInstances(widgetId = null, screenName = null, section = null) {
+    var key;
     var matches, widget;
     var instances = [];
 
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;
@@ -376,8 +382,9 @@ Singleton {
 
   // Get widget with full metadata
   function getWidgetWithMetadata(widgetId, screenName = null, section = null) {
+    var key;
     var widget;
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;
@@ -394,10 +401,11 @@ Singleton {
 
   // Get all widgets in a specific section
   function getWidgetsBySection(section, screenName = null) {
+    var key;
     var widget;
     var widgetEntries = [];
 
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;
@@ -421,9 +429,10 @@ Singleton {
 
   // Get all registered widgets (for debugging)
   function getAllRegisteredWidgets() {
+    var key;
     var widget;
     var result = [];
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;
@@ -440,8 +449,9 @@ Singleton {
 
   // Check if a widget type exists in a section
   function hasWidget(widgetId, section = null, screenName = null) {
+    var key;
     var widget;
-    for (var key in widgetInstances) {
+    for (key in widgetInstances) {
       widget = widgetInstances[key];
       if (!widget)
         continue;

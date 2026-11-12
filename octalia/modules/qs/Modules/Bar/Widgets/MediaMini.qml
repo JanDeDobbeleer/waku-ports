@@ -21,8 +21,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -160,6 +161,7 @@ Item {
   NPopupContextMenu {
     id: contextMenu
     model: {
+      var i, isCurrent;
       var items = [];
       if (hasPlayer && MediaService.canPlay) {
         items.push({
@@ -186,8 +188,8 @@ Item {
       // Append available players (like in Control Center) so user can switch from the bar
       var players = MediaService.getAvailablePlayers ? MediaService.getAvailablePlayers() : [];
       if (players && players.length > 1) {
-        for (var i = 0; i < players.length; i++) {
-          var isCurrent = (i === MediaService.selectedPlayerIndex);
+        for (i = 0; i < players.length; i++) {
+          isCurrent = (i === MediaService.selectedPlayerIndex);
           items.push({
                        "label": players[i].identity,
                        "action": "player-" + i,

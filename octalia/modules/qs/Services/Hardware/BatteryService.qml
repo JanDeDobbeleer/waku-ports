@@ -35,10 +35,11 @@ Singleton {
                                                                                                    })
 
   readonly property var bluetoothBatteries: {
+    var btd, i;
     var list = [];
     var btArray = BluetoothService.devices?.values || [];
-    for (var i = 0; i < btArray.length; i++) {
-      var btd = btArray[i];
+    for (i = 0; i < btArray.length; i++) {
+      btd = btArray[i];
       if (btd && btd.connected && btd.batteryAvailable) {
         list.push(btd);
       }

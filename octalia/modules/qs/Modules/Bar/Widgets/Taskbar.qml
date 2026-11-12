@@ -29,8 +29,9 @@ Item {
 
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId] ?? {}
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -59,14 +60,15 @@ Item {
   }
 
   readonly property int titleWidth: {
+    var entriesCount, maxWidthPerEntry;
     // First, use user-defined title width if set
     var calculatedWidth = (widgetSettings.titleWidth !== undefined) ? widgetSettings.titleWidth : widgetMetadata.titleWidth;
 
     // Second, shrink title width if it exceeds maxTaskbarWidth when smartWidth is enabled
     if (smartWidth && combinedModel.length > 0) {
       if (maxTaskbarWidth > 0) {
-        var entriesCount = combinedModel.length;
-        var maxWidthPerEntry = (maxTaskbarWidth / entriesCount) - itemSize - Style.marginS - Style.margin2M;
+        entriesCount = combinedModel.length;
+        maxWidthPerEntry = (maxTaskbarWidth / entriesCount) - itemSize - Style.marginS - Style.margin2M;
         calculatedWidth = Math.min(calculatedWidth, maxWidthPerEntry);
       }
 

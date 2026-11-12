@@ -114,8 +114,9 @@ ColumnLayout {
   }
 
   Component.onDestruction: {
+    var dialog;
     if (_activeDialog && _activeDialog.close) {
-      var dialog = _activeDialog;
+      dialog = _activeDialog;
       _activeDialog = null;
       dialog.close();
       dialog.destroy();
@@ -177,15 +178,16 @@ ColumnLayout {
   }
 
   Component.onCompleted: {
+    var entry, found, i, j;
     entriesModel = [];
 
     // Add the entries available in settings
-    for (var i = 0; i < Settings.data.sessionMenu.powerOptions.length; i++) {
+    for (i = 0; i < Settings.data.sessionMenu.powerOptions.length; i++) {
       const settingEntry = Settings.data.sessionMenu.powerOptions[i];
 
-      for (var j = 0; j < entriesDefault.length; j++) {
+      for (j = 0; j < entriesDefault.length; j++) {
         if (settingEntry.action === entriesDefault[j].id) {
-          var entry = entriesDefault[j];
+          entry = entriesDefault[j];
           entry.enabled = settingEntry.enabled;
           // Default countdownEnabled to true for backward compatibility
           entry.countdownEnabled = settingEntry.countdownEnabled !== undefined ? settingEntry.countdownEnabled : true;
@@ -198,9 +200,9 @@ ColumnLayout {
     }
 
     // Add any missing entries from default
-    for (var i = 0; i < entriesDefault.length; i++) {
-      var found = false;
-      for (var j = 0; j < entriesModel.length; j++) {
+    for (i = 0; i < entriesDefault.length; i++) {
+      found = false;
+      for (j = 0; j < entriesModel.length; j++) {
         if (entriesModel[j].id === entriesDefault[i].id) {
           found = true;
           break;
@@ -208,7 +210,7 @@ ColumnLayout {
       }
 
       if (!found) {
-        var entry = entriesDefault[i];
+        entry = entriesDefault[i];
         // Default countdownEnabled to true for new entries
         entry.countdownEnabled = true;
         // Default command to empty string for new entries

@@ -129,8 +129,9 @@ SmartPanel {
 
     property alias wallhavenView: wallhavenView
     property int currentScreenIndex: {
+      var i;
       if (screen !== null) {
-        for (var i = 0; i < Quickshell.screens.length; i++) {
+        for (i = 0; i < Quickshell.screens.length; i++) {
           if (Quickshell.screens[i].name == screen.name) {
             return i;
           }
@@ -239,9 +240,10 @@ SmartPanel {
       id: searchDebounceTimer
       interval: 150
       onTriggered: {
+        var i;
         panelContent.filterText = searchInput.text;
         // Trigger update on all screen views
-        for (var i = 0; i < screenRepeater.count; i++) {
+        for (i = 0; i < screenRepeater.count; i++) {
           let item = screenRepeater.itemAt(i);
           if (item && item.updateFiltered) {
             item.updateFiltered();
@@ -1479,6 +1481,7 @@ SmartPanel {
     }
 
     Component.onCompleted: {
+      var height, mode, resolution, width;
       // Initialize service properties and perform initial search if Wallhaven is active
       if (typeof WallhavenService !== "undefined" && Settings.data.wallpaper.useWallhaven && !initialized) {
         // Set flags immediately to prevent race conditions
@@ -1497,11 +1500,11 @@ SmartPanel {
         WallhavenService.order = Settings.data.wallpaper.wallhavenOrder;
 
         // Initialize resolution settings
-        var width = Settings.data.wallpaper.wallhavenResolutionWidth || "";
-        var height = Settings.data.wallpaper.wallhavenResolutionHeight || "";
-        var mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
+        width = Settings.data.wallpaper.wallhavenResolutionWidth || "";
+        height = Settings.data.wallpaper.wallhavenResolutionHeight || "";
+        mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
         if (width && height) {
-          var resolution = width + "x" + height;
+          resolution = width + "x" + height;
           if (mode === "atleast") {
             WallhavenService.minResolution = resolution;
             WallhavenService.resolutions = "";

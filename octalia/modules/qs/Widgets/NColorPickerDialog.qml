@@ -46,9 +46,10 @@ Popup {
   closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
   onOpened: {
+    var parentPos;
     // Center on screen after popup is opened and parent position is known
     if (screen && parent) {
-      var parentPos = parent.mapToItem(null, 0, 0);
+      parentPos = parent.mapToItem(null, 0, 0);
       x = Math.round((screen.width - width) / 2 - parentPos.x);
       y = Math.round((screen.height - height) / 2 - parentPos.y);
     }
@@ -281,8 +282,9 @@ Popup {
                 to: 360
 
                 onValueChanged: {
+                  var newHue;
                   if (!selectedSlider.pressed && !fieldMouse.pressed && !hexInput.activeFocus && value !== Math.round(root.displayHue * 360)) {
-                    var newHue = value / 360;
+                    newHue = value / 360;
                     root.selectedColor = Qt.hsva(newHue, root.selectedColor.hsvSaturation, root.selectedColor.hsvValue, 1);
                     root.stableHue = newHue;
                   }

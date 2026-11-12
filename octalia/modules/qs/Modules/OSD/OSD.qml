@@ -378,9 +378,10 @@ Variants {
     }
 
     Component.onDestruction: {
+      var i;
       LockKeysService.unregisterComponent("osd:" + (modelData?.name || "unknown"));
       if (typeof BrightnessService !== "undefined" && BrightnessService.monitors) {
-        for (var i = 0; i < BrightnessService.monitors.length; i++) {
+        for (i = 0; i < BrightnessService.monitors.length; i++) {
           try {
             BrightnessService.monitors[i].brightnessUpdated.disconnect(onBrightnessChanged);
           } catch (e) {

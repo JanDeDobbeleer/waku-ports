@@ -106,10 +106,11 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.bar.tray-blacklist-placeholder")
         buttonIcon: "add"
         onButtonClicked: {
+          var exists, i, newRule;
           if (newRuleInput.text.length > 0) {
-            var newRule = newRuleInput.text.trim();
-            var exists = false;
-            for (var i = 0; i < blacklistModel.count; i++) {
+            newRule = newRuleInput.text.trim();
+            exists = false;
+            for (i = 0; i < blacklistModel.count; i++) {
               if (blacklistModel.get(i).rule === newRule) {
                 exists = true;
                 break;

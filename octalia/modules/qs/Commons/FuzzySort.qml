@@ -716,6 +716,7 @@ Singleton {
   }
 
   function _go(search, targets, options) {
+    var score;
     var hasAtLeast1Match, i, key, keyI, keys, keysBitflags, keysLen, obj, objResults, res, result, target, tmp;
     if (!search)
       return options?.all ? _all(targets, options) : _noResults;
@@ -834,7 +835,7 @@ Singleton {
         for (let j = 0; j < keysLen; j++)
           objResults[j] = _tmpResults[j];
 
-        var score;
+
         if (containsSpace) {
           score = 0;
           for (let j = 0; j < preparedSearch.spaceSearches.length; j++)

@@ -125,15 +125,16 @@ SmartPanel {
   // _powerOptionsVersion forces re-evaluation when settings change
   property int _powerOptionsVersion: 0
   property var powerOptions: {
+    var i, metadata, settingOption;
     // Reference version to trigger re-evaluation
     void (_powerOptionsVersion);
     var options = [];
     var settingsOptions = Settings.data.sessionMenu.powerOptions || [];
 
-    for (var i = 0; i < settingsOptions.length; i++) {
-      var settingOption = settingsOptions[i];
+    for (i = 0; i < settingsOptions.length; i++) {
+      settingOption = settingsOptions[i];
       if (settingOption.enabled && actionMetadata[settingOption.action]) {
-        var metadata = actionMetadata[settingOption.action];
+        metadata = actionMetadata[settingOption.action];
         options.push({
                        "action": settingOption.action,
                        "icon": metadata.icon,

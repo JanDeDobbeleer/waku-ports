@@ -47,10 +47,11 @@ Popup {
 
   // Filter out hidden items to avoid spacing artifacts from zero-height items
   readonly property var filteredModel: {
+    var i;
     if (!model || model.length === 0)
       return [];
     var filtered = [];
-    for (var i = 0; i < model.length; i++) {
+    for (i = 0; i < model.length; i++) {
       if (model[i].visible !== false) {
         filtered.push(model[i]);
       }

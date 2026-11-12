@@ -2,12 +2,13 @@ import QtQuick 6.10
 
 QtObject {
   function migrate(adapter, logger, rawJson) {
+    var newValue;
     var oldValue;
     logger.i("Settings", "Migrating settings to v59 (wallpaper.transitionType: string -> array)");
 
     if (rawJson && rawJson.wallpaper && typeof rawJson.wallpaper.transitionType === "string") {
       oldValue = rawJson.wallpaper.transitionType;
-      var newValue;
+
 
       if (oldValue === "random") {
         newValue = ["fade", "disc", "stripes", "wipe", "pixelate", "honeycomb"];

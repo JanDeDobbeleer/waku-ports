@@ -31,9 +31,10 @@ Popup {
   }
 
   onOpened: {
+    var parentPos;
     // Center on screen after popup is opened and parent position is known
     if (screen && parent) {
-      var parentPos = parent.mapToItem(null, 0, 0);
+      parentPos = parent.mapToItem(null, 0, 0);
       x = Math.round((screen.width - width) / 2 - parentPos.x);
       y = Math.round((screen.height - height) / 2 - parentPos.y);
     }

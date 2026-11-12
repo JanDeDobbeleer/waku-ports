@@ -380,9 +380,10 @@ ColumnLayout {
           path: modelData
           blockLoading: false
           onLoaded: {
+            var jsonData;
             var schemeName = root.extractSchemeName(path);
             try {
-              var jsonData = JSON.parse(text());
+              jsonData = JSON.parse(text());
               root.schemeLoaded(schemeName, jsonData);
             } catch (e) {
               root.schemeLoaded(schemeName, null);

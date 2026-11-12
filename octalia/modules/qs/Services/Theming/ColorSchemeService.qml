@@ -211,9 +211,10 @@ Singleton {
   FileView {
     id: schemeReader
     onLoaded: {
+      var data, variant;
       try {
-        var data = JSON.parse(text());
-        var variant = data;
+        data = JSON.parse(text());
+        variant = data;
         // If scheme provides dark/light variants, pick based on settings
         if (data && (data.dark || data.light)) {
           if (Settings.data.colorSchemes.darkMode) {

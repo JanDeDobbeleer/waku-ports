@@ -713,11 +713,12 @@ Item {
       easing.type: Easing.OutQuad
 
       onRunningChanged: {
+        var shouldFinalizeNow;
         // Safety: If animation didn't run (zero duration), handle immediately
         if (!running && duration === 0) {
           if (root.isClosing && root.opacity === 0.0) {
             root.opacityFadeComplete = true;
-            var shouldFinalizeNow = panelContent.geometryPlaceholder && !panelContent.geometryPlaceholder.shouldAnimateWidth && !panelContent.geometryPlaceholder.shouldAnimateHeight;
+            shouldFinalizeNow = panelContent.geometryPlaceholder && !panelContent.geometryPlaceholder.shouldAnimateWidth && !panelContent.geometryPlaceholder.shouldAnimateHeight;
             if (shouldFinalizeNow) {
               // Logger.d("SmartPanel", "Zero-duration opacity + no size animation - finalizing", root.objectName);
               Qt.callLater(root.finalizeClose);
@@ -735,7 +736,7 @@ Item {
           root.opacityFadeComplete = true;
           // If no size animation will run (centered attached panels only), finalize immediately
           // Detached panels (allowAttach === false) should always animate from top
-          var shouldFinalizeNow = panelContent.geometryPlaceholder && !panelContent.geometryPlaceholder.shouldAnimateWidth && !panelContent.geometryPlaceholder.shouldAnimateHeight;
+          shouldFinalizeNow = panelContent.geometryPlaceholder && !panelContent.geometryPlaceholder.shouldAnimateWidth && !panelContent.geometryPlaceholder.shouldAnimateHeight;
           if (shouldFinalizeNow) {
             //Logger.d("SmartPanel", "No animation - finalizing immediately", root.objectName);
             Qt.callLater(root.finalizeClose);
@@ -889,6 +890,7 @@ Item {
       }
 
       readonly property bool animateFromTop: {
+        var attachedToVerticalBar, touchingNonTopEdge;
         // Non-attached panels always roll down from top
         // Check both the setting and whether panel actually touches any edge
         if (!panelContent.allowAttach || !isActuallyAttachedToAnyEdge) {
@@ -902,12 +904,12 @@ Item {
           }
           // Attached to vertical bar (left/right) - don't animate from top
           // Panels attach to bar if they have allowAttach (with or without explicit anchor)
-          var attachedToVerticalBar = panelContent.allowAttachToBar && root.barIsVertical && ((root.effectivePanelAnchorLeft && root.barPosition === "left") || (root.effectivePanelAnchorRight && root.barPosition === "right"));
+          attachedToVerticalBar = panelContent.allowAttachToBar && root.barIsVertical && ((root.effectivePanelAnchorLeft && root.barPosition === "left") || (root.effectivePanelAnchorRight && root.barPosition === "right"));
           if (attachedToVerticalBar) {
             return false;
           }
           // Panel touching left/right/bottom screen edge - animate from that edge instead
-          var touchingNonTopEdge = (willTouchLeftEdge || willTouchRightEdge || willTouchBottomEdge) && !willTouchTopBar && !willTouchBottomBar && !willTouchLeftBar && !willTouchRightBar;
+          touchingNonTopEdge = (willTouchLeftEdge || willTouchRightEdge || willTouchBottomEdge) && !willTouchTopBar && !willTouchBottomBar && !willTouchLeftBar && !willTouchRightBar;
           if (touchingNonTopEdge) {
             return false;
           }
@@ -939,6 +941,7 @@ Item {
         return false;
       }
       readonly property bool animateFromBottom: {
+        var attachedToVerticalBar;
         // Non-attached panels always roll down from top, not bottom
         if (!panelContent.allowAttach || !isActuallyAttachedToAnyEdge) {
           return false;
@@ -949,7 +952,7 @@ Item {
             return true;
           }
           // Attached to vertical bar (left/right) - don't animate from bottom
-          var attachedToVerticalBar = panelContent.allowAttachToBar && root.barIsVertical && ((root.effectivePanelAnchorLeft && root.barPosition === "left") || (root.effectivePanelAnchorRight && root.barPosition === "right"));
+          attachedToVerticalBar = panelContent.allowAttachToBar && root.barIsVertical && ((root.effectivePanelAnchorLeft && root.barPosition === "left") || (root.effectivePanelAnchorRight && root.barPosition === "right"));
           if (attachedToVerticalBar) {
             return false;
           }
@@ -1077,21 +1080,23 @@ Item {
       height: currentHeight
 
       x: {
+        var targetRightEdge;
         // Offset x to make panel grow/shrink from the appropriate edge
         // Use CACHED values to prevent recalculation during animation
         if (root.cachedAnimateFromRight && root.cachedShouldAnimateWidth) {
           // Keep the RIGHT edge fixed at its target position
-          var targetRightEdge = targetX + targetWidth;
+          targetRightEdge = targetX + targetWidth;
           return targetRightEdge - width;
         }
         return targetX;
       }
       y: {
+        var targetBottomEdge;
         // Offset y to make panel grow/shrink from the appropriate edge
         // Use CACHED values to prevent recalculation during animation
         if (root.cachedAnimateFromBottom && root.cachedShouldAnimateHeight) {
           // Keep the BOTTOM edge fixed at its target position
-          var targetBottomEdge = targetY + targetHeight;
+          targetBottomEdge = targetY + targetHeight;
           return targetBottomEdge - height;
         }
         return targetY;
@@ -1165,10 +1170,11 @@ Item {
 
       // Smart corner state calculation based on bar attachment and edge touching
       property int topLeftCornerState: {
+        var edgeInverted;
         // If bar is not visible, don't show outer corners based on bar attachment
         if (!root.barShouldShow) {
           // Only check edge touching, not bar touching
-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingTopEdge);
+          edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingTopEdge);
           if (edgeInverted) {
             if (panelContent.touchingLeftEdge && panelContent.touchingTopEdge)
               return 0; // Both edges: no inversion (normal rounded corner)
@@ -1198,10 +1204,11 @@ Item {
       }
 
       property int topRightCornerState: {
+        var edgeInverted;
         // If bar is not visible, don't show outer corners based on bar attachment
         if (!root.barShouldShow) {
           // Only check edge touching, not bar touching
-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingTopEdge);
+          edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingTopEdge);
           if (edgeInverted) {
             if (panelContent.touchingRightEdge && panelContent.touchingTopEdge)
               return 0; // Both edges: no inversion (normal rounded corner)
@@ -1231,10 +1238,11 @@ Item {
       }
 
       property int bottomLeftCornerState: {
+        var edgeInverted;
         // If bar is not visible, don't show outer corners based on bar attachment
         if (!root.barShouldShow) {
           // Only check edge touching, not bar touching
-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingBottomEdge);
+          edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingBottomEdge);
           if (edgeInverted) {
             if (panelContent.touchingLeftEdge && panelContent.touchingBottomEdge)
               return 0; // Both edges: no inversion (normal rounded corner)
@@ -1264,10 +1272,11 @@ Item {
       }
 
       property int bottomRightCornerState: {
+        var edgeInverted;
         // If bar is not visible, don't show outer corners based on bar attachment
         if (!root.barShouldShow) {
           // Only check edge touching, not bar touching
-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingBottomEdge);
+          edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingBottomEdge);
           if (edgeInverted) {
             if (panelContent.touchingRightEdge && panelContent.touchingBottomEdge)
               return 0; // Both edges: no inversion (normal rounded corner)

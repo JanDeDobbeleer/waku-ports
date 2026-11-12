@@ -23,6 +23,7 @@ PopupWindow {
 
   // Compute if current tray item is pinned
   readonly property bool isPinned: {
+    var i;
     if (!trayItem || widgetSection === "" || widgetIndex < 0)
       return false;
     var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[widgetSection];
@@ -33,7 +34,7 @@ PopupWindow {
       return false;
     var pinnedList = widgetSettings.pinned || [];
     const itemName = trayItem.tooltipTitle || trayItem.name || trayItem.id || "";
-    for (var i = 0; i < pinnedList.length; i++) {
+    for (i = 0; i < pinnedList.length; i++) {
       if (pinnedList[i] === itemName)
         return true;
     }

@@ -43,8 +43,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -291,6 +292,7 @@ Item {
     repeat: true
     running: false
     onTriggered: {
+      var end, start, textEnd, textStart;
       if (_scrollState.needsScrolling && _scrollState.originalText.length > currentMaxTextLength) {
         // Traditional marquee with pause at beginning and end
         if (_scrollState.phase === 0) {
@@ -304,13 +306,13 @@ Item {
         } else if (_scrollState.phase === 1) {
           // Scrolling
           _scrollState.offset++;
-          var start = _scrollState.offset;
-          var end = start + currentMaxTextLength;
+          start = _scrollState.offset;
+          end = start + currentMaxTextLength;
 
           if (start >= _scrollState.originalText.length - currentMaxTextLength) {
             // Reached or passed the end, ensure we show the last part
-            var textEnd = _scrollState.originalText.length;
-            var textStart = Math.max(0, textEnd - currentMaxTextLength);
+            textEnd = _scrollState.originalText.length;
+            textStart = Math.max(0, textEnd - currentMaxTextLength);
             _dynamicText = _scrollState.originalText.substring(textStart, textEnd);
             _scrollState.phase = 2;  // Move to static end phase
             _scrollState.phaseCounter = 0;
@@ -320,8 +322,8 @@ Item {
         } else if (_scrollState.phase === 2) {
           // Static at end
           // Ensure end text is displayed correctly
-          var textEnd = _scrollState.originalText.length;
-          var textStart = Math.max(0, textEnd - currentMaxTextLength);
+          textEnd = _scrollState.originalText.length;
+          textStart = Math.max(0, textEnd - currentMaxTextLength);
           _dynamicText = _scrollState.originalText.substring(textStart, textEnd);
           _scrollState.phaseCounter++;
           if (_scrollState.phaseCounter >= _staticDuration) {

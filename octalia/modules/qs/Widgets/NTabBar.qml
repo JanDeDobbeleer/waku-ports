@@ -79,8 +79,9 @@ Rectangle {
     spacing: root.spacing
 
     onChildrenChanged: {
-      for (var i = 0; i < children.length; i++) {
-        var child = children[i];
+      var child, i;
+      for (i = 0; i < children.length; i++) {
+        child = children[i];
         child.visibleChanged.connect(root._updateFirstLast);
       }
       root._updateFirstLast();

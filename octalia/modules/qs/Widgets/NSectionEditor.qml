@@ -97,8 +97,9 @@ NBox {
   readonly property bool showCrossSectionDropHint: crossDropHoverActive
 
   Component.onDestruction: {
+    var dialog;
     if (_activeDialog && _activeDialog.close) {
-      var dialog = _activeDialog;
+      dialog = _activeDialog;
       _activeDialog = null;
       dialog.close();
       dialog.destroy();
@@ -271,14 +272,15 @@ NBox {
         Layout.fillWidth: false
         Layout.leftMargin: Style.marginS
         Layout.maximumWidth: {
+          var maxWidth, minWidth;
           // Reserve space for other elements: count indicator, combo box (~200), button (~50), and margins
           // Use a reasonable maximum that leaves room for controls on the right
           // On smaller screens, use a smaller percentage to ensure controls fit
           var rowLayout = parent;
           if (rowLayout && rowLayout.width > 0) {
             // Use smaller percentage on smaller screens, but ensure minimum space for text
-            var minWidth = 150 * Style.uiScaleRatio;
-            var maxWidth = rowLayout.width < 600 ? rowLayout.width * 0.35 : rowLayout.width * 0.4;
+            minWidth = 150 * Style.uiScaleRatio;
+            maxWidth = rowLayout.width < 600 ? rowLayout.width * 0.35 : rowLayout.width * 0.4;
             return Math.max(minWidth, maxWidth);
           }
           return 250 * Style.uiScaleRatio;
@@ -449,15 +451,16 @@ NBox {
               parent: Overlay.overlay
               width: 240 * Style.uiScaleRatio
               model: {
+                var displayLabel, i, label, positionKey, section;
                 var items = [];
                 // Add move options for each available section (except current)
-                for (var i = 0; i < root.availableSections.length; i++) {
-                  var section = root.availableSections[i];
+                for (i = 0; i < root.availableSections.length; i++) {
+                  section = root.availableSections[i];
                   if (section !== root.sectionId) {
-                    var label = root.getSectionLabel(section);
-                    var displayLabel = '';
+                    label = root.getSectionLabel(section);
+                    displayLabel = '';
                     // Map section IDs to correct position keys based on bar orientation
-                    var positionKey = section;
+                    positionKey = section;
                     if (root.barIsVertical) {
                       if (section === "left")
                         positionKey = "top";

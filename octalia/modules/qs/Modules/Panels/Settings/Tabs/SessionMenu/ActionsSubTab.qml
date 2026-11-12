@@ -206,14 +206,15 @@ ColumnLayout {
 
         // Position binding for non-dragging state
         y: {
+          var currentIndex, i, item;
           if (delegateItem.dragging) {
             return delegateItem.y;
           }
 
           var draggedIndex = -1;
           var targetIndex = -1;
-          for (var i = 0; i < listView.count; i++) {
-            var item = listView.itemAtIndex(i);
+          for (i = 0; i < listView.count; i++) {
+            item = listView.itemAtIndex(i);
             if (item && item.dragging) {
               draggedIndex = item.dragStartIndex;
               targetIndex = item.dragTargetIndex;
@@ -222,7 +223,7 @@ ColumnLayout {
           }
 
           if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
-            var currentIndex = delegateItem.index;
+            currentIndex = delegateItem.index;
             if (draggedIndex < targetIndex) {
               if (currentIndex > draggedIndex && currentIndex <= targetIndex) {
                 return (currentIndex - 1) * (delegateItem.height + Style.marginS);
