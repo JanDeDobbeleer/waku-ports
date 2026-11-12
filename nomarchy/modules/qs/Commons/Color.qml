@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -76,65 +77,73 @@ QtObject {
     return Util.alpha(flatColor(pick(colorKey, colorFallback), colorFallback), pickAlpha(alphaKey, alphaFallback))
   }
 
-  readonly property QtObject bar: QtObject {
-    property color background: root.composed("bar.background", "bar.background-alpha", root.background, 1.0)
-    property color text: root.pick("bar.text", root.foreground)
-    property color active: root.pick("bar.active", root.urgent)
+  component BarColors: QtObject {
+    final property color background: root.composed("bar.background", "bar.background-alpha", root.background, 1.0)
+    final property color text: root.pick("bar.text", root.foreground)
+    final property color active: root.pick("bar.active", root.urgent)
   }
-  readonly property QtObject popups: QtObject {
-    property color background: root.composed("popups.background", "popups.background-alpha", root.background, 1.0)
-    property color text: root.pick("popups.text", root.foreground)
-    property color border: root.composed("popups.border", "popups.border-alpha", root.accent, 1.0)
+  final readonly property BarColors bar: BarColors {}
+  component PopupColors: QtObject {
+    final property color background: root.composed("popups.background", "popups.background-alpha", root.background, 1.0)
+    final property color text: root.pick("popups.text", root.foreground)
+    final property color border: root.composed("popups.border", "popups.border-alpha", root.accent, 1.0)
   }
-  readonly property QtObject tooltip: QtObject {
-    property color background: root.composed("tooltip.background", "tooltip.background-alpha", root.background, 1.0)
-    property color text: root.pick("tooltip.text", root.foreground)
-    property color border: root.composed("tooltip.border", "tooltip.border-alpha", root.foreground, 1.0)
+  final readonly property PopupColors popups: PopupColors {}
+  component TooltipColors: QtObject {
+    final property color background: root.composed("tooltip.background", "tooltip.background-alpha", root.background, 1.0)
+    final property color text: root.pick("tooltip.text", root.foreground)
+    final property color border: root.composed("tooltip.border", "tooltip.border-alpha", root.foreground, 1.0)
   }
-  readonly property QtObject notifications: QtObject {
-    property color background: root.composed("notifications.background", "notifications.background-alpha", root.background, 1.0)
-    property color text: root.pick("notifications.text", root.foreground)
-    property color border: root.composed("notifications.border", "notifications.border-alpha", root.accent, 1.0)
-    property color countdown: root.pick("notifications.countdown", root.accent)
+  final readonly property TooltipColors tooltip: TooltipColors {}
+  component NotificationColors: QtObject {
+    final property color background: root.composed("notifications.background", "notifications.background-alpha", root.background, 1.0)
+    final property color text: root.pick("notifications.text", root.foreground)
+    final property color border: root.composed("notifications.border", "notifications.border-alpha", root.accent, 1.0)
+    final property color countdown: root.pick("notifications.countdown", root.accent)
   }
-  readonly property QtObject menu: QtObject {
-    property color background: root.composed("menu.background", "menu.background-alpha", root.background, 1.0)
-    property color text: root.pick("menu.text", root.foreground)
-    property color border: root.composed("menu.border", "menu.border-alpha", root.foreground, 1.0)
-    property color scrim: root.composed("menu.scrim", "menu.scrim-alpha", root.background, 0.5)
-    property color selectedBackground: root.composed("menu.selected-background", "menu.selected-background-alpha", root.foreground, 0.08)
-    property color selectedText: root.pick("menu.selected-text", root.accent)
-    property color selectedBorder: root.composed("menu.selected-border", "menu.selected-border-alpha", root.foreground, 0.0)
+  final readonly property NotificationColors notifications: NotificationColors {}
+  component MenuColors: QtObject {
+    final property color background: root.composed("menu.background", "menu.background-alpha", root.background, 1.0)
+    final property color text: root.pick("menu.text", root.foreground)
+    final property color border: root.composed("menu.border", "menu.border-alpha", root.foreground, 1.0)
+    final property color scrim: root.composed("menu.scrim", "menu.scrim-alpha", root.background, 0.5)
+    final property color selectedBackground: root.composed("menu.selected-background", "menu.selected-background-alpha", root.foreground, 0.08)
+    final property color selectedText: root.pick("menu.selected-text", root.accent)
+    final property color selectedBorder: root.composed("menu.selected-border", "menu.selected-border-alpha", root.foreground, 0.0)
   }
+  final readonly property MenuColors menu: MenuColors {}
   // polkit + lock share a single border-alpha across border / border-active /
   // border-error: the three states are mutually exclusive in time, so one
   // companion is enough.
-  readonly property QtObject polkit: QtObject {
-    property color background: root.composed("polkit.background", "polkit.background-alpha", root.background, 1.0)
-    property color text: root.pick("polkit.text", root.foreground)
-    property color textError: root.pick("polkit.text-error", root.urgent)
-    property color border: root.composed("polkit.border", "polkit.border-alpha", root.accent, 1.0)
-    property color borderError: root.composed("polkit.border-error", "polkit.border-alpha", root.urgent, 1.0)
-    property color accent: root.pick("polkit.accent", root.accent)
-    property color scrim: root.composed("polkit.scrim", "polkit.scrim-alpha", root.background, 0.5)
+  component PolkitColors: QtObject {
+    final property color background: root.composed("polkit.background", "polkit.background-alpha", root.background, 1.0)
+    final property color text: root.pick("polkit.text", root.foreground)
+    final property color textError: root.pick("polkit.text-error", root.urgent)
+    final property color border: root.composed("polkit.border", "polkit.border-alpha", root.accent, 1.0)
+    final property color borderError: root.composed("polkit.border-error", "polkit.border-alpha", root.urgent, 1.0)
+    final property color accent: root.pick("polkit.accent", root.accent)
+    final property color scrim: root.composed("polkit.scrim", "polkit.scrim-alpha", root.background, 0.5)
   }
-  readonly property QtObject lock: QtObject {
-    property color background: root.composed("lock.background", "lock.background-alpha", root.background, 0.8)
-    property color text: root.pick("lock.text", root.foreground)
-    property color placeholder: root.shellValues["lock.placeholder"] ? root.flatColor(root.shellValues["lock.placeholder"], Util.alpha(root.foreground, 0.66)) : Util.alpha(root.foreground, 0.66)
-    property color textError: root.pick("lock.text-error", root.urgent)
-    property color border: root.composed("lock.border", "lock.border-alpha", root.foreground, 1.0)
-    property color borderActive: root.composed("lock.border-active", "lock.border-alpha", root.accent, 1.0)
-    property color borderError: root.composed("lock.border-error", "lock.border-alpha", root.urgent, 1.0)
-    property color selection: root.composed("lock.selection", "lock.selection-alpha", root.accent, 0.45)
+  final readonly property PolkitColors polkit: PolkitColors {}
+  component LockColors: QtObject {
+    final property color background: root.composed("lock.background", "lock.background-alpha", root.background, 0.8)
+    final property color text: root.pick("lock.text", root.foreground)
+    final property color placeholder: root.shellValues["lock.placeholder"] ? root.flatColor(root.shellValues["lock.placeholder"], Util.alpha(root.foreground, 0.66)) : Util.alpha(root.foreground, 0.66)
+    final property color textError: root.pick("lock.text-error", root.urgent)
+    final property color border: root.composed("lock.border", "lock.border-alpha", root.foreground, 1.0)
+    final property color borderActive: root.composed("lock.border-active", "lock.border-alpha", root.accent, 1.0)
+    final property color borderError: root.composed("lock.border-error", "lock.border-alpha", root.urgent, 1.0)
+    final property color selection: root.composed("lock.selection", "lock.selection-alpha", root.accent, 0.45)
   }
+  final readonly property LockColors lock: LockColors {}
   // The image picker has no card surface or backdrop; per-slice dim
   // overlays / text outlines use the foundational `background` color directly.
-  readonly property QtObject imagePicker: QtObject {
-    property color text: root.pick("image-picker.text", root.foreground)
-    property color selectedBorder: root.composed("image-picker.selected-border", "image-picker.selected-border-alpha", root.accent, 1.0)
-    property color unselectedBorder: root.composed("image-picker.unselected-border", "image-picker.unselected-border-alpha", root.foreground, 0.28)
+  component ImagePickerColors: QtObject {
+    final property color text: root.pick("image-picker.text", root.foreground)
+    final property color selectedBorder: root.composed("image-picker.selected-border", "image-picker.selected-border-alpha", root.accent, 1.0)
+    final property color unselectedBorder: root.composed("image-picker.unselected-border", "image-picker.unselected-border-alpha", root.foreground, 0.28)
   }
+  final readonly property ImagePickerColors imagePicker: ImagePickerColors {}
 
   function loadColors(raw) {
     var lines = String(raw || "").split("\n")
