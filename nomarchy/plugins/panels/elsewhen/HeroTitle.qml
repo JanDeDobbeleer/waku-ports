@@ -35,7 +35,7 @@ Column {
   signal globeClicked(bool slow)
 
   // Three turns that land on `lon`; null replays the last endpoints.
-  function spinOpening(lon) {
+  function spinOpening(lon: var): void {
     globeSpin.stop()
     if (lon !== null) {
       globeSpin.from = lon - 1080
@@ -45,7 +45,7 @@ Column {
   }
 
   // `from` is passed in: once the focus changes, the rest binding has already moved spin.
-  function turn(from, lon) {
+  function turn(from: real, lon: real): void {
     globeSpin.stop()
     focusSpin.from = from
     focusSpin.to = from + Solar.shortestTurn(from, lon)

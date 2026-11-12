@@ -35,7 +35,7 @@ Item {
 
   // Read a single value from this panel's inline shell.json entry, with a
   // fallback for missing/null values. Matches BarWidget.setting().
-  function setting(name, fallback) {
+  function setting(name: string, fallback: var): var {
     var value = settings ? settings[name] : undefined
     return value === undefined || value === null ? fallback : value
   }

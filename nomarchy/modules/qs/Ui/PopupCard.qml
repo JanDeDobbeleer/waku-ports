@@ -4,6 +4,7 @@ import Quickshell.Hyprland
 import qs.Commons
 import qs.Commons as Commons
 import "BarValues.js" as BarValues
+import "PopupCardUtils.js" as PopupCardUtils
 
 PopupWindow {
   id: root
@@ -25,10 +26,10 @@ PopupWindow {
 
   readonly property var coordinatorKey: owner || root
   readonly property var anchorWindow: anchorItem ? anchorItem.QsWindow.window : null
-  readonly property var popupScreen: anchorWindow ? anchorWindow.screen : null
+  readonly property var popupScreen: PopupCardUtils.field(anchorWindow, "screen")
   readonly property bool containsMouse: cardHover.hovered
-  readonly property real screenW: popupScreen ? popupScreen.width : 0
-  readonly property real screenH: popupScreen ? popupScreen.height : 0
+  readonly property real screenW: PopupCardUtils.number(popupScreen, "width")
+  readonly property real screenH: PopupCardUtils.number(popupScreen, "height")
   // Thickness of the painted bar strip on this screen, notch floor
   // included. The bar window spans its whole screen (only the strip inside
   // it is painted and takes input), so the window's dimensions say nothing
@@ -43,14 +44,14 @@ PopupWindow {
     : 0
   readonly property real verticalContentInset: padding * 2 + Border.top(borderSpec) + Border.bottom(borderSpec)
 
-  function fittedContentWidth(width, cap): real {
+  function fittedContentWidth(width: var, cap: var): real {
     var desired = Math.max(1, Number(width) || 1)
     var maxWidth = root.availableCardWidth > 0 ? root.availableCardWidth : desired
     if (cap !== undefined && Number(cap) > 0) maxWidth = Math.min(maxWidth, Number(cap))
     return Math.round(Math.min(desired, maxWidth))
   }
 
-  function fittedContentHeight(implicitHeight, cap): real {
+  function fittedContentHeight(implicitHeight: var, cap: var): real {
     var desired = Math.max(root.verticalContentInset, (Number(implicitHeight) || 0) + root.verticalContentInset)
     var maxHeight = root.availableCardHeight > 0 ? root.availableCardHeight : desired
     if (cap !== undefined && Number(cap) > 0) maxHeight = Math.min(maxHeight, Number(cap))

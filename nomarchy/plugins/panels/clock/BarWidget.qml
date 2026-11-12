@@ -5,6 +5,7 @@ import qs.Commons as Commons
 import qs.Ui
 import "." as Local
 import "Model.js" as Model
+import "ClockBarWidgetUtils.js" as ClockBarWidgetUtils
 
 // Date/time label for the bar, and the host for the calendar popup.
 //
@@ -38,9 +39,9 @@ BarWidget {
   readonly property string displayText: formatted(displayDate)
   readonly property var verticalLines: displayText.split("\n")
 
-  function refresh() {
+  function refresh(): void {
     displayDate = new Date()
-    if (root.loadedPanel && root.loadedPanel.refresh) root.loadedPanel.refresh()
+    ClockBarWidgetUtils.call(root.loadedPanel, "refresh", [])
   }
 
   function cycleFormat() {
@@ -65,31 +66,31 @@ BarWidget {
 
   // The ISO week goes in as a literal, so its digits are localized here the
   // way Qt localizes the rest of the format.
-  function formatted(date) {
+  function formatted(date: date): string {
     var week = Model.isoWeekLiteral(date.getFullYear(), date.getMonth(), date.getDate())
-    week = week.split("").map(function(digit) { return I18n.formatNumber(digit) }).join("")
+    week = week.split("").map(function(digit: string): string { return I18n.formatNumber(digit) }).join("")
     return date.toLocaleString(root.formatLocale, activeFormat.replace(/ww/g, week))
   }
 
   // ---- Calendar popup. Shape contract for shell.summon/hide/toggle
   //      routing: Bar.findPanelWidget requires open/close/opened on the
   //      bar-widget root.
-  readonly property bool opened: root.loadedPanel ? root.loadedPanel.opened === true : false
+  readonly property bool opened: root.loadedPanel ? ClockBarWidgetUtils.field(root.loadedPanel, "opened") === true : false
 
-  function open() {
-    if (root.loadedPanel) root.loadedPanel.open()
+  function open(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "open", [])
   }
 
-  function close() {
-    if (root.loadedPanel) root.loadedPanel.close()
+  function close(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "close", [])
   }
 
-  function togglePanel() {
-    if (root.loadedPanel) root.loadedPanel.toggle()
+  function togglePanel(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "toggle", [])
   }
 
-  function toggleWeekStart() {
-    if (root.loadedPanel) root.loadedPanel.toggleWeekStart()
+  function toggleWeekStart(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "toggleWeekStart", [])
   }
 
   // The clock fills more slot than it paints a mark for, at both
@@ -103,16 +104,16 @@ BarWidget {
   // Forwarded so this widget can stand in for the panel as the bar's popout
   // identity: Bar.requestPopout prefers closeForPopoutSwitch over close, and
   // KeyboardPanel reads popoutSwitchClosing back off its owner.
-  readonly property bool popoutSwitchClosing: root.loadedPanel ? root.loadedPanel.popoutSwitchClosing === true : false
+  readonly property bool popoutSwitchClosing: root.loadedPanel ? ClockBarWidgetUtils.field(root.loadedPanel, "popoutSwitchClosing") === true : false
 
-  function closeForPopoutSwitch() {
-    if (root.loadedPanel) root.loadedPanel.closeForPopoutSwitch()
+  function closeForPopoutSwitch(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "closeForPopoutSwitch", [])
   }
 
   function injectPanel() {
     var target = root.loadedPanel
     if (!target) return
-    if ("bar" in target) target.bar = root.bar
+    if (ClockBarWidgetUtils.hasProperty(target, "bar")) ClockBarWidgetUtils.setProperty(target, "bar", root.bar)
     if ("settings" in target) target.settings = root.settings
     if ("anchorItem" in target) target.anchorItem = button
     if ("hostWidget" in target) target.hostWidget = root
@@ -160,8 +161,8 @@ BarWidget {
     bar: root.bar
     text: root.vertical ? "" : root.displayText
     labelVisible: !root.vertical
-    hasVisualContent: root.vertical ? root.verticalLines.length > 0 : text !== ""
-    fixedHeight: root.vertical ? root.verticalLines.length * Style.bar.iconSlot : -1
+    hasVisualContent: root.vertical ? ClockBarWidgetUtils.arrayLength(root.verticalLines) > 0 : text !== ""
+    fixedHeight: root.vertical ? ClockBarWidgetUtils.arrayLength(root.verticalLines) * Style.bar.iconSlot : -1
     horizontalMargin: 8.75
     verticalPadding: 8.75
     tooltipText: I18n.t("clock.toggleFormat")

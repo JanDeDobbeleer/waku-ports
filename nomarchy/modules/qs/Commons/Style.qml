@@ -5,6 +5,7 @@ import qs.Commons as Commons
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import "StyleUtils.js" as StyleUtils
 
 // Shared structural style tokens for the shell. Color is the palette
 // singleton; Style holds everything else themes can influence — corner
@@ -48,13 +49,13 @@ QtObject {
   // or hex colors. Set a state's border width to 0 to drop that border.
   property var styleOverrides: ({})
 
-  function styleRawNum(key) {
+  function styleRawNum(key: string): var {
     var v = styleOverrides[key]
     var n = Number(v)
     return isFinite(n) ? n : null
   }
 
-  function styleNum(key, fallback) {
+  function styleNum(key: string, fallback: var): var {
     var n = styleRawNum(key)
     return n === null ? fallback : n
   }
@@ -127,59 +128,59 @@ QtObject {
     return colorFromHex(s, fb)
   }
 
-  function normalStateColor(foreground, accent, urgent) {
+  function normalStateColor(foreground: var, accent: var, urgent: var): color {
     return resolveStateColor(normalColorToken, foreground, accent, urgent, foreground || Commons.Color.foreground)
   }
 
-  function hoverStateColor(foreground, accent, urgent) {
+  function hoverStateColor(foreground: var, accent: var, urgent: var): color {
     return resolveStateColor(hoverColorToken, foreground, accent, urgent, foreground || Commons.Color.foreground)
   }
 
-  function selectedStateColor(foreground, accent, urgent) {
+  function selectedStateColor(foreground: var, accent: var, urgent: var): color {
     return resolveStateColor(selectedColorToken, foreground, accent, urgent, foreground || Commons.Color.foreground)
   }
 
-  function pressedStateColor(foreground, accent, urgent) {
+  function pressedStateColor(foreground: var, accent: var, urgent: var): color {
     return resolveStateColor(pressedColorToken, foreground, accent, urgent, hoverStateColor(foreground, accent, urgent))
   }
 
-  function focusStateColor(foreground, accent, urgent) {
+  function focusStateColor(foreground: var, accent: var, urgent: var): color {
     var role = String(focusColorToken || "").replace(/^\s+|\s+$/g, "").toLowerCase()
     if (role === "hover" || role === "hover-cursor" || role === "inherit")
       return hoverStateColor(foreground, accent, urgent)
     return resolveStateColor(focusColorToken, foreground, accent, urgent, hoverStateColor(foreground, accent, urgent))
   }
 
-  function selectionStateColor(foreground, accent, urgent) {
+  function selectionStateColor(foreground: var, accent: var, urgent: var): color {
     return resolveStateColor(selectionColorToken, foreground, accent, urgent, foreground || Commons.Color.foreground)
   }
 
-  function normalFillFor(foreground, accent, urgent) { return Util.alpha(normalStateColor(foreground, accent, urgent), normalFillAlpha) }
-  function hoverFillFor(foreground, accent, urgent) { return Util.alpha(hoverStateColor(foreground, accent, urgent), hoverFillAlpha) }
-  function selectedFillFor(foreground, accent, urgent) { return Util.alpha(selectedStateColor(foreground, accent, urgent), selectedFillAlpha) }
-  function pressedFillFor(foreground, accent, urgent) { return Util.alpha(pressedStateColor(foreground, accent, urgent), pressedFillAlpha) }
-  function focusFillFor(foreground, accent, urgent) { return Util.alpha(focusStateColor(foreground, accent, urgent), focusFillAlpha) }
-  function selectionFillFor(foreground, accent, urgent) { return Util.alpha(selectionStateColor(foreground, accent, urgent), selectionFillAlpha) }
+  function normalFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(normalStateColor(foreground, accent, urgent), normalFillAlpha) }
+  function hoverFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(hoverStateColor(foreground, accent, urgent), hoverFillAlpha) }
+  function selectedFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(selectedStateColor(foreground, accent, urgent), selectedFillAlpha) }
+  function pressedFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(pressedStateColor(foreground, accent, urgent), pressedFillAlpha) }
+  function focusFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(focusStateColor(foreground, accent, urgent), focusFillAlpha) }
+  function selectionFillFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(selectionStateColor(foreground, accent, urgent), selectionFillAlpha) }
 
-  function normalBorderFor(foreground, accent, urgent) { return Util.alpha(normalStateColor(foreground, accent, urgent), normalBorderAlpha) }
-  function hoverBorderFor(foreground, accent, urgent) { return Util.alpha(hoverStateColor(foreground, accent, urgent), hoverBorderAlpha) }
-  function selectedBorderFor(foreground, accent, urgent) { return Util.alpha(selectedStateColor(foreground, accent, urgent), selectedBorderAlpha) }
-  function focusBorderFor(foreground, accent, urgent) { return Util.alpha(focusStateColor(foreground, accent, urgent), focusBorderAlpha) }
+  function normalBorderFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(normalStateColor(foreground, accent, urgent), normalBorderAlpha) }
+  function hoverBorderFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(hoverStateColor(foreground, accent, urgent), hoverBorderAlpha) }
+  function selectedBorderFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(selectedStateColor(foreground, accent, urgent), selectedBorderAlpha) }
+  function focusBorderFor(foreground: var, accent: var, urgent: var): color { return Util.alpha(focusStateColor(foreground, accent, urgent), focusBorderAlpha) }
 
   // Composite helpers for the focus > hover > normal priority chain used by
   // every form control surface (TextField, NumberField, Dropdown, Toggle,
   // etc.). Saves callers from re-writing the three-line ternary ladder for
   // fill / border / border-width on every Rectangle background.
   function controlFill(focused: var, hot: var, foreground: var, accent: var): var {
-    if (focused) return focusFillFor(foreground, accent)
-    if (hot) return hoverFillFor(foreground, accent)
-    return normalFillFor(foreground, accent)
+    if (focused) return focusFillFor(foreground, accent, Commons.Color.urgent)
+    if (hot) return hoverFillFor(foreground, accent, Commons.Color.urgent)
+    return normalFillFor(foreground, accent, Commons.Color.urgent)
   }
 
   function controlBorder(focused: var, hot: var, foreground: var, accent: var): var {
-    if (focused) return focusBorderFor(foreground, accent)
-    if (hot) return hoverBorderFor(foreground, accent)
-    return normalBorderFor(foreground, accent)
+    if (focused) return focusBorderFor(foreground, accent, Commons.Color.urgent)
+    if (hot) return hoverBorderFor(foreground, accent, Commons.Color.urgent)
+    return normalBorderFor(foreground, accent, Commons.Color.urgent)
   }
 
   function controlBorderWidth(focused: var, hot: var): int {
@@ -225,7 +226,7 @@ QtObject {
     return Math.max(1, Math.round(n))
   }
 
-  function spacingToken(key, fallback) {
+  function spacingToken(key: string, fallback: real): real {
     var v = spacingOverrides[key]
     var n = Number(v)
     return (isFinite(n) && n >= 0) ? Math.round(n) : space(fallback)
@@ -281,17 +282,17 @@ QtObject {
   property bool barScaleWithFont: true
   readonly property real fontScale: Math.max(1 / 12, fontBaseSize / 12)
 
-  function fontPx(mult) {
+  function fontPx(mult: real): int {
     return Math.max(1, Math.round(fontBaseSize * mult))
   }
 
-  function fontToken(key, fallback) {
+  function fontToken(key: string, fallback: int): int {
     var v = fontOverrides[key]
     var n = Number(v)
     return (isFinite(n) && n > 0) ? Math.round(n) : fallback
   }
 
-  function barToken(key, fallback) {
+  function barToken(key: string, fallback: int): int {
     var v = barOverrides[key]
     var n = Number(v)
     var base = (isFinite(n) && n > 0) ? n : fallback
@@ -299,7 +300,7 @@ QtObject {
     return Math.max(1, Math.round(base))
   }
 
-  function boolToken(value, fallback) {
+  function boolToken(value: var, fallback: bool): bool {
     if (value === undefined || value === null) return fallback
     var s = String(value).replace(/^\s+|\s+$/g, "").toLowerCase()
     if (s === "true" || s === "1" || s === "yes" || s === "on") return true
@@ -345,7 +346,7 @@ QtObject {
     // cutout differs from the derived default (see BarModel.notchHeight).
     // 0 means derive it. Physical alignment, so it never scales with font.
     final readonly property int notchHeight: {
-      var v = Number(root.barOverrides["notch-height"])
+      var v = Number(StyleUtils.get(root.barOverrides, "notch-height"))
       return (isFinite(v) && v > 0) ? Math.round(v) : 0
     }
     final readonly property int iconSlot:       root.barToken("icon-slot",       27)
@@ -370,99 +371,39 @@ QtObject {
   // pointer: it starts at once and settles without a bounce.
   readonly property var easeOut: [0.23, 1.0, 0.32, 1.0, 1.0, 1.0]
 
-  function refresh() {
+  function refresh(): void {
     hyprctlProcImpl.running = true
     gapsOutProcImpl.running = true
     animationsProcImpl.running = true
   }
 
-  function scheduleRefresh() {
+  function scheduleRefresh(): void {
     refreshTimerImpl.restart()
   }
 
-  function applyRoundingJson(raw) {
-    try {
-      let json = JSON.parse(raw || "{}")
-      let n = Number(json.int)
-      if (isFinite(n) && n >= 0) cornerRadius = n
-    } catch (e) {
-      // hyprctl missing / Hyprland not running — leave the previous value.
-    }
+  function applyRoundingJson(raw: string): void {
+    var n = StyleUtils.intField(raw)
+    if (isFinite(n) && n >= 0) cornerRadius = n
   }
 
-  function applyGapsOutJson(raw) {
-    try {
-      let json = JSON.parse(raw || "{}")
-      let css = String(json.css || "")
-      let parts = css.match(/-?\d+(?:\.\d+)?/g) || []
-      let n = parts.length > 0 ? Number(parts[0]) : Number(json.int)
-      if (isFinite(n) && n >= 0) gapsOut = Math.max(0, Math.round(n / 2))
-    } catch (e) {
-      // hyprctl missing / Hyprland not running — leave the previous value.
-    }
+  function applyGapsOutJson(raw: string): void {
+    var n = StyleUtils.gapsOutField(raw)
+    if (isFinite(n) && n >= 0) gapsOut = Math.max(0, Math.round(n / 2))
   }
 
   // Pull typography, bar dimensions, state tokens, and spacing out of the
   // shell.toml dict that Color already parsed. Called by Commons.Color.loadShell so
   // a single parse pass feeds both singletons.
-  function applyShellValues(values) {
-    var fontOut = {}
-    var barOut = {}
-    var styleOut = {}
-    var spacingOut = {}
-    var nextBase = 12
-    var nextSpacingScale = 1.0
-    var nextSpacingScaleWithFont = true
-    var nextBarScaleWithFont = true
-    var v = values || {}
-    for (let fullKey in v) {
-      let dot = fullKey.indexOf(".")
-      if (dot < 0) continue
-      let section = fullKey.substr(0, dot)
-      let key = fullKey.substr(dot + 1)
-      let raw = v[fullKey]
-      if (section === "font") {
-        let ival = parseInt(raw, 10)
-        if (!isFinite(ival)) continue
-        if (key === "base-size") nextBase = ival
-        else fontOut[key] = ival
-      } else if (section === "bar") {
-        if (key === "scale-with-font") {
-          nextBarScaleWithFont = boolToken(raw, nextBarScaleWithFont)
-        } else if (key === "size-horizontal" || key === "size-vertical" || key === "notch-height"
-          || key === "icon-slot" || key === "icon-canvas" || key === "icon-font"
-          || key === "icon-size" || key === "status-slot") {
-          let b = parseInt(raw, 10)
-          if (isFinite(b)) barOut[key] = b
-        }
-      } else if (section === "spacing") {
-        if (key === "scale-with-font") {
-          nextSpacingScaleWithFont = boolToken(raw, nextSpacingScaleWithFont)
-        } else {
-          let fval = parseFloat(raw)
-          if (!isFinite(fval)) continue
-          if (key === "scale") nextSpacingScale = fval
-          else spacingOut[key] = fval
-        }
-      } else if (section === "controls" || section === "style") {
-        // Strings are passed through; styleRawNum/styleString coerce on read.
-        // [style] is the legacy name for [controls].
-        styleOut[key] = raw
-      }
-    }
-    // Keep only a 1px sanity floor. Per-token overrides aren't clamped
-    // either — a theme that wants display-large = 64 should be allowed to
-    // ship it.
-    if (!isFinite(nextBase) || nextBase < 1) nextBase = 1
-    if (!isFinite(nextSpacingScale) || nextSpacingScale < 0) nextSpacingScale = 1.0
-    spacingScale = nextSpacingScale
-    spacingScaleWithFont = nextSpacingScaleWithFont
-    fontBaseSize = nextBase
-    fontOverrides = fontOut
-    barOverrides = barOut
-    barScaleWithFont = nextBarScaleWithFont
-    spacingOverrides = spacingOut
-    styleOverrides = styleOut
+  function applyShellValues(values: var): void {
+    var parsed = StyleUtils.parseShellValues(values)
+    spacingScale = parsed[5]
+    spacingScaleWithFont = parsed[6]
+    fontBaseSize = parsed[4]
+    fontOverrides = parsed[0]
+    barOverrides = parsed[1]
+    barScaleWithFont = parsed[7]
+    spacingOverrides = parsed[3]
+    styleOverrides = parsed[2]
   }
 
   property Process hyprctlProc: Process {
@@ -480,11 +421,8 @@ QtObject {
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {
-        try {
-          root.reduceMotion = JSON.parse(text || "{}").bool === false
-        } catch (e) {
-          // hyprctl missing / Hyprland not running — leave the previous value.
-        }
+        var reduceMotion = StyleUtils.reduceMotionValue(text)
+        if (reduceMotion !== undefined) root.reduceMotion = reduceMotion
       }
     }
   }
@@ -493,8 +431,8 @@ QtObject {
   // lands, and Hyprland only announces it once the new values are in effect.
   property Connections hyprlandEvents: Connections {
     target: Hyprland
-    function onRawEvent(event) {
-      if (event && String(event.name) === "configreloaded") root.refresh()
+    function onRawEvent(event: var): void {
+      if (event && String(StyleUtils.get(event, "name")) === "configreloaded") root.refresh()
     }
   }
 
@@ -510,7 +448,7 @@ QtObject {
   // Resolve the fontconfig alias to a concrete family name. `nomarchy font
   // set <name>` rewrites ~/.config/fontconfig/fonts.conf and restarts the
   // shell, but rerun on file change anyway so manual edits propagate too.
-  function resolveFontFamily() {
+  function resolveFontFamily(): void {
     fcMatchProcImpl.running = true
   }
 

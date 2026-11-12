@@ -28,7 +28,7 @@ BarWidget {
   readonly property var hostWindow: Window.window
 
   // [{ key, exe, iconUrl, windows: [{ index, title, active, minimized }] }]
-  property list<var> groups: []
+  property var groups: []
   // The programs in the order they first showed up, kept while rows come and go.
   property list<var> known: []
 
@@ -71,7 +71,7 @@ BarWidget {
   // on the tile or the card, and lists the windows by title. `hoverItem` is the tile it hangs from.
   property var hoverGroup: null
   property Item hoverItem: null
-  readonly property bool previewOpen: hoverGroup !== null && hoverItem !== null && hoverGroup.windows.length > 1
+  readonly property bool previewOpen: AppsModel.isPreviewOpen(hoverGroup, hoverItem)
 
   function hoverEnter(group: var, item: var): var {
     closeTimer.stop()
@@ -87,18 +87,14 @@ BarWidget {
   }
 
   // The group as it is now: the preview follows windows opening, closing and changing title.
-  readonly property var previewGroup: {
-    if (!hoverGroup) return null
-    for (let i = 0; i < groups.length; i++) if (groups[i].key === hoverGroup.key) return groups[i]
-    return null
-  }
+  readonly property var previewGroup: AppsModel.findGroup(groups, hoverGroup)
 
   // Where the card opens: just below the bar strip, under the hovered tile. Without a rect the engine
   // anchors to the whole thickness of the bar's window, which spans the screen, and the card would
   // open at the bottom of it. The rect runs from the tile's top to the bottom of the strip.
   readonly property rect previewRect: {
     if (!hoverItem) return Qt.rect(0, 0, 0, 0)
-    var top = hoverItem.mapToItem(root, 0, 0).y
+    var top = AppsModel.previewRectY(hoverItem, root)
     return Qt.rect(0, 0, hoverItem.width, Math.max(1, root.height - top))
   }
 
@@ -109,7 +105,7 @@ BarWidget {
   }
 
   readonly property var shown: groups.length > maxVisible ? groups.slice(0, maxVisible) : groups
-  readonly property int hidden: Math.max(0, groups.length - shown.length)
+  readonly property int hidden: Math.max(0, groups.length - AppsModel.length(shown))
 
   visible: !vertical && groups.length > 0
   implicitWidth: visible ? row.implicitWidth + Style.space(8) : 0
@@ -161,9 +157,9 @@ BarWidget {
         id: app
         required property var modelData
 
-        readonly property bool focused: modelData.windows.some(function(w: var): var { return w.active })
-        readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(function(w: var): var { return w.minimized })
-        readonly property int count: modelData.windows.length
+        readonly property bool focused: AppsModel.hasActive(modelData)
+        readonly property bool allMinimized: AppsModel.allMinimized(modelData)
+        readonly property int count: AppsModel.length(AppsModel.windows(modelData))
         readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
         width: root.cell
@@ -183,7 +179,7 @@ BarWidget {
           width: Math.round(root.cell * 0.68)
           height: width
           visible: app.hasImage
-          source: app.modelData.iconUrl
+          source: AppsModel.field(app.modelData, "iconUrl")
           sourceSize: Qt.size(width * 2, height * 2)
           fillMode: Image.PreserveAspectFit
           asynchronous: true
@@ -196,7 +192,7 @@ BarWidget {
           anchors.centerIn: parent
           visible: !app.hasImage
           textFormat: Text.PlainText
-          text: app.modelData.exe.length > 0 ? app.modelData.exe.charAt(0).toUpperCase() : "?"
+          text: AppsModel.textForApp(app.modelData)
           color: root.ink
           font.family: root.family
           font.pixelSize: Style.font.body
@@ -287,15 +283,15 @@ BarWidget {
     readonly property real cardPad: Style.space(6)
     readonly property real cardW: boxW + cardPad * 2
     readonly property real tileGap: Style.space(8)
-    readonly property int count: root.previewGroup ? root.previewGroup.windows.length : 0
+    readonly property int count: AppsModel.length(AppsModel.windows(root.previewGroup))
     // A single strip while it fits in 60% of the screen, then a wrapping grid.
     readonly property real maxW: Math.max(cardW, (preview.screenW > 0 ? preview.screenW : 1920) * 0.6 - preview.padding * 2)
     readonly property int cols: count <= 0 ? 1
       : (count * cardW + (count - 1) * tileGap <= maxW ? count : Math.max(1, Math.floor((maxW + tileGap) / (cardW + tileGap))))
 
     // The card pads and borders the content on both sides; the height already counts them.
-    cardWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec))
-    cardHeight: preview.fittedContentHeight(grid.implicitHeight)
+    cardWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec), undefined)
+    cardHeight: preview.fittedContentHeight(grid.implicitHeight, undefined)
 
     GridLayout {
       id: grid
@@ -305,7 +301,7 @@ BarWidget {
       rowSpacing: preview.tileGap
 
       Repeater {
-        model: root.previewGroup ? root.previewGroup.windows : []
+        model: AppsModel.windows(root.previewGroup)
 
         delegate: Item {
           id: card
@@ -320,9 +316,9 @@ BarWidget {
           Rectangle {
             anchors.fill: parent
             radius: 0
-            color: card.modelData.active ? Style.selectedFillFor(root.ink, Commons.Color.accent)
-              : (cardArea.containsMouse ? Style.hoverFillFor(root.ink, Commons.Color.accent)
-              : Style.normalFillFor(root.ink, Commons.Color.accent))
+            color: AppsModel.field(card.modelData, "active") ? Style.selectedFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent)
+              : (cardArea.containsMouse ? Style.hoverFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent)
+              : Style.normalFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent))
           }
 
           ColumnLayout {
@@ -346,11 +342,11 @@ BarWidget {
 
               Image {
                 anchors.centerIn: parent
-                visible: card.modelData.minimized || !thumb.available
-                opacity: card.modelData.minimized ? 0.55 : 1
+                visible: AppsModel.field(card.modelData, "minimized") || !thumb.available
+                opacity: AppsModel.field(card.modelData, "minimized") ? 0.55 : 1
                 width: Style.space(48)
                 height: width
-                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                source: AppsModel.field(root.previewGroup, "iconUrl")
                 sourceSize: Qt.size(width * 2, height * 2)
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
@@ -368,9 +364,9 @@ BarWidget {
                 y: (box.height - height) / 2
                 width: Math.min(availW, availH * ratio)
                 height: width / ratio
-                visible: !card.modelData.minimized
-                hwnd: card.modelData.minimized ? 0 : card.modelData.hwnd
-                active: root.previewSettled && card.modelData.hwnd !== 0 && !card.modelData.minimized
+                visible: !AppsModel.field(card.modelData, "minimized")
+                hwnd: AppsModel.field(card.modelData, "minimized") ? 0 : AppsModel.field(card.modelData, "hwnd")
+                active: root.previewSettled && AppsModel.field(card.modelData, "hwnd") !== 0 && !AppsModel.field(card.modelData, "minimized")
                 fit: W.WindowThumbnail.PreserveAspectFit
               }
             }
@@ -382,7 +378,7 @@ BarWidget {
               Image {
                 Layout.preferredWidth: Style.space(16)
                 Layout.preferredHeight: Style.space(16)
-                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                source: AppsModel.field(root.previewGroup, "iconUrl")
                 sourceSize: Qt.size(width * 2, height * 2)
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
@@ -392,13 +388,13 @@ BarWidget {
               Text {
                 Layout.fillWidth: true
                 textFormat: Text.PlainText
-                text: card.modelData.title !== "" ? card.modelData.title : (root.previewGroup ? root.previewGroup.exe : "")
+                text: AppsModel.stringField(card.modelData, "title") !== "" ? AppsModel.stringField(card.modelData, "title") : AppsModel.stringField(root.previewGroup, "exe")
                 elide: Text.ElideRight
                 maximumLineCount: 1
                 color: Commons.Color.popups.text
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                font.bold: card.modelData.active
+                font.bold: AppsModel.field(card.modelData, "active")
               }
             }
           }
@@ -409,7 +405,7 @@ BarWidget {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-              taskbar.activate(card.modelData.index)
+              taskbar.activate(AppsModel.field(card.modelData, "index"))
               root.close()
             }
           }

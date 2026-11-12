@@ -5,6 +5,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "ReminderFlowModel.js" as ReminderFlowModel
+import "../panels/PanelUtils.js" as PanelUtils
 
 Item {
   id: root
@@ -31,10 +32,9 @@ Item {
   property int cardHeight: Math.min(contentMargin * 2 + headerHeight, panel.height - Style.gapsOut * 2)
   readonly property string promptText: root.step === "message" ? I18n.t("reminders.messagePrompt") : I18n.t("reminders.minutesPrompt")
 
-  function open(payloadJson) {
-    var payload = ({})
-    try { payload = JSON.parse(payloadJson || "{}") } catch (e) { payload = ({}) }
-    if (payload.fontFamily) root.fontFamily = payload.fontFamily
+  function open(payloadJson: string): void {
+    var parsedFontFamily = PanelUtils.reminderFontFamily(payloadJson)
+    if (parsedFontFamily) root.fontFamily = parsedFontFamily
 
     root.opened = true
     root.step = "minutes"
@@ -48,10 +48,9 @@ Item {
     root.opened = false
   }
 
-  function dismiss() {
+  function dismiss(): void {
     root.opened = false
-    if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "nomarchy.reminders")
+    PanelUtils.dismiss(root.shell, root.manifest, "nomarchy.reminders")
   }
 
   function toggle() {
@@ -59,7 +58,7 @@ Item {
     else root.open("{}")
   }
 
-  function setFilter(nextFilter) {
+  function setFilter(nextFilter: string): void {
     root.filterText = nextFilter
   }
 

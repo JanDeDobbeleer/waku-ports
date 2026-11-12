@@ -111,10 +111,10 @@ Panel {
   readonly property string toggleHint: root.adapter && root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOff") : Commons.I18n.t("bluetooth.turnOn")
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent)
+    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent)
+    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
 
   function sectionCount(section: string): int {
@@ -680,8 +680,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
     panelContent: LazyContent {}
 

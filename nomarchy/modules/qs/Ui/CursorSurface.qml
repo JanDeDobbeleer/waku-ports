@@ -22,8 +22,8 @@ BorderSurface {
 
   property color foreground: Commons.Color.foreground
   property color accent: Commons.Color.accent
-  property color fill: Style.hoverFillFor(foreground, accent)
-  property color currentFill: Style.selectedFillFor(foreground, accent)
+  property color fill: Style.hoverFillFor(foreground, accent, Commons.Color.urgent)
+  property color currentFill: Style.selectedFillFor(foreground, accent, Commons.Color.urgent)
 
   radius: Style.cornerRadius
 

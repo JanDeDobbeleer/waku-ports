@@ -1,4 +1,5 @@
 import QtQuick
+import "PluginShellApiUtils.js" as PluginShellApiUtils
 
 // Capability-scoped shell surface for installed third-party plugins.
 //
@@ -27,44 +28,41 @@ QtObject {
   property var _updateSettings: null
   property var _mutateBarConfig: null
 
-  function serviceFor(id) {
-    return _serviceLookup ? _serviceLookup(String(id || "")) : null
+  function serviceFor(id: string): var {
+    return PluginShellApiUtils.invoke(_serviceLookup, [String(id || "")], api)
   }
 
   // Only full-bar facades receive narrow proxies for the specific
   // non-authentication services used by the built-in bar widgets.
-  function firstPartyServiceFor(id) {
-    return _firstPartyServiceLookup
-      ? _firstPartyServiceLookup(String(id || "")) : null
+  function firstPartyServiceFor(id: string): var {
+    return PluginShellApiUtils.invoke(_firstPartyServiceLookup, [String(id || "")], api)
   }
 
-  function pluginShellForBarEntry(ownerId, moduleName) {
-    return _barEntryShellLookup
-      ? _barEntryShellLookup(String(ownerId || ""), String(moduleName || "")) : null
+  function pluginShellForBarEntry(ownerId: string, moduleName: string): var {
+    return PluginShellApiUtils.invoke(_barEntryShellLookup, [String(ownerId || ""), String(moduleName || "")], api)
   }
 
-  function summon(id, payloadJson) {
-    return _summon ? _summon(String(id || ""), String(payloadJson || "")) : false
+  function summon(id: string, payloadJson: string): bool {
+    return !!PluginShellApiUtils.invoke(_summon, [String(id || ""), String(payloadJson || "")], api)
   }
 
-  function hide(id) {
-    return _hide ? _hide(String(id || "")) : false
+  function hide(id: string): bool {
+    return !!PluginShellApiUtils.invoke(_hide, [String(id || "")], api)
   }
 
-  function toggle(id, payloadJson) {
-    return _toggle ? _toggle(String(id || ""), String(payloadJson || "")) : false
+  function toggle(id: string, payloadJson: string): bool {
+    return !!PluginShellApiUtils.invoke(_toggle, [String(id || ""), String(payloadJson || "")], api)
   }
 
-  function isPluginOpen(id) {
-    return _isOpen ? _isOpen(String(id || "")) : false
+  function isPluginOpen(id: string): bool {
+    return !!PluginShellApiUtils.invoke(_isOpen, [String(id || "")], api)
   }
 
-  function updateEntryInline(id, settings) {
-    return _updateSettings ? _updateSettings(String(id || ""), settings) : false
+  function updateEntryInline(id: string, settings: var): bool {
+    return !!PluginShellApiUtils.invoke(_updateSettings, [String(id || ""), settings], api)
   }
 
-  function mutateShellConfig(mutator) {
-    return _mutateBarConfig && typeof mutator === "function"
-      ? _mutateBarConfig(mutator) : false
+  function mutateShellConfig(mutator: var): bool {
+    return !!PluginShellApiUtils.invoke(_mutateBarConfig, [mutator], api)
   }
 }

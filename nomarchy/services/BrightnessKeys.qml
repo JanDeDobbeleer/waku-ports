@@ -45,7 +45,7 @@ Item {
   // reload() reads in the background, so wait for it: text() would otherwise
   // still hold the previous reading, and a level changed elsewhere (the
   // monitor panel, a script) would step from the wrong place.
-  function readNumber(file) {
+  function readNumber(file: var): real {
     file.reload()
     file.waitForJob()
     return Number(String(file.text() || "").trim())

@@ -255,8 +255,8 @@ Panel {
     // popup follows wherever the widget is placed.
     centerOnBar: false
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(560))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(560), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
     panelContent: LazyContent {}
 
@@ -319,7 +319,7 @@ Panel {
                 anchors.baseline: heroDate.baseline
                 text: "󰃭"
                 color: heroMouse.containsMouse
-                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                   : root.contentForeground
                 font.family: root.contentFontFamily
                 // Decorative, and deliberately outside the Style.font.*
@@ -334,7 +334,7 @@ Panel {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.today.toLocaleDateString(root.labelLocale, Commons.I18n.t("clock.dayMonthFormat"))
                 color: heroMouse.containsMouse
-                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                   : root.contentForeground
                 font.family: root.contentFontFamily
                 font.pixelSize: 52
@@ -474,7 +474,7 @@ Panel {
                   width: Math.round(parent.width * root.yearDone)
                   height: parent.height
                   radius: parent.radius
-                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent)
+                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                   Behavior on width { NumberAnimation { duration: Style.duration(160); easing.type: Easing.OutCubic } }
                 }
@@ -533,7 +533,7 @@ Panel {
                   width: Math.round(parent.width * root.lifeDone)
                   height: parent.height
                   radius: parent.radius
-                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent)
+                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                   Behavior on width { NumberAnimation { duration: Style.duration(160); easing.type: Easing.OutCubic } }
                 }
@@ -595,7 +595,7 @@ Panel {
                   height: Style.space(16)
                   radius: Style.cornerRadius
                   color: weekStartMouse.containsMouse
-                    ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent)
+                    ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                     : "transparent"
 
                   Text {
@@ -603,7 +603,7 @@ Panel {
                     textFormat: Text.PlainText
                     text: Commons.I18n.t("clock.weekShort")
                     color: weekStartMouse.containsMouse
-                      ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                      ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                       : Qt.darker(root.contentForeground, 1.9)
                     font.family: root.contentFontFamily
                     font.pixelSize: Style.font.caption
@@ -690,7 +690,7 @@ Panel {
                       // over a grid this quiet.
                       color: "transparent"
                       border.width: modelData.today ? Style.spacing.hairline : 0
-                      border.color: Style.normalBorderFor(root.contentForeground, Commons.Color.accent)
+                      border.color: Style.normalBorderFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                       Text {
                         textFormat: Text.PlainText

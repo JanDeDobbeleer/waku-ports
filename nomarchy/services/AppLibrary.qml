@@ -37,25 +37,25 @@ Item {
   // entries appeared or vanished, or the hidden-entry filters reloaded.
   signal appsChanged()
 
-  function entryName(entry) {
+  function entryName(entry: var): string {
     return AppSearch.entryName(entry)
   }
 
-  function entrySubtext(entry) {
+  function entrySubtext(entry: var): string {
     return AppSearch.entrySubtext(entry)
   }
 
-  function isHiddenEntry(entry) {
-    var id = String((entry && entry.id) || "")
+  function isHiddenEntry(entry: var): bool {
+    var id = String(AppSearch.entryId(entry) || "")
     return root.configuredHiddenEntryIds[id] === true || root.desktopHiddenEntryIds[id] === true
   }
 
-  function sortedEntries(query) {
-    var values = DesktopEntries.applications.values || []
-    return AppSearch.sortedEntries(values, query, function(entry) { return root.isHiddenEntry(entry) })
+  function sortedEntries(query: string): var {
+    var values = AppSearch.applicationValues(DesktopEntries.applications)
+    return AppSearch.sortedEntries(values, query, function(entry: var): bool { return root.isHiddenEntry(entry) })
   }
 
-  function iconSource(icon) {
+  function iconSource(icon: string): string {
     var value = String(icon || "")
     if (value.length === 0) return Quickshell.iconPath("application-x-executable", true)
     if (value.indexOf("file://") === 0 || value.indexOf("image://") === 0) return value
@@ -71,11 +71,11 @@ Item {
 
   // The shell may start before first-install packages have finished placing
   // their icons; consumers call this when they open so icons appear live.
-  function refreshIcons() {
+  function refreshIcons(): void {
     if (!iconIndexScan.running) iconIndexScan.running = true
   }
 
-  function launch(desktopId, name) {
+  function launch(desktopId: string, name: string): void {
     var id = String(desktopId || "")
     if (!id) return
     root.beginLaunchFeedback(name)
@@ -89,8 +89,8 @@ Item {
     // terminal window after the command (org.nomarchy.nvim), so the dock and
     // titlebars can tell Neovim from the terminal it runs in.
     var command = root.terminalCommand(DesktopEntries.byId(id))
-    if (command.length > 0) {
-      Util.execDetached("nomarchy-launch-tui " + command.map(function(word) { return Util.shellQuote(word) }).join(" "))
+    if (AppSearch.arrayLength(command) > 0) {
+      Util.execDetached("nomarchy-launch-tui " + command.map(function(word: var): string { return Util.shellQuote(word) }).join(" "))
       return
     }
     // Start gtk-launch inside a scope under app-graphical.slice so apps do not
@@ -102,24 +102,23 @@ Item {
 
   // The command a terminal entry runs, without the field codes it leaves for a
   // launcher to fill in; empty for an entry that is not run in a terminal.
-  function terminalCommand(entry) {
-    if (!entry || !entry.runInTerminal) return []
-    return (entry.command || []).filter(function(word) { return !/^%[a-zA-Z]$/.test(String(word)) })
+  function terminalCommand(entry: var): var {
+    return AppSearch.terminalCommand(entry)
   }
 
-  function remove(desktopId, name) {
+  function remove(desktopId: string, name: string): void {
     var id = String(desktopId || "")
     if (!id) return
     Util.execDetached(Util.shellQuote(root.nomarchyPath + "/bin/nomarchy-remove-launcher-entry") + " " + Util.shellQuote(id) + " " + Util.shellQuote(String(name || id)))
   }
 
-  function normalizeDesktopId(id) {
+  function normalizeDesktopId(id: string): string {
     var value = String(id || "").trim()
     if (value.slice(-8) === ".desktop") value = value.slice(0, -8)
     return value
   }
 
-  function loadConfiguredHides(rawText) {
+  function loadConfiguredHides(rawText: string): void {
     var next = ({})
     var lines = String(rawText || "").split(/\n/)
     for (let i = 0; i < lines.length; i++) {
@@ -130,7 +129,7 @@ Item {
     root.appsChanged()
   }
 
-  function loadDesktopHiddenEntries(rawText) {
+  function loadDesktopHiddenEntries(rawText: string): void {
     var next = ({})
     var lines = String(rawText || "").split(/\n/)
     for (let i = 0; i < lines.length; i++) {
@@ -141,7 +140,7 @@ Item {
     root.appsChanged()
   }
 
-  function iconIndexScanCommand() {
+  function iconIndexScanCommand(): string {
     // List app/device icons across the XDG icon dirs and /usr/share/pixmaps as
     // "<path>" lines. Some desktop entries, such as Print Settings, use device
     // icons like "printer" instead of app icons. SVGs are emitted before PNGs
@@ -158,7 +157,7 @@ Item {
     ].join(' ')
   }
 
-  function indexIconLine(path) {
+  function indexIconLine(path: string): void {
     var value = String(path || "").trim()
     if (value.length === 0) return
     var slash = value.lastIndexOf("/")
@@ -169,17 +168,17 @@ Item {
       root.pendingIconIndex[name] = value
   }
 
-  function hiddenEntryScanCommand() {
-    var desktop = [(Quickshell.env("XDG_CURRENT_DESKTOP") || ""), (Quickshell.env("XDG_SESSION_DESKTOP") || ""), (Quickshell.env("DESKTOP_SESSION") || "")].filter(function(v) { return String(v || "").length > 0 }).join(":")
+  function hiddenEntryScanCommand(): string {
+    var desktop = [(Quickshell.env("XDG_CURRENT_DESKTOP") || ""), (Quickshell.env("XDG_SESSION_DESKTOP") || ""), (Quickshell.env("DESKTOP_SESSION") || "")].filter(function(v: var): bool { return String(v || "").length > 0 }).join(":")
     var script = root.nomarchyPath + "/services/hidden-entries.sh"
     return Util.shellQuote(script) + " " + Util.shellQuote(desktop)
   }
 
-  function toplevelCount() {
-    try { return ToplevelManager.toplevels.values.length } catch (e) { return 0 }
+  function toplevelCount(): int {
+    return AppSearch.safeCount(ToplevelManager.toplevels.values)
   }
 
-  function beginLaunchFeedback(name) {
+  function beginLaunchFeedback(name: string): void {
     root.launchSerial++
     root.launchToplevelCount = root.toplevelCount()
     root.launchActiveToplevel = ToplevelManager.activeToplevel
@@ -188,7 +187,7 @@ Item {
     launchTimeout.restart()
   }
 
-  function closeLaunchFeedback(serial) {
+  function closeLaunchFeedback(serial: int): void {
     if (serial !== root.launchSerial) return
     launchDelay.stop()
     launchTimeout.stop()
@@ -198,7 +197,7 @@ Item {
     }
   }
 
-  function maybeFinishLaunchFeedback() {
+  function maybeFinishLaunchFeedback(): void {
     if (!launchDelay.running && !launchTimeout.running && !root.launchOsdOpen) return
     if (root.toplevelCount() <= root.launchToplevelCount && ToplevelManager.activeToplevel === root.launchActiveToplevel) return
     root.closeLaunchFeedback(root.launchSerial)

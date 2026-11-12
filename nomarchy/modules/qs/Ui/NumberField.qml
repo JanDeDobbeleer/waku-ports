@@ -74,7 +74,7 @@ Column {
       text: spin.displayText
       font: spin.font
       color: root.foreground
-      selectionColor: Style.selectionFillFor(root.foreground, root.accent)
+      selectionColor: Style.selectionFillFor(root.foreground, root.accent, Commons.Color.urgent)
       selectedTextColor: root.foreground
       horizontalAlignment: Qt.AlignHCenter
       verticalAlignment: Qt.AlignVCenter

@@ -50,6 +50,7 @@ Item {
       width: parent.width
 
       Text {
+        id: titleText
         textFormat: Text.PlainText
         visible: root.title !== ""
         text: root.title
@@ -62,7 +63,7 @@ Item {
       }
 
       Item {
-        width: Math.max(0, parent.width - parent.children[0].width - detailPill.implicitWidth)
+        width: Math.max(0, parent.width - titleText.width - detailPill.implicitWidth)
         height: 1
       }
 

@@ -22,6 +22,13 @@ function setCenterHoverRevealSuppressed(bar, value) {
 function moduleWidgets(bar, id, fallback) {
   return bar && typeof bar.moduleWidgets === "function" ? bar.moduleWidgets(id) : fallback
 }
+function broadcast(bar, id, fallback, method) {
+  var items = moduleWidgets(bar, id, fallback)
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i]
+    if (item && typeof item[method] === "function") item[method].call(item)
+  }
+}
 
 function position(bar) { return bar.position }
 function sizeForScreen(bar, screen) {

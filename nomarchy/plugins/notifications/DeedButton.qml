@@ -30,7 +30,7 @@ Item {
 
   Rectangle {
     anchors { fill: parent; topMargin: button.rule; leftMargin: button.leftRule ? button.rule : 0 }
-    color: button.hot ? Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent) : "transparent"
+    color: button.hot ? Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent, Commons.Color.urgent) : "transparent"
     Behavior on color { ColorAnimation { duration: Style.duration(120) } }
   }
 

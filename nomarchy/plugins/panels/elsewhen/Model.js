@@ -1,3 +1,10 @@
+function callFunction(callback, args) { return typeof callback === "function" ? callback.apply(null, args || []) : undefined }
+function setValue(object, key, value) { if (object != null) object[key] = value }
+function value(object, key) { return object == null ? undefined : object[key] }
+function itemCount(items) { return items && items.length ? items.length : 0 }
+
+function field(value, name) { return value == null ? undefined : value[name] }
+
 // QML has no Intl, so each zone's UTC offset comes from a `date` probe and the
 // clocks tick locally against it.
 
@@ -1396,4 +1403,58 @@ if (typeof module !== "undefined") {
     pickSeedZones: pickSeedZones,
     seedZones: seedZones
   }
+}
+
+function removeProperty(object, key) {
+  delete object[key]
+}
+
+function pendingProfiles(zones, tried) {
+  return handlesIn(zones).filter(function(handle) { return !tried[handle] })
+}
+
+function markProfilesTried(tried, handles) {
+  var next = Object.assign({}, tried)
+  for (var i = 0; i < handles.length; i++) next[handles[i]] = true
+  return next
+}
+
+function staleWeatherKeys(request, weather, now, coordinatesFor) {
+  return request.map(factsKey).filter(function(key) {
+    var coords = coordinatesFor(key)
+    return coords && weatherStale(weather[key], now, coords)
+  })
+}
+
+function coordinatesForKeys(keys, coordinatesFor) {
+  return keys.map(function(key) { return coordinatesFor(key) })
+}
+
+function factsKeys(request) {
+  return request.map(factsKey)
+}
+
+function pinnedGeography(request) {
+  var out = {}
+  request.forEach(function(row) {
+    if (row && row.lat !== undefined) out[factsKey(row)] = { lat: row.lat, lon: row.lon }
+  })
+  return out
+}
+
+function mergeGeocodeResponses(root, rows, responseText, zoneTabText) {
+  var answers = String(responseText || "").split("\n\u001e\n")
+  var nextGeo = Object.assign({}, root.geo)
+  var nextFallback = {}
+  rows.forEach(function(row, index) {
+    var key = factsKey(row)
+    var found = pickGeocode(answers[index] || "", row.id)
+    var place = (found && found.place) || zoneTabCoords(zoneTabText, row.id)
+    if (!place) return
+    if (found.answered) nextGeo[key] = place
+    else nextFallback[key] = place
+  })
+  root.geo = nextGeo
+  root.fallbackGeo = nextFallback
+  root.fetchWeather()
 }

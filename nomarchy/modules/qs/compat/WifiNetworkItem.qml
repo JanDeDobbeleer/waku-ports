@@ -22,7 +22,7 @@ QtObject {
     }
 
     // A password for a new network is Windows' business: open its Wi-Fi settings.
-    function connectWithPsk(passphrase) {
+    function connectWithPsk(passphrase: string): void {
         Quickshell.execDetached(["explorer.exe", "ms-settings:network-wifi"])
         net.connectionFailed(ConnectionFailReason.WifiClientFailed)
     }

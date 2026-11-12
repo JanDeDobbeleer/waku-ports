@@ -258,8 +258,8 @@ Panel {
     bar: root.bar
     open: root.opened && root.batteryPresent
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
     panelContent: LazyContent {}
 

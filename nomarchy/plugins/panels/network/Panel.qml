@@ -312,8 +312,8 @@ Panel {
   // `selectedIndex`). Mouse hover and keyboard nav both mutate this state
   // at the root; items never read containsMouse for visuals. See
   // CursorSurface for the shared chrome shared by rows and pills.
-  readonly property color hoverFill: bar ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
-  readonly property color selectedFill: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
+  readonly property color hoverFill: bar ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "transparent"
+  readonly property color selectedFill: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "transparent"
 
   // scannerEnabled lives on the shared WifiDevice, which has no reference
   // counting, and a bar widget is instantiated once per monitor. Tracking the
@@ -1169,8 +1169,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
     // Catches all unhandled keys for keyboard navigation. AfterItem priority
     // lets the passphrase TextField (a child via focus chain) get its keys
@@ -1985,7 +1985,7 @@ Panel {
         BorderSurface {
           anchors.fill: parent
           visible: row.forgetFocused
-          color: Style.hoverFillFor(root.contentUrgent, root.contentUrgent)
+          color: Style.hoverFillFor(root.contentUrgent, root.contentUrgent, Commons.Color.urgent)
           borderSpec: Border.controlSpec("hover-cursor", root.contentUrgent, root.contentUrgent)
           radius: Style.cornerRadius
           z: -1
@@ -2130,7 +2130,7 @@ Panel {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         height: Style.spacing.controlHeight
-        color: Style.normalFillFor(root.contentForeground)
+        color: Style.normalFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
         borderSpec: Border.controlSpec("normal", root.contentForeground, Commons.Color.accent)
         radius: Style.cornerRadius
 

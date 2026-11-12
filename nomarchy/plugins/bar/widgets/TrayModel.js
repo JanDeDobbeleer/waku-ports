@@ -73,7 +73,25 @@ if (typeof module !== "undefined") {
     itemNamed: itemNamed,
     entryId: entryId,
     layoutHasWidget: layoutHasWidget,
-    ownedByNomarchy: ownedByNomarchy
+    ownedByNomarchy: ownedByNomarchy,
+    field: field,
+    fieldString: fieldString,
+    currentTitle: currentTitle,
+    currentChildren: currentChildren,
+    resetTrayMenu: resetTrayMenu,
+    leaveSubmenu: leaveSubmenu,
+    openTrayMenu: openTrayMenu,
+    tooltip: tooltip,
+    classifyItem: classifyItem,
+    bucket: bucket,
+    sectionExtent: sectionExtent,
+    itemTitle: itemTitle,
+    itemMenu: itemMenu,
+    triggered: triggered,
+    displayName: displayName,
+    isActive: isActive,
+    activate: activate,
+    scroll: scroll
   }
 }
 
@@ -81,3 +99,78 @@ function settingArray(settings, key) {
   var value = settings ? settings[key] : null
   return value instanceof Array ? value : []
 }
+
+function field(item, key) { return item ? item[key] : undefined }
+function fieldString(item, key) { return String(field(item, key) || "") }
+function currentTitle(stack) {
+  return stack && stack.length > 0 ? (stack[stack.length - 1].title || "") : ""
+}
+function currentChildren(stack, rootOpener) {
+  return stack && stack.length > 0 ? stack[stack.length - 1].opener.children : rootOpener.children
+}
+
+function resetTrayMenu(root, flickable, timer) {
+  root.menuLevelSettling = false
+  timer.stop()
+  flickable.contentY = 0
+  var openers = root.submenuStack
+  root.submenuStack = []
+  for (var i = openers.length - 1; i >= 0; i--) openers[i].opener.destroy()
+}
+
+function leaveSubmenu(root) {
+  if (root.submenuStack.length === 0) return
+  var stack = root.submenuStack.slice()
+  var top = stack.pop()
+  root.submenuStack = stack
+  top.opener.destroy()
+  root.settleMenuLevel()
+}
+
+function openTrayMenu(root, item, anchorItem, mouse, openerComponent) {
+  root.resetTrayMenu()
+  root.activeTrayItem = item
+  root.activeTrayAnchor = anchorItem
+  root.trayMenuOpen = true
+}
+
+function tooltip(item) {
+  return item ? (item.tooltipTitle || item.title || item.id || "") : ""
+}
+function classifyItem(item, pinned, hidden) {
+  var id = String(field(item, "id") || "")
+  if (hidden.indexOf(id) !== -1) return "hidden"
+  if (pinned.indexOf(id) !== -1) return "pinned"
+  return "drawer"
+}
+function bucket(values, category, pinned, hidden, owner, passiveStatus) {
+  var list = values || []
+  var result = []
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i]
+    if (item.status === passiveStatus || owner(item)) continue
+    if (category === "all" || classifyItem(item, pinned, hidden) === category) result.push(item)
+  }
+  return result
+}
+function sectionExtent(section, vertical) {
+  return section ? (vertical ? section.implicitHeight : section.implicitWidth) : 0
+}
+function itemTitle(item) {
+  return item ? String(item.title || item.id || "") : ""
+}
+function itemMenu(item) { return item ? item.menu : null }
+function triggered(item) { if (item) item.triggered() }
+function displayName(item, fallback) {
+  var title = String(field(item, "title") || "").trim()
+  if (title) return title
+  var tooltipTitle = String(field(item, "tooltipTitle") || "").trim()
+  if (tooltipTitle) return tooltipTitle
+  var id = String(field(item, "id") || "")
+  var slash = id.lastIndexOf("/")
+  return slash !== -1 ? id.substring(slash + 1) : (id || fallback)
+}
+
+function isActive(item, passiveStatus) { return !!item && item.status !== passiveStatus }
+function activate(item, method) { if (item && typeof item[method] === "function") item[method]() }
+function scroll(item, delta, horizontal) { if (item && typeof item.scroll === "function") item.scroll(delta, horizontal) }

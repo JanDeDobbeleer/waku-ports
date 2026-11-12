@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Ui
 import "Model.js" as Model
+import "../PanelUtils.js" as PanelUtils
 
 // Centered Wi-Fi share overlay: no card, just the QR code floating on a
 // heavy scrim. Esc or the scrim dismiss it.
@@ -49,15 +50,8 @@ Item {
   readonly property color onScrimUrgent: "#ff6b6b"
   readonly property string fontFamily: Style.font.family
 
-  function open(payloadJson) {
-    var payload = {}
-    try { payload = JSON.parse(payloadJson || "{}") || {} } catch (e) {}
-    // The payload SSID titles the card during generation; the meta line the
-    // generator emits is authoritative and overwrites it. A payload without
-    // one clears the title: a re-summon may be sharing a different
-    // connection, so the previous card's name must not label this one.
-    root.ssid = payload.ssid !== undefined ? String(payload.ssid) : ""
-    generate(String(payload.iface || ""))
+  function open(payloadJson: string): void {
+    PanelUtils.openWifiQr(root, payloadJson)
     root.opened = true
     // The window is instantiated hidden, so the content's `focus: true` is
     // evaluated before the surface is mapped and Escape would land nowhere.
@@ -88,13 +82,11 @@ Item {
     root.passwordError = ""
   }
 
-  function dismiss() {
-    if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "nomarchy.wifiqr")
-    else close()
+  function dismiss(): void {
+    if (!PanelUtils.dismiss(root.shell, root.manifest, "nomarchy.wifiqr")) close()
   }
 
-  function generate(requestedIface) {
+  function generate(requestedIface: string): void {
     if (qrProc.running) {
       // Whether the run in flight is a dismissal's SIGTERM still landing or
       // a live generation for an earlier summon, the latest request wins:
@@ -131,7 +123,7 @@ Item {
     qrProc.running = true
   }
 
-  function updateQr(raw) {
+  function updateQr(raw: string): void {
     var parsed = Model.parseQrOutput(raw)
     qrRows = parsed.matrix.rows
     qrSize = parsed.matrix.size

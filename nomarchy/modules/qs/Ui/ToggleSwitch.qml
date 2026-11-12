@@ -84,8 +84,8 @@ Item {
     anchors.centerIn: parent
     radius: root.rounded ? height / 2 : 0
     color: root.checked
-      ? Style.selectedFillFor(root.foreground, root.accent)
-      : Style.normalFillFor(root.foreground, root.accent)
+      ? Style.selectedFillFor(root.foreground, root.accent, Commons.Color.urgent)
+      : Style.normalFillFor(root.foreground, root.accent, Commons.Color.urgent)
     borderSpec: Border.controlSpec(root.checked ? "selected" : "normal", root.foreground, root.accent)
 
     Behavior on color { ColorAnimation { duration: Style.duration(120) } }
@@ -96,7 +96,7 @@ Item {
       radius: root.rounded ? height / 2 : 0
       x: root.checked !== root.mirrored ? track.width - width - root.knobInset : root.knobInset
       anchors.verticalCenter: parent.verticalCenter
-      color: root.checked ? Style.selectedStateColor(root.foreground, root.accent) : Qt.darker(root.foreground, 1.25)
+      color: root.checked ? Style.selectedStateColor(root.foreground, root.accent, Commons.Color.urgent) : Qt.darker(root.foreground, 1.25)
 
       Behavior on x { NumberAnimation { duration: Style.duration(120); easing.type: Easing.OutCubic } }
       Behavior on color { ColorAnimation { duration: Style.duration(120) } }

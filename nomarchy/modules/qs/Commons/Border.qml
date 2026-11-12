@@ -87,9 +87,9 @@ QtObject {
 
   function sameColor(a: var, b: var): bool { return Geometry.sameColor(a, b) }
 
-  function localOrSurfaceSpec(section: string, token: string, localColor: var, defaultColor: var, fallbackWidth: int, alphaKey: string): var {
+  function localOrSurfaceSpec(section: string, token: string, localColor: var, defaultColor: var, fallbackWidth: int): var {
     if (!sameColor(localColor, defaultColor)) return flat(localColor, fallbackWidth)
-    return surfaceSpec(section, token, localColor, fallbackWidth, alphaKey)
+    return surfaceSpec(section, token, localColor, fallbackWidth)
   }
 
   function surfaceWidths(section: string, token: string, fallbackWidth: int): var {
@@ -122,8 +122,8 @@ QtObject {
     return { color: color, gradient: gradient }
   }
 
-  function surfaceSpec(section: string, token: string, fallbackColor: var, fallbackWidth: int, alphaKey: string): var {
-    var opacity = alpha(section, alphaKey || token + "-alpha", 1.0)
+  function surfaceSpec(section: string, token: string, fallbackColor: var, fallbackWidth: int): var {
+    var opacity = alpha(section, token + "-alpha", 1.0)
     var legacyGradientRaw = valueOr(section, token === "border" ? ["border-gradient"] : [token + "-gradient", "border-gradient"])
     var resolved = borderValue(resolveValueRef(value(section, token)), fallbackColor, opacity, legacyGradientRaw)
 
@@ -198,11 +198,11 @@ QtObject {
     return Geometry.maxWidth(controlWidths(state)) > 0
   }
 
-  function controlSpec(state: string, foreground: var, accent: var, urgent: var): var {
+  function controlSpec(state: string, foreground: var, accent: var): var {
     var prefix = controlPrefix(state)
     var resolved = borderValue(
       Style.styleOverrides[prefix + "-border"],
-      controlColor(prefix, foreground, accent, urgent),
+      controlColor(prefix, foreground, accent, Commons.Color.urgent),
       controlAlpha(prefix),
       Style.styleOverrides[prefix + "-border-gradient"]
     )

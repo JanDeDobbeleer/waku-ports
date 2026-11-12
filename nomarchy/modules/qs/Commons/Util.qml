@@ -1,6 +1,7 @@
 pragma Singleton
 import Quickshell
 import QtQuick
+import "UtilData.js" as UtilData
 
 // Shared utility helpers used across plugins. Pure functions only — no
 // state. Anything stateful belongs on Color, Style, or a service.
@@ -9,13 +10,8 @@ QtObject {
 
   // Manual click forwarding must honor the same clipping as Qt's hit test.
   // Collapsed drawers keep their children laid out beyond the visible edge.
-  function itemContainsPoint(target: var, source: var, x: var, y: var): bool {
-    if (!target || !target.contains(target.mapFromItem(source, x, y))) return false
-    for (let item = target; item; item = item.parent) {
-      if (!item.visible || item.opacity === 0 || !item.enabled) return false
-      if (item.clip && !item.contains(item.mapFromItem(source, x, y))) return false
-    }
-    return true
+  function itemContainsPoint(target: Item, source: Item, x: real, y: real): bool {
+    return UtilData.itemContainsPoint(target, source, x, y)
   }
 
   function clamp(value: var, min: var, max: var): var {
@@ -28,7 +24,7 @@ QtObject {
     return clamp(value, 0, 1)
   }
 
-  function wheelSteps(accumulator, delta) {
+  function wheelSteps(accumulator: real, delta: real): var {
     // Some mouse/compositor combinations scale a single notch well beyond
     // Qt's conventional 120 units. Keep one event to one step while still
     // accumulating the smaller deltas emitted by touchpads.
@@ -42,10 +38,7 @@ QtObject {
   // Compose a base color with an opacity. Accepts a color object or a hex
   // string; null/undefined yields transparent black at the requested alpha.
   function alpha(c: var, opacity: var): color {
-    var a = clampAlpha(opacity)
-    if (!c) return Qt.rgba(0, 0, 0, a)
-    if (typeof c === "string") c = Qt.color(c)
-    return Qt.rgba(c.r, c.g, c.b, a)
+    return UtilData.alpha(c, clampAlpha(opacity))
   }
 
   // file:// URL with each path segment percent-encoded so spaces and
@@ -79,11 +72,11 @@ QtObject {
   // without re-tokenizing — so untrusted data ($(id), a filename) stays literal.
   // The login shell (-l) keeps the PATH/session env GUI targets (omasnap, mpv,
   // xdg-open) need. Prefer this over execDetached for anything built from input.
-  function execArgv(argv) {
+  function execArgv(argv: var): void {
     Quickshell.execDetached(["C:/Program Files/Git/usr/bin/bash.exe", "-lc", 'exec "$@"', "C:/Program Files/Git/usr/bin/bash.exe"].concat(argv))
   }
 
-  function isPlainObject(value) {
+  function isPlainObject(value: var): bool {
     return value !== null && typeof value === "object" && !Array.isArray(value)
   }
 
@@ -95,26 +88,18 @@ QtObject {
   // surfacing garbage downstream.
   function decodeBase64(value: var): string {
     var s = String(value || "")
-    if (!s) return ""
-    try { return Qt.atob(s) } catch (e) { return "" }
+    return s ? UtilData.decodeBase64(s) : ""
   }
 
-  function cloneJson(value) {
+  function cloneJson(value: var): var {
     return JSON.parse(JSON.stringify(value === undefined ? null : value))
   }
 
   // Parse the last line of a custom-module / indicator process output as
   // waybar-style JSON ({text, class, tooltip, ...}). Falls back to {text: raw}
   // when the output isn't JSON, and {} for empty output.
-  function parseModuleJson(raw) {
-    var text = String(raw || "").trim()
-    if (!text) return {}
-    var lines = text.split("\n")
-    try {
-      return JSON.parse(lines[lines.length - 1])
-    } catch (e) {
-      return { text: text }
-    }
+  function parseModuleJson(raw: string): var {
+    return UtilData.parseModuleJson(raw)
   }
 
   // Standard Qt text-editing keys shared by every searchable panel's filter:
@@ -158,20 +143,20 @@ QtObject {
   // Layout normalization shared by bar config consumers
   // so the two never drift. Entries are deep-cloned to decouple from the
   // input config; consumers can mutate without leaking back to shell.json.
-  function normalizeLayoutEntry(entry) {
+  function normalizeLayoutEntry(entry: var): var {
     if (typeof entry === "string") return { id: canonicalWidgetId(entry) }
-    if (isPlainObject(entry) && entry.id) {
+    if (isPlainObject(entry) && UtilData.field(entry, "id")) {
       let copy = cloneJson(entry)
-      copy.id = canonicalWidgetId(copy.id)
+      UtilData.setField(copy, "id", canonicalWidgetId(UtilData.field(copy, "id")))
       return copy
     }
     return null
   }
 
-  function normalizeLayoutSection(list) {
+  function normalizeLayoutSection(list: var): var {
     if (!Array.isArray(list)) return []
     var out = []
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < UtilData.arrayLength(list); i++) {
       let e = normalizeLayoutEntry(list[i])
       if (e) out.push(e)
     }
@@ -183,10 +168,10 @@ QtObject {
   // centerBegin and centerEnd hang off its two edges.
   readonly property var barSections: ["left", "centerBegin", "center", "centerEnd", "right", "tray"]
 
-  function normalizeLayout(layout) {
+  function normalizeLayout(layout: var): var {
     var src = isPlainObject(layout) ? layout : {}
     var out = {}
-    for (let i = 0; i < barSections.length; i++)
+    for (let i = 0; i < UtilData.arrayLength(barSections); i++)
       out[barSections[i]] = normalizeLayoutSection(src[barSections[i]])
     return out
   }

@@ -66,8 +66,8 @@ Panel {
   readonly property color iconColor: tailscale.active ? foreground : dim
   readonly property string toggleHint: tailscale.active ? Commons.I18n.t("tailscale.turnOff") : (tailscale.needsLogin ? Commons.I18n.t("tailscale.authorizeDevice") : Commons.I18n.t("tailscale.turnOn"))
   readonly property color barIconColor: tailscale.active ? barForeground : Qt.darker(barForeground, 1.55)
-  readonly property color hoverFill: bar ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
-  readonly property color selectedFill: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
+  readonly property color hoverFill: bar ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "transparent"
+  readonly property color selectedFill: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "transparent"
 
   // Large tailnets: the machine list renders through a virtualized
   // ListView over this filtered view instead of one eager row per peer.
@@ -524,7 +524,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
     panelContent: LazyContent {}

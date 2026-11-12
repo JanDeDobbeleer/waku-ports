@@ -132,3 +132,15 @@ if (typeof module !== "undefined") {
     sortedEntries: sortedEntries
   }
 }
+
+function entryId(entry) { return entry ? entry.id : "" }
+function applicationValues(applications) { return applications && applications.values ? applications.values : [] }
+function terminalCommand(entry) {
+  if (!entry || !entry.runInTerminal) return []
+  return (entry.command || []).filter(function(word) { return !/^%[a-zA-Z]$/.test(String(word)) })
+}
+function safeCount(values) {
+  try { return values.length } catch (error) { return 0 }
+}
+
+function arrayLength(values) { return values ? values.length : 0 }

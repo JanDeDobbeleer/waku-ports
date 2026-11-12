@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import waku.services as S
+import "NetworkingUtils.js" as NetworkingUtils
 
 // Quickshell.Networking over the engine's `Network` service. Windows has no NetworkManager, so the
 // backend reports NetworkManager (the panel needs one). `devices` holds the Wi-Fi interface (when
@@ -30,13 +31,11 @@ Singleton {
 
     property Instantiator wired: Instantiator {
         // Only the adapter carrying the connection: the rest are Wi-Fi Direct, Hyper-V and VPN virtuals.
-        model: S.Network.kind !== "ethernet" ? [] : (S.Network.adapters || []).filter(function(a) {
-            return !!a.isUp && !/wi-?fi|wlan|wireless|loopback|virtual|vethernet|bluetooth|local area connection|vswitch|vpn|tunnel/i.test(String(a.name || ""))
-        }).slice(0, 1)
+        model: NetworkingUtils.wiredAdapters(S.Network.kind, S.Network.adapters)
         delegate: WiredDeviceItem {
             required property var modelData
-            name: String(modelData.name || "")
-            connected: !!modelData.isUp && S.Network.kind === "ethernet"
+            name: NetworkingUtils.adapterName(modelData)
+            connected: NetworkingUtils.adapterConnected(modelData) && S.Network.kind === "ethernet"
         }
         onObjectAdded: Qt.callLater(root.collect)
         onObjectRemoved: Qt.callLater(root.collect)
@@ -48,7 +47,7 @@ Singleton {
     readonly property var list: {
         var out = []
         if (S.Network.wifiAvailable) out.push(root.wifi)
-        for (let i = 0; i < wired.count; ++i) out.push(wired.objectAt(i))
+        for (let i = 0; i < NetworkingUtils.count(wired); ++i) out.push(NetworkingUtils.objectAt(wired, i))
         return out
     }
     function collect() {}

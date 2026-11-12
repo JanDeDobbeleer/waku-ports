@@ -16,16 +16,16 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  final readonly property Flickable agentsFlickable: panel.loadedContent ? (panel.loadedContent as LazyContent).contentFlick : null
-  final readonly property PanelHero agentsHero: panel.loadedContent ? (panel.loadedContent as LazyContent).contentHero : null
-  final readonly property Column agentsColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).contentColumn : null
-  final readonly property Repeater agentsProviderSections: panel.loadedContent ? (panel.loadedContent as LazyContent).contentSections : null
+  final readonly property Flickable agentsFlickable: panel.loadedContent ? Dynamic.value(panel.loadedContent, "contentFlick") : null
+  final readonly property PanelHero agentsHero: panel.loadedContent ? Dynamic.value(panel.loadedContent, "contentHero") : null
+  final readonly property Column agentsColumn: panel.loadedContent ? Dynamic.value(panel.loadedContent, "contentColumn") : null
+  final readonly property Repeater agentsProviderSections: panel.loadedContent ? Dynamic.value(panel.loadedContent, "contentSections") : null
 
   readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   readonly property color urgent: bar ? BarValues.urgent(bar) : Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color surface: Commons.Color.popups.background
-  readonly property color track: Style.selectedFillFor(foreground, Commons.Color.accent)
+  readonly property color track: Style.selectedFillFor(foreground, Commons.Color.accent, urgent)
   readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
 
   // Every subscription on one page, limits first: the question this panel
@@ -275,8 +275,8 @@ Panel {
   function beginProviderDrag(index: int, y: real): void {
     if (dragIndex >= 0 || !agentsProviderSections) return
     var pitches = []
-    for (let i = 0; i < agentsProviderSections.count; i++)
-      pitches.push(agentsProviderSections.itemAt(i).height + agentsColumn.spacing)
+    for (let i = 0; i < Dynamic.value(agentsProviderSections, "count"); i++)
+      pitches.push(Dynamic.call(agentsProviderSections, "itemAt", [i]).height + Dynamic.value(agentsColumn, "spacing"))
     rowPitches = pitches
     // Keep the same model object so grabbing does not rebuild the delegates.
     dragProviders = providers
@@ -346,13 +346,13 @@ Panel {
 
   // Keeps whatever the cursor lands on inside the scrolled view.
   function revealItem(item: Item): void {
-    if (!item || !agentsColumn || !agentsFlickable || !agentsFlickable.interactive) return
-    var top = item.mapToItem(agentsColumn, 0, 0).y
+    if (!item || !agentsColumn || !agentsFlickable || !Dynamic.value(agentsFlickable, "interactive")) return
+    var top = Dynamic.value(Dynamic.call(item, "mapToItem", [agentsColumn, 0, 0]), "y")
     var margin = Style.space(12)
-    if (top - margin < agentsFlickable.contentY)
-      agentsFlickable.contentY = Math.max(0, top - margin)
-    else if (top + item.height + margin > agentsFlickable.contentY + agentsFlickable.height)
-      agentsFlickable.contentY = Math.min(agentsFlickable.contentHeight - agentsFlickable.height, top + item.height + margin - agentsFlickable.height)
+    if (top - margin < Dynamic.value(agentsFlickable, "contentY"))
+      Dynamic.setValue(agentsFlickable, "contentY", Math.max(0, top - margin))
+    else if (top + item.height + margin > Dynamic.value(agentsFlickable, "contentY") + Dynamic.value(agentsFlickable, "height"))
+      Dynamic.setValue(agentsFlickable, "contentY", Math.min(Dynamic.value(agentsFlickable, "contentHeight") - Dynamic.value(agentsFlickable, "height"), top + item.height + margin - Dynamic.value(agentsFlickable, "height")))
   }
 
   // The bar icon lights up when any account new sessions use is nearly out,
@@ -588,7 +588,7 @@ Panel {
 
   // Hands the keyboard back to the panel after an inline edit.
   function focusKeys(): void {
-    if (panel.loadedContent) panel.loadedContent.forceActiveFocus()
+    if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus")
   }
 
   function accountDetail(account: var): string {
@@ -1104,13 +1104,13 @@ Panel {
     resetKeys()
     if (Dynamic.value(usage.enabledProviders, "length") === 0 && !checkProcess.running) checkProcess.running = true
     nowMs = Date.now()
-    if (agentsFlickable) agentsFlickable.contentY = 0
+    if (agentsFlickable) Dynamic.setValue(agentsFlickable, "contentY", 0)
     usage.refreshLimits()
     // "Doesn't fit" was true when a model last started or stopped; memory an
     // app has since let go of only shows after a fresh look, once per open.
     if (localBlocked) Util.execArgv(["nomarchy-agent-local", "status", "--write"])
     if (picking) refreshLocalListing()
-    Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
+    Qt.callLater(function() { if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus") })
   }
 
   Main {

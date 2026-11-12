@@ -25,7 +25,7 @@ Panel {
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var mprisPlayers: Mpris.players ? Mpris.players.values : []
   readonly property var mediaService: BarValues.firstPartyServiceFor(bar, "nomarchy.media")
-  readonly property MprisPlayer activeMediaPlayer: mediaService ? mediaService.activePlayer as MprisPlayer : null
+  readonly property MprisPlayer activeMediaPlayer: mediaService ? Dynamic.value(mediaService, "activePlayer") as MprisPlayer : null
 
   // Nodes of a platform's audio processing, which are neither devices nor apps,
   // stay out of every list (AudioNodes.platformHides). Most machines have none.
@@ -202,15 +202,15 @@ Panel {
     onFileChanged: volumeSinkResolveTimer.restart()
   }
 
-  readonly property real outputVolume: volumeSink && Dynamic.value(volumeSink, "audio") ? volumeSink.audio.volume : 0
-  readonly property bool outputMuted: volumeSink && Dynamic.value(volumeSink, "audio") ? volumeSink.audio.muted : false
+  readonly property real outputVolume: volumeSink && Dynamic.value(volumeSink, "audio") ? Dynamic.value(Dynamic.value(volumeSink, "audio"), "volume") : 0
+  readonly property bool outputMuted: volumeSink && Dynamic.value(volumeSink, "audio") ? Dynamic.value(Dynamic.value(volumeSink, "audio"), "muted") : false
   // A virtual source is untyped in Quickshell (see Model.isUntypedSource), so
   // its volume and mute go through wpctl (UntypedInput), and the panel shows no
   // level meter for it: Quickshell's peak monitor takes typed nodes only.
   readonly property bool inputViaWpctl: UntypedInput.active
   readonly property bool inputLevelKnown: !inputViaWpctl || UntypedInput.known
-  readonly property real inputVolume: inputViaWpctl ? UntypedInput.volume : (source && Dynamic.value(source, "audio") ? source.audio.volume : 0)
-  readonly property bool inputMuted: inputViaWpctl ? UntypedInput.muted : (source && Dynamic.value(source, "audio") ? source.audio.muted : false)
+  readonly property real inputVolume: inputViaWpctl ? UntypedInput.volume : (source && Dynamic.value(source, "audio") ? Dynamic.value(Dynamic.value(source, "audio"), "volume") : 0)
+  readonly property bool inputMuted: inputViaWpctl ? UntypedInput.muted : (source && Dynamic.value(source, "audio") ? Dynamic.value(Dynamic.value(source, "audio"), "muted") : false)
   readonly property var inputPeakNode: inputViaWpctl ? null : source
   // Windows port: PwNodePeakMonitor is a stub, so the meter would only be an empty bar.
   readonly property bool inputLevelShown: false
@@ -244,10 +244,10 @@ Panel {
   readonly property string toggleHint: anyAudible ? Commons.I18n.t("audio.mute") : Commons.I18n.t("audio.unmute")
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent)
+    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent)
+    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
 
   function sectionCount(section: string): int {
@@ -349,7 +349,8 @@ Panel {
     }
     if (focusSection === "streams" && selectedIndex >= 0 && selectedIndex < Dynamic.value(displayAudioStreams, "length")) {
       let s = nodeFor(displayAudioStreams[selectedIndex])
-      if (s && Dynamic.value(s, "audio")) s.audio.volume = Math.max(0, Math.min(1.5, Dynamic.value(s, "audio").volume + delta))
+      let streamAudio = s ? Dynamic.value(s, "audio") : null
+      if (streamAudio) Dynamic.set(streamAudio, "volume", Math.max(0, Math.min(1.5, Dynamic.value(streamAudio, "volume") + delta)))
     }
   }
 
@@ -370,7 +371,7 @@ Panel {
     }
     if (focusSection === "streams" && selectedIndex >= 0) {
       let st = nodeFor(displayAudioStreams[selectedIndex])
-      if (st && Dynamic.value(st, "audio")) st.audio.muted = !Dynamic.value(Dynamic.value(st, "audio"), "muted")
+      if (st && Dynamic.value(st, "audio")) Dynamic.set(Dynamic.value(st, "audio"), "muted", !Dynamic.value(Dynamic.value(st, "audio"), "muted"))
     }
   }
 
@@ -402,7 +403,7 @@ Panel {
     if (!row) return null
     for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
-      if (n && n.id === row.id && String(Dynamic.value(n, "name") || "") === Dynamic.value(row, "name")) return n
+      if (n && n.id === Dynamic.value(row, "id") && String(Dynamic.value(n, "name") || "") === Dynamic.value(row, "name")) return n
     }
     return null
   }
@@ -450,7 +451,7 @@ Panel {
       flick.contentY = 0
       return
     }
-    var pt = item.mapToItem(flick.contentItem || flick, 0, 0)
+    var pt = Dynamic.call(item, "mapToItem", [flick.contentItem || flick, 0, 0])
     var top = pt.y
     var bottom = top + (item.height || 0)
     var viewTop = flick.contentY
@@ -507,7 +508,7 @@ Panel {
   function setOutputVolume(v: real): real {
     if (!volumeSink || !Dynamic.value(volumeSink, "audio")) return outputVolume
     var volume = Math.max(0, Math.min(1, v))
-    volumeSink.audio.volume = volume
+    Dynamic.set(volumeSink.audio, "volume", volume)
     return volume
   }
 
@@ -525,18 +526,18 @@ Panel {
       return
     }
     if (!source || !Dynamic.value(source, "audio")) return
-    source.audio.volume = Math.max(0, Math.min(1, v))
+    Dynamic.set(source.audio, "volume", Math.max(0, Math.min(1, v)))
   }
 
   function toggleOutputMute(): void {
-    if (volumeSink && Dynamic.value(volumeSink, "audio")) volumeSink.audio.muted = !Dynamic.value(Dynamic.value(volumeSink, "audio"), "muted")
+    if (volumeSink && Dynamic.value(volumeSink, "audio")) Dynamic.set(Dynamic.value(volumeSink, "audio"), "muted", !Dynamic.value(Dynamic.value(volumeSink, "audio"), "muted"))
   }
 
   function toggleInputMute(): void {
     if (inputViaWpctl) {
       if (UntypedInput.known) UntypedInput.setMuted(!Dynamic.value(UntypedInput, "muted"))
     }
-    else if (source && Dynamic.value(source, "audio")) source.audio.muted = !Dynamic.value(Dynamic.value(source, "audio"), "muted")
+    else if (source && Dynamic.value(source, "audio")) Dynamic.set(Dynamic.value(source, "audio"), "muted", !Dynamic.value(Dynamic.value(source, "audio"), "muted"))
   }
 
   // The hero switch is the whole panel's on/off, so it carries both channels
@@ -544,18 +545,18 @@ Panel {
   // muting a single channel from the row below flipping the master switch.
   function toggleAllMuted(): void {
     var mute = anyAudible
-    if (hasOutput) volumeSink.audio.muted = mute
+    if (hasOutput) Dynamic.set(volumeSink.audio, "muted", mute)
     if (hasInput && inputViaWpctl) UntypedInput.setMuted(mute)
-    else if (hasInput) source.audio.muted = mute
+    else if (hasInput) Dynamic.set(Dynamic.value(source, "audio"), "muted", mute)
   }
 
   function setDefaultSink(node: var): void {
     if (!node) return
     Pipewire.preferredDefaultAudioSink = node
-    if (node.id !== undefined && Dynamic.value(node, "name")) {
+    if (Dynamic.value(node, "id") !== undefined && Dynamic.value(node, "name")) {
       Quickshell.execDetached([
         "nomarchy-audio-output-set-default",
-        String(node.id),
+        String(Dynamic.value(node, "id")),
         String(Dynamic.value(node, "name"))
       ])
     }
@@ -565,10 +566,10 @@ Panel {
     if (!node) return
     // Quickshell refuses an untyped node; the command below still selects it.
     if (Dynamic.value(node, "audio")) Pipewire.preferredDefaultAudioSource = node
-    if (node.id !== undefined && Dynamic.value(node, "name")) {
+    if (Dynamic.value(node, "id") !== undefined && Dynamic.value(node, "name")) {
       Quickshell.execDetached([
         "nomarchy-audio-input-set-default",
-        String(node.id),
+        String(Dynamic.value(node, "id")),
         String(Dynamic.value(node, "name"))
       ])
     }
@@ -715,7 +716,7 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.outputIcon()
+    text: root.outputIcon(undefined)
     onPressed: function(b) {
       if (b === Qt.RightButton) root.toggleAllMuted()
       else root.toggle()
@@ -724,9 +725,9 @@ Panel {
     onWheelMoved: function(delta) {
       if (!root.hasOutput) return
       var wheel = Util.wheelSteps(root.wheelAccumulator, delta)
-      root.wheelAccumulator = wheel.remainder
-      if (wheel.steps === 0) return
-      var volume = root.setOutputVolume(root.outputVolume + wheel.steps * 0.05)
+      root.wheelAccumulator = Dynamic.value(wheel, "remainder")
+      if (Dynamic.value(wheel, "steps") === 0) return
+      var volume = root.setOutputVolume(root.outputVolume + Dynamic.value(wheel, "steps") * 0.05)
       root.showVolumeOsd(volume)
     }
   }
@@ -762,7 +763,7 @@ Panel {
           if (root.focusSection === "streams" && root.selectedIndex >= 0
               && root.selectedIndex < Dynamic.value(root.displayAudioStreams, "length")) {
             let s = root.nodeFor(root.displayAudioStreams[root.selectedIndex])
-            if (s && Dynamic.value(s, "audio")) s.audio.muted = !Dynamic.value(Dynamic.value(s, "audio"), "muted")
+            if (s && Dynamic.value(s, "audio")) Dynamic.set(Dynamic.value(s, "audio"), "muted", !Dynamic.value(Dynamic.value(s, "audio"), "muted"))
           } else if (root.focusSection === "input") {
             root.toggleInputMute()
           } else {
@@ -798,7 +799,7 @@ Panel {
             Text {
               id: heroIcon
               textFormat: Text.PlainText
-              text: root.outputIcon()
+              text: root.outputIcon(undefined)
               color: root.contentForeground
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.display
@@ -1232,8 +1233,8 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property real streamVolume: node && Dynamic.value(node, "audio") ? node.audio.volume : 0
-    readonly property bool streamMuted: node && Dynamic.value(node, "audio") ? node.audio.muted : false
+    readonly property real streamVolume: node && Dynamic.value(node, "audio") ? Dynamic.value(Dynamic.value(node, "audio"), "volume") : 0
+    readonly property bool streamMuted: node && Dynamic.value(node, "audio") ? Dynamic.value(Dynamic.value(node, "audio"), "muted") : false
     readonly property bool isActive: root.streamRepresentsPlayer(node, root.activeMediaPlayer)
 
     hasCursor: root.cursorActive && root.focusSection === "streams" && root.selectedIndex === rowIndex
@@ -1274,7 +1275,7 @@ Panel {
             cursorShape: Qt.PointingHandCursor
             onClicked: {
               if (streamRow.node && Dynamic.value(streamRow.node, "audio"))
-                streamRow.node.audio.muted = !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted")
+                Dynamic.set(Dynamic.value(streamRow.node, "audio"), "muted", !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted"))
             }
           }
         }
@@ -1316,11 +1317,11 @@ Panel {
         opacity: streamRow.streamMuted ? 0.5 : 1.0
 
         onMoved: function(v) {
-          if (streamRow.node && Dynamic.value(streamRow.node, "audio")) streamRow.node.audio.volume = v
+          if (streamRow.node && Dynamic.value(streamRow.node, "audio")) Dynamic.set(Dynamic.value(streamRow.node, "audio"), "volume", v)
         }
         onRightClicked: {
           if (streamRow.node && Dynamic.value(streamRow.node, "audio"))
-            streamRow.node.audio.muted = !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted")
+            Dynamic.set(Dynamic.value(streamRow.node, "audio"), "muted", !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted"))
         }
       }
     }

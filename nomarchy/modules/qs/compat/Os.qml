@@ -16,7 +16,7 @@ Singleton {
     }
 
     // Deletes a file, or a folder with everything in it when `recursive`.
-    function rm(path, recursive) {
+    function rm(path: var, recursive: bool): void {
         const p = win(path);
         if (recursive)
             Quickshell.execDetached(["cmd", "/c", "rmdir", "/s", "/q", p]);

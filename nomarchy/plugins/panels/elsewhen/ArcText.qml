@@ -35,17 +35,17 @@ Item {
     // advanceWidth does not register the font as a dependency.
     var _ = metrics.font.family + metrics.font.pixelSize
     var widths = []
-    for (let i = 0; i < glyphs.length; i++) widths.push(metrics.advanceWidth(glyphs[i]))
+    for (let i = 0; i < Arc.itemCount(glyphs); i++) widths.push(metrics.advanceWidth(glyphs[i]))
     return Arc.layout(widths, rise, false)
   }
 
   // Room for the end characters' corners once they are turned.
   readonly property real slack: Math.round(metrics.height / 2)
 
-  implicitWidth: flat ? Math.ceil(flatText.implicitWidth) + 2 * slack : Math.ceil(placed.width) + 2 * slack
-  implicitHeight: flat ? Math.ceil(flatText.implicitHeight) : Math.ceil(placed.height + metrics.height)
+  implicitWidth: flat ? Math.ceil(flatText.implicitWidth) + 2 * slack : Math.ceil(Arc.field(placed, "width")) + 2 * slack
+  implicitHeight: flat ? Math.ceil(flatText.implicitHeight) : Math.ceil(Arc.field(placed, "height") + metrics.height)
 
-  readonly property real originX: (width - placed.width) / 2
+  readonly property real originX: (width - Arc.field(placed, "width")) / 2
 
   Text {
     id: flatText
@@ -59,13 +59,13 @@ Item {
   }
 
   Repeater {
-    model: root.glyphs.length
+    model: Arc.itemCount(root.glyphs)
 
     Text {
       required property int index
       // The count changes a beat before the arrays behind it do.
       readonly property string glyph: root.glyphs[index] || ""
-      readonly property var spot: root.placed.chars[index] || { x: 0, y: 0, rotation: 0 }
+      readonly property var spot: Arc.charAt(root.placed, index) || { x: 0, y: 0, rotation: 0 }
 
       // Exactly one advance wide, so the glyph's middle is where the arc put it.
       width: metrics.advanceWidth(glyph)
@@ -73,9 +73,9 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
 
-      x: root.originX + spot.x
-      y: spot.y
-      rotation: spot.rotation
+      x: root.originX + Arc.field(spot, "x")
+      y: Arc.field(spot, "y")
+      rotation: Arc.field(spot, "rotation")
       transformOrigin: Item.Center
 
       textFormat: Text.PlainText

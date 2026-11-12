@@ -336,3 +336,8 @@ function parseWorld(text) {
     return { land: land, coarse: null, coarseComplete: false }
   }
 }
+
+
+function arrayLength(value) {
+  return value && value.length ? value.length : 0
+}

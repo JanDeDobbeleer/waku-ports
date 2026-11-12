@@ -28,12 +28,12 @@ QtObject {
   // re-evaluate when the theme swaps; mutating it in place would not.
   property var shellValues: ({})
 
-  function pick(key, fallback) {
+  function pick(key: string, fallback: var): var {
     var v = shellValues[key]
     return (typeof v === "string" && v.length > 0) ? v : fallback
   }
 
-  function pickAlpha(key, fallback) {
+  function pickAlpha(key: string, fallback: real): real {
     var v = shellValues[key]
     if (typeof v !== "string" || v.length === 0) return fallback
     var n = Number(v)
@@ -41,7 +41,7 @@ QtObject {
     return Util.clampAlpha(n)
   }
 
-  function firstColorToken(value) {
+  function firstColorToken(value: var): var {
     var parts = String(value || "").replace(/^\s+|\s+$/g, "").split(/\s+/)
     for (let i = 0; i < parts.length; i++) {
       if (!parts[i].match(/^-?\d+(?:\.\d+)?deg$/)) return parts[i]
@@ -49,7 +49,7 @@ QtObject {
     return value
   }
 
-  function flatColor(value, fallback) {
+  function flatColor(value: var, fallback: color): color {
     var seen = Object.create(null)
     var token = firstColorToken(value)
     var role = String(token || "").replace(/^\s+|\s+$/g, "").toLowerCase()
@@ -73,7 +73,7 @@ QtObject {
 
   // Compose a color from a base-color key and its `-alpha` companion. If the
   // base token is a gradient, color-only consumers use the first stop.
-  function composed(colorKey, alphaKey, colorFallback, alphaFallback) {
+  function composed(colorKey: string, alphaKey: string, colorFallback: color, alphaFallback: real): color {
     return Util.alpha(flatColor(pick(colorKey, colorFallback), colorFallback), pickAlpha(alphaKey, alphaFallback))
   }
 
@@ -128,7 +128,7 @@ QtObject {
   component LockColors: QtObject {
     final property color background: root.composed("lock.background", "lock.background-alpha", root.background, 0.8)
     final property color text: root.pick("lock.text", root.foreground)
-    final property color placeholder: root.shellValues["lock.placeholder"] ? root.flatColor(root.shellValues["lock.placeholder"], Util.alpha(root.foreground, 0.66)) : Util.alpha(root.foreground, 0.66)
+    final property color placeholder: Geometry.field(root.shellValues, "lock.placeholder") ? root.flatColor(Geometry.field(root.shellValues, "lock.placeholder"), Util.alpha(root.foreground, 0.66)) : Util.alpha(root.foreground, 0.66)
     final property color textError: root.pick("lock.text-error", root.urgent)
     final property color border: root.composed("lock.border", "lock.border-alpha", root.foreground, 1.0)
     final property color borderActive: root.composed("lock.border-active", "lock.border-alpha", root.accent, 1.0)
@@ -145,7 +145,7 @@ QtObject {
   }
   final readonly property ImagePickerColors imagePicker: ImagePickerColors {}
 
-  function loadColors(raw) {
+  function loadColors(raw: string): void {
     var lines = String(raw || "").split("\n")
     var foundAccent = false
     var foundMuted = false
@@ -188,7 +188,7 @@ QtObject {
   // Accepts quoted strings, bare numeric values, bare width lists, and bare
   // role names; tolerates inline comments. Numbers are kept as strings here —
   // readers coerce when they pull a value.
-  function parseShell(raw) {
+  function parseShell(raw: string): var {
     var parsed = {}
     var text = String(raw || "")
     if (text) {
@@ -214,7 +214,7 @@ QtObject {
   // Re-derive `shellValues` from theme base + user override and push it to
   // Style. User keys win, so a machine-level `~/.config/nomarchy/shell.toml`
   // survives theme switches (which replace only themeShellValues).
-  function mergeShell() {
+  function mergeShell(): void {
     var merged = {}
     for (let tk in themeShellValues) merged[tk] = themeShellValues[tk]
     for (let uk in userShellValues) merged[uk] = userShellValues[uk]
@@ -222,12 +222,12 @@ QtObject {
     Style.applyShellValues(merged)
   }
 
-  function loadShell(raw) {
+  function loadShell(raw: string): void {
     themeShellValues = parseShell(raw)
     mergeShell()
   }
 
-  function loadUserShell(raw) {
+  function loadUserShell(raw: string): void {
     userShellValues = parseShell(raw)
     mergeShell()
   }

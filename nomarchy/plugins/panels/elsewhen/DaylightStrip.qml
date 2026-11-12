@@ -36,7 +36,7 @@ Item {
   // right and the evening at the left in a right-to-left layout. Everything
   // on the strip is placed by x, so it flips here; fractions stay in day order.
   readonly property bool mirrored: LayoutMirroring.enabled
-  function stripFraction(fraction) { return mirrored ? 1 - fraction : fraction }
+  function stripFraction(fraction: real): real { return mirrored ? 1 - fraction : fraction }
 
   // Which arrow's time is showing: its index, or Model.NO_CHIP.
   property int shownChip: Model.NO_CHIP
@@ -50,7 +50,7 @@ Item {
 
   // Decided against the value read on press, so either delivery order of a
   // tap and the release underneath it lands the same way.
-  function dismissUnlessChanged(atPress) {
+  function dismissUnlessChanged(atPress: int): void {
     shownChip = Model.chipAfterRelease(shownChip, atPress)
   }
 
@@ -63,19 +63,19 @@ Item {
   readonly property double dayMs: ready ? Sun.localMidnightMs(nowMs, offsetMinutes) : 0
 
   readonly property var sun: {
-    if (!ready || !place || place.lat === undefined || place.lon === undefined) return null
+    if (!ready || !place || Model.field(place, "lat") === undefined || Model.field(place, "lon") === undefined) return null
     // Local noon: the instant furthest from either edge of the day.
-    return Sun.sunTimes(place.lat, place.lon, dayMs + 43200000, offsetMinutes)
+    return Sun.sunTimes(Model.field(place, "lat"), Model.field(place, "lon"), dayMs + 43200000, offsetMinutes)
   }
 
   // Empty in polar day and night, when the sun does not cross the horizon.
   readonly property var sunMarks: {
-    if (!sun || sun.kind !== "normal") return []
+    if (!sun || Model.field(sun, "kind") !== "normal") return []
     var out = []
-    var up = Sun.eventMark(sun.riseMinutes)
-    var down = Sun.eventMark(sun.setMinutes)
-    if (up !== null) out.push({ x: up, minutes: sun.riseMinutes, rising: true, label: Commons.I18n.t("elsewhen.sunriseAt") })
-    if (down !== null) out.push({ x: down, minutes: sun.setMinutes, rising: false, label: Commons.I18n.t("elsewhen.sunsetAt") })
+    var up = Sun.eventMark(Model.field(sun, "riseMinutes"))
+    var down = Sun.eventMark(Model.field(sun, "setMinutes"))
+    if (up !== null) out.push({ x: up, minutes: Model.field(sun, "riseMinutes"), rising: true, label: Commons.I18n.t("elsewhen.sunriseAt") })
+    if (down !== null) out.push({ x: down, minutes: Model.field(sun, "setMinutes"), rising: false, label: Commons.I18n.t("elsewhen.sunsetAt") })
     return out
   }
 
@@ -100,8 +100,8 @@ Item {
 
       Rectangle {
         required property var modelData
-        x: parent.width * (strip.mirrored ? 1 - modelData.x1 : modelData.x0)
-        width: Math.max(1, parent.width * (modelData.x1 - modelData.x0))
+        x: parent.width * (strip.mirrored ? 1 - Model.field(modelData, "x1") : Model.field(modelData, "x0"))
+        width: Math.max(1, parent.width * (Model.field(modelData, "x1") - Model.field(modelData, "x0")))
         height: parent.height
         radius: track.radius
         color: Util.alpha(strip.foreground, 0.28)
@@ -139,12 +139,12 @@ Item {
     property bool showing: false
     property int chipAtPress: Model.NO_CHIP
 
-    function onMoon(mouse) {
+    function onMoon(mouse: var): bool {
       if (strip.litNow) return false
-      return Math.abs(mouse.x - (nowMarker.x + nowMarker.width / 2)) <= nowMarker.width
+      return Math.abs(Model.field(mouse, "x") - (nowMarker.x + nowMarker.width / 2)) <= nowMarker.width
     }
 
-    function finish() {
+    function finish(): void {
       if (!showing) strip.scrubEnded()
       strip.dismissUnlessChanged(chipAtPress)
       showing = false
@@ -171,7 +171,7 @@ Item {
       id: arrow
       required property var modelData
       required property int index
-      readonly property bool rising: modelData.rising
+      readonly property bool rising: Model.field(modelData, "rising")
 
       // A finger-sized box around a caption-sized glyph, tucked towards the band.
       width: Style.space(14)
@@ -179,7 +179,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       // Each arrow sits on the dark side of its mark, which swaps sides
       // when the day runs right to left.
-      x: Model.arrowBox(strip.stripFraction(arrow.modelData.x), strip.width, arrow.width, Style.space(3),
+      x: Model.arrowBox(strip.stripFraction(Model.field(arrow.modelData, "x")), strip.width, arrow.width, Style.space(3),
                         strip.mirrored ? !arrow.rising : arrow.rising)
 
       // Hidden while the now marker stands on it. nowMarker.x, not progress,
@@ -227,8 +227,8 @@ Item {
         visible: strip.shownChip === arrow.index
         delay: 0
         closePolicy: Popup.NoAutoClose
-        text: arrow.modelData.label
-          .arg(Model.formatMinuteOfDay(arrow.modelData.minutes, strip.hour24, strip.words))
+        text: Model.field(arrow.modelData, "label")
+          .arg(Model.formatMinuteOfDay(Model.field(arrow.modelData, "minutes"), strip.hour24, strip.words))
         fontFamily: strip.fontFamily
       }
     }

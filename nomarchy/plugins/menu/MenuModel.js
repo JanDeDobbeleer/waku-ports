@@ -133,7 +133,7 @@ function mergeMenuSources(defaultItems, userItems, rootLabel) {
 // ids already claimed (including duplicate desktop ids) are listed once.
 function mergeAppRows(items, itemOrder, appRows) {
   var source = items || ({})
-  var order = Array.isArray(itemOrder) ? itemOrder : []
+  var order = itemOrder ? Array.from(itemOrder) : []
   var rows = Array.isArray(appRows) ? appRows : []
   var nextItems = ({})
   var nextOrder = []
@@ -165,7 +165,7 @@ function mergeAppRows(items, itemOrder, appRows) {
 // from the Enable list — without disturbing static children declared in JSONC.
 function swapProviderRows(items, itemOrder, menuId, rows) {
   var source = items || ({})
-  var order = Array.isArray(itemOrder) ? itemOrder : []
+  var order = itemOrder ? Array.from(itemOrder) : []
   var incoming = Array.isArray(rows) ? rows : []
   var nextItems = ({})
   var nextOrder = []
@@ -204,7 +204,7 @@ function resolveRoute(items, itemOrder, input) {
   var raw = String(input || "").toLowerCase().replace(/_/g, "-")
   if (!raw || raw === "go" || raw === "menu") return "root"
   if (item(items, raw)) return raw
-  var order = Array.isArray(itemOrder) ? itemOrder : []
+  var order = itemOrder ? Array.from(itemOrder) : []
   for (var i = 0; i < order.length; i++) {
     var entry = item(items, order[i])
     if (!entry || entry.kind === "app" || !entry.aliases) continue
@@ -270,7 +270,7 @@ function isDescendantOf(items, id, ancestorId) {
 
 function childCount(items, itemOrder, id) {
   var count = 0
-  var order = Array.isArray(itemOrder) ? itemOrder : []
+  var order = itemOrder ? Array.from(itemOrder) : []
   for (var i = 0; i < order.length; i++) {
     var entry = item(items, order[i])
     if (entry && entry.parent === id) count += 1
@@ -288,7 +288,7 @@ function isVisible(items, itemOrder, whenResults, entry, depth) {
   if (guard >= 32) return false
 
   var target = entry.kind === "link" ? entry.target : entry.id
-  var order = Array.isArray(itemOrder) ? itemOrder : []
+  var order = itemOrder ? Array.from(itemOrder) : []
   for (var i = 0; i < order.length; i++) {
     var child = item(items, order[i])
     if (child && child.parent === target && isVisible(items, itemOrder, whenResults, child, guard + 1)) return true
@@ -643,7 +643,7 @@ function dmenuSelections(options, selected, preserveOrder) {
 }
 
 function toggleDmenuSelection(selected, value) {
-  return selected.indexOf(value) === -1 ? selected.concat([value])
+  return selected.indexOf(value) === -1 ? [...selected, value]
     : selected.filter(function(item) { return item !== value })
 }
 
@@ -719,7 +719,24 @@ if (typeof module !== "undefined") {
     dmenuSelections: dmenuSelections,
     toggleDmenuSelection: toggleDmenuSelection,
     displayRow: displayRow,
-    applyTranslations: applyTranslations
+    applyTranslations: applyTranslations,
+    parseJsonOrDefault: parseJsonOrDefault,
+    startProviderForMenu: startProviderForMenu,
+    startNextProvider: startNextProvider,
+    invalidateVolatileProvider: invalidateVolatileProvider,
+    loadProviderForMenu: loadProviderForMenu,
+    loadProvidersForSearch: loadProvidersForSearch,
+    providerLoaded: providerLoaded,
+    rebuildDisplay: rebuildDisplay,
+    openDmenu: openDmenu,
+    openRoute: openRoute,
+    goBack: goBack,
+    confirmDelete: confirmDelete,
+    itemTitleOrLabel: itemTitleOrLabel,
+    deleteTargetMessage: deleteTargetMessage,
+    requestedSelection: requestedSelection,
+    enqueueSelection: enqueueSelection,
+    startSelectionNext: startSelectionNext
   }
 }
 
@@ -766,4 +783,230 @@ function appLibraryForShell(shell) {
 function rootCatalogLabel(catalog) {
   var root = catalog ? catalog.root : null
   return root ? root.label : undefined
+}
+
+function startProviderForMenu(root, process, id) {
+  var entry = item(root.items, id)
+  if (!entry || !entry.provider || root.providersLoaded[id]) return
+  if (entry.provider === "apps") {
+    root.providersLoaded[id] = true
+    root.mergeAppRows()
+    return
+  }
+  var spec = root.providers[entry.provider]
+  if (!spec) return
+  root.providersLoaded[id] = true
+  process.menuId = id
+  process.providerKey = entry.provider
+  process.revision = root.providerRevision
+  process.collected = ""
+  process.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", spec.script]
+  process.running = true
+}
+
+function startNextProvider(root, process) {
+  if (process.running) return
+  while (root.providerQueue.length > 0) {
+    var id = root.providerQueue.shift()
+    var entry = item(root.items, id)
+    if (!entry || !entry.provider || root.providersLoaded[id]) continue
+    root.startProviderForMenu(id)
+    return
+  }
+}
+
+function invalidateVolatileProvider(root, id) {
+  var entry = item(root.items, id)
+  var spec = entry && entry.provider ? root.providers[entry.provider] : null
+  if (spec && spec.volatile) root.providersLoaded[id] = false
+}
+
+function loadProviderForMenu(root, process, id) {
+  var entry = item(root.items, id)
+  if (!entry || !entry.provider || root.providersLoaded[id]) return
+  if (entry.provider === "apps") {
+    root.startProviderForMenu(id)
+    return
+  }
+  if (process.running) {
+    if (root.providerQueue.indexOf(id) < 0) root.providerQueue = [...root.providerQueue, id]
+    return
+  }
+  root.startProviderForMenu(id)
+}
+
+function loadProvidersForSearch(root, process) {
+  var active = item(root.items, root.activeMenu) ? root.activeMenu : "root"
+  for (var i = 0; i < root.itemOrder.length; i++) {
+    var entry = item(root.items, root.itemOrder[i])
+    if (!entry || !entry.provider || root.providersLoaded[entry.id]) continue
+    if (active !== "root" && entry.id !== active && !root.isDescendantOf(entry.id, active)) continue
+    root.loadProviderForMenu(entry.id)
+  }
+}
+
+function providerLoaded(loaded, key) { return !!loaded && !!loaded[key] }
+
+function rebuildDisplay(root, displayModel, callLater) {
+  if (root.dmenuActive) {
+    root.rebuildDmenuDisplay()
+    return
+  }
+  displayModel.clear()
+  if (!root.rowsLoaded) return
+  var active = item(root.items, root.activeMenu) ? root.activeMenu : "root"
+  root.activeMenu = active
+  var rows = []
+  var query = root.filterText.trim()
+  root.searchDivider = false
+  if (query) {
+    var currentRows = []
+    var drilldownRows = []
+    for (var i = 0; i < root.itemOrder.length; i++) {
+      var entry = item(root.items, root.itemOrder[i])
+      if (!entry || entry.id === "root") continue
+      if (!root.isDescendantOf(entry.id, active) || !root.matchesQuery(entry, query)) continue
+      var detail = root.parentPathFor(entry.id)
+      var row = root.displayRow(entry, detail, root.searchScore(entry, query), undefined)
+      if (entry.parent === active) currentRows.push(row)
+      else drilldownRows.push(row)
+    }
+    function searchSort(a, b) {
+      if (a.score !== b.score) return a.score - b.score
+      return a.path.localeCompare(b.path)
+    }
+    currentRows.sort(searchSort)
+    drilldownRows.sort(searchSort)
+    root.searchDivider = currentRows.length > 0 && drilldownRows.length > 0
+    if (root.searchDivider) {
+      for (var d = 0; d < drilldownRows.length; d++) drilldownRows[d].section = "drilldown"
+    }
+    rows = currentRows.concat(drilldownRows)
+  } else {
+    for (var j = 0; j < root.itemOrder.length; j++) {
+      var child = item(root.items, root.itemOrder[j])
+      if (!child || child.parent !== active || !root.isVisible(child)) continue
+      rows.push(root.displayRow(child, child.description, child.order, undefined))
+    }
+    if (active === "apps") {
+      rows.sort(function(a, b) {
+        var aLabel = String(a.label || "").toLowerCase()
+        var bLabel = String(b.label || "").toLowerCase()
+        if (aLabel < bLabel) return -1
+        if (aLabel > bLabel) return 1
+        var aId = String(a.itemId || "")
+        var bId = String(b.itemId || "")
+        if (aId < bId) return -1
+        if (aId > bId) return 1
+        return 0
+      })
+    }
+  }
+  for (var k = 0; k < rows.length; k++) displayModel.append(rows[k])
+  root.layoutSerial += 1
+  root.settleCursor()
+  callLater(function() { if (displayModel.count > 0) root.revealCursor() })
+}
+
+function openDmenu(root, payload, selectionProc, i18n, callLater) {
+  root.requestSerial += 1
+  root.mode = payload.mode === "input" ? "input" : "select"
+  root.dmenuPrompt = String(payload.prompt || (root.mode === "input" ? i18n.t("menu.inputPrompt") : i18n.t("menu.selectPrompt")))
+  root.dmenuOptions = Array.isArray(payload.options) ? payload.options : []
+  root.dmenuMultiple = root.mode === "select" && payload.multiple === true
+  root.dmenuOnChange = root.dmenuMultiple && Array.isArray(payload.onChange)
+    && payload.onChange.every(function(arg) { return typeof arg === "string" }) ? payload.onChange : []
+  root.dmenuChangeKey = String(payload.changeKey || JSON.stringify(Array.from(root.dmenuOnChange)))
+  root.dmenuSelected = dmenuSelections(root.dmenuOptions, Array.isArray(payload.selected) ? payload.selected : [], root.dmenuOnChange.length > 0)
+  root.dmenuSaved = root.dmenuSelected
+  if (root.dmenuOnChange.length > 0) root.dmenuSelected = dmenuSelections(root.dmenuOptions, selectionProc.requestedSelection(), true)
+  root.selectionFile = String(payload.selectionFile || "")
+  root.doneFile = String(payload.doneFile || "")
+  root.requestActive = !!root.doneFile
+  root.dmenuWidth = Math.max(1, Number(payload.width || 300))
+  root.dmenuMaxHeight = Math.max(0, Number(payload.maxHeight || 0))
+  root.activeMenu = "root"
+  root.navStack = []
+  root.filterText = ""
+  root.selectedIndex = 0
+  root.cursorActive = root.mode !== "input"
+  root.disarmPointer()
+  root.opened = true
+  root.rebuildDisplay()
+  callLater(function() { root.filterInput.forceActiveFocus() })
+}
+
+function openRoute(root, initialMenu) {
+  var id = root.resolveRoute(initialMenu)
+  var entry = item(root.items, id)
+  if (entry && entry.kind === "action" && entry.action && !entry.provider) {
+    root.cancel()
+    root.runAction(entry.action)
+    return "ok"
+  }
+  if (entry && entry.kind === "link" && entry.target) id = entry.target
+  root.pendingInitialMenu = id
+  root.openExistingMenu(id)
+  return "ok"
+}
+
+function goBack(root) {
+  if (root.activeMenu === "root") return false
+  if (root.navStack.length > 0) {
+    var previous = root.navStack[root.navStack.length - 1]
+    root.navStack = root.navStack.slice(0, root.navStack.length - 1)
+    root.setActiveMenu(previous, false, false)
+    return true
+  }
+  var active = item(root.items, root.activeMenu)
+  root.setActiveMenu(active && active.parent ? active.parent : "root", false, false)
+  return true
+}
+
+function confirmDelete(root) {
+  var target = root.deleteTarget
+  root.deleteConfirmOpen = false
+  root.deleteTarget = null
+  if (!target) return
+  root.cancel()
+  if (root.appLibrary) root.appLibrary.remove(target.appId, target.label)
+}
+
+function itemTitleOrLabel(items, id) {
+  var entry = item(items, id)
+  return entry ? (entry.title || entry.label) : "Go"
+}
+
+function deleteTargetMessage(target) {
+  return target ? target.label : ""
+}
+
+function requestedSelection(process, root) {
+  for (var i = process.queue.length - 1; i >= 0; i--) {
+    var queued = process.queue[i]
+    if (queued.key === root.dmenuChangeKey) return queued.selected
+  }
+  if (process.running && process.changeKey === root.dmenuChangeKey) return process.selected
+  return root.dmenuSelected
+}
+
+function enqueueSelection(process, root, values) {
+  var selected = dmenuSelections(root.dmenuOptions, values, true)
+  process.queue = process.queue.concat([{
+    serial: root.requestSerial, key: root.dmenuChangeKey, selected: selected,
+    command: [...root.dmenuOnChange, JSON.stringify(selected)]
+  }])
+  if (!process.running) process.startNext()
+}
+
+function startSelectionNext(process) {
+  if (process.queue.length === 0) return
+  var change = process.queue[0]
+  process.queue = process.queue.slice(1)
+  process.serial = change.serial
+  process.changeKey = change.key
+  process.selected = change.selected
+  process.collected = ""
+  process.command = change.command
+  process.running = true
 }

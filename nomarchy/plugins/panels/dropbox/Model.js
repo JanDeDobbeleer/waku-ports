@@ -1,3 +1,5 @@
+function field(object, key) { return object ? object[key] : undefined }
+
 var IMAGE_EXTENSIONS = {
   jpg: true, jpeg: true, png: true, gif: true, webp: true, avif: true, heic: true,
   svg: true, bmp: true, tif: true, tiff: true

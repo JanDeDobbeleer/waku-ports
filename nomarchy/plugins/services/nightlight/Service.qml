@@ -25,7 +25,7 @@ Item {
     if (!statusProbe.running) statusProbe.running = true
   }
 
-  function setNightlight(value) {
+  function setNightlight(value: bool): void {
     applyTemperature(value ? nightTemperature : dayTemperature)
   }
 
@@ -33,7 +33,7 @@ Item {
     setNightlight(!nightlightEnabled)
   }
 
-  function applyTemperature(temp) {
+  function applyTemperature(temp: int): void {
     root.temperature = temp
     root.stateLoaded = true
 
@@ -46,7 +46,7 @@ Item {
     runApply(temp)
   }
 
-  function runApply(temp) {
+  function runApply(temp: int): void {
     applyProcess.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc",
       "pgrep -x hyprsunset >/dev/null || { setsid uwsm-app -- hyprsunset >/dev/null 2>&1 & sleep 1; }; " +
       "hyprctl hyprsunset temperature " + Number(temp) +

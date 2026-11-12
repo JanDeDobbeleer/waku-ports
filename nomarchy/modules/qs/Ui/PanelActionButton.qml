@@ -63,9 +63,9 @@ BorderSurface {
       : (bordered ? Border.controlSpec("normal", foreground, Commons.Color.accent) : Border.none()))
 
   color: _showFocusRing
-    ? Style.focusFillFor(hoverColor, hoverColor)
+    ? Style.focusFillFor(hoverColor, hoverColor, Commons.Color.urgent)
     : (_hot
-      ? Style.hoverFillFor(hoverColor, hoverColor)
+      ? Style.hoverFillFor(hoverColor, hoverColor, Commons.Color.urgent)
       : "transparent")
   borderSpec: _borderSpec
 

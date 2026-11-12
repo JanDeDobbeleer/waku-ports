@@ -4,6 +4,7 @@ import QtQuick.Controls.Basic as QQC
 import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
+import "MultiSelectUtils.js" as MultiSelectUtils
 
 // Searchable multi-select dropdown. Trigger shape matches Dropdown /
 // SearchableDropdown; the popup shows a search field, an optional refresh
@@ -60,56 +61,27 @@ Item {
   property bool loadingOptions: false
   property string optionsError: ""
 
-  function normalizeOption(o) {
-    if (o && typeof o === "object") {
-      return {
-        value: String(o.value),
-        label: String(o.label !== undefined ? o.label : o.value),
-        description: o.description ? String(o.description) : ""
-      }
-    }
-    var s = String(o)
-    return { value: s, label: s, description: "" }
-  }
+  function normalizeOption(o: var): var { return MultiSelectUtils.normalizeOption(o) }
+  function arrayLength(value: var): int { return MultiSelectUtils.arrayLength(value) }
+  function arrayAt(value: var, index: int): var { return MultiSelectUtils.arrayAt(value, index) }
+  function fieldValue(object: var, name: string): var { return MultiSelectUtils.field(object, name) }
 
   // QML schema arrays sometimes arrive as JSValue lists that fail
   // `Array.isArray`. arrayFrom accepts anything array-like (`.length`
   // numeric) and returns a real JS array so the rest of the component can
   // rely on standard array operations.
-  function arrayFrom(v) {
-    if (!v || typeof v.length !== "number" || typeof v === "string") return []
-    var out = []
-    for (let i = 0; i < v.length; i++) out.push(v[i])
-    return out
-  }
+  function arrayFrom(v: var): var { return MultiSelectUtils.arrayFrom(v) }
 
-  function normalizeAll(arr) {
-    var out = []
-    var src = arrayFrom(arr)
-    var seen = ({})
-    for (let i = 0; i < src.length; i++) {
-      let n = normalizeOption(src[i])
-      if (!n.value) continue
-      if (seen[n.value]) continue
-      seen[n.value] = true
-      out.push(n)
-    }
-    return out
-  }
+  function normalizeAll(arr: var): var { return MultiSelectUtils.normalizeAll(arr) }
 
-  function valueSet() {
-    var set = ({})
-    var arr = arrayFrom(values)
-    for (let i = 0; i < arr.length; i++) set[String(arr[i])] = true
-    return set
-  }
+  function valueSet(): var { return MultiSelectUtils.valueSet(values) }
 
-  function isSelected(value) {
+  function isSelected(value: string): bool {
     var set = valueSet()
     return !!set[String(value)]
   }
 
-  function toggleValue(value) {
+  function toggleValue(value: string): void {
     var v = String(value)
     var arr = arrayFrom(values)
     var idx = arr.indexOf(v)
@@ -119,34 +91,16 @@ Item {
     root.changed(arr)
   }
 
-  function selectionLabel() {
-    var arr = arrayFrom(values)
-    if (arr.length === 0) return ""
-    var labels = []
-    var byValue = ({})
-    for (let i = 0; i < resolvedOptions.length; i++)
-      byValue[resolvedOptions[i].value] = resolvedOptions[i].label
-    for (let j = 0; j < arr.length; j++)
-      labels.push(byValue[String(arr[j])] || String(arr[j]))
-    if (labels.length <= 3) return labels.join(", ")
-    return Commons.I18n.tn("multiSelect.selectedCount", arr.length).arg(Commons.I18n.formatNumber(arr.length))
+  function selectionLabel(): string {
+    return MultiSelectUtils.selectionLabel(values, resolvedOptions, Commons.I18n)
   }
 
   property var filtered: resolvedOptions
-  function recomputeFiltered() {
-    var q = searchField.text.toLowerCase()
-    if (!q) { filtered = resolvedOptions; return }
-    var out = []
-    for (let i = 0; i < resolvedOptions.length; i++) {
-      let o = resolvedOptions[i]
-      if (o.label.toLowerCase().indexOf(q) !== -1
-          || o.description.toLowerCase().indexOf(q) !== -1
-          || o.value.toLowerCase().indexOf(q) !== -1) out.push(o)
-    }
-    filtered = out
+  function recomputeFiltered(): void {
+    filtered = MultiSelectUtils.filteredOptions(resolvedOptions, searchField.text)
   }
 
-  function rebuildFromStatic() {
+  function rebuildFromStatic(): void {
     resolvedOptions = normalizeAll(options)
     recomputeFiltered()
   }
@@ -156,24 +110,8 @@ Item {
   // surfaces as an error rather than silently falling back to newline
   // parsing, which would render the broken text as a literal option label.
   // Output not starting with `[` is treated as one value per non-empty line.
-  function parseCommandOutput(text) {
-    var raw = String(text || "").trim()
-    if (raw === "") return { options: [], error: "" }
-    if (raw.charAt(0) === "[") {
-      try {
-        let parsed = JSON.parse(raw)
-        return { options: parsed, error: "" }
-      } catch (e) {
-        return { options: [], error: Commons.I18n.t("multiSelect.invalidJson") }
-      }
-    }
-    var out = []
-    var lines = raw.split(/\r?\n/)
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i].trim()
-      if (line !== "") out.push(line)
-    }
-    return { options: out, error: "" }
+  function parseCommandOutput(text: string): var {
+    return MultiSelectUtils.parseCommandOutput(text, Commons.I18n.t("multiSelect.invalidJson"))
   }
 
   // Monotonic request id so stale stdout/exit signals from a previous
@@ -182,9 +120,9 @@ Item {
   property int refreshSeq: 0
   readonly property int refreshTimeoutMs: 6000
 
-  function refresh() {
+  function refresh(): void {
     var cmd = arrayFrom(optionsCommand)
-    if (cmd.length === 0) {
+    if (MultiSelectUtils.arrayLength(cmd) === 0) {
       rebuildFromStatic()
       return
     }
@@ -210,7 +148,7 @@ Item {
     }
   }
 
-  onOptionsChanged: if (arrayFrom(optionsCommand).length === 0) rebuildFromStatic()
+  onOptionsChanged: if (arrayLength(arrayFrom(optionsCommand)) === 0) rebuildFromStatic()
   onOptionsCommandChanged: refresh()
   Component.onCompleted: refresh()
 
@@ -226,12 +164,14 @@ Item {
       onStreamFinished: {
         if (optionsProcess.seq !== root.refreshSeq) return
         var result = root.parseCommandOutput(text)
-        if (result.error) {
-          root.optionsError = result.error
+        var error = root.arrayAt(result, 1)
+        var dynamicOptions = root.arrayAt(result, 0)
+        if (error) {
+          root.optionsError = error
           root.resolvedOptions = root.normalizeAll(root.options)
         } else {
           let combined = root.arrayFrom(root.options)
-          for (let j = 0; j < result.options.length; j++) combined.push(result.options[j])
+          for (let j = 0; j < root.arrayLength(dynamicOptions); j++) combined.push(root.arrayAt(dynamicOptions, j))
           root.resolvedOptions = root.normalizeAll(combined)
         }
         root.recomputeFiltered()
@@ -271,7 +211,7 @@ Item {
 
     BorderSurface {
       id: trigger
-      readonly property Item attachedWindowItem: Window.window ? Window.window.contentItem : null
+      readonly property Item attachedWindowItem: MultiSelectUtils.windowContentItem(Window.window)
       width: parent.width
       height: root.rowHeight
       radius: Style.cornerRadius
@@ -412,13 +352,14 @@ Item {
             height: root.popupRowHeight + Style.spacing.controlPaddingX
 
             Row {
+              id: searchHeaderRow
               anchors.fill: parent
               anchors.margins: Style.spacing.md
               spacing: Style.spacing.rowGap
 
               TextField {
                 id: searchField
-                width: parent.width - refreshButton.width - parent.spacing
+                width: parent.width - refreshButton.width - searchHeaderRow.spacing
                 height: parent.height
                 placeholderText: root.placeholderText
                 foreground: root.foreground
@@ -452,14 +393,14 @@ Item {
 
               BorderSurface {
                 id: refreshButton
-                visible: root.arrayFrom(root.optionsCommand).length > 0
+                visible: root.arrayLength(root.arrayFrom(root.optionsCommand)) > 0
                 enabled: !root.loadingOptions
                 width: parent.height
                 height: parent.height
                 radius: Style.cornerRadius
                 color: refreshHover.hovered
-                  ? Style.hoverFillFor(root.foreground, root.accent)
-                  : Style.normalFillFor(root.foreground, root.accent)
+                  ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
+                  : Style.normalFillFor(root.foreground, root.accent, Commons.Color.urgent)
                 borderSpec: refreshHover.hovered
                   ? Border.controlSpec("hover-cursor", root.foreground, root.accent)
                   : Border.controlSpec("normal", root.foreground, root.accent)
@@ -520,8 +461,8 @@ Item {
               currentIndex: -1
               keyNavigationEnabled: false
 
-              function toggleCurrent() {
-                if (currentIndex < 0 || currentIndex >= root.filtered.length) return
+              function toggleCurrent(): void {
+                if (currentIndex < 0 || currentIndex >= root.arrayLength(root.filtered)) return
                 root.toggleValue(root.filtered[currentIndex].value)
               }
 
@@ -553,12 +494,12 @@ Item {
                 required property var modelData
                 required property int index
 
-                readonly property bool selected: root.isSelected(modelData.value)
+                readonly property bool selected: root.isSelected(root.fieldValue(modelData, "value"))
 
                 width: resultList.width
                 height: Math.max(root.popupRowHeight, rowContent.implicitHeight + Style.spacing.rowPaddingX)
                 color: index === resultList.currentIndex
-                  ? Style.hoverFillFor(root.foreground, root.accent)
+                  ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
                   : "transparent"
 
                 Row {
@@ -576,7 +517,7 @@ Item {
                     height: Style.space(16)
                     radius: Math.max(2, Style.cornerRadius / 2)
                     anchors.verticalCenter: parent.verticalCenter
-                    color: resultRow.selected ? Style.selectedFillFor(root.foreground, root.accent) : "transparent"
+                    color: resultRow.selected ? Style.selectedFillFor(root.foreground, root.accent, Commons.Color.urgent) : "transparent"
                     borderSpec: resultRow.selected
                       ? Border.controlSpec("selected", root.foreground, root.accent)
                       : Border.controlSpec("normal", root.foreground, root.accent)
@@ -585,7 +526,7 @@ Item {
                       anchors.centerIn: parent
                       visible: resultRow.selected
                       text: "✓"
-                      color: Style.selectedStateColor(root.foreground, root.accent)
+                      color: Style.selectedStateColor(root.foreground, root.accent, Commons.Color.urgent)
                       font.family: root.fontFamily
                       font.pixelSize: Math.round(checkbox.height * 0.85)
                       font.bold: true
@@ -593,14 +534,14 @@ Item {
                   }
 
                   Column {
-                    width: parent.width - checkbox.width - parent.spacing
+                    width: parent.width - checkbox.width - rowContent.spacing
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Style.spacing.xxs
 
                     Text {
                       textFormat: Text.PlainText
-                      text: resultRow.modelData.label
-                      color: resultRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
+                      text: root.fieldValue(resultRow.modelData, "label")
+                      color: resultRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent, Commons.Color.urgent) : root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.body
                       elide: Text.ElideRight
@@ -609,7 +550,7 @@ Item {
                     Text {
                       textFormat: Text.PlainText
                       visible: text !== ""
-                      text: resultRow.modelData.description
+                      text: root.fieldValue(resultRow.modelData, "description")
                       color: Qt.darker(root.foreground, 1.5)
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -624,7 +565,7 @@ Item {
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
                   onPositionChanged: resultList.currentIndex = resultRow.index
-                  onClicked: root.toggleValue(resultRow.modelData.value)
+                  onClicked: root.toggleValue(root.fieldValue(resultRow.modelData, "value"))
                 }
               }
             }

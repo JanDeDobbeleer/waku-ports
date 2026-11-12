@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.Commons as Commons
+import "OverlayWindowUtils.js" as OverlayWindowUtils
 
 // Map a fresh fullscreen surface on each open. Keep its first frames
 // transparent until Qt receives the output's scale, so it opens sharp without
@@ -16,21 +17,15 @@ PanelWindow {
   property int shownKeyboardFocus: WlrKeyboardFocus.Exclusive
 
   property var targetScreen: null
-  readonly property var targetMonitor: {
-    var monitors = Hyprland.monitors.values
-    for (let i = 0; i < monitors.length; i++) {
-      if (targetScreen && monitors[i].name === targetScreen.name) return monitors[i]
-    }
-    // Windows port: Quickshell.Hyprland has no monitors, so the screen stands in for one.
-    return targetScreen ? { name: targetScreen.name, scale: targetScreen.devicePixelRatio } : null
-  }
+  readonly property var targetMonitor: OverlayWindowUtils.targetMonitor(Hyprland.monitors, targetScreen)
 
   // Wait for fullscreen geometry as well as scale so no smaller opening frame
   // is stretched across the output. Fractional scale uses units of 1/120;
   // compare in those units to tolerate floating point rounding.
   readonly property bool contentReady: shown && backingWindowVisible && !!targetScreen
-    && width === targetScreen.width && height === targetScreen.height
-    && !!targetMonitor && Math.round(devicePixelRatio * 120) === Math.round(targetMonitor.scale * 120)
+    && width === OverlayWindowUtils.number(targetScreen, "width")
+    && height === OverlayWindowUtils.number(targetScreen, "height")
+    && !!targetMonitor && Math.round(devicePixelRatio * 120) === Math.round(OverlayWindowUtils.number(targetMonitor, "scale") * 120)
   property bool contentRevealed: false
 
   // Closing keeps the window mapped for one more frame at opacity 0. A window
@@ -82,7 +77,7 @@ PanelWindow {
     })
   }
 
-  function focusedScreen() {
+  function focusedScreen(): var {
     var monitor = Hyprland.focusedMonitor as HyprlandMonitor
     var name = monitor ? String(monitor.name || "") : ""
     for (let i = 0; i < Quickshell.screens.length; i++) {

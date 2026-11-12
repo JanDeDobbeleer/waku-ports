@@ -40,7 +40,11 @@ Item {
     path: root.pluginDir + "/world.json"
     printErrors: false
     onLoaded: {
-      try { root.land = JSON.parse(text()); canvas.requestPaint() } catch (e) { }
+      var parsed = Solar.parseJson(text())
+      if (parsed.ok) {
+        root.land = parsed.value
+        canvas.requestPaint()
+      }
     }
   }
 
@@ -49,7 +53,7 @@ Item {
     anchors.fill: parent
     renderStrategy: Canvas.Cooperative
 
-    function strokePath(ctx, pts) {
+    function strokePath(ctx: var, pts: var): void {
       var segs = Solar.visibleSegments(pts, root.spin, 0, root.radius)
       for (let i = 0; i < segs.length; i++) {
         ctx.moveTo(segs[i][0].x, segs[i][0].y)
@@ -91,9 +95,9 @@ Item {
       ctx.strokeStyle = Util.alpha(c, root.showLand ? (root.bold ? 0.42 : 0.30) : 0.85)
       ctx.stroke()
 
-      if (root.showLand && root.land.length > 0) {
+      if (root.showLand && Solar.arrayLength(root.land) > 0) {
         ctx.beginPath()
-        for (i = 0; i < root.land.length; i++) {
+        for (i = 0; i < Solar.arrayLength(root.land); i++) {
           let ring = root.land[i]
           // Major landmasses only; islands read as dirt on the lens.
           if (ring.length < 40) continue

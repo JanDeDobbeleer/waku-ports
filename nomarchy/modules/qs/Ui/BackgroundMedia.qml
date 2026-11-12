@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
+import "BackgroundMediaUtils.js" as BackgroundMediaUtils
 
 // The shell draws stills only. OWE owns video backgrounds on the desktop, and
 // it feeds the lock screen through its own socket.
@@ -18,9 +19,9 @@ Item {
   property bool constrainDecode: false
   property size decodeSize: Qt.size(0, 0)
   readonly property var current: imageLoader.item
-  readonly property bool ready: current ? current.ready : false
+  readonly property bool ready: !!BackgroundMediaUtils.field(current, "ready")
   // The file behind path could not be loaded, as when it was deleted.
-  readonly property bool failed: current ? current.failed : false
+  readonly property bool failed: !!BackgroundMediaUtils.field(current, "failed")
   readonly property bool video: Util.isVideoPath(path)
   // Cache-bust images selected in a running lock session, so a theme switch
   // that replaces the file behind an unchanged path shows the new pixels.

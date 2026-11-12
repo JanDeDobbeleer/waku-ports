@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import "BackgroundSwitchUtils.js" as BackgroundSwitchUtils
 
 // Sequence a background change around an intro. The outgoing frame is held
 // under BackgroundIntro's cover, the link moves once that cover is on screen,
@@ -13,7 +14,7 @@ Item {
   id: root
 
   property var intro: null
-  readonly property var backgroundService: intro ? intro.backgroundService : null
+  readonly property var backgroundService: BackgroundSwitchUtils.field(intro, "backgroundService")
   readonly property string home: (Quickshell.env("HOME") || "")
   readonly property string backgroundLink: home + "/.local/state/nomarchy/current/background"
   readonly property string transitionCache: home + "/.cache/nomarchy/background-transitions"
@@ -44,32 +45,32 @@ Item {
 
   // A theme switch waits while this is set, so it cannot capture a frame from
   // under a cover or take over from a change still being set up.
-  readonly property bool busy: !!intro && (intro.themeToken !== "" || intro.revealing) || snapshotProc.running
+  readonly property bool busy: !!intro && (BackgroundSwitchUtils.field(intro, "themeToken") !== "" || BackgroundSwitchUtils.field(intro, "revealing")) || snapshotProc.running
 
   // The background the latest selection names. The link only moves once a
   // change is under way, so a selection still queued or covered is not there
   // yet.
-  function selected() {
+  function selected(): string {
     if (queuedPath) return queuedPath
-    if (token && intro && (snapshotProc.running || token === intro.themeToken)) return still
-    return backgroundService ? backgroundService.currentBackground : ""
+    if (token && intro && (snapshotProc.running || token === BackgroundSwitchUtils.field(intro, "themeToken"))) return still
+    return backgroundService ? BackgroundSwitchUtils.field(backgroundService, "currentBackground") : ""
   }
 
-  function displayedStill() {
-    var path = backgroundService ? (backgroundService.displayedBackground || backgroundService.currentBackground) : ""
+  function displayedStill(): string {
+    var path = backgroundService ? (BackgroundSwitchUtils.field(backgroundService, "displayedBackground") || BackgroundSwitchUtils.field(backgroundService, "currentBackground")) : ""
     return path && !Util.isVideoPath(path) ? path : ""
   }
 
   // nomarchy-theme-bg-set's selection, with the intro it found for it.
-  function switchTo(path, clipPath) {
+  function switchTo(path: string, clipPath: string): string {
     path = String(path || "").trim()
     if (!path || !intro || !backgroundService) return "unavailable"
     if (busy) {
       queuedPath = path
-    } else if (path !== backgroundService.currentBackground) {
+    } else if (path !== BackgroundSwitchUtils.field(backgroundService, "currentBackground")) {
       // A playing intro hides the shell's background, so even a still
       // without an intro of its own has to come in under the cover.
-      if (clipPath || backgroundService.suspended) {
+      if (clipPath || BackgroundSwitchUtils.field(backgroundService, "suspended")) {
         begin(path, clipPath)
       } else {
         link(path)
@@ -79,19 +80,19 @@ Item {
     return "ok"
   }
 
-  function link(target) {
+  function link(target: string): void {
     pendingLink = target
     if (!linkProc.running) startLink()
   }
 
-  function startLink() {
+  function startLink(): void {
     linkProc.target = pendingLink
     pendingLink = ""
     linkProc.command = ["ln", "-nsf", linkProc.target, backgroundLink]
     linkProc.running = true
   }
 
-  function begin(path, clipPath) {
+  function begin(path: string, clipPath: string): void {
     serial += 1
     token = "background-" + serial
     still = path
@@ -99,7 +100,7 @@ Item {
     prepared = false
     linked = false
     started = false
-    if (backgroundService.suspended) {
+    if (BackgroundSwitchUtils.field(backgroundService, "suspended")) {
       // A playing video shows a frame only OWE can capture.
       snapshotProc.forToken = token
       snapshotProc.file = transitionCache + "/previous-" + serial + ".ppm"
@@ -111,35 +112,35 @@ Item {
     }
   }
 
-  function cover(path) {
-    intro.prepareTheme(path, token, "", "")
+  function cover(path: string): void {
+    BackgroundSwitchUtils.call(intro, "prepareTheme", [path, token, "", ""])
     advance()
   }
 
   // A theme switch has put up its cover and repointed the link itself; the
   // rest is the same as a background change, plus Hyprland's reload.
-  function play(tok, stillPath, clipPath, preparedFlag) {
+  function play(tok: string, stillPath: string, clipPath: string, preparedFlag: string): string {
     reloadPending = true
-    if (!intro || tok !== intro.themeToken) return "superseded"
+    if (!intro || tok !== BackgroundSwitchUtils.field(intro, "themeToken")) return "superseded"
     token = tok
     still = stillPath
     root.clipPath = clipPath
     prepared = preparedFlag === "true"
     linked = true
     started = false
-    own(intro.themeBackground)
+    own(BackgroundSwitchUtils.field(intro, "themeBackground"))
     advance()
     return "ok"
   }
 
-  function own(path) {
+  function own(path: string): void {
     if (path && path.indexOf(transitionCache + "/") === 0 && ownedCovers.indexOf(path) === -1)
       ownedCovers = ownedCovers.concat([path])
   }
 
-  function advance() {
-    if (!token || !intro || token !== intro.themeToken) return
-    var coverStatus = intro.themeCoverStatus(token)
+  function advance(): void {
+    if (!token || !intro || token !== BackgroundSwitchUtils.field(intro, "themeToken")) return
+    var coverStatus = BackgroundSwitchUtils.call(intro, "themeCoverStatus", [token])
     if (coverStatus === "loading") return
     // Moving the link cancels a playing intro and hands the desktop back to
     // the shell, so it waits for the cover.
@@ -153,7 +154,7 @@ Item {
     // The shell holds the new still before OWE hands the desktop back, so the
     // old one cannot flash between the clip and the still. With the
     // background plugin disabled the cover still has to come down.
-    if (backgroundService) backgroundService.setBackground(still, true)
+    if (backgroundService) BackgroundSwitchUtils.call(backgroundService, "setBackground", [still, true])
     if (clipPath && coverStatus !== "error") {
       playProc.forToken = token
       playProc.command = prepared
@@ -161,19 +162,16 @@ Item {
         : ["C:/Program Files/Git/usr/bin/bash.exe", "-c", 'owe refresh >/dev/null && exec owe intro --start first-frame "$1"', "_", clipPath]
       playProc.running = true
     } else {
-      intro.finishTheme(token, !clipPath)
+      BackgroundSwitchUtils.call(intro, "finishTheme", [token, !clipPath])
     }
   }
 
-  function settle() {
+  function settle(): void {
     if (busy) return
     if (reloadPending && !playProc.running && !reloadLock.running) reloadLock.running = true
-    var kept = []
-    for (let path of ownedCovers) {
-      if (path === intro.themeBackground) kept.push(path)
-      else Quickshell.execDetached(["rm", "-f", path])
-    }
-    ownedCovers = kept
+    ownedCovers = BackgroundSwitchUtils.keepCover(ownedCovers, BackgroundSwitchUtils.field(intro, "themeBackground"), function(path: string): void {
+      Quickshell.execDetached(["rm", "-f", path])
+    })
     // The queued selection goes back through nomarchy-theme-bg-set, which
     // finds its intro under the settings and theme as they are now.
     if (queuedPath) {
@@ -189,7 +187,7 @@ Item {
     function onCoverPresented() { root.advance() }
     function onThemeTokenChanged() {
       // A theme switch taking the cover brings its own background.
-      if (root.intro.themeToken && root.intro.themeToken !== root.token) root.queuedPath = ""
+      if (BackgroundSwitchUtils.field(root.intro, "themeToken") && BackgroundSwitchUtils.field(root.intro, "themeToken") !== root.token) root.queuedPath = ""
       Qt.callLater(root.settle)
     }
     function onRevealingChanged() { Qt.callLater(root.settle) }
@@ -217,7 +215,7 @@ Item {
     property string file: ""
     onExited: function(exitCode) {
       // A theme switch that took the cover meanwhile wins.
-      if (forToken !== root.token || root.intro.themeToken !== "") {
+      if (forToken !== root.token || BackgroundSwitchUtils.field(root.intro, "themeToken") !== "") {
         Quickshell.execDetached(["rm", "-f", file])
       } else if (exitCode === 0) {
         root.own(file)

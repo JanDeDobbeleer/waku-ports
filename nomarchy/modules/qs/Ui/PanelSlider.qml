@@ -13,7 +13,7 @@ Item {
   property real maximum: 1
   property real step: 0.05
   property bool integer: false
-  property color trackColor: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent) : "#333"
+  property color trackColor: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "#333"
   property color fillColor: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   property color knobColor: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   property bool dragging: false
@@ -46,7 +46,7 @@ Item {
   // In a mirrored (right-to-left) layout the anchored fill already starts at
   // the right; the knob, ticks, and pointer are placed by x, so they flip here.
   readonly property bool mirrored: LayoutMirroring.enabled
-  function trackX(fraction) {
+  function trackX(fraction: real): real {
     return track.x + track.width * (root.mirrored ? 1 - fraction : fraction)
   }
 
@@ -118,7 +118,7 @@ Item {
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-    function valueFromX(x) {
+    function valueFromX(x: real): real {
       if (track.width <= 0) return root.minimum
       var fraction = Math.max(0, Math.min(1, (x - track.x) / track.width))
       if (root.mirrored) fraction = 1 - fraction

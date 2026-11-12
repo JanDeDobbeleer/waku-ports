@@ -250,9 +250,9 @@ Panel {
 
   function sectionCount(section: string): int {
     if (section === "displays") return Dynamic.value(segments, "length")
-    if (section === "scale") return current ? current.scales.length : 0
-    if (section === "resolution") return current ? current.resolutions.length : 0
-    if (section === "refresh") return current ? current.refreshes.length : 0
+    if (section === "scale") return current ? Dynamic.value(Dynamic.value(current, "scales"), "length") : 0
+    if (section === "resolution") return current ? Dynamic.value(Dynamic.value(current, "resolutions"), "length") : 0
+    if (section === "refresh") return current ? Dynamic.value(Dynamic.value(current, "refreshes"), "length") : 0
     if (section === "mirror") return Dynamic.value(mirrorModes, "length")
     if (section === "layout") return 1
     return 0  // sliders: only the sentinel at -1
@@ -338,7 +338,7 @@ Panel {
     if (!item || !scrollArea) return
     var flick = scrollArea.contentItem
     if (!flick || flick.contentY === undefined) return
-    var pt = item.mapToItem(flick.contentItem || flick, 0, 0)
+    var pt = Dynamic.call(item, "mapToItem", [flick.contentItem || flick, 0, 0])
     var top = Dynamic.value(pt, "y")
     var bottom = top + (Dynamic.value(item, "height") || 0)
     var viewTop = flick.contentY
@@ -561,7 +561,7 @@ Panel {
 
   // Opens where `item` was clicked, at (x, y) within it, in panel coordinates.
   function openRotateMenu(name: string, item: Item, x: real, y: real): void {
-    var spot = item.mapToItem(panel.loadedContent, x, y)
+    var spot = Dynamic.call(item, "mapToItem", [panel.loadedContent, x, y])
     rotateMenuName = name
     rotateMenuX = Dynamic.value(spot, "x")
     rotateMenuY = Dynamic.value(spot, "y")
@@ -586,8 +586,7 @@ Panel {
   // ctrl+h/j/k/l on the layout: the shown display to that side of the rest.
   function placeShown(side: string): void {
     if (!current || !layoutMovable) return
-    var name = Dynamic.value(current, "name")
-    applyLayout(function(): var { return Model.placeDisplay(layoutRects, name, side) })
+    applyLayout(function(): var { return Model.placeDisplay(layoutRects, Dynamic.value(current, "name"), side) })
   }
 
   function closeRotateMenu(): void {
@@ -603,7 +602,7 @@ Panel {
   // leaves everything where it was. Behind another command it waits its turn
   // and is worked out again then, from the sizes that command left.
   function applyLayout(place: var): void {
-    var rects = place()
+    var rects = Dynamic.callFunction(place)
     if (!rects || Model.sameLayout(rects, Model.normalizeLayout(Model.copyRects(layoutRects)))) return
     pendingRects = rects
     if (actionBusy) queuedActions = queuedActions.concat([{ layout: place }])
@@ -819,9 +818,9 @@ Panel {
     onWheelMoved: function(delta) {
       if (!root.brightnessAvailable) return
       var wheel = Util.wheelSteps(root.wheelAccumulator, delta)
-      root.wheelAccumulator = wheel.remainder
-      if (wheel.steps === 0) return
-      root.setBrightness(root.brightnessPercent + wheel.steps * 5)
+      root.wheelAccumulator = Dynamic.value(wheel, "remainder")
+      if (Dynamic.value(wheel, "steps") === 0) return
+      root.setBrightness(root.brightnessPercent + Dynamic.value(wheel, "steps") * 5)
       root.showBrightnessOsd(root.brightnessPercent)
     }
   }
@@ -919,7 +918,7 @@ Panel {
               spacing: Style.space(2)
 
               Text {
-                text: Dynamic.value(root, "current") ? root.current.title : Commons.I18n.t("monitor.display")
+                text: Dynamic.value(root, "current") ? Dynamic.value(root.current, "title") : Commons.I18n.t("monitor.display")
                 textFormat: Text.PlainText
                 color: root.contentForeground
                 font.family: root.contentFontFamily
@@ -1155,13 +1154,13 @@ Panel {
             Grid {
               id: scaleGrid
               width: Dynamic.value(parent, "width")
-              columns: Math.max(1, Dynamic.value(root, "current") ? root.current.scales.length : 1)
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "scales"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: Dynamic.value(root, "current") ? root.current.scales : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "scales") : []
 
                 ScalePill {
                   required property string modelData
@@ -1218,13 +1217,13 @@ Panel {
             Grid {
               id: resolutionGrid
               width: Dynamic.value(parent, "width")
-              columns: Math.max(1, Dynamic.value(root, "current") ? root.current.resolutions.length : 1)
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "resolutions"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: Dynamic.value(root, "current") ? root.current.resolutions : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "resolutions") : []
 
                 ResolutionPill {
                   required property string modelData
@@ -1280,13 +1279,13 @@ Panel {
             Grid {
               id: refreshGrid
               width: Dynamic.value(parent, "width")
-              columns: Math.max(1, Dynamic.value(root, "current") ? root.current.refreshes.length : 1)
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "refreshes"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: Dynamic.value(root, "current") ? root.current.refreshes : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "refreshes") : []
 
                 RefreshPill {
                   required property var modelData
@@ -1605,8 +1604,8 @@ Panel {
         z: dragging ? 1 : 0
         radius: Style.cornerRadius > 0 ? Style.space(3) : 0
         color: isCurrent
-          ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent)
-          : Style.hoverFillFor(root.contentForeground, Commons.Color.accent)
+          ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
+          : Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
         border.width: isCurrent && map.hasCursor ? 2 : 1
         border.color: isCurrent ? Commons.Color.accent : Qt.darker(root.contentForeground, 1.6)
 
@@ -1615,7 +1614,7 @@ Panel {
         Rectangle {
           anchors.fill: parent
           z: -1
-          radius: parent.radius
+          radius: screenRect.radius
           color: Commons.Color.popups.background
         }
 
@@ -1637,8 +1636,8 @@ Panel {
 
             Rectangle {
               anchors.fill: parent
-              radius: parent.radius
-              color: Style.hoverFillFor(root.contentForeground, Commons.Color.accent)
+              radius: screenRect.radius
+              color: Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
             }
           }
         }
@@ -1682,17 +1681,12 @@ Panel {
           }
           onReleased: function(mouse) {
             if (mouse.button === Qt.RightButton) return
-            var name = Dynamic.value(screenRect.modelData, "name")
-            var moved = Math.abs(screenRect.dragX) + Math.abs(screenRect.dragY) > 3
-            // Back into layout space; snap within about 8 map pixels.
-            var x = Dynamic.value(map.bounds, "x") + (Dynamic.value(screenRect, "x") - map.offsetX) / map.ratio
-            var y = Dynamic.value(map.bounds, "y") + (Dynamic.value(screenRect, "y") - map.offsetY) / map.ratio
             // Reset first: applying the move redraws the map, this box included.
-            screenRect.dragX = 0
-            screenRect.dragY = 0
-            var snap = Style.space(8) / map.ratio
-            if (moved) root.applyLayout(function() { return Model.dropDisplay(root.layoutRects, name, x, y, snap) })
-            else root.selectDisplay(name)
+            Dynamic.finishDisplayDrag(root.layoutRects, screenRect, map, Style.space(8),
+              function(rects: var, name: string, x: real, y: real, snap: real): void {
+                root.applyLayout(function(): var { return Model.dropDisplay(rects, name, x, y, snap) })
+              },
+              function(name: string): void { root.selectDisplay(name) })
           }
           onCanceled: {
             screenRect.dragX = 0

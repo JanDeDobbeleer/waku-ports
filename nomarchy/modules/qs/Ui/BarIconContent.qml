@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import "BarIconContentUtils.js" as BarIconContentUtils
 
 Item {
   id: root
@@ -20,7 +21,7 @@ Item {
     onLoaded: {
       // Keep declared dimensions. Empty wrapper items receive a source canvas.
       let loadedItem = item as Item
-      if (loadedItem && !(loadedItem instanceof Image)) {
+      if (loadedItem && !BarIconContentUtils.isImage(loadedItem)) {
         if (loadedItem.width <= 0) loadedItem.width = Qt.binding(function(): real { return root.sourceSize })
         if (loadedItem.height <= 0) loadedItem.height = Qt.binding(function(): real { return root.sourceSize })
       }

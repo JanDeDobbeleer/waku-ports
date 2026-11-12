@@ -233,7 +233,7 @@ Item {
     anchors { leftMargin: plate.borderLeft; rightMargin: plate.borderRight
               topMargin: plate.borderTop; bottomMargin: plate.borderBottom }
     visible: card.selected
-    color: Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent)
+    color: Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent, Commons.Color.urgent)
   }
 
   Item {

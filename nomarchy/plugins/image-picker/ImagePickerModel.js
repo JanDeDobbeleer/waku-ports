@@ -23,14 +23,14 @@ function parseThemeNames(text) {
 // shadow can even list twice, once per preview extension), so only themes
 // with no stock twin can be deleted from the picker.
 function canDeleteTheme(name, extraNames, stockNames) {
-  if (!name || !Array.isArray(extraNames) || extraNames.indexOf(name) === -1) return false
-  return !Array.isArray(stockNames) || stockNames.indexOf(name) === -1
+  if (!name || !(extraNames && typeof extraNames.length === "number") || extraNames.indexOf(name) === -1) return false
+  return !(stockNames && typeof stockNames.length === "number") || stockNames.indexOf(name) === -1
 }
 
 // Where selection lands when the selected image goes away: the previous
 // match in list order, or the next one when the first match is deleted.
 function replacementSelectionPath(images, selectedIndex, filterText) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   if (selectedIndex < 0 || selectedIndex >= values.length) return ""
   for (var i = selectedIndex - 1; i >= 0; i--) {
     if (itemMatches(values, i, filterText)) return values[i].filePath
@@ -69,7 +69,7 @@ function loadRows(rows) {
 }
 
 function itemMatches(images, index, filterText) {
-  if (!Array.isArray(images) || index < 0 || index >= images.length) return false
+  if (!(images && typeof images.length === "number") || index < 0 || index >= images.length) return false
   var needle = String(filterText || "").toLowerCase()
   if (!needle) return true
 
@@ -79,7 +79,7 @@ function itemMatches(images, index, filterText) {
 }
 
 function firstMatchingIndex(images, filterText) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   for (var i = 0; i < values.length; i++) {
     if (itemMatches(values, i, filterText)) return i
   }
@@ -104,7 +104,7 @@ function selectedFilteredPosition(images, selectedIndex, filterText) {
 }
 
 function indexForSelectedImage(images, selectedImage) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   for (var i = 0; i < values.length; i++) {
     if (values[i].filePath === selectedImage) return i
   }

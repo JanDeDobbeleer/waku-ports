@@ -1,4 +1,5 @@
 import QtQuick
+import "PointerMoveGateUtils.js" as PointerMoveGateUtils
 
 // Filters synthetic hover churn from moving delegates under a stationary
 // pointer. Call reset() after keyboard/list mutations, then moved() from a
@@ -27,28 +28,7 @@ QtObject {
     root.initialSampleAllowed = true
   }
 
-  function moved(item, mouse) {
-    if (!item || !mouse) {
-      root.reset()
-      return false
-    }
-
-    var target = root.referenceItem || item
-    var point = item.mapToItem(target, mouse.x, mouse.y)
-    var firstSample = !root.primed
-    var didMove = !firstSample
-      ? Math.abs(point.x - root.lastX) > root.threshold || Math.abs(point.y - root.lastY) > root.threshold
-      : root.initialSampleAllowed
-
-    // Keep the previous accepted position while filtering jitter so slow,
-    // sub-threshold steps accumulate into deliberate pointer movement.
-    if (firstSample || didMove) {
-      root.lastX = point.x
-      root.lastY = point.y
-    }
-    root.primed = true
-    root.initialSampleAllowed = false
-
-    return didMove
+  function moved(item: Item, mouse: var): bool {
+    return PointerMoveGateUtils.moved(root, item, mouse)
   }
 }

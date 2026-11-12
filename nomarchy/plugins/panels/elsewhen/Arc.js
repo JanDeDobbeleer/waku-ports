@@ -50,3 +50,16 @@ function layout(widths, rise, smile) {
 }
 
 if (typeof module !== "undefined") module.exports = { layout: layout }
+
+function itemCount(value) {
+  return value && value.length ? value.length : 0
+}
+
+function field(value, name) {
+  return value == null ? undefined : value[name]
+}
+
+function charAt(layout, index) {
+  var chars = field(layout, "chars")
+  return chars ? chars[index] : undefined
+}

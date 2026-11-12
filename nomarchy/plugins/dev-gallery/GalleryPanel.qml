@@ -827,7 +827,7 @@ Item {
                     hasCursor: root.focusSection === "cursor-surface" && root.selectedIndex === index
                     current: index === 1
                     foreground: root.foreground
-                    fill: Style.hoverFillFor(root.foreground, root.accent)
+                    fill: Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
                     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(this)
 
                     Text {
@@ -1184,8 +1184,8 @@ Item {
               height: Style.space(36)
               readonly property bool focused: root.focusSection === "panel-tool-tip"
               color: tipMouse.containsMouse || focused
-                ? Style.hoverFillFor(root.foreground, root.accent)
-                : Style.normalFillFor(root.foreground, root.accent)
+                ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
+                : Style.normalFillFor(root.foreground, root.accent, Commons.Color.urgent)
               borderSpec: focused
                 ? Border.controlSpec("hover-cursor", root.foreground, root.accent)
                 : Border.controlSpec("normal", root.foreground, root.accent)
@@ -1732,7 +1732,7 @@ Item {
                   implicitHeight: composedRow.implicitHeight + Style.spacing.md * 2
                   current: true
                   foreground: root.foreground
-                  fill: Style.hoverFillFor(root.foreground, root.accent)
+                  fill: Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
                   hasCursor: root.focusSection === "composed" && root.selectedIndex === 0
                   onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(this)
 
@@ -1806,7 +1806,7 @@ Item {
                   width: parent.width
                   implicitHeight: idleRow.implicitHeight + Style.spacing.md * 2
                   foreground: root.foreground
-                  fill: Style.hoverFillFor(root.foreground, root.accent)
+                  fill: Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
                   hasCursor: root.focusSection === "composed" && root.selectedIndex === 1
                   onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(this)
 

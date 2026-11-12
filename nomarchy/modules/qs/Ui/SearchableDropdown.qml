@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls.Basic as QQC
 import qs.Commons
 import qs.Commons as Commons
+import "ButtonGroupUtils.js" as OptionData
 
 // Searchable single-select dropdown. Same trigger shape as Dropdown, but
 // the popup leads with an embedded TextField that filters the option
@@ -56,31 +57,37 @@ Item {
   signal changed(string value)
   signal hovered(bool isHovered)
 
-  function optionValue(o) {
-    return (o && typeof o === "object") ? String(o.value) : String(o)
+  function optionValue(o: var): string {
+    return o && typeof o === "object" ? String(OptionData.field(o, "value")) : String(o)
   }
-  function optionLabel(o) {
-    return (o && typeof o === "object") ? String(o.label) : String(o)
+  function optionLabel(o: var): string {
+    return o && typeof o === "object" ? String(OptionData.field(o, "label")) : String(o)
   }
-  function optionDescription(o) {
-    return (o && typeof o === "object" && o.description) ? String(o.description) : ""
+  function optionCount(): int { return OptionData.arrayLength(options) }
+  function optionAt(index: int): var { return OptionData.arrayAt(options, index) }
+  function optionDescription(o: var): string {
+    var description = OptionData.field(o, "description")
+    return o && typeof o === "object" && description ? String(description) : ""
   }
-  function currentLabel() {
-    for (let i = 0; i < options.length; i++) {
-      if (optionValue(options[i]) === value) return optionLabel(options[i])
+  function currentLabel(): string {
+    for (let i = 0; i < optionCount(); i++) {
+      if (optionValue(optionAt(i)) === value) return optionLabel(optionAt(i))
     }
     return value
   }
 
   property var filtered: options
-  function recomputeFiltered() {
+  function filteredCount(): int { return OptionData.arrayLength(filtered) }
+  function filteredAt(index: int): var { return OptionData.arrayAt(filtered, index) }
+  function recomputeFiltered(): void {
     var q = searchField.text.toLowerCase()
     if (!q) { filtered = options; return }
     var out = []
-    for (let i = 0; i < options.length; i++) {
-      let lbl = optionLabel(options[i]).toLowerCase()
-      let desc = optionDescription(options[i]).toLowerCase()
-      if (lbl.indexOf(q) !== -1 || desc.indexOf(q) !== -1) out.push(options[i])
+    for (let i = 0; i < optionCount(); i++) {
+      let option = optionAt(i)
+      let lbl = optionLabel(option).toLowerCase()
+      let desc = optionDescription(option).toLowerCase()
+      if (lbl.indexOf(q) !== -1 || desc.indexOf(q) !== -1) out.push(option)
     }
     filtered = out
   }
@@ -274,8 +281,8 @@ Item {
               keyNavigationEnabled: false
 
               function selectCurrent() {
-                if (currentIndex < 0 || currentIndex >= root.filtered.length) return
-                var v = root.optionValue(root.filtered[currentIndex])
+                if (currentIndex < 0 || currentIndex >= root.filteredCount()) return
+                var v = root.optionValue(root.filteredAt(currentIndex))
                 root.value = v
                 root.changed(v)
                 popup.close()
@@ -310,7 +317,7 @@ Item {
                 width: resultList.width
                 height: Math.max(root.popupRowHeight, rowContent.implicitHeight + Style.spacing.rowPaddingX)
                 color: index === resultList.currentIndex
-                  ? Style.hoverFillFor(root.foreground, root.accent)
+                  ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
                   : "transparent"
 
                 Column {
@@ -325,7 +332,7 @@ Item {
                   Text {
                     textFormat: Text.PlainText
                     text: root.optionLabel(optionRow.modelData)
-                    color: optionRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
+                    color: optionRow.index === resultList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent, Commons.Color.urgent) : root.foreground
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     elide: Text.ElideRight
@@ -347,7 +354,7 @@ Item {
                   anchors.fill: parent
                   hoverEnabled: true
                   cursorShape: Qt.PointingHandCursor
-                  onPositionChanged: resultList.currentIndex = parent.index
+                  onPositionChanged: resultList.currentIndex = optionRow.index
                   onClicked: resultList.selectCurrent()
                 }
               }

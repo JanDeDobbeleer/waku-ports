@@ -20,15 +20,15 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property AnimatedFlickable scroller: panel.loadedContent ? (panel.loadedContent as LazyContent).scroller : null
-  readonly property Column scrollContent: panel.loadedContent ? (panel.loadedContent as LazyContent).scrollContent : null
-  readonly property HeroTitle hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
-  readonly property Item stage: panel.loadedContent ? (panel.loadedContent as LazyContent).stage : null
-  readonly property Column listWrap: panel.loadedContent ? (panel.loadedContent as LazyContent).listWrap : null
-  readonly property Repeater cityRows: panel.loadedContent ? (panel.loadedContent as LazyContent).cityRows : null
-  readonly property CitySearch citySearch: panel.loadedContent ? (panel.loadedContent as LazyContent).citySearch : null
-  readonly property CitySearch hereSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).hereSearch : null
-  readonly property Loader globeLoader: panel.loadedContent ? (panel.loadedContent as LazyContent).globeLoader : null
+  readonly property AnimatedFlickable scroller: panel.loadedContent ? Dynamic.value(panel.loadedContent, "scroller") as AnimatedFlickable : null
+  readonly property Column scrollContent: panel.loadedContent ? Dynamic.value(panel.loadedContent, "scrollContent") as Column : null
+  readonly property HeroTitle hero: panel.loadedContent ? Dynamic.value(panel.loadedContent, "hero") as HeroTitle : null
+  readonly property Item stage: panel.loadedContent ? Dynamic.value(panel.loadedContent, "stage") as Item : null
+  readonly property Column listWrap: panel.loadedContent ? Dynamic.value(panel.loadedContent, "listWrap") as Column : null
+  readonly property Repeater cityRows: panel.loadedContent ? Dynamic.value(panel.loadedContent, "cityRows") as Repeater : null
+  readonly property CitySearch citySearch: panel.loadedContent ? Dynamic.value(panel.loadedContent, "citySearch") as CitySearch : null
+  readonly property CitySearch hereSearch: panel.loadedContent ? Dynamic.value(panel.loadedContent, "hereSearch") as CitySearch : null
+  readonly property Loader globeLoader: panel.loadedContent ? Dynamic.value(panel.loadedContent, "globeLoader") as Loader : null
 
 
   // ---- settings
@@ -53,16 +53,15 @@ Panel {
 
   // The words the model's clocks and dates read in, from the shell's language.
   readonly property var words: {
-    var locale = formatLocale
     return {
       t: Commons.I18n.t,
       tn: Commons.I18n.tn,
       fmt: Commons.I18n.formatNumber,
-      am: Dynamic.value(locale, "amText"),
-      pm: Dynamic.value(locale, "pmText"),
+      am: Dynamic.value(formatLocale, "amText"),
+      pm: Dynamic.value(formatLocale, "pmText"),
       date: function(parts: var): string {
         return new Date(Dynamic.value(parts, "year"), Dynamic.value(parts, "month"), Dynamic.value(parts, "day"), 12)
-          .toLocaleString(locale, Commons.I18n.t("elsewhen.dateFormat"))
+          .toLocaleString(formatLocale, Commons.I18n.t("elsewhen.dateFormat"))
       }
     }
   }
@@ -95,14 +94,14 @@ Panel {
   property bool factsQueued: false
 
   readonly property bool adding: citySearch ? Dynamic.value(citySearch, "active") : false
-  onAddingChanged: if (!adding && scroller) scroller.scrollToTop()
+  onAddingChanged: if (!adding && scroller) Dynamic.call(scroller, "scrollToTop")
   readonly property bool choosingHere: hereSearch ? Dynamic.value(hereSearch, "active") : false
   readonly property var zoneOptions: Model.zoneOptions(zoneCatalogText, zones)
   // The globe's jump box may go to a city that is already tracked.
   readonly property var allZoneOptions: Model.zoneOptions(zoneCatalogText, [])
   readonly property var searchZoneIds: {
     var out = []
-    var matches = (citySearch ? citySearch.matches : []).concat(hereSearch ? hereSearch.matches : [])
+    var matches = (citySearch ? Dynamic.value(citySearch, "matches") : []).concat(hereSearch ? Dynamic.value(hereSearch, "matches") : [])
     for (let i = 0; i < Dynamic.value(matches, "length"); i++) {
       let id = matches[i].value
       if (out.indexOf(id) < 0) out.push(id)
@@ -129,7 +128,7 @@ Panel {
   readonly property real bigGlobeOpacity: Util.clamp(zoom / 0.12, 0, 1)
   readonly property real globeStageHeight: Style.space(378)
   // Far enough for the top row to fall past the whole list.
-  readonly property real knockFall: (listWrap ? listWrap.implicitHeight : 0) + Style.space(220)
+  readonly property real knockFall: (listWrap ? Dynamic.value(listWrap, "implicitHeight") : 0) + Style.space(220)
 
   // Shift-click the globe to run the transition at a third of the speed.
   readonly property int slowMotionFactor: 3
@@ -141,21 +140,21 @@ Panel {
     if (on) {
       addSelected = false
       // Both live in the list, which the globe is about to knock away.
-      if (hereSearch) hereSearch.stop()
+      if (hereSearch) Dynamic.call(hereSearch, "stop")
       peopleEditIndex = -1
     }
     zoomDuration = (on ? 800 : 500) * (slow === true ? slowMotionFactor : 1)
     zoomEasing = on ? Easing.OutQuart : Easing.InOutCubic
     globeMode = on
-    if (on && globeLoader && globeLoader.item) showFocusOnGlobe()
+    if (on && globeLoader && Dynamic.value(globeLoader, "item")) showFocusOnGlobe()
   }
 
   // The globe opens on the list's focus, when its coordinates are known.
   function showFocusOnGlobe(): void {
-    var g = globeLoader ? globeLoader.item as Globe : null
+    var g = globeLoader ? Dynamic.value(globeLoader, "item") as Globe : null
     if (!g) return
-    if (focusIndex >= 0 && focusKnown) g.goTo(Dynamic.value(focusZone, "label"), Dynamic.value(focusZone, "id"))
-    else g.showHome()
+    if (focusIndex >= 0 && focusKnown) Dynamic.call(g, "goTo", [Dynamic.value(focusZone, "label"), Dynamic.value(focusZone, "id"), null])
+    else Dynamic.call(g, "showHome")
   }
 
   // A tap on the globe: a city on this machine's zone becomes here, and the
@@ -200,7 +199,7 @@ Panel {
 
   function notify(title: var): void { Util.execArgv(["nomarchy-notification-send", title]) }
 
-  function startChoosingHere(): void { if (hereSearch && localZone !== "" && !globeMode) hereSearch.start() }
+  function startChoosingHere(): void { if (hereSearch && localZone !== "" && !globeMode) Dynamic.call(hereSearch, "start") }
 
   function focusFromGlobe(label: var, zone: var): void {
     var i = Model.indexOfZone(zones, label, zone)
@@ -212,7 +211,7 @@ Panel {
   readonly property var heroCenter: {
     if (!hero || !stage) return null
     var _ = hero.icon.width + Dynamic.value(hero.icon, "height") + Dynamic.value(stage, "y") + stage.width
-    var pt = hero.icon.mapToItem(stage, hero.icon.width / 2, Dynamic.value(hero.icon, "height") / 2)
+    var pt = Dynamic.call(hero.icon, "mapToItem", [stage, hero.icon.width / 2, Dynamic.value(hero.icon, "height") / 2])
     return (pt && Dynamic.value(pt, "x") !== undefined) ? pt : null
   }
   readonly property real heroCenterX: heroCenter ? Dynamic.value(heroCenter, "x") : (stage ? stage.width / 2 : 0)
@@ -233,10 +232,10 @@ Panel {
     dragIndex = index
     dragTarget = index
     rowPitch = pitch
-    var gap = pitch - (cityRows && cityRows.itemAt(index) ? cityRows.itemAt(index).height : 0)
+    var gap = pitch - (cityRows && Dynamic.call(cityRows, "itemAt", [index]) ? Dynamic.call(cityRows, "itemAt", [index]).height : 0)
     var pitches = []
     for (let i = 0; i < Dynamic.value(zones, "length"); i++) {
-      let item = cityRows ? cityRows.itemAt(i) : null
+      let item = cityRows ? Dynamic.call(cityRows, "itemAt", [i]) : null
       pitches.push(item ? Dynamic.value(item, "height") + gap : pitch)
     }
     rowPitches = pitches
@@ -358,9 +357,9 @@ Panel {
 
   function focusOn(index: int): void {
     addSelected = false
-    var from = hero ? hero.spin : 0
+    var from = hero ? Dynamic.value(hero, "spin") : 0
     focusKey = index >= 0 && index < Dynamic.value(zones, "length") ? Model.factsKey(zones[index]) : ""
-    if (focusKnown && hero) hero.turn(from, focusLon)
+    if (focusKnown && hero) Dynamic.call(hero, "turn", [from, focusLon])
   }
 
   // Past the last city, the list's cursor rests on "Add a city"; the globe stays put.
@@ -378,7 +377,7 @@ Panel {
     }
     focusOn(next)
     if (globeMode) showFocusOnGlobe()
-    else scrollToItem(next >= 0 && cityRows ? cityRows.itemAt(next) : null)
+    else scrollToItem(next >= 0 && cityRows ? Dynamic.call(cityRows, "itemAt", [next]) : null)
   }
 
   // The picked city goes, as with its × button, and the cursor lands on the city
@@ -392,11 +391,11 @@ Panel {
 
   function scrollToItem(item: Item): void {
     if (!scroller) return
-    if (!item) { scroller.scrollToTop(); return }
-    var top = item.mapToItem(scrollContent, 0, 0).y
-    if (top < scroller.contentY) scroller.scrollTo(top)
-    else if (top + Dynamic.value(item, "height") > scroller.contentY + Dynamic.value(scroller, "height"))
-      scroller.scrollTo(Math.min(scroller.maxScroll, top + Dynamic.value(item, "height") - Dynamic.value(scroller, "height")))
+    if (!item) { Dynamic.call(scroller, "scrollToTop"); return }
+    var top = Dynamic.value(Dynamic.call(item, "mapToItem", [scrollContent, 0, 0]), "y")
+    if (top < Dynamic.value(scroller, "contentY")) Dynamic.call(scroller, "scrollTo", [top])
+    else if (top + Dynamic.value(item, "height") > Dynamic.value(scroller, "contentY") + Dynamic.value(scroller, "height"))
+      Dynamic.call(scroller, "scrollTo", [Math.min(Dynamic.value(scroller, "maxScroll"), top + Dynamic.value(item, "height") - Dynamic.value(scroller, "height"))])
   }
 
   // Surrogate pairs rather than literal glyphs, which re-encoding can break.
@@ -474,7 +473,7 @@ Panel {
     var entry = { id: root.moduleName }
     for (let existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
     for (let key in values) {
-      if (values[key] === undefined) delete entry[key]
+      if (values[key] === undefined) Model.removeProperty(entry, key)
       else entry[key] = values[key]
     }
 
@@ -497,7 +496,7 @@ Panel {
   function removeCity(id: string): void { setZones(Model.removeZone(zones, id)) }
   function removeCityAt(index: int): void { setZones(Model.removeZoneAt(zones, index)) }
 
-  function startAdding(): void { if (citySearch) citySearch.start() }
+  function startAdding(): void { if (citySearch) Dynamic.call(citySearch, "start") }
 
   function addSessionCity(label: string, id: string, place: var): void {
     for (let i = 0; i < Dynamic.value(sessionCities, "length"); i++)
@@ -528,25 +527,23 @@ Panel {
   // ---- people
   // GitHub profiles by handle, each fetched once a session and cached on disk for a week.
   property var profiles: ({})
+  readonly property var pendingProfiles: Model.pendingProfiles(zones, profilesTried)
   property var profilesTried: ({})
   property double profileStamp: 0
   property bool profilesQueued: false
   property int peopleEditIndex: -1
 
-  function fetchProfiles() {
-    var wanted = Model.handlesIn(zones).filter(function(h: string): bool { return !profilesTried[h] })
-    if (Dynamic.value(wanted, "length") === 0) return
+  function fetchProfiles(): void {
+    if (Dynamic.value(pendingProfiles, "length") === 0) return
     if (peopleProc.running) { profilesQueued = true; return }
-    var tried = Object.assign({}, profilesTried)
-    wanted.forEach(function(h: string): void { tried[h] = true })
-    profilesTried = tried
-    peopleProc.command = Model.profilesCommand(wanted)
+    profilesTried = Model.markProfilesTried(profilesTried, pendingProfiles)
+    peopleProc.command = Model.profilesCommand(pendingProfiles)
     peopleProc.running = true
   }
 
   function startPeopleEdit(index: int): void {
-    if (citySearch) citySearch.stop()
-    if (hereSearch) hereSearch.stop()
+    if (citySearch) Dynamic.call(citySearch, "stop")
+    if (hereSearch) Dynamic.call(hereSearch, "stop")
     peopleEditIndex = index
   }
 
@@ -563,7 +560,7 @@ Panel {
 
   // A hidden field keeps its focus, so the panel asks for the keyboard back.
   function takeKeyboardBack(): void {
-    Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
+    Qt.callLater(function() { if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus") })
   }
 
   // ---- place search
@@ -634,23 +631,17 @@ Panel {
   }
 
   function fetchWeather(): void {
-    var now = Date.now()
     // A reading for somewhere else is stale too: a city's coordinates can move under its name.
-    var stale = factsRequest.map(Model.factsKey).filter(function(key: string): bool {
-      return coordsFor(key) && Model.weatherStale(weather[key], now, coordsFor(key))
-    })
-    if (Dynamic.value(stale, "length") === 0) { publishFacts(); return }
-    weatherProc.keys = stale
-    weatherProc.points = stale.map(coordsFor)
-    weatherProc.command = ["curl", "-fsS", "--max-time", "8", Model.forecastUrl(stale.map(coordsFor))]
+    weatherProc.keys = Model.staleWeatherKeys(factsRequest, weather, Date.now(), function(key: string): var { return root.coordsFor(key) })
+    if (Dynamic.value(weatherProc, "keys").length === 0) { publishFacts(); return }
+    weatherProc.points = Model.coordinatesForKeys(Dynamic.value(weatherProc, "keys"), function(key: string): var { return root.coordsFor(key) })
+    weatherProc.command = ["curl", "-fsS", "--max-time", "8", Model.forecastUrl(Dynamic.value(weatherProc, "points"))]
     weatherProc.running = true
   }
 
   function publishFacts(): void {
-    var coords = {}
-    var keys = factsRequest.map(Model.factsKey)
-    keys.forEach(function(key: string): void { coords[key] = coordsFor(key) })
-    facts = Model.mergeFacts(keys, coords, weather)
+    var keys = Model.factsKeys(factsRequest)
+    facts = Model.mergeFacts(keys, Model.coordinatesForKeys(keys, function(key: string): var { return root.coordsFor(key) }), weather)
     if (!factsQueued) return
     factsQueued = false
     Qt.callLater(refreshFacts)
@@ -674,13 +665,7 @@ Panel {
   }
 
   // Coordinates a city came with, from a place search: never geocoded by name.
-  readonly property var pinnedGeo: {
-    var out = {}
-    factsRequest.forEach(function(row: var): void {
-      if (Dynamic.value(row, "lat") !== undefined) out[Model.factsKey(row)] = { lat: Dynamic.value(row, "lat"), lon: Dynamic.value(row, "lon") }
-    })
-    return out
-  }
+  readonly property var pinnedGeo: Model.pinnedGeography(factsRequest)
 
   // ---- opening spin
   // It lands on the home meridian, so it waits for home's coordinates, read
@@ -697,7 +682,7 @@ Panel {
     if (lon === null) { spinPending = true; spinFallback.restart(); return }
     spinPending = false
     spinFallback.stop()
-    if (hero) hero.spinOpening(lon)
+    if (hero) Dynamic.call(hero, "spinOpening", [lon])
   }
 
   onFactsChanged: if (spinPending) startOpeningSpin()
@@ -706,7 +691,7 @@ Panel {
   Timer {
     id: spinFallback
     interval: 1500
-    onTriggered: if (root.spinPending) { root.spinPending = false; if (root.hero) root.hero.spinOpening(null) }
+    onTriggered: if (root.spinPending) { root.spinPending = false; if (root.hero) Dynamic.call(root.hero, "spinOpening", [null]) }
   }
 
   onOpenedChanged: {
@@ -718,8 +703,8 @@ Panel {
       tick(); refresh(); refreshFacts(); loadCatalog(); fetchProfiles()
       startOpeningSpin()
     } else {
-      if (citySearch) citySearch.stop()
-      if (hereSearch) hereSearch.stop()
+      if (citySearch) Dynamic.call(citySearch, "stop")
+      if (hereSearch) Dynamic.call(hereSearch, "stop")
       peopleEditIndex = -1
       setGlobeMode(false, false); scrubMinutes = 0
       spinPending = false; spinFallback.stop()
@@ -783,22 +768,7 @@ Panel {
     id: geoProc
     property var rows: []
     stdout: StdioCollector {
-      onStreamFinished: {
-        var answers = text.split("\n\u001e\n")
-        var nextGeo = Object.assign({}, root.geo)
-        var nextFallback = {}
-        geoProc.rows.forEach(function(row: var, i: int): void {
-          var key = Model.factsKey(row)
-          var found = Model.pickGeocode(answers[i] || "", Dynamic.value(row, "id"))
-          var place = Dynamic.value(found, "place") || Model.zoneTabCoords(zoneTab.text(), Dynamic.value(row, "id"))
-          if (!place) return
-          if (found.answered) nextGeo[key] = place
-          else nextFallback[key] = place
-        })
-        root.geo = nextGeo
-        root.fallbackGeo = nextFallback
-        root.fetchWeather()
-      }
+      onStreamFinished: Model.mergeGeocodeResponses(root, Dynamic.value(geoProc, "rows"), text, zoneTab.text())
     }
   }
 
@@ -1054,7 +1024,7 @@ Panel {
         else if (key === "t" && (modifiers & Qt.AltModifier)) root.toggleUnits()
         else if (key === "t") root.toggleHour24()
         else if (root.globeMode && (key === "+" || key === "j")) {
-          if (globeLoaderItem.globe) globeLoaderItem.globe.startJump()
+          if (Dynamic.value(globeLoaderItem, "globe")) Dynamic.call(Dynamic.value(globeLoaderItem, "globe"), "startJump")
         } else if (!root.globeMode && (key === "+" || key === "a")) {
           root.startAdding()
         } else if (!root.globeMode && key === "w") {
@@ -1083,7 +1053,7 @@ Panel {
           acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
           onWheel: function(event) {
             var d = Dynamic.value(event.pixelDelta, "y") !== 0 ? Dynamic.value(event.pixelDelta, "y") : Dynamic.value(event.angleDelta, "y") / 120 * Style.space(40)
-            scroller.contentY -= d
+            Dynamic.set(scroller, "contentY", Dynamic.value(scroller, "contentY") - d)
             scroller.clamp()
           }
         }
@@ -1113,7 +1083,7 @@ Panel {
             markerLon: root.focusLon
             onCaptionClicked: {
               if (root.focusIndex >= 0) root.focusOn(-1)
-              else if (root.choosingHere) hereSearch.stop()
+              else if (root.choosingHere) Dynamic.call(hereSearch, "stop")
               else root.startChoosingHere()
             }
             onGlobeClicked: function(slow) { root.setGlobeMode(!root.globeMode, slow) }
@@ -1131,12 +1101,12 @@ Panel {
             placesPending: function(text: string): bool { return root.placesPending(text) }
             loading: root.zoneCatalogText === ""
             placeholderText: Commons.I18n.t("elsewhen.whereAreYou")
-            offsetLabel: function(zoneId) { return root.utcLabelFor(zoneId) }
+            offsetLabel: function(zoneId: string): string { return root.utcLabelFor(zoneId) }
             foreground: root.foreground
             dim: root.dim
             fainter: root.fainter
             fontFamily: root.fontFamily
-            onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(citySearch, "active")) citySearch.stop() }
+            onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(citySearch, "active")) Dynamic.call(citySearch, "stop") }
             onQueryChanged: if (active) root.requestPlaces(query)
             onPicked: function(label, id, place) {
               var pick = { label: label, id: id }
@@ -1151,8 +1121,8 @@ Panel {
           Item {
             id: stage
             width: parent.width
-            height: Math.max(1, listWrap.implicitHeight
-                    + (root.globeStageHeight - listWrap.implicitHeight) * root.zoom)
+            height: Math.max(1, Dynamic.value(listWrap, "implicitHeight")
+                    + (root.globeStageHeight - Dynamic.value(listWrap, "implicitHeight")) * root.zoom)
 
             // Clipped, so knocked rows fall out of the panel.
             Item {
@@ -1192,13 +1162,13 @@ Panel {
                   placesFor: function(text: string): var { return root.placesFor(text) }
                   placesPending: function(text: string): bool { return root.placesPending(text) }
                   loading: root.zoneCatalogText === ""
-                  offsetLabel: function(zoneId) { return root.utcLabelFor(zoneId) }
+                  offsetLabel: function(zoneId: string): string { return root.utcLabelFor(zoneId) }
                   hasCursor: root.addSelected
                   foreground: root.foreground
                   dim: root.dim
                   fainter: root.fainter
                   fontFamily: root.fontFamily
-                  onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(hereSearch, "active")) hereSearch.stop() }
+                  onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(hereSearch, "active")) Dynamic.call(hereSearch, "stop") }
                   onQueryChanged: if (active) root.requestPlaces(query)
                   onPicked: function(label, id, place) { root.addCity(id, label, place) }
                   onDismissed: root.takeKeyboardBack()
@@ -1227,8 +1197,8 @@ Panel {
 
               // The disc's center, above the globe's footer and jump bar.
               readonly property real discCX: width / 2
-              readonly property real discCY: globe ? (height - globe.footerHeight - globe.jumpHeight) / 2 : height / 2
-              readonly property real discR: globe && globe.radius > 0 ? globe.radius : 1
+              readonly property real discCY: globe ? (height - Dynamic.value(globe, "footerHeight") - Dynamic.value(globe, "jumpHeight")) / 2 : height / 2
+              readonly property real discR: globe && Dynamic.value(globe, "radius") > 0 ? Dynamic.value(globe, "radius") : 1
               readonly property real startScale: root.heroDiscRadius / discR
               readonly property real zoomScale: startScale + (1 - startScale) * root.zoom
 
@@ -1276,7 +1246,7 @@ Panel {
                 globe.offsetModeToggleRequested.connect(function(): void { root.toggleOffsetMode() })
                 globe.jumpRequested.connect(function(label: string, zone: string, place: var): void { root.addSessionCity(label, zone, place) })
                 globe.exitRequested.connect(function(): void { root.setGlobeMode(false, false) })
-                globe.jumpDismissed.connect(function(): void { Qt.callLater(function(): void { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() }) })
+                globe.jumpDismissed.connect(function(): void { Qt.callLater(function(): void { if (panel.loadedContent) Dynamic.call(panel.loadedContent, "forceActiveFocus") }) })
                 globe.citySelected.connect(function(label: string, zone: string): void { root.focusFromGlobe(label, zone) })
                 globe.cityTapped.connect(function(label: string, zone: string): void { root.claimHome(label, zone) })
                 // A cold start can finish loading after the mode switched on.

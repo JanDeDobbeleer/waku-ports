@@ -4,6 +4,7 @@ import Quickshell.Services.Mpris
 import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
+import "MediaBarWidgetUtils.js" as MediaBarWidgetUtils
 
 BarWidget {
   id: root
@@ -14,8 +15,8 @@ BarWidget {
   moduleName: "nomarchy.media"
 
   readonly property var mediaService: BarValues.firstPartyServiceFor(bar, "nomarchy.media")
-  readonly property MprisPlayer activePlayer: mediaService ? mediaService.activePlayer as MprisPlayer : null
-  readonly property var sourcePlayers: mediaService ? mediaService.sourcePlayers : []
+  readonly property MprisPlayer activePlayer: MediaBarWidgetUtils.field(mediaService, "activePlayer") as MprisPlayer
+  readonly property var sourcePlayers: MediaBarWidgetUtils.field(mediaService, "sourcePlayers") || []
 
   readonly property bool hasMedia: activePlayer !== null && (activePlayer.trackTitle || activePlayer.trackArtist)
   readonly property bool isPlaying: !!activePlayer && !!activePlayer.isPlaying
@@ -25,7 +26,13 @@ BarWidget {
 
   property bool popupOpen: false
 
-  function close() { popupOpen = false }
+  function close(): void { popupOpen = false }
+  function playerKey(player: var): string {
+    return String(MediaBarWidgetUtils.call(mediaService, "playerKey", [player]) || "")
+  }
+  function runAction(action: string, player: var): void {
+    MediaBarWidgetUtils.call(mediaService, "runAction", [action, false, playerKey(player)])
+  }
   property real maxLabelWidth: 180
 
   visible: hasMedia
@@ -118,8 +125,8 @@ BarWidget {
     hostBar: root.bar
     owner: root
     open: root.popupOpen
-    cardWidth: popup.fittedContentWidth(Style.space(320))
-    cardHeight: popup.fittedContentHeight(column.implicitHeight)
+    cardWidth: popup.fittedContentWidth(Style.space(320), undefined)
+    cardHeight: popup.fittedContentHeight(column.implicitHeight, undefined)
 
     Column {
       id: column
@@ -134,7 +141,7 @@ BarWidget {
           width: Style.space(64)
           height: Style.space(64)
           radius: Style.spacing.labelGap
-          color: Style.normalFillFor(root.contentForeground, Commons.Color.accent)
+          color: Style.normalFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
           borderSpec: Border.controlSpec("normal", root.contentForeground, Commons.Color.accent)
 
           // Decode the art at the size it is drawn, not the size the player
@@ -211,7 +218,7 @@ BarWidget {
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoPrevious
           opacity: enabled ? 1.0 : 0.4
-          onClicked: if (root.mediaService) root.mediaService.runAction("previous", false, root.mediaService.playerKey(root.activePlayer))
+          onClicked: if (root.mediaService) root.runAction("previous", root.activePlayer)
         }
 
         Button {
@@ -222,7 +229,7 @@ BarWidget {
           iconSize: Style.font.iconLarge
           enabled: root.activePlayer && (root.activePlayer.canTogglePlaying || root.activePlayer.canPlay || root.activePlayer.canPause)
           opacity: enabled ? 1.0 : 0.4
-          onClicked: if (root.mediaService) root.mediaService.runAction("playPause", false, root.mediaService.playerKey(root.activePlayer))
+          onClicked: if (root.mediaService) root.runAction("playPause", root.activePlayer)
         }
 
         Button {
@@ -232,18 +239,18 @@ BarWidget {
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoNext
           opacity: enabled ? 1.0 : 0.4
-          onClicked: if (root.mediaService) root.mediaService.runAction("next", false, root.mediaService.playerKey(root.activePlayer))
+          onClicked: if (root.mediaService) root.runAction("next", root.activePlayer)
         }
       }
 
       PanelSeparator {
-        visible: root.sourcePlayers.length > 1
+        visible: MediaBarWidgetUtils.arrayLength(root.sourcePlayers) > 1
         foreground: root.contentForeground
       }
 
       Column {
         id: sourceList
-        visible: root.sourcePlayers.length > 1
+        visible: MediaBarWidgetUtils.arrayLength(root.sourcePlayers) > 1
         width: parent.width
         spacing: Style.space(4)
 
@@ -254,16 +261,16 @@ BarWidget {
             id: sourceRow
             required property var modelData
 
-            readonly property var player: modelData
+            readonly property MprisPlayer player: modelData as MprisPlayer
             readonly property bool selected: root.activePlayer && player
-              && root.mediaService.playerKey(root.activePlayer) === root.mediaService.playerKey(player)
+              && root.playerKey(root.activePlayer) === root.playerKey(player)
             readonly property string sourceTitle: player ? (player.trackTitle || player.identity || player.desktopEntry || I18n.t("media.mediaSource")) : I18n.t("media.mediaSource")
             readonly property string sourceDetail: player && player.trackArtist ? player.trackArtist : (player && player.identity ? player.identity : "")
 
             width: sourceList.width
             height: sourceInner.implicitHeight + Style.space(10)
             radius: Style.spacing.labelGap
-            color: selected ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent) : "transparent"
+            color: selected ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent) : "transparent"
             borderSpec: selected ? Border.controlSpec("normal", root.contentForeground, Commons.Color.accent) : Border.none()
 
             Row {
@@ -319,7 +326,7 @@ BarWidget {
               anchors.fill: parent
               hoverEnabled: true
               cursorShape: Qt.PointingHandCursor
-              onClicked: if (root.mediaService) root.mediaService.selectPlayer(root.mediaService.playerKey(sourceRow.player))
+              onClicked: if (root.mediaService) MediaBarWidgetUtils.call(root.mediaService, "selectPlayer", [root.playerKey(sourceRow.player)])
             }
           }
         }

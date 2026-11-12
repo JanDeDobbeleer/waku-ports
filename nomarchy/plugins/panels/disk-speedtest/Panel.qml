@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import "../PanelUtils.js" as PanelUtils
 
 // The shared gauge-cluster overlay dressed for the disk speed test: read and
 // write dials in MB/s, titled with the model of the disk under test. One
@@ -24,7 +25,7 @@ Item {
   property string error: ""
   property string stderrText: ""
 
-  function open(payloadJson) {
+  function open(payloadJson: string): void {
     opened = true
     runTest()
   }
@@ -32,7 +33,7 @@ Item {
   // Host-initiated close (`shell hide`). The user-initiated paths (Esc, the
   // scrim) route through shell.hide so the host's open-panel state stays
   // consistent, and land back here.
-  function close() {
+  function close(): void {
     opened = false
     pendingRun = false
     // Clear the phase before killing the process, so onExited reads the stop
@@ -45,13 +46,11 @@ Item {
     }
   }
 
-  function dismiss() {
-    if (shell && typeof shell.hide === "function")
-      shell.hide((manifest && manifest.id) || "nomarchy.disk-speedtest")
-    else close()
+  function dismiss(): void {
+    if (!PanelUtils.dismiss(shell, manifest, "nomarchy.disk-speedtest")) close()
   }
 
-  function runTest() {
+  function runTest(): void {
     if (proc.running) {
       // A dismissal's SIGTERM is still in flight; Process.running stays true
       // until the child exits, so queue the fresh run for onExited.
@@ -68,7 +67,7 @@ Item {
     proc.running = true
   }
 
-  function toRate(raw) {
+  function toRate(raw: string): real {
     var value = parseFloat(raw)
     return isFinite(value) && value > 0 ? value : 0
   }
@@ -76,7 +75,7 @@ Item {
   // Lines are "disk <model>", then "read <MB/s>" once a second, then
   // "write <MB/s>". The phase follows whichever figure is streaming, and each
   // phase's final line is its steady-state average, which the dial settles on.
-  function updateLine(line) {
+  function updateLine(line: string): void {
     var parts = String(line).trim().split(/\s+/)
     if (parts.length < 2) return
     if (parts[0] === "disk") {

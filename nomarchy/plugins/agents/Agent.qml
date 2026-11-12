@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Io
+import "Dynamic.js" as Dynamic
 
 // One agent's usage record, read straight off the data file that
 // nomarchy-agent-usage-update maintains. The panel never learns how the
@@ -31,22 +32,22 @@ Item {
   // inode. Should inotify fail to rearm on the new one (watch quota, ENOSPC),
   // the FileView goes quiet, so Main.qml also reloads every record after each
   // update run (#9974).
-  function reload() { agentFile.reload() }
+  function reload(): void { agentFile.reload() }
 
-  function clear() {
+  function clear(): void {
     root.parsedText = ""
     root.record = null
   }
 
-  function parse(content) {
+  function parse(content: string): void {
     var text = String(content || "")
     if (root.record && text === root.parsedText) return
-    try {
-      let parsed = JSON.parse(text)
-      root.record = parsed && typeof parsed === "object" ? parsed : null
+    var result = Dynamic.parseRecord(text)
+    if (result.ok) {
+      root.record = result.record
       root.parsedText = root.record ? text : ""
-    } catch (e) {
-      console.warn("agents", "Ignoring bad usage record", root.path, e)
+    } else {
+      console.warn("agents", "Ignoring bad usage record", root.path)
       root.clear()
     }
   }

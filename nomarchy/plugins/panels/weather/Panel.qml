@@ -27,18 +27,18 @@ Panel {
   property var hostWidget: null
   readonly property var barIdentity: hostWidget || root
 
-  function open() {
+  function open(): void {
     openedFromHotkey = false
     setCenterHoverRevealSuppressed(false)
-    root.controller.show()
-    root.locationFile.reload()
+    Model.invoke(root.controller, "show")
+    Model.invoke(root.locationFile, "reload")
     root.refresh()
   }
 
-  function openFromHotkey() {
+  function openFromHotkey(): void {
     openedFromHotkey = true
-    root.controller.show()
-    root.locationFile.reload()
+    Model.invoke(root.controller, "show")
+    Model.invoke(root.locationFile, "reload")
     root.refresh()
     // Set after showing, not before: showing hands the popout coordinator
     // over, which closes whichever panel was open, and that close clears the
@@ -50,13 +50,13 @@ Panel {
     })
   }
 
-  function close() {
+  function close(): void {
     setCenterHoverRevealSuppressed(false)
     if (root.editingLocation) root.cancelEditingLocation()
-    root.controller.hide()
+    Model.invoke(root.controller, "hide")
   }
 
-  function toggle() {
+  function toggle(): void {
     if (root.opened) root.close()
     else root.openFromHotkey()
   }
@@ -76,7 +76,7 @@ Panel {
   // Configured location, read from the weather.json state file (owned by
   // nomarchy-weather-location). The watch makes hand edits take effect live.
   property var configuredLocationState: ({ name: "", latitude: null, longitude: null })
-  readonly property string configuredLocation: configuredLocationState.name
+  readonly property string configuredLocation: String(Model.field(configuredLocationState, "name") || "")
 
   // With nothing configured, where geo.nomarchy.org places this network, in the
   // same shape. Kept when a later lookup fails.
@@ -89,7 +89,7 @@ Panel {
   // encoded name); empty means wttr.in's own IP auto-detect, used only when
   // geo.nomarchy.org could not answer.
   readonly property var locationState: Model.effectiveLocation(configuredLocationState, detectedLocationState)
-  readonly property string locationQuery: Model.wttrLocationQuery(locationState.name, locationState.latitude, locationState.longitude)
+  readonly property string locationQuery: Model.wttrLocationQuery(Model.field(locationState, "name"), Model.field(locationState, "latitude"), Model.field(locationState, "longitude"))
 
   // Keep the previous report visible while the new location loads. The
   // editor remains open with a spinner, so stale data is never presented
@@ -119,7 +119,7 @@ Panel {
   Timer {
     interval: 1500
     running: true
-    onTriggered: root.locationFile.reload()
+    onTriggered: Model.invoke(root.locationFile, "reload")
   }
 
   property int forecastRetries: 0
@@ -139,33 +139,33 @@ Panel {
 
   // wttr's current conditions when available; open-meteo's (bundled with the
   // much faster daily forecast fetch) fill the hero while wttr is in flight.
-  readonly property bool hasConfiguredCoordinates: !isNaN(parseFloat(String(configuredLocationState.latitude))) && !isNaN(parseFloat(String(configuredLocationState.longitude)))
-  readonly property bool hasCoordinates: !isNaN(parseFloat(String(locationState.latitude))) && !isNaN(parseFloat(String(locationState.longitude)))
+  readonly property bool hasConfiguredCoordinates: Model.hasCoordinates(configuredLocationState)
+  readonly property bool hasCoordinates: Model.hasCoordinates(locationState)
   readonly property var openMeteoCurrent: Model.openMeteoCurrentCondition(dailyForecastReport)
-  readonly property var current: (hasCoordinates && openMeteoCurrent) ? openMeteoCurrent : ((report && report.current_condition && report.current_condition[0]) ? report.current_condition[0] : openMeteoCurrent)
-  readonly property var areaInfo: report && report.nearest_area && report.nearest_area[0] ? report.nearest_area[0] : null
+  readonly property var current: Model.currentCondition(report, dailyForecastReport, hasCoordinates)
+  readonly property var areaInfo: Model.areaInfo(report)
   readonly property var forecastDays: buildForecastDays()
-  readonly property string reportCountry: areaInfo && areaInfo.country && areaInfo.country[0] ? areaInfo.country[0].value : ""
+  readonly property string reportCountry: Model.countryName(areaInfo)
 
   readonly property bool useImperial: Model.shouldUseImperial(setting("unit", "metric"), Qt.locale().name, reportCountry)
 
   // Auto-refresh interval in minutes; clamped to a sane minimum.
   readonly property int refreshMinutes: Math.max(1, parseInt(setting("refreshMinutes", 15), 10) || 15)
 
-  readonly property string reportLocation:  configuredLocation || (autoLocation ? detectedLocationState.name : "") || (areaInfo && areaInfo.areaName && areaInfo.areaName[0] ? areaInfo.areaName[0].value : "")
-  readonly property string reportTempNum:   current ? displayNumber(useImperial ? current.temp_F : current.temp_C) : ""
+  readonly property string reportLocation: Model.locationLabel(configuredLocation, autoLocation, detectedLocationState, areaInfo)
+  readonly property string reportTempNum:   current ? Model.temperature(current, useImperial ? "temp_F" : "temp_C", Commons.I18n.formatNumber) : ""
   readonly property string tempUnit:        "°" + (useImperial ? "F" : "C")
-  readonly property string reportFeels:     current ? formatTemp(useImperial ? current.FeelsLikeF : current.FeelsLikeC) : ""
-  readonly property string reportWind:      current ? (useImperial ? (displayNumber(current.windspeedMiles) + " mph") : (displayNumber(current.windspeedKmph) + " km/h")) : ""
-  readonly property string reportHumidity:  current ? (displayNumber(current.humidity) + "%") : ""
+  readonly property string reportFeels:     current ? Model.temperatureWithUnit(current, useImperial ? "FeelsLikeF" : "FeelsLikeC", useImperial, Commons.I18n.formatNumber) : ""
+  readonly property string reportWind:      current ? Model.windSpeed(current, useImperial, Commons.I18n.formatNumber) : ""
+  readonly property string reportHumidity:  current ? (Model.temperature(current, "humidity", Commons.I18n.formatNumber) + "%") : ""
 
   // The report's numbers arrive as strings ("13"), and blank when missing.
-  function displayNumber(value) {
+  function displayNumber(value: var): string {
     if (value === undefined || value === null || value === "") return ""
     return Commons.I18n.formatNumber(value)
   }
 
-  function refresh() {
+  function refresh(): void {
     // Each full refresh cycle gets a fresh retry budget, so an earlier
     // exhausted round (e.g. waking with the network still down) doesn't
     // starve retries for the rest of the session.
@@ -182,22 +182,22 @@ Panel {
     refreshDailyForecast(null)
   }
 
-  function detectLocation() {
+  function detectLocation(): void {
     if (locationProc.running) return
     detectingLocation = true
     locationProc.running = true
   }
 
-  function refreshDailyForecast(sourceReport) {
+  function refreshDailyForecast(sourceReport: var): void {
     if (dailyForecastProc.running) return
 
-    var lat = parseFloat(String(root.locationState.latitude))
-    var lon = parseFloat(String(root.locationState.longitude))
+    var lat = parseFloat(String(Model.field(root.locationState, "latitude")))
+    var lon = parseFloat(String(Model.field(root.locationState, "longitude")))
     if (isNaN(lat) || isNaN(lon)) {
-      let area = sourceReport && sourceReport.nearest_area && sourceReport.nearest_area[0] ? sourceReport.nearest_area[0] : root.areaInfo
+      let area = Model.areaInfo(sourceReport) || root.areaInfo
       if (!area) return
-      lat = parseFloat(String(area.latitude || ""))
-      lon = parseFloat(String(area.longitude || ""))
+      lat = parseFloat(String(Model.field(area, "latitude") || ""))
+      lon = parseFloat(String(Model.field(area, "longitude") || ""))
     }
     if (isNaN(lat) || isNaN(lon)) return
 
@@ -216,38 +216,38 @@ Panel {
   //      field; picking a geocoded suggestion persists name + coordinates to
   //      the module's shell.json entry. An empty commit returns to auto.
   // The search field lives in the panel's lazily built content.
-  function locationInput() {
-    return panel.loadedContent ? (panel.loadedContent as LazyContent).locationField : null
+  function locationInput(): var {
+    return panel.loadedContent ? Model.field(panel.loadedContent, "weatherInputField") : null
   }
 
-  function startEditingLocation() {
+  function startEditingLocation(): void {
     editingLocation = true
     savingLocation = false
     savingLocationQueryStarted = false
     locationSuggestions = []
     suggestionIndex = 0
     Qt.callLater(function() {
-      var locationField = root.locationInput()
-      if (!locationField) return
-      locationField.text = root.configuredLocation
-      locationField.selectAll()
-      locationField.forceActiveFocus()
+      var input = root.locationInput()
+      if (!input) return
+      Model.setInputText(input, root.configuredLocation)
+      Model.selectInput(input)
+      Model.focusInput(input)
     })
   }
 
-  function cancelEditingLocation() {
+  function cancelEditingLocation(): void {
     editingLocation = false
     savingLocation = false
     savingLocationQueryStarted = false
     locationSuggestions = []
     geocodeDebounce.stop()
-    Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
+    Qt.callLater(function() { if (panel.loadedContent) Model.focusInput(panel.loadedContent) })
   }
 
-  function commitLocation() {
-    var locationField = root.locationInput()
-    if (!locationField) return
-    var location = Model.locationCommit(locationField.text, locationSuggestions, suggestionIndex)
+  function commitLocation(): void {
+    var input = root.locationInput()
+    if (!input) return
+    var location = Model.locationCommit(Model.inputText(input), locationSuggestions, suggestionIndex)
     if (location.name === "") {
       clearLocation()
       return
@@ -262,28 +262,28 @@ Panel {
     persistLocation(location.name, location.latitude, location.longitude)
   }
 
-  function clearLocation() {
+  function clearLocation(): void {
     persistLocation("", null, null)
     cancelEditingLocation()
   }
 
-  function pickSuggestion(suggestion) {
+  function pickSuggestion(suggestion: var): void {
     if (!suggestion) return
     savingLocation = true
     savingLocationQueryStarted = false
     configuredLocationState = {
-      name: suggestion.name,
-      latitude: suggestion.latitude,
-      longitude: suggestion.longitude
+      name: Model.selectedSuggestion(suggestion, "name"),
+      latitude: Model.selectedSuggestion(suggestion, "latitude"),
+      longitude: Model.selectedSuggestion(suggestion, "longitude")
     }
-    persistLocation(suggestion.name, suggestion.latitude, suggestion.longitude)
+    persistLocation(Model.selectedSuggestion(suggestion, "name"), Model.selectedSuggestion(suggestion, "latitude"), Model.selectedSuggestion(suggestion, "longitude"))
   }
 
-  function finishSavingLocation() {
+  function finishSavingLocation(): void {
     if (savingLocation && savingLocationQueryStarted) cancelEditingLocation()
   }
 
-  function persistLocation(name, latitude, longitude) {
+  function persistLocation(name: string, latitude: var, longitude: var): void {
     if (name && latitude !== null && longitude !== null)
       locationSaveProc.command = ["nomarchy-weather-location", "--set", name, latitude + "," + longitude]
     else if (name)
@@ -295,9 +295,9 @@ Panel {
 
   // Debounced geocoding. Only one curl runs at a time; if the query moved on
   // while a fetch was in flight, the latest query is fetched right after.
-  function requestGeocode() {
-    var locationField = root.locationInput()
-    var query = locationField ? locationField.text.trim() : ""
+  function requestGeocode(): void {
+    var input = root.locationInput()
+    var query = input ? Model.inputText(input).trim() : ""
     if (query.length < 2) {
       locationSuggestions = []
       return
@@ -306,62 +306,61 @@ Panel {
     if (!geocodeProc.running) startGeocode()
   }
 
-  function startGeocode() {
+  function startGeocode(): void {
     geocodeActiveQuery = geocodePendingQuery
     geocodeProc.command = ["curl", "-fsS", "--max-time", "5",
       "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(geocodeActiveQuery) + "&count=5&language=en&format=json"]
     geocodeProc.running = true
   }
 
-  function buildForecastDays() {
+  function buildForecastDays(): var {
     return Model.buildForecastDays(report, dailyForecastReport, Qt.formatDate(new Date(), "yyyy-MM-dd"))
   }
 
-  function openMeteoForecastDays() {
+  function openMeteoForecastDays(): var {
     return Model.openMeteoForecastDays(dailyForecastReport, Qt.formatDate(new Date(), "yyyy-MM-dd"))
   }
 
-  function wttrNextForecastDays() {
+  function wttrNextForecastDays(): var {
     return Model.wttrNextForecastDays(report, Qt.formatDate(new Date(), "yyyy-MM-dd"))
   }
 
-  function isFutureForecastDate(dateString) {
+  function isFutureForecastDate(dateString: string): bool {
     return Model.isFutureForecastDate(dateString, Qt.formatDate(new Date(), "yyyy-MM-dd"))
   }
 
-  function roundedTemp(value) {
+  function roundedTemp(value: var): var {
     return Model.roundedTemp(value)
   }
 
-  function celsiusToFahrenheit(value) {
+  function celsiusToFahrenheit(value: var): var {
     return Model.celsiusToFahrenheit(value)
   }
 
-  function formatTemp(value) {
+  function formatTemp(value: var): string {
     return Model.formatTemp(value, useImperial, Commons.I18n.formatNumber)
   }
 
-  function dayName(dateString) {
-    var locale = Qt.locale(Commons.I18n.formatLocale)
-    return Model.dayName(dateString, function(date) { return locale.standaloneDayName(date.getDay(), Locale.LongFormat) })
+  function dayName(dateString: string): string {
+    return Model.localizedDayName(dateString, Qt.locale(Commons.I18n.formatLocale), Locale.LongFormat)
   }
 
   // Bare degree value (no unit letter), used in the forecast row.
-  function bareTempForDay(day, kind) {
+  function bareTempForDay(day: var, kind: string): string {
     return Model.bareTempForDay(day, kind, useImperial, Commons.I18n.formatNumber)
   }
 
   // Representative icon for a forecast day: the hourly entry nearest noon.
-  function dayIcon(day) {
+  function dayIcon(day: var): string {
     return Model.dayIcon(day)
   }
 
-  function iconForOpenMeteoCode(code) {
+  function iconForOpenMeteoCode(code: var): string {
     return Model.iconForOpenMeteoCode(code)
   }
 
   // Mirrors nomarchy-weather-icon's wttr.in code → nerd-font glyph mapping.
-  function iconForCode(code, night) {
+  function iconForCode(code: var, night: bool): string {
     return Model.iconForCode(code, night)
   }
 
@@ -376,30 +375,31 @@ Panel {
           root.scheduleForecastRetry()
           return
         }
-        try {
-          let parsed = JSON.parse(raw)
-          root.report = parsed
-          if (!root.hasConfiguredCoordinates)
-            root.label = Model.provisionalCurrentIcon(parsed.current_condition && parsed.current_condition[0], root.label)
-          root.forecastRetries = 0
-          if (Model.weatherResponseCompletesSave(root.hasConfiguredCoordinates, "wttr"))
-            root.finishSavingLocation()
-          // Known coordinates already drove the fast open-meteo fetch from
-          // refresh(); only a name, or wttr's own IP lookup, needs the area
-          // wttr reported.
-          if (!root.hasCoordinates)
-            root.refreshDailyForecast(parsed)
-        } catch (e) {
+        let response = Model.parseResponse(raw)
+        if (!response.ok || response.data === null) {
           // Keep last-good report visible, but try again shortly.
           root.scheduleForecastRetry()
+          return
         }
+        let parsed = response.data
+        root.report = parsed
+        if (!root.hasConfiguredCoordinates)
+          root.label = Model.provisionalCurrentIcon(Model.field(parsed, "current_condition") && Model.field(parsed, "current_condition")[0], root.label)
+        root.forecastRetries = 0
+        if (Model.weatherResponseCompletesSave(root.hasConfiguredCoordinates, "wttr"))
+          root.finishSavingLocation()
+        // Known coordinates already drove the fast open-meteo fetch from
+        // refresh(); only a name, or wttr's own IP lookup, needs the area
+        // wttr reported.
+        if (!root.hasCoordinates)
+          root.refreshDailyForecast(parsed)
       }
     }
   }
 
   // wttr.in can be slow or flaky, especially for a location it hasn't
   // cached yet. Retry a few times before leaving it to the refresh timer.
-  function scheduleForecastRetry() {
+  function scheduleForecastRetry(): void {
     if (forecastRetries >= 3) return
     forecastRetries++
     forecastRetryTimer.restart()
@@ -414,7 +414,7 @@ Panel {
   // With configured coordinates this fetch is the only thing that updates the
   // bar icon, so a dropped response (e.g. waking before the network is back)
   // must retry rather than wait out the refresh timer with a stale icon.
-  function scheduleDailyForecastRetry() {
+  function scheduleDailyForecastRetry(): void {
     if (dailyForecastRetries >= 3) return
     dailyForecastRetries++
     dailyForecastRetryTimer.restart()
@@ -436,18 +436,19 @@ Panel {
           root.scheduleDailyForecastRetry()
           return
         }
-        try {
-          let parsed = JSON.parse(raw)
-          let parsedCurrent = Model.openMeteoCurrentCondition(parsed)
-          root.dailyForecastReport = parsed
-          root.label = Model.currentIcon(parsedCurrent, root.label)
-          root.dailyForecastRetries = 0
-          if (Model.weatherResponseCompletesSave(root.hasConfiguredCoordinates, "open-meteo"))
-            root.finishSavingLocation()
-        } catch (e) {
+        let response = Model.parseResponse(raw)
+        if (!response.ok || response.data === null) {
           // Keep last-good daily forecast visible, but try again shortly.
           root.scheduleDailyForecastRetry()
+          return
         }
+        let parsed = response.data
+        let parsedCurrent = Model.openMeteoCurrentCondition(parsed)
+        root.dailyForecastReport = parsed
+        root.label = Model.currentIcon(parsedCurrent, root.label)
+        root.dailyForecastRetries = 0
+        if (Model.weatherResponseCompletesSave(root.hasConfiguredCoordinates, "open-meteo"))
+          root.finishSavingLocation()
       }
     }
   }
@@ -477,7 +478,7 @@ Panel {
 
       // FileView handles changed locations. Explicitly refresh here too so
       // saving the already-active location cannot strand the spinner.
-      root.locationFile.reload()
+      Model.invoke(root.locationFile, "reload")
       if (!root.savingLocationQueryStarted) {
         root.savingLocationQueryStarted = true
         root.forecastRetries = 0
@@ -551,7 +552,7 @@ Panel {
 
     component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      final property alias locationField: locationField
+      final property alias weatherInputField: weatherInputField
       implicitHeight: weatherColumn.implicitHeight
       anchors.fill: parent
       blocked: root.editingLocation
@@ -671,7 +672,7 @@ Panel {
             spacing: Style.space(6)
 
             TextField {
-              id: locationField
+              id: weatherInputField
               width: Style.space(190)
               enabled: !root.savingLocation
               placeholderText: Commons.I18n.t("weather.searchCity")
@@ -685,7 +686,7 @@ Panel {
                   root.cancelEditingLocation()
                   event.accepted = true
                 } else if (event.key === Qt.Key_Down) {
-                  if (root.suggestionIndex < root.locationSuggestions.length - 1) root.suggestionIndex++
+                  if (root.suggestionIndex < Model.itemCount(root.locationSuggestions) - 1) root.suggestionIndex++
                   event.accepted = true
                 } else if (event.key === Qt.Key_Up) {
                   if (root.suggestionIndex > 0) root.suggestionIndex--
@@ -704,7 +705,7 @@ Panel {
               height: Style.space(18)
               anchors.verticalCenter: parent.verticalCenter
               radius: Math.min(4, Style.cornerRadius)
-              color: !root.savingLocation && clearLocationArea.containsMouse ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent) : "transparent"
+              color: !root.savingLocation && clearLocationArea.containsMouse ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent) : "transparent"
 
               Text {
                 textFormat: Text.PlainText
@@ -800,7 +801,7 @@ Panel {
 
       // ---- Geocoding suggestions while the location is being edited.
       Column {
-        visible: root.editingLocation && !root.savingLocation && root.locationSuggestions.length > 0
+        visible: root.editingLocation && !root.savingLocation && Model.itemCount(root.locationSuggestions) > 0
         width: parent.width
         spacing: 0
 
@@ -814,7 +815,7 @@ Panel {
             width: parent.width
             height: suggestionRow.implicitHeight + Style.space(12)
             radius: Style.cornerRadius
-            color: index === root.suggestionIndex ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent) : "transparent"
+            color: index === root.suggestionIndex ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent) : "transparent"
 
             Row {
               id: suggestionRow
@@ -825,15 +826,15 @@ Panel {
 
               Text {
                 textFormat: Text.PlainText
-                text: suggestionCell.modelData.name
-                color: suggestionCell.index === root.suggestionIndex ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent) : root.contentForeground
+                text: Model.field(suggestionCell.modelData, "name")
+                color: suggestionCell.index === root.suggestionIndex ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent) : root.contentForeground
                 font.family: root.contentFontFamily
                 font.pixelSize: Style.font.body
               }
               Text {
                 textFormat: Text.PlainText
                 visible: text !== ""
-                text: suggestionCell.modelData.description
+                text: Model.field(suggestionCell.modelData, "description")
                 color: Qt.darker(root.contentForeground, 1.5)
                 font.family: root.contentFontFamily
                 font.pixelSize: Style.font.bodySmall
@@ -864,7 +865,7 @@ Panel {
 
       // ---- Divider between current conditions and forecast.
       Rectangle {
-        visible: root.forecastDays.length > 0
+        visible: Model.itemCount(root.forecastDays) > 0
         width: parent.width
         height: Style.spacing.hairline
         color: root.contentForeground
@@ -874,7 +875,7 @@ Panel {
       // ---- Forecast row: each cell has the day icon left of a day-name + hi/lo column.
       //      Wrapped in an Item so the block of cells can be centered within the popup.
       Item {
-        visible: root.forecastDays.length > 0
+        visible: Model.itemCount(root.forecastDays) > 0
         width: parent.width
         height: forecastRow.height
 
@@ -907,7 +908,7 @@ Panel {
 
                 Text {
                   textFormat: Text.PlainText
-                  text: root.dayName(forecastDayCell.modelData.date).toUpperCase()
+                  text: root.dayName(Model.field(forecastDayCell.modelData, "date")).toUpperCase()
                   color: Qt.darker(root.contentForeground, 1.4)
                   font.family: root.contentFontFamily
                   font.pixelSize: Style.font.caption
