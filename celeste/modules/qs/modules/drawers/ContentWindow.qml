@@ -16,8 +16,14 @@ import qs.modules.bar
 StyledWindow {
     id: root
 
+    Item {
+        id: focusWatcher
+        readonly property bool windowActive: Window.active
+    }
+
     readonly property alias bar: barItem
     readonly property alias interactionWrapper: interactions
+    readonly property bool windowActive: focusWatcher.windowActive
 
     readonly final property ScreenState screenState: ShellState.forScreen(screen)
 
@@ -171,7 +177,7 @@ StyledWindow {
     // shortcut receives keys. `hadFocus` starts true when the window is already active and
     // otherwise becomes true when the activation arrives (onActiveChanged below).
     onKeyboardPanelOpenChanged: {
-        hadFocus = keyboardPanelOpen && root.backingWindow.active;
+        hadFocus = keyboardPanelOpen && root.windowActive;
         if (keyboardPanelOpen)
             lightDismissSince = Date.now();
     }
@@ -180,7 +186,7 @@ StyledWindow {
     // asynchronous, so a loss in the first 400 ms after opening is not the user's.
     Connections {
         function onActiveChanged(): void {
-            if (root.backingWindow.active) {
+            if (root.windowActive) {
                 root.hadFocus = true;
             } else if (root.hadFocus && root.lightDismissOpen) {
                 root.hadFocus = false;

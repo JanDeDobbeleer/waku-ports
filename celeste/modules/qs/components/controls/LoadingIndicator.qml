@@ -19,6 +19,8 @@ MaterialShape {
     final property real thisLRotation
     final property bool containsIcon
 
+    function currentRotation(): real { return root.cRotation + root.lRotation + root.thisLRotation; }
+
     final property bool animated: true
     final property int morphAnimRotation: 60
     final property real morphScale: 0.14
@@ -69,7 +71,9 @@ MaterialShape {
             if (t >= root.springDuration) {
                 root.springSettled = true;
             } else {
-                const [pos, vel] = root.spring(t);
+                const values = root.spring(t);
+                const pos = values[0];
+                const vel = values[1];
                 root.morphProgress = Math.min(1, pos); // Overshooting the morph looks weird
                 root.thisLRotation = pos * root.morphAnimRotation;
                 root.scale = 1 + vel * root.morphScale / root.springMaxVelocity;
@@ -92,7 +96,7 @@ MaterialShape {
             root.rotation = root.rotation;
             root.lRotation = (root.lRotation + root.thisLRotation) % 360;
             root.thisLRotation = 0;
-            root.rotation = Qt.binding(() => root.cRotation + root.lRotation + root.thisLRotation);
+            root.rotation = Qt.binding(root.currentRotation);
 
             root.springSettled = false;
             timer.restart();

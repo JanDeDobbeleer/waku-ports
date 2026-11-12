@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import qs.components
 import qs.services
+import "UtilitiesBackgroundHelpers.js" as UtilitiesBackgroundHelpers
 
 ShapePath {
     id: root
@@ -31,13 +32,13 @@ ShapePath {
         relativeY: -(root.wrapper.height - root.roundingY * 2)
     }
     PathArc {
-        relativeX: root.sidebar.utilsRoundingX
+        relativeX: UtilitiesBackgroundHelpers.utilsRoundingX(root.sidebar)
         relativeY: -root.roundingY
-        radiusX: root.sidebar.utilsRoundingX
+        radiusX: UtilitiesBackgroundHelpers.utilsRoundingX(root.sidebar)
         radiusY: Math.min(root.rounding, root.wrapper.height)
     }
     PathLine {
-        relativeX: root.wrapper.height > 0 ? root.wrapper.width - root.rounding - root.sidebar.utilsRoundingX : root.wrapper.width
+        relativeX: root.wrapper.height > 0 ? root.wrapper.width - root.rounding - UtilitiesBackgroundHelpers.utilsRoundingX(root.sidebar) : root.wrapper.width
         relativeY: 0
     }
     PathArc {

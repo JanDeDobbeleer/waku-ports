@@ -10,6 +10,7 @@ import qs.components
 import qs.components.effects
 import qs.components.filedialog
 import qs.services
+import "UserHelpers.js" as UserHelpers
 import qs.utils
 
 Item {
@@ -52,7 +53,7 @@ Item {
 
                 containmentMask: QtObject {
                     function contains(pt: point): bool {
-                        return shape.contains(pt) && !logoShape.contains(mouse.mapToItem(logoShape, pt)) && !uptimeShape.contains(mouse.mapToItem(uptimeShape, pt));
+                        return UserHelpers.contains(shape, logoShape, uptimeShape, mouse, pt);
                     }
                 }
 
@@ -61,7 +62,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     root.screenState.dashboard = false;
-                    root.facePicker.open();
+                    UserHelpers.open(root.facePicker);
                 }
             }
         }

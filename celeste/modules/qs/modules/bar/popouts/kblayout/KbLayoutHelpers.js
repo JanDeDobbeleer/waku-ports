@@ -129,3 +129,5 @@ function readActiveLayout(text, model, layouts) {
     }
     model._rebuildVisible();
 }
+
+function count(model) { return model.count; }

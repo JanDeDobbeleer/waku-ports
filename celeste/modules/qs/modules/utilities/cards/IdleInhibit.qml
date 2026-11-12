@@ -83,7 +83,7 @@ StyledRect {
         opacity: RuntimeState.inhibitIdle ? 1 : 0
         scale: RuntimeState.inhibitIdle ? 1 : 0.5
 
-        Component.onCompleted: active = Qt.binding(() => opacity > 0)
+        active: opacity > 0
 
         sourceComponent: StyledRect {
             implicitWidth: activeText.implicitWidth + Tokens.padding.medium * 2

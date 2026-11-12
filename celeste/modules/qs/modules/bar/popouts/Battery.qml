@@ -6,6 +6,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "BatteryHelpers.js" as BatteryHelpers
 
 Column {
     id: root
@@ -84,7 +85,7 @@ Column {
 
         active: PowerProfiles.degradationReason !== PerformanceDegradationReason.None
 
-        height: active ? ((item as Item)?.implicitHeight ?? 0) : 0
+        height: active ? BatteryHelpers.implicitHeight(item) : 0
 
         sourceComponent: StyledRect {
             implicitWidth: child.implicitWidth + Tokens.padding.medium * 2

@@ -74,3 +74,8 @@ function isLocationSelected(dialog, location) {
 function selectLocation(dialog, location) {
     dialog.cwd = location === "Home" ? ["Home"] : ["Home", location];
 }
+
+function selectedName(item, translator) {
+    if (!item) return "";
+    return translator.trCtx('"%1" selected', "selected file").arg(item.modelData.name);
+}

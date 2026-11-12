@@ -6,6 +6,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "NotifHelpers.js" as NotifHelpers
 
 StyledRect {
     id: root
@@ -15,7 +16,7 @@ StyledRect {
     required final property bool expanded
     required final property ScreenState screenState
 
-    readonly final property StyledText body: (expandedContent.item as ExpandedBody)?.body ?? null
+    readonly final property StyledText bodyContent: NotifHelpers.body(expandedContent.item)
     readonly final property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Tokens.padding.medium * 2 : summaryHeightMetrics.height
 
     implicitHeight: nonAnimHeight

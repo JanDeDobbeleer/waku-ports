@@ -77,7 +77,7 @@ LazyListView {
             scale: modelData?.closed ? 0.7 : 1
 
             hoverEnabled: true
-            cursorShape: NotifGroupListHelpers.cursorShape(notifInner.body, pressed, Qt)
+            cursorShape: NotifGroupListHelpers.cursorShape(notifInner.bodyContent, pressed, Qt)
             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
             preventStealing: !root.expanded
             enabled: !(modelData?.closed ?? true)

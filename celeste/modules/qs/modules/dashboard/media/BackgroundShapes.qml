@@ -5,6 +5,7 @@ import Celeste.Config
 import M3Shapes
 import qs.components
 import qs.services
+import "BackgroundShapesHelpers.js" as BackgroundShapesHelpers
 
 Item {
     id: root
@@ -49,7 +50,7 @@ Item {
 
                 s.x += s.vx * dt;
                 s.y += s.vy * dt;
-                s.rotation += s.vr * dt;
+                BackgroundShapesHelpers.addRotation(s, dt);
 
                 if (s.x + s.width < 0)
                     s.x = root.width;

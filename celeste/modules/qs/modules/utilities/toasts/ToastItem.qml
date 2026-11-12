@@ -41,7 +41,7 @@ StyledRect {
 
     Elevation {
         anchors.fill: parent
-        radius: parent.radius
+        radius: root.radius
         opacity: parent.opacity
         z: -1
         level: 3

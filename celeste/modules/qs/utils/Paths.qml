@@ -33,7 +33,10 @@ Singleton {
 
     function slash(path: var): string {
         // The drive letter is upper case, so two spellings of one path compare equal.
-        return String(path ?? "").split("\\").join("/").replace(/^[a-z]:/, m => m.toUpperCase());
+        let normalized = String(path ?? "").split("\\").join("/");
+        if (/^[a-z]:/.test(normalized))
+            normalized = normalized[0].toUpperCase() + normalized.slice(1);
+        return normalized;
     }
 
     function toLocalFile(path: url): string {

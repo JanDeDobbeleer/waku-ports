@@ -7,6 +7,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "KbLayoutHelpers.js" as KbLayoutHelpers
 
 ColumnLayout {
     id: root
@@ -43,7 +44,7 @@ ColumnLayout {
         clip: true
         interactive: true
         implicitHeight: Math.min(contentHeight, 320)
-        visible: kb.visibleModel.count > 0
+        visible: KbLayoutHelpers.count(kb.visibleModel) > 0
         spacing: Tokens.spacing.small
 
         add: Transition {
