@@ -6,6 +6,7 @@ import Quickshell
 import Celeste.I18n
 import qs.components
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 
 LazyLoader {
     id: loader
@@ -37,8 +38,7 @@ LazyLoader {
         final property list<string> filters: loader.filters
 
         readonly final property bool selectionValid: {
-            const file = folderContents.currentItem?.modelData;
-            return (file && !file.isDir && (filters.includes("*") || filters.some(filter => filter.toLowerCase() === file.suffix.toLowerCase()))) ?? false;
+            return FileDialogHelpers.selectionValid(folderContents.currentItem?.modelData, filters);
         }
 
         function accepted(path: string): void {
@@ -61,7 +61,7 @@ LazyLoader {
         // setup, not one that is visible from the start, which is what a LazyLoader gives. So it
         // starts hidden and is shown once it is loaded; otherwise it opens behind the active window.
         visible: false
-        Component.onCompleted: Qt.callLater(() => root.visible = true)
+        Component.onCompleted: FileDialogHelpers.showLater(root)
 
         onVisibleChanged: {
             if (!visible)
