@@ -14,40 +14,40 @@ Singleton {
 
     // True when the engine sees a Wi-Fi link. A VPN tunnel can become the default route, so `kind`
     // may read something else while the SSID stays set; the SSID is the better witness.
-    readonly property bool wifiLinked: S.Network.kind === "wifi" || (S.Network.kind !== "ethernet" && S.Network.ssid !== "")
-    readonly property bool vpnActive: S.Network.vpnActive
-    readonly property string vpnName: S.Network.vpnName
+    readonly final property bool wifiLinked: S.Network.kind === "wifi" || (S.Network.kind !== "ethernet" && S.Network.ssid !== "")
+    readonly final property bool vpnActive: S.Network.vpnActive
+    readonly final property string vpnName: S.Network.vpnName
 
-    property bool isConnected: wifiLinked || S.Network.kind === "ethernet"
-    readonly property bool connecting: pendingConnection !== null
-    property string activeInterface: wifiLinked ? "Wi-Fi" : S.Network.kind === "ethernet" ? "Ethernet" : ""
-    property string activeConnection: wifiLinked ? S.Network.ssid : ""
+    final property bool isConnected: wifiLinked || S.Network.kind === "ethernet"
+    readonly final property bool connecting: pendingConnection !== null
+    final property string activeInterface: wifiLinked ? "Wi-Fi" : S.Network.kind === "ethernet" ? "Ethernet" : ""
+    final property string activeConnection: wifiLinked ? S.Network.ssid : ""
     // The radio state Windows reports; before it is known, a Wi-Fi link or a scan result counts.
-    property bool wifiEnabled: S.Network.wifiAvailable ? S.Network.wifiEnabled : (wifiLinked || networks.length > 0)
-    readonly property bool scanning: S.Network.scanning
+    final property bool wifiEnabled: S.Network.wifiAvailable ? S.Network.wifiEnabled : (wifiLinked || networks.length > 0)
+    readonly final property bool scanning: S.Network.scanning
 
-    property list<AccessPoint> networks: []
-    readonly property AccessPoint active: networks.find(n => n.active) ?? syntheticActive
-    property list<string> savedConnections: []
+    final property list<AccessPoint> networks: []
+    readonly final property AccessPoint active: networks.find(n => n.active) ?? syntheticActive
+    final property list<string> savedConnections: []
     // The scan list marks `known` networks.
-    property list<string> savedConnectionSsids: []
-    property var savedConnectionSecurity: ({})
+    final property list<string> savedConnectionSsids: []
+    final property var savedConnectionSecurity: ({})
 
-    property var pendingConnection: null
-    property var wirelessDeviceDetails: null
-    property var ethernetDeviceDetails: null
-    property string ethernetDataUsage: ""
-    property string ethernetSpeed: ""
-    property list<EthernetDevice> ethernetDevices: []
-    readonly property EthernetDevice activeEthernet: ethernetDevices.find(d => d.connected) ?? null
-    readonly property bool hasAvailableEthernet: ethernetDevices.some(d => d.state !== "unavailable")
+    final property var pendingConnection: null
+    final property var wirelessDeviceDetails: null
+    final property var ethernetDeviceDetails: null
+    final property string ethernetDataUsage: ""
+    final property string ethernetSpeed: ""
+    final property list<EthernetDevice> ethernetDevices: []
+    readonly final property EthernetDevice activeEthernet: ethernetDevices.find(d => d.connected) ?? null
+    readonly final property bool hasAvailableEthernet: ethernetDevices.some(d => d.state !== "unavailable")
 
     readonly property alias connectionCheckTimer: connectionCheckTimer
     readonly property alias immediateCheckTimer: immediateCheckTimer
 
     // The link waku reports when the scan list has no entry for it yet.
-    readonly property AccessPoint syntheticActive: wifiLinked && S.Network.ssid ? synthetic : null
-    readonly property AccessPoint synthetic: AccessPoint {
+    readonly final property AccessPoint syntheticActive: wifiLinked && S.Network.ssid ? synthetic : null
+    readonly final property AccessPoint synthetic: AccessPoint {
         lastIpcObject: ({
                 ssid: S.Network.ssid,
                 bssid: "",
@@ -272,7 +272,7 @@ Singleton {
 
     // refresh() emits networksChanged when a scan starts, with the same list. Rebuilding then would
     // destroy every row the UI shows, so only a changed list rebuilds.
-    property string networksSignature: ""
+    final property string networksSignature: ""
 
     function rebuild(): void {
         const signature = JSON.stringify(S.Network.networks || []);
@@ -364,34 +364,34 @@ Singleton {
     Timer {
         id: immediateCheckTimer
 
-        property int checkCount: 0
+        final property int checkCount: 0
 
         interval: 500
     }
 
     component AccessPoint: QtObject {
-        required property var lastIpcObject
-        readonly property string ssid: lastIpcObject.ssid
-        readonly property string bssid: lastIpcObject.bssid
-        readonly property int strength: lastIpcObject.strength
-        readonly property int frequency: lastIpcObject.frequency
-        readonly property bool active: lastIpcObject.active
-        readonly property string security: lastIpcObject.security
-        readonly property bool isSecure: security.length > 0
+        required final property var lastIpcObject
+        readonly final property string ssid: lastIpcObject.ssid
+        readonly final property string bssid: lastIpcObject.bssid
+        readonly final property int strength: lastIpcObject.strength
+        readonly final property int frequency: lastIpcObject.frequency
+        readonly final property bool active: lastIpcObject.active
+        readonly final property string security: lastIpcObject.security
+        readonly final property bool isSecure: security.length > 0
     }
 
     component EthernetDevice: QtObject {
-        required property var lastIpcObject
-        readonly property string iface: lastIpcObject.interface
-        readonly property string type: lastIpcObject.type
-        readonly property string state: lastIpcObject.state
-        readonly property string connection: lastIpcObject.connection
-        readonly property bool connected: lastIpcObject.connected
-        readonly property string ipAddress: lastIpcObject.ipAddress ?? ""
-        readonly property string gateway: lastIpcObject.gateway ?? ""
-        readonly property var dns: lastIpcObject.dns ?? []
-        readonly property string subnet: lastIpcObject.subnet ?? ""
-        readonly property string macAddress: lastIpcObject.macAddress ?? ""
-        readonly property string speed: lastIpcObject.speed ?? ""
+        required final property var lastIpcObject
+        readonly final property string iface: lastIpcObject.interface
+        readonly final property string type: lastIpcObject.type
+        readonly final property string state: lastIpcObject.state
+        readonly final property string connection: lastIpcObject.connection
+        readonly final property bool connected: lastIpcObject.connected
+        readonly final property string ipAddress: lastIpcObject.ipAddress ?? ""
+        readonly final property string gateway: lastIpcObject.gateway ?? ""
+        readonly final property var dns: lastIpcObject.dns ?? []
+        readonly final property string subnet: lastIpcObject.subnet ?? ""
+        readonly final property string macAddress: lastIpcObject.macAddress ?? ""
+        readonly final property string speed: lastIpcObject.speed ?? ""
     }
 }

@@ -5,7 +5,7 @@ import "ScaleSizes.js" as SS
 QtObject {
     id: root
 
-    required property var source
+    required final property var source
 
     readonly final property bool enabled: SS.get(root.source, "enabled")
     readonly final property real base: SS.get(root.source, "base")

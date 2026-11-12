@@ -10,9 +10,9 @@ import "Calc.js" as Calc
 QtObject {
     id: root
 
-    property string result
-    property string rawResult
-    property bool busy
+    final property string result
+    final property string rawResult
+    final property bool busy
 
     function evaluate(expr: string): var {
         try {

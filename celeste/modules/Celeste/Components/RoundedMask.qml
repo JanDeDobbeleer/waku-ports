@@ -7,12 +7,12 @@ import QtQuick.Effects
 Item {
     id: root
 
-    property Item source
-    property real topLeftRadius: 0
-    property real topRightRadius: 0
-    property real bottomRightRadius: 0
-    property real bottomLeftRadius: 0
-    property color color: "transparent"
+    final property Item source
+    final property real topLeftRadius: 0
+    final property real topRightRadius: 0
+    final property real bottomRightRadius: 0
+    final property real bottomLeftRadius: 0
+    final property color color: "transparent"
 
     MultiEffect {
         anchors.fill: parent

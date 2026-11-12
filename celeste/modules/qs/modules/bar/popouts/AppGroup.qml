@@ -22,24 +22,23 @@ import qs.services
 Item {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
-    readonly property var group: Hypr.appGroups.find(g => g.key === Hypr.hoverGroupKey) ?? null
-    readonly property var windows: group?.windows ?? []
+    readonly final property HyprGroup group: Hypr.groupByKey(Hypr.hoverGroupKey)
 
     // Thumbnails are live only while the flyout is open and has settled.
-    readonly property bool live: popouts.hasCurrent && popouts.currentName === "appgroup" && popouts.settled
+    readonly final property bool live: popouts.hasCurrent && popouts.currentName === "appgroup" && popouts.settled
 
-    readonly property real boxW: Tokens.px(240)
-    readonly property real boxH: Tokens.px(150)
-    readonly property real inset: Tokens.px(6)
-    readonly property real cardPad: Tokens.padding.small
-    readonly property real cardW: boxW + cardPad * 2
-    readonly property real gap: Tokens.spacing.medium
+    readonly final property real boxW: Tokens.px(240)
+    readonly final property real boxH: Tokens.px(150)
+    readonly final property real inset: Tokens.px(6)
+    readonly final property real cardPad: Tokens.padding.small
+    readonly final property real cardW: boxW + cardPad * 2
+    readonly final property real gap: Tokens.spacing.medium
     // The widest the flyout may be: 60% of the window (the screen), less the popout padding.
-    readonly property real maxW: Math.max(cardW, (Window.window ? Window.window.width : 1920) * 0.6 - Tokens.padding.large * 2)
-    readonly property int count: windows.length
-    readonly property int cols: count <= 0 ? 1 : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
+    readonly final property real maxW: Math.max(cardW, (Window.window ? Window.window.width : 1920) * 0.6 - Tokens.padding.large * 2)
+    readonly final property int count: Hypr.groupCount(group)
+    readonly final property int cols: count <= 0 ? 1 : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
 
     // Per card: "<hwnd> <available> <sourceWidth> <sourceHeight> <x>,<y>,<w>,<h>" (test IPC; the
     // rectangle is in logical window coordinates).
@@ -69,22 +68,22 @@ Item {
         Repeater {
             id: cards
 
-            model: root.windows.length
+            model: root.count
 
             delegate: Item {
                 id: card
 
-                required property int index
-                readonly property var modelData: root.windows[index]
+                required final property int index
+                readonly final property HyprToplevel modelData: Hypr.groupWindow(root.group, index)
 
-                readonly property bool focused: modelData.address === Hypr.focusedHwnd
-                readonly property string progressState: modelData.progressState ?? "none"
-                readonly property real progress: modelData.progress ?? 0
+                readonly final property bool focused: modelData.address === Hypr.focusedHwnd
+                readonly final property string progressState: modelData.progressState
+                readonly final property real progress: modelData.progress
                 // DWM has no live thumbnail of a minimized window: none is registered, the card
                 // shows the icon.
-                readonly property bool minimized: !!modelData.minimized
+                readonly final property bool minimized: modelData.minimized
                 // Fake windows (test IPC) borrow the preview of a real one (`srcHwnd`).
-                readonly property real hwnd: Number(modelData.srcHwnd ?? modelData.address) || 0
+                readonly final property real hwnd: Number(modelData.srcHwnd || modelData.address) || 0
                 readonly property alias thumb: thumb
 
                 implicitWidth: root.cardW
@@ -126,7 +125,7 @@ Item {
                             opacity: card.minimized ? 0.55 : 1
                             width: Tokens.px(48)
                             height: width
-                            source: card.modelData.icon ?? ""
+                            source: card.modelData.icon
                             sourceSize: Qt.size(width * 2, height * 2)
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
@@ -144,9 +143,9 @@ Item {
                         WindowThumbnail {
                             id: thumb
 
-                            readonly property real availW: box.width - root.inset * 2
-                            readonly property real availH: box.height - root.inset * 2
-                            readonly property real ratio: sourceWidth > 0 && sourceHeight > 0 ? sourceWidth / sourceHeight : availW / availH
+                            readonly final property real availW: box.width - root.inset * 2
+                            readonly final property real availH: box.height - root.inset * 2
+                            readonly final property real ratio: sourceWidth > 0 && sourceHeight > 0 ? sourceWidth / sourceHeight : availW / availH
 
                             x: (box.width - width) / 2
                             y: (box.height - height) / 2
@@ -166,7 +165,7 @@ Item {
                         Image {
                             Layout.preferredWidth: Tokens.px(16)
                             Layout.preferredHeight: Tokens.px(16)
-                            source: card.modelData.icon ?? ""
+                            source: card.modelData.icon
                             sourceSize: Qt.size(width * 2, height * 2)
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
@@ -188,7 +187,7 @@ Item {
                             Layout.preferredWidth: (Tokens.sizes.bar.innerWidth - Tokens.padding.small) * 2 / 3
                             Layout.preferredHeight: Layout.preferredWidth
                             visible: card.progressState === "indeterminate"
-                            readonly property color ink: card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
+                            readonly final property color ink: card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
 
                             Rectangle {
                                 anchors.fill: parent
@@ -231,7 +230,7 @@ Item {
                         // The workspace the window is on; a window on another workspace gets the
                         // tertiary colours, as a hint that a click switches there.
                         StyledRect {
-                            readonly property bool away: card.modelData.wsActive === false
+                            readonly final property bool away: card.modelData.wsActive === false
 
                             implicitWidth: Math.max(implicitHeight, chip.implicitWidth + Tokens.px(10))
                             implicitHeight: chip.implicitHeight + Tokens.px(4)
@@ -255,7 +254,7 @@ Item {
                         Layout.preferredHeight: Math.max(2, Tokens.px(3))
                         visible: card.progressState !== "none" && card.progressState !== "indeterminate"
                         radius: height / 2
-                        readonly property color ink: card.progressState === "error" ? Colours.palette.m3error : card.progressState === "paused" ? Colours.palette.m3tertiary : card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
+                        readonly final property color ink: card.progressState === "error" ? Colours.palette.m3error : card.progressState === "paused" ? Colours.palette.m3tertiary : card.focused ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
                         color: Qt.alpha(ink, 0.22)
 
                         Rectangle {

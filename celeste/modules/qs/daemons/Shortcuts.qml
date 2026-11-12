@@ -8,8 +8,8 @@ import qs.services
 Scope {
     id: root
 
-    property bool launcherInterrupted
-    readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false
+    final property bool launcherInterrupted
+    readonly final property bool hasFullscreen: Hypr.hasFullscreen(Hypr.focusedWorkspace)
 
     // The nexus window (shortcut "nexus", IPC target "nexus") is not ported yet.
 

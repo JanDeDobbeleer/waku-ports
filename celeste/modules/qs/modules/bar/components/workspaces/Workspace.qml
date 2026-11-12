@@ -13,32 +13,33 @@ import qs.utils
 Item {
     id: root
 
-    required property int modelData
-    required property int index
-    required property int activeWsId
-    required property int ws
-    required property var monitor
+    required final property int modelData
+    required final property int index
+    required final property int activeWsId
+    required final property int ws
+    required final property HyprMonitor monitor
 
-    required property int displayType
-    required property bool showWindows
-    required property var iconRules
-    property string activeLabel
-    property string occupiedLabel
-    property string label
+    required final property int displayType
+    required final property bool showWindows
+    required final property var iconRules
+    final property string activeLabel
+    final property string occupiedLabel
+    final property string label
 
-    readonly property var toplevels: Hypr.toplevelsForWs(ws, GlobalConfig.bar.workspaces.ignoredTags)
-    readonly property bool isOccupied: toplevels.length > 0
-    readonly property bool hasWindows: isOccupied && showWindows && Config.bar.workspaces.maxWindowIcons > 0
-    readonly property bool focused: activeWsId === ws
+    readonly final property var toplevels: Hypr.toplevelsForWs(ws, GlobalConfig.bar.workspaces.ignoredTags)
+    readonly final property bool isOccupied: Hypr.toplevelCount(ws) > 0
+    readonly final property bool hasWindows: isOccupied && showWindows && Config.bar.workspaces.maxWindowIcons > 0
+    readonly final property bool focused: activeWsId === ws
+    final property real windowsHeight: 0
 
-    property color offMonitorColour: Colours.palette.m3outlineVariant
-    readonly property bool onOtherMonitor: {
+    final property color offMonitorColour: Colours.palette.m3outlineVariant
+    readonly final property bool onOtherMonitor: {
         if (Config.bar.workspaces.perMonitor)
             return false;
-        const mon = Hypr.workspaces.values.find(w => w.id === ws)?.monitor;
+        const mon = Hypr.workspaceById(ws)?.monitor;
         return !!(mon && mon !== monitor);
     }
-    readonly property color fgColour: {
+    readonly final property color fgColour: {
         if (onOtherMonitor)
             return offMonitorColour;
         if (focused || isOccupied || Config.bar.workspaces.occupiedBg)
@@ -56,9 +57,9 @@ Item {
     anchors.horizontalCenter: parent?.horizontalCenter
     // Port: LazyListView's attached layout properties are plain properties here, and the list is
     // a ListView, so the delegate sets its own height. Adding and removing do not animate.
-    readonly property real preferredHeight: layout.implicitHeight + (hasWindows ? Tokens.padding.extraSmall : 0)
-    property real visibleHeight: preferredHeight
-    readonly property real layoutY: y
+    readonly final property real preferredHeight: layout.implicitHeight + (hasWindows ? Tokens.padding.extraSmall : 0)
+    final property real visibleHeight: preferredHeight
+    readonly final property real layoutY: y
 
     width: ListView.view?.width ?? 0
     height: visibleHeight
@@ -124,7 +125,7 @@ Item {
                 if (label)
                     return label;
 
-                const ws = Hypr.workspaces.values.find(w => w.id === root.ws);
+                const ws = Hypr.workspaceById(root.ws);
                 const wsName = !ws || ws.name == root.ws ? root.ws : Hypr.trimWsName(ws.name)[0];
 
                 const capitalisation = Config.bar.workspaces.capitalisation;
@@ -197,7 +198,7 @@ Item {
 
             Layout.fillWidth: true
             Layout.topMargin: -Tokens.spacing.extraSmall / 2
-            Layout.preferredHeight: root.hasWindows && item ? item.layoutHeight : 0
+            Layout.preferredHeight: root.hasWindows ? root.windowsHeight : 0
 
             visible: active
             active: root.showWindows && Config.bar.workspaces.maxWindowIcons > 0
@@ -206,6 +207,9 @@ Item {
                 spacing: 0
                 implicitHeight: contentHeight
                 removeDuration: Tokens.anim.durations.expressiveDefaultEffects
+
+                Component.onCompleted: root.windowsHeight = layoutHeight
+                onLayoutHeightChanged: root.windowsHeight = layoutHeight
 
                 model: ScriptModel {
                     values: {
@@ -222,11 +226,11 @@ Item {
                 delegate: Item {
                     id: win
 
-                    required property var modelData
-                    required property int index // Needed, LazyListView will fail to set it if it doesn't exist
+                    required final property HyprToplevel modelData
+                    required final property int index // Needed, LazyListView will fail to set it if it doesn't exist
 
-                    readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
-                    readonly property color tint: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
+                    readonly final property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
+                    readonly final property color tint: root.onOtherMonitor ? root.offMonitorColour : Colours.palette.m3onSurfaceVariant
 
                     width: ListView.view?.width ?? 0
                     height: glyph.implicitHeight
@@ -243,7 +247,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: !win.hasImage
                         grade: 0
-                        text: Icons.getAppCategoryIcon(win.modelData.lastIpcObject.class, "desktop_windows")
+                        text: Icons.getAppCategoryIcon(win.modelData.appClass, "desktop_windows")
                         color: win.tint
                     }
 
@@ -255,7 +259,7 @@ Item {
                         width: Math.round(glyph.implicitHeight * 0.9)
                         height: width
                         visible: win.hasImage
-                        source: win.modelData.icon ?? ""
+                        source: win.modelData.icon
                         sourceSize: Qt.size(width * 2, height * 2)
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
@@ -270,11 +274,11 @@ Item {
     component WsIconCacher: QtObject {
         id: cacher
 
-        property string name
-        readonly property string icon: Icons.matchIconRuleList(Hypr.trimWsName(name), root.iconRules)
-        readonly property var wsObj: Hypr.workspaces.values.find(w => w.id === root.ws) ?? null
+        final property string name
+        readonly final property string icon: Icons.matchIconRuleList(Hypr.trimWsName(name), root.iconRules)
+        readonly final property HyprWorkspace wsObj: Hypr.workspaceById(root.ws)
 
-        readonly property Connections conn: Connections {
+        readonly final property Connections conn: Connections {
             function onNameChanged(): void {
                 cacher.updateName();
             }

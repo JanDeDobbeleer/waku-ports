@@ -11,7 +11,7 @@ import qs.utils
 ClipRect {
     id: root
 
-    property real animPerc: UPower.displayDevice.percentage
+    final property real animPerc: UPower.displayDevice.percentage
 
     color: Colours.palette.m3secondaryContainer
     radius: Tokens.rounding.large
@@ -60,10 +60,10 @@ ClipRect {
     component Contents: ColumnLayout {
         id: contents
 
-        required property color accentColour
-        required property color textColour
-        required property color subTextColour
-        readonly property bool charging: [UPowerDeviceState.Charging, UPowerDeviceState.FullyCharged, UPowerDeviceState.PendingCharge].includes(UPower.displayDevice.state)
+        required final property color accentColour
+        required final property color textColour
+        required final property color subTextColour
+        readonly final property bool charging: [UPowerDeviceState.Charging, UPowerDeviceState.FullyCharged, UPowerDeviceState.PendingCharge].includes(UPower.displayDevice.state)
 
         spacing: 0
 

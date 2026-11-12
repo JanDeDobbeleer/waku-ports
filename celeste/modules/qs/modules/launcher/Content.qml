@@ -12,12 +12,12 @@ import qs.modules.launcher.services
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property var panels
-    required property real maxHeight
+    required final property ScreenState screenState
+    required final property var panels
+    required final property real maxHeight
 
-    readonly property int padding: Tokens.padding.large
-    readonly property int rounding: Tokens.rounding.extraLarge
+    readonly final property int padding: Tokens.padding.large
+    readonly final property int rounding: Tokens.rounding.extraLarge
 
     implicitWidth: listWrapper.width + padding * 2
     implicitHeight: searchItem.height + listWrapper.height + padding + searchItem.anchors.bottomMargin

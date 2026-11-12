@@ -11,20 +11,20 @@ QtObject {
     id: root
 
     // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
-    property int refs: 0
+    final property int refs: 0
     function ref(): void {
         refs++;
     }
     function unref(): void {
         refs = Math.max(0, refs - 1);
     }
-    readonly property int type: src.available ? GpuType.Generic : GpuType.None
-    readonly property string name: src.name
-    readonly property bool detecting: !src.ready
-    readonly property real percentage: src.percent / 100
-    readonly property real temperature: NaN
+    readonly final property int type: src.available ? GpuType.Generic : GpuType.None
+    readonly final property string name: src.name
+    readonly final property bool detecting: !src.ready
+    readonly final property real percentage: src.percent / 100
+    readonly final property real temperature: NaN
 
-    readonly property var src: S.Gpu {
+    readonly final property var src: S.Gpu {
         active: root.refs > 0 || !ready
         interval: GlobalConfig.dashboard.resourceUpdateInterval
     }

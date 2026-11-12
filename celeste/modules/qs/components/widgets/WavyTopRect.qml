@@ -6,11 +6,11 @@ import qs.services
 Shape {
     id: root
 
-    property color color: Colours.palette.m3surfaceContainer
-    property int waves: 4
-    property real amplitude: 3
+    final property color color: Colours.palette.m3surfaceContainer
+    final property int waves: 4
+    final property real amplitude: 3
 
-    readonly property real waveHeight: amplitude * 2
+    readonly final property real waveHeight: amplitude * 2
 
     preferredRendererType: Shape.CurveRenderer
     asynchronous: true

@@ -15,17 +15,17 @@ import qs.services
 Scope {
     id: root
 
-    property var lock: null
-    readonly property bool hasPlayer: Players.list.some(p => p.isPlaying)
-    readonly property bool isCharging: !UPower.onBattery
-    readonly property bool enabled: {
+    final property var lock: null
+    readonly final property bool hasPlayer: Players.list.some(p => p.isPlaying)
+    readonly final property bool isCharging: !UPower.onBattery
+    readonly final property bool enabled: {
         if (GlobalConfig.general.idle.inhibitWhenAudio && hasPlayer)
             return false;
         if (GlobalConfig.general.idle.inhibitWhenCharging && isCharging)
             return false;
         return !RuntimeState.inhibitIdle;
     }
-    readonly property int idleSeconds: S.DesktopState.idleSeconds
+    readonly final property int idleSeconds: S.DesktopState.idleSeconds
 
     function handleIdleAction(action: var): void {
         if (!action)
@@ -46,9 +46,9 @@ Scope {
         QtObject {
             id: monitor
 
-            required property var modelData
+            required final property var modelData
 
-            readonly property bool monitored: {
+            readonly final property bool monitored: {
                 if (!root.enabled || !(modelData.enabled ?? true))
                     return false;
                 if (modelData.inhibitWhenAudio && root.hasPlayer)
@@ -57,7 +57,7 @@ Scope {
                     return false;
                 return true;
             }
-            readonly property bool isIdle: monitored && root.idleSeconds >= modelData.timeout
+            readonly final property bool isIdle: monitored && root.idleSeconds >= modelData.timeout
 
             onIsIdleChanged: root.handleIdleAction(isIdle ? modelData.idleAction : modelData.returnAction)
         }

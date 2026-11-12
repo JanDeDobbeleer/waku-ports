@@ -11,27 +11,27 @@ import qs.compat
 Singleton {
     id: root
 
-    property string osName: "Windows"
-    property string osPrettyName: "Windows"
-    property string osId: "windows"
-    property list<string> osIdLike: []
-    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/windows.svg`)
+    final property string osName: "Windows"
+    final property string osPrettyName: "Windows"
+    final property string osId: "windows"
+    final property list<string> osIdLike: []
+    final property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/windows.svg`)
 
-    property string uptime
+    final property string uptime
     // Uptime trimmed to its two largest components
-    property string uptimeShort
-    readonly property string user: Quickshell.env("USERNAME")
-    readonly property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || "Explorer" // waku gap: no compositor name on Windows
-    readonly property string shell: "waku"
+    final property string uptimeShort
+    readonly final property string user: Quickshell.env("USERNAME")
+    readonly final property string wm: Quickshell.env("XDG_CURRENT_DESKTOP") || "Explorer" // waku gap: no compositor name on Windows
+    readonly final property string shell: "waku"
 
-    property string kernel
-    property string hostname: Quickshell.env("COMPUTERNAME")
-    property string firmware
+    final property string kernel
+    final property string hostname: Quickshell.env("COMPUTERNAME")
+    final property string firmware
 
     // DMI vendor/model, combined into a single human-readable device name
-    property string boardVendor
-    property string boardName
-    readonly property string device: {
+    final property string boardVendor
+    final property string boardName
+    readonly final property string device: {
         if (!boardName)
             return boardVendor;
         if (!boardVendor || boardName.toLowerCase().startsWith(boardVendor.toLowerCase()))
@@ -39,7 +39,7 @@ Singleton {
         return `${boardVendor} ${boardName}`;
     }
 
-    property double bootTime: Date.now() // until the boot time arrives, count from shell start
+    final property double bootTime: Date.now() // until the boot time arrives, count from shell start
 
     // Strips the placeholder strings OEMs commonly leave in DMI fields
     function sanitiseDmi(s: string): string {

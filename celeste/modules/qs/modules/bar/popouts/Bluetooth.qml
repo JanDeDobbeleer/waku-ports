@@ -16,7 +16,7 @@ import qs.utils
 ColumnLayout {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
     width: Tokens.px(300)
     spacing: Tokens.spacing.small
@@ -81,8 +81,8 @@ ColumnLayout {
         RowLayout {
             id: device
 
-            required property BluetoothDevice modelData
-            readonly property bool loading: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
+            required final property BluetoothDevice modelData
+            readonly final property bool loading: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
 
             Layout.fillWidth: true
             Layout.rightMargin: Tokens.padding.extraSmall
@@ -197,7 +197,7 @@ ColumnLayout {
     }
 
     component Toggle: RowLayout {
-        required property string label
+        required final property string label
         property alias checked: toggle.checked
         property alias toggle: toggle
 

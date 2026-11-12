@@ -12,16 +12,16 @@ QtObject {
         Error
     }
 
-    property bool closed: false
-    property string title: ""
-    property string message: ""
-    property string icon: ""
-    property int timeout: 5000
-    property int type: Toast.Info
+    final property bool closed: false
+    final property string title: ""
+    final property string message: ""
+    final property string icon: ""
+    final property int timeout: 5000
+    final property int type: Toast.Info
 
     signal finishedClose
 
-    property var _locks: []
+    final property var _locks: []
 
     function close(): void {
         if (!closed)
@@ -44,7 +44,7 @@ QtObject {
             close();
     }
 
-    property Timer _timer: Timer {
+    final property Timer _timer: Timer {
         interval: root.timeout
         running: true
         onTriggered: root.close()

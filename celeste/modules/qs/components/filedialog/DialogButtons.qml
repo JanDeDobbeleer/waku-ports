@@ -7,8 +7,8 @@ import qs.services
 StyledRect {
     id: root
 
-    required property var dialog
-    required property FolderContents folder
+    required final property var dialog
+    required final property FolderContents folder
 
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
 

@@ -73,10 +73,10 @@ Searcher {
     useFuzzy: GlobalConfig.launcher.useFuzzy.variants
 
     component Variant: QtObject {
-        required property string variant
-        required property string icon
-        required property string name
-        required property string description
+        required final property string variant
+        required final property string icon
+        required final property string name
+        required final property string description
 
         function onClicked(list: var): void {
             list.screenState.launcher = false;

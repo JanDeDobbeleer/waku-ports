@@ -25,19 +25,19 @@ Searcher {
     id: root
 
     // No bundled picture: when waku reports no current wallpaper, nothing is shown.
-    readonly property string fallback: ""
+    readonly final property string fallback: ""
 
-    property bool showPreview: false
-    readonly property string current: showPreview ? previewPath : actualCurrent
-    property string previewPath
-    property string actualCurrent: fromWaku(S.Wallpapers.current)
-    property bool previewColourLock
-    property bool pendingPreviewClear
+    final property bool showPreview: false
+    readonly final property string current: showPreview ? previewPath : actualCurrent
+    final property string previewPath
+    final property string actualCurrent: fromWaku(S.Wallpapers.current)
+    final property bool previewColourLock
+    final property bool pendingPreviewClear
 
-    property list<QtObject> entries: []
+    final property list<QtObject> entries: []
 
     // The width of the picker's thumbnails; Visual's `thumbnailWidth` default must match.
-    readonly property int thumbnailWidth: 640
+    readonly final property int thumbnailWidth: 640
 
     function fromWaku(path: string): string {
         return Paths.slash(path) || fallback;
@@ -288,10 +288,10 @@ Searcher {
         id: entryComp
 
         QtObject {
-            property string path
-            property string name
-            property string parentDir
-            property string relativePath
+            final property string path
+            final property string name
+            final property string parentDir
+            final property string relativePath
         }
     }
 }

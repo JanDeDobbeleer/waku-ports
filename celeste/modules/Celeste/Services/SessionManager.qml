@@ -21,11 +21,11 @@ import waku.services as S
 QtObject {
     id: root
 
-    readonly property bool dryRun: Quickshell.env("CELESTE_DRYRUN") === "1"
-    readonly property bool allowed: GlobalConfig.services.allowSystemActions
-    property string lastLogged
+    readonly final property bool dryRun: Quickshell.env("CELESTE_DRYRUN") === "1"
+    readonly final property bool allowed: GlobalConfig.services.allowSystemActions
+    final property string lastLogged
 
-    readonly property var actions: ({
+    readonly final property var actions: ({
             "logout": "signOut",
             "poweroff": "shutdown",
             "shutdown": "shutdown",
@@ -36,7 +36,7 @@ QtObject {
             "lock": "lock"
         })
 
-    readonly property var labels: ({
+    readonly final property var labels: ({
             "lock": "Locking the session",
             "sleep": "Going to sleep",
             "hibernate": "Hibernating",
@@ -45,7 +45,7 @@ QtObject {
             "shutdown": "Shutting down"
         })
 
-    readonly property var icons: ({
+    readonly final property var icons: ({
             "lock": "lock",
             "sleep": "bedtime",
             "hibernate": "downloading",

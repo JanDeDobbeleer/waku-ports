@@ -4,12 +4,12 @@ import Celeste.Components
 Item {
     id: root
 
-    property real radius
-    property real topLeftRadius: radius
-    property real topRightRadius: radius
-    property real bottomRightRadius: radius
-    property real bottomLeftRadius: radius
-    property color color: "transparent"
+    final property real radius
+    final property real topLeftRadius: radius
+    final property real topRightRadius: radius
+    final property real bottomRightRadius: radius
+    final property real bottomLeftRadius: radius
+    final property color color: "transparent"
     default property alias contentData: contentItem.data
 
     Item {

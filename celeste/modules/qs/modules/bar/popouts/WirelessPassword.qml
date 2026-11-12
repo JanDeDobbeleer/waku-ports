@@ -13,11 +13,11 @@ import qs.utils
 ColumnLayout {
     id: root
 
-    required property PopoutState popouts
-    property var network: null
-    property bool isClosing: false
+    required final property PopoutState popouts
+    final property var network: null
+    final property bool isClosing: false
 
-    readonly property bool shouldBeVisible: root.popouts.currentName === "wirelesspassword"
+    readonly final property bool shouldBeVisible: root.popouts.currentName === "wirelesspassword"
 
     function checkConnectionStatus(): void {
         if (!root.shouldBeVisible || !connectButton.connecting) {
@@ -209,7 +209,7 @@ ColumnLayout {
             }
 
             Timer {
-                property int attempts: 0
+                final property int attempts: 0
 
                 interval: 50
                 running: root.shouldBeVisible && (!root.network || !root.network.ssid)
@@ -261,7 +261,7 @@ ColumnLayout {
             FocusScope {
                 id: passwordContainer
 
-                property string passwordBuffer: ""
+                final property string passwordBuffer: ""
 
                 objectName: "passwordContainer"
                 Layout.topMargin: Tokens.spacing.largeIncreased
@@ -391,7 +391,7 @@ ColumnLayout {
                 ListView {
                     id: charList
 
-                    readonly property int fullWidth: count * (implicitHeight + spacing) - spacing
+                    readonly final property int fullWidth: count * (implicitHeight + spacing) - spacing
 
                     anchors.centerIn: parent
                     implicitWidth: fullWidth
@@ -489,8 +489,8 @@ ColumnLayout {
                 TextButton {
                     id: connectButton
 
-                    property bool connecting: false
-                    property bool hasError: false
+                    final property bool connecting: false
+                    final property bool hasError: false
 
                     Layout.fillWidth: true
                     Layout.minimumHeight: Tokens.font.body.medium.pointSize + Tokens.padding.medium * 2
@@ -559,7 +559,7 @@ ColumnLayout {
     Timer {
         id: connectionMonitor
 
-        property int repeatCount: 0
+        final property int repeatCount: 0
 
         interval: 1000
         repeat: true

@@ -6,21 +6,21 @@ import QtQuick
 QtObject {
     id: root
 
-    property QtObject entry
-    property int frequency: 0
+    final property QtObject entry
+    final property int frequency: 0
 
     // waku gap: a QML type cannot declare a property named `id`, so upstream `entry.id` is `appId`.
-    readonly property string appId: entry?.id ?? ""
-    readonly property string name: entry?.name ?? ""
-    readonly property string comment: entry?.comment ?? ""
-    readonly property string execString: entry?.execString ?? ""
-    readonly property string startupClass: entry?.startupClass ?? ""
-    readonly property string genericName: entry?.genericName ?? ""
-    readonly property string categories: {
+    readonly final property string appId: entry?.id ?? ""
+    readonly final property string name: entry?.name ?? ""
+    readonly final property string comment: entry?.comment ?? ""
+    readonly final property string execString: entry?.execString ?? ""
+    readonly final property string startupClass: entry?.startupClass ?? ""
+    readonly final property string genericName: entry?.genericName ?? ""
+    readonly final property string categories: {
         const c = entry?.categories;
         return Array.isArray(c) ? c.join(" ") : (c ? String(c) : "");
     }
-    readonly property string keywords: {
+    readonly final property string keywords: {
         const k = entry?.keywords;
         return Array.isArray(k) ? k.join(" ") : (k ? String(k) : "");
     }

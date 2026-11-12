@@ -5,7 +5,7 @@ import "ScaleSizes.js" as SS
 QtObject {
     id: root
 
-    property real fontScale: 1
+    final property real fontScale: 1
 
     readonly final property TokenFontStyle headline: TokenFontStyle {
         cfg: SS.get(GlobalConfig.appearance, "font.headline")

@@ -84,9 +84,9 @@ ColumnLayout {
         delegate: Item {
             id: kbDelegate
 
-            required property int layoutIndex
-            required property string label
-            readonly property bool isDisabled: layoutIndex > 3
+            required final property int layoutIndex
+            required final property string label
+            readonly final property bool isDisabled: layoutIndex > 3
 
             width: list.width
             height: Math.max(36, rowText.implicitHeight + Tokens.padding.small)

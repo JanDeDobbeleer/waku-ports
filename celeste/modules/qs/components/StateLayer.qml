@@ -7,18 +7,18 @@ import qs.services
 MouseArea {
     id: root
 
-    property bool disabled
-    property bool showHoverBackground: true
-    property bool manualPressOverride
-    property bool manualHoverOverride
+    final property bool disabled
+    final property bool showHoverBackground: true
+    final property bool manualPressOverride
+    final property bool manualHoverOverride
     readonly property alias rect: base
 
-    property bool shapeMorph
-    property real stateOpacity: containsMouse || manualHoverOverride ? 0.08 : 0
+    final property bool shapeMorph
+    final property real stateOpacity: containsMouse || manualHoverOverride ? 0.08 : 0
 
-    property real pressX: width / 2
-    property real pressY: height / 2
-    property real circleRadius
+    final property real pressX: width / 2
+    final property real pressY: height / 2
+    final property real circleRadius
 
     property alias color: base.color
     property alias radius: base.radius
@@ -27,14 +27,14 @@ MouseArea {
     property alias bottomLeftRadius: base.bottomLeftRadius
     property alias bottomRightRadius: base.bottomRightRadius
 
-    readonly property real endRadius: {
+    readonly final property real endRadius: {
         const d1 = distSq(0, 0);
         const d2 = distSq(width, 0);
         const d3 = distSq(0, height);
         const d4 = distSq(width, height);
         return (Math.sqrt(Math.max(d1, d2, d3, d4)) + (shapeMorph ? 24 : 0)) * 1.3;
     }
-    property real endRadiusAtPress
+    final property real endRadiusAtPress
 
     function distSq(x: real, y: real): real {
         return (pressX - x) ** 2 + (pressY - y) ** 2;

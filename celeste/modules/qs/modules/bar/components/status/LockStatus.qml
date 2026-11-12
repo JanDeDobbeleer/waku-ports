@@ -6,12 +6,12 @@ import qs.services
 ColumnLayout {
     id: root
 
-    required property color colour
-    required property int parentSpacing
+    required final property color colour
+    required final property int parentSpacing
 
-    property real gap: Hypr.capsLock && Hypr.numLock ? parentSpacing : 0
-    property real capsHeight: Hypr.capsLock ? capslockIcon.implicitHeight : 0
-    property real numHeight: Hypr.numLock ? numlockIcon.implicitHeight : 0
+    final property real gap: Hypr.capsLock && Hypr.numLock ? parentSpacing : 0
+    final property real capsHeight: Hypr.capsLock ? capslockIcon.implicitHeight : 0
+    final property real numHeight: Hypr.numLock ? numlockIcon.implicitHeight : 0
 
     spacing: Math.round(gap)
 

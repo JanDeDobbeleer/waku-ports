@@ -12,14 +12,14 @@ Row {
         Tonal
     }
 
-    property real horizontalPadding: Tokens.padding.medium
-    property real verticalPadding: Tokens.padding.small
-    property int type: SplitButton.Filled
-    property bool disabled
-    property bool menuOnTop
-    property string fallbackIcon
-    property string fallbackText
-    property real minLeftWidth
+    final property real horizontalPadding: Tokens.padding.medium
+    final property real verticalPadding: Tokens.padding.small
+    final property int type: SplitButton.Filled
+    final property bool disabled
+    final property bool menuOnTop
+    final property string fallbackIcon
+    final property string fallbackText
+    final property real minLeftWidth
 
     property alias menuItems: menu.items
     property alias active: menu.active
@@ -31,10 +31,10 @@ Row {
     readonly property alias textRow: textRow
     readonly property alias expandBtn: expandBtn
 
-    property color colour: type == SplitButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer
-    property color textColour: type == SplitButton.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
-    property color disabledColour: Qt.alpha(Colours.palette.m3onSurface, 0.1)
-    property color disabledTextColour: Qt.alpha(Colours.palette.m3onSurface, 0.38)
+    final property color colour: type == SplitButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer
+    final property color textColour: type == SplitButton.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
+    final property color disabledColour: Qt.alpha(Colours.palette.m3onSurface, 0.1)
+    final property color disabledTextColour: Qt.alpha(Colours.palette.m3onSurface, 0.38)
 
     spacing: Math.floor(Tokens.spacing.extraSmall / 2)
 
@@ -96,7 +96,7 @@ Row {
     StyledRect {
         id: expandBtn
 
-        property real rad: root.expanded ? implicitHeight / 2 * Math.min(1, Tokens.rounding.scale) : Tokens.rounding.medium / 2
+        final property real rad: root.expanded ? implicitHeight / 2 * Math.min(1, Tokens.rounding.scale) : Tokens.rounding.medium / 2
 
         radius: implicitHeight / 2 * Math.min(1, Tokens.rounding.scale)
         topLeftRadius: rad

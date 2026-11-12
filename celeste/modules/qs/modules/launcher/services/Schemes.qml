@@ -16,10 +16,10 @@ import qs.utils
 Searcher {
     id: root
 
-    readonly property var seeds: Colours.seeds
-    readonly property string currentFlavour: Colours.seed
-    readonly property string currentScheme: `${Colours.scheme} ${currentFlavour}`
-    readonly property string currentVariant: Colours.flavour
+    readonly final property var seeds: Colours.seeds
+    readonly final property string currentFlavour: Colours.seed
+    readonly final property string currentScheme: `${Colours.scheme} ${currentFlavour}`
+    readonly final property string currentVariant: Colours.flavour
 
     function transformSearch(search: string): string {
         return search.slice(`${GlobalConfig.launcher.actionPrefix}scheme `.length);
@@ -88,10 +88,10 @@ Searcher {
     }
 
     component Scheme: QtObject {
-        required property var modelData
-        readonly property string name: modelData?.name ?? ""
-        readonly property string flavour: modelData?.flavour ?? ""
-        readonly property var colours: modelData?.colours ?? ({})
+        required final property var modelData
+        readonly final property string name: modelData?.name ?? ""
+        readonly final property string flavour: modelData?.flavour ?? ""
+        readonly final property var colours: modelData?.colours ?? ({})
 
         function onClicked(list: var): void {
             list.screenState.launcher = false;

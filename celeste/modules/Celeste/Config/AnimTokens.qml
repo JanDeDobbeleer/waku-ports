@@ -43,7 +43,7 @@ QtObject {
     }
 
     component Curve: NumberAnimation {
-        required property var points
+        required final property var points
 
         easing.type: Easing.BezierSpline
         easing.bezierCurve: points

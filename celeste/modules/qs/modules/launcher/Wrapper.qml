@@ -9,20 +9,20 @@ import qs.modules.launcher.services
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property ScreenState screenState
-    required property var panels
+    required final property ShellScreen screen
+    required final property ScreenState screenState
+    required final property var panels
 
-    readonly property bool shouldBeActive: screenState.launcher && Config.launcher.enabled
+    readonly final property bool shouldBeActive: screenState.launcher && Config.launcher.enabled
 
-    readonly property real maxHeight: {
+    readonly final property real maxHeight: {
         let max = screen.height - Config.border.thickness * 2 + Tokens.padding.extraLarge;
         if (screenState.dashboard)
             max -= panels.dashboard.nonAnimHeight;
         return max;
     }
 
-    property real offsetScale: shouldBeActive ? 0 : 1
+    final property real offsetScale: shouldBeActive ? 0 : 1
 
     onShouldBeActiveChanged: {
         if (shouldBeActive)

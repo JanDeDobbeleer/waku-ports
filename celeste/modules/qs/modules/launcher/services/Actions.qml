@@ -49,13 +49,13 @@ Searcher {
     }
 
     component Action: QtObject {
-        required property var modelData
-        readonly property string name: modelData.name ? Tr.trMarked(modelData.name) : Tr.trCtx("Unnamed", "launcher action with no name")
-        readonly property string desc: modelData.description ? Tr.trMarked(modelData.description) : Tr.trCtx("No description", "launcher action with no description")
-        readonly property string icon: modelData.icon ?? "help_outline"
-        readonly property list<string> command: modelData.command ?? []
-        readonly property bool enabled: modelData.enabled ?? true
-        readonly property bool dangerous: modelData.dangerous ?? false
+        required final property var modelData
+        readonly final property string name: modelData.name ? Tr.trMarked(modelData.name) : Tr.trCtx("Unnamed", "launcher action with no name")
+        readonly final property string desc: modelData.description ? Tr.trMarked(modelData.description) : Tr.trCtx("No description", "launcher action with no description")
+        readonly final property string icon: modelData.icon ?? "help_outline"
+        readonly final property list<string> command: modelData.command ?? []
+        readonly final property bool enabled: modelData.enabled ?? true
+        readonly final property bool dangerous: modelData.dangerous ?? false
 
         function onClicked(list: var): void {
             run(list.screenState, list.search);

@@ -10,11 +10,11 @@ import qs.utils
 Item {
     id: root
 
-    required property var bar
-    required property Brightness.Monitor monitor
-    property color colour: Colours.palette.m3primary
+    required final property var bar
+    required final property Brightness.Monitor monitor
+    final property color colour: Colours.palette.m3primary
 
-    readonly property string windowTitle: {
+    readonly final property string windowTitle: {
         const title = Hypr.activeToplevel?.title;
         if (!title)
             return Tr.trCtx("Desktop", "shown when no window is focused");
@@ -27,13 +27,13 @@ Item {
         return title;
     }
 
-    readonly property int maxHeight: {
+    readonly final property int maxHeight: {
         const otherModules = bar.children.filter(c => c.entryId && c.item !== this && c.entryId !== "spacer");
         const otherHeight = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimHeight ?? curr.height), 0);
         // Length - 2 cause repeater counts as a child
         return bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
     }
-    property Title current: text1
+    final property Title current: text1
 
     clip: true
     implicitWidth: Math.max(icon.implicitWidth, current.implicitHeight)
@@ -71,7 +71,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
 
         animate: true
-        text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
+        text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.appClass, "desktop_windows")
         color: root.colour
     }
 

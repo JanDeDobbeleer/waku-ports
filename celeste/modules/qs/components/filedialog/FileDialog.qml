@@ -10,10 +10,10 @@ import qs.services
 LazyLoader {
     id: loader
 
-    property list<string> cwd: ["Home"]
-    property string filterLabel: Tr.tr("All files")
-    property list<string> filters: ["*"]
-    property string title: Tr.tr("Select a file")
+    final property list<string> cwd: ["Home"]
+    final property string filterLabel: Tr.tr("All files")
+    final property list<string> filters: ["*"]
+    final property string title: Tr.tr("Select a file")
 
     signal accepted(path: string)
     signal rejected
@@ -32,11 +32,11 @@ LazyLoader {
     FloatingWindow {
         id: root
 
-        property list<string> cwd: loader.cwd
-        property string filterLabel: loader.filterLabel
-        property list<string> filters: loader.filters
+        final property list<string> cwd: loader.cwd
+        final property string filterLabel: loader.filterLabel
+        final property list<string> filters: loader.filters
 
-        readonly property bool selectionValid: {
+        readonly final property bool selectionValid: {
             const file = folderContents.currentItem?.modelData;
             return (file && !file.isDir && (filters.includes("*") || filters.some(filter => filter.toLowerCase() === file.suffix.toLowerCase()))) ?? false;
         }

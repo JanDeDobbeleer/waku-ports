@@ -15,11 +15,11 @@ import qs.utils
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property FileDialog facePicker
-    property string faceOverride
+    required final property ScreenState screenState
+    required final property FileDialog facePicker
+    final property string faceOverride
 
-    property color pfpFallbackColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+    final property color pfpFallbackColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.large

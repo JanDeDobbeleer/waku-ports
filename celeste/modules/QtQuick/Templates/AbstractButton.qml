@@ -4,17 +4,17 @@ import QtQuick
 Control {
     id: button
 
-    property string text
-    property font font
-    property bool checkable: false
-    property bool checked: false
-    property bool autoExclusive: false
-    property bool autoRepeat: false
-    property Item indicator
-    readonly property bool pressed: area.pressed
-    readonly property bool down: area.pressed
-    readonly property real implicitIndicatorWidth: indicator ? indicator.implicitWidth : 0
-    readonly property real implicitIndicatorHeight: indicator ? indicator.implicitHeight : 0
+    final property string text
+    final property font font
+    final property bool checkable: false
+    final property bool checked: false
+    final property bool autoExclusive: false
+    final property bool autoRepeat: false
+    final property Item indicator
+    readonly final property bool pressed: area.pressed
+    readonly final property bool down: area.pressed
+    readonly final property real implicitIndicatorWidth: indicator ? indicator.implicitWidth : 0
+    readonly final property real implicitIndicatorHeight: indicator ? indicator.implicitHeight : 0
 
     signal clicked
     signal toggled

@@ -11,8 +11,8 @@ import qs.services
 Item {
     id: root
 
-    property bool open
-    readonly property real padding: Tokens.padding.large
+    final property bool open
+    readonly final property real padding: Tokens.padding.large
 
     implicitWidth: btn.implicitWidth * 0.9
     implicitHeight: btn.implicitHeight * 0.9

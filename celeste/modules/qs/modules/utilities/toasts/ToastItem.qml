@@ -10,7 +10,7 @@ import qs.services
 StyledRect {
     id: root
 
-    required property Toast modelData
+    required final property Toast modelData
 
     anchors.left: parent.left
     anchors.right: parent.right

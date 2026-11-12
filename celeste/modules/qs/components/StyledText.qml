@@ -7,7 +7,7 @@ import qs.services
 Text {
     id: root
 
-    property bool animate: false
+    final property bool animate: false
 
     renderType: Text.NativeRendering
     textFormat: Text.PlainText

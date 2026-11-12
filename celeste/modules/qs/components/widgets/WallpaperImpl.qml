@@ -8,7 +8,7 @@ import Celeste.State
 Item {
     id: root
 
-    readonly property var shader: {
+    readonly final property var shader: {
         CUtils.dependency(Config.background.wallpaperTransition);
         let transition = CUtils.enumToString(Config.background, "wallpaperTransition");
         if (!transition)
@@ -18,9 +18,9 @@ Item {
         return Shaders[transition] ?? Shaders.crossfade;
     }
 
-    property string source: Wallpapers.current
-    property ShaderEffectSource currentCapture: capture1
-    property real transitionProgress: 1
+    final property string source: Wallpapers.current
+    final property ShaderEffectSource currentCapture: capture1
+    final property real transitionProgress: 1
 
     onSourceChanged: {
         transitionAnim.stop();
@@ -98,9 +98,9 @@ Item {
     ShaderEffect {
         id: transition
 
-        property Item from
-        property Item to: liveItem
-        property real progress: root.transitionProgress
+        final property Item from
+        final property Item to: liveItem
+        final property real progress: root.transitionProgress
 
         anchors.fill: parent
         visible: root.transitionProgress < 1

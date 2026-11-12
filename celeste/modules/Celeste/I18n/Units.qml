@@ -5,7 +5,7 @@ import Celeste.Config
 
 QtObject {
     // Whether to show a 12-hour clock, guessing from the locale when Auto
-    readonly property bool twelveHourClock: {
+    readonly final property bool twelveHourClock: {
         const format = GlobalConfig.services.clockFormat;
         if (format === ClockFormat.Auto)
             return Qt.locale().timeFormat(Locale.ShortFormat).toLowerCase().includes("a");

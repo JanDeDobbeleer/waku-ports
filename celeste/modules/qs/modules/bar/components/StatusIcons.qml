@@ -12,21 +12,21 @@ import qs.modules.bar.components.status
 StyledRect {
     id: root
 
-    property color colour: Colours.palette.m3secondary
+    final property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
-    readonly property int spacing: Tokens.spacing.medium / 2
-    readonly property int padding: Config.bar.status.background ? Tokens.padding.medium : Tokens.padding.extraSmall
+    readonly final property int spacing: Tokens.spacing.medium / 2
+    readonly final property int padding: Config.bar.status.background ? Tokens.padding.medium : Tokens.padding.extraSmall
 
     // Index of the first/last entry that isn't collapsed, for edge margin gating
-    readonly property int firstPresent: {
+    readonly final property int firstPresent: {
         const values = model.values;
         for (let i = 0; i < values.length; i++)
             if (!collapsed(values[i]))
                 return i;
         return -1;
     }
-    readonly property int lastPresent: {
+    readonly final property int lastPresent: {
         const values = model.values;
         for (let i = values.length - 1; i >= 0; i--)
             if (!collapsed(values[i]))
@@ -160,14 +160,14 @@ StyledRect {
     }
 
     component EntryWrapper: Item {
-        required property var modelData
-        required property int index
-        property int margin: root.spacing / 2
-        readonly property bool present: !root.collapsed(modelData)
-        property real topGap: present && index !== root.firstPresent ? margin : 0
-        property real bottomGap: present && index !== root.lastPresent ? margin : 0
-        default property Item item
-        property string name: modelData.id.toLowerCase()
+        required final property var modelData
+        required final property int index
+        final property int margin: root.spacing / 2
+        readonly final property bool present: !root.collapsed(modelData)
+        final property real topGap: present && index !== root.firstPresent ? margin : 0
+        final property real bottomGap: present && index !== root.lastPresent ? margin : 0
+        default final property Item item
+        final property string name: modelData.id.toLowerCase()
 
         Layout.topMargin: Math.round(topGap)
         Layout.bottomMargin: Math.round(bottomGap)

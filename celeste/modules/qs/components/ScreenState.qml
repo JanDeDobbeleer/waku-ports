@@ -1,18 +1,18 @@
 import Quickshell
 
 PersistentProperties {
-    required property ShellScreen modelData
+    required final property ShellScreen modelData
 
     // Drawer visibilities
-    property bool bar
-    property bool osd
-    property bool session
-    property bool launcher
-    property bool dashboard
-    property bool utilities
-    property bool sidebar
+    final property bool bar
+    final property bool osd
+    final property bool session
+    final property bool launcher
+    final property bool dashboard
+    final property bool utilities
+    final property bool sidebar
 
     // Dashboard state
-    property int dashboardTab
-    property date dashboardDate: new Date()
+    final property int dashboardTab
+    final property date dashboardDate: new Date()
 }

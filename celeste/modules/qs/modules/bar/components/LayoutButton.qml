@@ -11,7 +11,7 @@ import waku.services as S
 Item {
     id: root
 
-    readonly property var info: ({
+    readonly final property var info: ({
             "mainStack": {"icon": "view_sidebar"},
             "mainStackTop": {"icon": "view_agenda"},
             "columns": {"icon": "view_column"},
@@ -21,9 +21,9 @@ Item {
             "centerMain": {"icon": "view_week"}
         })
 
-    readonly property string layoutName: S.Tiling.currentLayout
-    readonly property bool active: S.Tiling.active && layoutName !== ""
-    readonly property string glyph: info[layoutName]?.icon ?? "dashboard"
+    readonly final property string layoutName: S.Tiling.currentLayout
+    readonly final property bool active: S.Tiling.active && layoutName !== ""
+    readonly final property string glyph: info[layoutName]?.icon ?? "dashboard"
 
     // Runs a step of the layout cycle: "next" or "previous". `dry` logs the command only.
     function cycle(direction: string, dry = Paths.dryRun): string {

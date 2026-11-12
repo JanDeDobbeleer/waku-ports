@@ -16,7 +16,7 @@ Item {
     id: root
 
     // Funny binding hack to make lyrics update
-    readonly property var _: {
+    readonly final property var _: {
         const p = Players.active;
         if (p)
             Lyrics.setTrack(p.trackArtist, p.trackTitle, p.trackAlbum, p.length);
@@ -24,8 +24,8 @@ Item {
             Lyrics.clearTrack();
     }
 
-    readonly property real fadeAmount: 0.1
-    property list<string> lyricList: Lyrics.lyrics
+    readonly final property real fadeAmount: 0.1
+    final property list<string> lyricList: Lyrics.lyrics
 
     layer.enabled: true
     layer.effect: Mask {
@@ -251,9 +251,9 @@ Item {
         delegate: StyledText {
             id: lyric
 
-            required property string modelData
-            required property int index
-            property real effectScale: ListView.isCurrentItem ? 1 : 0
+            required final property string modelData
+            required final property int index
+            final property real effectScale: ListView.isCurrentItem ? 1 : 0
 
             anchors.left: lyrics.contentItem.left
             anchors.right: lyrics.contentItem.right

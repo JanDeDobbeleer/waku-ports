@@ -5,14 +5,14 @@ import QtQuick
 QtObject {
     id: root
 
-    property int capacity: 0
-    readonly property int count: _data.length
-    readonly property real maximum: _max
+    final property int capacity: 0
+    readonly final property int count: _data.length
+    readonly final property real maximum: _max
 
     signal valuesChanged
 
-    property var _data: []
-    property real _max: 0
+    final property var _data: []
+    final property real _max: 0
 
     onCapacityChanged: {
         _data = [];

@@ -13,13 +13,13 @@ import qs.modules.launcher.services
 StyledListView {
     id: root
 
-    required property SearchBar search
-    required property ScreenState screenState
+    required final property SearchBar search
+    required final property ScreenState screenState
 
-    property string displayText
+    final property string displayText
 
-    readonly property string requestedState: stateForText(search.text)
-    readonly property string displayState: stateForText(displayText)
+    readonly final property string requestedState: stateForText(search.text)
+    readonly final property string displayState: stateForText(displayText)
 
     function syncDisplayText(): void {
         if (screenState.launcher && requestedState === displayState)

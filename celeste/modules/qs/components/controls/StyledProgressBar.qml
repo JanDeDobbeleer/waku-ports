@@ -17,16 +17,16 @@ ProgressBar {
         Stopped
     }
 
-    property color fgColour: Colours.palette.m3primary
-    property color bgColour: Colours.palette.m3secondaryContainer
+    final property color fgColour: Colours.palette.m3primary
+    final property color bgColour: Colours.palette.m3secondaryContainer
 
-    property bool wavy
-    property bool wavePaused
-    property int waveFrequency: 6
-    property real waveAmplitude: 0.5
-    property int waveDuration: 1000
+    final property bool wavy
+    final property bool wavePaused
+    final property int waveFrequency: 6
+    final property real waveAmplitude: 0.5
+    final property int waveDuration: 1000
 
-    property int indeterminateAnimState: StyledProgressBar.Stopped
+    final property int indeterminateAnimState: StyledProgressBar.Stopped
 
     function toBounds(startFrac: real, endFrac: real, gapSize: real): point {
         startFrac = CUtils.clamp(startFrac, 0, 1);
@@ -101,7 +101,7 @@ ProgressBar {
             }
 
             Line {
-                property real implicitSize
+                final property real implicitSize
 
                 Component.onCompleted: implicitSize = Qt.binding(() => parent.width - wave.implicitWidth < parent.height ? parent.height : 4)
 
@@ -159,9 +159,9 @@ ProgressBar {
                 model: Math.max(manager.activeIndicators.length, 1) - 1
 
                 delegate: Line {
-                    required property int index
-                    readonly property LinearIndicatorSegment cur: manager.activeIndicators[index]
-                    readonly property LinearIndicatorSegment next: manager.activeIndicators[index + 1 % manager.activeIndicators.length]
+                    required final property int index
+                    readonly final property LinearIndicatorSegment cur: manager.activeIndicators[index]
+                    readonly final property LinearIndicatorSegment next: manager.activeIndicators[index + 1 % manager.activeIndicators.length]
 
                     bounds: root.toBounds(cur.endFraction, next.startFraction, cur.gapSize / 2)
                 }
@@ -178,8 +178,8 @@ ProgressBar {
                 model: manager.activeIndicators
 
                 delegate: Wave {
-                    required property LinearIndicatorSegment modelData
-                    readonly property point bounds: root.toBounds(modelData.startFraction, modelData.endFraction, modelData.gapSize / 2)
+                    required final property LinearIndicatorSegment modelData
+                    readonly final property point bounds: root.toBounds(modelData.startFraction, modelData.endFraction, modelData.gapSize / 2)
 
                     x: bounds.x
                     implicitWidth: bounds.y - bounds.x
@@ -198,7 +198,7 @@ ProgressBar {
     }
 
     component Line: StyledRect {
-        property point bounds
+        final property point bounds
 
         x: bounds.x
         implicitWidth: bounds.y - bounds.x

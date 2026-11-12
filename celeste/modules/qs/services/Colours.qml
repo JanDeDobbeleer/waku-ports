@@ -22,13 +22,13 @@ import qs.utils
 Singleton {
     id: root
 
-    property bool showPreview
-    property string scheme: "dynamic"
+    final property bool showPreview
+    final property string scheme: "dynamic"
     // The ColorScheme variant (one of S.ColorScheme.variants).
-    property string flavour: "tonalspot"
+    final property string flavour: "tonalspot"
     // "wallpaper" for the dynamic scheme, else a key of `seeds` (the material scheme).
-    property string seed: "wallpaper"
-    readonly property var seeds: ({
+    final property string seed: "wallpaper"
+    readonly final property var seeds: ({
             "purple": "#6750A4",
             "rose": "#A8627B",
             "teal": "#006A6A",
@@ -37,22 +37,22 @@ Singleton {
             "orange": "#9C4A00"
         })
     // False until the saved choice is read, so the defaults never overwrite it.
-    property bool restored
-    readonly property bool light: showPreview ? previewLight : currentLight
-    property bool currentLight
-    property bool previewLight
-    readonly property M3Palette palette: showPreview ? preview : current
-    readonly property M3TPalette tPalette: M3TPalette {}
-    readonly property M3Palette current: M3Palette {}
-    readonly property M3Palette preview: M3Palette {}
-    readonly property Transparency transparency: Transparency {}
-    property real wallLuminance
+    final property bool restored
+    readonly final property bool light: showPreview ? previewLight : currentLight
+    final property bool currentLight
+    final property bool previewLight
+    readonly final property M3Palette palette: showPreview ? preview : current
+    readonly final property M3TPalette tPalette: M3TPalette {}
+    readonly final property M3Palette current: M3Palette {}
+    readonly final property M3Palette preview: M3Palette {}
+    readonly final property Transparency transparency: Transparency {}
+    final property real wallLuminance
 
     // Used when the wallpaper cannot be read, or the scheme is not "dynamic".
-    readonly property color fallbackSeed: "#a8627b"
+    readonly final property color fallbackSeed: "#a8627b"
 
-    property string pendingCurrent
-    property string pendingPreview
+    final property string pendingCurrent
+    final property string pendingPreview
 
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)
@@ -213,8 +213,8 @@ Singleton {
     onFlavourChanged: persist()
     onCurrentLightChanged: persist()
 
-    readonly property string wallpaperPath: WallpaperService.actualCurrent
-    readonly property string previewWallpaperPath: WallpaperService.previewPath
+    readonly final property string wallpaperPath: WallpaperService.actualCurrent
+    readonly final property string previewWallpaperPath: WallpaperService.previewPath
 
     onWallpaperPathChanged: regenerate(false)
     onPreviewWallpaperPathChanged: {

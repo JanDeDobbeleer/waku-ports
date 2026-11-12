@@ -6,19 +6,19 @@ import Celeste
 Item {
     id: root
 
-    property CircularBuffer line1
-    property CircularBuffer line2
-    property color line1Color: "white"
-    property color line2Color: "white"
-    property real line1FillAlpha: 0.15
-    property real line2FillAlpha: 0.2
-    property real maxValue: 1024
-    property real slideProgress: 0
-    property int historyLength: 30
-    property real lineWidth: 2
+    final property CircularBuffer line1
+    final property CircularBuffer line2
+    final property color line1Color: "white"
+    final property color line2Color: "white"
+    final property real line1FillAlpha: 0.15
+    final property real line2FillAlpha: 0.2
+    final property real maxValue: 1024
+    final property real slideProgress: 0
+    final property int historyLength: 30
+    final property real lineWidth: 2
 
     // Re-evaluated when a buffer pushes (valuesChanged) so the point lists follow the data.
-    property int revision: 0
+    final property int revision: 0
 
     Connections {
         target: root.line1
@@ -52,10 +52,10 @@ Item {
         return pts;
     }
 
-    readonly property var line1Points: pointsFor(line1, false)
-    readonly property var line1Fill: pointsFor(line1, true)
-    readonly property var line2Points: pointsFor(line2, false)
-    readonly property var line2Fill: pointsFor(line2, true)
+    readonly final property var line1Points: pointsFor(line1, false)
+    readonly final property var line1Fill: pointsFor(line1, true)
+    readonly final property var line2Points: pointsFor(line2, false)
+    readonly final property var line2Fill: pointsFor(line2, true)
 
     Shape {
         anchors.fill: parent

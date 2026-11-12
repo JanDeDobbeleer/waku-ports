@@ -9,8 +9,8 @@ import qs.modules.bar as Bar
 Scope {
     id: root
 
-    required property ShellScreen screen
-    required property Bar.BarWrapper bar
+    required final property ShellScreen screen
+    required final property Bar.BarWrapper bar
 
     ExclusionZone {
         anchors.left: true

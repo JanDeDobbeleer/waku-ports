@@ -9,7 +9,7 @@ import qs.compat
 Singleton {
     id: root
 
-    readonly property var weatherIcons: ({
+    readonly final property var weatherIcons: ({
             "0": "clear_day",
             "1": "clear_day",
             "2": "partly_cloudy_day",
@@ -40,7 +40,7 @@ Singleton {
             "99": "thunderstorm"
         })
 
-    readonly property var categoryIcons: ({
+    readonly final property var categoryIcons: ({
             WebBrowser: "web",
             Printing: "print",
             Security: "security",
@@ -81,7 +81,7 @@ Singleton {
         })
 
     // qmlformat off
-    readonly property list<string> networkIcons: [
+    readonly final property list<string> networkIcons: [
         "signal_wifi_0_bar",
         "network_wifi_1_bar",
         "network_wifi_2_bar",
@@ -89,7 +89,7 @@ Singleton {
         "network_wifi"
     ]
 
-    readonly property var bluetoothIconRules: [
+    readonly final property var bluetoothIconRules: [
         [["headset", "headphones"], "headphones"],
         [["audio"], "speaker"],
         [["phone"], "smartphone"],
@@ -103,7 +103,7 @@ Singleton {
         [["camera"], "photo_camera"]
     ]
 
-    readonly property var notifIconRules: [
+    readonly final property var notifIconRules: [
         [["reboot"], "restart_alt"],
         [["recording"], "screen_record"],
         [["battery"], "power"],

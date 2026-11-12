@@ -6,7 +6,7 @@ import qs.services
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     implicitWidth: icon.implicitHeight + Tokens.padding.small
     implicitHeight: icon.implicitHeight

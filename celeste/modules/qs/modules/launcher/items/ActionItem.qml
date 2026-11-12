@@ -6,8 +6,8 @@ import qs.services
 Item {
     id: root
 
-    required property var modelData
-    required property var list
+    required final property var modelData
+    required final property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
 

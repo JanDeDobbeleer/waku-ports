@@ -53,8 +53,8 @@ StyledRect {
             SparklineItem {
                 id: sparkline
 
-                property real targetMax: 1024
-                property real smoothMax: targetMax
+                final property real targetMax: 1024
+                final property real smoothMax: targetMax
 
                 anchors.fill: parent
                 line1: NetworkUsage.uploadBuffer

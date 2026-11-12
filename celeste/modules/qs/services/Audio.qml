@@ -11,21 +11,21 @@ import qs.compat
 Singleton {
     id: root
 
-    property string previousSinkName: ""
-    property string previousSourceName: ""
+    final property string previousSinkName: ""
+    final property string previousSourceName: ""
 
-    property list<PwNode> sinks: []
-    property list<PwNode> sources: []
-    property list<PwNode> streams: []
+    final property list<PwNode> sinks: []
+    final property list<PwNode> sources: []
+    final property list<PwNode> streams: []
 
-    readonly property PwNode sink: Pipewire.defaultAudioSink
-    readonly property PwNode source: Pipewire.defaultAudioSource
+    readonly final property PwNode sink: Pipewire.defaultAudioSink
+    readonly final property PwNode source: Pipewire.defaultAudioSource
 
-    readonly property bool muted: !!sink?.audio?.muted
-    readonly property real volume: sink?.audio?.volume ?? 0
+    readonly final property bool muted: !!sink?.audio?.muted
+    readonly final property real volume: sink?.audio?.volume ?? 0
 
-    readonly property bool sourceMuted: !!source?.audio?.muted
-    readonly property real sourceVolume: source?.audio?.volume ?? 0
+    readonly final property bool sourceMuted: !!source?.audio?.muted
+    readonly final property real sourceVolume: source?.audio?.volume ?? 0
 
     // waku gap: no audio capture. cava and the beat tracker keep upstream's names and stay silent.
     readonly property alias cava: cava
@@ -176,8 +176,8 @@ Singleton {
     QtObject {
         id: cava
 
-        readonly property int bars: GlobalConfig.services.visualiserBars
-        readonly property var values: Array.from({
+        readonly final property int bars: GlobalConfig.services.visualiserBars
+        readonly final property var values: Array.from({
             length: bars
         }, () => 0)
     }
@@ -185,7 +185,7 @@ Singleton {
     QtObject {
         id: beatTracker
 
-        readonly property real bpm: 0
+        readonly final property real bpm: 0
     }
 
     IpcHandler {

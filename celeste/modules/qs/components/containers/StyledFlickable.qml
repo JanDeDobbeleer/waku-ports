@@ -4,7 +4,7 @@ import qs.components
 Flickable {
     id: root
 
-    property bool doneFakeFlick
+    final property bool doneFakeFlick
 
     maximumFlickVelocity: 3000
 

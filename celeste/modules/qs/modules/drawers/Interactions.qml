@@ -9,20 +9,20 @@ import qs.modules.bar.popouts as BarPopouts
 CustomMouseArea {
     id: root
 
-    required property ShellScreen screen
-    required property BarPopouts.Wrapper popouts
-    required property ScreenState screenState
-    required property Panels panels
-    required property Bar.BarWrapper bar
-    required property real borderThickness
-    required property bool fullscreen
+    required final property ShellScreen screen
+    required final property BarPopouts.Wrapper popouts
+    required final property ScreenState screenState
+    required final property Panels panels
+    required final property Bar.BarWrapper bar
+    required final property real borderThickness
+    required final property bool fullscreen
     // True while a panel that closes when the user clicks elsewhere is open.
-    required property bool lightDismiss
+    required final property bool lightDismiss
 
     signal dismissRequested
 
-    property point dragStart
-    property bool dashboardShortcutActive
+    final property point dragStart
+    final property bool dashboardShortcutActive
 
     Timer {
         id: dashboardHoverTimer
@@ -33,9 +33,9 @@ CustomMouseArea {
                 root.screenState.dashboard = true;
         }
     }
-    property bool osdShortcutActive
-    property bool utilitiesShortcutActive
-    property bool sidebarShortcutActive
+    final property bool osdShortcutActive
+    final property bool utilitiesShortcutActive
+    final property bool sidebarShortcutActive
 
     function withinPanelHeight(panel: Item, x: real, y: real): bool {
         const panelY = root.borderThickness + panel.y;

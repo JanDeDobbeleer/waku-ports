@@ -15,10 +15,10 @@ import qs.modules.bar.popouts as BarPopouts
 StyledRect {
     id: root
 
-    required property ScreenState screenState
-    required property BarPopouts.Wrapper popouts
+    required final property ScreenState screenState
+    required final property BarPopouts.Wrapper popouts
 
-    readonly property var quickToggles: {
+    readonly final property var quickToggles: {
         const seenIds = new Set();
 
         return Config.utilities.quickToggles.values.filter(item => {
@@ -34,8 +34,8 @@ StyledRect {
             return true;
         });
     }
-    readonly property int splitIndex: Math.ceil(quickToggles.length / 2)
-    readonly property bool needExtraRow: quickToggles.length > 6
+    readonly final property int splitIndex: Math.ceil(quickToggles.length / 2)
+    readonly final property bool needExtraRow: quickToggles.length > 6
 
     implicitHeight: layout.implicitHeight + Tokens.padding.extraLargeIncreased
 

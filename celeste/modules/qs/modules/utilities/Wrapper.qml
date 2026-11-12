@@ -11,20 +11,20 @@ import qs.modules.bar.popouts as BarPopouts
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property Sidebar.Wrapper sidebar
-    required property BarPopouts.Wrapper popouts
-    property real horizontalStretch
-    property matrix4x4 deformMatrix
+    required final property ScreenState screenState
+    required final property Sidebar.Wrapper sidebar
+    required final property BarPopouts.Wrapper popouts
+    final property real horizontalStretch
+    final property matrix4x4 deformMatrix
 
-    readonly property PersistentProperties props: PersistentProperties {
+    readonly final property PersistentProperties props: PersistentProperties {
         reloadableId: "utilities"
     }
-    readonly property bool shouldBeActive: screenState.sidebar || (screenState.utilities && Config.utilities.enabled && !(screenState.session && Config.session.enabled))
-    readonly property real totalPadding: content.anchors.margins + CUtils.clamp(content.anchors.margins - Config.border.thickness, 0, content.anchors.margins)
-    readonly property real nonAnimHeight: ((content.item as Content)?.nonAnimHeight ?? 0) + totalPadding
-    property real offsetScale: shouldBeActive ? 0 : 1
-    property real sidebarLerp
+    readonly final property bool shouldBeActive: screenState.sidebar || (screenState.utilities && Config.utilities.enabled && !(screenState.session && Config.session.enabled))
+    readonly final property real totalPadding: content.anchors.margins + CUtils.clamp(content.anchors.margins - Config.border.thickness, 0, content.anchors.margins)
+    readonly final property real nonAnimHeight: ((content.item as Content)?.nonAnimHeight ?? 0) + totalPadding
+    final property real offsetScale: shouldBeActive ? 0 : 1
+    final property real sidebarLerp
 
     visible: offsetScale < 1
     anchors.bottomMargin: (-implicitHeight - 5) * offsetScale

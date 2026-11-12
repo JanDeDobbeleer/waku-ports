@@ -7,7 +7,7 @@ import qs.compat
 Singleton {
     id: root
 
-    readonly property list<ShellScreen> screens: Quickshell.screens.filter(s => GlobalConfig.forScreen(s.name).enabled)
+    readonly final property list<ShellScreen> screens: Quickshell.screens.filter(s => GlobalConfig.forScreen(s.name).enabled)
 
     function isExcluded(screen: ShellScreen): bool {
         return !GlobalConfig.forScreen(screen.name).enabled;

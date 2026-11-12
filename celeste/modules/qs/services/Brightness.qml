@@ -15,11 +15,16 @@ import qs.compat
 Singleton {
     id: root
 
-    readonly property bool available: S.ControlCenter.brightnessAvailable
-    readonly property list<Monitor> monitors: variants.instances
+    readonly final property bool available: S.ControlCenter.brightnessAvailable
+    readonly final property list<Monitor> monitors: variants.instances
 
     function getMonitorForScreen(screen: ShellScreen): var {
         return monitors.find(m => m.modelData === screen);
+    }
+
+    function adjustForScreen(screen: ShellScreen, delta: real): void {
+        const monitor = getMonitorForScreen(screen);
+        monitor.setBrightness(monitor.brightness + delta);
     }
 
     function getMonitor(query: string): var {
@@ -132,11 +137,11 @@ Singleton {
     component Monitor: QtObject {
         id: monitor
 
-        required property ShellScreen modelData
-        readonly property bool isDdc: false
-        readonly property bool isAppleDisplay: false
+        required final property ShellScreen modelData
+        readonly final property bool isDdc: false
+        readonly final property bool isAppleDisplay: false
         // 0..1. Stays 0 while the machine has no controllable display.
-        readonly property real brightness: S.ControlCenter.brightnessAvailable ? S.ControlCenter.brightness / 100 : 0
+        readonly final property real brightness: S.ControlCenter.brightnessAvailable ? S.ControlCenter.brightness / 100 : 0
 
         function setBrightness(value: real): void {
             if (!S.ControlCenter.brightnessAvailable)

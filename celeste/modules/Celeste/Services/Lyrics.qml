@@ -6,20 +6,20 @@ import QtQuick
 // waku gap: no lookup runs. `lyrics` stays empty, `hasLyrics` false, and `loading` false.
 // The properties and methods exist so the lyrics widgets load.
 QtObject {
-    property var lyrics: []
-    property int backend: 0
-    property int preferredBackend: 0
-    property var lyricCandidates: []
-    property var selectedCandidate: ({
+    final property var lyrics: []
+    final property int backend: 0
+    final property int preferredBackend: 0
+    final property var lyricCandidates: []
+    final property var selectedCandidate: ({
             title: "",
             artist: "",
             album: ""
         })
-    readonly property bool loading: false
-    readonly property bool hasLyrics: lyrics.length > 0
-    property real offset: 0
-    readonly property string trackArtist: ""
-    readonly property string trackTitle: ""
+    readonly final property bool loading: false
+    readonly final property bool hasLyrics: lyrics.length > 0
+    final property real offset: 0
+    readonly final property string trackArtist: ""
+    readonly final property string trackTitle: ""
 
     function indexForTime(time: real): int {
         return -1;

@@ -8,11 +8,11 @@ import qs.components
 Item {
     id: root
 
-    required property ScreenState screenState
-    readonly property Props props: Props {}
+    required final property ScreenState screenState
+    readonly final property Props props: Props {}
 
-    readonly property bool shouldBeActive: screenState.sidebar && Config.sidebar.enabled
-    property real offsetScale: shouldBeActive ? 0 : 1
+    readonly final property bool shouldBeActive: screenState.sidebar && Config.sidebar.enabled
+    final property real offsetScale: shouldBeActive ? 0 : 1
 
     visible: offsetScale < 1
     anchors.rightMargin: (-implicitWidth - 5) * offsetScale

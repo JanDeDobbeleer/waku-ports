@@ -16,7 +16,7 @@ AnchorAnimation {
         SlowSpatial
     }
 
-    property int type: AnchorAnim.DefaultSpatial
+    final property int type: AnchorAnim.DefaultSpatial
 
     duration: {
         if (type < AnchorAnim.StandardSmall || type > AnchorAnim.SlowSpatial)

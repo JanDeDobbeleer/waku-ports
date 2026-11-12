@@ -11,11 +11,11 @@ import qs.services
 LazyListView {
     id: root
 
-    required property Props props
-    required property list<var> notifs
-    required property bool expanded
-    required property Flickable container
-    required property ScreenState screenState
+    required final property Props props
+    required final property list<var> notifs
+    required final property bool expanded
+    required final property Flickable container
+    required final property ScreenState screenState
 
     signal requestToggleExpand(expand: bool)
 
@@ -72,19 +72,19 @@ LazyListView {
         MouseArea {
             id: notif
 
-            required property int index
-            required property NotifData modelData
+            required final property int index
+            required final property NotifData modelData
 
-            property int startY
+            final property int startY
 
             Component.onCompleted: modelData?.lock(this)
             Component.onDestruction: modelData?.unlock(this)
 
             // Port: LazyListView's attached layout properties are plain properties here, and the
             // list is a ListView, so the delegate sets its own height.
-            readonly property real preferredHeight: modelData?.closed ? 0 : notifInner.nonAnimHeight
-            readonly property real visibleHeight: modelData?.closed ? 0 : notifInner.implicitHeight
-            readonly property bool ready: true
+            readonly final property real preferredHeight: modelData?.closed ? 0 : notifInner.nonAnimHeight
+            readonly final property real visibleHeight: modelData?.closed ? 0 : notifInner.implicitHeight
+            readonly final property bool ready: true
             implicitHeight: notifInner.implicitHeight
             width: ListView.view?.width ?? 0
             height: visibleHeight

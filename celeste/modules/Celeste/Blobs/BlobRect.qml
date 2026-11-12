@@ -8,40 +8,40 @@ import QtQuick
 Item {
     id: root
 
-    property BlobGroup group
-    property real radius: 0
-    property real stiffness: 200
-    property real damping: 16
-    property real deformScale: 0.0005
-    property var exclude: []
-    property var excludeCorners: []
-    property real topLeftRadius: radius
-    property real topRightRadius: radius
-    property real bottomLeftRadius: radius
-    property real bottomRightRadius: radius
+    final property BlobGroup group
+    final property real radius: 0
+    final property real stiffness: 200
+    final property real damping: 16
+    final property real deformScale: 0.0005
+    final property var exclude: []
+    final property var excludeCorners: []
+    final property real topLeftRadius: radius
+    final property real topRightRadius: radius
+    final property real bottomLeftRadius: radius
+    final property real bottomRightRadius: radius
     // The spring's matrix (rest state is identity) and the same matrix about the shape's centre.
-    property matrix4x4 rawDeformMatrix
-    property matrix4x4 deformMatrix
+    final property matrix4x4 rawDeformMatrix
+    final property matrix4x4 deformMatrix
     // Port: the C++ shape fuses with the frame by SDF blending. A plain rectangle abutting the
     // frame leaves an antialiasing seam, so a panel can grow into the frame by these amounts.
-    property real bleedTop: 0
-    property real bleedRight: 0
-    property real bleedBottom: 0
+    final property real bleedTop: 0
+    final property real bleedRight: 0
+    final property real bleedBottom: 0
 
     // Spring state: the symmetric 2x2 deform matrix [m00 m01; m01 m11] and its velocities.
-    property real m00: 1
-    property real m01: 0
-    property real m11: 1
-    property real v00: 0
-    property real v01: 0
-    property real v11: 0
-    property bool springActive: false
-    property bool hasPrev: false
-    property real prevX: 0
-    property real prevY: 0
+    final property real m00: 1
+    final property real m01: 0
+    final property real m11: 1
+    final property real v00: 0
+    final property real v01: 0
+    final property real v11: 0
+    final property bool springActive: false
+    final property bool hasPrev: false
+    final property real prevX: 0
+    final property real prevY: 0
 
-    readonly property real maxStretch: 0.35
-    readonly property real restEpsilon: 0.002
+    readonly final property real maxStretch: 0.35
+    readonly final property real restEpsilon: 0.002
 
     function resetSpring(): void {
         m00 = 1;
@@ -128,7 +128,7 @@ Item {
     }
 
     // Runs only while the shape moves or the spring settles, so an idle panel costs nothing.
-    property bool moving: false
+    final property bool moving: false
     onXChanged: moving = true
     onYChanged: moving = true
     onWidthChanged: {
@@ -156,8 +156,8 @@ Item {
     // bleed (it is flush with the frame) grows by this much, so a stretch that settles back below
     // rest size never opens a gap to the frame. The C++ shape stays fused to the frame by SDF
     // blending instead.
-    readonly property real deformGapY: Math.max(0, height / 2 * (1 - m11) + Math.abs(m01) * width / 2) + 1
-    readonly property real deformGapX: Math.max(0, width / 2 * (1 - m00) + Math.abs(m01) * height / 2) + 1
+    readonly final property real deformGapY: Math.max(0, height / 2 * (1 - m11) + Math.abs(m01) * width / 2) + 1
+    readonly final property real deformGapX: Math.max(0, width / 2 * (1 - m00) + Math.abs(m01) * height / 2) + 1
 
     Rectangle {
         anchors.fill: parent

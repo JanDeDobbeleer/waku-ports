@@ -10,11 +10,11 @@ import qs.services
 Item {
     id: root
 
-    required property var workspaces
-    required property int wsSpacing
+    required final property var workspaces
+    required final property int wsSpacing
 
-    readonly property color colour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
-    property color colourAnimated: colour
+    readonly final property color colour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+    final property color colourAnimated: colour
 
     Behavior on colourAnimated {
         CAnim {}
@@ -45,13 +45,13 @@ Item {
     }
 
     component OccupiedRect: StyledRect {
-        required property int index
-        required property Workspace modelData
+        required final property int index
+        required final property Workspace modelData
 
-        property real topRadius: ifAdjacent(0, -1, 0, width / 2)
-        property real bottomRadius: ifAdjacent(root.workspaces.length - 1, 1, 0, width / 2)
-        property real topPadding: ifAdjacent(0, -1, root.wsSpacing, 0)
-        property real bottomPadding: ifAdjacent(root.workspaces.length - 1, 1, root.wsSpacing, 0)
+        final property real topRadius: ifAdjacent(0, -1, 0, width / 2)
+        final property real bottomRadius: ifAdjacent(root.workspaces.length - 1, 1, 0, width / 2)
+        final property real topPadding: ifAdjacent(0, -1, root.wsSpacing, 0)
+        final property real bottomPadding: ifAdjacent(root.workspaces.length - 1, 1, root.wsSpacing, 0)
 
         function ifAdjacent(exclIdx: int, adj: int, yes: real, no: real): real {
             if (!modelData?.isOccupied || index === exclIdx)

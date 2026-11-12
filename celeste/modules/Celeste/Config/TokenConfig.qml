@@ -224,7 +224,7 @@ QtObject {
         final property SizesNexusCfg nexus: SizesNexusCfg {}
     }
 
-    property FileView file: FileView {
+    final property FileView file: FileView {
         id: fileView
 
         path: Quickshell.shellPath("config/shell-tokens.json")
@@ -239,9 +239,9 @@ QtObject {
             // panel sizes); a number, or "auto" to derive it from the screen's devicePixelRatio.
             // `fontScale` is an extra factor for text only, `roundingScale` one for corner radii only.
             // The celeste tokens are designed for about 1x; 0.75 suits a 150% Windows display.
-            property var scale: 0.75
-            property real fontScale: 1.0
-            property real roundingScale: 1.0
+            final property var scale: 0.75
+            final property real fontScale: 1.0
+            final property real roundingScale: 1.0
 
             final property AppearanceCfg appearance: AppearanceCfg {}
 

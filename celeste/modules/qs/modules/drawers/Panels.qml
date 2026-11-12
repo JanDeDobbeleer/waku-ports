@@ -16,10 +16,10 @@ import qs.modules.utilities.toasts as Toasts
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property ScreenState screenState
-    required property Bar.BarWrapper bar
-    required property real borderThickness
+    required final property ShellScreen screen
+    required final property ScreenState screenState
+    required final property Bar.BarWrapper bar
+    required final property real borderThickness
 
     readonly property alias osd: osd
     readonly property alias osdWrapper: osdWrapper

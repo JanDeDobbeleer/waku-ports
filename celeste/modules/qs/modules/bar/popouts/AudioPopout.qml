@@ -13,7 +13,7 @@ import qs.services
 Item {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
     implicitWidth: Tokens.sizes.bar.audioWidth
     implicitHeight: layout.implicitHeight + Tokens.padding.medium * 2
@@ -45,7 +45,7 @@ Item {
             StyledRadioButton {
                 id: control
 
-                required property PwNode modelData
+                required final property PwNode modelData
 
                 Layout.fillWidth: true
                 ButtonGroup.group: sinks
@@ -65,7 +65,7 @@ Item {
             model: Audio.sources
 
             StyledRadioButton {
-                required property PwNode modelData
+                required final property PwNode modelData
 
                 Layout.fillWidth: true
                 ButtonGroup.group: sources

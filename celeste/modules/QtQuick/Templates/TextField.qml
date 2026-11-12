@@ -28,8 +28,8 @@ Control {
 
     property alias text: input.text
     readonly property alias displayText: input.displayText
-    property string placeholderText
-    property color placeholderTextColor: "gray"
+    final property string placeholderText
+    final property color placeholderTextColor: "gray"
     property alias color: input.color
     property alias selectionColor: input.selectionColor
     property alias selectedTextColor: input.selectedTextColor

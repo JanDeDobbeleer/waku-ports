@@ -13,12 +13,12 @@ import qs.utils
 ColumnLayout {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
-    property string connectingToSsid: ""
-    property string view: "wireless" // "wireless" or "ethernet"
-    property var passwordNetwork: null
-    property bool showPasswordDialog: false
+    final property string connectingToSsid: ""
+    final property string view: "wireless" // "wireless" or "ethernet"
+    final property var passwordNetwork: null
+    final property bool showPasswordDialog: false
 
     spacing: Tokens.spacing.small
     width: Tokens.sizes.bar.networkWidth
@@ -106,9 +106,9 @@ ColumnLayout {
         RowLayout {
             id: networkItem
 
-            required property Nmcli.AccessPoint modelData
-            readonly property bool isConnecting: root.connectingToSsid === modelData.ssid
-            readonly property bool loading: networkItem.isConnecting
+            required final property Nmcli.AccessPoint modelData
+            readonly final property bool isConnecting: root.connectingToSsid === modelData.ssid
+            readonly final property bool loading: networkItem.isConnecting
 
             visible: root.view === "wireless"
             Layout.preferredHeight: visible ? implicitHeight : 0
@@ -296,8 +296,8 @@ ColumnLayout {
         RowLayout {
             id: ethernetItem
 
-            required property var modelData
-            readonly property bool loading: false
+            required final property var modelData
+            readonly final property bool loading: false
 
             visible: root.view === "ethernet"
             Layout.preferredHeight: visible ? implicitHeight : 0
@@ -419,7 +419,7 @@ ColumnLayout {
     }
 
     component Toggle: RowLayout {
-        required property string label
+        required final property string label
         property alias checked: toggle.checked
         property alias toggle: toggle
 

@@ -12,12 +12,12 @@ import qs.compat
 Singleton {
     id: root
 
-    readonly property list<MprisPlayer> list: Mpris.players.values
-    readonly property MprisPlayer active: props.manualActive ?? list.find(p => getIdentity(p) === GlobalConfig.services.defaultPlayer) ?? list[0] ?? null
+    readonly final property list<MprisPlayer> list: Mpris.players.values
+    readonly final property MprisPlayer active: props.manualActive ?? list.find(p => getIdentity(p) === GlobalConfig.services.defaultPlayer) ?? list[0] ?? null
     property alias manualActive: props.manualActive
 
     // Dedup key for progressive metadata (e.g. mpv-mpris/yt-dlp player fills title then artist later).
-    property string lastNowPlayingKey: ""
+    final property string lastNowPlayingKey: ""
 
     function getIdentity(player: MprisPlayer): string {
         if (!player)
@@ -86,7 +86,7 @@ Singleton {
     PersistentProperties {
         id: props
 
-        property MprisPlayer manualActive
+        final property MprisPlayer manualActive
 
         reloadableId: "players"
     }

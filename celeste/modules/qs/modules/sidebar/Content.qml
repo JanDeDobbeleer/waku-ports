@@ -7,8 +7,8 @@ import qs.services
 Item {
     id: root
 
-    required property Props props
-    required property ScreenState screenState
+    required final property Props props
+    required final property ScreenState screenState
 
     ColumnLayout {
         id: layout

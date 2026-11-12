@@ -16,18 +16,18 @@ ListModel {
         Dirs = 8
     }
 
-    property string path
-    property bool recursive: false
-    property bool watchChanges: true
-    property bool showHidden: false
-    property bool sortReverse: false
-    property int filter: FileSystemModel.NoFilter
-    property var nameFilters: []
-    property var entries: []
+    final property string path
+    final property bool recursive: false
+    final property bool watchChanges: true
+    final property bool showHidden: false
+    final property bool sortReverse: false
+    final property int filter: FileSystemModel.NoFilter
+    final property var nameFilters: []
+    final property var entries: []
 
-    readonly property var imageSuffixes: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "avif", "tif", "tiff", "ico", "jxl"]
-    readonly property var videoSuffixes: ["mp4", "webm", "mkv", "mov", "avi", "m4v"]
-    readonly property var mimeBySuffix: ({
+    readonly final property var imageSuffixes: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "avif", "tif", "tiff", "ico", "jxl"]
+    readonly final property var videoSuffixes: ["mp4", "webm", "mkv", "mov", "avi", "m4v"]
+    readonly final property var mimeBySuffix: ({
             "png": "image/png",
             "jpg": "image/jpeg",
             "jpeg": "image/jpeg",
@@ -45,12 +45,12 @@ ListModel {
             "json": "application/json"
         })
 
-    readonly property bool wantImages: (filter & FileSystemModel.Images) !== 0
-    readonly property bool wantVideos: (filter & FileSystemModel.Videos) !== 0
-    readonly property bool wantFiles: (filter & FileSystemModel.Files) !== 0
-    readonly property bool wantDirs: (filter & FileSystemModel.Dirs) !== 0
-    readonly property bool anyFiles: wantImages || wantVideos || wantFiles
-    readonly property var effectiveNameFilters: {
+    readonly final property bool wantImages: (filter & FileSystemModel.Images) !== 0
+    readonly final property bool wantVideos: (filter & FileSystemModel.Videos) !== 0
+    readonly final property bool wantFiles: (filter & FileSystemModel.Files) !== 0
+    readonly final property bool wantDirs: (filter & FileSystemModel.Dirs) !== 0
+    readonly final property bool anyFiles: wantImages || wantVideos || wantFiles
+    readonly final property var effectiveNameFilters: {
         const out = [...(nameFilters ?? [])];
         if (!wantFiles && (wantImages || wantVideos)) {
             if (wantImages)
@@ -61,11 +61,11 @@ ListModel {
         return out.length > 0 ? out : ["*"];
     }
 
-    property Component entryComponent: Component {
+    final property Component entryComponent: Component {
         FileSystemEntry {}
     }
 
-    property FolderListModel source: FolderListModel {
+    final property FolderListModel source: FolderListModel {
         folder: root.path ? "file:///" + root.path.replace(/\\/g, "/").replace(/^\/+/, "") : ""
         nameFilters: root.effectiveNameFilters
         showFiles: !root.wantDirs || root.anyFiles

@@ -7,15 +7,15 @@ import qs.services
 ScrollBar {
     id: root
 
-    required property Flickable flickable
+    required final property Flickable flickable
     // waku: the QtQuick.Templates shim has no attached ScrollBar, so follow the flickable here.
     size: flickable.visibleArea.heightRatio
     position: flickable.visibleArea.yPosition
-    property bool shouldBeActive
-    property real nonAnimPosition
-    property bool animating
-    property bool _updatingFromFlickable: false
-    property bool _updatingFromUser: false
+    final property bool shouldBeActive
+    final property real nonAnimPosition
+    final property bool animating
+    final property bool _updatingFromFlickable: false
+    final property bool _updatingFromUser: false
 
     onHoveredChanged: {
         if (hovered)

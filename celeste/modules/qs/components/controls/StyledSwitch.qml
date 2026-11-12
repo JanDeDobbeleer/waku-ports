@@ -8,8 +8,8 @@ import qs.services
 Switch {
     id: root
 
-    property int cLayer: 1
-    property bool disabled
+    final property int cLayer: 1
+    final property bool disabled
 
     enabled: !disabled
 
@@ -28,7 +28,7 @@ Switch {
         implicitHeight: Tokens.font.body.medium.pointSize + Tokens.padding.small * 2
 
         StyledRect {
-            readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.2 : implicitHeight
+            readonly final property real nonAnimWidth: root.pressed ? implicitHeight * 1.2 : implicitHeight
 
             radius: Tokens.rounding.full
             color: {
@@ -59,14 +59,14 @@ Switch {
             Shape {
                 id: icon
 
-                property point start1: {
+                final property point start1: {
                     if (root.pressed)
                         return Qt.point(width * 0.2, height / 2);
                     if (root.checked)
                         return Qt.point(width * 0.15, height / 2);
                     return Qt.point(width * 0.15, height * 0.15);
                 }
-                property point end1: {
+                final property point end1: {
                     if (root.pressed) {
                         if (root.checked)
                             return Qt.point(width * 0.4, height / 2);
@@ -76,7 +76,7 @@ Switch {
                         return Qt.point(width * 0.4, height * 0.7);
                     return Qt.point(width * 0.85, height * 0.85);
                 }
-                property point start2: {
+                final property point start2: {
                     if (root.pressed) {
                         if (root.checked)
                             return Qt.point(width * 0.4, height / 2);
@@ -86,7 +86,7 @@ Switch {
                         return Qt.point(width * 0.4, height * 0.7);
                     return Qt.point(width * 0.15, height * 0.85);
                 }
-                property point end2: {
+                final property point end2: {
                     if (root.pressed)
                         return Qt.point(width * 0.8, height / 2);
                     if (root.checked)

@@ -11,7 +11,7 @@ import qs.services
 ColumnLayout {
     id: root
 
-    readonly property bool hasUnknownLength: (Players.active?.length ?? 0) > 2147483647
+    readonly final property bool hasUnknownLength: (Players.active?.length ?? 0) > 2147483647
 
     function lengthStr(length: int): string {
         if (length < 0)

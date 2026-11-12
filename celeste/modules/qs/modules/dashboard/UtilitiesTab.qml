@@ -11,10 +11,10 @@ import qs.services
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
-    readonly property int columns: 6
-    readonly property real tileWidth: (implicitWidth - Tokens.spacing.small * (columns - 1)) / columns
+    readonly final property int columns: 6
+    readonly final property real tileWidth: (implicitWidth - Tokens.spacing.small * (columns - 1)) / columns
 
     implicitWidth: Tokens.px(840)
     implicitHeight: layout.implicitHeight
@@ -34,8 +34,8 @@ Item {
             ColumnLayout {
                 id: group
 
-                required property var modelData
-                readonly property var items: UtilitiesActions.inGroup(modelData.id)
+                required final property var modelData
+                readonly final property var items: UtilitiesActions.inGroup(modelData.id)
 
                 Layout.fillWidth: true
                 visible: items.length > 0
@@ -65,7 +65,7 @@ Item {
     component Tile: StyledRect {
         id: tile
 
-        required property var modelData
+        required final property var modelData
 
         implicitWidth: root.tileWidth
         implicitHeight: Tokens.px(92)

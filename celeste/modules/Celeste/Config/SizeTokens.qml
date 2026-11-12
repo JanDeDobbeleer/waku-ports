@@ -7,8 +7,8 @@ import "ScaleSizes.js" as SS
 QtObject {
     id: root
 
-    required property var source
-    property real scale: 1
+    required final property var source
+    final property real scale: 1
 
     readonly final property BarSizes bar: BarSizes {}
 

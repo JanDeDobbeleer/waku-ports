@@ -12,20 +12,20 @@ QtObject {
     }
 
     // Outputs (read only by convention).
-    property real startFraction: 0
-    property real endFraction: 0
-    property real rotation: 0
+    final property real startFraction: 0
+    final property real endFraction: 0
+    final property real rotation: 0
 
-    property real progress: 0
-    property real completeEndProgress: 0
-    property int indeterminateAnimationType: CircularIndicatorManager.Advance
+    final property real progress: 0
+    final property real completeEndProgress: 0
+    final property int indeterminateAnimationType: CircularIndicatorManager.Advance
 
-    readonly property real duration: indeterminateAnimationType === CircularIndicatorManager.Advance ? 5400 : 6000
-    readonly property real completeEndDuration: indeterminateAnimationType === CircularIndicatorManager.Advance ? 333 : 500
+    readonly final property real duration: indeterminateAnimationType === CircularIndicatorManager.Advance ? 5400 : 6000
+    readonly final property real completeEndDuration: indeterminateAnimationType === CircularIndicatorManager.Advance ? 333 : 500
 
-    readonly property var expandDelays: [0, 1350, 2700, 4050]
-    readonly property var collapseDelays: [667, 2017, 3367, 4717]
-    readonly property var spinDelays: [0, 1500, 3000, 4500]
+    readonly final property var expandDelays: [0, 1350, 2700, 4050]
+    readonly final property var collapseDelays: [667, 2017, 3367, 4717]
+    readonly final property var spinDelays: [0, 1500, 3000, 4500]
 
     onProgressChanged: refresh()
     onCompleteEndProgressChanged: refresh()

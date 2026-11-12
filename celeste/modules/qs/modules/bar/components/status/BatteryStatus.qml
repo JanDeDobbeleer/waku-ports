@@ -5,7 +5,7 @@ import qs.services
 import qs.utils
 
 MaterialIcon {
-    required property color colour
+    required final property color colour
 
     animate: true
     text: {

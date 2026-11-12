@@ -12,8 +12,8 @@ import qs.utils
 StyledRect {
     id: root
 
-    readonly property color accent: Colours.palette.m3secondary
-    readonly property real percentage: Storage.primaryDisk?.perc ?? 0
+    readonly final property color accent: Colours.palette.m3secondary
+    readonly final property real percentage: Storage.primaryDisk?.perc ?? 0
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.extraExtraLarge
@@ -122,7 +122,7 @@ StyledRect {
     }
 
     component DiskItem: MenuItem {
-        required property var modelData
+        required final property var modelData
 
         icon: modelData.mount === Storage.primaryDisk?.mount ? "check" : ""
         text: modelData.mount

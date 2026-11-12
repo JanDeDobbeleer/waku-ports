@@ -71,7 +71,7 @@ Item {
     }
 
     component PlayerItem: MenuItem {
-        required property MprisPlayer modelData
+        required final property MprisPlayer modelData
 
         icon: modelData === Players.active ? "check" : ""
         text: Players.getIdentity(modelData)

@@ -13,17 +13,17 @@ import qs.utils
 StyledRect {
     id: root
 
-    required property string modelData
-    required property Props props
-    required property Flickable container
-    required property ScreenState screenState
+    required final property string modelData
+    required final property Props props
+    required final property Flickable container
+    required final property ScreenState screenState
 
-    readonly property list<var> notifs: Notifs.list.filter(n => n.appName === modelData)
-    readonly property list<var> activeNotifs: notifs.filter(n => !n.closed)
-    readonly property int notifCount: activeNotifs.length
-    readonly property string image: activeNotifs.find(n => n.image.length > 0)?.image ?? ""
-    readonly property string appIcon: activeNotifs.find(n => n.appIcon.length > 0)?.appIcon ?? ""
-    readonly property int urgency: {
+    readonly final property list<var> notifs: Notifs.list.filter(n => n.appName === modelData)
+    readonly final property list<var> activeNotifs: notifs.filter(n => !n.closed)
+    readonly final property int notifCount: activeNotifs.length
+    readonly final property string image: activeNotifs.find(n => n.image.length > 0)?.image ?? ""
+    readonly final property string appIcon: activeNotifs.find(n => n.appIcon.length > 0)?.appIcon ?? ""
+    readonly final property int urgency: {
         if (activeNotifs.find(n => n.urgency === NotificationUrgency.Critical))
             return NotificationUrgency.Critical;
         if (activeNotifs.find(n => n.urgency === NotificationUrgency.Normal))
@@ -31,12 +31,12 @@ StyledRect {
         return NotificationUrgency.Low;
     }
 
-    readonly property int nonAnimHeight: {
+    readonly final property int nonAnimHeight: {
         const headerHeight = header.implicitHeight + (root.expanded ? Math.round(Tokens.spacing.extraSmall) : 0);
         const columnHeight = headerHeight + notifList.layoutHeight;
         return Math.round(Math.max(Tokens.sizes.notifs.image, columnHeight) + Tokens.padding.medium * 2);
     }
-    readonly property bool expanded: props.expandedNotifs.includes(modelData)
+    readonly final property bool expanded: props.expandedNotifs.includes(modelData)
 
     function toggleExpand(expand: bool): void {
         if (expand) {

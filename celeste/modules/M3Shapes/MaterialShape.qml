@@ -33,14 +33,14 @@ Rectangle {
         VerySunny
     }
 
-    property real implicitSize: 0
-    property int shape: MaterialShape.Circle
-    property int fromShape: shape
-    property int toShape: shape
-    property real morphProgress: 1
-    property var animationEasing: null
-    property int animationDuration: 0
-    property bool batching_: false
+    final property real implicitSize: 0
+    final property int shape: MaterialShape.Circle
+    final property int fromShape: shape
+    final property int toShape: shape
+    final property real morphProgress: 1
+    final property var animationEasing: null
+    final property int animationDuration: 0
+    final property bool batching_: false
 
     // Fraction of the half side used as the corner radius.
     function roundness_(kind: int): real {

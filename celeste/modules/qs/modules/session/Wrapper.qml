@@ -7,13 +7,13 @@ import qs.components
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property bool sidebarVisible
-    readonly property real nonAnimWidth: content.implicitWidth
+    required final property ScreenState screenState
+    required final property bool sidebarVisible
+    readonly final property real nonAnimWidth: content.implicitWidth
 
-    readonly property bool shouldBeActive: screenState.session && Config.session.enabled
-    property real offsetScale: shouldBeActive ? 0 : 1
-    property real sidebarOffset: sidebarVisible ? 14 : 0
+    readonly final property bool shouldBeActive: screenState.session && Config.session.enabled
+    final property real offsetScale: shouldBeActive ? 0 : 1
+    final property real sidebarOffset: sidebarVisible ? 14 : 0
 
     visible: offsetScale < 1
     anchors.rightMargin: (-implicitWidth - 5 - sidebarOffset) * offsetScale

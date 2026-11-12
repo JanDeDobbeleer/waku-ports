@@ -10,8 +10,8 @@ import qs.services
 Item {
     id: root
 
-    readonly property int spacing: Tokens.spacing.small
-    property bool flag
+    readonly final property int spacing: Tokens.spacing.small
+    final property bool flag
 
     function shouldShowToast(toast: Toast): bool {
         if (!Notifs.hasFullscreen())
@@ -62,10 +62,10 @@ Item {
     component ToastWrapper: MouseArea {
         id: toast
 
-        required property int index
-        required property Toast modelData
+        required final property int index
+        required final property Toast modelData
 
-        readonly property bool previewHidden: {
+        readonly final property bool previewHidden: {
             let extraHidden = 0;
             for (let i = 0; i < index; i++)
                 if (Toaster.toasts[i].closed)

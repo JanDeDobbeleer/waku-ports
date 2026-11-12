@@ -17,11 +17,11 @@ import qs.compat
 Singleton {
     id: root
 
-    property list<NotifData> list: []
-    readonly property list<NotifData> notClosed: list.filter(n => !n.closed)
-    readonly property list<NotifData> popups: list.filter(n => n.popup)
+    final property list<NotifData> list: []
+    readonly final property list<NotifData> notClosed: list.filter(n => !n.closed)
+    readonly final property list<NotifData> popups: list.filter(n => n.popup)
 
-    property bool loaded
+    final property bool loaded
 
     // waku gap: no fullscreen detection (upstream asks Hyprland).
     function hasFullscreen(): bool {

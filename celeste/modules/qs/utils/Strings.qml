@@ -5,7 +5,7 @@ import Celeste.I18n
 import qs.compat
 
 Singleton {
-    property var _regexCache: ({})
+    final property var _regexCache: ({})
 
     function percent(value: int): string {
         // TRANSLATORS: %1 = a number

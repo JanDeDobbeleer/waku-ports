@@ -16,8 +16,8 @@ import qs.utils
 Item {
     id: root
 
-    required property var dialog
-    readonly property FileEntry currentItem: view.currentItem as FileEntry
+    required final property var dialog
+    readonly final property FileEntry currentItem: view.currentItem as FileEntry
 
     StyledRect {
         anchors.fill: parent
@@ -160,10 +160,10 @@ Item {
     component FileEntry: StyledRect {
         id: item
 
-        required property int index
-        required property FileSystemEntry modelData
+        required final property int index
+        required final property FileSystemEntry modelData
 
-        readonly property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
+        readonly final property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
 
         implicitWidth: Sizes.itemWidth
         implicitHeight: nonAnimHeight

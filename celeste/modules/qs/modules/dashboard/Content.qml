@@ -12,11 +12,11 @@ import qs.components.filedialog
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property FileDialog facePicker
-    property string faceOverride
+    required final property ScreenState screenState
+    required final property FileDialog facePicker
+    final property string faceOverride
 
-    readonly property var dashboardTabs: {
+    readonly final property var dashboardTabs: {
         const allTabs = [
             {
                 component: dashComponent,
@@ -53,8 +53,8 @@ Item {
         return allTabs.filter(tab => tab.enabled);
     }
 
-    readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
-    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
+    readonly final property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
+    readonly final property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
@@ -95,8 +95,8 @@ Item {
         Flickable {
             id: view
 
-            readonly property int currentIndex: root.screenState.dashboardTab
-            readonly property Item currentItem: {
+            readonly final property int currentIndex: root.screenState.dashboardTab
+            readonly final property Item currentItem: {
                 CUtils.dependency(repeater.count); // Trigger update on count change
                 return repeater.itemAt(currentIndex);
             }
@@ -149,8 +149,8 @@ Item {
                     delegate: Loader {
                         id: paneLoader
 
-                        required property int index
-                        required property var modelData
+                        required final property int index
+                        required final property var modelData
 
                         // Port: `active` is updated from handlers, not bound. A binding that reads the
                         // pane geometry and the flickable content width makes Qt report a loop

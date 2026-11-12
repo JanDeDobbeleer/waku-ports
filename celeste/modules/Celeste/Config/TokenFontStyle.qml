@@ -6,8 +6,8 @@ import "FontBuilder.js" as FB
 QtObject {
     id: root
 
-    required property var cfg
-    property real scale: 1
+    required final property var cfg
+    final property real scale: 1
 
     readonly final property font large: FB.sizeFont(cfg, "large", scale)
     readonly final property font medium: FB.sizeFont(cfg, "medium", scale)

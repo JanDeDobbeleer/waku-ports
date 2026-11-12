@@ -11,22 +11,22 @@ QtObject {
     id: root
 
     // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
-    property int refs: 0
+    final property int refs: 0
     function ref(): void {
         refs++;
     }
     function unref(): void {
         refs = Math.max(0, refs - 1);
     }
-    property var manualPrimaryDisk: null
-    property string _manualMount: ""
+    final property var manualPrimaryDisk: null
+    final property string _manualMount: ""
     onManualPrimaryDiskChanged: _manualMount = manualPrimaryDisk ? manualPrimaryDisk.mount : ""
 
     // Port: the list is replaced on every poll. Anything built from it (the drive menu's items)
     // is torn down and rebuilt each time, which closes an open menu. So the list is replaced only
     // when the set of drives changes; the usage numbers are updated in place on the same objects.
-    property var disks: []
-    readonly property var _srcDisks: src.disks
+    final property var disks: []
+    readonly final property var _srcDisks: src.disks
     function _refresh(): void {
         const list = _srcDisks ?? [];
         const same = list.length === disks.length && list.every((d, i) => d.mount === disks[i].mount && d.hasRoot === disks[i].hasRoot);
@@ -49,18 +49,18 @@ QtObject {
         });
         usageTick++;
     }
-    property int usageTick: 0
+    final property int usageTick: 0
     on_SrcDisksChanged: _refresh()
     Component.onCompleted: _refresh()
     // A copy, re-made on each usage update (usageTick), so bindings that read its numbers refresh.
-    readonly property var primaryDisk: {
+    readonly final property var primaryDisk: {
         usageTick;
         const d = disks.find(d => d.mount === _manualMount) ?? disks.find(d => d.hasRoot) ?? disks[0];
         return d ? Object.assign({}, d) : null;
     }
-    readonly property real percentage: primaryDisk ? primaryDisk.perc : 0
+    readonly final property real percentage: primaryDisk ? primaryDisk.perc : 0
 
-    readonly property var src: S.Disks {
+    readonly final property var src: S.Disks {
         active: root.refs > 0
         interval: Math.max(5000, GlobalConfig.dashboard.resourceUpdateInterval)
     }

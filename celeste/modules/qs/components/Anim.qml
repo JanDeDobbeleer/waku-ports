@@ -19,7 +19,7 @@ NumberAnimation {
         SlowEffects
     }
 
-    property int type: Anim.DefaultSpatial
+    final property int type: Anim.DefaultSpatial
 
     duration: {
         if (type < Anim.StandardSmall || type > Anim.SlowEffects)

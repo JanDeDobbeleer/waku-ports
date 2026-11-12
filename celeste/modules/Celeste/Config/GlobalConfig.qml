@@ -14,7 +14,7 @@ import "ConfigList.js" as CL
 QtObject {
     id: root
 
-    readonly property bool enabled: true
+    readonly final property bool enabled: true
 
     function forScreen(screen: string): var {
         return root;
@@ -42,7 +42,7 @@ QtObject {
     property alias utilities: adapter.utilities
     property alias paths: adapter.paths
 
-    readonly property string _home: Quickshell.env("USERPROFILE") || Quickshell.env("HOME") || ""
+    readonly final property string _home: Quickshell.env("USERPROFILE") || Quickshell.env("HOME") || ""
 
     component FontCfg: JsonObject {
         final property string family: "" // Empty inherits the style family
@@ -499,8 +499,8 @@ QtObject {
         final property int thickness: 10
         final property int rounding: 25
         final property int smoothing: 20
-        readonly property int minThickness: 2
-        readonly property int clampedThickness: Math.max(minThickness, thickness)
+        readonly final property int minThickness: 2
+        readonly final property int clampedThickness: Math.max(minThickness, thickness)
     }
 
     component DashboardPerformanceCfg: JsonObject {
@@ -833,7 +833,7 @@ QtObject {
         final property string lockNoNotifsPic: "root:/assets/dino.png"
     }
 
-    property FileView file: FileView {
+    final property FileView file: FileView {
         id: fileView
 
         path: Quickshell.shellPath("config/shell.json")

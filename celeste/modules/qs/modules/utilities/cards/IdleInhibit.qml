@@ -10,7 +10,7 @@ import qs.services
 StyledRect {
     id: root
 
-    readonly property real nonAnimHeight: layout.implicitHeight + (RuntimeState.inhibitIdle ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Tokens.padding.extraLargeIncreased
+    readonly final property real nonAnimHeight: layout.implicitHeight + (RuntimeState.inhibitIdle ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Tokens.padding.extraLargeIncreased
 
     implicitHeight: nonAnimHeight
 

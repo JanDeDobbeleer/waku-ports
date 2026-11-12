@@ -10,8 +10,8 @@ import qs.services
 Item {
     id: root
 
-    required property var list
-    readonly property string math: list.search.text.slice(`${GlobalConfig.launcher.actionPrefix}calc `.length)
+    required final property var list
+    readonly final property string math: list.search.text.slice(`${GlobalConfig.launcher.actionPrefix}calc `.length)
 
     function onClicked(): void {
         Quickshell.clipboardText = Qalculator.rawResult;

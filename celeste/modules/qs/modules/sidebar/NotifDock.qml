@@ -15,9 +15,9 @@ import qs.utils
 Item {
     id: root
 
-    required property Props props
-    required property ScreenState screenState
-    readonly property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
+    required final property Props props
+    required final property ScreenState screenState
+    readonly final property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.medium

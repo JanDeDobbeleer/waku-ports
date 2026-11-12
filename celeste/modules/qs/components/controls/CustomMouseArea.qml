@@ -1,7 +1,7 @@
 import QtQuick
 
 MouseArea {
-    property int scrollAccumulatedY: 0
+    final property int scrollAccumulatedY: 0
 
     function onWheel(event: WheelEvent): void {
     }

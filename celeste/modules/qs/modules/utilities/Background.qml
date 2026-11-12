@@ -6,11 +6,11 @@ import qs.services
 ShapePath {
     id: root
 
-    required property Wrapper wrapper
-    required property var sidebar
-    required property real rounding
-    readonly property bool flatten: wrapper.height < rounding * 2
-    readonly property real roundingY: flatten ? wrapper.height / 2 : rounding
+    required final property Wrapper wrapper
+    required final property var sidebar
+    required final property real rounding
+    readonly final property bool flatten: wrapper.height < rounding * 2
+    readonly final property real roundingY: flatten ? wrapper.height / 2 : rounding
 
     strokeWidth: -1
     fillColor: Colours.palette.m3surface

@@ -5,8 +5,8 @@ import QtQuick
 QtObject {
     id: root
 
-    property var service
-    property var _held: null
+    final property var service
+    final property var _held: null
 
     onServiceChanged: {
         if (_held && _held.unref)

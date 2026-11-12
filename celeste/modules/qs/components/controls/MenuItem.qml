@@ -1,12 +1,12 @@
 import QtQuick
 
 QtObject {
-    required property string text
-    property string icon
-    property string trailingIcon
-    property string activeIcon: icon
-    property string activeText: text
-    property var value
+    required final property string text
+    final property string icon
+    final property string trailingIcon
+    final property string activeIcon: icon
+    final property string activeText: text
+    final property var value
 
     signal clicked
 }

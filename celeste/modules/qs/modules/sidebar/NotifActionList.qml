@@ -13,7 +13,7 @@ import qs.services
 Item {
     id: root
 
-    required property NotifData notif
+    required final property NotifData notif
 
     Layout.fillWidth: true
     implicitHeight: flickable.contentHeight
@@ -114,7 +114,7 @@ Item {
                 StyledRect {
                     id: action
 
-                    required property var modelData
+                    required final property var modelData
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true

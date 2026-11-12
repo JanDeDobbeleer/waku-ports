@@ -13,18 +13,18 @@ Control {
         AlwaysOn
     }
 
-    property real size: 1
-    property real position: 0
-    property int orientation: Qt.Vertical
-    property int policy: ScrollBar.AsNeeded
-    property real minimumSize: 0
-    property bool interactive: true
-    readonly property bool horizontal: orientation === Qt.Horizontal
-    readonly property bool vertical: orientation === Qt.Vertical
-    readonly property real visualSize: Math.max(minimumSize, Math.min(1, size))
-    readonly property real visualPosition: Math.max(0, Math.min(1 - visualSize, position))
-    readonly property bool pressed: false
-    readonly property bool active: policy === ScrollBar.AlwaysOn || (policy === ScrollBar.AsNeeded && size < 1)
+    final property real size: 1
+    final property real position: 0
+    final property int orientation: Qt.Vertical
+    final property int policy: ScrollBar.AsNeeded
+    final property real minimumSize: 0
+    final property bool interactive: true
+    readonly final property bool horizontal: orientation === Qt.Horizontal
+    readonly final property bool vertical: orientation === Qt.Vertical
+    readonly final property real visualSize: Math.max(minimumSize, Math.min(1, size))
+    readonly final property real visualPosition: Math.max(0, Math.min(1 - visualSize, position))
+    readonly final property bool pressed: false
+    readonly final property bool active: policy === ScrollBar.AlwaysOn || (policy === ScrollBar.AsNeeded && size < 1)
 
     autoPlaceContent: false
 

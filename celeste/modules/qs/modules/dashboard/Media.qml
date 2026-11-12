@@ -10,7 +10,7 @@ import qs.services
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     implicitWidth: Tokens.sizes.dashboard.mediaTabWidth
     implicitHeight: Tokens.sizes.dashboard.mediaTabHeight

@@ -10,11 +10,11 @@ QtObject {
     id: root
 
     // Never changes; upstream bumps this when the language changes. CUtils.dependency(Tr.__trsChanged)
-    property bool __trsChanged: false
+    final property bool __trsChanged: false
 
-    readonly property var supportedLanguages: ["en"]
-    property string language: ""
-    readonly property var locale: Qt.locale()
+    readonly final property var supportedLanguages: ["en"]
+    final property string language: ""
+    readonly final property var locale: Qt.locale()
 
     function formatDateTime(date: date, fmt: var): string {
         return date.toLocaleString(locale, fmt);

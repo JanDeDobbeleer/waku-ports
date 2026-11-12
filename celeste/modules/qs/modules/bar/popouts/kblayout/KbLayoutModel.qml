@@ -12,10 +12,10 @@ Item {
     id: model
 
     property alias visibleModel: visibleModel
-    property string activeLabel: ""
-    property int activeIndex: -1
-    property var _xkbMap: ({})
-    property bool _notifiedLimit: false
+    final property string activeLabel: ""
+    final property int activeIndex: -1
+    final property var _xkbMap: ({})
+    final property bool _notifiedLimit: false
 
     function start() {
         xkbXmlBase.running = true;

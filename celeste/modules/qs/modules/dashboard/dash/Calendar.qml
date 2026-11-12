@@ -14,17 +14,17 @@ import qs.services
 CustomMouseArea {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
-    property date currentDate: screenState.dashboardDate
-    readonly property int currMonth: currentDate.getMonth()
-    readonly property int currYear: currentDate.getFullYear()
-    readonly property int nonAnimCurrMonth: screenState.dashboardDate.getMonth()
-    readonly property int nonAnimCurrYear: screenState.dashboardDate.getFullYear()
+    final property date currentDate: screenState.dashboardDate
+    readonly final property int currMonth: currentDate.getMonth()
+    readonly final property int currYear: currentDate.getFullYear()
+    readonly final property int nonAnimCurrMonth: screenState.dashboardDate.getMonth()
+    readonly final property int nonAnimCurrYear: screenState.dashboardDate.getFullYear()
 
-    readonly property int animDirection: screenState.dashboardDate > currentDate ? -1 : 1
-    property real animTranslate
-    property real animOpacity: 1
+    readonly final property int animDirection: screenState.dashboardDate > currentDate ? -1 : 1
+    final property real animTranslate
+    final property real animOpacity: 1
 
     function onWheel(event: WheelEvent): void {
         if (event.angleDelta.y > 0)
@@ -164,7 +164,7 @@ CustomMouseArea {
             locale: grid.locale
 
             delegate: StyledText {
-                required property var model
+                required final property var model
 
                 horizontalAlignment: Text.AlignHCenter
                 text: model.shortName
@@ -196,7 +196,7 @@ CustomMouseArea {
                 delegate: Item {
                     id: dayItem
 
-                    required property var model
+                    required final property var model
 
                     implicitWidth: implicitHeight
                     implicitHeight: text.implicitHeight + Tokens.padding.small
@@ -224,8 +224,8 @@ CustomMouseArea {
             MaterialShape {
                 id: todayIndicator
 
-                readonly property Item todayItem: grid.contentItem.children.find(c => c.model.today) ?? null
-                property Item today
+                readonly final property Item todayItem: grid.contentItem.children.find(c => c.model.today) ?? null
+                final property Item today
 
                 onTodayItemChanged: {
                     if (todayItem)

@@ -8,12 +8,12 @@ import qs.modules.bar as Bar
 Region {
     id: root
 
-    required property Bar.BarWrapper bar
-    required property Panels panels
-    required property var win
+    required final property Bar.BarWrapper bar
+    required final property Panels panels
+    required final property var win
 
-    readonly property real borderThickness: win.Config.border.thickness
-    readonly property real clampedThickness: win.Config.border.clampedThickness
+    readonly final property real borderThickness: win.Config.border.thickness
+    readonly final property real clampedThickness: win.Config.border.clampedThickness
 
     x: bar.clampedWidth + win.dragMaskPadding
     y: clampedThickness + win.dragMaskPadding
@@ -73,12 +73,12 @@ Region {
     }
 
     component R: Region {
-        required property Item panel
+        required final property Item panel
 
         // Port: waku's Region has one change signal for x, y, width and height, so a binding
         // that reads its own width or height loops. The size lives in w_ and h_ instead.
-        property real w_: panel.width
-        property real h_: panel.height
+        final property real w_: panel.width
+        final property real h_: panel.height
 
         x: panel.x + root.bar.implicitWidth
         y: panel.y + root.borderThickness

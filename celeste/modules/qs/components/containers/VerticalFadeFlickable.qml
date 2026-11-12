@@ -7,10 +7,10 @@ import qs.components.effects
 StyledFlickable {
     id: root
 
-    property real fadeAmount: 0.2
+    final property real fadeAmount: 0.2
 
-    property real topFadeOpacity: fadeShouldBeActive(true) ? 0 : 1
-    property real bottomFadeOpacity: fadeShouldBeActive(false) ? 0 : 1
+    final property real topFadeOpacity: fadeShouldBeActive(true) ? 0 : 1
+    final property real bottomFadeOpacity: fadeShouldBeActive(false) ? 0 : 1
 
     function fadeShouldBeActive(isStart: bool): bool {
         // When content is smaller than flickable size, hide fade when rebound starts

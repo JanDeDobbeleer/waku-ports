@@ -14,10 +14,10 @@ import qs.utils
 MouseArea {
     id: root
 
-    required property var modelData
-    property int size: Tokens.font.body.small.pointSize * 2
+    required final property var modelData
+    final property int size: Tokens.font.body.small.pointSize * 2
 
-    readonly property string name: modelData.tooltipTitle || modelData.title || modelData.id
+    readonly final property string name: modelData.tooltipTitle || modelData.title || modelData.id
 
     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
     hoverEnabled: true

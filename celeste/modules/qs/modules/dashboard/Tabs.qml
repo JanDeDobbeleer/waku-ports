@@ -12,9 +12,9 @@ import qs.services
 Item {
     id: root
 
-    required property real nonAnimWidth
-    required property ScreenState screenState
-    required property var tabs
+    required final property real nonAnimWidth
+    required final property ScreenState screenState
+    required final property var tabs
 
     readonly property alias count: bar.count
 
@@ -47,7 +47,7 @@ Item {
             }
 
             delegate: Tab {
-                required property var modelData
+                required final property var modelData
 
                 iconName: modelData.iconName
                 text: modelData.text
@@ -112,8 +112,8 @@ Item {
     component Tab: TabButton {
         id: tab
 
-        required property string iconName
-        readonly property bool current: TabBar.tabBar.currentItem === this
+        required final property string iconName
+        readonly final property bool current: TabBar.tabBar.currentItem === this
 
         Layout.fillWidth: true
         Layout.preferredWidth: 1 // Uniform width across all tabs

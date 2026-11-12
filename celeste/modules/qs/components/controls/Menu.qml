@@ -19,17 +19,17 @@ MouseArea {
         Right
     }
 
-    required property Item attachTo
-    property int attachSideX: Menu.Right
-    property int attachSideY: Menu.Bottom
-    property int thisSideX: Menu.Right
-    property int thisSideY: Menu.Top
-    property real marginX
-    property real marginY
+    required final property Item attachTo
+    final property int attachSideX: Menu.Right
+    final property int attachSideY: Menu.Bottom
+    final property int thisSideX: Menu.Right
+    final property int thisSideY: Menu.Top
+    final property real marginX
+    final property real marginY
 
-    property list<MenuItem> items
-    property MenuItem active: items[0] ?? null
-    property bool expanded
+    final property list<MenuItem> items
+    final property MenuItem active: items[0] ?? null
+    final property bool expanded
 
     // Port: untyped. A MenuItem-typed argument cannot take a component derived from MenuItem
     // (the drive menu's DiskItem); the call fails and the handler never runs.
@@ -128,9 +128,9 @@ MouseArea {
                     StyledRect {
                         id: menuItem
 
-                        required property int index
-                        required property MenuItem modelData
-                        readonly property bool active: modelData === root?.active
+                        required final property int index
+                        required final property MenuItem modelData
+                        readonly final property bool active: modelData === root?.active
 
                         Layout.fillWidth: true
                         implicitWidth: menuOptionRow.implicitWidth + Tokens.padding.medium * 2

@@ -140,7 +140,7 @@ Column {
     StyledRect {
         id: profiles
 
-        property string current: {
+        final property string current: {
             const p = PowerProfiles.profile;
             if (p === PowerProfile.PowerSaver)
                 return saver.icon;
@@ -226,7 +226,7 @@ Column {
     }
 
     component Fill: AnchorChanges {
-        required property Item item
+        required final property Item item
 
         target: indicator
         anchors.left: item.left
@@ -236,8 +236,8 @@ Column {
     }
 
     component Profile: Item {
-        required property string icon
-        required property int profile
+        required final property string icon
+        required final property int profile
 
         implicitWidth: iconItem.implicitHeight + Tokens.padding.small
         implicitHeight: iconItem.implicitHeight + Tokens.padding.small

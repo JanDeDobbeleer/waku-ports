@@ -14,10 +14,10 @@ import qs.services
 Item {
     id: root
 
-    readonly property real centerX: width / 2
-    readonly property real centerY: height / 2
-    readonly property real spacing: Tokens.spacing.medium
-    readonly property real maxMagnitude: (implicitWidth - cover.implicitWidth) / 2 - spacing
+    readonly final property real centerX: width / 2
+    readonly final property real centerY: height / 2
+    readonly final property real spacing: Tokens.spacing.medium
+    readonly final property real maxMagnitude: (implicitWidth - cover.implicitWidth) / 2 - spacing
 
     ServiceRef {
         service: Audio.cava
@@ -40,18 +40,18 @@ Item {
         ShapePath {
             id: bar
 
-            required property int modelData
-            readonly property real value: Math.max(1e-2, Math.min(1, Audio.cava.values[modelData]))
+            required final property int modelData
+            readonly final property real value: Math.max(1e-2, Math.min(1, Audio.cava.values[modelData]))
 
-            readonly property real angle: modelData * 2 * Math.PI / GlobalConfig.services.visualiserBars
-            readonly property real dist: shapeEdgeDist + value * root.maxMagnitude
-            readonly property real shapeEdgeDist: {
+            readonly final property real angle: modelData * 2 * Math.PI / GlobalConfig.services.visualiserBars
+            readonly final property real dist: shapeEdgeDist + value * root.maxMagnitude
+            readonly final property real shapeEdgeDist: {
                 CUtils.dependency(cover.shape.rotation); // Update when shape rotation changes
                 const sDist = cover.shape.distanceAtAngle(modelData * 360 / GlobalConfig.services.visualiserBars + 90);
                 return sDist + root.spacing + strokeWidth / 2;
             }
-            readonly property real cos: Math.cos(angle)
-            readonly property real sin: Math.sin(angle)
+            readonly final property real cos: Math.cos(angle)
+            readonly final property real sin: Math.sin(angle)
 
             asynchronous: true
             capStyle: root.Tokens.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap

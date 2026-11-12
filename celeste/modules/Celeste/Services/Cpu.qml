@@ -12,23 +12,23 @@ QtObject {
     id: root
 
     // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
-    property int refs: 0
+    final property int refs: 0
     function ref(): void {
         refs++;
     }
     function unref(): void {
         refs = Math.max(0, refs - 1);
     }
-    property string name
-    readonly property real percentage: src.percent / 100
-    readonly property real temperature: NaN
+    final property string name
+    readonly final property real percentage: src.percent / 100
+    readonly final property real temperature: NaN
 
-    readonly property var src: S.Cpu {
+    readonly final property var src: S.Cpu {
         active: root.refs > 0
         interval: GlobalConfig.dashboard.resourceUpdateInterval
     }
 
-    readonly property var nameProc: Process {
+    readonly final property var nameProc: Process {
         running: true
         command: ["reg", "query", "HKLM\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "/v", "ProcessorNameString"]
         stdout: StdioCollector {

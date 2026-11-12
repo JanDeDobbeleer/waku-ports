@@ -8,9 +8,9 @@ import qs.services
 Slider {
     id: root
 
-    required property string icon
-    property real oldValue
-    property bool initialized
+    required final property string icon
+    final property real oldValue
+    final property bool initialized
 
     orientation: Qt.Vertical
 
@@ -65,7 +65,7 @@ Slider {
             MaterialIcon {
                 id: icon
 
-                property bool moving
+                final property bool moving
 
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: 1

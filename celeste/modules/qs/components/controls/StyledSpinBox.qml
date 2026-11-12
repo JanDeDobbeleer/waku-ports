@@ -7,9 +7,9 @@ import qs.services
 DoubleSpinBox {
     id: root
 
-    property int repeatRate: 400
-    property int repeatDecay: 50
-    property int cLayer: 1
+    final property int repeatRate: 400
+    final property int repeatDecay: 50
+    final property int cLayer: 1
 
     function increase(): void {
         let newValue = Math.min(to, value + stepSize);

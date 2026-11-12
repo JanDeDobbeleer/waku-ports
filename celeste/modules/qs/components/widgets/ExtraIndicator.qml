@@ -5,7 +5,7 @@ import qs.components
 import qs.services
 
 StyledRect {
-    required property int extra
+    required final property int extra
 
     anchors.right: parent.right
     anchors.margins: Tokens.padding.medium

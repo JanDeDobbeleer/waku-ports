@@ -14,12 +14,12 @@ import qs.services
 Item {
     id: root
 
-    property real playerProgress: {
+    final property real playerProgress: {
         const active = Players.active;
         return active?.length ? (active.position % active.length) / active.length : 0;
     }
 
-    readonly property real arcCoverGap: Tokens.spacing.extraSmall
+    readonly final property real arcCoverGap: Tokens.spacing.extraSmall
 
     anchors.top: parent.top
     anchors.bottom: parent.bottom

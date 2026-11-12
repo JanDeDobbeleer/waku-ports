@@ -9,10 +9,10 @@ import qs.services
 Item {
     id: root
 
-    required property PopoutState popouts
-    required property ScreenState screenState
-    readonly property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
-    readonly property Item current: currentPopout?.item ?? null
+    required final property PopoutState popouts
+    required final property ScreenState screenState
+    readonly final property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
+    readonly final property Item current: currentPopout?.item ?? null
 
     implicitWidth: currentPopout ? currentPopout.implicitWidth + Tokens.padding.large * 2 : 0
     implicitHeight: currentPopout ? currentPopout.implicitHeight + Tokens.padding.large * 2 : 0
@@ -146,9 +146,9 @@ Item {
     component Popout: Loader {
         id: popout
 
-        required property string name
-        readonly property bool shouldBeActive: root.popouts.currentName === name
-        property bool ready: true
+        required final property string name
+        readonly final property bool shouldBeActive: root.popouts.currentName === name
+        final property bool ready: true
 
         anchors.centerIn: parent
 

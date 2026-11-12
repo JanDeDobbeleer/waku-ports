@@ -11,20 +11,20 @@ Item {
         Arc
     }
 
-    property int lineWidth: 4
-    property real amplitudeMultiplier: 0
-    property int frequency: 6
-    property real startX: 0
-    property real fullLength: 0
-    property color color: "white"
-    property real waveProgress: 0
-    property int pathType: WavyLine.Linear
-    property real startAngle: 0
-    property real fullAngle: 360
-    property real radius: 0
-    property real value: 1
+    final property int lineWidth: 4
+    final property real amplitudeMultiplier: 0
+    final property int frequency: 6
+    final property real startX: 0
+    final property real fullLength: 0
+    final property color color: "white"
+    final property real waveProgress: 0
+    final property int pathType: WavyLine.Linear
+    final property real startAngle: 0
+    final property real fullAngle: 360
+    final property real radius: 0
+    final property real value: 1
 
-    readonly property var points: pathType === WavyLine.Arc ? arcPoints() : linearPoints()
+    readonly final property var points: pathType === WavyLine.Arc ? arcPoints() : linearPoints()
 
     function linearPoints(): var {
         const pts = [];

@@ -4,8 +4,8 @@ import "ScaleSizes.js" as SS
 // One size scale of upstream's AppearanceRounding/Spacing/Padding: each token times `scale`,
 // truncated to an int like upstream's static_cast<int>. `full` only matters for rounding.
 QtObject {
-    required property var source
-    property real scale: 1
+    required final property var source
+    final property real scale: 1
 
     readonly final property int extraSmall: SS.truncScaled(source, "extraSmall", scale)
     readonly final property int small: SS.truncScaled(source, "small", scale)

@@ -33,7 +33,7 @@ TextField {
     StyledRect {
         id: cursor
 
-        property bool disableBlink
+        final property bool disableBlink
 
         x: root.cursorRectangle.x
         y: root.cursorRectangle.y

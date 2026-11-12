@@ -13,7 +13,7 @@ import qs.utils
 Column {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     padding: Tokens.padding.large
     rightPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
@@ -84,7 +84,7 @@ Column {
     component SessionButton: IconButton {
         id: button
 
-        required property list<string> command
+        required final property list<string> command
 
         function exec(): void {
             // Real Windows actions through ControlCenter; sign out, restart and shutdown need a second press.

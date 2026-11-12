@@ -14,12 +14,12 @@ import qs.modules.utilities as Utilities
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property Item osdPanel
-    required property Item sessionPanel
-    required property Item utilitiesPanel
-    readonly property int padding: Tokens.padding.large
-    readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
+    required final property ScreenState screenState
+    required final property Item osdPanel
+    required final property Item sessionPanel
+    required final property Item utilitiesPanel
+    readonly final property int padding: Tokens.padding.large
+    readonly final property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
 
     anchors.top: parent.top
     anchors.bottom: parent.bottom
@@ -143,10 +143,10 @@ Item {
     component NotifWrapper: Item {
         id: wrapper
 
-        required property NotifData modelData
-        required property int index
+        required final property NotifData modelData
+        required final property int index
         readonly property alias nonAnimHeight: notif.nonAnimHeight
-        property int idx
+        final property int idx
 
         onIndexChanged: {
             if (index !== -1)

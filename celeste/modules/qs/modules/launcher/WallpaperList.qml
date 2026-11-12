@@ -10,14 +10,14 @@ import qs.services
 PathView {
     id: root
 
-    required property SearchBar search
-    required property var screenState
-    required property var panels
-    required property var content
+    required final property SearchBar search
+    required final property var screenState
+    required final property var panels
+    required final property var content
 
-    readonly property int itemWidth: Tokens.sizes.launcher.wallpaperWidth * 0.8 + Tokens.padding.medium * 2
+    readonly final property int itemWidth: Tokens.sizes.launcher.wallpaperWidth * 0.8 + Tokens.padding.medium * 2
 
-    readonly property int numItems: {
+    readonly final property int numItems: {
         const screen = QsWindow.window?.screen;
         if (!screen)
             return 0;
@@ -47,7 +47,7 @@ PathView {
     model: ScriptModel {
         id: scriptModel
 
-        readonly property string search: root.search.text.split(" ").slice(1).join(" ")
+        readonly final property string search: root.search.text.split(" ").slice(1).join(" ")
 
         // waku: entries of an earlier directory scan are destroyed, so drop the nulls.
         values: WallpaperService.query(search).filter(w => w)

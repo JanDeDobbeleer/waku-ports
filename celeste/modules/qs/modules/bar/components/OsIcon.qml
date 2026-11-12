@@ -8,7 +8,7 @@ import qs.utils
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     implicitWidth: Math.round(Tokens.font.body.large.pointSize * 1.2)
     implicitHeight: Math.round(Tokens.font.body.large.pointSize * 1.2)

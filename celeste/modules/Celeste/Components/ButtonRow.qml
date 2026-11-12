@@ -8,9 +8,9 @@ import QtQuick
 Item {
     id: root
 
-    property real spacing: 0
+    final property real spacing: 0
 
-    readonly property string signature: {
+    readonly final property string signature: {
         let s = `${width}|${spacing}`;
         for (let i = 0; i < children.length; i++) {
             const c = children[i];

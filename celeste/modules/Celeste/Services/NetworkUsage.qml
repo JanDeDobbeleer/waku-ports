@@ -12,30 +12,30 @@ QtObject {
     id: root
 
     // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
-    property int refs: 0
+    final property int refs: 0
     function ref(): void {
         refs++;
     }
     function unref(): void {
         refs = Math.max(0, refs - 1);
     }
-    readonly property int historyLength: 30
-    property real downloadSpeed: 0
-    property real uploadSpeed: 0
-    property real downloadTotal: 0
-    property real uploadTotal: 0
-    readonly property CircularBuffer downloadBuffer: CircularBuffer {
+    readonly final property int historyLength: 30
+    final property real downloadSpeed: 0
+    final property real uploadSpeed: 0
+    final property real downloadTotal: 0
+    final property real uploadTotal: 0
+    readonly final property CircularBuffer downloadBuffer: CircularBuffer {
         capacity: root.historyLength + 1
     }
-    readonly property CircularBuffer uploadBuffer: CircularBuffer {
+    readonly final property CircularBuffer uploadBuffer: CircularBuffer {
         capacity: root.historyLength + 1
     }
 
-    property real _lastRx: -1
-    property real _lastTx: -1
-    property double _lastTime: 0
+    final property real _lastRx: -1
+    final property real _lastTx: -1
+    final property double _lastTime: 0
 
-    readonly property var timer: Timer {
+    readonly final property var timer: Timer {
         running: root.refs > 0
         repeat: true
         triggeredOnStart: true
@@ -46,7 +46,7 @@ QtObject {
         }
     }
 
-    readonly property var proc: Process {
+    readonly final property var proc: Process {
         command: ["netstat", "-e"]
         stdout: StdioCollector {
             onStreamFinished: {

@@ -3,10 +3,10 @@ import QtQuick
 Loader {
     id: root
 
-    property Component sourceComp
-    property bool isComplete
-    property int outAnimType: Anim.FastEffects
-    property int inAnimType: Anim.DefaultEffects
+    final property Component sourceComp
+    final property bool isComplete
+    final property int outAnimType: Anim.FastEffects
+    final property int inAnimType: Anim.DefaultEffects
 
     asynchronous: true
     Component.onCompleted: {

@@ -9,8 +9,8 @@ import qs.services
 Item {
     id: root
 
-    required property var modelData
-    required property ScreenState screenState
+    required final property var modelData
+    required final property ScreenState screenState
 
     scale: 0.5
     opacity: 0

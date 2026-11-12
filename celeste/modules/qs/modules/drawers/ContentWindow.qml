@@ -19,27 +19,18 @@ StyledWindow {
     readonly property alias bar: barItem
     readonly property alias interactionWrapper: interactions
 
-    readonly property ScreenState screenState: ShellState.forScreen(screen)
+    readonly final property ScreenState screenState: ShellState.forScreen(screen)
 
-    readonly property var monitor: Hypr.monitorFor(screen)
-    readonly property bool hasSpecialWorkspace: (monitor?.lastIpcObject.specialWorkspace?.name.length ?? 0) > 0
-    readonly property bool hasFullscreenOnNormalWs: monitor?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false
-    readonly property bool hasFullscreen: {
-        if (hasSpecialWorkspace) {
-            const specialName = monitor?.lastIpcObject.specialWorkspace?.name;
-            if (!specialName)
-                return false;
-            const specialWs = Hypr.workspaces.values.find(ws => ws.name === specialName);
-            return specialWs?.toplevels.values.some(t => t.lastIpcObject.fullscreen > 1) ?? false;
-        }
-        return hasFullscreenOnNormalWs;
-    }
+    readonly final property HyprMonitor monitor: Hypr.monitorFor(screen)
+    readonly final property bool hasSpecialWorkspace: (monitor?.specialName.length ?? 0) > 0
+    readonly final property bool hasFullscreenOnNormalWs: Hypr.hasFullscreen(monitor?.activeWorkspace ?? null)
+    readonly final property bool hasFullscreen: hasSpecialWorkspace ? Hypr.specialFullscreen(monitor) : hasFullscreenOnNormalWs
 
     // Port: the panels that close when the user presses Escape, clicks outside them, switches to
     // another window, or toggles them again. Upstream gets the click and focus part from
     // HyprlandFocusGrab; waku's shim of it ends for good after its first clear (it writes `active`,
     // which removes this binding), so the window does it itself.
-    readonly property bool lightDismissOpen: {
+    readonly final property bool lightDismissOpen: {
         const s = screenState;
         const conf = contentItem.Config;
         if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
@@ -54,31 +45,31 @@ StyledWindow {
         return false;
     }
     // The panels that take the keyboard (WlrKeyboardFocus.OnDemand below).
-    readonly property bool keyboardPanelOpen: screenState.launcher || screenState.session
-    property double lightDismissSince: 0
-    property bool hadFocus: false
+    readonly final property bool keyboardPanelOpen: screenState.launcher || screenState.session
+    final property double lightDismissSince: 0
+    final property bool hadFocus: false
 
-    property real fsTransitionProg: hasFullscreen ? 1 : 0
-    readonly property real sdfBorderOffset: 2 * fsTransitionProg // SDFs joins are not exact, so offset by 2px to ensure nothing shows
-    readonly property real borderThickness: Config.border.thickness * (1 - fsTransitionProg)
-    readonly property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
-    readonly property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
+    final property real fsTransitionProg: hasFullscreen ? 1 : 0
+    readonly final property real sdfBorderOffset: 2 * fsTransitionProg // SDFs joins are not exact, so offset by 2px to ensure nothing shows
+    readonly final property real borderThickness: Config.border.thickness * (1 - fsTransitionProg)
+    readonly final property real borderRounding: Config.border.rounding * (1 - fsTransitionProg)
+    readonly final property real shadowOpacity: 0.7 * (1 - fsTransitionProg)
 
     // The frame's shadow needs a full-window layer plus the effect's blur textures, which cost about
     // as much GPU memory as everything else the idle shell holds. The layer exists only while some
     // panel is on screen; the shadow fades out over `shadowFade` before the layer goes, so closing
     // the last panel does not make the shadow pop off.
-    readonly property bool anyPanelVisible: panelsItem.dashboard.visible || panelsItem.launcher.visible || panelsItem.session.visible || panelsItem.sidebar.visible || panelsItem.osd.visible || panelsItem.utilities.visible || panelsItem.notifications.visible || panelsItem.popoutsWrapper.visible
-    property real shadowFade: anyPanelVisible ? 1 : 0
-    readonly property real borderLayoutThickness: hasFullscreen ? 0 : Config.border.thickness
+    readonly final property bool anyPanelVisible: panelsItem.dashboard.visible || panelsItem.launcher.visible || panelsItem.session.visible || panelsItem.sidebar.visible || panelsItem.osd.visible || panelsItem.utilities.visible || panelsItem.notifications.visible || panelsItem.popoutsWrapper.visible
+    final property real shadowFade: anyPanelVisible ? 1 : 0
+    readonly final property real borderLayoutThickness: hasFullscreen ? 0 : Config.border.thickness
 
-    property color surfaceColour: Colours.tPalette.m3surface
+    final property color surfaceColour: Colours.tPalette.m3surface
 
-    readonly property int dragMaskPadding: {
+    readonly final property int dragMaskPadding: {
         if (lightDismissOpen || panelsItem.popouts.isDetached)
             return 0;
 
-        if (monitor?.lastIpcObject.specialWorkspace?.name || monitor?.activeWorkspace?.toplevels.values.length > 0)
+        if (monitor?.specialName || Hypr.windowCount(monitor?.activeWorkspace ?? null) > 0)
             return 0;
 
         const thresholds = [];
@@ -133,7 +124,7 @@ StyledWindow {
 
         Region {
             // Port: x reads w_, not width (waku's Region has one change signal for its geometry).
-            readonly property real w_: panelsItem.osdWrapper.width * (1 - panelsItem.osd.offsetScale) + root.borderThickness
+            readonly final property real w_: panelsItem.osdWrapper.width * (1 - panelsItem.osd.offsetScale) + root.borderThickness
 
             x: root.width - w_
             y: panelsItem.osdWrapper.y + root.borderThickness
@@ -317,7 +308,7 @@ StyledWindow {
 
             attachLeft: !panelsItem.popouts.isDetached
             // Extra width to prevent vertical movement deformation partially detaching panel from bar
-            property real extraWidth: panelsItem.popouts.isDetached ? 0 : 0.2
+            final property real extraWidth: panelsItem.popouts.isDetached ? 0 : 0.2
 
             panel: panelsItem.popoutsWrapper
             deformAmount: panelsItem.popouts.isDetached ? 0.05 : panelsItem.popouts.hasCurrent ? 0.15 : 0.1
@@ -419,41 +410,41 @@ StyledWindow {
     }
 
     component PanelBg: BlobRect {
-        required property Item panel
-        property real deformAmount: 0.15
+        required final property Item panel
+        final property real deformAmount: 0.15
         // Port: edges the panel is flush with. The waku blob stub does not fuse shapes, so a
         // flush edge is square and overlaps the frame instead of leaving a seam and a wedge.
-        property bool attachTop: false
-        property bool attachRight: false
-        property bool attachBottom: false
-        property bool attachLeft: false
+        final property bool attachTop: false
+        final property bool attachRight: false
+        final property bool attachBottom: false
+        final property bool attachLeft: false
         // Port: how far the panel has moved off its attached edge. The expressive slide curves
         // overshoot, so the wrapper's margin goes positive for a few frames and the panel leaves
         // the frame. The upstream SDF union keeps the shape fused to the frame; the stub extends
         // the rectangle to the frame by the same amount so no wallpaper shows in the gap.
-        property real gapTop: 0
-        property real gapRight: 0
-        property real gapBottom: 0
-        readonly property real coverTop: attachTop ? Math.max(0, gapTop) : 0
-        readonly property real coverRight: attachRight ? Math.max(0, gapRight) : 0
-        readonly property real coverBottom: attachBottom ? Math.max(0, gapBottom) : 0
+        final property real gapTop: 0
+        final property real gapRight: 0
+        final property real gapBottom: 0
+        readonly final property real coverTop: attachTop ? Math.max(0, gapTop) : 0
+        readonly final property real coverRight: attachRight ? Math.max(0, gapRight) : 0
+        readonly final property real coverBottom: attachBottom ? Math.max(0, gapBottom) : 0
 
         // Port: concave junction fillets. Upstream fuses a flush panel with the frame by a circular
         // smooth-min whose blend arc has radius `smoothing`; the stub draws separate shapes, so each
         // end of an attached edge gets a fillet piece (the square minus a quarter circle) in the
         // group colour. The radius is the frame's own, in logical px, not scaled by the UI scale.
         // Fillets lie in free space beside the panel, outside the open-panel mask regions.
-        readonly property real filletMax: root.Config.border.smoothing * (1 - root.fsTransitionProg)
+        readonly final property real filletMax: root.Config.border.smoothing * (1 - root.fsTransitionProg)
         // Inner edges of the frame in this item's coordinates.
-        readonly property real frameL: barItem.implicitWidth - x
-        readonly property real frameR: root.width - root.borderThickness - x
-        readonly property real frameT: root.borderThickness - y
-        readonly property real frameB: root.height - root.borderThickness - y
+        readonly final property real frameL: barItem.implicitWidth - x
+        readonly final property real frameR: root.width - root.borderThickness - x
+        readonly final property real frameT: root.borderThickness - y
+        readonly final property real frameB: root.height - root.borderThickness - y
         // How far the panel reaches out of each frame edge; the radius grows with it as it slides.
-        readonly property real filletRight: Math.max(0, Math.min(filletMax, frameR, height / 2))
-        readonly property real filletLeft: Math.max(0, Math.min(filletMax, width - frameL, height / 2))
-        readonly property real filletTop: Math.max(0, Math.min(filletMax, height - frameT, width / 2))
-        readonly property real filletBottom: Math.max(0, Math.min(filletMax, frameB, width / 2))
+        readonly final property real filletRight: Math.max(0, Math.min(filletMax, frameR, height / 2))
+        readonly final property real filletLeft: Math.max(0, Math.min(filletMax, width - frameL, height / 2))
+        readonly final property real filletTop: Math.max(0, Math.min(filletMax, height - frameT, width / 2))
+        readonly final property real filletBottom: Math.max(0, Math.min(filletMax, frameB, width / 2))
 
         // Right edge: ends at the top and bottom of the panel (a top or bottom attachment is the frame).
         // The junction is the panel's own right edge, which is the neighbouring panel's left edge
@@ -523,17 +514,17 @@ StyledWindow {
     // The piece is the square of side r at the junction minus the quarter circle centred on the
     // square's far corner.
     component Fillet: Shape {
-        property real r: 0
-        property real px: 0
-        property real py: 0
-        property real ax: 0
-        property real ay: 0
-        property real bx: 0
-        property real by: 0
+        final property real r: 0
+        final property real px: 0
+        final property real py: 0
+        final property real ax: 0
+        final property real ay: 0
+        final property real bx: 0
+        final property real by: 0
 
-        readonly property int sweep: (bx * ay - by * ax) > 0 ? 1 : 0
+        readonly final property int sweep: (bx * ay - by * ax) > 0 ? 1 : 0
 
-        property bool active: true
+        final property bool active: true
 
         visible: active && r > 0.5
         preferredRendererType: Shape.CurveRenderer
@@ -554,7 +545,7 @@ StyledWindow {
             // The piece runs `n` under the frame (against b) and under the panel (against a), so
             // the arc's thin tip, where it turns tangent to the frame, always sits on solid colour.
             PathSvg {
-                readonly property real n: 3
+                readonly final property real n: 3
                 path: `M${px - (ax + bx) * n},${py - (ay + by) * n}`
                     + ` L${px + ax * r - bx * n},${py + ay * r - by * n}`
                     + ` L${px + ax * r},${py + ay * r}`

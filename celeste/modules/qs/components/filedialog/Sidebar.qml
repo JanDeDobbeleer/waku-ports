@@ -11,7 +11,7 @@ import qs.services
 StyledRect {
     id: root
 
-    required property var dialog
+    required final property var dialog
 
     implicitWidth: Sizes.sidebarWidth
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
@@ -42,8 +42,8 @@ StyledRect {
             StyledRect {
                 id: place
 
-                required property string modelData
-                readonly property bool selected: modelData === root.dialog.cwd[root.dialog.cwd.length - 1]
+                required final property string modelData
+                readonly final property bool selected: modelData === root.dialog.cwd[root.dialog.cwd.length - 1]
 
                 Layout.fillWidth: true
                 implicitHeight: placeInner.implicitHeight + Tokens.padding.medium * 2

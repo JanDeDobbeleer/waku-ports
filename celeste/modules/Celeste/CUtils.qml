@@ -9,8 +9,8 @@ import Quickshell.Io
 QtObject {
     id: root
 
-    readonly property string version: "celeste-port"
-    readonly property string qtVersion: "6.10"
+    readonly final property string version: "celeste-port"
+    readonly final property string qtVersion: "6.10"
 
     // No-op for declaring variable/expression dependencies in QML bindings
     function dependency(value: var): void {
@@ -83,7 +83,7 @@ QtObject {
     }
 
     // Enumerator names by setting name. The QML enums cannot be enumerated, so the names are listed here.
-    readonly property var _enums: {
+    readonly final property var _enums: {
         const display = ["Shapes", "Text", "Icons"];
         const temperature = ["Auto", "Celsius", "Fahrenheit", "Kelvin"];
         const lyrics = ["Auto", "Local", "LRCLIB", "NetEase"];
@@ -155,7 +155,7 @@ QtObject {
         p.running = true;
     }
 
-    property Component proc: Component {
+    final property Component proc: Component {
         Process {
             onExited: destroy()
         }

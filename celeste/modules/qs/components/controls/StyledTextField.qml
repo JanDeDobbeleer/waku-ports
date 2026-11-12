@@ -14,31 +14,31 @@ TextFieldBase {
         Filled
     }
 
-    property int type: StyledTextField.Outlined
+    final property int type: StyledTextField.Outlined
 
-    property int smallFontSize: Tokens.font.label.small.pointSize
-    readonly property real smallFontScale: smallFontSize / font.pointSize
+    final property int smallFontSize: Tokens.font.label.small.pointSize
+    readonly final property real smallFontScale: smallFontSize / font.pointSize
 
     property int verticalPadding: Tokens.padding.large
     property int horizontalPadding: Tokens.padding.large
     property int radius: Tokens.rounding.small
-    readonly property int clampedRadius: Math.min(horizontalPadding, Math.min(width, height) / 2, radius)
+    readonly final property int clampedRadius: Math.min(horizontalPadding, Math.min(width, height) / 2, radius)
 
-    property string leadingIcon
-    property string trailingIcon
-    readonly property int leadingOffset: leadingIcon ? leadingIconLoader.width + leadingIconLoader.anchors.leftMargin : 0
-    readonly property int trailingOffset: trailingIcon ? trailingIconLoader.width + trailingIconLoader.anchors.rightMargin : 0
+    final property string leadingIcon
+    final property string trailingIcon
+    readonly final property int leadingOffset: leadingIcon ? leadingIconLoader.width + leadingIconLoader.anchors.leftMargin : 0
+    readonly final property int trailingOffset: trailingIcon ? trailingIconLoader.width + trailingIconLoader.anchors.rightMargin : 0
 
-    property string supportingText
-    property string errorText
-    property bool isError
-    property bool emptyIsValid: true
-    property var validate // Regex or function
-    readonly property bool valid: !validate || (!text && emptyIsValid) || (validate instanceof RegExp ? validate.test(text) : !!validate(text))
-    readonly property string effectiveSupportingText: isError && errorText ? errorText : supportingText
-    readonly property int supportingTextOffset: effectiveSupportingText ? supportingTextLoader.height + Tokens.spacing.extraSmall : 0
+    final property string supportingText
+    final property string errorText
+    final property bool isError
+    final property bool emptyIsValid: true
+    final property var validate // Regex or function
+    readonly final property bool valid: !validate || (!text && emptyIsValid) || (validate instanceof RegExp ? validate.test(text) : !!validate(text))
+    readonly final property string effectiveSupportingText: isError && errorText ? errorText : supportingText
+    readonly final property int supportingTextOffset: effectiveSupportingText ? supportingTextLoader.height + Tokens.spacing.extraSmall : 0
 
-    readonly property int filledOffset: type === StyledTextField.Filled ? Tokens.spacing.small : 0
+    readonly final property int filledOffset: type === StyledTextField.Filled ? Tokens.spacing.small : 0
 
     leftPadding: horizontalPadding + leadingOffset
     rightPadding: horizontalPadding + trailingOffset
@@ -205,9 +205,9 @@ TextFieldBase {
             ShapePath {
                 id: path
 
-                readonly property real outlineGap: placeholder.width * root.smallFontScale + Tokens.spacing.extraSmall * 2
-                property real outlineGapScale: root.activeFocus || root.text ? 1 : 0
-                readonly property real inset: strokeWidth / 2
+                readonly final property real outlineGap: placeholder.width * root.smallFontScale + Tokens.spacing.extraSmall * 2
+                final property real outlineGapScale: root.activeFocus || root.text ? 1 : 0
+                readonly final property real inset: strokeWidth / 2
 
                 strokeWidth: root.activeFocus ? 2 : 1
                 strokeColor: root.isError ? Colours.palette.m3error : (root.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline)

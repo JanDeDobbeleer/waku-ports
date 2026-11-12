@@ -7,16 +7,16 @@ import QtQuick
 QtObject {
     id: root
 
-    readonly property string uuid: "appdb"
-    property string path
-    property var entries: []
-    property var favouriteApps: []
-    readonly property var apps: sorted
+    readonly final property string uuid: "appdb"
+    final property string path
+    final property var entries: []
+    final property var favouriteApps: []
+    readonly final property var apps: sorted
 
-    property var counts: ({})
-    property var sorted: []
+    final property var counts: ({})
+    final property var sorted: []
 
-    property Component entryComponent: Component {
+    final property Component entryComponent: Component {
         AppEntry {}
     }
 
@@ -43,7 +43,7 @@ QtObject {
         return false;
     }
 
-    property var cache: ({})
+    final property var cache: ({})
 
     function rebuild(): void {
         const next = {};

@@ -9,7 +9,7 @@ import qs.services
 StyledRect {
     id: root
 
-    required property var dialog
+    required final property var dialog
 
     implicitWidth: inner.implicitWidth + Tokens.padding.medium * 2
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
@@ -66,8 +66,8 @@ StyledRect {
                     RowLayout {
                         id: folder
 
-                        required property string modelData
-                        required property int index
+                        required final property string modelData
+                        required final property int index
 
                         spacing: 0
 

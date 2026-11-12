@@ -9,21 +9,21 @@ import qs.services
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property ScreenState screenState
-    required property bool sidebarOrSessionVisible
+    required final property ShellScreen screen
+    required final property ScreenState screenState
+    required final property bool sidebarOrSessionVisible
 
-    property bool hovered
-    readonly property Brightness.Monitor monitor: Brightness.getMonitorForScreen(root.screen)
-    readonly property bool shouldBeActive: screenState.osd && Config.osd.enabled && !(screenState.utilities && Config.utilities.enabled)
-    property real offsetScale: shouldBeActive ? 0 : 1
-    property real sidebarOffset: sidebarOrSessionVisible ? 12 : 0
+    final property bool hovered
+    readonly final property Brightness.Monitor monitor: Brightness.getMonitorForScreen(root.screen)
+    readonly final property bool shouldBeActive: screenState.osd && Config.osd.enabled && !(screenState.utilities && Config.utilities.enabled)
+    final property real offsetScale: shouldBeActive ? 0 : 1
+    final property real sidebarOffset: sidebarOrSessionVisible ? 12 : 0
 
-    property real volume
-    property bool muted
-    property real sourceVolume
-    property bool sourceMuted
-    property real brightness
+    final property real volume
+    final property bool muted
+    final property real sourceVolume
+    final property bool sourceMuted
+    final property real brightness
 
     function show(): void {
         screenState.osd = true;

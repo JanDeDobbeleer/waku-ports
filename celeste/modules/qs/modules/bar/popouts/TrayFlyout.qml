@@ -13,9 +13,9 @@ import qs.services
 ColumnLayout {
     id: root
 
-    readonly property int columns: 4
-    readonly property int cell: Tokens.font.body.small.pointSize * 3
-    property string hovered: ""
+    readonly final property int columns: 4
+    readonly final property int cell: Tokens.font.body.small.pointSize * 3
+    final property string hovered: ""
 
     spacing: Tokens.spacing.small
 
@@ -36,7 +36,7 @@ ColumnLayout {
             Item {
                 id: slot
 
-                required property var modelData
+                required final property var modelData
 
                 implicitWidth: root.cell
                 implicitHeight: root.cell

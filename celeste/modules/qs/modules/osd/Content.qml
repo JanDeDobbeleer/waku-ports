@@ -12,14 +12,14 @@ import qs.utils
 Item {
     id: root
 
-    required property Brightness.Monitor monitor
-    required property ScreenState screenState
+    required final property Brightness.Monitor monitor
+    required final property ScreenState screenState
 
-    required property real volume
-    required property bool muted
-    required property real sourceVolume
-    required property bool sourceMuted
-    required property real brightness
+    required final property real volume
+    required final property bool muted
+    required final property real sourceVolume
+    required final property bool sourceMuted
+    required final property real brightness
 
     implicitWidth: layout.implicitWidth + Tokens.padding.large + layout.anchors.horizontalCenterOffset * 2
     implicitHeight: layout.implicitHeight + Tokens.padding.large * 2
@@ -109,7 +109,7 @@ Item {
     }
 
     component WrappedLoader: Loader {
-        required property bool shouldBeActive
+        required final property bool shouldBeActive
 
         asynchronous: true
         Layout.preferredHeight: shouldBeActive ? Tokens.sizes.osd.sliderHeight : 0

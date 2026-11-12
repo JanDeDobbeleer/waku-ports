@@ -10,8 +10,8 @@ import qs.services
 StyledRect {
     id: root
 
-    readonly property color colour: Colours.palette.m3tertiary
-    readonly property int padding: Config.bar.clock.background ? Tokens.padding.medium : Tokens.padding.extraSmall
+    readonly final property color colour: Colours.palette.m3tertiary
+    readonly final property int padding: Config.bar.clock.background ? Tokens.padding.medium : Tokens.padding.extraSmall
 
     function fontFor(text: string, metricWidth: int): font {
         // We don't count seconds for the max width because it changes too often

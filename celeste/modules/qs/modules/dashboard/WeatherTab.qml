@@ -9,7 +9,7 @@ import qs.utils
 Item {
     id: root
 
-    readonly property var today: Weather.forecast && Weather.forecast.length > 0 ? Weather.forecast[0] : null
+    readonly final property var today: Weather.forecast && Weather.forecast.length > 0 ? Weather.forecast[0] : null
 
     implicitWidth: layout.implicitWidth > Tokens.px(800) ? layout.implicitWidth : Tokens.px(840)
     implicitHeight: layout.implicitHeight
@@ -151,8 +151,8 @@ Item {
                 StyledRect {
                     id: forecastItem
 
-                    required property int index
-                    required property var modelData
+                    required final property int index
+                    required final property var modelData
 
                     Layout.fillWidth: true
                     implicitHeight: forecastItemColumn.implicitHeight + Tokens.padding.medium * 2
@@ -208,10 +208,10 @@ Item {
     component DetailCard: StyledRect {
         id: detailRoot
 
-        property string icon
-        property string label
-        property string value
-        property color colour
+        final property string icon
+        final property string label
+        final property string value
+        final property color colour
 
         Layout.fillWidth: true
         Layout.preferredHeight: Tokens.px(60)
@@ -251,10 +251,10 @@ Item {
     component WeatherStat: Row {
         id: weatherStat
 
-        property string icon
-        property string label
-        property string value
-        property color colour
+        final property string icon
+        final property string label
+        final property string value
+        final property color colour
 
         spacing: Tokens.spacing.small
 

@@ -11,7 +11,7 @@ import qs.utils
 Item {
     id: root
 
-    required property color colour
+    required final property color colour
 
     // Port: the waku shim reports every device as plain "bluetooth", so the icon name comes from the
     // service's device type (row.type) and, for "Generic", from the device name. The result is a
@@ -79,7 +79,7 @@ Item {
             MaterialIcon {
                 id: device
 
-                required property BluetoothDevice modelData
+                required final property BluetoothDevice modelData
 
                 animate: true
                 text: Icons.getBluetoothIcon(root.iconNameFor(modelData))

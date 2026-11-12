@@ -9,7 +9,7 @@ import qs.compat
 import waku.services as S
 
 Singleton {
-    property ShellRoot shellRoot
+    final property ShellRoot shellRoot
 
     function anySidebarOpen(): bool {
         return states.instances.some(s => s.sidebar);
@@ -72,13 +72,13 @@ Singleton {
     }
 
     component Components: QtObject {
-        required property ShellScreen modelData
+        required final property ShellScreen modelData
 
-        property var background
-        property var rootWindow
-        property var interactionWrapper
-        property var bar
-        property var panels
+        final property var background
+        final property var rootWindow
+        final property var interactionWrapper
+        final property var bar
+        final property var panels
 
         function find(name: string, rootItem: Item): var {
             return CUtils.findChild(rootItem ?? rootWindow?.contentItem, name);
@@ -94,11 +94,11 @@ Singleton {
     }
 
     component ComponentRef: QtObject {
-        required property ShellScreen screen
-        required property string slot
-        required property var component
+        required final property ShellScreen screen
+        required final property string slot
+        required final property var component
 
-        readonly property QtObject target: ShellState.componentsFor(screen)
+        readonly final property QtObject target: ShellState.componentsFor(screen)
 
         onTargetChanged: {
             if (target)

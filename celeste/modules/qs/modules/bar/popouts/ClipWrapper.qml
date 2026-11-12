@@ -8,11 +8,11 @@ import qs.modules.bar.popouts // Need to import this module so the Wrapper type 
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property real borderThickness
+    required final property ShellScreen screen
+    required final property real borderThickness
 
     readonly property alias content: contentItem
-    property real offsetScale: x > 0 || contentItem.hasCurrent ? 0 : 1
+    final property real offsetScale: x > 0 || contentItem.hasCurrent ? 0 : 1
 
     visible: width > 0 && height > 0
     clip: true

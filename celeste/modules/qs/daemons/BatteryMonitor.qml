@@ -9,8 +9,8 @@ import Celeste.Services
 Scope {
     id: root
 
-    readonly property list<var> warnLevels: [...GlobalConfig.general.battery.warnLevels.values].sort((a, b) => a.level - b.level)
-    property real lastPercentage: 100
+    readonly final property list<var> warnLevels: [...GlobalConfig.general.battery.warnLevels.values].sort((a, b) => a.level - b.level)
+    final property real lastPercentage: 100
 
     function handleBatteryWarnings(): void {
         const p = UPower.displayDevice.percentage * 100;
