@@ -102,6 +102,18 @@ Item {
         Keys.onEscapePressed: root.screenState.launcher = false
 
         Keys.onPressed: event => {
+            if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier) && list.showWallpapers) {
+                const entry = list.currentList?.currentItem?.modelData;
+                if (entry) {
+                    if (Colours.scheme === "dynamic" && entry.path !== WallpaperService.actualCurrent)
+                        WallpaperService.previewColourLock = true;
+                    if (WallpaperService.setWallpaperAllDesktops(entry.path))
+                        root.screenState.launcher = false;
+                }
+                event.accepted = true;
+                return;
+            }
+
             // Port: Shift+Enter starts the selected app as a new window, Ctrl+Shift+Enter elevated.
             // Handled here and accepted, so the plain Enter path (onAccepted) never also runs.
             if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier) && !list.showWallpapers && !text.startsWith(GlobalConfig.launcher.actionPrefix)) {
