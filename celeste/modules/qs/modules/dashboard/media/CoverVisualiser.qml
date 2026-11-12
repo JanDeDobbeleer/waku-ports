@@ -10,6 +10,7 @@ import Celeste.Services
 import qs.components
 import qs.components.widgets
 import qs.services
+import "CoverVisualiserHelpers.js" as CoverVisualiserHelpers
 
 Item {
     id: root
@@ -33,9 +34,7 @@ Item {
     Variants {
         id: bars
 
-        model: Array.from({
-            length: GlobalConfig.services.visualiserBars
-        }, (_, i) => i)
+        model: CoverVisualiserHelpers.barIndices(GlobalConfig.services.visualiserBars)
 
         ShapePath {
             id: bar
@@ -45,17 +44,13 @@ Item {
 
             readonly final property real angle: modelData * 2 * Math.PI / GlobalConfig.services.visualiserBars
             readonly final property real dist: shapeEdgeDist + value * root.maxMagnitude
-            readonly final property real shapeEdgeDist: {
-                CUtils.dependency(cover.shape.rotation); // Update when shape rotation changes
-                const sDist = cover.shape.distanceAtAngle(modelData * 360 / GlobalConfig.services.visualiserBars + 90);
-                return sDist + root.spacing + strokeWidth / 2;
-            }
+            readonly final property real shapeEdgeDist: CoverVisualiserHelpers.edgeDistance(cover, modelData * 360 / GlobalConfig.services.visualiserBars + 90, CUtils, root.spacing, strokeWidth)
             readonly final property real cos: Math.cos(angle)
             readonly final property real sin: Math.sin(angle)
 
             asynchronous: true
-            capStyle: root.Tokens.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-            strokeWidth: 360 / GlobalConfig.services.visualiserBars - root.Tokens.spacing.small / 4
+            capStyle: Tokens.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
+            strokeWidth: 360 / GlobalConfig.services.visualiserBars - Tokens.spacing.small / 4
             strokeColor: Colours.palette.m3primary
 
             startX: root.centerX + shapeEdgeDist * cos
