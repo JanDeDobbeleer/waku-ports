@@ -8,6 +8,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.modules.launcher.services
+import "ContentHelpers.js" as ContentHelpers
 
 Item {
     id: root
@@ -61,95 +62,19 @@ Item {
 
         placeholderText: Tr.tr("Type \"%1\" for commands").arg(GlobalConfig.launcher.actionPrefix)
 
-        onAccepted: {
-            const currentItem = list.currentList?.currentItem;
-            if (currentItem) {
-                if (list.showWallpapers) {
-                    if (Colours.scheme === "dynamic" && currentItem.modelData.path !== WallpaperService.actualCurrent)
-                        WallpaperService.previewColourLock = true;
-                    WallpaperService.setWallpaper(currentItem.modelData.path);
-                    root.screenState.launcher = false;
-                } else if (text.startsWith(GlobalConfig.launcher.actionPrefix)) {
-                    if (text.startsWith(`${GlobalConfig.launcher.actionPrefix}calc `))
-                        currentItem.onClicked();
-                    else
-                        currentItem.modelData.onClicked(list.currentList);
-                } else {
-                    Apps.launch(currentItem.modelData);
-                    root.screenState.launcher = false;
-                }
-            }
-        }
+        onAccepted: ContentHelpers.accepted(list.currentList, list.showWallpapers, text, GlobalConfig.launcher.actionPrefix, Colours.scheme, WallpaperService.actualCurrent, WallpaperService, Apps, root.screenState)
 
-        Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
-        Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
+        Keys.onUpPressed: ContentHelpers.move(list.currentList, false)
+        Keys.onDownPressed: ContentHelpers.move(list.currentList, true)
 
         // Port: the wallpaper strip runs left to right, so the arrows step through it (Enter picks,
         // see onAccepted). Elsewhere they keep moving the text cursor.
-        Keys.onLeftPressed: event => {
-            if (list.showWallpapers)
-                list.currentList?.decrementCurrentIndex();
-            else
-                event.accepted = false;
-        }
-        Keys.onRightPressed: event => {
-            if (list.showWallpapers)
-                list.currentList?.incrementCurrentIndex();
-            else
-                event.accepted = false;
-        }
+        Keys.onLeftPressed: event => ContentHelpers.horizontal(list.currentList, list.showWallpapers, event, false)
+        Keys.onRightPressed: event => ContentHelpers.horizontal(list.currentList, list.showWallpapers, event, true)
 
         Keys.onEscapePressed: root.screenState.launcher = false
 
-        Keys.onPressed: event => {
-            if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier) && list.showWallpapers) {
-                const entry = list.currentList?.currentItem?.modelData;
-                if (entry) {
-                    if (Colours.scheme === "dynamic" && entry.path !== WallpaperService.actualCurrent)
-                        WallpaperService.previewColourLock = true;
-                    if (WallpaperService.setWallpaperAllDesktops(entry.path))
-                        root.screenState.launcher = false;
-                }
-                event.accepted = true;
-                return;
-            }
-
-            // Port: Shift+Enter starts the selected app as a new window, Ctrl+Shift+Enter elevated.
-            // Handled here and accepted, so the plain Enter path (onAccepted) never also runs.
-            if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier) && !list.showWallpapers && !text.startsWith(GlobalConfig.launcher.actionPrefix)) {
-                const entry = list.currentList?.currentItem?.modelData;
-                if (entry) {
-                    let started = true;
-                    if (event.modifiers & Qt.ControlModifier)
-                        started = Apps.launchAdmin(entry);
-                    else
-                        Apps.launchNew(entry);
-                    if (started)
-                        root.screenState.launcher = false;
-                }
-                event.accepted = true;
-                return;
-            }
-
-            if (!GlobalConfig.launcher.vimKeybinds)
-                return;
-
-            if (event.modifiers & Qt.ControlModifier) {
-                if (event.key === Qt.Key_J || event.key === Qt.Key_N) {
-                    list.currentList?.incrementCurrentIndex();
-                    event.accepted = true;
-                } else if (event.key === Qt.Key_K || event.key === Qt.Key_P) {
-                    list.currentList?.decrementCurrentIndex();
-                    event.accepted = true;
-                }
-            } else if (event.key === Qt.Key_Tab) {
-                list.currentList?.incrementCurrentIndex();
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
-                list.currentList?.decrementCurrentIndex();
-                event.accepted = true;
-            }
-        }
+        Keys.onPressed: event => ContentHelpers.keyPressed(event, list.currentList, list.showWallpapers, text, GlobalConfig.launcher.actionPrefix, GlobalConfig.launcher.vimKeybinds, Colours.scheme, WallpaperService.actualCurrent, WallpaperService, Apps, root.screenState, Qt.Key_Return, Qt.Key_Enter, Qt.ShiftModifier, Qt.ControlModifier, Qt.Key_J, Qt.Key_N, Qt.Key_K, Qt.Key_P, Qt.Key_Tab, Qt.Key_Backtab)
 
         Component.onCompleted: forceActiveFocus()
 
