@@ -103,8 +103,8 @@ Item {
   // decode and layer upload finishes.
   function allPreviewsSettled() {
     if (!opened || !imagesLoaded || layoutSettled || imageArray.length === 0 || imageCards.count === 0) return false
-    for (var i = 0; i < imageCards.count; i++) {
-      var item = imageCards.itemAt(i)
+    for (let i = 0; i < imageCards.count; i++) {
+      let item = imageCards.itemAt(i)
       if (!item || !item.previewSettled) return false
     }
     return true
@@ -168,7 +168,7 @@ Item {
     if (count === 0) return
 
     var index = selectedIndex
-    for (var i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       index = (index + direction + count) % count
       if (itemMatches(index)) {
         select(index)
@@ -181,7 +181,7 @@ Item {
     filterText = nextFilterText
 
     if (!itemMatches(selectedIndex)) {
-      var first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, filterText)
+      let first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, filterText)
       if (first >= 0) selectedIndex = first
     }
   }
@@ -313,8 +313,8 @@ Item {
     }
 
     if (imageRows) {
-      var rowsToLoad = imageRows
-      var rowsSerial = requestSerial
+      let rowsToLoad = imageRows
+      let rowsSerial = requestSerial
       imageArray = []
       selectedIndex = 0
       imagesLoaded = true
@@ -365,8 +365,8 @@ Item {
   }
 
   function enableNeighborsWhenReady() {
-    for (var i = 0; i < imageCards.count; i++) {
-      var item = imageCards.itemAt(i)
+    for (let i = 0; i < imageCards.count; i++) {
+      let item = imageCards.itemAt(i)
       if (item && item.selected && item.previewReady) neighborImagesEnabled = true
     }
   }
@@ -377,7 +377,7 @@ Item {
   function currentThemePreview() {
     var name = String(themeNameFile.text() || "").trim()
     var images = ImagePickerModel.loadRows(themeRows)
-    for (var i = 0; i < images.length; i++) {
+    for (let i = 0; i < images.length; i++) {
       if (nameForPath(images[i].filePath) === name) return images[i].filePath
     }
     return ""
@@ -428,7 +428,7 @@ Item {
     if (n === 0) return
     var start = Math.max(0, paths.indexOf(current))
     var order = [paths[start]]
-    for (var d = 1; order.length < n; d++) {
+    for (let d = 1; order.length < n; d++) {
       if (order.length < n) order.push(paths[(start + d) % n])
       if (order.length < n && 2 * d < n) order.push(paths[(start - d + n) % n])
     }
@@ -734,7 +734,7 @@ Item {
   // PORTDBG: state dump for `wakuc call shell call nomarchy.image-picker debugState x`
   function debugState() {
     var names = []
-    for (var i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(imageArray[i].filePath))
+    for (let i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(imageArray[i].filePath))
     return JSON.stringify({ opened: opened, themeMode: themeMode, wallpaperMode: wallpaperMode, count: imageArray.length,
       selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("
 ").length, wallDir: wallpaperDir() })
