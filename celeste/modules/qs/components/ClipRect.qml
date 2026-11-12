@@ -19,7 +19,7 @@ Item {
     }
 
     ShaderEffectSource {
-        id: source
+        id: sourceItem
 
         hideSource: true
         sourceItem: contentItem
@@ -27,7 +27,7 @@ Item {
 
     RoundedMask {
         anchors.fill: parent
-        source: source
+        source: sourceItem
         topLeftRadius: root.topLeftRadius
         topRightRadius: root.topRightRadius
         bottomRightRadius: root.bottomRightRadius

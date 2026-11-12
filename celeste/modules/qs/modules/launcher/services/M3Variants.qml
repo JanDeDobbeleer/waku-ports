@@ -1,8 +1,6 @@
 pragma Singleton
 
-import ".."
 import QtQuick
-import Quickshell
 import Celeste
 import Celeste.Config
 import Celeste.I18n

@@ -1,8 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
-import Celeste
 import Celeste.Config
 import Celeste.I18n
 import Celeste.State

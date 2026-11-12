@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQml
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Mpris
 import Celeste
 import Celeste.Config

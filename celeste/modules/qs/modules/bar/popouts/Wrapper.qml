@@ -14,11 +14,11 @@ Item {
     required property ShellScreen screen
     required property real offsetScale
 
-    readonly property alias content: content
+    readonly property alias content: contentItem
 
-    readonly property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? content.implicitWidth
-    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? content.implicitHeight
-    readonly property Item current: (content.item as Content)?.current ?? null
+    readonly property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? contentItem.implicitWidth
+    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? contentItem.implicitHeight
+    readonly property Item current: (contentItem.item as Content)?.current ?? null
     readonly property bool isDetached: detachedMode.length > 0
 
     property alias currentName: popoutState.currentName
@@ -63,8 +63,8 @@ Item {
     focus: hasCurrent
     Keys.onEscapePressed: {
         // Forward escape to password popout if active, otherwise close
-        if (currentName === "wirelesspassword" && content.item) {
-            const passwordPopout = (content.item as Content)?.children.find(c => c.name === "wirelesspassword");
+        if (currentName === "wirelesspassword" && contentItem.item) {
+            const passwordPopout = (contentItem.item as Content)?.children.find(c => c.name === "wirelesspassword");
             if (passwordPopout && passwordPopout.item) {
                 passwordPopout.item.closeDialog();
                 return;
@@ -110,7 +110,7 @@ Item {
     }
 
     Comp {
-        id: content
+        id: contentItem
 
         shouldBeActive: root.hasCurrent && !root.detachedMode
         anchors.fill: parent

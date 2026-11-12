@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Hyprland
 import Celeste
 import Celeste.Components
 import Celeste.Config
@@ -59,20 +58,20 @@ ClipRect {
 
         const allMonitors = !Config.bar.workspaces.perMonitor;
         const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        const workspaces = Hypr.workspaces.values.filter(w => w.id > 0 && (allMonitors || w.monitor === root.monitor) && (w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags))));
-        const currentIdx = workspaces.findIndex(w => w.id === activeWsId);
+        const workspacesItem = Hypr.workspaces.values.filter(w => w.id > 0 && (allMonitors || w.monitor === root.monitor) && (w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags))));
+        const currentIdx = workspacesItem.findIndex(w => w.id === activeWsId);
         if (currentIdx < 0)
             return [];
 
-        const end = CUtils.clamp(currentIdx + 1, Math.min(shown, workspaces.length), workspaces.length);
+        const end = CUtils.clamp(currentIdx + 1, Math.min(shown, workspacesItem.length), workspacesItem.length);
         const start = Math.max(0, end - shown);
 
-        return workspaces.slice(start, end).map(w => w.id);
+        return workspacesItem.slice(start, end).map(w => w.id);
     }
 
     readonly property var workspaces: {
-        CUtils.dependency(workspaces.itemsDirty);
-        return wsIds.map(id => workspaces.itemAtIndex(workspaceIndex(id)));
+        CUtils.dependency(workspacesItem.itemsDirty);
+        return wsIds.map(id => workspacesItem.itemAtIndex(workspaceIndex(id)));
     }
 
     // Only relevant for when showUnoccupied is true
@@ -87,12 +86,12 @@ ClipRect {
     // Port: no `as Workspace` cast. On waku a cast to a type of the same module came back null
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
-        return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
+        return clickWorkspace(workspacesItem.itemAt(x, y)?.ws ?? 0);
     }
 
     // Right click on a dot closes that desktop (Windows virtual desktops only).
     function removeWorkspaceAt(x: real, y: real): string {
-        const ws = workspaces.itemAt(x, y)?.ws ?? 0;
+        const ws = workspacesItem.itemAt(x, y)?.ws ?? 0;
         if (!ws)
             return "none";
         Hypr.removeWorkspace(ws);
@@ -127,7 +126,7 @@ ClipRect {
     }
 
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: workspaces.layoutHeight + workspaces.anchors.margins * 2
+    implicitHeight: workspacesItem.layoutHeight + workspacesItem.anchors.margins * 2
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
@@ -155,7 +154,7 @@ ClipRect {
 
             sourceComponent: OccupiedBg {
                 workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
+                wsSpacing: workspacesItem.spacing
             }
 
             Behavior on opacity {
@@ -166,7 +165,7 @@ ClipRect {
         }
 
         LazyListView {
-            id: workspaces
+            id: workspacesItem
 
             anchors.left: parent.left
             anchors.right: parent.right
@@ -205,7 +204,7 @@ ClipRect {
 
             sourceComponent: GapMarkers {
                 workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
+                wsSpacing: workspacesItem.spacing
             }
 
             Behavior on opacity {
@@ -217,21 +216,21 @@ ClipRect {
 
         Loader {
             asynchronous: true
-            anchors.left: workspaces.left
-            anchors.right: workspaces.right
+            anchors.left: workspacesItem.left
+            anchors.right: workspacesItem.right
             active: Config.bar.workspaces.activeIndicator
 
             sourceComponent: ActiveIndicator {
                 activeWs: {
-                    CUtils.dependency(workspaces.itemsDirty);
-                    return workspaces.itemAtIndex(root.activeWsIdx) as Workspace;
+                    CUtils.dependency(workspacesItem.itemsDirty);
+                    return workspacesItem.itemAtIndex(root.activeWsIdx) as Workspace;
                 }
-                mask: workspaces
+                mask: workspacesItem
             }
         }
 
         MouseArea {
-            anchors.fill: workspaces
+            anchors.fill: workspacesItem
             acceptedButtons: Hypr.canRemoveWorkspace ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton
             onClicked: event => {
                 if (event.button === Qt.RightButton)

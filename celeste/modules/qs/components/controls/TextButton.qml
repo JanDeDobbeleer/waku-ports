@@ -6,8 +6,8 @@ import qs.services
 ButtonBase {
     id: root
 
-    property alias text: label.text
-    readonly property alias label: label
+    property alias text: labelItem.text
+    readonly property alias label: labelItem
 
     horizontalPadding: Tokens.padding.medium
     verticalPadding: Tokens.padding.small
@@ -31,11 +31,11 @@ ButtonBase {
         return type === TextButton.Filled ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer;
     }
 
-    implicitWidth: label.implicitWidth + horizontalPadding * 2
-    implicitHeight: label.implicitHeight + verticalPadding * 2
+    implicitWidth: labelItem.implicitWidth + horizontalPadding * 2
+    implicitHeight: labelItem.implicitHeight + verticalPadding * 2
 
     StyledText {
-        id: label
+        id: labelItem
 
         anchors.centerIn: parent
         color: root.onColour

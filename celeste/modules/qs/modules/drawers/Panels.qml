@@ -32,7 +32,7 @@ Item {
     readonly property alias popoutsWrapper: popoutsWrapper
     readonly property alias utilities: utilities
     readonly property alias toasts: toasts
-    readonly property alias sidebar: sidebar
+    readonly property alias sidebar: sidebarItem
 
     anchors.fill: parent
     anchors.margins: borderThickness
@@ -44,7 +44,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: sessionWrapper.anchors.rightMargin + session.width * (1 - session.offsetScale)
-        clip: sidebar.visible || session.visible
+        clip: sidebarItem.visible || session.visible
 
         implicitWidth: osd.implicitWidth * (1 - osd.offsetScale)
         implicitHeight: osd.implicitHeight
@@ -54,7 +54,7 @@ Item {
 
             screen: root.screen
             screenState: root.screenState
-            sidebarOrSessionVisible: sidebar.visible || session.visible
+            sidebarOrSessionVisible: sidebarItem.visible || session.visible
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -65,7 +65,7 @@ Item {
         id: notifications
 
         screenState: root.screenState
-        sidebarPanel: sidebar
+        sidebarPanel: sidebarItem
         osdPanel: osdWrapper
         sessionPanel: sessionWrapper
         utilitiesPanel: utilities
@@ -79,8 +79,8 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
-        anchors.rightMargin: sidebar.width * (1 - sidebar.offsetScale)
-        clip: sidebar.visible
+        anchors.rightMargin: sidebarItem.width * (1 - sidebarItem.offsetScale)
+        clip: sidebarItem.visible
 
         implicitWidth: session.implicitWidth * (1 - session.offsetScale)
         implicitHeight: session.implicitHeight
@@ -89,7 +89,7 @@ Item {
             id: session
 
             screenState: root.screenState
-            sidebarVisible: sidebar.visible
+            sidebarVisible: sidebarItem.visible
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -127,7 +127,7 @@ Item {
         id: utilities
 
         screenState: root.screenState
-        sidebar: sidebar
+        sidebar: sidebarItem
         popouts: popoutsWrapper.content
 
         anchors.bottom: parent.bottom
@@ -137,13 +137,13 @@ Item {
     Toasts.Toasts {
         id: toasts
 
-        anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
-        anchors.right: sidebar.left
+        anchors.bottom: sidebarItem.visible ? parent.bottom : utilities.top
+        anchors.right: sidebarItem.left
         anchors.margins: Tokens.padding.medium
     }
 
     Sidebar.Wrapper {
-        id: sidebar
+        id: sidebarItem
 
         screenState: root.screenState
 

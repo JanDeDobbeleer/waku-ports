@@ -90,11 +90,11 @@ ColumnLayout {
 
             width: list.width
             height: Math.max(36, rowText.implicitHeight + Tokens.padding.small)
-            ToolTip.visible: isDisabled && layer.containsMouse
+            ToolTip.visible: isDisabled && layerItem.containsMouse
             ToolTip.text: Tr.tr("XKB limitation: maximum 4 layouts allowed")
 
             StateLayer {
-                id: layer
+                id: layerItem
 
                 onClicked: {
                     if (!kbDelegate.isDisabled)
@@ -112,9 +112,9 @@ ColumnLayout {
             StyledText {
                 id: rowText
 
-                anchors.verticalCenter: layer.verticalCenter
-                anchors.left: layer.left
-                anchors.right: layer.right
+                anchors.verticalCenter: layerItem.verticalCenter
+                anchors.left: layerItem.left
+                anchors.right: layerItem.right
                 anchors.leftMargin: Tokens.padding.extraSmall
                 anchors.rightMargin: Tokens.padding.extraSmall
                 text: kbDelegate.label

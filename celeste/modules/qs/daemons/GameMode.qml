@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Celeste
 import Celeste.Config
 import Celeste.I18n

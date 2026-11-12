@@ -1,9 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Quickshell.Services.Notifications
-import Celeste
 import Celeste.Config
 import Celeste.I18n
 import qs.services

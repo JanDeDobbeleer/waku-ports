@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 import Quickshell.Io
-import Celeste.Config
 
 // Port of upstream CUtils (plugin/src/Celeste/cutils.cpp) as a QML singleton.
 // Differences: copyFile and deleteFile run cmd.exe and return true without waiting for the

@@ -7,7 +7,6 @@ import Celeste.State
 import Quickshell.Services.UPower
 import waku.services as S
 import qs.services
-import qs.utils
 
 // Idle timeouts over DesktopState.idleSeconds (upstream uses Wayland's IdleMonitor). `lock` is the
 // lock screen, which is not ported yet: while it is null, "lock" actions are ignored. Other string

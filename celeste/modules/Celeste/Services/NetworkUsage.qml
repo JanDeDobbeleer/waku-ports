@@ -1,11 +1,9 @@
 pragma Singleton
 
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import Celeste
 import Celeste.Config
-import waku.services as S
 
 // Port of celeste's NetworkUsage. waku's Network source has no throughput, so this polls
 // `netstat -e` (interface byte counters, summed over all interfaces) while referenced. Speeds are

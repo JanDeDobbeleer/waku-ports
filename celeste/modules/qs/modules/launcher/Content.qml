@@ -20,7 +20,7 @@ Item {
     readonly property int rounding: Tokens.rounding.extraLarge
 
     implicitWidth: listWrapper.width + padding * 2
-    implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin
+    implicitHeight: searchItem.height + listWrapper.height + padding + searchItem.anchors.bottomMargin
 
     Item {
         id: listWrapper
@@ -29,7 +29,7 @@ Item {
         implicitHeight: list.height + root.padding
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: search.top
+        anchors.bottom: searchItem.top
         anchors.bottomMargin: root.padding
 
         ContentList {
@@ -38,15 +38,15 @@ Item {
             content: root
             screenState: root.screenState
             panels: root.panels
-            maxHeight: root.maxHeight - search.implicitHeight - root.padding * 3
-            search: search
+            maxHeight: root.maxHeight - searchItem.implicitHeight - root.padding * 3
+            search: searchItem
             padding: root.padding
             rounding: root.rounding
         }
     }
 
     SearchBar {
-        id: search
+        id: searchItem
 
         objectName: "launcherSearch"
 
@@ -156,12 +156,12 @@ Item {
         Connections {
             function onLauncherChanged(): void {
                 if (!root.screenState.launcher)
-                    search.text = "";
+                    searchItem.text = "";
             }
 
             function onSessionChanged(): void {
                 if (!root.screenState.session)
-                    search.forceActiveFocus();
+                    searchItem.forceActiveFocus();
             }
 
             target: root.screenState

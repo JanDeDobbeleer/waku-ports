@@ -1,6 +1,5 @@
 pragma Singleton
 
-import ".."
 import QtQuick
 import Quickshell
 import Celeste

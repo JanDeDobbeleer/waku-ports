@@ -4,7 +4,6 @@ import Celeste.Config
 import Celeste.Multimedia
 import Celeste.Shaders
 import Celeste.State
-import qs.services
 
 Item {
     id: root
@@ -30,14 +29,14 @@ Item {
             currentCapture = currentCapture === capture1 ? capture2 : capture1;
             currentCapture.sourceItem = transition;
         } else {
-            currentCapture.sourceItem = live;
+            currentCapture.sourceItem = liveItem;
         }
 
         currentCapture.visible = true;
         currentCapture.scheduleUpdate();
     }
 
-    Component.onCompleted: live.source = source
+    Component.onCompleted: liveItem.source = source
 
     NumberAnimation on transitionProgress {
         id: transitionAnim
@@ -59,8 +58,8 @@ Item {
             visible = false;
             transition.from = this;
             root.transitionProgress = 0;
-            live.source = root.source;
-            if (live.ready)
+            liveItem.source = root.source;
+            if (liveItem.ready)
                 transitionAnim.start();
         }
     }
@@ -76,14 +75,14 @@ Item {
             visible = false;
             transition.from = this;
             root.transitionProgress = 0;
-            live.source = root.source;
-            if (live.ready)
+            liveItem.source = root.source;
+            if (liveItem.ready)
                 transitionAnim.start();
         }
     }
 
     Visual {
-        id: live
+        id: liveItem
 
         anchors.fill: parent
         playing: PersistentState.wallpaperPlaying
@@ -100,7 +99,7 @@ Item {
         id: transition
 
         property Item from
-        property Item to: live
+        property Item to: liveItem
         property real progress: root.transitionProgress
 
         anchors.fill: parent

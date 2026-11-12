@@ -10,7 +10,6 @@ import qs.components
 import qs.components.controls
 import qs.components.widgets
 import qs.services
-import qs.utils
 
 Item {
     id: root

@@ -8,22 +8,22 @@ import QtQuick
 QtObject {
     readonly property bool enabled: GlobalConfig.enabled
 
-    readonly property var appearance: GlobalConfig.appearance
-    readonly property var general: GlobalConfig.general
-    readonly property var background: GlobalConfig.background
-    readonly property var bar: GlobalConfig.bar
-    readonly property var border: GlobalConfig.border
-    readonly property var dashboard: GlobalConfig.dashboard
-    readonly property var launcher: GlobalConfig.launcher
-    readonly property var lock: GlobalConfig.lock
-    readonly property var nexus: GlobalConfig.nexus
-    readonly property var notifs: GlobalConfig.notifs
-    readonly property var osd: GlobalConfig.osd
-    readonly property var services: GlobalConfig.services
-    readonly property var session: GlobalConfig.session
-    readonly property var sidebar: GlobalConfig.sidebar
-    readonly property var utilities: GlobalConfig.utilities
-    readonly property var paths: GlobalConfig.paths
+    readonly property GlobalConfig.AppearanceCfg appearance: GlobalConfig.appearance
+    readonly property GlobalConfig.GeneralCfg general: GlobalConfig.general
+    readonly property GlobalConfig.BackgroundCfg background: GlobalConfig.background
+    readonly property GlobalConfig.BarCfg bar: GlobalConfig.bar
+    readonly property GlobalConfig.BorderCfg border: GlobalConfig.border
+    readonly property GlobalConfig.DashboardCfg dashboard: GlobalConfig.dashboard
+    readonly property GlobalConfig.LauncherCfg launcher: GlobalConfig.launcher
+    readonly property GlobalConfig.LockCfg lock: GlobalConfig.lock
+    readonly property GlobalConfig.NexusCfg nexus: GlobalConfig.nexus
+    readonly property GlobalConfig.NotifsCfg notifs: GlobalConfig.notifs
+    readonly property GlobalConfig.OsdCfg osd: GlobalConfig.osd
+    readonly property GlobalConfig.ServicesCfg services: GlobalConfig.services
+    readonly property GlobalConfig.SessionCfg session: GlobalConfig.session
+    readonly property GlobalConfig.SidebarCfg sidebar: GlobalConfig.sidebar
+    readonly property GlobalConfig.UtilitiesCfg utilities: GlobalConfig.utilities
+    readonly property GlobalConfig.PathsCfg paths: GlobalConfig.paths
 
     function forScreen(screen: string): var {
         return GlobalConfig;

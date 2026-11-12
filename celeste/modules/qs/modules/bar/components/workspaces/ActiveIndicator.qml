@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.components.effects

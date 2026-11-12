@@ -5,7 +5,6 @@ import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Shapes
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import Celeste.Blobs
 import Celeste.Config
@@ -17,7 +16,7 @@ import qs.modules.bar
 StyledWindow {
     id: root
 
-    readonly property alias bar: bar
+    readonly property alias bar: barItem
     readonly property alias interactionWrapper: interactions
 
     readonly property ScreenState screenState: ShellState.forScreen(screen)
@@ -50,7 +49,7 @@ StyledWindow {
         // elsewhere dismisses it.
         if ((!conf.dashboard.showOnHover || interactions.dashboardShortcutActive) && s.dashboard && conf.dashboard.enabled)
             return true;
-        if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current?.depth ?? 0) > 1)
+        if (panelsItem.popouts.currentName.startsWith("traymenu") && (panelsItem.popouts.current?.depth ?? 0) > 1)
             return true;
         return false;
     }
@@ -69,14 +68,14 @@ StyledWindow {
     // as much GPU memory as everything else the idle shell holds. The layer exists only while some
     // panel is on screen; the shadow fades out over `shadowFade` before the layer goes, so closing
     // the last panel does not make the shadow pop off.
-    readonly property bool anyPanelVisible: panels.dashboard.visible || panels.launcher.visible || panels.session.visible || panels.sidebar.visible || panels.osd.visible || panels.utilities.visible || panels.notifications.visible || panels.popoutsWrapper.visible
+    readonly property bool anyPanelVisible: panelsItem.dashboard.visible || panelsItem.launcher.visible || panelsItem.session.visible || panelsItem.sidebar.visible || panelsItem.osd.visible || panelsItem.utilities.visible || panelsItem.notifications.visible || panelsItem.popoutsWrapper.visible
     property real shadowFade: anyPanelVisible ? 1 : 0
     readonly property real borderLayoutThickness: hasFullscreen ? 0 : Config.border.thickness
 
     property color surfaceColour: Colours.tPalette.m3surface
 
     readonly property int dragMaskPadding: {
-        if (lightDismissOpen || panels.popouts.isDetached)
+        if (lightDismissOpen || panelsItem.popouts.isDetached)
             return 0;
 
         if (monitor?.lastIpcObject.specialWorkspace?.name || monitor?.activeWorkspace?.toplevels.values.length > 0)
@@ -93,7 +92,7 @@ StyledWindow {
         screenState.launcher = false;
         screenState.session = false;
         screenState.dashboard = false;
-        panels.popouts.close();
+        panelsItem.popouts.close();
     }
 
     name: "drawers"
@@ -127,27 +126,27 @@ StyledWindow {
     Region {
         id: emptyRegion
 
-        x: panels.notifications.x + bar.implicitWidth
-        y: panels.notifications.y + root.borderThickness
-        width: panels.notifications.width
-        height: panels.notifications.height
+        x: panelsItem.notifications.x + barItem.implicitWidth
+        y: panelsItem.notifications.y + root.borderThickness
+        width: panelsItem.notifications.width
+        height: panelsItem.notifications.height
 
         Region {
             // Port: x reads w_, not width (waku's Region has one change signal for its geometry).
-            readonly property real w_: panels.osdWrapper.width * (1 - panels.osd.offsetScale) + root.borderThickness
+            readonly property real w_: panelsItem.osdWrapper.width * (1 - panelsItem.osd.offsetScale) + root.borderThickness
 
             x: root.width - w_
-            y: panels.osdWrapper.y + root.borderThickness
+            y: panelsItem.osdWrapper.y + root.borderThickness
             width: w_
-            height: panels.osd.height
+            height: panelsItem.osd.height
         }
     }
 
     Regions {
         id: regions
 
-        bar: bar
-        panels: panels
+        bar: barItem
+        panels: panelsItem
         win: root
     }
 
@@ -165,8 +164,8 @@ StyledWindow {
         screenState.session = false;
         screenState.sidebar = false;
         screenState.dashboard = false;
-        panels.popouts.hasCurrent = false;
-        bar.closeTray();
+        panelsItem.popouts.hasCurrent = false;
+        barItem.closeTray();
     }
 
     // The engine takes the foreground when keyboardFocus turns on, so a launcher opened by a
@@ -203,7 +202,7 @@ StyledWindow {
 
     StyledRect {
         anchors.fill: parent
-        opacity: (root.screenState.session && Config.session.enabled) || panels.popouts.detachedMode !== "" ? 0.5 : 0
+        opacity: (root.screenState.session && Config.session.enabled) || panelsItem.popouts.detachedMode !== "" ? 0.5 : 0
         color: Colours.palette.m3scrim
 
         Behavior on opacity {
@@ -235,7 +234,7 @@ StyledWindow {
             anchors.margins: -50 // Make border thicker to smooth out bulge from closed drawers
             group: blobGroup
             radius: root.borderRounding
-            borderLeft: bar.implicitWidth - anchors.margins - root.sdfBorderOffset
+            borderLeft: barItem.implicitWidth - anchors.margins - root.sdfBorderOffset
             borderRight: root.borderThickness - anchors.margins - root.sdfBorderOffset
             borderTop: root.borderThickness - anchors.margins - root.sdfBorderOffset
             borderBottom: root.borderThickness - anchors.margins - root.sdfBorderOffset
@@ -245,8 +244,8 @@ StyledWindow {
             id: dashBg
 
             attachTop: true
-            panel: panels.dashboard
-            gapTop: panels.dashboard.anchors.topMargin
+            panel: panelsItem.dashboard
+            gapTop: panelsItem.dashboard.anchors.topMargin
             deformAmount: 0.1
         }
 
@@ -254,8 +253,8 @@ StyledWindow {
             id: launcherBg
 
             attachBottom: true
-            panel: panels.launcher
-            gapBottom: panels.launcher.anchors.bottomMargin
+            panel: panelsItem.launcher
+            gapBottom: panelsItem.launcher.anchors.bottomMargin
             deformAmount: 0.1
         }
 
@@ -263,34 +262,34 @@ StyledWindow {
             id: sessionBg
 
             attachRight: true
-            panel: panels.sessionWrapper
-            gapRight: panels.session.anchors.rightMargin
+            panel: panelsItem.sessionWrapper
+            gapRight: panelsItem.session.anchors.rightMargin
             deformAmount: 0.2
-            x: panels.sessionWrapper.x + panels.session.x + bar.implicitWidth
-            implicitWidth: panels.session.width
+            x: panelsItem.sessionWrapper.x + panelsItem.session.x + barItem.implicitWidth
+            implicitWidth: panelsItem.session.width
         }
 
         PanelBg {
             id: sidebarBg
 
             attachRight: true
-            panel: panels.sidebar
-            gapRight: panels.sidebar.anchors.rightMargin
+            panel: panelsItem.sidebar
+            gapRight: panelsItem.sidebar.anchors.rightMargin
             deformAmount: 0.03
             implicitHeight: panel.height * (1 / rawDeformMatrix.m22) + 2
-            exclude: panels.sidebar.offsetScale > 0.08 ? [] : [utilsBg]
-            bottomLeftRadius: Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius
+            exclude: panelsItem.sidebar.offsetScale > 0.08 ? [] : [utilsBg]
+            bottomLeftRadius: Math.max(0, Math.min(1, panelsItem.sidebar.offsetScale / 0.3)) * radius
         }
 
         PanelBg {
             id: osdBg
 
             attachRight: true
-            panel: panels.osdWrapper
-            gapRight: panels.osd.anchors.rightMargin
+            panel: panelsItem.osdWrapper
+            gapRight: panelsItem.osd.anchors.rightMargin
             deformAmount: 0.25
-            x: panels.osdWrapper.x + panels.osd.x + bar.implicitWidth
-            implicitWidth: panels.osd.width
+            x: panelsItem.osdWrapper.x + panelsItem.osd.x + barItem.implicitWidth
+            implicitWidth: panelsItem.osd.width
         }
 
         PanelBg {
@@ -298,7 +297,7 @@ StyledWindow {
 
             attachTop: true
             attachRight: true
-            panel: panels.notifications
+            panel: panelsItem.notifications
         }
 
         PanelBg {
@@ -306,24 +305,24 @@ StyledWindow {
 
             attachBottom: true
             attachRight: true
-            panel: panels.utilities
-            gapBottom: panels.utilities.anchors.bottomMargin
-            deformAmount: panels.sidebar.visible ? 0.1 : 0.15
-            exclude: panels.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
-            topLeftRadius: Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius
+            panel: panelsItem.utilities
+            gapBottom: panelsItem.utilities.anchors.bottomMargin
+            deformAmount: panelsItem.sidebar.visible ? 0.1 : 0.15
+            exclude: panelsItem.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
+            topLeftRadius: Math.max(0, Math.min(1, panelsItem.sidebar.offsetScale / 0.3)) * radius
         }
 
         PanelBg {
             id: popoutBg
 
-            attachLeft: !panels.popouts.isDetached
+            attachLeft: !panelsItem.popouts.isDetached
             // Extra width to prevent vertical movement deformation partially detaching panel from bar
-            property real extraWidth: panels.popouts.isDetached ? 0 : 0.2
+            property real extraWidth: panelsItem.popouts.isDetached ? 0 : 0.2
 
-            panel: panels.popoutsWrapper
-            deformAmount: panels.popouts.isDetached ? 0.05 : panels.popouts.hasCurrent ? 0.15 : 0.1
-            x: panels.popoutsWrapper.x + panels.popouts.x + bar.implicitWidth - panels.popouts.width * extraWidth
-            implicitWidth: panels.popouts.width * (1 + extraWidth)
+            panel: panelsItem.popoutsWrapper
+            deformAmount: panelsItem.popouts.isDetached ? 0.05 : panelsItem.popouts.hasCurrent ? 0.15 : 0.1
+            x: panelsItem.popoutsWrapper.x + panelsItem.popouts.x + barItem.implicitWidth - panelsItem.popouts.width * extraWidth
+            implicitWidth: panelsItem.popouts.width * (1 + extraWidth)
 
             Behavior on extraWidth {
                 Anim {}
@@ -335,21 +334,21 @@ StyledWindow {
         id: interactions
 
         screen: root.screen
-        popouts: panels.popouts
+        popouts: panelsItem.popouts
         screenState: root.screenState
-        panels: panels
-        bar: bar
+        panels: panelsItem
+        bar: barItem
         borderThickness: root.borderLayoutThickness
         fullscreen: root.hasFullscreen
         lightDismiss: root.lightDismissOpen
         onDismissRequested: root.dismiss()
 
         Panels {
-            id: panels
+            id: panelsItem
 
             screen: root.screen
             screenState: root.screenState
-            bar: bar
+            bar: barItem
             borderThickness: root.borderThickness
 
             utilities.horizontalStretch: (sidebarBg.rawDeformMatrix.m11 - 1) / 2 + 1
@@ -382,14 +381,14 @@ StyledWindow {
         }
 
         BarWrapper {
-            id: bar
+            id: barItem
 
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
             screen: root.screen
             screenState: root.screenState
-            popouts: panels.popouts
+            popouts: panelsItem.popouts
 
             fullscreen: root.hasFullscreen
         }
@@ -410,13 +409,13 @@ StyledWindow {
     ShellState.ComponentRef {
         screen: root.screen
         slot: "bar"
-        component: bar
+        component: barItem
     }
 
     ShellState.ComponentRef {
         screen: root.screen
         slot: "panels"
-        component: panels
+        component: panelsItem
     }
 
     component PanelBg: BlobRect {
@@ -446,7 +445,7 @@ StyledWindow {
         // Fillets lie in free space beside the panel, outside the open-panel mask regions.
         readonly property real filletMax: root.Config.border.smoothing * (1 - root.fsTransitionProg)
         // Inner edges of the frame in this item's coordinates.
-        readonly property real frameL: bar.implicitWidth - x
+        readonly property real frameL: barItem.implicitWidth - x
         readonly property real frameR: root.width - root.borderThickness - x
         readonly property real frameT: root.borderThickness - y
         readonly property real frameB: root.height - root.borderThickness - y
@@ -504,7 +503,7 @@ StyledWindow {
         // Port: a closed panel sits just off its edge and, with the blob smoothing, still bulges the
         // frame into a small rounded corner there (the utilities panel at the bottom right).
         visible: panel.visible
-        x: panel.x + bar.implicitWidth
+        x: panel.x + barItem.implicitWidth
         y: panel.y + root.borderThickness
         implicitWidth: panel.width
         implicitHeight: panel.height

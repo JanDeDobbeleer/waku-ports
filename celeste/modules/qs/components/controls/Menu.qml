@@ -8,7 +8,6 @@ import Celeste.Config
 import qs.components
 import qs.components.effects
 import qs.services
-import qs.modules.drawers
 
 MouseArea {
     id: root
@@ -127,7 +126,7 @@ MouseArea {
                     model: root.items
 
                     StyledRect {
-                        id: item
+                        id: menuItem
 
                         required property int index
                         required property MenuItem modelData
@@ -155,12 +154,12 @@ MouseArea {
                             bottomLeftRadius: parent.bottomLeftRadius
                             bottomRightRadius: parent.bottomRightRadius
 
-                            color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                            color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
                             disabled: !root.expanded
                             onClicked: {
-                                root.itemSelected(item.modelData);
-                                root.active = item.modelData;
-                                item.modelData.clicked();
+                                root.itemSelected(menuItem.modelData);
+                                root.active = menuItem.modelData;
+                                menuItem.modelData.clicked();
                                 root.expanded = false;
                             }
                         }
@@ -174,26 +173,26 @@ MouseArea {
 
                             MaterialIcon {
                                 Layout.alignment: Qt.AlignVCenter
-                                text: item.modelData?.icon ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                text: menuItem.modelData?.icon ?? ""
+                                color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
                             }
 
                             StyledText {
                                 Layout.alignment: Qt.AlignVCenter
                                 Layout.fillWidth: true
-                                text: item.modelData?.text ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                                text: menuItem.modelData?.text ?? ""
+                                color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
                             }
 
                             Loader {
                                 asynchronous: true
                                 Layout.alignment: Qt.AlignVCenter
-                                active: item.modelData?.trailingIcon.length > 0
+                                active: menuItem.modelData?.trailingIcon.length > 0
                                 visible: active
 
                                 sourceComponent: MaterialIcon {
-                                    text: item.modelData.trailingIcon
-                                    color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                    text: menuItem.modelData.trailingIcon
+                                    color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
                                 }
                             }
                         }

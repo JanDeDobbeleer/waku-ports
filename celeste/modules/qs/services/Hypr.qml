@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Celeste.Config
 import Celeste.I18n
 import waku.services as S

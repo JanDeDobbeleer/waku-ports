@@ -7,11 +7,11 @@ TextFieldBase {
     id: root
 
     readonly property alias bg: bg
-    readonly property alias searchIcon: searchIcon
-    readonly property alias clearIcon: clearIcon
+    readonly property alias searchIcon: searchIconItem
+    readonly property alias clearIcon: clearIconItem
 
-    leftPadding: searchIcon.width + searchIcon.anchors.leftMargin + Tokens.spacing.medium
-    rightPadding: clearIcon.width + clearIcon.anchors.rightMargin + Tokens.spacing.medium
+    leftPadding: searchIconItem.width + searchIconItem.anchors.leftMargin + Tokens.spacing.medium
+    rightPadding: clearIconItem.width + clearIconItem.anchors.rightMargin + Tokens.spacing.medium
     topPadding: Tokens.padding.large
     bottomPadding: Tokens.padding.large
 
@@ -58,7 +58,7 @@ TextFieldBase {
     }
 
     MaterialIcon {
-        id: searchIcon
+        id: searchIconItem
 
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -70,7 +70,7 @@ TextFieldBase {
     }
 
     IconButton {
-        id: clearIcon
+        id: clearIconItem
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter

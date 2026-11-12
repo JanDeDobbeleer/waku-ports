@@ -31,7 +31,7 @@ Slider {
     }
 
     handle: Item {
-        id: handle
+        id: handleItem
 
         property alias moving: icon.moving
 
@@ -96,7 +96,7 @@ Slider {
         }
     }
 
-    onPressedChanged: handle.moving = pressed
+    onPressedChanged: handleItem.moving = pressed
 
     onValueChanged: {
         if (!initialized) {
@@ -106,7 +106,7 @@ Slider {
         if (Math.abs(value - oldValue) < 0.01)
             return;
         oldValue = value;
-        handle.moving = true;
+        handleItem.moving = true;
         stateChangeDelay.restart();
     }
 
@@ -116,7 +116,7 @@ Slider {
         interval: 500
         onTriggered: {
             if (!root.pressed)
-                handle.moving = false;
+                handleItem.moving = false;
         }
     }
 

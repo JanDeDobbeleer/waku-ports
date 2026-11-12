@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import "./kblayout"
 import QtQuick
-import Quickshell
 import Celeste.Config
 import qs.components
 import qs.services

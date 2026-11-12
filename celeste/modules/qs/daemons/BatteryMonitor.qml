@@ -5,8 +5,6 @@ import Celeste
 import Celeste.Config
 import Celeste.I18n
 import Celeste.Services
-import waku.services as S
-import qs.utils
 
 Scope {
     id: root

@@ -3,9 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Celeste.Config
 import Celeste.I18n
-import qs.utils
 import qs.compat
 
 // System facts for the dashboard. Windows has no /proc or /etc/os-release, so the values come from

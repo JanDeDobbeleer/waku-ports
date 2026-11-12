@@ -76,13 +76,13 @@ GridLayout {
     Rect {
         Layout.row: 1
         Layout.column: 4
-        Layout.preferredWidth: resources.implicitWidth
+        Layout.preferredWidth: resourcesItem.implicitWidth
         Layout.fillHeight: true
 
         radius: Tokens.rounding.large
 
         Resources {
-            id: resources
+            id: resourcesItem
         }
     }
 

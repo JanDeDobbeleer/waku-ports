@@ -239,8 +239,8 @@ Column {
         required property string icon
         required property int profile
 
-        implicitWidth: icon.implicitHeight + Tokens.padding.small
-        implicitHeight: icon.implicitHeight + Tokens.padding.small
+        implicitWidth: iconItem.implicitHeight + Tokens.padding.small
+        implicitHeight: iconItem.implicitHeight + Tokens.padding.small
 
         StateLayer {
             radius: Tokens.rounding.full
@@ -249,7 +249,7 @@ Column {
         }
 
         MaterialIcon {
-            id: icon
+            id: iconItem
 
             anchors.centerIn: parent
 

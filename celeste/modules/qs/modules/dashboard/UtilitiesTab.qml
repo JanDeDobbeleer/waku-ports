@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Celeste.Config
-import Celeste.I18n
 import qs.components
 import qs.services
 

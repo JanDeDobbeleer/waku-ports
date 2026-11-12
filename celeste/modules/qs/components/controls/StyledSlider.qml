@@ -27,7 +27,7 @@ Slider {
 
     signal interaction(v: real)
 
-    Component.onCompleted: filledWidth = Qt.binding(() => (width - handle.implicitWidth - handle.anchors.leftMargin) * pos)
+    Component.onCompleted: filledWidth = Qt.binding(() => (width - handleItem.implicitWidth - handleItem.anchors.leftMargin) * pos)
 
     implicitWidth: Tokens.px(200)
     implicitHeight: Tokens.px(12)
@@ -38,7 +38,7 @@ Slider {
         StyledRect {
             id: remaining
 
-            anchors.left: handle.right
+            anchors.left: handleItem.right
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
@@ -66,7 +66,7 @@ Slider {
         }
 
         StyledRect {
-            id: handle
+            id: handleItem
 
             anchors.left: filled.right
             anchors.verticalCenter: parent.verticalCenter
@@ -120,7 +120,7 @@ Slider {
                 lineWidth: root.height * 0.7
                 frequency: root.waveFrequency
                 startX: x
-                fullLength: root.width - handle.implicitWidth - handle.anchors.leftMargin
+                fullLength: root.width - handleItem.implicitWidth - handleItem.anchors.leftMargin
                 color: root.fgColour
 
                 implicitWidth: root.filledWidth
@@ -164,7 +164,7 @@ Slider {
         anchors.verticalCenter: parent.verticalCenter
 
         preventStealing: true
-        implicitHeight: handle.implicitHeight
+        implicitHeight: handleItem.implicitHeight
 
         onPressed: e => {
             widthBehavior.enabled = false;

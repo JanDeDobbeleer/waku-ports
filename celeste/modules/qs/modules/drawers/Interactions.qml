@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls.Basic
 import Quickshell
 import Celeste.Config
 import qs.components

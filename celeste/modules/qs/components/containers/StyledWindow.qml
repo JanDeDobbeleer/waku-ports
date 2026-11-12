@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Wayland
-import Celeste.Config
 
 // qmllint disable uncreatable-type
 PanelWindow {

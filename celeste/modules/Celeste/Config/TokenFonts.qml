@@ -1,5 +1,4 @@
 import QtQuick
-import "FontBuilder.js" as FB
 import "ScaleSizes.js" as SS
 
 // Tokens.font: the font styles, and the clock and workspaces fonts.

@@ -1,6 +1,5 @@
 import QtQuick
 import Celeste.Config
-import Celeste.Models
 import Celeste.Multimedia
 import Celeste.State
 import qs.components

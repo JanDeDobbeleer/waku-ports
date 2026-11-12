@@ -1,7 +1,6 @@
 pragma Singleton
 
 import QtQuick
-import Celeste.Config
 
 // Stub for celeste's C++ Lyrics service (local .lrc files, lrclib and NetEase lookups).
 // waku gap: no lookup runs. `lyrics` stays empty, `hasLyrics` false, and `loading` false.

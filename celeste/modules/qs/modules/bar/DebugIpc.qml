@@ -1,12 +1,10 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Bluetooth
 import waku as W
 import waku.services as S
 import qs.services
 import qs.utils
-import Celeste.Services
 import Celeste.Config
 import qs.modules.launcher.services
 
