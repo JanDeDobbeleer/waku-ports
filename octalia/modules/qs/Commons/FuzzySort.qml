@@ -58,28 +58,34 @@ Singleton {
   function _fastpriorityqueue() {
     var e = [], o = 0, a = {};
     var v = function (r) {
-      for (var a = 0, vc = e[a], c = 1; c < o; ) {
-        var s = c + 1;
+      var a, c, f, s, vc;
+      a = 0;
+      vc = e[a];
+      c = 1;
+      for (; c < o; ) {
+        s = c + 1;
         a = c;
         if (s < o && e[s]._score < e[c]._score)
           a = s;
         e[a - 1 >> 1] = e[a];
         c = 1 + (a << 1);
       }
-      for (var f = a - 1 >> 1; a > 0 && vc._score < e[f]._score; f = (a = f) - 1 >> 1)
+      for (f = a - 1 >> 1; a > 0 && vc._score < e[f]._score; f = (a = f) - 1 >> 1)
         e[a] = e[f];
       e[a] = vc;
     };
     a.add = function (r) {
+      var vc;
       var ac = o;
       e[o++] = r;
-      for (var vc = ac - 1 >> 1; ac > 0 && r._score < e[vc]._score; vc = (ac = vc) - 1 >> 1)
+      for (vc = ac - 1 >> 1; ac > 0 && r._score < e[vc]._score; vc = (ac = vc) - 1 >> 1)
         e[ac] = e[vc];
       e[ac] = r;
     };
     a.poll = function () {
+      var ac;
       if (o !== 0) {
-        var ac = e[0];
+        ac = e[0];
         e[0] = e[--o];
         v();
         return ac;
@@ -173,6 +179,7 @@ Singleton {
   }
 
   function _prepareLowerInfo(str) {
+    var bit, i, lowerCode;
     str = _remove_accents(str);
     var strLen = str.length;
     var lower = str.toLowerCase();
@@ -180,13 +187,13 @@ Singleton {
     var bitflags = 0;
     var containsSpace = false;
 
-    for (var i = 0; i < strLen; ++i) {
-      var lowerCode = lowerCodes[i] = lower.charCodeAt(i);
+    for (i = 0; i < strLen; ++i) {
+      lowerCode = lowerCodes[i] = lower.charCodeAt(i);
       if (lowerCode === 32) {
         containsSpace = true;
         continue;
       }
-      var bit = lowerCode >= 97 && lowerCode <= 122 ? lowerCode - 97 : lowerCode >= 48 && lowerCode <= 57 ? 26 : lowerCode <= 127 ? 30 : 31;
+      bit = lowerCode >= 97 && lowerCode <= 122 ? lowerCode - 97 : lowerCode >= 48 && lowerCode <= 57 ? 26 : lowerCode <= 127 ? 30 : 31;
       bitflags |= 1 << bit;
     }
     return {
@@ -198,16 +205,17 @@ Singleton {
   }
 
   function _prepareBeginningIndexes(target) {
+    var i, isAlphanum, isBeginning, isUpper, targetCode;
     var targetLen = target.length;
     var beginningIndexes = [];
     var beginningIndexesLen = 0;
     var wasUpper = false;
     var wasAlphanum = false;
-    for (var i = 0; i < targetLen; ++i) {
-      var targetCode = target.charCodeAt(i);
-      var isUpper = targetCode >= 65 && targetCode <= 90;
-      var isAlphanum = isUpper || targetCode >= 97 && targetCode <= 122 || targetCode >= 48 && targetCode <= 57;
-      var isBeginning = isUpper && !wasUpper || !wasAlphanum || !isAlphanum;
+    for (i = 0; i < targetLen; ++i) {
+      targetCode = target.charCodeAt(i);
+      isUpper = targetCode >= 65 && targetCode <= 90;
+      isAlphanum = isUpper || targetCode >= 97 && targetCode <= 122 || targetCode >= 48 && targetCode <= 57;
+      isBeginning = isUpper && !wasUpper || !wasAlphanum || !isAlphanum;
       wasUpper = isUpper;
       wasAlphanum = isAlphanum;
       if (isBeginning)
@@ -217,13 +225,14 @@ Singleton {
   }
 
   function _prepareNextBeginningIndexes(target) {
+    var i;
     target = _remove_accents(target);
     var targetLen = target.length;
     var beginningIndexes = _prepareBeginningIndexes(target);
     var nextBeginningIndexes = [];
     var lastIsBeginning = beginningIndexes[0];
     var lastIsBeginningI = 0;
-    for (var i = 0; i < targetLen; ++i) {
+    for (i = 0; i < targetLen; ++i) {
       if (lastIsBeginning > i) {
         nextBeginningIndexes[i] = lastIsBeginning;
       } else {
@@ -235,6 +244,7 @@ Singleton {
   }
 
   function _prepareSearch(search) {
+    var _info, i, searches;
     if (typeof search === 'number')
       search = '' + search;
     else if (typeof search !== 'string')
@@ -244,12 +254,12 @@ Singleton {
 
     var spaceSearches = [];
     if (info.containsSpace) {
-      var searches = search.split(/\s+/);
+      searches = search.split(/\s+/);
       searches = [...new Set(searches)];
-      for (var i = 0; i < searches.length; i++) {
+      for (i = 0; i < searches.length; i++) {
         if (searches[i] === '')
           continue;
-        var _info = _prepareLowerInfo(searches[i]);
+        _info = _prepareLowerInfo(searches[i]);
         spaceSearches.push({
                              lowerCodes: _info.lowerCodes,
                              _lower: searches[i].toLowerCase(),
@@ -339,6 +349,7 @@ Singleton {
   }
 
   function _highlight(result, open, close) {
+    var ch, i;
     if (open === undefined)
       open = '<b>';
     if (close === undefined)
@@ -354,8 +365,8 @@ Singleton {
     var opened = false;
     var parts = [];
 
-    for (var i = 0; i < targetLen; ++i) {
-      var ch = target[i];
+    for (i = 0; i < targetLen; ++i) {
+      ch = target[i];
       if (indexes[indexesI] === i) {
         ++indexesI;
         if (!opened) {
@@ -395,19 +406,20 @@ Singleton {
   }
 
   function _all(targets, options) {
+    var i, keyI, obj, objResults, result, target;
     var results = [];
     results.total = targets.length;
     var limit = options?.limit || _INFINITY;
 
     if (options?.key) {
-      for (var i = 0; i < targets.length; i++) {
-        var obj = targets[i];
-        var target = _getValue(obj, options.key);
+      for (i = 0; i < targets.length; i++) {
+        obj = targets[i];
+        target = _getValue(obj, options.key);
         if (target == _NULL)
           continue;
         if (!_isPrepared(target))
           target = _getPrepared(target);
-        var result = _new_result(target.target, {
+        result = _new_result(target.target, {
                                    _score: target._score,
                                    obj: obj
                                  });
@@ -416,11 +428,11 @@ Singleton {
           return results;
       }
     } else if (options?.keys) {
-      for (var i = 0; i < targets.length; i++) {
-        var obj = targets[i];
-        var objResults = _createKeysResult(options.keys.length);
-        for (var keyI = options.keys.length - 1; keyI >= 0; --keyI) {
-          var target = _getValue(obj, options.keys[keyI]);
+      for (i = 0; i < targets.length; i++) {
+        obj = targets[i];
+        objResults = _createKeysResult(options.keys.length);
+        for (keyI = options.keys.length - 1; keyI >= 0; --keyI) {
+          target = _getValue(obj, options.keys[keyI]);
           if (!target) {
             objResults[keyI] = _noTarget;
             continue;
@@ -438,8 +450,8 @@ Singleton {
           return results;
       }
     } else {
-      for (var i = 0; i < targets.length; i++) {
-        var target = targets[i];
+      for (i = 0; i < targets.length; i++) {
+        target = targets[i];
         if (target == _NULL)
           continue;
         if (!_isPrepared(target))
@@ -455,6 +467,7 @@ Singleton {
   }
 
   function _algorithm(preparedSearch, prepared, allowSpaces, allowPartialMatch) {
+    var i, isMatch, lastMatch, s;
     if (allowSpaces === undefined)
       allowSpaces = false;
     if (allowPartialMatch === undefined)
@@ -474,7 +487,7 @@ Singleton {
     var matchesSimpleLen = 0;
 
     for (; ; ) {
-      var isMatch = searchLowerCode === targetLowerCodes[targetI];
+      isMatch = searchLowerCode === targetLowerCodes[targetI];
       if (isMatch) {
         _matchesSimple[matchesSimpleLen++] = targetI;
         ++searchI;
@@ -506,10 +519,10 @@ Singleton {
           if (backtrackCount > 200)
             break;
           --searchI;
-          var lastMatch = _matchesStrict[--matchesStrictLen];
+          lastMatch = _matchesStrict[--matchesStrictLen];
           targetI = nextBeginningIndexes[lastMatch];
         } else {
-          var isMatch = searchLowerCodes[searchI] === targetLowerCodes[targetI];
+          isMatch = searchLowerCodes[searchI] === targetLowerCodes[targetI];
           if (isMatch) {
             _matchesStrict[matchesStrictLen++] = targetI;
             ++searchI;
@@ -529,10 +542,10 @@ Singleton {
     var isSubstringBeginning = !isSubstring ? false : substringIndex === 0 || prepared._nextBeginningIndexes[substringIndex - 1] === substringIndex;
 
     if (isSubstring && !isSubstringBeginning) {
-      for (var i = 0; i < nextBeginningIndexes.length; i = nextBeginningIndexes[i]) {
+      for (i = 0; i < nextBeginningIndexes.length; i = nextBeginningIndexes[i]) {
         if (i <= substringIndex)
           continue;
-        for (var s = 0; s < searchLen; s++)
+        for (s = 0; s < searchLen; s++)
           if (searchLowerCodes[s] !== prepared._targetLowerCodes[i + s])
             break;
         if (s === searchLen) {
@@ -544,9 +557,10 @@ Singleton {
     }
 
     var calculateScore = function (matches) {
+      var i, uniqueBeginningIndexes;
       var score = 0;
       var extraMatchGroupCount = 0;
-      for (var i = 1; i < searchLen; ++i) {
+      for (i = 1; i < searchLen; ++i) {
         if (matches[i] - matches[i - 1] !== 1) {
           score -= matches[i];
           ++extraMatchGroupCount;
@@ -559,8 +573,8 @@ Singleton {
       if (!successStrict) {
         score *= 1000;
       } else {
-        var uniqueBeginningIndexes = 1;
-        for (var i = nextBeginningIndexes[0]; i < targetLen; i = nextBeginningIndexes[i])
+        uniqueBeginningIndexes = 1;
+        for (i = nextBeginningIndexes[0]; i < targetLen; i = nextBeginningIndexes[i])
           ++uniqueBeginningIndexes;
         if (uniqueBeginningIndexes > 24)
           score *= (uniqueBeginningIndexes - 24) * 10;
@@ -577,13 +591,13 @@ Singleton {
     var matchesBest, score;
     if (!successStrict) {
       if (isSubstring)
-        for (var i = 0; i < searchLen; ++i)
+        for (i = 0; i < searchLen; ++i)
           _matchesSimple[i] = substringIndex + i;
       matchesBest = _matchesSimple;
       score = calculateScore(matchesBest);
     } else {
       if (isSubstringBeginning) {
-        for (var i = 0; i < searchLen; ++i)
+        for (i = 0; i < searchLen; ++i)
           _matchesSimple[i] = substringIndex + i;
         matchesBest = _matchesSimple;
         score = calculateScore(_matchesSimple);
@@ -594,7 +608,7 @@ Singleton {
     }
 
     prepared._score = score;
-    for (var i = 0; i < searchLen; ++i)
+    for (i = 0; i < searchLen; ++i)
       prepared._indexes[i] = matchesBest[i];
     prepared._indexes.len = searchLen;
 
@@ -606,6 +620,7 @@ Singleton {
   }
 
   function _algorithmSpaces(preparedSearch, target, allowPartialMatch) {
+    var i, indexes, indexesIsConsecutiveSubstring, isTheLastSearch, j, newBeginningIndex, search, toReplace;
     var seen_indexes = new Set();
     var score = 0;
     var result = _NULL;
@@ -621,9 +636,9 @@ Singleton {
     };
 
     var hasAtLeast1Match = false;
-    for (var i = 0; i < searchesLen; ++i) {
+    for (i = 0; i < searchesLen; ++i) {
       _allowPartialMatchScores[i] = _NEGATIVE_INFINITY;
-      var search = searches[i];
+      search = searches[i];
       result = _algorithm(search, target);
 
       if (allowPartialMatch) {
@@ -637,10 +652,10 @@ Singleton {
         }
       }
 
-      var isTheLastSearch = i === searchesLen - 1;
+      isTheLastSearch = i === searchesLen - 1;
       if (!isTheLastSearch) {
-        var indexes = result._indexes;
-        var indexesIsConsecutiveSubstring = true;
+        indexes = result._indexes;
+        indexesIsConsecutiveSubstring = true;
         for (let j = 0; j < indexes.len - 1; j++) {
           if (indexes[j + 1] - indexes[j] !== 1) {
             indexesIsConsecutiveSubstring = false;
@@ -649,8 +664,8 @@ Singleton {
         }
 
         if (indexesIsConsecutiveSubstring) {
-          var newBeginningIndex = indexes[indexes.len - 1] + 1;
-          var toReplace = target._nextBeginningIndexes[newBeginningIndex - 1];
+          newBeginningIndex = indexes[indexes.len - 1] + 1;
+          toReplace = target._nextBeginningIndexes[newBeginningIndex - 1];
           for (let j = newBeginningIndex - 1; j >= 0; j--) {
             if (toReplace !== target._nextBeginningIndexes[j])
               break;
@@ -670,7 +685,7 @@ Singleton {
       }
       first_seen_index_last_search = result._indexes[0];
 
-      for (var j = 0; j < result._indexes.len; ++j)
+      for (j = 0; j < result._indexes.len; ++j)
         seen_indexes.add(result._indexes[j]);
     }
 
@@ -682,7 +697,7 @@ Singleton {
     var allowSpacesResult = _algorithm(preparedSearch, target, true);
     if (allowSpacesResult !== _NULL && allowSpacesResult._score > score) {
       if (allowPartialMatch) {
-        for (var i = 0; i < searchesLen; ++i) {
+        for (i = 0; i < searchesLen; ++i) {
           _allowPartialMatchScores[i] = allowSpacesResult._score / searchesLen;
         }
       }
@@ -702,6 +717,7 @@ Singleton {
   }
 
   function _go(search, targets, options) {
+    var hasAtLeast1Match, i, key, keyI, keys, keysBitflags, keysLen, obj, objResults, res, result, target, tmp;
     if (!search)
       return options?.all ? _all(targets, options) : _noResults;
 
@@ -728,17 +744,17 @@ Singleton {
     }
 
     if (options?.key) {
-      var key = options.key;
-      for (var i = 0; i < targetsLen; ++i) {
-        var obj = targets[i];
-        var target = _getValue(obj, key);
+      key = options.key;
+      for (i = 0; i < targetsLen; ++i) {
+        obj = targets[i];
+        target = _getValue(obj, key);
         if (!target)
           continue;
         if (!_isPrepared(target))
           target = _getPrepared(target);
         if ((searchBitflags & target._bitflags) !== searchBitflags)
           continue;
-        var result = _algorithm(preparedSearch, target);
+        result = _algorithm(preparedSearch, target);
         if (result === _NULL)
           continue;
         if (result._score < threshold)
@@ -747,15 +763,15 @@ Singleton {
         push_result(result);
       }
     } else if (options?.keys) {
-      var keys = options.keys;
-      var keysLen = keys.length;
+      keys = options.keys;
+      keysLen = keys.length;
 
-      outer: for (var i = 0; i < targetsLen; ++i) {
-        var obj = targets[i];
-        var keysBitflags = 0;
-        for (var keyI = 0; keyI < keysLen; ++keyI) {
-          var key = keys[keyI];
-          var target = _getValue(obj, key);
+      outer: for (i = 0; i < targetsLen; ++i) {
+        obj = targets[i];
+        keysBitflags = 0;
+        for (keyI = 0; keyI < keysLen; ++keyI) {
+          key = keys[keyI];
+          target = _getValue(obj, key);
           if (!target) {
             _tmpTargets[keyI] = _noTarget;
             continue;
@@ -773,7 +789,7 @@ Singleton {
           for (let j = 0; j < preparedSearch.spaceSearches.length; j++)
             _keysSpacesBestScores[j] = _NEGATIVE_INFINITY;
 
-        for (var keyI = 0; keyI < keysLen; ++keyI) {
+        for (keyI = 0; keyI < keysLen; ++keyI) {
           target = _tmpTargets[keyI];
           if (target === _noTarget) {
             _tmpResults[keyI] = _noTarget;
@@ -790,7 +806,7 @@ Singleton {
             for (let j = 0; j < preparedSearch.spaceSearches.length; j++) {
               if (_allowPartialMatchScores[j] > -1000) {
                 if (_keysSpacesBestScores[j] > _NEGATIVE_INFINITY) {
-                  var tmp = (_keysSpacesBestScores[j] + _allowPartialMatchScores[j]) / 4;
+                  tmp = (_keysSpacesBestScores[j] + _allowPartialMatchScores[j]) / 4;
                   if (tmp > _keysSpacesBestScores[j])
                     _keysSpacesBestScores[j] = tmp;
                 }
@@ -805,7 +821,7 @@ Singleton {
             if (_keysSpacesBestScores[j] === _NEGATIVE_INFINITY)
               continue outer;
         } else {
-          var hasAtLeast1Match = false;
+          hasAtLeast1Match = false;
           for (let j = 0; j < keysLen; j++)
             if (_tmpResults[j]._score !== _NEGATIVE_INFINITY) {
               hasAtLeast1Match = true;
@@ -815,7 +831,7 @@ Singleton {
             continue;
         }
 
-        var objResults = _createKeysResult(keysLen);
+        objResults = _createKeysResult(keysLen);
         for (let j = 0; j < keysLen; j++)
           objResults[j] = _tmpResults[j];
 
@@ -827,10 +843,10 @@ Singleton {
         } else {
           score = _NEGATIVE_INFINITY;
           for (let j = 0; j < keysLen; j++) {
-            var res = objResults[j];
+            res = objResults[j];
             if (res._score > -1000) {
               if (score > _NEGATIVE_INFINITY) {
-                var tmp = (score + res._score) / 4;
+                tmp = (score + res._score) / 4;
                 if (tmp > score)
                   score = tmp;
               }
@@ -856,15 +872,15 @@ Singleton {
         push_result(objResults);
       }
     } else {
-      for (var i = 0; i < targetsLen; ++i) {
-        var target = targets[i];
+      for (i = 0; i < targetsLen; ++i) {
+        target = targets[i];
         if (!target)
           continue;
         if (!_isPrepared(target))
           target = _getPrepared(target);
         if ((searchBitflags & target._bitflags) !== searchBitflags)
           continue;
-        var result = _algorithm(preparedSearch, target);
+        result = _algorithm(preparedSearch, target);
         if (result === _NULL)
           continue;
         if (result._score < threshold)
@@ -876,7 +892,7 @@ Singleton {
     if (resultsLen === 0)
       return _noResults;
     var results = new Array(resultsLen);
-    for (var i = resultsLen - 1; i >= 0; --i)
+    for (i = resultsLen - 1; i >= 0; --i)
       results[i] = _q.poll();
     results.total = resultsLen + limitedCount;
     return results;

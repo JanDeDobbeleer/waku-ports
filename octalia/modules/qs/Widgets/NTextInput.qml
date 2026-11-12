@@ -86,12 +86,13 @@ ColumnLayout {
         propagateComposedEvents: false
 
         onPressed: mouse => {
+          var textPos;
                      mouse.accepted = true;
                      // Focus the input and position cursor
                      input.forceActiveFocus();
                      var inputPos = mapToItem(inputContainer, mouse.x, mouse.y);
                      if (inputPos.x >= 0 && inputPos.x <= inputContainer.width) {
-                       var textPos = inputPos.x - Style.marginM;
+                       textPos = inputPos.x - Style.marginM;
                        if (textPos >= 0 && textPos <= input.width) {
                          input.cursorPosition = input.positionAt(textPos, input.height / 2);
                        }
@@ -186,9 +187,10 @@ ColumnLayout {
                          }
 
               onPositionChanged: mouse => {
+                var pos;
                                    if (mouse.buttons & Qt.LeftButton) {
                                      mouse.accepted = true;
-                                     var pos = input.positionAt(mouse.x, mouse.y);
+                                     pos = input.positionAt(mouse.x, mouse.y);
                                      input.select(selectionStart, pos);
                                    }
                                  }

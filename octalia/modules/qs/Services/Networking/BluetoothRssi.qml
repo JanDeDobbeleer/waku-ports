@@ -27,11 +27,12 @@ QtObject {
       id: out
     }
     onExited: function (exitCode, exitStatus) {
+      var dbm, pct, text;
       try {
-        var text = out.text || "";
-        var dbm = BluetoothUtils.parseRssiOutput(text);
+        text = out.text || "";
+        dbm = BluetoothUtils.parseRssiOutput(text);
         if (root._currentAddr !== "" && dbm !== null) {
-          var pct = BluetoothUtils.dbmToPercent(dbm);
+          pct = BluetoothUtils.dbmToPercent(dbm);
           if (pct !== null) {
             root.cache[root._currentAddr] = pct;
             root.version++;

@@ -137,6 +137,7 @@ Singleton {
   }
 
   function collectWeatherChanges(weather) {
+    var i;
     const changes = [];
 
     if (Date.now() < Date.parse(weather.daily.sunrise[0])) {
@@ -147,7 +148,7 @@ Singleton {
                    });
     }
 
-    for (var i = 0; i < weather.daily.sunrise.length; i++) {
+    for (i = 0; i < weather.daily.sunrise.length; i++) {
       changes.push({
                      "time": Date.parse(weather.daily.sunrise[i]),
                      "darkMode": false
@@ -162,12 +163,13 @@ Singleton {
   }
 
   function applyCurrentMode(changes) {
+    var i;
     const now = Date.now();
     Logger.i("DarkModeService", `Applying mode at ${new Date(now).toLocaleString()} (${now})`);
 
     // changes.findLast(change => change.time < now) // not available in QML...
     let lastChange = null;
-    for (var i = 0; i < changes.length; i++) {
+    for (i = 0; i < changes.length; i++) {
       Logger.d("DarkModeService", `Checking change: time=${changes[i].time} (${new Date(changes[i].time).toLocaleString()}), darkMode=${changes[i].darkMode}`);
       if (changes[i].time < now) {
         lastChange = changes[i];

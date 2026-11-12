@@ -119,6 +119,7 @@ Popup {
             }
 
             function findFirstFocusable(item) {
+              var child, found, i;
               if (!item)
                 return null;
               // Check if this item can accept focus
@@ -126,11 +127,11 @@ Popup {
                 return item;
               // Check children
               if (item.children) {
-                for (var i = 0; i < item.children.length; i++) {
-                  var child = item.children[i];
+                for (i = 0; i < item.children.length; i++) {
+                  child = item.children[i];
                   if (child && child.focus !== undefined && child.focus === true)
                     return child;
-                  var found = findFirstFocusable(child);
+                  found = findFirstFocusable(child);
                   if (found)
                     return found;
                 }
@@ -164,8 +165,9 @@ Popup {
   }
 
   function saveAndClose() {
+    var newSettings;
     if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
+      newSettings = settingsLoader.item.saveSettings();
       if (newSettings) {
         root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
       }
@@ -174,11 +176,12 @@ Popup {
   }
 
   function loadWidgetSettings() {
+    var currentWidgetData, widgets;
     const source = BarWidgetRegistry.widgetSettingsMap[widgetId];
     if (source) {
-      var currentWidgetData = widgetData;
+      currentWidgetData = widgetData;
       if (sectionId && widgetIndex >= 0) {
-        var widgets = Settings.getBarWidgetsForScreen(screen?.name || "")[sectionId];
+        widgets = Settings.getBarWidgetsForScreen(screen?.name || "")[sectionId];
         if (widgets && widgetIndex < widgets.length) {
           currentWidgetData = widgets[widgetIndex];
         }

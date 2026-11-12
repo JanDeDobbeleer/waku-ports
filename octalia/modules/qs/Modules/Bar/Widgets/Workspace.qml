@@ -96,11 +96,12 @@ Item {
 
   // Helper to get the current window object from ID
   function getSelectedWindow() {
+    var i, win;
     if (!selectedWindowId)
       return null;
     // Search directly in CompositorService to get the live window object
-    for (var i = 0; i < CompositorService.windows.count; i++) {
-      var win = CompositorService.windows.get(i);
+    for (i = 0; i < CompositorService.windows.count; i++) {
+      win = CompositorService.windows.get(i);
       // Using loose equality on purpose (==)
       if (win && (win.id == selectedWindowId || win.address == selectedWindowId)) {
         return win;
@@ -193,8 +194,9 @@ Item {
   }
 
   function computeWidth() {
+    var i;
     let total = 0;
-    for (var i = 0; i < localWorkspaces.count; i++) {
+    for (i = 0; i < localWorkspaces.count; i++) {
       const ws = localWorkspaces.get(i);
       total += getWorkspaceWidth(ws);
     }
@@ -204,8 +206,9 @@ Item {
   }
 
   function computeHeight() {
+    var i;
     let total = 0;
-    for (var i = 0; i < localWorkspaces.count; i++) {
+    for (i = 0; i < localWorkspaces.count; i++) {
       const ws = localWorkspaces.get(i);
       total += getWorkspaceHeight(ws);
     }
@@ -215,7 +218,8 @@ Item {
   }
 
   function getFocusedLocalIndex() {
-    for (var i = 0; i < localWorkspaces.count; i++) {
+    var i;
+    for (i = 0; i < localWorkspaces.count; i++) {
       if (localWorkspaces.get(i).isFocused === true)
         return i;
     }
@@ -325,10 +329,11 @@ Item {
   }
 
   function refreshWorkspaces() {
+    var existing, i, target, workspaceData;
     var targetList = [];
     var focusedOutput = null;
     if (followFocusedScreen) {
-      for (var i = 0; i < CompositorService.workspaces.count; i++) {
+      for (i = 0; i < CompositorService.workspaces.count; i++) {
         const ws = CompositorService.workspaces.get(i);
         if (ws.isFocused)
           focusedOutput = ws.output.toLowerCase();
@@ -337,7 +342,7 @@ Item {
 
     if (screen !== null) {
       const screenName = screen.name.toLowerCase();
-      for (var i = 0; i < CompositorService.workspaces.count; i++) {
+      for (i = 0; i < CompositorService.workspaces.count; i++) {
         const ws = CompositorService.workspaces.get(i);
         // For global workspaces (e.g., LabWC), show all workspaces on all screens
         const matchesScreen = CompositorService.globalWorkspaces || (followFocusedScreen && ws.output.toLowerCase() == focusedOutput) || (!followFocusedScreen && ws.output.toLowerCase() == screenName);
@@ -348,7 +353,7 @@ Item {
           continue;
 
         // Create a plain JS object for the workspace data
-        var workspaceData = {
+        workspaceData = {
           id: ws.id,
           idx: ws.idx,
           name: ws.name,
@@ -374,8 +379,8 @@ Item {
     var i = 0;
     while (i < localWorkspaces.count || i < targetList.length) {
       if (i < localWorkspaces.count && i < targetList.length) {
-        var existing = localWorkspaces.get(i);
-        var target = targetList[i];
+        existing = localWorkspaces.get(i);
+        target = targetList[i];
         if (existing.id === target.id) {
           // Use set() to update all properties, including arrays like 'windows'
           // This is more reliable than repeated setProperty calls for complex types
@@ -404,7 +409,8 @@ Item {
   }
 
   function updateWorkspaceFocus() {
-    for (var i = 0; i < localWorkspaces.count; i++) {
+    var i;
+    for (i = 0; i < localWorkspaces.count; i++) {
       const ws = localWorkspaces.get(i);
       if (ws.isFocused === true) {
         if (root.lastFocusedWorkspaceId !== -1 && root.lastFocusedWorkspaceId !== ws.id) {
@@ -572,6 +578,7 @@ Item {
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     enabled: root.enableScrollWheel
     onWheel: function (event) {
+      var direction;
       if (root.wheelCooldown)
         return;
       // Prefer vertical delta, fall back to horizontal if needed
@@ -583,7 +590,7 @@ Item {
       root.wheelAccumulatedDelta += delta;
       var step = 120;
       if (Math.abs(root.wheelAccumulatedDelta) >= step) {
-        var direction = root.wheelAccumulatedDelta > 0 ? -1 : 1;
+        direction = root.wheelAccumulatedDelta > 0 ? -1 : 1;
         if (root.reverseScroll)
           direction *= -1;
         // For vertical layout, natural mapping: wheel up -> previous, down -> next (already handled by sign)

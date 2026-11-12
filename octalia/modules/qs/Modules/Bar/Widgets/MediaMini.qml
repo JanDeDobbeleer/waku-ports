@@ -209,6 +209,7 @@ Item {
     }
 
     onTriggered: action => {
+      var idx;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
@@ -219,7 +220,7 @@ Item {
                    else if (action === "next")
                    MediaService.next();
                    else if (action && action.indexOf("player-") === 0) {
-                     var idx = parseInt(action.split("-")[1]);
+                     idx = parseInt(action.split("-")[1]);
                      if (!isNaN(idx)) {
                        MediaService.switchToPlayer(idx);
                      }

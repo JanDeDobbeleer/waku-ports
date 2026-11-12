@@ -82,13 +82,14 @@ NIconButton {
     ]
 
     onTriggered: action => {
+      var panel;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
                    if (action === "open-launcher") {
                      PanelService.toggleLauncher(screen);
                    } else if (action === "open-settings") {
-                     var panel = PanelService.getPanel("settingsPanel", screen);
+                     panel = PanelService.getPanel("settingsPanel", screen);
                      panel.requestedTab = SettingsPanel.Tab.General;
                      panel.toggle();
                    } else if (action === "widget-settings") {

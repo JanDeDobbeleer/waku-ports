@@ -93,8 +93,9 @@ Item {
   }
 
   function _checkNextState() {
+    var currentCheckItem;
     if (_currentStateCheckIndex < _parsedStateChecks.length) {
-      var currentCheckItem = _parsedStateChecks[_currentStateCheckIndex];
+      currentCheckItem = _parsedStateChecks[_currentStateCheckIndex];
       if (currentCheckItem && currentCheckItem.command) {
         stateCheckProcessExecutor.running = true;
       } else {

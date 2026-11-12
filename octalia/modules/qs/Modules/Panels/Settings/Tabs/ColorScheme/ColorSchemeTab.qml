@@ -22,11 +22,12 @@ ColumnLayout {
   property var screen
 
   function populateTimeOptions() {
-    for (var h = 0; h < 24; h++) {
-      for (var m = 0; m < 60; m += 30) {
-        var hh = ("0" + h).slice(-2);
-        var mm = ("0" + m).slice(-2);
-        var key = hh + ":" + mm;
+    var h, hh, key, m, mm;
+    for (h = 0; h < 24; h++) {
+      for (m = 0; m < 60; m += 30) {
+        hh = ("0" + h).slice(-2);
+        mm = ("0" + m).slice(-2);
+        key = hh + ":" + mm;
         timeOptions.append({
                              "key": key,
                              "name": key

@@ -26,7 +26,8 @@ ColumnLayout {
   }
 
   function populateBlacklist() {
-    for (var i = 0; i < localBlacklist.length; i++) {
+    var i;
+    for (i = 0; i < localBlacklist.length; i++) {
       blacklistModel.append({
                               "rule": localBlacklist[i]
                             });
@@ -182,8 +183,9 @@ ColumnLayout {
 
   // This function will be called by the dialog to get the new settings
   function saveSettings() {
+    var i;
     var newBlacklist = [];
-    for (var i = 0; i < blacklistModel.count; i++) {
+    for (i = 0; i < blacklistModel.count; i++) {
       newBlacklist.push(blacklistModel.get(i).rule);
     }
 

@@ -150,16 +150,17 @@ Item {
                          }
 
               onPositionChanged: mouse => {
+                var dy, newY, targetIndex;
                                    if (delegateItem.dragging) {
-                                     var dy = mouse.y - dragHandle.height / 2;
-                                     var newY = delegateItem.y + dy;
+                                     dy = mouse.y - dragHandle.height / 2;
+                                     newY = delegateItem.y + dy;
 
                                      // Constrain within bounds
                                      newY = Math.max(0, Math.min(newY, root.contentHeight - delegateItem.height));
                                      delegateItem.y = newY;
 
                                      // Calculate target index (but don't apply yet)
-                                     var targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + delegateItem.itemSpacing));
+                                     targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + delegateItem.itemSpacing));
                                      targetIndex = Math.max(0, Math.min(targetIndex, repeater.count - 1));
 
                                      delegateItem.dragTargetIndex = targetIndex;

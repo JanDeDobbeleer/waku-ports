@@ -170,7 +170,8 @@ Variants {
 
     // Brightness Handling
     function connectBrightnessMonitors() {
-      for (var i = 0; i < BrightnessService.monitors.length; i++) {
+      var i;
+      for (i = 0; i < BrightnessService.monitors.length; i++) {
         const monitor = BrightnessService.monitors[i];
         monitor.brightnessUpdated.disconnect(onBrightnessChanged);
         monitor.brightnessUpdated.connect(onBrightnessChanged);
@@ -178,6 +179,7 @@ Variants {
     }
 
     function onBrightnessChanged(newBrightness) {
+      var cards;
       if (!root)
         return;
 
@@ -189,7 +191,7 @@ Variants {
       if (brightnessPanel && brightnessPanel.isPanelOpen)
         return;
       if (controlCenterPanel && controlCenterPanel.isPanelOpen) {
-        var cards = Settings.data.controlCenter.cards || [];
+        cards = Settings.data.controlCenter.cards || [];
         if (cards.some(c => c.enabled && c.id === "brightness-card"))
           return;
       }
@@ -207,6 +209,7 @@ Variants {
 
     // OSD Display Control
     function showOSD(type) {
+      var audioPanel, cards, controlCenterPanel;
       // Ignore all OSD requests during startup period
       if (!startupComplete)
         return;
@@ -217,12 +220,12 @@ Variants {
 
       // Suppress Audio OSD if Audio Panel or Control Center (with audio card) is open
       if (type === OSD.Type.Volume || type === OSD.Type.InputVolume) {
-        var audioPanel = PanelService.getPanel("audioPanel", root.modelData);
+        audioPanel = PanelService.getPanel("audioPanel", root.modelData);
         if (audioPanel && audioPanel.isPanelOpen)
           return;
-        var controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.modelData);
+        controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.modelData);
         if (controlCenterPanel && controlCenterPanel.isPanelOpen) {
-          var cards = Settings.data.controlCenter.cards || [];
+          cards = Settings.data.controlCenter.cards || [];
           if (cards.some(c => c.enabled && c.id === "audio-card"))
             return;
         }

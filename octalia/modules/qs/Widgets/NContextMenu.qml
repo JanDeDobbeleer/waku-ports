@@ -144,13 +144,14 @@ Popup {
 
   // Helper function to open at mouse position
   function openAt(x, y) {
+    var constraint, itemCount, menuHeight, menuWidth, tl;
     if (root.parent) {
-      var menuWidth = root.width;
-      var itemCount = root.filteredModel.length;
-      var menuHeight = Math.max(itemCount * root.itemHeight + Math.max(0, itemCount - 1) * listView.spacing, root.itemHeight) + root.topPadding + root.bottomPadding;
-      var constraint = root.constrainTo || root._detectedConstraint;
+      menuWidth = root.width;
+      itemCount = root.filteredModel.length;
+      menuHeight = Math.max(itemCount * root.itemHeight + Math.max(0, itemCount - 1) * listView.spacing, root.itemHeight) + root.topPadding + root.bottomPadding;
+      constraint = root.constrainTo || root._detectedConstraint;
       if (constraint) {
-        var tl = constraint.mapToItem(root.parent, 0, 0);
+        tl = constraint.mapToItem(root.parent, 0, 0);
         x = Math.max(tl.x, Math.min(x, tl.x + constraint.width - menuWidth));
         y = Math.max(tl.y, Math.min(y, tl.y + constraint.height - menuHeight));
       } else {
@@ -165,9 +166,10 @@ Popup {
 
   // Helper function to open at item
   function openAtItem(item, mouseX, mouseY) {
+    var p;
     if (!root.constrainTo) {
       root._detectedConstraint = null;
-      var p = item;
+      p = item;
       while (p && p !== root.parent) {
         if (p.clip && p.width > 0 && p.height > 0) {
           root._detectedConstraint = p;

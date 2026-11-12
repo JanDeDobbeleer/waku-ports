@@ -162,11 +162,12 @@ ColumnLayout {
   // Signal functions
   // ---------------------------------
   function _addWidgetToSection(widgetId, section) {
+    var metadata;
     var newWidget = {
       "id": widgetId
     };
     if (ControlCenterWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      var metadata = ControlCenterWidgetRegistry.widgetMetadata[widgetId];
+      metadata = ControlCenterWidgetRegistry.widgetMetadata[widgetId];
       if (metadata) {
         Object.keys(metadata).forEach(function (key) {
           newWidget[key] = metadata[key];
@@ -177,19 +178,21 @@ ColumnLayout {
   }
 
   function _removeWidgetFromSection(section, index) {
+    var newArray, removedWidgets;
     if (index >= 0 && index < Settings.data.controlCenter.shortcuts[section].length) {
-      var newArray = Settings.data.controlCenter.shortcuts[section].slice();
-      var removedWidgets = newArray.splice(index, 1);
+      newArray = Settings.data.controlCenter.shortcuts[section].slice();
+      removedWidgets = newArray.splice(index, 1);
       Settings.data.controlCenter.shortcuts[section] = newArray;
     }
   }
 
   function _reorderWidgetInSection(section, fromIndex, toIndex) {
+    var item, newArray;
     if (fromIndex >= 0 && fromIndex < Settings.data.controlCenter.shortcuts[section].length && toIndex >= 0 && toIndex < Settings.data.controlCenter.shortcuts[section].length) {
 
       // Create a new array to avoid modifying the original
-      var newArray = Settings.data.controlCenter.shortcuts[section].slice();
-      var item = newArray[fromIndex];
+      newArray = Settings.data.controlCenter.shortcuts[section].slice();
+      item = newArray[fromIndex];
       newArray.splice(fromIndex, 1);
       newArray.splice(toIndex, 0, item);
 
@@ -198,17 +201,18 @@ ColumnLayout {
   }
 
   function _moveWidgetBetweenSections(fromSection, index, toSection) {
+    var sourceArray, targetArray, widget;
     // Get the widget from the source section
     if (index >= 0 && index < Settings.data.controlCenter.shortcuts[fromSection].length) {
-      var widget = Settings.data.controlCenter.shortcuts[fromSection][index];
+      widget = Settings.data.controlCenter.shortcuts[fromSection][index];
 
       // Remove from source section
-      var sourceArray = Settings.data.controlCenter.shortcuts[fromSection].slice();
+      sourceArray = Settings.data.controlCenter.shortcuts[fromSection].slice();
       sourceArray.splice(index, 1);
       Settings.data.controlCenter.shortcuts[fromSection] = sourceArray;
 
       // Add to target section
-      var targetArray = Settings.data.controlCenter.shortcuts[toSection].slice();
+      targetArray = Settings.data.controlCenter.shortcuts[toSection].slice();
       targetArray.push(widget);
       Settings.data.controlCenter.shortcuts[toSection] = targetArray;
     }

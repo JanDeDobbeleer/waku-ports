@@ -50,6 +50,7 @@ Item {
 
     if (Settings.data.network.bluetoothHideUnnamedDevices) {
       list = list.filter(function (dev) {
+        var normAddr, normName;
         var dn = dev.name || dev.deviceName || "";
         var s = String(dn).trim();
         if (s.length === 0)
@@ -59,8 +60,8 @@ Item {
           return false;
         var addr = dev.address || dev.bdaddr || dev.mac || "";
         if (addr.length > 0) {
-          var normName = s.toLowerCase().replace(/[^0-9a-z]/g, "");
-          var normAddr = String(addr).toLowerCase().replace(/[^0-9a-z]/g, "");
+          normName = s.toLowerCase().replace(/[^0-9a-z]/g, "");
+          normAddr = String(addr).toLowerCase().replace(/[^0-9a-z]/g, "");
           if (normName.length > 0 && normName === normAddr)
             return false;
         }

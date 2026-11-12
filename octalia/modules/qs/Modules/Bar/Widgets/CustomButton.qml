@@ -360,11 +360,12 @@ Item {
   }
 
   function parseDynamicContent(content) {
+    var jsonStr;
     var contentStr = String(content || "").trim();
 
     if (parseJson && contentStr) {
       // Handle multi-line JSON by filtering empty lines and joining
-      var jsonStr = contentStr;
+      jsonStr = contentStr;
       if (contentStr.includes('\n')) {
         const lines = contentStr.split('\n').filter(line => line.trim() !== '');
         jsonStr = lines.join('');
@@ -464,15 +465,16 @@ Item {
   }
 
   function checkCollapse(text) {
+    var pattern, regex;
     if (!textCollapse || textCollapse.length === 0) {
       return false;
     }
 
     if (textCollapse.startsWith("/") && textCollapse.endsWith("/") && textCollapse.length > 1) {
       // Treat as regex
-      var pattern = textCollapse.substring(1, textCollapse.length - 1);
+      pattern = textCollapse.substring(1, textCollapse.length - 1);
       try {
-        var regex = new RegExp(pattern);
+        regex = new RegExp(pattern);
         return regex.test(text);
       } catch (e) {
         Logger.w("CustomButton", `Invalid regex for textCollapse: ${textCollapse} - ${e.message}`);

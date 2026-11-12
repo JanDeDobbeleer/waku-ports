@@ -50,8 +50,9 @@ RowLayout {
   }
 
   function findIndexByKey(key) {
-    for (var i = 0; i < itemCount(); i++) {
-      var item = getItem(i);
+    var i, item;
+    for (i = 0; i < itemCount(); i++) {
+      item = getItem(i);
       if (item && item.key === key)
         return i;
     }
@@ -107,8 +108,9 @@ RowLayout {
                         }
 
     Keys.onReturnPressed: event => {
+      var item;
                             if (combo.popup.visible) {
-                              var item = root.getItem(listView.currentIndex);
+                              item = root.getItem(listView.currentIndex);
                               if (item && item.key !== undefined) {
                                 root.selected(item.key);
                                 combo.currentIndex = listView.currentIndex;

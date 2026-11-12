@@ -123,9 +123,10 @@ ColumnLayout {
     running: false
 
     onExited: function (exitCode) {
+      var gitOutput;
       Logger.d("VersionSubTab", "gitProcess - Process exited with code:", exitCode);
       if (exitCode === 0) {
-        var gitOutput = stdout.text.trim();
+        gitOutput = stdout.text.trim();
         Logger.d("VersionSubTab", "gitProcess - gitOutput:", gitOutput);
         if (gitOutput) {
           root.commitInfo = gitOutput;

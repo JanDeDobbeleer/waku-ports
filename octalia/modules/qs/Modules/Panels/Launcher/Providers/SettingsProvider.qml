@@ -38,6 +38,7 @@ Item {
   }
 
   function getResults(query) {
+    var searchTerm;
     if (!query || SettingsSearchService.searchIndex.length === 0)
       return [];
 
@@ -47,7 +48,7 @@ Item {
     var isCommandMode = trimmed.startsWith(">settings");
     if (isCommandMode) {
       // Extract search term after ">settings "
-      var searchTerm = trimmed.substring(9).trim();
+      searchTerm = trimmed.substring(9).trim();
       // In command mode, show all settings if no search term
       if (searchTerm.length === 0) {
         return getAllSettings();
@@ -114,16 +115,17 @@ Item {
   }
 
   function getAllSettings() {
+    var breadcrumb, entry, j, label, subTabName, tabName;
     var launcherItems = [];
 
-    for (var j = 0; j < SettingsSearchService.searchIndex.length; j++) {
-      var entry = SettingsSearchService.searchIndex[j];
+    for (j = 0; j < SettingsSearchService.searchIndex.length; j++) {
+      entry = SettingsSearchService.searchIndex[j];
       if (!SettingsSearchService.isEntryVisible(entry))
         continue;
-      var label = I18n.tr(entry.labelKey);
-      var tabName = I18n.tr(entry.tabLabel);
-      var subTabName = entry.subTabLabel ? I18n.tr(entry.subTabLabel) : "";
-      var breadcrumb = subTabName ? (tabName + " › " + subTabName) : tabName;
+      label = I18n.tr(entry.labelKey);
+      tabName = I18n.tr(entry.tabLabel);
+      subTabName = entry.subTabLabel ? I18n.tr(entry.subTabLabel) : "";
+      breadcrumb = subTabName ? (tabName + " › " + subTabName) : tabName;
 
       launcherItems.push({
                            "name": label,

@@ -8,10 +8,11 @@ Singleton {
   id: root
 
   function _formatMessage(...args) {
+    var module;
     var t = Time.getFormattedTimestamp();
     if (args.length > 1) {
       const maxLength = 14;
-      var module = args.shift().substring(0, maxLength).padStart(maxLength, " ");
+      module = args.shift().substring(0, maxLength).padStart(maxLength, " ");
       return `\x1b[36m[${t}]\x1b[0m \x1b[35m${module}\x1b[0m ` + args.join(" ");
     } else {
       return `[\x1b[36m[${t}]\x1b[0m ` + args.join(" ");
@@ -28,8 +29,9 @@ Singleton {
 
   // Debug log (only when Settings.isDebug is true)
   function d(...args) {
+    var msg;
     if (Settings?.isDebug) {
-      var msg = _formatMessage(...args);
+      msg = _formatMessage(...args);
       console.debug(msg);
     }
   }
@@ -53,13 +55,14 @@ Singleton {
   }
 
   function callStack() {
+    var i, line;
     var stack = _getStackTrace();
     Logger.i("Debug", "--------------------------");
     Logger.i("Debug", "Current call stack");
     // Split the stack into lines and log each one
     var stackLines = stack.split('\n');
-    for (var i = 0; i < stackLines.length; i++) {
-      var line = stackLines[i].trim(); // Remove leading/trailing whitespace
+    for (i = 0; i < stackLines.length; i++) {
+      line = stackLines[i].trim(); // Remove leading/trailing whitespace
       if (line.length > 0) {
         // Only log non-empty lines
         Logger.i("Debug", `- ${line}`);

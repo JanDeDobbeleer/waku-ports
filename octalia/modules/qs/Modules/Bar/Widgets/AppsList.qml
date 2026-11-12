@@ -55,13 +55,14 @@ Item {
   property var groups: []
 
   function rebuild() {
+    var i;
     const order = [];
     const byKey = {};
     const activeIds = CompositorService.getActiveWorkspaces().map(function (ws) {
       return ws.id;
     });
     const total = CompositorService.windows.count || 0;
-    for (var i = 0; i < total; i++) {
+    for (i = 0; i < total; i++) {
       const w = CompositorService.windows.get(i);
       if (!w || !w.appId)
         continue;

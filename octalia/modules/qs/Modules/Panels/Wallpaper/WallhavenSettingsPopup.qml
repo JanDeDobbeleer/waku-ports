@@ -49,6 +49,7 @@ Popup {
   }
 
   function updateResolution(triggerSearch) {
+    var resolution;
     if (typeof WallhavenService === "undefined") {
       return;
     }
@@ -58,7 +59,7 @@ Popup {
     var mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
 
     if (width && height) {
-      var resolution = width + "x" + height;
+      resolution = width + "x" + height;
       if (mode === "atleast") {
         WallhavenService.minResolution = resolution;
         WallhavenService.resolutions = "";

@@ -32,8 +32,9 @@ ColumnLayout {
   ]
 
   function saveCards() {
+    var i;
     var toSave = [];
-    for (var i = 0; i < cardsModel.length; i++) {
+    for (i = 0; i < cardsModel.length; i++) {
       toSave.push({
                     "id": cardsModel[i].id,
                     "enabled": cardsModel[i].enabled
@@ -118,9 +119,10 @@ ColumnLayout {
     Connections {
       target: Settings.data.location
       function onWeatherEnabledChanged() {
+        var i;
         // Auto-disable weather card when weather is disabled
         var newModel = cardsModel.slice();
-        for (var i = 0; i < newModel.length; i++) {
+        for (i = 0; i < newModel.length; i++) {
           if (newModel[i].id === "weather-card") {
             newModel[i] = Object.assign({}, newModel[i], {
                                           "enabled": Settings.data.location.weatherEnabled

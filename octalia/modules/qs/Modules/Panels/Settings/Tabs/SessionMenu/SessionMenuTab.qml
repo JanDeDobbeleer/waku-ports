@@ -59,11 +59,12 @@ ColumnLayout {
   ]
 
   function saveEntries() {
+    var i, keybind;
     var toSave = [];
     var enabledNumber = 1;
 
-    for (var i = 0; i < entriesModel.length; i++) {
-      var keybind = entriesModel[i].keybind || "";
+    for (i = 0; i < entriesModel.length; i++) {
+      keybind = entriesModel[i].keybind || "";
 
       if (entriesModel[i].enabled) {
         // For enabled entries with numeric or empty keybinds, assign sequential number
@@ -89,7 +90,7 @@ ColumnLayout {
 
     // Update local model with renumbered keybinds
     var newModel = [];
-    for (var i = 0; i < entriesModel.length; i++) {
+    for (i = 0; i < entriesModel.length; i++) {
       newModel.push(Object.assign({}, entriesModel[i], {
                                     "keybind": toSave[i].keybind
                                   }));

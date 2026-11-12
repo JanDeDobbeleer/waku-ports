@@ -86,6 +86,7 @@ Singleton {
   }
 
   function resolveSchemePath(nameOrPath) {
+    var i;
     if (!nameOrPath)
       return "";
     if (nameOrPath.indexOf("/") !== -1) {
@@ -106,7 +107,7 @@ Singleton {
     var preinstalledPath = schemesDirectory + "/" + schemeName + "/" + schemeName + ".json";
     var downloadedPath = downloadedSchemesDirectory + "/" + schemeName + "/" + schemeName + ".json";
     // Try to find the scheme in the loaded schemes list to determine which directory it's in
-    for (var i = 0; i < schemes.length; i++) {
+    for (i = 0; i < schemes.length; i++) {
       if (schemes[i].indexOf("/" + schemeName + "/") !== -1 || schemes[i].indexOf("/" + schemeName + ".json") !== -1) {
         return schemes[i];
       }
@@ -123,6 +124,7 @@ Singleton {
   }
 
   function setPredefinedScheme(schemeName) {
+    var i;
     Logger.i("ColorScheme", "Attempting to set predefined scheme to:", schemeName);
 
     var resolvedPath = resolveSchemePath(schemeName);
@@ -130,7 +132,7 @@ Singleton {
 
     // Check if the scheme actually exists in the loaded schemes list
     var schemeExists = false;
-    for (var i = 0; i < schemes.length; i++) {
+    for (i = 0; i < schemes.length; i++) {
       if (getBasename(schemes[i]) === basename) {
         schemeExists = true;
         break;
@@ -170,6 +172,7 @@ Singleton {
   }
 
   function collectSchemes() {
+    var basename;
     if (!scanning || bundledSchemes.status !== FolderListModel.Ready || downloadedSchemes.status === FolderListModel.Loading)
       return;
     var files = [];
@@ -195,7 +198,7 @@ Singleton {
     // Normalize stored scheme to basename and re-apply if necessary
     var stored = Settings.data.colorSchemes.predefinedScheme;
     if (stored) {
-      var basename = getBasename(stored);
+      basename = getBasename(stored);
       if (basename !== stored) {
         Settings.data.colorSchemes.predefinedScheme = basename;
       }

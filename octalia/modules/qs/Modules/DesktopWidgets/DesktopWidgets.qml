@@ -77,6 +77,7 @@ Variants {
 
       // Add a new widget to the current screen
       function addWidgetToCurrentScreen(widgetId) {
+        var i, widgets;
         var monitorName = window.screen.name;
         var newWidget = {
           "id": widgetId
@@ -100,9 +101,9 @@ Variants {
         var newMonitorWidgets = monitorWidgets.slice();
         var found = false;
 
-        for (var i = 0; i < newMonitorWidgets.length; i++) {
+        for (i = 0; i < newMonitorWidgets.length; i++) {
           if (newMonitorWidgets[i].name === monitorName) {
-            var widgets = (newMonitorWidgets[i].widgets || []).slice();
+            widgets = (newMonitorWidgets[i].widgets || []).slice();
             widgets.push(newWidget);
             newMonitorWidgets[i] = {
               "name": monitorName,
@@ -186,8 +187,9 @@ Variants {
               // Otherwise, try to find a divisor of both centerX and centerY
               // that's close to our best size
               var gcd = function (a, b) {
+                var temp;
                 while (b !== 0) {
-                  var temp = b;
+                  temp = b;
                   b = a % b;
                   a = temp;
                 }
@@ -405,13 +407,14 @@ Variants {
                        }
 
             onPositionChanged: mouse => {
+              var currentPos, deltaX, deltaY, newX, newY;
                                  if (panelInternal.isDragging && pressed) {
-                                   var currentPos = mapToItem(widgetsContainer, mouse.x, mouse.y);
-                                   var deltaX = currentPos.x - pressPos.x;
-                                   var deltaY = currentPos.y - pressPos.y;
+                                   currentPos = mapToItem(widgetsContainer, mouse.x, mouse.y);
+                                   deltaX = currentPos.x - pressPos.x;
+                                   deltaY = currentPos.y - pressPos.y;
 
-                                   var newX = panelInternal.baseX + deltaX;
-                                   var newY = panelInternal.baseY + deltaY;
+                                   newX = panelInternal.baseX + deltaX;
+                                   newY = panelInternal.baseY + deltaY;
 
                                    // Boundary clamping
                                    newX = Math.max(0, Math.min(newX, widgetsContainer.width - editModeControlsPanel.width));

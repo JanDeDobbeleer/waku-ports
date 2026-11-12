@@ -264,13 +264,14 @@ Singleton {
     target: "toast"
 
     function send(json: string) {
+      var body, data, duration, icon, title, type;
       try {
-        var data = JSON.parse(json);
-        var title = data.title || "";
-        var body = data.body || "";
-        var icon = data.icon || "";
-        var type = data.type || "notice";
-        var duration = data.duration;
+        data = JSON.parse(json);
+        title = data.title || "";
+        body = data.body || "";
+        icon = data.icon || "";
+        type = data.type || "notice";
+        duration = data.duration;
 
         switch (type) {
         case "warning":
@@ -504,8 +505,9 @@ Singleton {
       ColorSchemeService.setPredefinedScheme(schemeName);
     }
     function setGenerationMethod(method: string) {
+      var i;
       var valid = false;
-      for (var i = 0; i < TemplateProcessor.schemeTypes.length; i++) {
+      for (i = 0; i < TemplateProcessor.schemeTypes.length; i++) {
         if (TemplateProcessor.schemeTypes[i].key === method) {
           valid = true;
           break;
@@ -628,13 +630,14 @@ Singleton {
     }
 
     function get(screen: string): string {
+      var found;
       if (screen === "all" || screen === "") {
         if (Quickshell.screens.length > 1) {
           return JSON.stringify(WallpaperService.getWallpapersEffectiveMap());
         }
         return WallpaperService.getWallpaper(Quickshell.screens[0].name) ?? "";
       } else {
-        var found = Quickshell.screens.find(s => s.name === screen);
+        found = Quickshell.screens.find(s => s.name === screen);
         if (!found) {
           Logger.w("IPC", "wallpaper get: unknown screen: " + screen);
           return "";
@@ -834,8 +837,9 @@ Singleton {
 
     // Returns all settings and shell state as JSON
     function all(): string {
+      var snapshot;
       try {
-        var snapshot = ShellState.buildStateSnapshot();
+        snapshot = ShellState.buildStateSnapshot();
         if (!snapshot) {
           throw new Error("State snapshot unavailable");
         }

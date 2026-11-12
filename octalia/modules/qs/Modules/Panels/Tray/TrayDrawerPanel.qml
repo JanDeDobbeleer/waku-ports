@@ -78,9 +78,10 @@ SmartPanel {
 
     // Filter tray items - this runs in panelContent context where isPinned is available
     function updateFilteredItems() {
+      var i, item;
       var filtered = [];
-      for (var i = 0; i < root.trayValuesAll.length; i++) {
-        var item = root.trayValuesAll[i];
+      for (i = 0; i < root.trayValuesAll.length; i++) {
+        item = root.trayValuesAll[i];
         if (!item)
           continue;
 
@@ -127,10 +128,11 @@ SmartPanel {
     }
 
     function isPinned(item) {
+      var i;
       if (!pinnedList || pinnedList.length === 0)
         return false;
       const title = item?.tooltipTitle || item?.name || item?.id || "";
-      for (var i = 0; i < pinnedList.length; i++) {
+      for (i = 0; i < pinnedList.length; i++) {
         if (wildCardMatch(title, pinnedList[i]))
           return true;
       }

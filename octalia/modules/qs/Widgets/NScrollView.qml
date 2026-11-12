@@ -157,9 +157,10 @@ ScrollView {
 
   // Function to configure the underlying Flickable
   function configureFlickable() {
+    var child, i;
     // Find the internal Flickable (it's usually the first child)
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
+    for (i = 0; i < children.length; i++) {
+      child = children[i];
       if (child.toString().indexOf("Flickable") !== -1) {
         // Configure the flickable to prevent horizontal scrolling
         child.boundsBehavior = root.boundsBehavior;

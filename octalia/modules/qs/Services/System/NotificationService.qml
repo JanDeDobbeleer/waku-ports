@@ -268,6 +268,7 @@ Singleton {
   }
 
   function updatePopup(internalId, notification, data) {
+    var i;
     const index = findPopupIndex(internalId);
     if (index < 0)
       return;
@@ -296,7 +297,7 @@ Singleton {
     // Deep copy actions to preserve them even if QML object clears list
     var safeActions = [];
     if (notification.actions) {
-      for (var i = 0; i < notification.actions.length; i++) {
+      for (i = 0; i < notification.actions.length; i++) {
         safeActions.push({
                            "identifier": notification.actions[i].identifier,
                            "actionObject": notification.actions[i]
@@ -320,6 +321,7 @@ Singleton {
   }
 
   function addPopup(quickshellId, notification, data) {
+    var i;
     // Map IDs
     quickshellIdToInternalId[quickshellId] = data.id;
 
@@ -332,7 +334,7 @@ Singleton {
     // Deep copy actions
     var safeActions = [];
     if (notification.actions) {
-      for (var i = 0; i < notification.actions.length; i++) {
+      for (i = 0; i < notification.actions.length; i++) {
         safeActions.push({
                            "identifier": notification.actions[i].identifier,
                            "actionObject": notification.actions[i]
@@ -384,9 +386,10 @@ Singleton {
   }
 
   function findDuplicateNotification(data) {
+    var i;
     const contentId = getContentId(data.summary, data.body, data.appName);
 
-    for (var i = 0; i < popupModel.count; i++) {
+    for (i = 0; i < popupModel.count; i++) {
       const existing = popupModel.get(i);
       const existingContentId = getContentId(existing.summary, existing.body, existing.appName);
       if (existingContentId === contentId) {
@@ -446,7 +449,8 @@ Singleton {
   }
 
   function findPopupIndex(internalId) {
-    for (var i = 0; i < popupModel.count; i++) {
+    var i;
+    for (i = 0; i < popupModel.count; i++) {
       if (popupModel.get(i).id === internalId) {
         return i;
       }
@@ -514,10 +518,11 @@ Singleton {
   }
 
   function updateAllProgress() {
+    var i;
     const now = Date.now();
     const toRemove = [];
 
-    for (var i = 0; i < popupModel.count; i++) {
+    for (i = 0; i < popupModel.count; i++) {
       const notif = popupModel.get(i);
       const notifData = popupState[notif.id];
       if (!notifData)
@@ -567,7 +572,8 @@ Singleton {
   }
 
   function updateModel(model, notificationId, prop, value) {
-    for (var i = 0; i < model.count; i++) {
+    var i;
+    for (i = 0; i < model.count; i++) {
       if (model.get(i).id === notificationId) {
         model.setProperty(i, prop, value);
         break;
@@ -642,9 +648,10 @@ Singleton {
   }
 
   function performSaveHistory() {
+    var i;
     try {
       const items = [];
-      for (var i = 0; i < historyModel.count; i++) {
+      for (i = 0; i < historyModel.count; i++) {
         const n = historyModel.get(i);
         const copy = Object.assign({}, n);
         copy.timestamp = n.timestamp.getTime();
@@ -950,6 +957,7 @@ Singleton {
   }
 
   function invokeAction(id, actionId) {
+    var i;
     let invoked = false;
     const notifData = popupState[id];
 
@@ -988,7 +996,7 @@ Singleton {
       }
     } else if (!notifData) {
       Logger.w("NotificationService", "No active notification data for id=" + id + ", searching history for manual invoke");
-      for (var i = 0; i < historyModel.count; i++) {
+      for (i = 0; i < historyModel.count; i++) {
         if (historyModel.get(i).id === id) {
           const histEntry = historyModel.get(i);
           if (histEntry.originalId) {
@@ -1024,12 +1032,13 @@ Singleton {
   }
 
   function focusSenderWindow(appName) {
+    var i;
     if (!appName || appName === "" || appName === "Unknown")
       return false;
 
     const normalizedName = appName.toLowerCase().replace(/\s+/g, "");
 
-    for (var i = 0; i < CompositorService.windows.count; i++) {
+    for (i = 0; i < CompositorService.windows.count; i++) {
       const win = CompositorService.windows.get(i);
       const winAppId = (win.appId || "").toLowerCase();
 
@@ -1047,7 +1056,8 @@ Singleton {
   }
 
   function removeFromHistory(notificationId) {
-    for (var i = 0; i < historyModel.count; i++) {
+    var i;
+    for (i = 0; i < historyModel.count; i++) {
       const notif = historyModel.get(i);
       if (notif.id === notificationId) {
         // Only delete cached images that are in our cache directory
@@ -1091,8 +1101,9 @@ Singleton {
   }
 
   function getHistorySnapshot() {
+    var i;
     const items = [];
-    for (var i = 0; i < historyModel.count; i++) {
+    for (i = 0; i < historyModel.count; i++) {
       const entry = historyModel.get(i);
       items.push({
                    "id": entry.id,

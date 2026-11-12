@@ -46,6 +46,7 @@ NBox {
   property bool crossDropHoverActive: false
 
   function clearCrossSectionHover() {
+    var candidate, i;
     crossDropHoverActive = false;
 
     var parentItem = root.parent;
@@ -53,8 +54,8 @@ NBox {
       return;
     }
 
-    for (var i = 0; i < parentItem.children.length; i++) {
-      var candidate = parentItem.children[i];
+    for (i = 0; i < parentItem.children.length; i++) {
+      candidate = parentItem.children[i];
       if (!candidate || candidate.crossDropHoverActive === undefined)
         continue;
       candidate.crossDropHoverActive = false;
@@ -62,6 +63,7 @@ NBox {
   }
 
   function updateCrossSectionHover(globalX, globalY) {
+    var area, candidate, i, localPoint, shouldHighlight;
     var parentItem = root.parent;
     if (!parentItem || !parentItem.children) {
       crossDropHoverActive = false;
@@ -70,16 +72,16 @@ NBox {
 
     crossDropHoverActive = false;
 
-    for (var i = 0; i < parentItem.children.length; i++) {
-      var candidate = parentItem.children[i];
+    for (i = 0; i < parentItem.children.length; i++) {
+      candidate = parentItem.children[i];
       if (!candidate || candidate.sectionId === undefined || candidate.crossDropHoverActive === undefined) {
         continue;
       }
 
-      var shouldHighlight = false;
+      shouldHighlight = false;
       if (candidate !== root && candidate.visible && candidate.enabled) {
-        var localPoint = candidate.mapFromGlobal(globalX, globalY);
-        var area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
+        localPoint = candidate.mapFromGlobal(globalX, globalY);
+        area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
         shouldHighlight = localPoint.x >= area.x && localPoint.y >= area.y && localPoint.x <= area.x + area.width && localPoint.y <= area.y + area.height;
       }
 
@@ -130,13 +132,14 @@ NBox {
   }
 
   function findSectionAtGlobalPosition(globalX, globalY) {
+    var area, candidate, i, localPoint;
     var parentItem = root.parent;
     if (!parentItem || !parentItem.children) {
       return "";
     }
 
-    for (var i = 0; i < parentItem.children.length; i++) {
-      var candidate = parentItem.children[i];
+    for (i = 0; i < parentItem.children.length; i++) {
+      candidate = parentItem.children[i];
       if (!candidate || candidate === root) {
         continue;
       }
@@ -146,8 +149,8 @@ NBox {
         continue;
       }
 
-      var localPoint = candidate.mapFromGlobal(globalX, globalY);
-      var area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
+      localPoint = candidate.mapFromGlobal(globalX, globalY);
+      area = candidate.dropTargetArea ? candidate.dropTargetArea : candidate;
       if (localPoint.x >= area.x && localPoint.y >= area.y && localPoint.x <= area.x + area.width && localPoint.y <= area.y + area.height) {
         return candidate.sectionId;
       }
@@ -201,9 +204,10 @@ NBox {
 
   // Open settings for a widget
   function openWidgetSettings(index, widgetData) {
+    var component;
     // Handle core widget settings
     {
-      var component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
+      component = Qt.createComponent(Qt.resolvedUrl(root.settingsDialogComponent));
 
       function instantiateAndOpen() {
         if (root._activeDialog) {
@@ -673,6 +677,7 @@ NBox {
         }
 
         function updateDropIndicator(mouseX, mouseY) {
+          var i;
           if (!dragStarted || draggedIndex === -1) {
             dropIndicator.opacity = 0;
             pulseAnimation.running = false;
@@ -684,7 +689,7 @@ NBox {
           let minDistance = Infinity;
 
           // Check position relative to each widget
-          for (var i = 0; i < widgetModel.length; i++) {
+          for (i = 0; i < widgetModel.length; i++) {
             if (i === draggedIndex)
               continue;
             const widget = widgetRepeater.itemAt(i);
@@ -774,6 +779,7 @@ NBox {
         }
 
         onPressed: mouse => {
+          var i;
                      // Reset state
                      startPos = Qt.point(mouse.x, mouse.y);
                      dragStarted = false;
@@ -785,7 +791,7 @@ NBox {
                      isOverButtonArea = false;
 
                      // Find which widget was clicked
-                     for (var i = 0; i < widgetModel.length; i++) {
+                     for (i = 0; i < widgetModel.length; i++) {
                        const widget = widgetRepeater.itemAt(i);
                        if (widget && widget.widgetIndex !== undefined) {
                          if (mouse.x >= widget.x && mouse.x <= widget.x + widget.width && mouse.y >= widget.y && mouse.y <= widget.y + widget.height) {
@@ -818,6 +824,7 @@ NBox {
                    }
 
         onPositionChanged: mouse => {
+          var moveGlobal, startGlobal;
                              if (potentialDrag && draggedIndex !== -1) {
                                const deltaX = mouse.x - startPos.x;
                                const deltaY = mouse.y - startPos.y;
@@ -834,7 +841,7 @@ NBox {
                                    ghostText.text = draggedModelData.id;
                                  }
 
-                                 var startGlobal = flowDragArea.mapToGlobal(mouse.x, mouse.y);
+                                 startGlobal = flowDragArea.mapToGlobal(mouse.x, mouse.y);
                                  root.updateCrossSectionHover(startGlobal.x, startGlobal.y);
                                }
 
@@ -843,7 +850,7 @@ NBox {
                                  dragGhost.x = mouse.x - dragGhost.width / 2;
                                  dragGhost.y = mouse.y - dragGhost.height / 2;
 
-                                 var moveGlobal = flowDragArea.mapToGlobal(mouse.x, mouse.y);
+                                 moveGlobal = flowDragArea.mapToGlobal(mouse.x, mouse.y);
                                  root.updateCrossSectionHover(moveGlobal.x, moveGlobal.y);
 
                                  // Update drop indicator
@@ -853,12 +860,13 @@ NBox {
                            }
 
         onReleased: mouse => {
+          var globalPos, targetSectionId;
                       if (root.draggable && dragStarted && dropTargetIndex !== -1 && dropTargetIndex !== draggedIndex) {
                         // Perform the reorder
                         reorderWidget(sectionId, draggedIndex, dropTargetIndex);
                       } else if (dragStarted && draggedIndex !== -1) {
-                        var globalPos = flowDragArea.mapToGlobal(mouse.x, mouse.y);
-                        var targetSectionId = root.findSectionAtGlobalPosition(globalPos.x, globalPos.y);
+                        globalPos = flowDragArea.mapToGlobal(mouse.x, mouse.y);
+                        targetSectionId = root.findSectionAtGlobalPosition(globalPos.x, globalPos.y);
                         if (targetSectionId !== "" && targetSectionId !== root.sectionId) {
                           root.moveWidget(root.sectionId, draggedIndex, targetSectionId);
                         }

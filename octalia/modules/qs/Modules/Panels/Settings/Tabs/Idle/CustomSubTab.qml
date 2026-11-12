@@ -18,6 +18,7 @@ ColumnLayout {
   }
 
   function _loadToModel() {
+    var i;
     if (_saving)
       return;
     entriesModel.clear();
@@ -27,7 +28,7 @@ ColumnLayout {
     } catch (e) {
       Logger.w("CustomSubTab", "Failed to parse customCommands:", e);
     }
-    for (var i = 0; i < entries.length; i++) {
+    for (i = 0; i < entries.length; i++) {
       entriesModel.append({
                             "name": String(entries[i].name || ""),
                             "timeout": parseInt(entries[i].timeout) || 60,
@@ -38,10 +39,11 @@ ColumnLayout {
   }
 
   function _saveFromModel() {
+    var i, item;
     _saving = true;
     var arr = [];
-    for (var i = 0; i < entriesModel.count; i++) {
-      var item = entriesModel.get(i);
+    for (i = 0; i < entriesModel.count; i++) {
+      item = entriesModel.get(i);
       arr.push({
                  "name": item.name,
                  "timeout": item.timeout,

@@ -97,6 +97,7 @@ SmartPanel {
     }
 
     function moveSelection(dir) {
+      var item;
       var m = NotificationService.historyModel;
       if (!m || m.count === 0)
         return;
@@ -123,7 +124,7 @@ SmartPanel {
           break; // Stop at edges
         }
 
-        var item = m.get(newIndex);
+        item = m.get(newIndex);
         if (item && isInCurrentRange(item.timestamp)) {
           found = true;
           break;
@@ -162,6 +163,7 @@ SmartPanel {
     }
 
     function activateSelection() {
+      var actions, delegate;
       if (focusIndex === -1)
         return;
       var item = NotificationService.historyModel.get(focusIndex);
@@ -169,13 +171,13 @@ SmartPanel {
         return;
 
       if (actionIndex >= 0) {
-        var actions = parseActions(item.actionsJson);
+        actions = parseActions(item.actionsJson);
         if (actionIndex < actions.length) {
           if (NotificationService.invokeAction(item.id, actions[actionIndex].identifier))
             root.close();
         }
       } else {
-        var delegate = notificationColumn.children[focusIndex];
+        delegate = notificationColumn.children[focusIndex];
         if (!delegate)
           return;
         if (!(delegate.canExpand || delegate.isExpanded))
@@ -209,6 +211,7 @@ SmartPanel {
     }
 
     function scrollToItem(index) {
+      var currentContentY, flickable, itemHeight, itemY, pos, viewHeight;
       // Find the delegate item
       if (index < 0 || index >= notificationColumn.children.length)
         return;
@@ -216,16 +219,16 @@ SmartPanel {
       var item = notificationColumn.children[index];
       if (item && item.visible) {
         // Use the internal flickable from NScrollView for accurate scrolling
-        var flickable = scrollView._internalFlickable;
+        flickable = scrollView._internalFlickable;
         if (!flickable || !flickable.contentItem)
           return;
 
-        var pos = flickable.contentItem.mapFromItem(item, 0, 0);
-        var itemY = pos.y;
-        var itemHeight = item.height;
+        pos = flickable.contentItem.mapFromItem(item, 0, 0);
+        itemY = pos.y;
+        itemHeight = item.height;
 
-        var currentContentY = flickable.contentY;
-        var viewHeight = flickable.height;
+        currentContentY = flickable.contentY;
+        viewHeight = flickable.height;
 
         // Check if above visible area
         if (itemY < currentContentY) {
@@ -299,6 +302,7 @@ SmartPanel {
     }
 
     function recalcRangeCounts() {
+      var i, item, r;
       var m = NotificationService.historyModel;
       if (!m || typeof m.count === "undefined" || m.count <= 0) {
         panelContent.rangeCounts = [0, 0, 0, 0];
@@ -309,11 +313,11 @@ SmartPanel {
 
       counts[0] = m.count;
 
-      for (var i = 0; i < m.count; ++i) {
-        var item = m.get(i);
+      for (i = 0; i < m.count; ++i) {
+        item = m.get(i);
         if (!item || typeof item.timestamp === "undefined")
           continue;
-        var r = rangeForTimestamp(item.timestamp);
+        r = rangeForTimestamp(item.timestamp);
         counts[r + 1] = counts[r + 1] + 1;
       }
 
@@ -331,12 +335,13 @@ SmartPanel {
     }
 
     function hasNotificationsInCurrentRange() {
+      var i, item;
       var m = NotificationService.historyModel;
       if (!m || m.count === 0) {
         return false;
       }
-      for (var i = 0; i < m.count; ++i) {
-        var item = m.get(i);
+      for (i = 0; i < m.count; ++i) {
+        item = m.get(i);
         if (item && isInCurrentRange(item.timestamp))
           return true;
       }

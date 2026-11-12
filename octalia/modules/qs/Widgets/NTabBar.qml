@@ -20,6 +20,7 @@ Rectangle {
   Component.onCompleted: _applyDistribution()
 
   function _updateFirstLast() {
+    var child, i;
     // Defensive check for QML initialization timing
     if (!tabRow || !tabRow.children) {
       return;
@@ -28,8 +29,8 @@ Rectangle {
     var len = kids.length;
     var firstVisible = -1;
     var lastVisible = -1;
-    for (var i = 0; i < len; i++) {
-      var child = kids[i];
+    for (i = 0; i < len; i++) {
+      child = kids[i];
       // Only consider items that have isFirst/isLast (actual tab buttons, not Repeaters)
       if (child.visible && "isFirst" in child) {
         if (firstVisible === -1)
@@ -37,8 +38,8 @@ Rectangle {
         lastVisible = i;
       }
     }
-    for (var i = 0; i < len; i++) {
-      var child = kids[i];
+    for (i = 0; i < len; i++) {
+      child = kids[i];
       if ("isFirst" in child)
         child.isFirst = (i === firstVisible);
       if ("isLast" in child)
@@ -47,19 +48,20 @@ Rectangle {
   }
 
   function _applyDistribution() {
+    var child, i;
     if (!tabRow || !tabRow.children) {
       return;
     }
     if (!distributeEvenly) {
-      for (var i = 0; i < tabRow.children.length; i++) {
-        var child = tabRow.children[i];
+      for (i = 0; i < tabRow.children.length; i++) {
+        child = tabRow.children[i];
         child.Layout.fillWidth = true;
       }
       return;
     }
 
-    for (var i = 0; i < tabRow.children.length; i++) {
-      var child = tabRow.children[i];
+    for (i = 0; i < tabRow.children.length; i++) {
+      child = tabRow.children[i];
       child.Layout.fillWidth = true;
       child.Layout.preferredWidth = 1;
     }

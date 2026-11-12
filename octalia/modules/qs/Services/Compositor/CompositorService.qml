@@ -163,9 +163,10 @@ Singleton {
   }
 
   function syncWorkspaces() {
+    var i;
     workspaces.clear();
     const ws = backend.workspaces;
-    for (var i = 0; i < ws.count; i++) {
+    for (i = 0; i < ws.count; i++) {
       workspaces.append(ws.get(i));
     }
     // Emit signal to notify listeners that workspace list has been updated
@@ -173,9 +174,10 @@ Singleton {
   }
 
   function syncWindows() {
+    var i;
     windows.clear();
     const ws = backend.windows;
-    for (var i = 0; i < ws.length; i++) {
+    for (i = 0; i < ws.length; i++) {
       windows.append(ws[i]);
     }
     // Emit signal to notify listeners that window list has been updated
@@ -184,10 +186,11 @@ Singleton {
 
   // Sync only the focused window state, not the entire window list
   function syncFocusedWindow() {
+    var i;
     const newIndex = backend.focusedWindowIndex;
 
     // Update isFocused flags by syncing from backend
-    for (var i = 0; i < windows.count && i < backend.windows.length; i++) {
+    for (i = 0; i < windows.count && i < backend.windows.length; i++) {
       const backendFocused = backend.windows[i].isFocused;
       if (windows.get(i).isFocused !== backendFocused) {
         windows.setProperty(i, "isFocused", backendFocused);
@@ -258,8 +261,9 @@ Singleton {
 
   // Get focused window title
   function getFocusedWindowTitle() {
+    var title;
     if (focusedWindowIndex >= 0 && focusedWindowIndex < windows.count) {
-      var title = windows.get(focusedWindowIndex).title;
+      title = windows.get(focusedWindowIndex).title;
       if (title !== undefined) {
         title = title.replace(/(\r\n|\n|\r)/g, "");
       }
@@ -277,9 +281,10 @@ Singleton {
   }
 
   function getWindowsForWorkspace(workspaceId) {
+    var i, window;
     var windowsInWs = [];
-    for (var i = 0; i < windows.count; i++) {
-      var window = windows.get(i);
+    for (i = 0; i < windows.count; i++) {
+      window = windows.get(i);
       if (window.workspaceId === workspaceId) {
         // Snapshot to plain JS object so callers never hold live ListModel
         // proxies that become invalid when syncWindows() clears the model.
@@ -314,7 +319,8 @@ Singleton {
 
   // Get current workspace
   function getCurrentWorkspace() {
-    for (var i = 0; i < workspaces.count; i++) {
+    var i;
+    for (i = 0; i < workspaces.count; i++) {
       const ws = workspaces.get(i);
       if (ws.isFocused) {
         return ws;
@@ -325,8 +331,9 @@ Singleton {
 
   // Get active workspaces
   function getActiveWorkspaces() {
+    var i;
     const activeWorkspaces = [];
-    for (var i = 0; i < workspaces.count; i++) {
+    for (i = 0; i < workspaces.count; i++) {
       const ws = workspaces.get(i);
       if (ws.isActive) {
         activeWorkspaces.push(ws);

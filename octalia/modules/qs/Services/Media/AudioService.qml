@@ -411,6 +411,7 @@ Singleton {
   }
 
   function getAppBaseKey(node): string {
+    var appId, appName, parts;
     if (!node || !node.properties) {
       return "";
     }
@@ -418,17 +419,17 @@ Singleton {
     var base = "";
     var binary = props["application.process.binary"] || "";
     if (binary) {
-      var parts = binary.split("/");
+      parts = binary.split("/");
       base = parts[parts.length - 1].toLowerCase();
     }
     if (!base) {
-      var appName = props["application.name"] || "";
+      appName = props["application.name"] || "";
       if (appName) {
         base = appName.toLowerCase();
       }
     }
     if (!base) {
-      var appId = props["application.id"] || "";
+      appId = props["application.id"] || "";
       if (appId) {
         base = appId.toLowerCase();
       }
@@ -437,6 +438,7 @@ Singleton {
   }
 
   function _concurrentStreamsForSameBase(base: string): int {
+    var i, s;
     if (!base) {
       return 0;
     }
@@ -445,8 +447,8 @@ Singleton {
       return 0;
     }
     var n = 0;
-    for (var i = 0; i < streams.length; i++) {
-      var s = streams[i];
+    for (i = 0; i < streams.length; i++) {
+      s = streams[i];
       if (s && getAppBaseKey(s) === base) {
         n++;
       }
@@ -535,12 +537,13 @@ Singleton {
   }
 
   function _cloneOverrideMap(ovSrc) {
+    var inner;
     var out = {};
     for (var ok in ovSrc) {
       if (!Object.prototype.hasOwnProperty.call(ovSrc, ok)) {
         continue;
       }
-      var inner = ovSrc[ok];
+      inner = ovSrc[ok];
       out[ok] = inner ? {
                           "volume": inner.volume,
                           "muted": inner.muted
@@ -577,28 +580,30 @@ Singleton {
   }
 
   function _writePanelStickyVolume(node, volume: real): void {
+    var psk, pvb;
     var base = getAppBaseKey(node);
     var key = getAppKey(node);
     if (_concurrentStreamsForSameBase(base) > 1 && key) {
-      var psk = panelAppVolumeByStreamKey;
+      psk = panelAppVolumeByStreamKey;
       psk[key] = volume;
       panelAppVolumeByStreamKey = psk;
     } else if (base) {
-      var pvb = panelAppVolumeByBase;
+      pvb = panelAppVolumeByBase;
       pvb[base] = volume;
       panelAppVolumeByBase = pvb;
     }
   }
 
   function _writePanelStickyMute(node, muted: bool): void {
+    var msk, pmb;
     var base = getAppBaseKey(node);
     var key = getAppKey(node);
     if (_concurrentStreamsForSameBase(base) > 1 && key) {
-      var msk = panelAppMutedByStreamKey;
+      msk = panelAppMutedByStreamKey;
       msk[key] = muted;
       panelAppMutedByStreamKey = msk;
     } else if (base) {
-      var pmb = panelAppMutedByBase;
+      pmb = panelAppMutedByBase;
       pmb[base] = muted;
       panelAppMutedByBase = pmb;
     }
@@ -623,14 +628,15 @@ Singleton {
   }
 
   function _migrateBasePanelLocksToPerStreamIfNeeded(): void {
+    var b, i, j, key, muteB, s, volB;
     var streams = root.appStreams;
     if (!streams || streams.length === 0) {
       return;
     }
 
     var bases = {};
-    for (var i = 0; i < streams.length; i++) {
-      var b = getAppBaseKey(streams[i]);
+    for (i = 0; i < streams.length; i++) {
+      b = getAppBaseKey(streams[i]);
       if (b) {
         bases[b] = true;
       }
@@ -650,18 +656,18 @@ Singleton {
       if (_concurrentStreamsForSameBase(base) <= 1) {
         continue;
       }
-      var volB = pvb[base];
-      var muteB = pmb[base];
+      volB = pvb[base];
+      muteB = pmb[base];
       if (volB === undefined && muteB === undefined) {
         continue;
       }
 
-      for (var j = 0; j < streams.length; j++) {
-        var s = streams[j];
+      for (j = 0; j < streams.length; j++) {
+        s = streams[j];
         if (!s || getAppBaseKey(s) !== base) {
           continue;
         }
-        var key = getAppKey(s);
+        key = getAppKey(s);
         if (!key) {
           continue;
         }
@@ -710,6 +716,7 @@ Singleton {
   }
 
   function _applyAppOverrides(): void {
+    var base, i, key, ov, panelMute, panelVol, s, targetMuted, targetVol;
     var streams = root.appStreams;
     if (!streams) {
       return;
@@ -720,16 +727,16 @@ Singleton {
     var prevKnown = root._knownAppStreamIds;
     var currentIds = {};
     _isApplyingAppOverride = true;
-    for (var i = 0; i < streams.length; i++) {
-      var s = streams[i];
+    for (i = 0; i < streams.length; i++) {
+      s = streams[i];
       if (!s) {
         continue;
       }
 
       currentIds[s.id] = true;
-      var key = getAppKey(s);
-      var base = getAppBaseKey(s);
-      var ov = key ? appVolumeOverrides[key] : null;
+      key = getAppKey(s);
+      base = getAppBaseKey(s);
+      ov = key ? appVolumeOverrides[key] : null;
 
       if (key && s.audio && !prevKnown[s.id]) {
         ov = _seedNewStreamOverride(key, base, s.audio);
@@ -739,10 +746,10 @@ Singleton {
         continue;
       }
 
-      var panelVol = _panelStickyVolume(key, base);
-      var panelMute = _panelStickyMute(key, base);
-      var targetVol = (panelVol !== undefined) ? panelVol : (ov && ov.volume !== undefined ? ov.volume : undefined);
-      var targetMuted = (panelMute !== undefined) ? panelMute : (ov && ov.muted !== undefined ? ov.muted : undefined);
+      panelVol = _panelStickyVolume(key, base);
+      panelMute = _panelStickyMute(key, base);
+      targetVol = (panelVol !== undefined) ? panelVol : (ov && ov.volume !== undefined ? ov.volume : undefined);
+      targetMuted = (panelMute !== undefined) ? panelMute : (ov && ov.muted !== undefined ? ov.muted : undefined);
       if (targetVol !== undefined && Math.abs(s.audio.volume - targetVol) > root.epsilon) {
         s.audio.volume = targetVol;
       }

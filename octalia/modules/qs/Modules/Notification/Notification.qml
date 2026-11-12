@@ -154,10 +154,11 @@ Variants {
 
       Component.onCompleted: {
         animateConnection = function (notificationId) {
+          var i, item;
           var delegate = null;
           if (notificationRepeater) {
-            for (var i = 0; i < notificationRepeater.count; i++) {
-              var item = notificationRepeater.itemAt(i);
+            for (i = 0; i < notificationRepeater.count; i++) {
+              item = notificationRepeater.itemAt(i);
               if (item?.notificationId === notificationId) {
                 delegate = item;
                 break;

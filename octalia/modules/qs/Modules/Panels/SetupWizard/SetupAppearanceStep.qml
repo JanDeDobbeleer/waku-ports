@@ -21,9 +21,10 @@ ColumnLayout {
   property int cacheVersion: 0
 
   function getSchemeColor(schemeName, key) {
+    var data, mode;
     try {
-      var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-      var data = schemeColorsCache[schemeName];
+      mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
+      data = schemeColorsCache[schemeName];
       if (data && data[mode] && data[mode][key])
         return data[mode][key];
     } catch (e) {}

@@ -37,16 +37,17 @@ Singleton {
   }
 
   function populateModels(allFontsText, monoFontsText) {
+    var families, fi, fontName, fontObj, i, j, k, line, m, mi, monoFamilies, monoName, n, name;
     // Parse monospace fonts into a lookup set
     // fc-list returns comma-separated family names for fonts with multiple families
     var monoLookup = {};
     var monoLines = monoFontsText.split('\n');
-    for (var i = 0; i < monoLines.length; i++) {
-      var line = monoLines[i].trim();
+    for (i = 0; i < monoLines.length; i++) {
+      line = monoLines[i].trim();
       if (line) {
-        var monoFamilies = line.split(',');
-        for (var mi = 0; mi < monoFamilies.length; mi++) {
-          var monoName = monoFamilies[mi].trim();
+        monoFamilies = line.split(',');
+        for (mi = 0; mi < monoFamilies.length; mi++) {
+          monoName = monoFamilies[mi].trim();
           if (monoName)
             monoLookup[monoName] = true;
         }
@@ -57,12 +58,12 @@ Singleton {
     var allLines = allFontsText.split('\n');
     var fontSet = {}; // Deduplicate font families
 
-    for (var j = 0; j < allLines.length; j++) {
-      var line = allLines[j].trim();
+    for (j = 0; j < allLines.length; j++) {
+      line = allLines[j].trim();
       if (line) {
-        var families = line.split(',');
-        for (var fi = 0; fi < families.length; fi++) {
-          var fontName = families[fi].trim();
+        families = line.split(',');
+        for (fi = 0; fi < families.length; fi++) {
+          fontName = families[fi].trim();
           if (fontName && !fontSet[fontName]) {
             fontSet[fontName] = true;
           }
@@ -79,9 +80,9 @@ Singleton {
     var allBatch = [];
     var monoBatch = [];
 
-    for (var k = 0; k < sortedFonts.length; k++) {
-      var name = sortedFonts[k];
-      var fontObj = {
+    for (k = 0; k < sortedFonts.length; k++) {
+      name = sortedFonts[k];
+      fontObj = {
         "key": name,
         "name": name
       };
@@ -106,9 +107,9 @@ Singleton {
                             "name": I18n.tr("panels.indicator.system-default")
                           });
 
-    for (var m = 0; m < allBatch.length; m++)
+    for (m = 0; m < allBatch.length; m++)
       availableFonts.append(allBatch[m]);
-    for (var n = 0; n < monoBatch.length; n++)
+    for (n = 0; n < monoBatch.length; n++)
       monospaceFonts.append(monoBatch[n]);
 
     fontsLoaded = true;

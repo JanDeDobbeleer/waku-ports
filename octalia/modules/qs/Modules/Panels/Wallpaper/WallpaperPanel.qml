@@ -101,6 +101,7 @@ SmartPanel {
   }
 
   function onReturnPressed() {
+    var item;
     if (!contentItem)
       return;
 
@@ -114,7 +115,7 @@ SmartPanel {
     if (view?.gridView?.hasActiveFocus) {
       let gridView = view.gridView;
       if (gridView.currentIndex >= 0 && gridView.currentIndex < gridView.model.count) {
-        var item = gridView.model.get(gridView.currentIndex);
+        item = gridView.model.get(gridView.currentIndex);
         view.selectItem(item.path, item.isDirectory);
       }
     }
@@ -151,6 +152,7 @@ SmartPanel {
 
     // Function to update Wallhaven resolution filter
     function updateWallhavenResolution() {
+      var resolution;
       if (typeof WallhavenService === "undefined") {
         return;
       }
@@ -160,7 +162,7 @@ SmartPanel {
       var mode = Settings.data.wallpaper.wallhavenResolutionMode || "atleast";
 
       if (width && height) {
-        var resolution = width + "x" + height;
+        resolution = width + "x" + height;
         if (mode === "atleast") {
           WallhavenService.minResolution = resolution;
           WallhavenService.resolutions = "";
@@ -207,12 +209,13 @@ SmartPanel {
     Connections {
       target: root
       function onOpened() {
+        var i;
         // Ensure contentItem is set
         if (!root.contentItem) {
           root.contentItem = panelContent;
         }
         // Reset grid view selections
-        for (var i = 0; i < screenRepeater.count; i++) {
+        for (i = 0; i < screenRepeater.count; i++) {
           let item = screenRepeater.itemAt(i);
           if (item && item.gridView) {
             item.gridView.currentIndex = -1;
@@ -685,10 +688,11 @@ SmartPanel {
 
     // Favorited paths (any light/dark) first, then the rest
     function sortFavoritesToTop(items) {
+      var i, it;
       var favs = [];
       var rest = [];
-      for (var i = 0; i < items.length; i++) {
-        var it = items[i];
+      for (i = 0; i < items.length; i++) {
+        it = items[i];
         if (!it.isDirectory && WallpaperService.isFavorite(it.path)) {
           favs.push(it);
         } else {
@@ -701,12 +705,13 @@ SmartPanel {
     // Rebuild filteredItems and sync to wallpaperModel (full replacement, no animation).
     // When skipSync is true the caller will animate the model itself.
     function updateFiltered(skipSync) {
+      var dirPath, i;
       var combinedItems = [];
 
       // In browse mode, add directories first
       if (isBrowseMode) {
-        for (var i = 0; i < directoriesList.length; i++) {
-          var dirPath = directoriesList[i];
+        for (i = 0; i < directoriesList.length; i++) {
+          dirPath = directoriesList[i];
           combinedItems.push({
                                "path": dirPath,
                                "name": dirPath.split('/').pop(),
@@ -716,7 +721,7 @@ SmartPanel {
       }
 
       // Add files
-      for (var i = 0; i < wallpapersList.length; i++) {
+      for (i = 0; i < wallpapersList.length; i++) {
         combinedItems.push({
                              "path": wallpapersList[i],
                              "name": wallpapersList[i].split('/').pop(),
@@ -748,8 +753,9 @@ SmartPanel {
 
     // Copy filteredItems into the ListModel (full rebuild, no animation).
     function syncModel() {
+      var i;
       wallpaperModel.clear();
-      for (var i = 0; i < filteredItems.length; i++) {
+      for (i = 0; i < filteredItems.length; i++) {
         wallpaperModel.append(filteredItems[i]);
       }
       wallpaperGridView.currentIndex = -1;
@@ -758,9 +764,10 @@ SmartPanel {
 
     // Animate a single item moving to its new position after a favorite toggle.
     function handleFavoriteMove(path) {
+      var i, j;
       // Find where the item currently sits in the model
       var fromIndex = -1;
-      for (var i = 0; i < wallpaperModel.count; i++) {
+      for (i = 0; i < wallpaperModel.count; i++) {
         if (wallpaperModel.get(i).path === path) {
           fromIndex = i;
           break;
@@ -771,7 +778,7 @@ SmartPanel {
 
       // Find where it should be in the freshly-computed filteredItems
       var toIndex = -1;
-      for (var j = 0; j < filteredItems.length; j++) {
+      for (j = 0; j < filteredItems.length; j++) {
         if (filteredItems[j].path === path) {
           toIndex = j;
           break;
@@ -800,9 +807,10 @@ SmartPanel {
     // Reorder wallpaperModel to match filteredItems using in-place moves.
     // Avoids clear+rebuild which would destroy delegates and flash thumbnails.
     function reconcileModel() {
-      for (var i = 0; i < filteredItems.length; i++) {
-        var currentPos = -1;
-        for (var j = i; j < wallpaperModel.count; j++) {
+      var currentPos, i, j;
+      for (i = 0; i < filteredItems.length; i++) {
+        currentPos = -1;
+        for (j = i; j < wallpaperModel.count; j++) {
           if (wallpaperModel.get(j).path === filteredItems[i].path) {
             currentPos = j;
             break;
@@ -858,6 +866,7 @@ SmartPanel {
     }
 
     function refreshWallpaperScreenData() {
+      var browsePath, gen;
       if (targetScreen === null) {
         return;
       }
@@ -866,11 +875,11 @@ SmartPanel {
 
       if (isBrowseMode) {
         // In browse mode, scan current directory for both files and directories
-        var browsePath = WallpaperService.getCurrentBrowsePath(targetScreen.name);
+        browsePath = WallpaperService.getCurrentBrowsePath(targetScreen.name);
         currentBrowsePath = browsePath;
 
         // Bump generation so stale scan callbacks from rapid navigation are ignored
-        var gen = ++_browseScanGeneration;
+        gen = ++_browseScanGeneration;
         WallpaperService.scanDirectoryWithDirs(targetScreen.name, browsePath, function (result) {
           if (gen !== _browseScanGeneration)
             return; // Stale callback from a superseded navigation
@@ -889,10 +898,11 @@ SmartPanel {
     }
 
     function selectItem(path, isDirectory) {
+      var screen;
       if (isDirectory) {
         WallpaperService.setBrowsePath(targetScreen.name, path);
       } else {
-        var screen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : targetScreen.name;
+        screen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : targetScreen.name;
         WallpaperService.changeWallpaper(path, screen, WallpaperService.wallpaperSelectionAppearance);
         WallpaperService.applyFavoriteTheme(path, screen, WallpaperService.wallpaperSelectionAppearance);
       }
@@ -1884,8 +1894,9 @@ SmartPanel {
     function wallhavenDownloadAndApply(wallpaper, targetScreen) {
       if (typeof WallhavenService !== "undefined") {
         WallhavenService.downloadWallpaper(wallpaper, function (success, localPath) {
+          var whScreen;
           if (success) {
-            var whScreen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : Quickshell.screens[currentScreenIndex].name;
+            whScreen = Settings.data.wallpaper.setWallpaperOnAllMonitors ? undefined : Quickshell.screens[currentScreenIndex].name;
             if (!Settings.data.wallpaper.setWallpaperOnAllMonitors && currentScreenIndex < Quickshell.screens.length) {
               WallpaperService.changeWallpaper(localPath, Quickshell.screens[currentScreenIndex].name, WallpaperService.wallpaperSelectionAppearance);
             } else {

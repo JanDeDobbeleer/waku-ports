@@ -35,9 +35,10 @@ RowLayout {
   property string searchText: ""
 
   function findIndexByKey(key) {
+    var i;
     if (!root.model)
       return -1;
-    for (var i = 0; i < root.model.count; i++) {
+    for (i = 0; i < root.model.count; i++) {
       if (root.model.get(i).key === key) {
         return i;
       }
@@ -49,9 +50,10 @@ RowLayout {
   readonly property var activeModel: isFiltered ? filteredModel : root.model
 
   function findIndexInActiveModel(key) {
+    var i;
     if (!activeModel || activeModel.count === undefined)
       return -1;
-    for (var i = 0; i < activeModel.count; i++) {
+    for (i = 0; i < activeModel.count; i++) {
       if (activeModel.get(i).key === key) {
         return i;
       }
@@ -63,6 +65,7 @@ RowLayout {
   property bool isFiltered: false
 
   function filterModel() {
+    var fuzzyResults, i, item, j, searchLower;
     // Check if model exists and has items
     if (!root.model || root.model.count === undefined || root.model.count === 0) {
       filteredModel.clear();
@@ -84,26 +87,26 @@ RowLayout {
 
     // Convert ListModel to array for fuzzy search
     var items = [];
-    for (var i = 0; i < root.model.count; i++) {
+    for (i = 0; i < root.model.count; i++) {
       items.push(root.model.get(i));
     }
 
     // Use fuzzy search if available, fallback to simple search
     if (typeof FuzzySort !== 'undefined') {
-      var fuzzyResults = FuzzySort.go(query, items, {
+      fuzzyResults = FuzzySort.go(query, items, {
                                         "key": "name",
                                         "limit": 50
                                       });
 
       // Add results in order of relevance
-      for (var j = 0; j < fuzzyResults.length; j++) {
+      for (j = 0; j < fuzzyResults.length; j++) {
         filteredModel.append(fuzzyResults[j].obj);
       }
     } else {
       // Fallback to simple search
-      var searchLower = query.toLowerCase();
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
+      searchLower = query.toLowerCase();
+      for (i = 0; i < items.length; i++) {
+        item = items[i];
         if (item.name.toLowerCase().includes(searchLower)) {
           filteredModel.append(item);
         }
@@ -235,8 +238,9 @@ RowLayout {
                           }
 
           function selectHighlighted() {
+            var selectedKey;
             if (listView.currentIndex >= 0 && listView.model && listView.currentIndex < listView.model.count) {
-              var selectedKey = listView.model.get(listView.currentIndex).key;
+              selectedKey = listView.model.get(listView.currentIndex).key;
               root.selected(selectedKey);
             }
           }

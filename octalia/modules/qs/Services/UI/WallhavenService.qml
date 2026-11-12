@@ -108,11 +108,12 @@ Singleton {
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
+      var errorMsg, response;
       if (xhr.readyState === XMLHttpRequest.DONE) {
         fetching = false;
         if (xhr.status === 200) {
           try {
-            var response = JSON.parse(xhr.responseText);
+            response = JSON.parse(xhr.responseText);
             if (response.data && Array.isArray(response.data)) {
               currentResults = response.data;
               currentMeta = response.meta || {};
@@ -126,29 +127,29 @@ Singleton {
               Logger.d("Wallhaven", "Search completed:", currentResults.length, "results, page", currentPage, "of", lastPage);
               searchCompleted(currentResults, currentMeta);
             } else {
-              var errorMsg = "Invalid API response";
+              errorMsg = "Invalid API response";
               lastError = errorMsg;
               Logger.e("Wallhaven", errorMsg);
               searchFailed(errorMsg);
             }
           } catch (e) {
-            var errorMsg = "Failed to parse API response: " + e.toString();
+            errorMsg = "Failed to parse API response: " + e.toString();
             lastError = errorMsg;
             Logger.e("Wallhaven", errorMsg);
             searchFailed(errorMsg);
           }
         } else if (xhr.status === 429) {
-          var errorMsg = "Rate limit exceeded (45 requests/minute)";
+          errorMsg = "Rate limit exceeded (45 requests/minute)";
           lastError = errorMsg;
           Logger.w("Wallhaven", errorMsg);
           searchFailed(errorMsg);
         } else if (xhr.status === 401) {
-          var errorMsg = "Invalid API Key. Please check your settings.";
+          errorMsg = "Invalid API Key. Please check your settings.";
           lastError = errorMsg;
           Logger.e("Wallhaven", errorMsg);
           searchFailed(errorMsg);
         } else {
-          var errorMsg = "API error: " + xhr.status;
+          errorMsg = "API error: " + xhr.status;
           lastError = errorMsg;
           Logger.e("Wallhaven", "Search failed:", errorMsg);
           searchFailed(errorMsg);
@@ -162,13 +163,14 @@ Singleton {
 
   // -------------------------------------------------
   function getWallpaperUrl(wallpaper) {
+    var idPrefix;
     // Use the 'path' field which contains the full resolution image URL
     if (wallpaper.path) {
       return wallpaper.path;
     }
     // Fallback to constructing URL from ID
     if (wallpaper.id) {
-      var idPrefix = wallpaper.id.substring(0, 2);
+      idPrefix = wallpaper.id.substring(0, 2);
       return "https://w.wallhaven.cc/full/" + idPrefix + "/wallhaven-" + wallpaper.id + ".jpg";
     }
     return "";
@@ -176,19 +178,20 @@ Singleton {
 
   // -------------------------------------------------
   function getThumbnailUrl(wallpaper, size) {
+    var idPrefix, sizeMap, sizePath;
     // size: "small", "large", "original"
     if (wallpaper.thumbs && wallpaper.thumbs[size]) {
       return wallpaper.thumbs[size];
     }
     // Fallback
     if (wallpaper.id) {
-      var idPrefix = wallpaper.id.substring(0, 2);
-      var sizeMap = {
+      idPrefix = wallpaper.id.substring(0, 2);
+      sizeMap = {
         "small": "small",
         "large": "lg",
         "original": "orig"
       };
-      var sizePath = sizeMap[size] || "lg";
+      sizePath = sizeMap[size] || "lg";
       return "https://th.wallhaven.cc/" + sizePath + "/" + idPrefix + "/" + wallpaper.id + ".jpg";
     }
     return "";

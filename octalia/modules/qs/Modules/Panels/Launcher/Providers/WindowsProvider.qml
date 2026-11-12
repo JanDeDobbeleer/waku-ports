@@ -38,6 +38,7 @@ Item {
   }
 
   function getResults(query) {
+    var appEntry, entry, i, iconName, j, score, searchTerm, win;
     if (!query)
       return [];
 
@@ -47,7 +48,7 @@ Item {
     var isCommandMode = trimmed.startsWith(">win");
     if (isCommandMode) {
       // Extract search term after ">win "
-      var searchTerm = trimmed.substring(4).trim();
+      searchTerm = trimmed.substring(4).trim();
       // In command mode, show all windows if no search term
       if (searchTerm.length === 0) {
         return getAllWindows();
@@ -62,8 +63,8 @@ Item {
     var items = [];
 
     // Collect all windows from CompositorService
-    for (var i = 0; i < CompositorService.windows.count; i++) {
-      var win = CompositorService.windows.get(i);
+    for (i = 0; i < CompositorService.windows.count; i++) {
+      win = CompositorService.windows.get(i);
       items.push({
                    "id": win.id,
                    "title": win.title || "",
@@ -82,13 +83,13 @@ Item {
 
     // Map to launcher items
     var launcherItems = [];
-    for (var j = 0; j < results.length; j++) {
-      var entry = results[j].obj;
-      var score = results[j].score;
+    for (j = 0; j < results.length; j++) {
+      entry = results[j].obj;
+      score = results[j].score;
 
       // Get icon name from DesktopEntry if available, otherwise use appId
-      var iconName = entry.appId;
-      var appEntry = ThemeIcons.findAppEntry(entry.appId);
+      iconName = entry.appId;
+      appEntry = ThemeIcons.findAppEntry(entry.appId);
       if (appEntry && appEntry.icon) {
         iconName = appEntry.icon;
       }
@@ -110,13 +111,14 @@ Item {
   }
 
   function getAllWindows() {
+    var appEntry, i, iconName, win;
     var launcherItems = [];
 
-    for (var i = 0; i < CompositorService.windows.count; i++) {
-      var win = CompositorService.windows.get(i);
+    for (i = 0; i < CompositorService.windows.count; i++) {
+      win = CompositorService.windows.get(i);
 
-      var iconName = win.appId;
-      var appEntry = ThemeIcons.findAppEntry(win.appId);
+      iconName = win.appId;
+      appEntry = ThemeIcons.findAppEntry(win.appId);
       if (appEntry && appEntry.icon) {
         iconName = appEntry.icon;
       }
@@ -145,9 +147,10 @@ Item {
         launcher.close();
 
       Qt.callLater(() => {
+        var i, win;
                      // Find the actual window object to pass to focusWindow
-                     for (var i = 0; i < CompositorService.windows.count; i++) {
-                       var win = CompositorService.windows.get(i);
+                     for (i = 0; i < CompositorService.windows.count; i++) {
+                       win = CompositorService.windows.get(i);
                        if (win.id === windowEntry.id) {
                          CompositorService.focusWindow(win);
                          break;

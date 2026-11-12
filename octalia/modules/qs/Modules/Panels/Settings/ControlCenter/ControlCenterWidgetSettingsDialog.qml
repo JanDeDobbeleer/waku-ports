@@ -134,8 +134,9 @@ Popup {
   }
 
   function saveAndClose() {
+    var newSettings;
     if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
+      newSettings = settingsLoader.item.saveSettings();
       if (newSettings) {
         root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
       }

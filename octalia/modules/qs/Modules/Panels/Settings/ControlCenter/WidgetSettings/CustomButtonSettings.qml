@@ -29,11 +29,12 @@ ColumnLayout {
     property bool enableOnStateLogic: widgetData.enableOnStateLogic !== undefined ? widgetData.enableOnStateLogic : widgetMetadata.enableOnStateLogic
 
     function populateStateChecks() {
+      var i, initialChecks, item;
       try {
-        var initialChecks = JSON.parse(stateChecksJson);
+        initialChecks = JSON.parse(stateChecksJson);
         if (initialChecks && Array.isArray(initialChecks)) {
-          for (var i = 0; i < initialChecks.length; i++) {
-            var item = initialChecks[i];
+          for (i = 0; i < initialChecks.length; i++) {
+            item = initialChecks[i];
             if (item && typeof item === "object") {
               _settings._stateChecksListModel.append({
                                                        "command": item.command || "",
@@ -56,8 +57,9 @@ ColumnLayout {
     }
 
     function saveSettings() {
+      var i;
       var savedStateChecksArray = [];
-      for (var i = 0; i < _settings._stateChecksListModel.count; i++) {
+      for (i = 0; i < _settings._stateChecksListModel.count; i++) {
         savedStateChecksArray.push(_settings._stateChecksListModel.get(i));
       }
       _settings.stateChecksJson = JSON.stringify(savedStateChecksArray);

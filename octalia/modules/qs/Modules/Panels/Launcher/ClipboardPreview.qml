@@ -17,6 +17,7 @@ Item {
   implicitHeight: contentArea.implicitHeight + Style.margin2L
 
   function loadContent() {
+    var requestedId;
     if (!currentItem || !currentItem.clipboardId)
       return;
 
@@ -38,13 +39,14 @@ Item {
         fullContent = currentItem.preview || "";
         loadingFullContent = true;
         // Async decode as fallback
-        var requestedId = currentItem.clipboardId;
+        requestedId = currentItem.clipboardId;
         ClipboardService.decode(requestedId, function (content) {
+          var trimmed;
           if (!previewPanel || !previewPanel.currentItem) {
             return;
           }
           if (previewPanel.currentItem.clipboardId === requestedId) {
-            var trimmed = content ? content.trim() : "";
+            trimmed = content ? content.trim() : "";
             if (trimmed !== "") {
               previewPanel.fullContent = trimmed;
             }

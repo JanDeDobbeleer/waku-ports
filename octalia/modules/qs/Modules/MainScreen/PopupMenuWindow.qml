@@ -75,9 +75,10 @@ PanelWindow {
     minWidth: 180
 
     onTriggered: (action, item) => {
+      var handled;
                    if (root.dynamicMenuCallback) {
                      // Callback returns true if it will handle closing (e.g., opening a dialog)
-                     var handled = root.dynamicMenuCallback(action);
+                     handled = root.dynamicMenuCallback(action);
                      if (!handled) {
                        root.close();
                      }

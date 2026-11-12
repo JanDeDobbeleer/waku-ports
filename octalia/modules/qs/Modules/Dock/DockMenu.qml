@@ -534,8 +534,9 @@ PopupWindow {
   }
 
   function handleLauncherSettings() {
+    var panel;
     if (targetScreen) {
-      var panel = PanelService.getPanel("settingsPanel", targetScreen);
+      panel = PanelService.getPanel("settingsPanel", targetScreen);
       panel.requestedTab = SettingsPanel.Tab.Launcher;
       panel.toggle();
     }
@@ -543,8 +544,9 @@ PopupWindow {
   }
 
   function handleDockSettings() {
+    var panel;
     if (targetScreen) {
-      var panel = PanelService.getPanel("settingsPanel", targetScreen);
+      panel = PanelService.getPanel("settingsPanel", targetScreen);
       panel.requestedTab = SettingsPanel.Tab.Dock;
       panel.toggle();
     }

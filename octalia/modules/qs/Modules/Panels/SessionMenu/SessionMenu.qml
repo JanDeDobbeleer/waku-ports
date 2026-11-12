@@ -185,6 +185,7 @@ SmartPanel {
 
   // Timer management
   function startTimer(action) {
+    var i;
     // Check if global countdown is disabled
     if (!Settings.data.sessionMenu.enableCountdown) {
       executeAction(action);
@@ -193,7 +194,7 @@ SmartPanel {
 
     // Check per-item countdown setting
     var option = null;
-    for (var i = 0; i < powerOptions.length; i++) {
+    for (i = 0; i < powerOptions.length; i++) {
       if (powerOptions[i].action === action) {
         option = powerOptions[i];
         break;
@@ -450,6 +451,7 @@ SmartPanel {
   }
 
   function checkKeybind(event) {
+    var i;
     if (powerOptions.length === 0)
       return false;
 
@@ -463,7 +465,7 @@ SmartPanel {
     if (!pressedKeybind)
       return false;
 
-    for (var i = 0; i < powerOptions.length; i++) {
+    for (i = 0; i < powerOptions.length; i++) {
       const option = powerOptions[i];
       if (option.keybind === pressedKeybind) {
         selectedIndex = i;

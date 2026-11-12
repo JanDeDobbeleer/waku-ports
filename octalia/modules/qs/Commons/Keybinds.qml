@@ -119,6 +119,7 @@ QtObject {
   }
 
   function checkKey(event, settingName, settings) {
+    var i;
     // Accept both simplified names ("remove") and full property names ("keyRemove")
     // so callers are less error-prone.
     var normalized = String(settingName || "");
@@ -130,7 +131,7 @@ QtObject {
     if (!boundKeys || boundKeys.length === 0)
       return false;
     var eventString = getKeybindString(event);
-    for (var i = 0; i < boundKeys.length; i++) {
+    for (i = 0; i < boundKeys.length; i++) {
       if (boundKeys[i] === eventString)
         return true;
     }

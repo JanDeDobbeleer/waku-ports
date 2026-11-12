@@ -28,6 +28,7 @@ Singleton {
   signal windowClosed
 
   function openToEntry(entry, screen) {
+    var settingsPanel;
     if (Settings.data.ui.settingsPanelMode === "window") {
       requestedEntry = entry;
       if (settingsWindow) {
@@ -41,7 +42,7 @@ Singleton {
         Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
         return;
       }
-      var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+      settingsPanel = PanelService.getPanel("settingsPanel", screen);
       if (settingsPanel) {
         settingsPanel.requestedEntry = entry;
         settingsPanel.open();
@@ -53,6 +54,7 @@ Singleton {
   // Respects user's settingsPanelMode setting (window vs panel)
   // For panel mode, screen parameter is required
   function openToTab(tab, subTab, screen) {
+    var settingsPanel;
     const tabId = tab !== undefined ? tab : 0;
     const subTabId = subTab !== undefined ? subTab : -1;
 
@@ -70,7 +72,7 @@ Singleton {
         Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
         return;
       }
-      var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+      settingsPanel = PanelService.getPanel("settingsPanel", screen);
       if (settingsPanel) {
         settingsPanel.openToTab(tabId, subTabId);
       }
@@ -107,6 +109,7 @@ Singleton {
   // Unified toggle: opens to tab/subtab if closed, closes if open
   // Respects settingsPanelMode setting
   function toggle(tab, subTab, screen) {
+    var settingsPanel;
     const tabId = tab !== undefined ? tab : 0;
     const subTabId = subTab !== undefined ? subTab : -1;
 
@@ -121,7 +124,7 @@ Singleton {
         Logger.w("SettingsPanelService", "Screen parameter required for panel mode");
         return;
       }
-      var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+      settingsPanel = PanelService.getPanel("settingsPanel", screen);
       if (settingsPanel?.isPanelOpen) {
         settingsPanel.close();
       } else {
@@ -132,12 +135,13 @@ Singleton {
 
   // Unified close for both modes
   function close(screen) {
+    var settingsPanel;
     if (Settings.data.ui.settingsPanelMode === "window") {
       closeWindow();
     } else {
       if (!screen)
         return;
-      var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+      settingsPanel = PanelService.getPanel("settingsPanel", screen);
       settingsPanel?.close();
     }
   }

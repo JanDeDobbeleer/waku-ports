@@ -65,18 +65,19 @@ Item {
   }
 
   function getEnabledActions() {
+    var action, i, j;
     var powerOptions = Settings.data.sessionMenu.powerOptions || [];
     var enabledSet = {};
 
-    for (var i = 0; i < powerOptions.length; i++) {
+    for (i = 0; i < powerOptions.length; i++) {
       if (powerOptions[i].enabled) {
         enabledSet[powerOptions[i].action] = powerOptions[i];
       }
     }
 
     var enabled = [];
-    for (var j = 0; j < sessionActions.length; j++) {
-      var action = sessionActions[j];
+    for (j = 0; j < sessionActions.length; j++) {
+      action = sessionActions[j];
       if (enabledSet[action.action]) {
         enabled.push({
                        "action": action.action,
@@ -92,6 +93,7 @@ Item {
   }
 
   function getResults(query) {
+    var action, entry, i, j, label, score;
     if (!query)
       return [];
 
@@ -105,9 +107,9 @@ Item {
 
     // Build searchable items with resolved translations
     var items = [];
-    for (var i = 0; i < enabledActions.length; i++) {
-      var action = enabledActions[i];
-      var label = I18n.tr(action.labelKey);
+    for (i = 0; i < enabledActions.length; i++) {
+      action = enabledActions[i];
+      label = I18n.tr(action.labelKey);
       items.push({
                    "action": action.action,
                    "icon": action.icon,
@@ -123,9 +125,9 @@ Item {
                                });
 
     var launcherItems = [];
-    for (var j = 0; j < results.length; j++) {
-      var entry = results[j].obj;
-      var score = results[j].score;
+    for (j = 0; j < results.length; j++) {
+      entry = results[j].obj;
+      score = results[j].score;
 
       launcherItems.push({
                            "name": entry.label,

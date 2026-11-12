@@ -190,10 +190,11 @@ PopupWindow {
   }
 
   function hideMenu() {
+    var i;
     visible = false;
 
     // Clean up all submenus recursively
-    for (var i = 0; i < columnLayout.children.length; i++) {
+    for (i = 0; i < columnLayout.children.length; i++) {
       const child = columnLayout.children[i];
       if (child?.subMenu) {
         child.subMenu.hideMenu();
@@ -409,6 +410,7 @@ PopupWindow {
               acceptedButtons: Qt.LeftButton | Qt.RightButton
 
               onClicked: mouse => {
+                var i;
                            if (modelData && !modelData.isSeparator) {
                              if (modelData.hasChildren) {
                                // Click on items with children toggles submenu
@@ -419,7 +421,7 @@ PopupWindow {
                                  entry.subMenu = null;
                                } else {
                                  // Close any other open submenus first
-                                 for (var i = 0; i < columnLayout.children.length; i++) {
+                                 for (i = 0; i < columnLayout.children.length; i++) {
                                    const sibling = columnLayout.children[i];
                                    if (sibling !== entry && sibling.subMenu) {
                                      sibling.subMenu.hideMenu();
@@ -549,6 +551,7 @@ PopupWindow {
   }
 
   function addToPinned() {
+    var overrideWidgets;
     if (!trayItem || widgetSection === "" || widgetIndex < 0) {
       Logger.w("TrayMenu", "Cannot pin: missing tray item or widget info");
       return;
@@ -578,7 +581,7 @@ PopupWindow {
 
     // Write to the correct location: screen override or global
     if (Settings.hasScreenOverride(screenName, "widgets")) {
-      var overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
+      overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
       overrideWidgets[widgetSection] = widgets;
       Settings.setScreenOverride(screenName, "widgets", overrideWidgets);
     } else {
@@ -595,6 +598,7 @@ PopupWindow {
   }
 
   function removeFromPinned() {
+    var i, overrideWidgets;
     if (!trayItem || widgetSection === "" || widgetIndex < 0) {
       Logger.w("TrayMenu", "Cannot unpin: missing tray item or widget info");
       return;
@@ -617,7 +621,7 @@ PopupWindow {
     }
     var pinnedList = widgetSettings.pinned || [];
     var newPinned = [];
-    for (var i = 0; i < pinnedList.length; i++) {
+    for (i = 0; i < pinnedList.length; i++) {
       if (pinnedList[i] !== itemName) {
         newPinned.push(pinnedList[i]);
       }
@@ -628,7 +632,7 @@ PopupWindow {
 
     // Write to the correct location: screen override or global
     if (Settings.hasScreenOverride(screenName, "widgets")) {
-      var overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
+      overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
       overrideWidgets[widgetSection] = widgets;
       Settings.setScreenOverride(screenName, "widgets", overrideWidgets);
     } else {

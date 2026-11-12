@@ -106,12 +106,13 @@ ColumnLayout {
                          }
 
               onPositionChanged: mouse => {
+                var dy, newY, targetIndex;
                                    if (delegateItem.dragging) {
-                                     var dy = mouse.y - height / 2;
-                                     var newY = delegateItem.y + dy;
+                                     dy = mouse.y - height / 2;
+                                     newY = delegateItem.y + dy;
                                      newY = Math.max(0, Math.min(newY, listView.contentHeight - delegateItem.height));
                                      delegateItem.y = newY;
-                                     var targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + Style.marginS));
+                                     targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + Style.marginS));
                                      targetIndex = Math.max(0, Math.min(targetIndex, listView.count - 1));
                                      delegateItem.dragTargetIndex = targetIndex;
                                    }

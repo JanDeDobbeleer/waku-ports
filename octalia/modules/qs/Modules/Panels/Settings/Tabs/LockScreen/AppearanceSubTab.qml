@@ -9,11 +9,12 @@ ColumnLayout {
   id: root
   spacing: Style.marginL
   function insertToken(token) {
+    var currentText, cursorPos, input, newText;
     if (formatInput.inputItem) {
-      var input = formatInput.inputItem;
-      var cursorPos = input.cursorPosition;
-      var currentText = input.text;
-      var newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
+      input = formatInput.inputItem;
+      cursorPos = input.cursorPosition;
+      currentText = input.text;
+      newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
       input.text = newText + " ";
       input.cursorPosition = cursorPos + token.length + 1;
       input.forceActiveFocus();

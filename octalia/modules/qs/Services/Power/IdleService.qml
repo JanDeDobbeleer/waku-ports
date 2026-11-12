@@ -255,6 +255,7 @@ Singleton {
   }
 
   function _applyCustomMonitors() {
+    var i;
     // Destroy all existing custom monitors
     for (var key in _customMonitors) {
       if (_customMonitors[key]) {
@@ -276,7 +277,7 @@ Singleton {
     }
 
     var newMonitors = {};
-    for (var i = 0; i < entries.length; i++) {
+    for (i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const timeoutSec = parseInt(entry.timeout);
       const cmd = entry.command;

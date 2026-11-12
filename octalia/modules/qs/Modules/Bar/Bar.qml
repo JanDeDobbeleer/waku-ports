@@ -32,9 +32,10 @@ Item {
 
   // Hot corner: trigger click on first widget in a section
   function triggerFirstWidgetInSection(sectionName: string) {
+    var i, widget;
     var widgets = BarService.getWidgetsBySection(sectionName, screen?.name);
-    for (var i = 0; i < widgets.length; i++) {
-      var widget = widgets[i];
+    for (i = 0; i < widgets.length; i++) {
+      widget = widgets[i];
       if (widget && widget.visible && widget.widgetId !== "Spacer") {
         if (typeof widget.clicked === "function") {
           widget.clicked();
@@ -46,9 +47,10 @@ Item {
 
   // Hot corner: trigger click on last widget in a section
   function triggerLastWidgetInSection(sectionName: string) {
+    var i, widget;
     var widgets = BarService.getWidgetsBySection(sectionName, screen?.name);
-    for (var i = widgets.length - 1; i >= 0; i--) {
-      var widget = widgets[i];
+    for (i = widgets.length - 1; i >= 0; i--) {
+      widget = widgets[i];
       if (widget && widget.visible && widget.widgetId !== "Spacer") {
         if (typeof widget.clicked === "function") {
           widget.clicked();
@@ -94,11 +96,12 @@ Item {
 
   // Sync a ListModel with widget data, preserving delegates when only settings change
   function syncWidgetModel(model, newWidgets) {
+    var i;
     var validWidgets = filterValidWidgets(newWidgets);
 
     // Build list of current IDs in model
     var currentIds = [];
-    for (var i = 0; i < model.count; i++) {
+    for (i = 0; i < model.count; i++) {
       currentIds.push(model.get(i).id);
     }
 
@@ -108,7 +111,7 @@ Item {
     // Check if structure changed (different IDs or order)
     var structureChanged = currentIds.length !== newIds.length;
     if (!structureChanged) {
-      for (var i = 0; i < currentIds.length; i++) {
+      for (i = 0; i < currentIds.length; i++) {
         if (currentIds[i] !== newIds[i]) {
           structureChanged = true;
           break;
@@ -121,7 +124,7 @@ Item {
     if (structureChanged) {
       // Rebuild model - IDs changed
       model.clear();
-      for (var i = 0; i < validWidgets.length; i++) {
+      for (i = 0; i < validWidgets.length; i++) {
         model.append(validWidgets[i]);
       }
     }
@@ -296,13 +299,14 @@ Item {
         }
 
         function isPointOverWidget(xPos, yPos) {
+          var i, localPos, widget;
           var widgets = BarService.getAllWidgetInstances(null, screen.name);
-          for (var i = 0; i < widgets.length; i++) {
-            var widget = widgets[i];
+          for (i = 0; i < widgets.length; i++) {
+            widget = widgets[i];
             if (!widget || !widget.visible || widget.widgetId === "Spacer") {
               continue;
             }
-            var localPos = mapToItem(widget, xPos, yPos);
+            localPos = mapToItem(widget, xPos, yPos);
 
             if (root.barIsVertical) {
               if (localPos.y >= -Style.marginS && localPos.y <= widget.height + Style.marginS) {
@@ -318,14 +322,15 @@ Item {
         }
 
         function switchWorkspaceByOffset(offset) {
+          var i, j, matchesScreen, ws;
           if (!root.screen || CompositorService.workspaces.count === 0)
             return;
 
           var screenName = root.screen.name.toLowerCase();
           var candidates = [];
-          for (var i = 0; i < CompositorService.workspaces.count; i++) {
-            var ws = CompositorService.workspaces.get(i);
-            var matchesScreen = CompositorService.globalWorkspaces || (ws.output && ws.output.toLowerCase() === screenName);
+          for (i = 0; i < CompositorService.workspaces.count; i++) {
+            ws = CompositorService.workspaces.get(i);
+            matchesScreen = CompositorService.globalWorkspaces || (ws.output && ws.output.toLowerCase() === screenName);
             if (matchesScreen)
               candidates.push(ws);
           }
@@ -334,7 +339,7 @@ Item {
             return;
 
           var current = -1;
-          for (var j = 0; j < candidates.length; j++) {
+          for (j = 0; j < candidates.length; j++) {
             if (candidates[j].isFocused) {
               current = j;
               break;
@@ -359,18 +364,19 @@ Item {
         }
 
         function handleEmptyBarClick(action, followMouse, command, mouse) {
+          var controlCenterPanel, launcherPanel, settingsPanel;
           if (action === "none")
             return;
           if (action === "controlCenter") {
-            var controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
+            controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
             controlCenterPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : "ControlCenter");
             mouse.accepted = true;
           } else if (action === "settings") {
-            var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+            settingsPanel = PanelService.getPanel("settingsPanel", screen);
             settingsPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
             mouse.accepted = true;
           } else if (action === "launcherPanel") {
-            var launcherPanel = PanelService.getPanel("launcherPanel", screen);
+            launcherPanel = PanelService.getPanel("launcherPanel", screen);
             launcherPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
             mouse.accepted = true;
           } else if (action === "command") {
@@ -455,6 +461,7 @@ Item {
           enabled: bar.barWheelAction !== "none"
 
           onWheel: function (event) {
+            var direction;
             if (bar.isPointOverWidget(event.x, event.y))
               return;
 
@@ -486,7 +493,7 @@ Item {
 
             bar.barWheelAccumulatedDelta += delta;
             if (Math.abs(bar.barWheelAccumulatedDelta) >= step) {
-              var direction = bar.barWheelAccumulatedDelta > 0 ? -1 : 1;
+              direction = bar.barWheelAccumulatedDelta > 0 ? -1 : 1;
               if (Settings.data.bar.reverseScroll)
                 direction *= -1;
               if (bar.barWheelAction === "workspace") {

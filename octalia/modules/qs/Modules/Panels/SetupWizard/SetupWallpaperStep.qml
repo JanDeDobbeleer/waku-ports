@@ -348,13 +348,14 @@ ColumnLayout {
   }
 
   function refreshWallpapers() {
+    var wallpapers;
     if (!selectedDirectory || selectedDirectory === "") {
       wallpapersList = [];
       filteredWallpapers = [];
       return;
     }
     if (typeof WallpaperService !== "undefined" && WallpaperService.getWallpapersList) {
-      var wallpapers = WallpaperService.getWallpapersList(Screen.name);
+      wallpapers = WallpaperService.getWallpapersList(Screen.name);
       wallpapersList = wallpapers;
       updateFilteredWallpapers();
       if (wallpapersList.length > 0 && selectedWallpaper === "") {
@@ -366,10 +367,11 @@ ColumnLayout {
   }
 
   function readDirectoryImages(directoryPath) {
+    var i;
     // Build find command args dynamically from ImageCacheService filters
     var filters = ImageCacheService.imageFilters;
     var findArgs = ["find", directoryPath, "-type", "f", "("];
-    for (var i = 0; i < filters.length; i++) {
+    for (i = 0; i < filters.length; i++) {
       if (i > 0) {
         findArgs.push("-o");
       }
@@ -442,11 +444,12 @@ ColumnLayout {
     stdout: StdioCollector {}
     stderr: StdioCollector {}
     onExited: function (exitCode) {
+      var i, images, line, lines;
       if (exitCode === 0) {
-        var lines = stdout.text.split('\n');
-        var images = [];
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
+        lines = stdout.text.split('\n');
+        images = [];
+        for (i = 0; i < lines.length; i++) {
+          line = lines[i].trim();
           if (line !== '') {
             images.push(line);
           }

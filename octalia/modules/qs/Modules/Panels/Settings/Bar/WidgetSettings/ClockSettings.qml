@@ -44,6 +44,7 @@ ColumnLayout {
 
   // Function to insert token at cursor position in the focused input
   function insertToken(token) {
+    var currentText, cursorPos, input, newText;
     if (!focusedInput || !focusedInput.inputItem) {
       // If no input is focused, default to horiz
       if (inputHoriz.inputItem) {
@@ -53,12 +54,12 @@ ColumnLayout {
     }
 
     if (focusedInput && focusedInput.inputItem) {
-      var input = focusedInput.inputItem;
-      var cursorPos = input.cursorPosition;
-      var currentText = input.text;
+      input = focusedInput.inputItem;
+      cursorPos = input.cursorPosition;
+      currentText = input.text;
 
       // Insert token at cursor position
-      var newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
+      newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
       input.text = newText + " ";
 
       // Move cursor after the inserted token

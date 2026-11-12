@@ -52,10 +52,11 @@ Singleton {
 
   // Find button config from Settings for when the live widget is not loaded
   function findButtonConfig(identifier) {
+    var config, i, widgets;
     var screens = Quickshell.screens;
-    for (var i = 0; i < screens.length; i++) {
-      var widgets = Settings.getBarWidgetsForScreen(screens[i].name);
-      var config = _searchWidgetsForIdentifier(widgets, identifier);
+    for (i = 0; i < screens.length; i++) {
+      widgets = Settings.getBarWidgetsForScreen(screens[i].name);
+      config = _searchWidgetsForIdentifier(widgets, identifier);
       if (config)
         return config;
     }
@@ -67,13 +68,14 @@ Singleton {
   }
 
   function _searchWidgetsForIdentifier(widgets, identifier) {
+    var j, list, s, w;
     var sections = ["left", "center", "right"];
-    for (var s = 0; s < sections.length; s++) {
-      var list = widgets[sections[s]];
+    for (s = 0; s < sections.length; s++) {
+      list = widgets[sections[s]];
       if (!list)
         continue;
-      for (var j = 0; j < list.length; j++) {
-        var w = list[j];
+      for (j = 0; j < list.length; j++) {
+        w = list[j];
         if (w.id === "CustomButton" && w.ipcIdentifier === identifier) {
           return w;
         }
@@ -94,10 +96,11 @@ Singleton {
   function substituteWheelDelta(command, delta) {
     var normalizedDelta = delta > 0 ? 1 : -1;
     return command.replace(/\$delta([+\-*/]\d+)?/g, function (match, operation) {
+      var operand, operator;
       if (operation) {
         try {
-          var operator = operation.charAt(0);
-          var operand = parseInt(operation.substring(1));
+          operator = operation.charAt(0);
+          operand = parseInt(operation.substring(1));
           var result;
           switch (operator) {
           case '+':

@@ -91,12 +91,13 @@ Item {
       WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
+          var hDelta;
                    var delta = (event.angleDelta.y !== 0) ? event.angleDelta.y : event.angleDelta.x;
                    if (dockRoot.isVertical) {
                      dock.contentY = Math.max(-dock.topMargin, Math.min(dock.contentHeight - dock.height + dock.bottomMargin, dock.contentY - delta));
                    } else {
                      // For horizontal dock, we want to scroll contentX with BOTH x and y wheels
-                     var hDelta = (event.angleDelta.x !== 0) ? event.angleDelta.x : event.angleDelta.y;
+                     hDelta = (event.angleDelta.x !== 0) ? event.angleDelta.x : event.angleDelta.y;
                      dock.contentX = Math.max(-dock.leftMargin, Math.min(dock.contentWidth - dock.width + dock.rightMargin, dock.contentX - hDelta));
                    }
                    event.accepted = true;

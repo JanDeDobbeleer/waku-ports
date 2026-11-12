@@ -86,9 +86,10 @@ Item {
 
   // Helper to get the current window object from ID
   function getSelectedWindow() {
+    var i;
     if (!selectedWindowId)
       return null;
-    for (var i = 0; i < combinedModel.length; i++) {
+    for (i = 0; i < combinedModel.length; i++) {
       // Using loose equality on purpose (==)
       if (combinedModel[i].id == selectedWindowId && combinedModel[i].window) {
         return combinedModel[i].window;
@@ -343,6 +344,7 @@ Item {
 
   // Function to update the combined model
   function updateCombinedModel() {
+    var i, passOutput, passWorkspace, w;
     const runningWindows = [];
     const pinnedApps = Settings.data.dock.pinnedApps || [];
     const processedAppIds = new Set();
@@ -354,12 +356,12 @@ Item {
         return ws.id;
       });
 
-      for (var i = 0; i < total; i++) {
-        var w = CompositorService.windows.get(i);
+      for (i = 0; i < total; i++) {
+        w = CompositorService.windows.get(i);
         if (!w)
           continue;
-        var passOutput = (!onlySameOutput) || (w.output == screen?.name);
-        var passWorkspace = (!onlyActiveWorkspaces) || (activeIds.includes(w.workspaceId));
+        passOutput = (!onlySameOutput) || (w.output == screen?.name);
+        passWorkspace = (!onlyActiveWorkspaces) || (activeIds.includes(w.workspaceId));
         if (passOutput && passWorkspace) {
           const isPinned = isAppIdPinned(w.appId, pinnedApps);
           runningWindows.push({
@@ -571,6 +573,7 @@ Item {
     target: root
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     onWheel: function (event) {
+      var currentIndex, direction, i, j, nextIndex, nextItem;
       if (root.wheelCooldown || root.combinedModel.length === 0)
         return;
       var dy = event.angleDelta.y;
@@ -580,10 +583,10 @@ Item {
       root.wheelAccumulatedDelta += delta;
       var step = 120;
       if (Math.abs(root.wheelAccumulatedDelta) >= step) {
-        var direction = root.wheelAccumulatedDelta > 0 ? -1 : 1;
+        direction = root.wheelAccumulatedDelta > 0 ? -1 : 1;
         // Find the focused window or first running window
-        var currentIndex = -1;
-        for (var i = 0; i < root.combinedModel.length; i++) {
+        currentIndex = -1;
+        for (i = 0; i < root.combinedModel.length; i++) {
           if (root.combinedModel[i].window && root.combinedModel[i].window.isFocused) {
             currentIndex = i;
             break;
@@ -591,7 +594,7 @@ Item {
         }
         if (currentIndex < 0) {
           // No focused window, find first running window
-          for (var j = 0; j < root.combinedModel.length; j++) {
+          for (j = 0; j < root.combinedModel.length; j++) {
             if (root.combinedModel[j].window) {
               currentIndex = j;
               break;
@@ -599,8 +602,8 @@ Item {
           }
         }
         if (currentIndex >= 0) {
-          var nextIndex = (currentIndex + direction + root.combinedModel.length) % root.combinedModel.length;
-          var nextItem = root.combinedModel[nextIndex];
+          nextIndex = (currentIndex + direction + root.combinedModel.length) % root.combinedModel.length;
+          nextItem = root.combinedModel[nextIndex];
           if (nextItem && nextItem.window) {
             try {
               CompositorService.focusWindow(nextItem.window);

@@ -25,9 +25,10 @@ NBox {
 
   // Helper to get widgets for this screen (ensures override exists)
   function _getWidgetsContainer() {
+    var currentWidgets, widgetsCopy;
     if (!Settings.hasScreenOverride(screenName, "widgets")) {
-      var currentWidgets = Settings.getBarWidgetsForScreen(screenName);
-      var widgetsCopy = QtObj2JS.qtObjectToPlainObject(currentWidgets);
+      currentWidgets = Settings.getBarWidgetsForScreen(screenName);
+      widgetsCopy = QtObj2JS.qtObjectToPlainObject(currentWidgets);
       Settings.setScreenOverride(screenName, "widgets", widgetsCopy);
     }
     var entry = Settings.getScreenOverrideEntry(screenName);
@@ -41,11 +42,12 @@ NBox {
 
   // Widget manipulation functions
   function _addWidgetToSection(widgetId, section) {
+    var metadata;
     var newWidget = {
       "id": widgetId
     };
     if (BarWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      var metadata = BarWidgetRegistry.widgetMetadata[widgetId];
+      metadata = BarWidgetRegistry.widgetMetadata[widgetId];
       if (metadata) {
         Object.keys(metadata).forEach(function (key) {
           newWidget[key] = metadata[key];
@@ -59,10 +61,11 @@ NBox {
   }
 
   function _removeWidgetFromSection(section, index) {
+    var newArray, removedWidgets;
     var widgets = _getWidgetsContainer();
     if (index >= 0 && index < widgets[section].length) {
-      var newArray = widgets[section].slice();
-      var removedWidgets = newArray.splice(index, 1);
+      newArray = widgets[section].slice();
+      removedWidgets = newArray.splice(index, 1);
       widgets[section] = newArray;
       _saveWidgets(widgets);
       BarService.widgetsRevision++;
@@ -74,10 +77,11 @@ NBox {
   }
 
   function _reorderWidgetInSection(section, fromIndex, toIndex) {
+    var item, newArray;
     var widgets = _getWidgetsContainer();
     if (fromIndex >= 0 && fromIndex < widgets[section].length && toIndex >= 0 && toIndex < widgets[section].length) {
-      var newArray = widgets[section].slice();
-      var item = newArray[fromIndex];
+      newArray = widgets[section].slice();
+      item = newArray[fromIndex];
       newArray.splice(fromIndex, 1);
       newArray.splice(toIndex, 0, item);
       widgets[section] = newArray;
@@ -95,13 +99,14 @@ NBox {
   }
 
   function _moveWidgetBetweenSections(fromSection, index, toSection) {
+    var sourceArray, targetArray, widget;
     var widgets = _getWidgetsContainer();
     if (index >= 0 && index < widgets[fromSection].length) {
-      var widget = widgets[fromSection][index];
-      var sourceArray = widgets[fromSection].slice();
+      widget = widgets[fromSection][index];
+      sourceArray = widgets[fromSection].slice();
       sourceArray.splice(index, 1);
       widgets[fromSection] = sourceArray;
-      var targetArray = widgets[toSection].slice();
+      targetArray = widgets[toSection].slice();
       targetArray.push(widget);
       widgets[toSection] = targetArray;
       _saveWidgets(widgets);
@@ -111,13 +116,14 @@ NBox {
 
   // Available widgets ListModel
   function updateAvailableWidgetsModel() {
+    var displayName, i, id;
     availableWidgetsModel.clear();
     var widgetIds = BarWidgetRegistry.getAvailableWidgets();
     if (!widgetIds)
       return;
-    for (var i = 0; i < widgetIds.length; i++) {
-      var id = widgetIds[i];
-      var displayName = id;
+    for (i = 0; i < widgetIds.length; i++) {
+      id = widgetIds[i];
+      displayName = id;
       const badges = [];
       if (BarWidgetRegistry.isCpuIntensive(id)) {
         badges.push({

@@ -103,8 +103,9 @@ ColumnLayout {
 
   // Helper to get screen names array
   function getScreenNames() {
+    var i;
     var names = [];
-    for (var i = 0; i < Quickshell.screens.length; i++) {
+    for (i = 0; i < Quickshell.screens.length; i++) {
       names.push(Quickshell.screens[i].name);
     }
     return names;
@@ -112,9 +113,10 @@ ColumnLayout {
 
   // Helper to get screen labels map (just screen names, NSectionEditor adds "Move to" prefix)
   function getScreenLabels() {
+    var i, screen;
     var labels = {};
-    for (var i = 0; i < Quickshell.screens.length; i++) {
-      var screen = Quickshell.screens[i];
+    for (i = 0; i < Quickshell.screens.length; i++) {
+      screen = Quickshell.screens[i];
       labels[screen.name] = screen.name;
     }
     return labels;
@@ -122,14 +124,16 @@ ColumnLayout {
 
   // Helper to get screen icons map
   function getScreenIcons() {
+    var i;
     var icons = {};
-    for (var i = 0; i < Quickshell.screens.length; i++) {
+    for (i = 0; i < Quickshell.screens.length; i++) {
       icons[Quickshell.screens[i].name] = "device-desktop";
     }
     return icons;
   }
 
   function updateAvailableWidgetsModel() {
+    var displayName, i, widgetId, widgetIds;
     availableWidgets.clear();
     try {
       if (typeof DesktopWidgetRegistry === "undefined" || !DesktopWidgetRegistry) {
@@ -142,15 +146,15 @@ ColumnLayout {
         });
         return;
       }
-      var widgetIds = DesktopWidgetRegistry.getAvailableWidgets();
+      widgetIds = DesktopWidgetRegistry.getAvailableWidgets();
       Logger.d("DesktopWidgetsTab", "Found widgets:", widgetIds, "count:", widgetIds ? widgetIds.length : 0);
       if (!widgetIds || widgetIds.length === 0) {
         Logger.w("DesktopWidgetsTab", "No widgets found in registry");
         return;
       }
-      for (var i = 0; i < widgetIds.length; i++) {
-        var widgetId = widgetIds[i];
-        var displayName = widgetId;
+      for (i = 0; i < widgetIds.length; i++) {
+        widgetId = widgetIds[i];
+        displayName = widgetId;
 
         const badges = [];
         if (DesktopWidgetRegistry.isCpuIntensive(widgetId)) {
@@ -174,8 +178,9 @@ ColumnLayout {
 
   // Get widgets for a specific monitor
   function getWidgetsForMonitor(monitorName) {
+    var i;
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-    for (var i = 0; i < monitorWidgets.length; i++) {
+    for (i = 0; i < monitorWidgets.length; i++) {
       if (monitorWidgets[i].name === monitorName) {
         return monitorWidgets[i].widgets || [];
       }
@@ -185,10 +190,11 @@ ColumnLayout {
 
   // Set widgets for a specific monitor
   function setWidgetsForMonitor(monitorName, widgets) {
+    var i;
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
     var found = false;
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === monitorName) {
         newMonitorWidgets[i] = {
           "name": monitorName,
@@ -208,11 +214,12 @@ ColumnLayout {
   }
 
   function _addWidgetToMonitor(monitorName, widgetId) {
+    var metadata;
     var newWidget = {
       "id": widgetId
     };
     if (DesktopWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      var metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
+      metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
       if (metadata) {
         Object.keys(metadata).forEach(function (key) {
           newWidget[key] = metadata[key];
@@ -240,18 +247,20 @@ ColumnLayout {
   }
 
   function _removeWidgetFromMonitor(monitorName, index) {
+    var newArray;
     var widgets = getWidgetsForMonitor(monitorName);
     if (index >= 0 && index < widgets.length) {
-      var newArray = widgets.slice();
+      newArray = widgets.slice();
       newArray.splice(index, 1);
       setWidgetsForMonitor(monitorName, newArray);
     }
   }
 
   function _updateWidgetSettingsForMonitor(monitorName, index, settings) {
+    var newArray;
     var widgets = getWidgetsForMonitor(monitorName);
     if (index >= 0 && index < widgets.length) {
-      var newArray = widgets.slice();
+      newArray = widgets.slice();
       newArray[index] = Object.assign({}, newArray[index], settings);
       setWidgetsForMonitor(monitorName, newArray);
     }

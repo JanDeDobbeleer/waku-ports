@@ -119,10 +119,11 @@ Item {
   }
 
   function _performFilteredItemsUpdate() {
+    var f, i, j, k, m, v, w;
     // Force a fresh read of settings to ensure we have the latest blacklist
     var currentSettings = {};
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var w = Settings.getBarWidgetsForScreen(screenName)[section];
+      w = Settings.getBarWidgetsForScreen(screenName)[section];
       if (w && sectionWidgetIndex < w.length) {
         currentSettings = w[sectionWidgetIndex];
       }
@@ -137,7 +138,7 @@ Item {
     let newItems = [];
     if (SystemTray.items && SystemTray.items.values) {
       const trayItems = SystemTray.items.values;
-      for (var i = 0; i < trayItems.length; i++) {
+      for (i = 0; i < trayItems.length; i++) {
         const item = trayItems[i];
         if (!item) {
           continue;
@@ -153,7 +154,7 @@ Item {
         // Check if blacklisted
         let isBlacklisted = false;
         if (root.blacklist && root.blacklist.length > 0) {
-          for (var j = 0; j < root.blacklist.length; j++) {
+          for (j = 0; j < root.blacklist.length; j++) {
             const rule = root.blacklist[j];
             if (wildCardMatch(title, rule)) {
               isBlacklisted = true;
@@ -178,10 +179,10 @@ Item {
       // If pinned list has items, pinned items are inline, rest go to drawer
       if (pinned && pinned.length > 0) {
         let pinnedItems = [];
-        for (var k = 0; k < newItems.length; k++) {
+        for (k = 0; k < newItems.length; k++) {
           const item2 = newItems[k];
           const title2 = item2.tooltipTitle || item2.name || item2.id || "";
-          for (var m = 0; m < pinned.length; m++) {
+          for (m = 0; m < pinned.length; m++) {
             const rule2 = pinned[m];
             if (wildCardMatch(title2, rule2)) {
               pinnedItems.push(item2);
@@ -193,10 +194,10 @@ Item {
 
         // Unpinned items go to drawer
         let unpinnedItems = [];
-        for (var v = 0; v < newItems.length; v++) {
+        for (v = 0; v < newItems.length; v++) {
           const cand = newItems[v];
           let isPinned = false;
-          for (var f = 0; f < filteredItems.length; f++) {
+          for (f = 0; f < filteredItems.length; f++) {
             if (filteredItems[f] === cand) {
               isPinned = true;
               break;

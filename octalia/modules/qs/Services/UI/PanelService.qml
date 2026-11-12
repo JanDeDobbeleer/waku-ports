@@ -38,8 +38,9 @@ Singleton {
   signal slotAssignmentChanged(int slotIndex, var panel)
 
   function assignToSlot(slotIndex, panel) {
+    var newAssignments;
     if (backgroundSlotAssignments[slotIndex] !== panel) {
-      var newAssignments = backgroundSlotAssignments.slice();
+      newAssignments = backgroundSlotAssignments.slice();
       newAssignments[slotIndex] = panel;
       backgroundSlotAssignments = newAssignments;
       slotAssignmentChanged(slotIndex, panel);
@@ -160,6 +161,7 @@ Singleton {
   // By default, if panel not found on screen, tries other screens (favoring 0x0)
   // Pass fallback=false to disable this behavior
   function getPanel(name, screen, fallback = true) {
+    var fallbackKey, fallbackScreen;
     if (!screen) {
       Logger.d("PanelService", "missing screen for getPanel:", name);
       // If no screen specified, return the first matching panel
@@ -181,9 +183,9 @@ Singleton {
     // If fallback enabled, try to find panel on another screen
     if (fallback) {
       // First try the primary screen (0x0)
-      var fallbackScreen = findFallbackScreen();
+      fallbackScreen = findFallbackScreen();
       if (fallbackScreen && fallbackScreen.name !== screen.name) {
-        var fallbackKey = `${name}-${fallbackScreen.name}`;
+        fallbackKey = `${name}-${fallbackScreen.name}`;
         if (registeredPanels[fallbackKey]) {
           Logger.d("PanelService", "Panel fallback from", screen.name, "to", fallbackScreen.name);
           return registeredPanels[fallbackKey];
@@ -267,6 +269,7 @@ Singleton {
 
   // Open launcher panel (handles both normal and overlay mode)
   function openLauncher(screen) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       // Close any regular panel first
       if (openedPanel) {
@@ -281,7 +284,7 @@ Singleton {
       willOpen();
     } else {
       // Normal mode - use the SmartPanel
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       if (panel)
         panel.open();
     }
@@ -289,6 +292,7 @@ Singleton {
 
   // Toggle launcher panel
   function toggleLauncher(screen) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       if (overlayLauncherOpen && overlayLauncherScreen === screen) {
         closeOverlayLauncher();
@@ -296,7 +300,7 @@ Singleton {
         openLauncher(screen);
       }
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       if (panel)
         panel.toggle();
     }
@@ -325,35 +329,39 @@ Singleton {
   // These methods work for both normal (SmartPanel) and overlay modes
 
   function isLauncherOpen(screen) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       return overlayLauncherOpen && overlayLauncherScreen === screen;
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       return panel ? panel.isPanelOpen : false;
     }
   }
 
   function getLauncherSearchText(screen) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       return overlayLauncherCore ? overlayLauncherCore.searchText : "";
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       return panel ? panel.searchText : "";
     }
   }
 
   function setLauncherSearchText(screen, text) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       if (overlayLauncherCore)
         overlayLauncherCore.setSearchText(text);
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       if (panel)
         panel.setSearchText(text);
     }
   }
 
   function openLauncherWithSearch(screen, searchText) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       openLauncher(screen);
       // Set search text after core is ready
@@ -362,7 +370,7 @@ Singleton {
                      overlayLauncherCore.setSearchText(searchText);
                    });
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       if (panel) {
         panel.open();
         panel.setSearchText(searchText);
@@ -371,10 +379,11 @@ Singleton {
   }
 
   function closeLauncher(screen) {
+    var panel;
     if (Settings.data.appLauncher.overviewLayer) {
       closeOverlayLauncher();
     } else {
-      var panel = getPanel("launcherPanel", screen);
+      panel = getPanel("launcherPanel", screen);
       if (panel)
         panel.close();
     }

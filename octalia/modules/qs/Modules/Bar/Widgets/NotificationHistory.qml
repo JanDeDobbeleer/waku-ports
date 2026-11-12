@@ -41,12 +41,13 @@ NIconButton {
   readonly property color badgeColor: Color.resolveColorKey(unreadBadgeColor)
 
   function computeUnreadCount() {
+    var i, item, ts;
     var since = NotificationService.lastSeenTs;
     var count = 0;
     var model = NotificationService.historyModel;
-    for (var i = 0; i < model.count; i++) {
-      var item = model.get(i);
-      var ts = item.timestamp instanceof Date ? item.timestamp.getTime() : item.timestamp;
+    for (i = 0; i < model.count; i++) {
+      item = model.get(i);
+      ts = item.timestamp instanceof Date ? item.timestamp.getTime() : item.timestamp;
       if (ts > since)
         count++;
     }

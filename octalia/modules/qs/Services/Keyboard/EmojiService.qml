@@ -79,15 +79,16 @@ Singleton {
   }
 
   function getCategoriesWithCounts() {
+    var category, emoji, i;
     if (!loaded) {
       return [];
     }
 
     var categoryCounts = {};
 
-    for (var i = 0; i < emojis.length; i++) {
-      var emoji = emojis[i];
-      var category = emoji.category || "other";
+    for (i = 0; i < emojis.length; i++) {
+      emoji = emojis[i];
+      category = emoji.category || "other";
       if (!categoryCounts[category]) {
         categoryCounts[category] = 0;
       }

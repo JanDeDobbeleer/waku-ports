@@ -40,11 +40,12 @@ ColumnLayout {
   }
 
   function getSchemeColor(schemeName, colorKey) {
+    var entry, variant;
     var _ = cacheVersion;
 
     if (schemeColorsCache[schemeName]) {
-      var entry = schemeColorsCache[schemeName];
-      var variant = entry;
+      entry = schemeColorsCache[schemeName];
+      variant = entry;
 
       if (entry.dark || entry.light) {
         variant = Settings.data.colorSchemes.darkMode ? (entry.dark || entry.light) : (entry.light || entry.dark);

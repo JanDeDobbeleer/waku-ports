@@ -183,12 +183,13 @@ Singleton {
   Connections {
     target: Settings.data.bar
     function onDisplayModeChanged() {
+      var displayMode;
       Logger.d("BarService", "Display mode changed to:", Settings.data.bar.displayMode);
 
       // Only affect screens without displayMode overrides
       for (let screenName in screenAutoHideState) {
         if (!Settings.hasScreenOverride(screenName, "displayMode")) {
-          var displayMode = Settings.getBarDisplayModeForScreen(screenName);
+          displayMode = Settings.getBarDisplayModeForScreen(screenName);
           if (displayMode === "auto_hide") {
             setScreenHidden(screenName, true);
           } else {
@@ -201,11 +202,12 @@ Singleton {
     }
 
     function onScreenOverridesChanged() {
+      var displayMode;
       Logger.d("BarService", "Screen overrides changed, re-evaluating auto-hide states");
 
       // Re-evaluate auto-hide state for all screens
       for (let screenName in screenAutoHideState) {
-        var displayMode = Settings.getBarDisplayModeForScreen(screenName);
+        displayMode = Settings.getBarDisplayModeForScreen(screenName);
         if (displayMode === "auto_hide") {
           if (!screenAutoHideState[screenName].hidden) {
             setScreenHidden(screenName, true);
@@ -312,10 +314,11 @@ Singleton {
 
   // Lookup a specific widget instance (returns the actual QML instance)
   function lookupWidget(widgetId, screenName = null, section = null, index = null) {
+    var widget;
     // If looking for a specific instance
     if (screenName && section !== null) {
       for (var key in widgetInstances) {
-        var widget = widgetInstances[key];
+        widget = widgetInstances[key];
         if (!widget)
           continue;
         if (widget.widgetId === widgetId && widget.screenName === screenName && widget.section === section) {
@@ -330,7 +333,7 @@ Singleton {
 
     // Return first match if no specific screen/section specified
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
       if (widget.widgetId === widgetId) {
@@ -347,14 +350,15 @@ Singleton {
 
   // Get all instances of a widget type
   function getAllWidgetInstances(widgetId = null, screenName = null, section = null) {
+    var matches, widget;
     var instances = [];
 
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
 
-      var matches = true;
+      matches = true;
       if (widgetId && widget.widgetId !== widgetId)
         matches = false;
       if (screenName && widget.screenName !== screenName)
@@ -372,8 +376,9 @@ Singleton {
 
   // Get widget with full metadata
   function getWidgetWithMetadata(widgetId, screenName = null, section = null) {
+    var widget;
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
       if (widget.widgetId === widgetId) {
@@ -389,10 +394,11 @@ Singleton {
 
   // Get all widgets in a specific section
   function getWidgetsBySection(section, screenName = null) {
+    var widget;
     var widgetEntries = [];
 
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
       if (widget.section === section) {
@@ -415,9 +421,10 @@ Singleton {
 
   // Get all registered widgets (for debugging)
   function getAllRegisteredWidgets() {
+    var widget;
     var result = [];
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
       result.push({
@@ -433,8 +440,9 @@ Singleton {
 
   // Check if a widget type exists in a section
   function hasWidget(widgetId, section = null, screenName = null) {
+    var widget;
     for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
+      widget = widgetInstances[key];
       if (!widget)
         continue;
       if (widget.widgetId === widgetId) {
@@ -471,12 +479,13 @@ Singleton {
 
   // Helper to close any existing dialogs in a popup menu window
   function closeExistingDialogs(popupMenuWindow) {
+    var child, i;
     if (!popupMenuWindow || !popupMenuWindow.dialogParent)
       return;
 
     var dialogParent = popupMenuWindow.dialogParent;
-    for (var i = dialogParent.children.length - 1; i >= 0; i--) {
-      var child = dialogParent.children[i];
+    for (i = dialogParent.children.length - 1; i >= 0; i--) {
+      child = dialogParent.children[i];
       if (child && typeof child.close === "function") {
         child.close();
       }
@@ -520,15 +529,16 @@ Singleton {
 
       if (dialog) {
         dialog.updateWidgetSettings.connect((sec, idx, settings) => {
+          var overrideWidgets, widgets;
                                               var screenName = screen?.name || "";
                                               if (Settings.hasScreenOverride(screenName, "widgets")) {
-                                                var overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
+                                                overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
                                                 if (overrideWidgets && overrideWidgets[sec] && idx < overrideWidgets[sec].length) {
                                                   overrideWidgets[sec][idx] = Object.assign({}, overrideWidgets[sec][idx], settings);
                                                   Settings.setScreenOverride(screenName, "widgets", overrideWidgets);
                                                 }
                                               } else {
-                                                var widgets = Settings.data.bar.widgets[sec];
+                                                widgets = Settings.data.bar.widgets[sec];
                                                 if (widgets && idx < widgets.length) {
                                                   widgets[idx] = Object.assign({}, widgets[idx], settings);
                                                   Settings.data.bar.widgets[sec] = widgets;

@@ -66,8 +66,9 @@ Item {
     }
 
     var gcd = function (a, b) {
+      var temp;
       while (b !== 0) {
-        var temp = b;
+        temp = b;
         b = a % b;
         a = temp;
       }
@@ -152,6 +153,7 @@ Item {
   }
 
   function removeWidget() {
+    var i, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -159,9 +161,9 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex >= 0 && widgetIndex < widgets.length) {
           widgets.splice(widgetIndex, 1);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
@@ -175,6 +177,7 @@ Item {
   }
 
   function raiseToTop() {
+    var i, widget, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -182,11 +185,11 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex < widgets.length && widgetIndex < widgets.length - 1) {
-          var widget = widgets.splice(widgetIndex, 1)[0];
+          widget = widgets.splice(widgetIndex, 1)[0];
           widgets.push(widget);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
                                                  "widgets": widgets
@@ -199,6 +202,7 @@ Item {
   }
 
   function lowerToBottom() {
+    var i, widget, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -206,11 +210,11 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex < widgets.length && widgetIndex > 0) {
-          var widget = widgets.splice(widgetIndex, 1)[0];
+          widget = widgets.splice(widgetIndex, 1)[0];
           widgets.unshift(widget);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
                                                  "widgets": widgets
@@ -389,23 +393,24 @@ Item {
                }
 
     onPositionChanged: mouse => {
+      var deltaX, deltaY, globalCurrentPos, globalPressPos, minVisibleX, minVisibleY, newX, newY, scaledHeight, scaledWidth;
                          if (internal.isDragging && pressed && internal.operationType === "drag") {
-                           var globalPressPos = mapToItem(root.parent, pressPos.x, pressPos.y);
-                           var globalCurrentPos = mapToItem(root.parent, mouse.x, mouse.y);
+                           globalPressPos = mapToItem(root.parent, pressPos.x, pressPos.y);
+                           globalCurrentPos = mapToItem(root.parent, mouse.x, mouse.y);
 
-                           var deltaX = globalCurrentPos.x - globalPressPos.x;
-                           var deltaY = globalCurrentPos.y - globalPressPos.y;
+                           deltaX = globalCurrentPos.x - globalPressPos.x;
+                           deltaY = globalCurrentPos.y - globalPressPos.y;
 
-                           var newX = internal.dragOffsetX + deltaX;
-                           var newY = internal.dragOffsetY + deltaY;
+                           newX = internal.dragOffsetX + deltaX;
+                           newY = internal.dragOffsetY + deltaY;
 
                            // Boundary clamping - allow widgets to go partially off-screen (75% can clip)
                            // This gives users more control over positioning while keeping widgets accessible
-                           var scaledWidth = root.width;
-                           var scaledHeight = root.height;
+                           scaledWidth = root.width;
+                           scaledHeight = root.height;
                            if (root.parent && scaledWidth > 0 && scaledHeight > 0) {
-                             var minVisibleX = scaledWidth * 0.25;
-                             var minVisibleY = scaledHeight * 0.25;
+                             minVisibleX = scaledWidth * 0.25;
+                             minVisibleY = scaledHeight * 0.25;
                              newX = Math.max(-scaledWidth + minVisibleX, Math.min(newX, root.parent.width - minVisibleX));
                              newY = Math.max(-scaledHeight + minVisibleY, Math.min(newY, root.parent.height - minVisibleY));
                            }
@@ -415,8 +420,8 @@ Item {
                              newY = root.snapToGrid(newY);
                              // Re-clamp after snapping
                              if (root.parent && scaledWidth > 0 && scaledHeight > 0) {
-                               var minVisibleX = scaledWidth * 0.25;
-                               var minVisibleY = scaledHeight * 0.25;
+                               minVisibleX = scaledWidth * 0.25;
+                               minVisibleY = scaledHeight * 0.25;
                                newX = Math.max(-scaledWidth + minVisibleX, Math.min(newX, root.parent.width - minVisibleX));
                                newY = Math.max(-scaledHeight + minVisibleY, Math.min(newY, root.parent.height - minVisibleY));
                              }
@@ -428,9 +433,10 @@ Item {
                        }
 
     onReleased: mouse => {
+      var roundedX, roundedY;
                   if (internal.isDragging && internal.operationType === "drag" && widgetIndex >= 0 && screen && screen.name) {
-                    var roundedX = Math.round(internal.dragOffsetX);
-                    var roundedY = Math.round(internal.dragOffsetY);
+                    roundedX = Math.round(internal.dragOffsetX);
+                    roundedY = Math.round(internal.dragOffsetY);
                     root.updateWidgetData({
                                             "x": roundedX,
                                             "y": roundedY
@@ -459,11 +465,12 @@ Item {
     hoverEnabled: true
 
     onPressed: mouse => {
+      var globalPos, popupMenuWindow;
                  if (mouse.button === Qt.RightButton) {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(root.screen);
+                   popupMenuWindow = PanelService.getPopupMenuWindow(root.screen);
                    if (popupMenuWindow) {
                      // Map click position to screen coordinates
-                     var globalPos = root.mapToItem(null, mouse.x, mouse.y);
+                     globalPos = root.mapToItem(null, mouse.x, mouse.y);
                      // Use dynamic context menu (created in PopupMenuWindow's Top layer)
                      // This ensures input events work correctly for desktop widgets (Bottom layer)
                      popupMenuWindow.showDynamicContextMenu(root.contextMenuModel, globalPos.x, globalPos.y, root.handleContextMenuAction);
@@ -582,19 +589,20 @@ Item {
                    }
 
         onPositionChanged: mouse => {
+          var currentPos, deltaX, deltaY, diagonalDelta, newScale, scaleDelta, sensitivity;
                              if (internal.isScaling && pressed && internal.operationType === "scale") {
-                               var currentPos = mapToItem(root.parent, mouse.x, mouse.y);
-                               var deltaX = currentPos.x - pressPos.x;
-                               var deltaY = currentPos.y - pressPos.y;
+                               currentPos = mapToItem(root.parent, mouse.x, mouse.y);
+                               deltaX = currentPos.x - pressPos.x;
+                               deltaY = currentPos.y - pressPos.y;
 
                                // Project delta onto the diagonal direction for this corner
                                // xDir/yDir indicate which direction increases scale
-                               var diagonalDelta = (deltaX * cornerHandle.modelData.xDir + deltaY * cornerHandle.modelData.yDir) / Math.sqrt(2);
+                               diagonalDelta = (deltaX * cornerHandle.modelData.xDir + deltaY * cornerHandle.modelData.yDir) / Math.sqrt(2);
 
                                // Scale sensitivity: pixels of drag per 1.0 scale change
-                               var sensitivity = 150;
-                               var scaleDelta = diagonalDelta / sensitivity;
-                               var newScale = Math.max(root.minScale, Math.min(root.maxScale, internal.initialScale + scaleDelta));
+                               sensitivity = 150;
+                               scaleDelta = diagonalDelta / sensitivity;
+                               newScale = Math.max(root.minScale, Math.min(root.maxScale, internal.initialScale + scaleDelta));
 
                                newScale = root.snapScaleToGrid(newScale);
 

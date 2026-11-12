@@ -74,6 +74,7 @@ Singleton {
       }
     }
     onLoadFailed: function (error) {
+      var shortCode;
       if (root.langCode === "en") {
         Logger.e("I18n", `Failed to load English translation file: ${error}`);
         // English also failed - still emit signal to unblock startup
@@ -91,7 +92,7 @@ Singleton {
         Qt.callLater(loadTranslations);
       } else {
         // Try language-only code (e.g. "zh-CN" → "zh")
-        var shortCode = root.langCode.substring(0, 2);
+        shortCode = root.langCode.substring(0, 2);
         if (shortCode !== root.langCode) {
           Logger.d("I18n", `Translation file for "${root.langCode}" not found, trying "${shortCode}"`);
           root.langCode = shortCode;
@@ -155,9 +156,10 @@ Singleton {
 
   // Strip 4-letter script subtag from a BCP 47 tag (e.g. "fr-Latn-FR" → "fr-FR")
   function stripScript(tag) {
+    var i;
     var parts = tag.split("-");
     var result = [];
-    for (var i = 0; i < parts.length; i++) {
+    for (i = 0; i < parts.length; i++) {
       if (parts[i].length === 4 && /^[A-Za-z]{4}$/.test(parts[i])) {
         continue;
       }
@@ -168,6 +170,7 @@ Singleton {
 
   // Determine the best language match against availableLanguages
   function determineFastLanguage() {
+    var fullLang, i, short_, stripped;
     // User preference from Settings (defaults to "" if not yet loaded from disk)
     var userLang = Settings.data.general.language;
     if (userLang !== "" && availableLanguages.includes(userLang)) {
@@ -178,8 +181,8 @@ Singleton {
     }
 
     // Match system locale against available translations
-    for (var i = 0; i < Qt.locale().uiLanguages.length; i++) {
-      var fullLang = Qt.locale().uiLanguages[i];
+    for (i = 0; i < Qt.locale().uiLanguages.length; i++) {
+      fullLang = Qt.locale().uiLanguages[i];
 
       // Exact match (e.g. "zh-CN")
       if (availableLanguages.includes(fullLang)) {
@@ -190,7 +193,7 @@ Singleton {
       }
 
       // Script-stripped match (e.g. "zh-Hans-CN" → "zh-CN")
-      var stripped = stripScript(fullLang);
+      stripped = stripScript(fullLang);
       if (stripped !== fullLang && availableLanguages.includes(stripped)) {
         return {
           code: stripped,
@@ -199,7 +202,7 @@ Singleton {
       }
 
       // Language-only match (e.g. "fr-FR" → "fr")
-      var short_ = fullLang.substring(0, 2);
+      short_ = fullLang.substring(0, 2);
       if (availableLanguages.includes(short_)) {
         return {
           code: short_,
@@ -249,13 +252,14 @@ Singleton {
   // -------------------------------------------
   // Check if a translation exists
   function hasTranslation(key) {
+    var i;
     if (!isLoaded)
       return false;
 
     const keys = key.split(".");
     var value = translations;
 
-    for (var i = 0; i < keys.length; i++) {
+    for (i = 0; i < keys.length; i++) {
       if (value && typeof value === "object" && keys[i] in value) {
         value = value[keys[i]];
       } else {
@@ -297,6 +301,7 @@ Singleton {
   // -------------------------------------------
   // Main translation function
   function tr(key, interpolations) {
+    var i;
     if (typeof interpolations === "undefined")
       interpolations = {};
 
@@ -311,7 +316,7 @@ Singleton {
     // Look-up translation in the active language
     var value = translations;
     var notFound = false;
-    for (var i = 0; i < keys.length; i++) {
+    for (i = 0; i < keys.length; i++) {
       if (value && typeof value === "object" && keys[i] in value) {
         value = value[keys[i]];
       } else {
@@ -325,7 +330,7 @@ Singleton {
     // Fallback to english if not found
     if (notFound && availableLanguages.includes("en") && langCode !== "en") {
       value = fallbackTranslations;
-      for (var i = 0; i < keys.length; i++) {
+      for (i = 0; i < keys.length; i++) {
         if (value && typeof value === "object" && keys[i] in value) {
           value = value[keys[i]];
         } else {

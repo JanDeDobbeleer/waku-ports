@@ -26,9 +26,10 @@ Singleton {
   Connections {
     target: WallpaperService
     function onWallpaperChanged(screenName, path) {
+      var effectiveMonitor;
       // Check if we need to wait for color generation
       if (Settings.data.colorSchemes.useWallpaperColors) {
-        var effectiveMonitor = Settings.data.colorSchemes.monitorForColors;
+        effectiveMonitor = Settings.data.colorSchemes.monitorForColors;
         if (effectiveMonitor === "" || effectiveMonitor === undefined) {
           effectiveMonitor = Screen.name;
         }

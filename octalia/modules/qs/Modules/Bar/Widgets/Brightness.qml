@@ -59,9 +59,10 @@ Item {
   }
 
   function getControllableMonitorCount() {
+    var i;
     var monitors = BrightnessService.monitors || [];
     var count = 0;
-    for (var i = 0; i < monitors.length; i++) {
+    for (i = 0; i < monitors.length; i++) {
       if (monitors[i] && monitors[i].brightnessControlAvailable)
         count++;
     }
@@ -123,11 +124,12 @@ Item {
     ]
 
     onTriggered: action => {
+      var settingsPanel;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
                    if (action === "open-display-settings") {
-                     var settingsPanel = PanelService.getPanel("settingsPanel", screen);
+                     settingsPanel = PanelService.getPanel("settingsPanel", screen);
                      settingsPanel.requestedTab = SettingsPanel.Tab.Display;
                      settingsPanel.open();
                    } else if (action === "widget-settings") {

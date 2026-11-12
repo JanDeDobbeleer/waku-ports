@@ -120,11 +120,12 @@ Singleton {
       }
     }
     onLoaded: function () {
+      var rawJson;
       if (!isLoaded) {
         Logger.i("Settings", "Settings loaded");
 
         // Load raw JSON for migrations (adapter doesn't expose removed properties)
-        var rawJson = null;
+        rawJson = null;
         try {
           rawJson = JSON.parse(settingsFileView.text());
         } catch (e) {
@@ -834,6 +835,7 @@ Singleton {
   // Get default value for a setting path (e.g., "general.scaleRatio" or "bar.position")
   // Returns undefined if not found
   function getDefaultValue(path) {
+    var i;
     if (!root._defaultSettings) {
       return undefined;
     }
@@ -841,7 +843,7 @@ Singleton {
     var parts = path.split(".");
     var current = root._defaultSettings;
 
-    for (var i = 0; i < parts.length; i++) {
+    for (i = 0; i < parts.length; i++) {
       if (current === undefined || current === null) {
         return undefined;
       }
@@ -874,11 +876,12 @@ Singleton {
   // Format: [{ "name": "HDMI-A-1", "position": "left" }, ...]
   // Note: QML's list<var> is not a true JS array, so we check for .length instead of Array.isArray()
   function _findScreenOverride(screenName) {
+    var i;
     var overrides = data.bar.screenOverrides;
     if (!screenName || !overrides || overrides.length === undefined) {
       return null;
     }
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         return overrides[i];
       }
@@ -888,11 +891,12 @@ Singleton {
 
   // Helper to find index of a screen override entry
   function _findScreenOverrideIndex(screenName) {
+    var i;
     var overrides = data.bar.screenOverrides;
     if (!screenName || !overrides || overrides.length === undefined) {
       return -1;
     }
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         return i;
       }
@@ -981,6 +985,7 @@ Singleton {
   // -----------------------------------------------------
   // Set a per-screen override
   function setScreenOverride(screenName, property, value) {
+    var i, newEntry;
     if (!screenName)
       return;
 
@@ -990,7 +995,7 @@ Singleton {
     }
 
     var index = -1;
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         index = i;
         break;
@@ -999,7 +1004,7 @@ Singleton {
 
     if (index === -1) {
       // Create new entry
-      var newEntry = {
+      newEntry = {
         "name": screenName
       };
       newEntry[property] = value;
@@ -1015,6 +1020,7 @@ Singleton {
   // Clear a per-screen override (revert to global default)
   // If property is null, clears all overrides for that screen
   function clearScreenOverride(screenName, property) {
+    var i, keys;
     if (!screenName)
       return;
 
@@ -1026,7 +1032,7 @@ Singleton {
     overrides = JSON.parse(JSON.stringify(overrides));
 
     var index = -1;
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         index = i;
         break;
@@ -1040,7 +1046,7 @@ Singleton {
     if (property) {
       delete overrides[index][property];
       // Remove screen entry if only "name" remains
-      var keys = Object.keys(overrides[index]);
+      keys = Object.keys(overrides[index]);
       if (keys.length <= 1 && (keys.length === 0 || keys[0] === "name")) {
         overrides.splice(index, 1);
       }
@@ -1060,14 +1066,15 @@ Singleton {
   // -----------------------------------------------------
   // Generate default settings: for reference only, not used by the shell
   function generateDefaultSettings() {
+    var defaultPath, jsonData, plainAdapter;
     try {
       Logger.d("Settings", "Generating settings-default.json");
 
       // Prepare a clean JSON
-      var plainAdapter = QtObj2JS.qtObjectToPlainObject(adapter);
-      var jsonData = JSON.stringify(plainAdapter, null, 2);
+      plainAdapter = QtObj2JS.qtObjectToPlainObject(adapter);
+      jsonData = JSON.stringify(plainAdapter, null, 2);
 
-      var defaultPath = Quickshell.shellDir + "/Assets/settings-default.json";
+      defaultPath = Quickshell.shellDir + "/Assets/settings-default.json";
 
       Quickshell.execDetached(["sh", "-c", `cat > "${defaultPath}" << 'OCTALIA_EOF'\n${jsonData}\nOCTALIA_EOF`]);
     } catch (error) {
@@ -1078,17 +1085,18 @@ Singleton {
   // -----------------------------------------------------
   // Generate default widget settings: for reference only, not used by the shell
   function generateWidgetDefaultSettings() {
+    var defaultPath, jsonData, output;
     try {
       Logger.d("Settings", "Generating settings-widgets-default.json");
 
-      var output = {
+      output = {
         "bar": QtObj2JS.qtObjectToPlainObject(BarWidgetRegistry.widgetMetadata),
         "controlCenter": QtObj2JS.qtObjectToPlainObject(ControlCenterWidgetRegistry.widgetMetadata),
         "desktop": QtObj2JS.qtObjectToPlainObject(DesktopWidgetRegistry.widgetMetadata)
       };
-      var jsonData = JSON.stringify(output, null, 2);
+      jsonData = JSON.stringify(output, null, 2);
 
-      var defaultPath = Quickshell.shellDir + "/Assets/settings-widgets-default.json";
+      defaultPath = Quickshell.shellDir + "/Assets/settings-widgets-default.json";
 
       Quickshell.execDetached(["sh", "-c", `cat > "${defaultPath}" << 'OCTALIA_EOF'\n${jsonData}\nOCTALIA_EOF`]);
     } catch (error) {
@@ -1100,6 +1108,7 @@ Singleton {
   // Run versioned migrations using MigrationRegistry
   // rawJson is the parsed JSON file content (before adapter filtering)
   function runVersionedMigrations(rawJson) {
+    var i;
     // Skip migrations on fresh installs (no prior settings file)
     if (!rawJson || root.isFreshInstall) {
       Logger.i("Settings", "Fresh install detected, skipping migrations");
@@ -1115,7 +1124,7 @@ Singleton {
     const versions = Object.keys(migrations).map(v => parseInt(v)).sort((a, b) => a - b);
 
     // Run migrations in order for versions newer than current
-    for (var i = 0; i < versions.length; i++) {
+    for (i = 0; i < versions.length; i++) {
       const version = versions[i];
 
       if (currentVersion < version) {
@@ -1144,6 +1153,7 @@ Singleton {
   // If the settings structure has changed, ensure
   // backward compatibility by upgrading the settings
   function upgradeSettings() {
+    var desktopWidget, i, m, s, shortcut, widget;
     // Wait for BarWidgetRegistry to be ready
     if (!BarWidgetRegistry.widgets || Object.keys(BarWidgetRegistry.widgets).length === 0) {
       Logger.d("Settings", "BarWidgetRegistry not ready, deferring upgrade");
@@ -1156,12 +1166,12 @@ Singleton {
 
     // 1. remove any non existing bar widget type
     var removedWidget = false;
-    for (var s = 0; s < sections.length; s++) {
+    for (s = 0; s < sections.length; s++) {
       const sectionName = sections[s];
       const widgets = adapter.bar.widgets[sectionName];
       // Iterate backward through the widgets array, so it does not break when removing a widget
-      for (var i = widgets.length - 1; i >= 0; i--) {
-        var widget = widgets[i];
+      for (i = widgets.length - 1; i >= 0; i--) {
+        widget = widgets[i];
         if (!BarWidgetRegistry.hasWidget(widget.id)) {
           Logger.w(`Settings`, `!!! Deleted invalid bar widget ${widget.id} !!!`);
           widgets.splice(i, 1);
@@ -1173,11 +1183,11 @@ Singleton {
     // -----------------
     // 2. remove any non existing control center widget type
     const ccSections = ["left", "right"];
-    for (var s = 0; s < ccSections.length; s++) {
+    for (s = 0; s < ccSections.length; s++) {
       const sectionName = ccSections[s];
       const shortcuts = adapter.controlCenter.shortcuts[sectionName];
-      for (var i = shortcuts.length - 1; i >= 0; i--) {
-        var shortcut = shortcuts[i];
+      for (i = shortcuts.length - 1; i >= 0; i--) {
+        shortcut = shortcuts[i];
         if (!ControlCenterWidgetRegistry.hasWidget(shortcut.id)) {
           Logger.w(`Settings`, `!!! Deleted invalid control center widget ${shortcut.id} !!!`);
           shortcuts.splice(i, 1);
@@ -1189,12 +1199,12 @@ Singleton {
     // -----------------
     // 3. remove any non existing desktop widget type
     const monitorWidgets = adapter.desktopWidgets.monitorWidgets;
-    for (var m = 0; m < monitorWidgets.length; m++) {
+    for (m = 0; m < monitorWidgets.length; m++) {
       const monitor = monitorWidgets[m];
       if (!monitor.widgets)
         continue;
-      for (var i = monitor.widgets.length - 1; i >= 0; i--) {
-        var desktopWidget = monitor.widgets[i];
+      for (i = monitor.widgets.length - 1; i >= 0; i--) {
+        desktopWidget = monitor.widgets[i];
         if (!DesktopWidgetRegistry.hasWidget(desktopWidget.id)) {
           Logger.w(`Settings`, `!!! Deleted invalid desktop widget ${desktopWidget.id} !!!`);
           monitor.widgets.splice(i, 1);
@@ -1205,10 +1215,10 @@ Singleton {
 
     // -----------------
     // 4. upgrade user widget settings
-    for (var s = 0; s < sections.length; s++) {
+    for (s = 0; s < sections.length; s++) {
       const sectionName = sections[s];
-      for (var i = 0; i < adapter.bar.widgets[sectionName].length; i++) {
-        var widget = adapter.bar.widgets[sectionName][i];
+      for (i = 0; i < adapter.bar.widgets[sectionName].length; i++) {
+        widget = adapter.bar.widgets[sectionName][i];
 
         // Check if widget registry supports user settings, if it does not, then there is nothing to do
         if (BarWidgetRegistry.widgetMetadata[widget.id] === undefined) {
@@ -1225,6 +1235,7 @@ Singleton {
   // -----------------------------------------------------
   // Function to clean up deprecated user/custom bar widgets settings
   function upgradeWidget(widget) {
+    var i;
     // Backup the widget definition before altering
     const widgetBefore = JSON.stringify(widget);
 
@@ -1242,7 +1253,7 @@ Singleton {
     }
 
     // Inject missing default setting (metaData) from BarWidgetRegistry
-    for (var i = 0; i < keys.length; i++) {
+    for (i = 0; i < keys.length; i++) {
       const k = keys[i];
       if (k === "id") {
         continue;

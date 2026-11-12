@@ -181,6 +181,7 @@ Singleton {
   }
 
   function getDeviceName(device) {
+    var match;
     if (!isDeviceReady(device)) {
       return "";
     }
@@ -192,7 +193,7 @@ Singleton {
         if (device.nativePath === "DisplayDevice") {
           return I18n.tr("battery.all-batteries");
         }
-        var match = device.nativePath.match(/(\d+)$/);
+        match = device.nativePath.match(/(\d+)$/);
         if (match) {
           // In case of 2 batteries: bat0 => bat1  bat1 => bat2
           return I18n.tr("common.battery") + " " + (parseInt(match[1]) + 1);  // Append numbers

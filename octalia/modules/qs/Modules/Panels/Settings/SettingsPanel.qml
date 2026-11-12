@@ -121,6 +121,7 @@ SmartPanel {
 
   // Override open to handle window mode
   function open(buttonItem, buttonName) {
+    var buttonPos;
     if (isWindowMode) {
       SettingsPanelService.openWindow(requestedTab);
       return;
@@ -141,7 +142,7 @@ SmartPanel {
 
     if (buttonItem) {
       root.buttonItem = buttonItem;
-      var buttonPos = buttonItem.mapToItem(null, 0, 0);
+      buttonPos = buttonItem.mapToItem(null, 0, 0);
       root.buttonPosition = Qt.point(buttonPos.x, buttonPos.y);
       root.buttonWidth = buttonItem.width;
       root.buttonHeight = buttonItem.height;

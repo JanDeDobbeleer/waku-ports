@@ -117,10 +117,11 @@ Popup {
   }
 
   function updateFilteredModel() {
+    var i;
     filteredModel.clear();
     const searchText = filePickerPanel.filterText.toLowerCase();
 
-    for (var i = 0; i < folderModel.count; i++) {
+    for (i = 0; i < folderModel.count; i++) {
       const fileName = folderModel.get(i, "fileName");
       const filePath = folderModel.get(i, "filePath");
       const fileIsDir = folderModel.get(i, "fileIsDir");
@@ -190,6 +191,7 @@ Popup {
 
     // Function when an item is clicked, either a folder or a file since both have the same functionality, reduces repetitive code
     function itemClicked(modifiers, path) {
+      var i, toggle;
       var list = currentSelection.slice();
       const index = list.indexOf(path);
       if (root.allowMultiSelection && (modifiers & Qt.ShiftModifier) && list.length > 0) {
@@ -197,8 +199,8 @@ Popup {
           list.splice(index, 1);
           currentSelection = list;
         } else {
-          var i = 0;
-          var toggle = false;
+          i = 0;
+          toggle = false;
           const firstItemPath = list[0];
           while (i < filteredModel.count) {
             const itemPath = filteredModel.get(i).filePath;

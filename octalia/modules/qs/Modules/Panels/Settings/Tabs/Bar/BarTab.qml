@@ -28,11 +28,12 @@ ColumnLayout {
   // These intentionally edit Settings.data.bar.widgets (global defaults),
   // not per-screen overrides. Per-screen editing is handled by MonitorWidgetsConfig.qml.
   function _addWidgetToSection(widgetId, section) {
+    var metadata;
     var newWidget = {
       "id": widgetId
     };
     if (BarWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      var metadata = BarWidgetRegistry.widgetMetadata[widgetId];
+      metadata = BarWidgetRegistry.widgetMetadata[widgetId];
       if (metadata) {
         Object.keys(metadata).forEach(function (key) {
           newWidget[key] = metadata[key];
@@ -44,10 +45,11 @@ ColumnLayout {
   }
 
   function _removeWidgetFromSection(section, index) {
+    var newArray, removedWidgets;
     var widgets = Settings.data.bar.widgets;
     if (index >= 0 && index < widgets[section].length) {
-      var newArray = widgets[section].slice();
-      var removedWidgets = newArray.splice(index, 1);
+      newArray = widgets[section].slice();
+      removedWidgets = newArray.splice(index, 1);
       widgets[section] = newArray;
       BarService.widgetsRevision++;
 
@@ -58,10 +60,11 @@ ColumnLayout {
   }
 
   function _reorderWidgetInSection(section, fromIndex, toIndex) {
+    var item, newArray;
     var widgets = Settings.data.bar.widgets;
     if (fromIndex >= 0 && fromIndex < widgets[section].length && toIndex >= 0 && toIndex < widgets[section].length) {
-      var newArray = widgets[section].slice();
-      var item = newArray[fromIndex];
+      newArray = widgets[section].slice();
+      item = newArray[fromIndex];
       newArray.splice(fromIndex, 1);
       newArray.splice(toIndex, 0, item);
       widgets[section] = newArray;
@@ -76,13 +79,14 @@ ColumnLayout {
   }
 
   function _moveWidgetBetweenSections(fromSection, index, toSection) {
+    var sourceArray, targetArray, widget;
     var widgets = Settings.data.bar.widgets;
     if (index >= 0 && index < widgets[fromSection].length) {
-      var widget = widgets[fromSection][index];
-      var sourceArray = widgets[fromSection].slice();
+      widget = widgets[fromSection][index];
+      sourceArray = widgets[fromSection].slice();
       sourceArray.splice(index, 1);
       widgets[fromSection] = sourceArray;
-      var targetArray = widgets[toSection].slice();
+      targetArray = widgets[toSection].slice();
       targetArray.push(widget);
       widgets[toSection] = targetArray;
       BarService.widgetsRevision++;
@@ -91,11 +95,12 @@ ColumnLayout {
   }
 
   function getWidgetLocations(widgetId) {
+    var i;
     if (!BarService)
       return [];
     const instances = BarService.getAllRegisteredWidgets();
     const locations = {};
-    for (var i = 0; i < instances.length; i++) {
+    for (i = 0; i < instances.length; i++) {
       if (instances[i].widgetId === widgetId) {
         const section = instances[i].section;
         if (section === "left")

@@ -87,13 +87,14 @@ ColumnLayout {
     currentKey: Settings.data.ui.settingsPanelMode
     defaultValue: Settings.getDefaultValue("ui.settingsPanelMode")
     onSelected: key => {
+      var screen;
                   // Defer setup to next update so close can do its work properly
                   Qt.callLater(() => {
                                  Settings.data.ui.settingsPanelMode = key;
                                });
                   if (Settings.data.ui.settingsPanelMode === "window" || key === "window") {
                     // Just switched from/to window, need to close panel
-                    var screen = PanelService.openedPanel?.screen || SettingsPanelService.settingsWindow?.screen || PanelService.findScreenForPanels();
+                    screen = PanelService.openedPanel?.screen || SettingsPanelService.settingsWindow?.screen || PanelService.findScreenForPanels();
                     SettingsPanelService.close(screen);
 
                     Qt.callLater(() => {

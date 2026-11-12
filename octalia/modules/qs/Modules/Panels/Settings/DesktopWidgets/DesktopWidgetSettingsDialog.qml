@@ -115,16 +115,17 @@ Popup {
             }
 
             function findFirstFocusable(item) {
+              var child, found, i;
               if (!item)
                 return null;
               if (item.focus !== undefined && item.focus === true)
                 return item;
               if (item.children) {
-                for (var i = 0; i < item.children.length; i++) {
-                  var child = item.children[i];
+                for (i = 0; i < item.children.length; i++) {
+                  child = item.children[i];
                   if (child && child.focus !== undefined && child.focus === true)
                     return child;
-                  var found = findFirstFocusable(child);
+                  found = findFirstFocusable(child);
                   if (found)
                     return found;
                 }
@@ -161,9 +162,10 @@ Popup {
     }
 
     onPositionChanged: mouse => {
+      var deltaX, deltaY;
                          if (pressed) {
-                           var deltaX = mouse.x - pressX;
-                           var deltaY = mouse.y - pressY;
+                           deltaX = mouse.x - pressX;
+                           deltaY = mouse.y - pressY;
 
                            root.x += deltaX;
                            root.y += deltaY;
@@ -198,8 +200,9 @@ Popup {
   }
 
   function saveAndClose() {
+    var newSettings;
     if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
+      newSettings = settingsLoader.item.saveSettings();
       if (newSettings) {
         root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
       }
@@ -208,21 +211,22 @@ Popup {
   }
 
   function loadWidgetSettings() {
+    var currentWidgetData, fullPath, i, monitorWidgets, widgets;
     // Handle core widgets
     const source = DesktopWidgetRegistry.widgetSettingsMap[widgetId];
     if (source) {
-      var currentWidgetData = widgetData;
-      var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-      for (var i = 0; i < monitorWidgets.length; i++) {
+      currentWidgetData = widgetData;
+      monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
+      for (i = 0; i < monitorWidgets.length; i++) {
         if (monitorWidgets[i].name === sectionId) {
-          var widgets = monitorWidgets[i].widgets || [];
+          widgets = monitorWidgets[i].widgets || [];
           if (widgetIndex >= 0 && widgetIndex < widgets.length) {
             currentWidgetData = widgets[widgetIndex];
           }
           break;
         }
       }
-      var fullPath = Qt.resolvedUrl(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/DesktopWidgets/" + source);
+      fullPath = Qt.resolvedUrl(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/DesktopWidgets/" + source);
       settingsLoader.setSource(fullPath, {
                                  "widgetData": currentWidgetData,
                                  "widgetMetadata": DesktopWidgetRegistry.widgetMetadata[widgetId]

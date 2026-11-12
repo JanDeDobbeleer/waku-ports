@@ -132,6 +132,7 @@ Singleton {
   }
 
   function updateWidgetData(monitorName, widgetIndex, properties) {
+    var i, widgets;
     if (widgetIndex < 0 || !monitorName) {
       return;
     }
@@ -139,9 +140,9 @@ Singleton {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === monitorName) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex < widgets.length) {
           widgets[widgetIndex] = Object.assign({}, widgets[widgetIndex], properties);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {

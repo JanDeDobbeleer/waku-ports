@@ -617,7 +617,8 @@ Item {
   }
 
   function selectTabById(tabId) {
-    for (var i = 0; i < tabsModel.length; i++) {
+    var i;
+    for (i = 0; i < tabsModel.length; i++) {
       if (tabsModel[i].id === tabId) {
         currentTabIndex = i;
         return;
