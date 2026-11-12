@@ -25,12 +25,16 @@ jobs:
       fail-fast: false
       matrix:
         port: [celeste, nomarchy, octalia, start12]
-    env:
-      # check.ps1 keeps its logs in the temp folder; point it where the artifact step can find it.
-      TEMP: ${{ runner.temp }}
-      TMP: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # check.ps1 keeps its logs in the temp folder; point it where the artifact step can find it.
+      # The runner context is not available in job-level env, so set it here.
+      - name: Use the runner temp folder
+        shell: pwsh
+        run: |
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
 
       - name: Read pins
         id: pin
