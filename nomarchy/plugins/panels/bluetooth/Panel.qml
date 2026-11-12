@@ -12,6 +12,9 @@ import waku.services as S
 
 Panel {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   moduleName: "nomarchy.bluetooth"
   ipcTarget: "nomarchy.bluetooth"
   // manageIpc: false so this panel can own the single IpcHandler the target
@@ -423,8 +426,7 @@ Panel {
   // different monitor closes one instance as it opens the next, so the
   // closing side has to leave the scan alone for the side still on screen.
   function openSibling() {
-    if (!bar || typeof bar.moduleWidgets !== "function") return null
-    var items = bar.moduleWidgets(moduleName)
+    var items = BarValues.moduleWidgets(bar, moduleName, [])
     for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root && items[i].opened === true) return items[i]
     }
@@ -571,7 +573,7 @@ Panel {
   // when it is the last one standing.
   Component.onDestruction: {
     if (!owesDiscoveryStop) return
-    var items = bar && typeof bar.moduleWidgets === "function" ? bar.moduleWidgets(moduleName) : []
+    var items = BarValues.moduleWidgets(bar, moduleName, [])
     for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root) { items[i].owesDiscoveryStop = true; return }
     }
@@ -612,14 +614,14 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: root.phraseIndex = (root.phraseIndex + 1) % root.activePhrases.length
     }
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -629,7 +631,7 @@ Panel {
     function onRotatingPhrasesChanged() {
       if (!root.rotatingPhrases) {
         phraseSwap.stop()
-        if (panel.loadedContent) panel.loadedContent.heroStatus.opacity = 1.0
+        if (panel.loadedContent) (panel.loadedContent as LazyContent).heroStatus.opacity = 1.0
       }
     }
   }
@@ -679,9 +681,11 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias heroStatus: heroStatus
+      final property alias heroStatus: heroStatus
       implicitHeight: column.implicitHeight
       anchors.fill: parent
       onMoveRequested: function(dx, dy) {
@@ -714,8 +718,8 @@ Panel {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: root.icon
-            color: BarValues.foreground(root.bar)
-            font.family: BarValues.fontFamily(root.bar)
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.display
             opacity: root.adapter && root.adapter.enabled ? 1.0 : 0.5
           }
@@ -727,7 +731,7 @@ Panel {
             visible: !!root.adapter
             checked: !!root.adapter && root.adapter.enabled
             hasCursor: root.headerHasCursor
-            foreground: BarValues.foreground(root.bar)
+            foreground: root.contentForeground
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             onHovered: function(on) { if (on) root.setHeaderCursor() }
@@ -736,7 +740,7 @@ Panel {
             PanelToolTip {
               visible: powerSwitch.containsMouse
               text: root.toggleHint
-              fontFamily: BarValues.fontFamily(root.bar)
+              fontFamily: root.contentFontFamily
             }
           }
 
@@ -752,8 +756,8 @@ Panel {
             Text {
               text: Commons.I18n.t("bluetooth.title")
               textFormat: Text.PlainText
-              color: BarValues.foreground(root.bar)
-              font.family: BarValues.fontFamily(root.bar)
+              color: root.contentForeground
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -764,8 +768,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
-              font.family: BarValues.fontFamily(root.bar)
+              color: Qt.darker(root.contentForeground, 1.4)
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -778,7 +782,7 @@ Panel {
         // Scrollable device list — capped so a noisy neighborhood doesn't
         // grow the popup past the screen.
         PanelSeparator {
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
         }
 
         Column {
@@ -789,8 +793,8 @@ Panel {
 
           PanelSectionHeader {
             text: Commons.I18n.t("bluetooth.connected")
-            foreground: BarValues.foreground(root.bar)
-            fontFamily: BarValues.fontFamily(root.bar)
+            foreground: root.contentForeground
+            fontFamily: root.contentFontFamily
           }
 
           Repeater {
@@ -809,7 +813,7 @@ Panel {
 
         PanelSeparator {
           visible: root.connectedDevices.length > 0 && root.scrollRows.length > 0
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
         }
 
         // ListView, not a Flickable: it owns the scroll position, so it keeps
@@ -856,15 +860,15 @@ Panel {
               PanelSeparator {
                 visible: bluetoothListRow.index > 0 && bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
-                foreground: BarValues.foreground(root.bar)
+                foreground: root.contentForeground
               }
 
               PanelSectionHeader {
                 visible: bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
                 text: bluetoothListRow.sectionTitle
-                foreground: BarValues.foreground(root.bar)
-                fontFamily: BarValues.fontFamily(root.bar)
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
               }
 
               DeviceRow {
@@ -884,8 +888,8 @@ Panel {
           text: !root.adapter ? Commons.I18n.t("bluetooth.noBluetoothAdapter")
               : !root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOnToScan")
               : Commons.I18n.t("bluetooth.scanning")
-          color: Qt.darker(BarValues.foreground(root.bar), 1.5)
-          font.family: BarValues.fontFamily(root.bar)
+          color: Qt.darker(root.contentForeground, 1.5)
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
           wrapMode: Text.WordWrap
           width: parent.width
@@ -919,7 +923,7 @@ Panel {
 
     hasCursor: rowSelected && !root.actionFocused
     current: isConnected
-    foreground: BarValues.foreground(root.bar)
+    foreground: root.contentForeground
     fill: root.hoverFill
     currentFill: root.selectedFill
 
@@ -937,9 +941,9 @@ Panel {
     }
 
     readonly property color statusColor: {
-      if (isConnected) return BarValues.foreground(root.bar)
-      if (action !== "" || devState === 3 || dev.pairing === true) return BarValues.foreground(root.bar)
-      return Qt.darker(BarValues.foreground(root.bar), 1.5)
+      if (isConnected) return root.contentForeground
+      if (action !== "" || devState === 3 || dev.pairing === true) return root.contentForeground
+      return Qt.darker(root.contentForeground, 1.5)
     }
 
     implicitHeight: rowContent.implicitHeight + Style.spacing.rowPaddingX
@@ -974,7 +978,7 @@ Panel {
     PanelToolTip {
       visible: row.actionTooltip !== "" && rowMouse.containsMouse && !root.actionFocused
       text: row.actionTooltip
-      fontFamily: BarValues.fontFamily(root.bar)
+      fontFamily: root.contentFontFamily
     }
 
     Item {
@@ -991,7 +995,7 @@ Panel {
         textFormat: Text.PlainText
         text: row.isConnected ? "󰂱" : "󰂯"
         color: row.statusColor
-        font.family: BarValues.fontFamily(root.bar)
+        font.family: root.contentFontFamily
         font.pixelSize: Style.font.heading
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -1009,8 +1013,8 @@ Panel {
         Text {
           textFormat: Text.PlainText
           text: root.deviceLabel(row.dev) || Commons.I18n.t("bluetooth.device")
-          color: BarValues.foreground(root.bar)
-          font.family: BarValues.fontFamily(root.bar)
+          color: root.contentForeground
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.body
           elide: Text.ElideRight
           width: parent.width
@@ -1020,7 +1024,7 @@ Panel {
           visible: row.statusText !== ""
           text: row.statusText
           color: row.statusColor
-          font.family: BarValues.fontFamily(root.bar)
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
           width: parent.width
@@ -1034,9 +1038,9 @@ Panel {
         visible: row.showForgetButton
         iconText: "󰅙"
         tooltipText: Commons.I18n.t("bluetooth.forget")
-        foreground: BarValues.foreground(root.bar)
-        hoverColor: BarValues.foreground(root.bar)
-        fontFamily: BarValues.fontFamily(root.bar)
+        foreground: root.contentForeground
+        hoverColor: root.contentForeground
+        fontFamily: root.contentFontFamily
         hasCursor: row.rowSelected && root.actionFocused
         onHovered: function(isHovered) {
           if (!isHovered) {

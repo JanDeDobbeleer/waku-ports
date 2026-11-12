@@ -5,7 +5,7 @@ import qs.Ui
 BarIndicator {
   id: root
 
-  readonly property var remoteSessionService: bar?.shell?.firstPartyServiceFor("nomarchy.remote-session")
+  readonly property var remoteSessionService: BarValues.firstPartyServiceFor(bar, "nomarchy.remote-session")
   readonly property var peers: remoteSessionService && Array.isArray(remoteSessionService.peers) ? remoteSessionService.peers : []
 
   active: remoteSessionService ? remoteSessionService.active : false

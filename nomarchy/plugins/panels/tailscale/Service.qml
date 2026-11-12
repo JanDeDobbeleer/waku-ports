@@ -124,23 +124,23 @@ Item {
     return Model.filterIPv4(ips)
   }
 
-  function cleanDnsName(name) {
+  function cleanDnsName(name: var): string {
     return Model.cleanDnsName(name)
   }
 
-  function shortDnsName(name) {
+  function shortDnsName(name: var): string {
     return Model.shortDnsName(name)
   }
 
-  function displayHostName(hostName, dnsName) {
+  function displayHostName(hostName: var, dnsName: var): string {
     return Model.displayHostName(hostName, dnsName, I18n.t)
   }
 
-  function osIcon(os) {
+  function osIcon(os: var): string {
     return Model.osIcon(os)
   }
 
-  function accountLabel(account) {
+  function accountLabel(account: var): string {
     return Model.accountLabel(account, I18n.t)
   }
 
@@ -166,7 +166,7 @@ Item {
     copyToClipboard(cleanDnsName(peer.DNSName), displayHostName(peer.HostName, peer.DNSName) + " DNS name")
   }
 
-  function peerAddress(peer) {
+  function peerAddress(peer: var): string {
     if (!peer) return ""
     if (peer.DNSName) return cleanDnsName(peer.DNSName)
     if (peer.HostName) return String(peer.HostName)
@@ -174,7 +174,7 @@ Item {
     return ips.length > 0 ? ips[0] : ""
   }
 
-  function canSendFiles(peer) {
+  function canSendFiles(peer: var): bool {
     if (!fileSharing || !running || !peer) return false
     return Model.isTaildropTarget(peer, selfUserId)
   }
@@ -241,7 +241,7 @@ Item {
     if (launched && !pollWatchdog.running) pollWatchdog.start()
   }
 
-  function elideStatus(text) {
+  function elideStatus(text: var): string {
     var value = String(text || "").replace(/\s+/g, " ").trim()
     return value.length > 140 ? value.substring(0, 137) + "…" : value
   }

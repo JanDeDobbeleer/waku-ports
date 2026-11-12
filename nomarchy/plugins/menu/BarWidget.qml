@@ -46,7 +46,7 @@ BarWidget {
       // Windows port: the shell host is called directly (nomarchy-shell and xdg-terminal-exec are Linux
       // programs), and a right click opens Windows Terminal.
       if (button === Qt.RightButton) Quickshell.execDetached(["wt.exe"])
-      else if (root.bar.shell) root.bar.shell.toggle("nomarchy.menu", "{\"menu\":\"root\"}")
+      else if (BarValues.hasShell(root.bar)) BarValues.toggle(root.bar, "nomarchy.menu", "{\"menu\":\"root\"}")
     }
   }
 }

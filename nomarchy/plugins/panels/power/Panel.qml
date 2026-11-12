@@ -8,6 +8,9 @@ import "Model.js" as Model
 
 Panel {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   moduleName: "nomarchy.power"
   ipcTarget: "nomarchy.power"
   // manageIpc: false so this panel can own the single IpcHandler the target
@@ -95,7 +98,7 @@ Panel {
   }
 
   readonly property color batteryFillColor: {
-    return root.bar ? BarValues.foreground(root.bar) : Commons.Color.foreground
+    return root.contentForeground
   }
 
   // Cute agent-flavored phrases shown in the hero status line, rotated on a
@@ -154,7 +157,7 @@ Panel {
 
   function togglePercentage() {
     root.settings = Object.assign({}, root.settings, { showPercentage: !root.showPercentage })
-    if (root.bar && root.bar.shell) root.bar.shell.updateEntryInline(root.moduleName, root.settings)
+    if (BarValues.hasShell(root.bar)) BarValues.updateEntryInline(root.bar, root.moduleName, root.settings)
   }
 
   Commons.ShellIpc {
@@ -205,7 +208,7 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
@@ -215,7 +218,7 @@ Panel {
       }
     }
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? (panel.loadedContent as LazyContent).heroStatus : null; property: "opacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -228,7 +231,7 @@ Panel {
     function onRotatingPhrasesChanged() {
       if (!root.rotatingPhrases) {
         phraseSwap.stop()
-        if (panel.loadedContent) panel.loadedContent.heroStatus.opacity = 1.0
+        if (panel.loadedContent) (panel.loadedContent as LazyContent).heroStatus.opacity = 1.0
       }
     }
   }
@@ -258,9 +261,11 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias heroStatus: heroStatus
+      final property alias heroStatus: heroStatus
       anchors.fill: parent
       implicitHeight: column.implicitHeight
       onMoveRequested: function(dx, dy) {
@@ -288,8 +293,8 @@ Panel {
             id: heroIcon
             textFormat: Text.PlainText
             text: root.batteryIcon()
-            color: BarValues.foreground(root.bar)
-            font.family: BarValues.fontFamily(root.bar)
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.display
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -309,8 +314,8 @@ Panel {
             Text {
               text: Commons.I18n.t("power.battery")
               textFormat: Text.PlainText
-              color: BarValues.foreground(root.bar)
-              font.family: BarValues.fontFamily(root.bar)
+              color: root.contentForeground
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -321,8 +326,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
-              font.family: BarValues.fontFamily(root.bar)
+              color: Qt.darker(root.contentForeground, 1.4)
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -335,8 +340,8 @@ Panel {
             id: heroPercent
             textFormat: Text.PlainText
             text: root.reading(root.batteryInfo.percentage) || "—"
-            color: BarValues.foreground(root.bar)
-            font.family: BarValues.fontFamily(root.bar)
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.displayLarge
             font.bold: true
             anchors.right: parent.right
@@ -355,7 +360,7 @@ Panel {
             id: barTrack
             anchors.fill: parent
             radius: height / 2
-            color: Qt.rgba(BarValues.foreground(root.bar).r, BarValues.foreground(root.bar).g, BarValues.foreground(root.bar).b, 0.12)
+            color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.12)
           }
 
           Rectangle {
@@ -417,7 +422,7 @@ Panel {
         // The Windows power modes, through the engine's PowerProfiles.
         PanelSeparator {
           visible: root.profiles.length > 0
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
         }
 
         Column {
@@ -427,8 +432,8 @@ Panel {
 
           PanelSectionHeader {
             text: Commons.I18n.t("power.powerProfile")
-            foreground: BarValues.foreground(root.bar)
-            fontFamily: BarValues.fontFamily(root.bar)
+            foreground: root.contentForeground
+            fontFamily: root.contentFontFamily
           }
 
           Row {
@@ -450,8 +455,8 @@ Panel {
                 iconSize: Style.font.title
                 text: Model.profileLabel(modelData, Commons.I18n.t)
                 fontSize: Style.font.bodySmall
-                foreground: BarValues.foreground(root.bar)
-                fontFamily: BarValues.fontFamily(root.bar)
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 horizontalPadding: Style.spacing.controlPaddingX
                 verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
                 bordered: true
@@ -487,16 +492,16 @@ Panel {
 
   component InfoLabel: Text {
     textFormat: Text.PlainText
-    color: BarValues.foreground(root.bar)
+    color: root.contentForeground
     opacity: 0.6
-    font.family: BarValues.fontFamily(root.bar)
+    font.family: root.contentFontFamily
     font.pixelSize: Style.font.bodySmall
   }
 
   component InfoValue: Text {
     textFormat: Text.PlainText
-    color: BarValues.foreground(root.bar)
-    font.family: BarValues.fontFamily(root.bar)
+    color: root.contentForeground
+    font.family: root.contentFontFamily
     font.pixelSize: Style.font.bodySmall
   }
 }

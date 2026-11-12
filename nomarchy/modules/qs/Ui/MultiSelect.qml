@@ -271,6 +271,7 @@ Item {
 
     BorderSurface {
       id: trigger
+      readonly property Item attachedWindowItem: Window.window ? Window.window.contentItem : null
       width: parent.width
       height: root.rowHeight
       radius: Style.cornerRadius
@@ -350,7 +351,7 @@ Item {
         property real _anchorX: 0
         property real _anchorY: 0
         property real _availableBelow: 0
-        readonly property var _windowItem: trigger.Window.window ? trigger.Window.window.contentItem : null
+        readonly property Item _windowItem: trigger.attachedWindowItem
         readonly property real _windowHeight: _windowItem ? _windowItem.height : 0
         readonly property real _idealContent: resultList.contentHeight + Style.space(50)
         readonly property real _maxRowsHeight: root.popupRowHeight * 6 + 5 * Style.spacing.labelGap + Style.space(50)

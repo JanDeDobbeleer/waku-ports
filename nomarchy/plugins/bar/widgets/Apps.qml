@@ -36,7 +36,7 @@ BarWidget {
     var byExe = {}
     var order = []
     for (let i = 0; i < rows.count; i++) {
-      let o = rows.objectAt(i)
+      let o = rows.objectAt(i) as TaskbarRow
       if (!o || o.key.indexOf("w:") !== 0) continue
       let exe = o.exe
       if (!byExe[exe]) {
@@ -124,23 +124,25 @@ BarWidget {
     window: root.hostWindow
   }
 
+  component TaskbarRow: QtObject {
+    final required property string title
+    final required property bool active
+    final required property bool minimized
+    final required property string key
+    final required property string iconUrl
+    final required property string uniqueId
+    final readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
+
+    onActiveChanged: Qt.callLater(root.rebuild)
+    onMinimizedChanged: Qt.callLater(root.rebuild)
+    onTitleChanged: Qt.callLater(root.rebuild)
+    onIconUrlChanged: Qt.callLater(root.rebuild)
+  }
+
   Instantiator {
     id: rows
     model: taskbar
-    delegate: QtObject {
-      required property string title
-      required property bool active
-      required property bool minimized
-      required property string key
-      required property string iconUrl
-      required property string uniqueId
-      readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
-
-      onActiveChanged: Qt.callLater(root.rebuild)
-      onMinimizedChanged: Qt.callLater(root.rebuild)
-      onTitleChanged: Qt.callLater(root.rebuild)
-      onIconUrlChanged: Qt.callLater(root.rebuild)
-    }
+    delegate: TaskbarRow {}
     onObjectAdded: Qt.callLater(root.rebuild)
     onObjectRemoved: Qt.callLater(root.rebuild)
   }

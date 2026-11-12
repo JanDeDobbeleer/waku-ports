@@ -17,7 +17,7 @@ BarWidget {
   function clear() { updateAvailable = false }
 
   function runUpdate() {
-    if (root.bar) root.bar.run("nomarchy-launch-floating-terminal-with-presentation nomarchy-update")
+    if (root.bar) BarValues.run(root.bar, "nomarchy-launch-floating-terminal-with-presentation nomarchy-update")
   }
 
   visible: updateAvailable

@@ -232,11 +232,11 @@ Panel {
       let existing = String(recentMullvadRegions[i] || "")
       if (existing !== "" && existing !== name && next.indexOf(existing) === -1) next.push(existing)
     }
-    if (!root.bar || !root.bar.shell || typeof root.bar.shell.updateEntryInline !== "function") return
+    if (!BarValues.hasUpdateEntryInline(root.bar)) return
     var entry = { id: root.moduleName }
     for (let key in settings) if (key !== "id") entry[key] = settings[key]
     entry.recentMullvadRegions = next
-    root.bar.shell.updateEntryInline(root.moduleName, entry)
+    BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
   function chooseExitNode(peer) {

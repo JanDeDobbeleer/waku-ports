@@ -26,7 +26,7 @@ Item {
   // crossing the track shows). Purely visual — snapping is the caller's job via
   // `integer`/`step` or an index-based value. Default 0 leaves the track plain.
   property int tickCount: 0
-  property color tickColor: bar ? bar.background : Commons.Color.background
+  property color tickColor: bar ? BarValues.background(bar) : Commons.Color.background
 
   onValueChanged: if (!dragging) liveValue = value
 
@@ -96,7 +96,7 @@ Item {
     height: root.knobSize
     radius: root.knobSize / 2
     color: root.knobColor
-    borderSpec: Border.flat(root.bar ? root.bar.background : "#101315", Math.max(1, Style.space(2)))
+    borderSpec: Border.flat(root.bar ? BarValues.background(root.bar) : "#101315", Math.max(1, Style.space(2)))
     anchors.verticalCenter: track.verticalCenter
     x: root.trackX(root.progress) - width / 2
     scale: root._hot ? 1.15 : 1.0

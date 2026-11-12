@@ -29,9 +29,8 @@ Item {
     Qt.callLater(function() { popoutSwitchClosing = false })
   }
   function toggle() { opened ? close() : open() }
-  function switchPanel(direction) {
-    if (bar && typeof bar.switchPanelFrom === "function") return bar.switchPanelFrom(root, direction)
-    return false
+  function switchPanel(direction: var): var {
+    return BarValues.switchPanel(bar, root, direction)
   }
 
   // Read a single value from this panel's inline shell.json entry, with a

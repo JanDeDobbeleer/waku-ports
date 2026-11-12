@@ -40,3 +40,15 @@ function entries(settings, defaults) {
   }
   return result
 }
+
+function injectProps(target, bar, id, settings, block, host) {
+  if (!target) return
+  if ("bar" in target) target.bar = bar
+  if ("moduleName" in target) target.moduleName = id
+  if ("settings" in target) target.settings = settings
+  if ("indicatorBlock" in target) target.indicatorBlock = block
+  if ("indicatorHost" in target) target.indicatorHost = host
+  if ("activeOverride" in target) target.activeOverride = block === "active" ? true : null
+}
+
+function isActive(target) { return !!target && target.active === true }

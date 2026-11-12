@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
+import "BarValues.js" as BarValues
 
 // Layer-shell popup attached to a bar widget icon, designed for
 // click-driven AND keyboard-driven panels (e.g. SUPER+CTRL+W summon).
@@ -98,7 +99,7 @@ PanelWindow {
   property Component panelContent: null
   property bool contentRequested: false
   readonly property Item loadedContent: contentLoader.item as Item
-  readonly property real loadedContentHeight: contentLoader.item ? contentLoader.item.implicitHeight : 0
+  readonly property real loadedContentHeight: loadedContent ? loadedContent.implicitHeight : 0
 
   // Build the content without opening the panel, for callers that need to
   // reach it first.
@@ -109,7 +110,7 @@ PanelWindow {
 
   readonly property var coordinatorKey: owner || root
   readonly property var anchorWindow: anchorItem ? anchorItem.QsWindow.window : null
-  readonly property string barPos: bar ? bar.position : "top"
+  readonly property string barPos: bar ? BarValues.position(bar) : "top"
 
   function close() {
     if (owner && "close" in owner) owner.close()
@@ -233,7 +234,7 @@ PanelWindow {
   // still consistent with the bar content origin, so it's accurate for
   // centering the card under the icon.
   readonly property real barThickness: !bar ? 0
-    : (typeof bar.barSizeFor === "function" && screen ? bar.barSizeFor(screen.name) : bar.barSize)
+    : BarValues.sizeForScreen(bar, screen)
   // Bar window dimensions, only for mapping overlay coordinates into
   // bar-window content coordinates in barPoint() below.
   readonly property real barW: anchorWindow ? anchorWindow.width : screenW
@@ -298,15 +299,15 @@ PanelWindow {
     if (!bar) return
     if (open) {
       popoutSwitchClosing = false
-      popoutSwitching = bar.activePopout && bar.activePopout !== coordinatorKey
+      popoutSwitching = BarValues.activePopout(bar) && BarValues.activePopout(bar) !== coordinatorKey
       if (popoutSwitching) morphFromLastCard()
-      bar.requestPopout(coordinatorKey)
+      BarValues.requestPopout(bar, coordinatorKey)
       publishCard()
       if (popoutSwitching) popoutSwitchTimer.restart()
     } else {
       popoutSwitchClosing = !!(owner && owner.popoutSwitchClosing)
       popoutSwitching = false
-      if (bar.activePopout === coordinatorKey) bar.releasePopout(coordinatorKey)
+      if (BarValues.activePopout(bar) === coordinatorKey) BarValues.releasePopout(bar, coordinatorKey)
       if (popoutSwitchClosing) closeSwitchTimer.restart()
     }
   }
@@ -340,22 +341,22 @@ PanelWindow {
   onCardTargetChanged: publishCard()
 
   function publishCard() {
-    if (!open || !bar || !screen || typeof bar.notePopoutCard !== "function") return
-    bar.notePopoutCard({ screen: screen.name, x: cardTarget.x, y: cardTarget.y,
+    if (!open || !bar || !screen) return
+    BarValues.notePopoutCard(bar, { screen: screen.name, x: cardTarget.x, y: cardTarget.y,
                          width: cardTarget.width, height: cardTarget.height })
   }
 
   // Already true as `open` flips, before onOpenChanged marks the switch, so
   // the card never starts growing in on top of the morph. Only a takeover in
   // the same section morphs; across sections the card grows in as usual.
-  readonly property bool takingOver: !!bar && !!bar.activePopout && bar.activePopout !== coordinatorKey
-    && typeof bar.popoutCardFor === "function" && !!bar.popoutCardFor(coordinatorKey)
+  readonly property bool takingOver: !!bar && !!BarValues.activePopout(bar) && BarValues.activePopout(bar) !== coordinatorKey
+    && !!BarValues.popoutCardFor(bar, coordinatorKey)
 
   property rect morphFrom: Qt.rect(0, 0, 0, 0)
   property real morph: 1
 
   function morphFromLastCard() {
-    var last = bar && typeof bar.popoutCardFor === "function" ? bar.popoutCardFor(coordinatorKey) : null
+    var last = BarValues.popoutCardFor(bar, coordinatorKey)
     if (!last || !screen || last.screen !== screen.name) return
     morphFrom = Qt.rect(last.x, last.y, last.width, last.height)
     morphRun.restart()
@@ -409,13 +410,13 @@ PanelWindow {
     }
 
     function pressTargetAt(px, py) {
-      if (!root.anchorWindow || !root.anchorWindow.contentItem || !root.bar || !root.bar.clickTargets) return null
+      if (!root.anchorWindow || !root.anchorWindow.contentItem || !root.bar || !BarValues.clickTargets(root.bar)) return null
       var p = barPoint(px, py)
-      var targets = root.bar.clickTargets
+      var targets = BarValues.clickTargets(root.bar)
       for (let i = targets.length - 1; i >= 0; i--) {
         let target = targets[i]
         if (!target || !target.triggerPress || target.visible === false || target.opacity === 0 || !target.mapToItem) continue
-        if (root.bar.targetBelongsToWindow && !root.bar.targetBelongsToWindow(target, root.anchorWindow)) continue
+        if (!BarValues.targetBelongsToWindow(root.bar, target, root.anchorWindow)) continue
         if (Util.itemContainsPoint(target, root.anchorWindow.contentItem, p.x, p.y)) return target
       }
       return null

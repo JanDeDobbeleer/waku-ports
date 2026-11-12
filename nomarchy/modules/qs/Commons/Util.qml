@@ -9,7 +9,7 @@ QtObject {
 
   // Manual click forwarding must honor the same clipping as Qt's hit test.
   // Collapsed drawers keep their children laid out beyond the visible edge.
-  function itemContainsPoint(target, source, x, y) {
+  function itemContainsPoint(target: var, source: var, x: var, y: var): bool {
     if (!target || !target.contains(target.mapFromItem(source, x, y))) return false
     for (let item = target; item; item = item.parent) {
       if (!item.visible || item.opacity === 0 || !item.enabled) return false
@@ -18,13 +18,13 @@ QtObject {
     return true
   }
 
-  function clamp(value, min, max) {
+  function clamp(value: var, min: var, max: var): var {
     var n = Number(value)
     if (!isFinite(n)) return min
     return Math.max(min, Math.min(max, n))
   }
 
-  function clampAlpha(value) {
+  function clampAlpha(value: var): real {
     return clamp(value, 0, 1)
   }
 
@@ -41,7 +41,7 @@ QtObject {
 
   // Compose a base color with an opacity. Accepts a color object or a hex
   // string; null/undefined yields transparent black at the requested alpha.
-  function alpha(c, opacity) {
+  function alpha(c: var, opacity: var): color {
     var a = clampAlpha(opacity)
     if (!c) return Qt.rgba(0, 0, 0, a)
     if (typeof c === "string") c = Qt.color(c)
@@ -50,7 +50,7 @@ QtObject {
 
   // file:// URL with each path segment percent-encoded so spaces and
   // special chars in user paths don't break Image.source.
-  function fileUrl(path) {
+  function fileUrl(path: var): string {
     if (!path) return ""
     // Windows port: a `D:\dir/file` path becomes file:///D:/dir/file. Qt reads `file://D%3A...` as a
     // host name, and a bare `D:\...` as a URL with scheme `d`.
@@ -60,17 +60,17 @@ QtObject {
     return "file://" + p.split("/").map(encodeURIComponent).join("/")
   }
 
-  function isVideoPath(path) {
+  function isVideoPath(path: var): bool {
     return /\.(mp4|m4v|mov|webm|mkv|avi)$/i.test(String(path || ""))
   }
 
   // Single-quote a string for bash. The replace handles embedded single
   // quotes by closing, escaping, and re-opening the literal.
-  function shellQuote(value) {
+  function shellQuote(value: var): string {
     return "'" + String(value || "").replace(/'/g, "'\\''") + "'"
   }
 
-  function execDetached(command) {
+  function execDetached(command: var): void {
     Quickshell.execDetached(["C:/Program Files/Git/usr/bin/bash.exe", "-lc", command])
   }
 
@@ -87,13 +87,13 @@ QtObject {
     return value !== null && typeof value === "object" && !Array.isArray(value)
   }
 
-  function canonicalWidgetId(id) {
+  function canonicalWidgetId(id: var): string {
     return String(id || "")
   }
 
   // Best-effort base64 decode. Returns "" on parse failure rather than
   // surfacing garbage downstream.
-  function decodeBase64(value) {
+  function decodeBase64(value: var): string {
     var s = String(value || "")
     if (!s) return ""
     try { return Qt.atob(s) } catch (e) { return "" }

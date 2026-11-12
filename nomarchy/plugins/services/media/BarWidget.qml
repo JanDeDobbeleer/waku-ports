@@ -7,9 +7,13 @@ import qs.Commons as Commons
 
 BarWidget {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
+  readonly property color contentBarForeground: bar ? BarValues.barForeground(bar) : Commons.Color.foreground
   moduleName: "nomarchy.media"
 
-  readonly property var mediaService: bar?.shell?.firstPartyServiceFor("nomarchy.media")
+  readonly property var mediaService: BarValues.firstPartyServiceFor(bar, "nomarchy.media")
   readonly property MprisPlayer activePlayer: mediaService ? mediaService.activePlayer as MprisPlayer : null
   readonly property var sourcePlayers: mediaService ? mediaService.sourcePlayers : []
 
@@ -38,11 +42,11 @@ BarWidget {
       textFormat: Text.PlainText
       anchors.verticalCenter: parent.verticalCenter
       text: root.playIcon
-      color: root.activePlayer && root.activePlayer.isPlaying ? BarValues.barForeground(root.bar) : Qt.darker(BarValues.barForeground(root.bar), 1.5)
-      font.family: BarValues.fontFamily(root.bar)
+      color: root.activePlayer && root.activePlayer.isPlaying ? root.contentBarForeground : Qt.darker(root.contentBarForeground, 1.5)
+      font.family: root.contentFontFamily
       font.pixelSize: Style.font.body
       Behavior on color {
-        enabled: !root.bar || root.bar.foregroundAnimationEnabled
+        enabled: !root.bar || BarValues.foregroundAnimationEnabled(root.bar)
         ColorAnimation { duration: Style.duration(160) }
       }
     }
@@ -53,14 +57,14 @@ BarWidget {
       height: glyph.height
       clip: true
       anchors.verticalCenter: parent.verticalCenter
-      visible: !root.bar.vertical && root.title !== ""
+      visible: !BarValues.vertical(root.bar) && root.title !== ""
 
       Text {
         id: labelText
         textFormat: Text.PlainText
         text: root.title + (root.artist ? "  ·  " + root.artist : "")
-        color: BarValues.barForeground(root.bar)
-        font.family: BarValues.fontFamily(root.bar)
+        color: root.contentBarForeground
+        font.family: root.contentFontFamily
         font.pixelSize: Style.font.body
         anchors.verticalCenter: parent.verticalCenter
 
@@ -70,7 +74,7 @@ BarWidget {
         // track is playing and the bar is on screen to show it.
         NumberAnimation on x {
           id: scrollAnim
-          running: labelText.needsScroll && root.isPlaying && root.visible && !root.bar.barHidden && !root.popupOpen && !root.bar.vertical && !Style.reduceMotion
+          running: labelText.needsScroll && root.isPlaying && root.visible && !BarValues.barHidden(root.bar) && !root.popupOpen && !BarValues.vertical(root.bar) && !Style.reduceMotion
           // Stopped, the title reads from its start again.
           onRunningChanged: if (!running) labelText.x = 0
           loops: Animation.Infinite
@@ -104,8 +108,8 @@ BarWidget {
       if (wheel.angleDelta.y > 0 && root.mediaService) root.mediaService.runAction("previous", false)
       else if (wheel.angleDelta.y < 0 && root.mediaService) root.mediaService.runAction("next", false)
     }
-    onEntered: if (root.bar) root.bar.showTooltip(root, root.hasMedia ? (root.title + (root.artist ? " — " + root.artist : "")) : "")
-    onExited: if (root.bar) root.bar.hideTooltip(root)
+    onEntered: if (root.bar) BarValues.showTooltip(root.bar, root, root.hasMedia ? (root.title + (root.artist ? " — " + root.artist : "")) : "")
+    onExited: if (root.bar) BarValues.hideTooltip(root.bar, root)
   }
 
   PopupCard {
@@ -130,8 +134,8 @@ BarWidget {
           width: Style.space(64)
           height: Style.space(64)
           radius: Style.spacing.labelGap
-          color: Style.normalFillFor(BarValues.foreground(root.bar), Commons.Color.accent)
-          borderSpec: Border.controlSpec("normal", BarValues.foreground(root.bar), Commons.Color.accent)
+          color: Style.normalFillFor(root.contentForeground, Commons.Color.accent)
+          borderSpec: Border.controlSpec("normal", root.contentForeground, Commons.Color.accent)
 
           // Decode the art at the size it is drawn, not the size the player
           // serves it at. The popup is built on every monitor at startup.
@@ -147,8 +151,8 @@ BarWidget {
             anchors.centerIn: parent
             visible: !root.activePlayer || !root.activePlayer.trackArtUrl
             text: "󰝚"
-            color: BarValues.foreground(root.bar)
-            font.family: BarValues.fontFamily(root.bar)
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.displayLarge
           }
         }
@@ -160,8 +164,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.title || I18n.t("media.nothingPlaying")
-            color: BarValues.foreground(root.bar)
-            font.family: BarValues.fontFamily(root.bar)
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.subtitle
             font.bold: true
             elide: Text.ElideRight
@@ -171,8 +175,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.artist
-            color: Qt.darker(BarValues.foreground(root.bar), 1.3)
-            font.family: BarValues.fontFamily(root.bar)
+            color: Qt.darker(root.contentForeground, 1.3)
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.bodySmall
             elide: Text.ElideRight
             width: parent.width
@@ -182,8 +186,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.activePlayer && root.activePlayer.trackAlbum ? root.activePlayer.trackAlbum : ""
-            color: Qt.darker(BarValues.foreground(root.bar), 1.6)
-            font.family: BarValues.fontFamily(root.bar)
+            color: Qt.darker(root.contentForeground, 1.6)
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.caption
             elide: Text.ElideRight
             width: parent.width
@@ -202,7 +206,7 @@ BarWidget {
 
         Button {
           iconText: "󰒮"
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
           horizontalPadding: Style.spacing.controlPaddingX
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoPrevious
@@ -212,7 +216,7 @@ BarWidget {
 
         Button {
           iconText: root.activePlayer && root.activePlayer.isPlaying ? "󰏤" : "󰐊"
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
           horizontalPadding: Style.spacing.panelGap
           verticalPadding: Style.spacing.controlPaddingY
           iconSize: Style.font.iconLarge
@@ -223,7 +227,7 @@ BarWidget {
 
         Button {
           iconText: "󰒭"
-          foreground: BarValues.foreground(root.bar)
+          foreground: root.contentForeground
           horizontalPadding: Style.spacing.controlPaddingX
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoNext
@@ -234,7 +238,7 @@ BarWidget {
 
       PanelSeparator {
         visible: root.sourcePlayers.length > 1
-        foreground: BarValues.foreground(root.bar)
+        foreground: root.contentForeground
       }
 
       Column {
@@ -259,8 +263,8 @@ BarWidget {
             width: sourceList.width
             height: sourceInner.implicitHeight + Style.space(10)
             radius: Style.spacing.labelGap
-            color: selected ? Style.selectedFillFor(BarValues.foreground(root.bar), Commons.Color.accent) : "transparent"
-            borderSpec: selected ? Border.controlSpec("normal", BarValues.foreground(root.bar), Commons.Color.accent) : Border.none()
+            color: selected ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent) : "transparent"
+            borderSpec: selected ? Border.controlSpec("normal", root.contentForeground, Commons.Color.accent) : Border.none()
 
             Row {
               id: sourceInner
@@ -274,8 +278,8 @@ BarWidget {
               Text {
                 textFormat: Text.PlainText
                 text: sourceRow.player && sourceRow.player.isPlaying ? "󰏤" : "󰐊"
-                color: BarValues.foreground(root.bar)
-                font.family: BarValues.fontFamily(root.bar)
+                color: root.contentForeground
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.body
                 width: Style.space(18)
                 horizontalAlignment: Text.AlignHCenter
@@ -290,8 +294,8 @@ BarWidget {
                 Text {
                   textFormat: Text.PlainText
                   text: sourceRow.sourceTitle
-                  color: BarValues.foreground(root.bar)
-                  font.family: BarValues.fontFamily(root.bar)
+                  color: root.contentForeground
+                  font.family: root.contentFontFamily
                   font.pixelSize: Style.font.bodySmall
                   font.bold: sourceRow.selected
                   elide: Text.ElideRight
@@ -301,8 +305,8 @@ BarWidget {
                 Text {
                   textFormat: Text.PlainText
                   text: sourceRow.sourceDetail
-                  color: Qt.darker(BarValues.foreground(root.bar), 1.5)
-                  font.family: BarValues.fontFamily(root.bar)
+                  color: Qt.darker(root.contentForeground, 1.5)
+                  font.family: root.contentFontFamily
                   font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
                   width: parent.width

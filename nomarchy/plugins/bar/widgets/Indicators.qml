@@ -15,7 +15,7 @@ BarWidget {
   property bool indicatorAreaHovered: false
   property bool indicatorItemHovered: false
   readonly property bool alwaysShowIndicators: setting("alwaysShow", false) === true
-  readonly property bool revealInactiveIndicators: alwaysShowIndicators || indicatorAreaHovered || indicatorItemHovered || (bar && bar.centerSectionRevealHeld === true && bar.centerHoverRevealSuppressed !== true)
+  readonly property bool revealInactiveIndicators: alwaysShowIndicators || indicatorAreaHovered || indicatorItemHovered || (bar && BarValues.centerSectionRevealHeld(bar) === true && BarValues.centerHoverRevealSuppressed(bar) !== true)
   // The active block sits against the widget's fixed edge, and everything that
   // grows the widget (revealed inactive icons, newly active ones) goes on its
   // far side, so the icons already showing keep their click targets. A
@@ -163,8 +163,9 @@ BarWidget {
   // below); its wrapper keeps the stock sizing expressions, so the root's
   // implicit size still follows the blocks synchronously rather than waiting
   // on a positioner's polish.
-  implicitWidth: orientationLoader.item ? orientationLoader.item.implicitWidth : 0
-  implicitHeight: orientationLoader.item ? orientationLoader.item.implicitHeight : 0
+  readonly property Item orientationItem: orientationLoader.item as Item
+  implicitWidth: orientationItem ? orientationItem.implicitWidth : 0
+  implicitHeight: orientationItem ? orientationItem.implicitHeight : 0
 
   Commons.ShellIpc {
     target: "nomarchy.indicators"
@@ -309,8 +310,9 @@ BarWidget {
     property bool horizontal: true
     property bool reportActiveState: false
 
-    implicitWidth: blockLoader.item ? blockLoader.item.implicitWidth : 0
-    implicitHeight: blockLoader.item ? blockLoader.item.implicitHeight : 0
+    readonly property Item blockItem: blockLoader.item as Item
+    implicitWidth: blockItem ? blockItem.implicitWidth : 0
+    implicitHeight: blockItem ? blockItem.implicitHeight : 0
     width: implicitWidth
     height: implicitHeight
 
@@ -371,8 +373,9 @@ BarWidget {
     property bool horizontal: true
     property bool reportActiveState: false
 
-    implicitWidth: blockLoader.item ? blockLoader.item.implicitWidth : 0
-    implicitHeight: blockLoader.item ? blockLoader.item.implicitHeight : 0
+    readonly property Item blockItem: blockLoader.item as Item
+    implicitWidth: blockItem ? blockItem.implicitWidth : 0
+    implicitHeight: blockItem ? blockItem.implicitHeight : 0
     width: implicitWidth
     height: implicitHeight
 
@@ -436,8 +439,9 @@ BarWidget {
     readonly property var indicatorSettings: root.entrySettings(entry)
     readonly property var barRef: root.bar
 
-    implicitWidth: indicatorSource.item && indicatorSource.item.visible ? indicatorSource.item.implicitWidth : 0
-    implicitHeight: indicatorSource.item && indicatorSource.item.visible ? indicatorSource.item.implicitHeight : 0
+    readonly property Item indicatorItem: indicatorSource.item as Item
+    implicitWidth: indicatorItem && indicatorItem.visible ? indicatorItem.implicitWidth : 0
+    implicitHeight: indicatorItem && indicatorItem.visible ? indicatorItem.implicitHeight : 0
     width: implicitWidth
     height: implicitHeight
     onEntryChanged: {
@@ -472,21 +476,14 @@ BarWidget {
       function onActiveChanged() { indicatorSlot.syncActiveState() }
     }
 
-    function injectProps() {
-      var target = indicatorSource.item
-      if (!target) return
-      if ("bar" in target) target.bar = root.bar
-      if ("moduleName" in target) target.moduleName = indicatorId
-      if ("settings" in target) target.settings = indicatorSettings
-      if ("indicatorBlock" in target) target.indicatorBlock = indicatorBlock
-      if ("indicatorHost" in target) target.indicatorHost = root
-      if ("activeOverride" in target) target.activeOverride = indicatorBlock === "active" ? true : null
+    function injectProps(): void {
+      IndicatorModel.injectProps(indicatorSource.item, root.bar, indicatorId, indicatorSettings, indicatorBlock, root)
     }
 
     function syncActiveState() {
       if (!reportActiveState || !indicatorsModule || !indicatorsModule.setIndicatorActive) return
 
-      var active = !!indicatorSource.item && indicatorSource.item.active === true
+      var active = IndicatorModel.isActive(indicatorSource.item)
       if (indicatorBlock === "active") {
         if (active) activeStateObserved = true
         else if (!activeStateObserved) return

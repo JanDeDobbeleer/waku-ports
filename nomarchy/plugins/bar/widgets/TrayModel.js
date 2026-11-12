@@ -64,6 +64,9 @@ function shownSpan(clipStart, clipLength, start, length) {
   return { start: from, length: to - from }
 }
 
+
+function sectionShown(item) { return item ? item.sectionShown : null }
+
 if (typeof module !== "undefined") {
   module.exports = {
     shownSpan: shownSpan,

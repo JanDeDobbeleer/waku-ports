@@ -496,23 +496,23 @@ Item {
                     spacing: Style.space(10)
 
                     SizedImage {
-                      visible: parent.parent.previewImage.length > 0
+                      visible: row.previewImage.length > 0
                       width: visible ? parent.height : 0
                       height: parent.height
-                      url: parent.parent.previewImage
+                      url: row.previewImage
                       asynchronous: true
                       smooth: true
                     }
 
                     Text {
                       textFormat: Text.PlainText
-                      width: parent.width - (parent.parent.previewImage.length > 0 ? parent.height + parent.spacing : 0)
+                      width: parent.width - (row.previewImage.length > 0 ? parent.height + parent.spacing : 0)
                       height: parent.height
-                      text: parent.parent.previewText
-                      color: parent.parent.hasCursor ? root.selectedText : root.foreground
+                      text: row.previewText
+                      color: row.hasCursor ? root.selectedText : root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.title
-                      opacity: parent.parent.entryType === "image" || parent.parent.entryType === "file" ? 0.72 : 1.0
+                      opacity: row.entryType === "image" || row.entryType === "file" ? 0.72 : 1.0
                       elide: Text.ElideRight
                       wrapMode: Text.NoWrap
                       verticalAlignment: Text.AlignVCenter

@@ -118,19 +118,14 @@ Panel {
     else root.open()
   }
 
-  function switchPanel(direction) {
-    if (root.bar && typeof root.bar.switchPanelFrom === "function")
-      return root.bar.switchPanelFrom(root.barIdentity, direction)
-    return false
+  function switchPanel(direction: var): var {
+    return BarValues.switchPanel(root.bar, root.barIdentity, direction)
   }
 
   // Summoning by hotkey moves no pointer, so a hover the bar was still
   // holding must not keep the center indicators revealed behind the panel.
-  function setCenterHoverRevealSuppressed(value) {
-    if (root.bar && typeof root.bar.setCenterHoverRevealSuppressed === "function")
-      root.bar.setCenterHoverRevealSuppressed(value)
-    else if (root.bar && "centerHoverRevealSuppressed" in root.bar)
-      root.bar.centerHoverRevealSuppressed = value
+  function setCenterHoverRevealSuppressed(value: var): void {
+    BarValues.setCenterHoverRevealSuppressed(root.bar, value)
   }
 
   function refresh() {
@@ -166,8 +161,8 @@ Panel {
 
     root.settings = entry
     if (root.hostWidget && "settings" in root.hostWidget) root.hostWidget.settings = entry
-    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
-      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    if (BarValues.hasUpdateEntryInline(root.bar))
+      BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
   function setWeekStart(day) {
@@ -179,7 +174,7 @@ Panel {
   function startEditingLife() {
     root.editingLife = true
     Qt.callLater(function() {
-      var content = panel.loadedContent
+      var content = panel.loadedContent as LazyContent
       if (!content) return
       var bornField = content.bornField
       var expectancyField = content.expectancyField
@@ -197,7 +192,7 @@ Panel {
 
   // Shared by both fields: Tab hops to the other one, Enter commits the pair,
   // Escape drops the lot.
-  function handleLifeKey(event, other) {
+  function handleLifeKey(event: KeyEvent, other: TextField): void {
     if (event.key === Qt.Key_Escape) {
       root.cancelEditingLife()
       event.accepted = true
@@ -220,7 +215,7 @@ Panel {
   }
 
   function commitLife() {
-    var content = panel.loadedContent
+    var content = panel.loadedContent as LazyContent
     if (!content) return
     var bornField = content.bornField
     var expectancyField = content.expectancyField
@@ -263,10 +258,12 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(560))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias bornField: bornField
-      property alias expectancyField: expectancyField
+      final property alias bornField: bornField
+      final property alias expectancyField: expectancyField
       implicitHeight: calendarColumn.implicitHeight
       anchors.fill: parent
       blocked: root.editingLife

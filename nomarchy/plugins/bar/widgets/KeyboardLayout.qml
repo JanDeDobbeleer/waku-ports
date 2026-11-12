@@ -103,7 +103,7 @@ BarWidget {
   function cycleLayout() {
     if (!root.bar || root.layoutCount < 2 || root.syncNames.length === 0) return
     const next = (root.layoutIndex + 1) % root.layoutCount
-    root.bar.run(root.syncNames.map(name =>
+    BarValues.run(root.bar, root.syncNames.map(name =>
       "hyprctl switchxkblayout " + Util.shellQuote(name) + " " + next).join("; "))
     refreshTimer.restart()
   }

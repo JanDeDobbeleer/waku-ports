@@ -88,11 +88,11 @@ Panel {
     if (!target) return
     if (target.localModel) {
       Util.execArgv(["nomarchy-agent-local", "remove", target.localModel.recipe])
-    } else if (bar && bar.shell) {
+    } else if (BarValues.hasShell(bar)) {
       let next = JSON.parse(JSON.stringify(settings || {}))
       if (!next.providers) next.providers = {}
       next.providers[target.providerId] = Object.assign({}, next.providers[target.providerId] || {}, { enabled: false })
-      bar.shell.updateEntryInline(moduleName, next)
+      BarValues.updateEntryInline(bar, moduleName, next)
     }
   }
 
@@ -671,7 +671,7 @@ Panel {
   }
 
   function launchAgent() {
-    if (root.bar) root.bar.run("nomarchy-agent --pick")
+    if (root.bar) BarValues.run(root.bar, "nomarchy-agent --pick")
     root.close()
   }
 

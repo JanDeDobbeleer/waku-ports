@@ -103,7 +103,7 @@ Item {
         x: parent.width * (strip.mirrored ? 1 - modelData.x1 : modelData.x0)
         width: Math.max(1, parent.width * (modelData.x1 - modelData.x0))
         height: parent.height
-        radius: parent.radius
+        radius: track.radius
         color: Util.alpha(strip.foreground, 0.28)
       }
     }

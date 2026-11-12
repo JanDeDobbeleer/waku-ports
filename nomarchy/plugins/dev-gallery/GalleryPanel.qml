@@ -261,9 +261,9 @@ Item {
   // Scroll the gallery so the given Item is fully visible inside
   // scrollArea's viewport, with a 20px breathing margin. Wired into the
   // hasCursor change handler of every cursor target below.
-  function ensureCursorVisible(item) {
+  function ensureCursorVisible(item: Item): void {
     if (!item || !scrollArea) return
-    var flick = scrollArea.contentItem
+    var flick = scrollArea.contentItem as Flickable
     if (!flick || flick.contentY === undefined) return
     var pt = item.mapToItem(flick.contentItem || flick, 0, 0)
     var top = pt.y

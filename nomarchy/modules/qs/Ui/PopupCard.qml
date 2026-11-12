@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Hyprland
 import qs.Commons
 import qs.Commons as Commons
+import "BarValues.js" as BarValues
 
 PopupWindow {
   id: root
@@ -33,12 +34,12 @@ PopupWindow {
   // it is painted and takes input), so the window's dimensions say nothing
   // about the bar.
   readonly property real barThickness: !hostBar ? 0
-    : (typeof hostBar.barSizeFor === "function" && popupScreen ? hostBar.barSizeFor(popupScreen.name) : hostBar.barSize)
+    : BarValues.sizeForScreen(hostBar, popupScreen)
   readonly property real availableCardWidth: screenW > 0
-    ? Math.max(120, screenW - ((hostBar && (hostBar.position === "left" || hostBar.position === "right")) ? barThickness : 0) - root.edgeMargin * 2)
+    ? Math.max(120, screenW - ((hostBar && (BarValues.position(hostBar) === "left" || BarValues.position(hostBar) === "right")) ? barThickness : 0) - root.edgeMargin * 2)
     : 0
   readonly property real availableCardHeight: screenH > 0
-    ? Math.max(120, screenH - ((hostBar && (hostBar.position === "top" || hostBar.position === "bottom")) ? barThickness : 0) - root.edgeMargin * 2)
+    ? Math.max(120, screenH - ((hostBar && (BarValues.position(hostBar) === "top" || BarValues.position(hostBar) === "bottom")) ? barThickness : 0) - root.edgeMargin * 2)
     : 0
   readonly property real verticalContentInset: padding * 2 + Border.top(borderSpec) + Border.bottom(borderSpec)
 
@@ -79,8 +80,8 @@ PopupWindow {
 
   onOpenChanged: {
     if (!hostBar) return
-    if (open) hostBar.requestPopout(coordinatorKey)
-    else if (hostBar.activePopout === coordinatorKey) hostBar.releasePopout(coordinatorKey)
+    if (open) BarValues.requestPopout(hostBar, coordinatorKey)
+    else if (BarValues.activePopout(hostBar) === coordinatorKey) BarValues.releasePopout(hostBar, coordinatorKey)
   }
 
   // Outside-click dismissal via Hyprland's focus grab. While `active`, input
@@ -118,9 +119,9 @@ PopupWindow {
     }
     opacity: shown
     scale: 0.97 + 0.03 * shown
-    transformOrigin: !root.hostBar || root.hostBar.position === "top" ? Item.Top
-      : root.hostBar.position === "bottom" ? Item.Bottom
-      : root.hostBar.position === "left" ? Item.Left : Item.Right
+    transformOrigin: !root.hostBar || BarValues.position(root.hostBar) === "top" ? Item.Top
+      : BarValues.position(root.hostBar) === "bottom" ? Item.Bottom
+      : BarValues.position(root.hostBar) === "left" ? Item.Left : Item.Right
 
     Item {
       id: contentHolder

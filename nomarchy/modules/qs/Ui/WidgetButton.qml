@@ -74,12 +74,13 @@ Item {
   // text rather than with the slot it sits in. Zero on icon-only buttons.
   readonly property real labelWidth: label.visible ? label.implicitWidth : 0
   readonly property bool iconLabel: labelVisible && isIconGlyph(text)
-  readonly property real iconPaintedWidth: iconLabel && iconLoader.item ? iconLoader.item.paintedWidth : 0
-  readonly property real iconPaintedHeight: iconLabel && iconLoader.item ? iconLoader.item.paintedHeight : 0
-  readonly property real iconCenterErrorX: iconLabel && iconLoader.item
-    ? iconLoader.x + iconLoader.item.paintedCenterX - width / 2 : 0
-  readonly property real iconCenterErrorY: iconLabel && iconLoader.item
-    ? iconLoader.y + iconLoader.item.paintedCenterY - height / 2 : 0
+  readonly property OpticalGlyph iconGlyph: iconLoader.item as OpticalGlyph
+  readonly property real iconPaintedWidth: iconLabel && iconGlyph ? iconGlyph.paintedWidth : 0
+  readonly property real iconPaintedHeight: iconLabel && iconGlyph ? iconGlyph.paintedHeight : 0
+  readonly property real iconCenterErrorX: iconLabel && iconGlyph
+    ? iconLoader.x + iconGlyph.paintedCenterX - width / 2 : 0
+  readonly property real iconCenterErrorY: iconLabel && iconGlyph
+    ? iconLoader.y + iconGlyph.paintedCenterY - height / 2 : 0
 
   function isIconGlyph(value: var): bool {
     var text = String(value || "")

@@ -129,7 +129,7 @@ Rectangle {
       if (!armed) {
         if (Math.abs(dy) < Style.space(4)) return
         armed = true
-        row.panel.beginRowDrag(row.index, row.height + row.parent.spacing)
+        row.panel.beginRowDrag(row.index, row.height + (row.parent as Column).spacing)
       }
       row.panel.moveRowDrag(dy)
     }

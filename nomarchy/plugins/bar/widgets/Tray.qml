@@ -37,15 +37,15 @@ BarWidget {
   // width, height }), or null while it shows none of it. It moves with the
   // drawer's contents as they slide in and out, and is cut to the drawer as
   // they are, so the bar's outline of it never reaches past the tray.
-  readonly property var sectionShown: trayContent.item ? trayContent.item.sectionShown : null
-  readonly property int sectionCount: bar && bar.layoutConfig && Array.isArray(bar.layoutConfig.tray) ? bar.layoutConfig.tray.length : 0
+  readonly property var sectionShown: TrayModel.sectionShown(trayContent.item)
+  readonly property int sectionCount: BarValues.traySectionCount(bar)
   readonly property real sectionExtent: sectionHost ? (vertical ? sectionHost.implicitHeight : sectionHost.implicitWidth) : 0
   readonly property bool hasDrawer: allItems.length > 0 || sectionCount > 0 || barDragging
   readonly property int drawerExtent: drawerCount * trayItemExtent + Math.max(0, drawerCount - 1) * trayItemGap + sectionExtent
   // A widget being dragged along the bar opens the drawer, to show where it
   // can go, and so does any panel open from the tray or the tray section.
-  readonly property bool barDragging: !!bar && bar.traySectionDragActive === true
-  readonly property bool holdOpen: trayMenuOpen || managePopupOpen || barDragging || (!!bar && bar.traySectionPopoutOpen === true)
+  readonly property bool barDragging: !!bar && BarValues.traySectionDragActive(bar) === true
+  readonly property bool holdOpen: trayMenuOpen || managePopupOpen || barDragging || (!!bar && BarValues.traySectionPopoutOpen(bar) === true)
   // The mark under the bar sits under the icon whose menu is open.
   readonly property Item openPanelIndicatorItem: trayMenuOpen ? activeTrayAnchor : null
   // Match Waybar's group/tray-expander drawer transition-duration.
@@ -188,7 +188,7 @@ BarWidget {
   }
 
   function ownedByNomarchy(item) {
-    var layout = root.bar && root.bar.layoutConfig ? root.bar.layoutConfig : null
+    var layout = root.bar && BarValues.layoutConfig(root.bar) ? BarValues.layoutConfig(root.bar) : null
     return TrayModel.ownedByNomarchy(item, layout)
   }
 
@@ -209,9 +209,9 @@ BarWidget {
   }
 
   function persistTrayState(pinned, hidden) {
-    if (!root.bar || !root.bar.shell || typeof root.bar.shell.updateEntryInline !== "function") return
+    if (!BarValues.hasUpdateEntryInline(root.bar)) return
     var id = root.moduleName || "nomarchy.tray"
-    root.bar.shell.updateEntryInline(id, { id: id, pinned: pinned, hidden: hidden })
+    BarValues.updateEntryInline(root.bar, id, { id: id, pinned: pinned, hidden: hidden })
   }
 
   function togglePin(iid) {
@@ -899,8 +899,8 @@ BarWidget {
       acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
-      onEntered: if (root.bar) root.bar.showTooltip(trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
-      onExited: if (root.bar) root.bar.hideTooltip(trayItemRoot)
+      onEntered: if (root.bar) BarValues.showTooltip(root.bar, trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
+      onExited: if (root.bar) BarValues.hideTooltip(root.bar, trayItemRoot)
       onPressed: function(mouse) {
         if (mouse.button === Qt.RightButton) {
           trayItemRoot.displayMenu(mouse)

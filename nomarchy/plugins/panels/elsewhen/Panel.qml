@@ -478,8 +478,8 @@ Panel {
     }
 
     root.settings = entry
-    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
-      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    if (BarValues.hasUpdateEntryInline(root.bar))
+      BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
   function setZones(next) {

@@ -38,7 +38,7 @@ BarIndicator {
 
   onPressed: function() {
     if (root.bar) {
-      root.bar.run(root.recording ? "nomarchy-capture-screenrecording --stop-recording" : "nomarchy-menu toggle trigger.capture.screenrecord")
+      BarValues.run(root.bar, root.recording ? "nomarchy-capture-screenrecording --stop-recording" : "nomarchy-menu toggle trigger.capture.screenrecord")
     }
   }
 }

@@ -66,7 +66,7 @@ BarWidget {
         root.toplevel.activate()
       }
     }
-    onEntered: if (root.bar) root.bar.showTooltip(root, root.title)
-    onExited: if (root.bar) root.bar.hideTooltip(root)
+    onEntered: if (root.bar) BarValues.showTooltip(root.bar, root, root.title)
+    onExited: if (root.bar) BarValues.hideTooltip(root.bar, root)
   }
 }

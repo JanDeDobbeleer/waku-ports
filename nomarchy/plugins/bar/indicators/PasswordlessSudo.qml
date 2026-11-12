@@ -63,6 +63,6 @@ BarIndicator {
   onPressed: function() {
     if (!root.bar || disableProc.running) return
     if (root.granted) disableProc.running = true
-    else root.bar.run("nomarchy-launch-floating-terminal-with-presentation nomarchy-sudo-passwordless")
+    else BarValues.run(root.bar, "nomarchy-launch-floating-terminal-with-presentation nomarchy-sudo-passwordless")
   }
 }
