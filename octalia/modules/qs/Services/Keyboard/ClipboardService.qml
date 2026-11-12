@@ -75,7 +75,7 @@ Singleton {
         root.cliphistAvailable = true;
         // Start watchers if feature is enabled
         if (root.active) {
-          startWatchers();
+          root.startWatchers();
         }
       } else {
         root.cliphistAvailable = false;
@@ -103,7 +103,7 @@ Singleton {
     interval: 5000
     repeat: true
     running: root.active
-    onTriggered: list()
+    onTriggered: root.list()
   }
 
   // Internal process objects

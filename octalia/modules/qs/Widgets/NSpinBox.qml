@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -51,7 +53,7 @@ RowLayout {
       }
       root._holdTicks++;
       var stepMultiplier = Math.min(root.maxStepMultiplier, 1 + Math.floor(root._holdTicks / root.rampFactor));
-      changeValue(root._repeatDirection, root.stepSize * stepMultiplier);
+      root.changeValue(root._repeatDirection, root.stepSize * stepMultiplier);
     }
   }
 
@@ -165,11 +167,11 @@ RowLayout {
         enabled: root.enabled && root.value > root.from
         onPressed: {
           root._repeatDirection = -1;
-          changeValue(root._repeatDirection, root.stepSize);
+          root.changeValue(root._repeatDirection, root.stepSize);
           repeatTimer.start();
         }
-        onReleased: stopRepeat()
-        onExited: stopRepeat()
+        onReleased: root.stopRepeat()
+        onExited: root.stopRepeat()
       }
     }
 
@@ -212,11 +214,11 @@ RowLayout {
         enabled: root.enabled && root.value < root.to
         onPressed: {
           root._repeatDirection = 1;
-          changeValue(root._repeatDirection, root.stepSize);
+          root.changeValue(root._repeatDirection, root.stepSize);
           repeatTimer.start();
         }
-        onReleased: stopRepeat()
-        onExited: stopRepeat()
+        onReleased: root.stopRepeat()
+        onExited: root.stopRepeat()
       }
     }
 

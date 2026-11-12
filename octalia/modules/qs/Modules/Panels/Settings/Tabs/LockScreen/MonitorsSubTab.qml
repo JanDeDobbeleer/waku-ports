@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -33,26 +35,28 @@ ColumnLayout {
   Repeater {
     model: Quickshell.screens || []
     delegate: NCheckbox {
+      id: monitorOption
+      required property ShellScreen modelData
       Layout.fillWidth: true
       readonly property real compositorScale: {
-        const info = CompositorService.displayScales[modelData.name];
+        const info = CompositorService.displayScales[monitorOption.modelData.name];
         return (info && info.scale) ? info.scale : 1.0;
       }
-      label: modelData.name || "Unknown"
+      label: monitorOption.modelData.name || "Unknown"
       description: {
         I18n.tr("system.monitor-description", {
-                  "model": modelData.model,
-                  "width": modelData.width * compositorScale,
-                  "height": modelData.height * compositorScale,
+                  "model": monitorOption.modelData.model,
+                  "width": monitorOption.modelData.width * compositorScale,
+                  "height": monitorOption.modelData.height * compositorScale,
                   "scale": compositorScale
                 });
       }
-      checked: (Settings.data.general.lockScreenMonitors || []).indexOf(modelData.name) !== -1
+      checked: (Settings.data.general.lockScreenMonitors || []).indexOf(monitorOption.modelData.name) !== -1
       onToggled: checked => {
                    if (checked) {
-                     Settings.data.general.lockScreenMonitors = root.addMonitor(Settings.data.general.lockScreenMonitors, modelData.name);
+                     Settings.data.general.lockScreenMonitors = root.addMonitor(Settings.data.general.lockScreenMonitors, monitorOption.modelData.name);
                    } else {
-                     Settings.data.general.lockScreenMonitors = root.removeMonitor(Settings.data.general.lockScreenMonitors, modelData.name);
+                     Settings.data.general.lockScreenMonitors = root.removeMonitor(Settings.data.general.lockScreenMonitors, monitorOption.modelData.name);
                    }
                  }
     }

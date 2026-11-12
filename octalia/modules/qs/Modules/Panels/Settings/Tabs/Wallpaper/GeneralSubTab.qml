@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -145,11 +147,13 @@ ColumnLayout {
         Repeater {
           model: Quickshell.screens || []
           delegate: ColumnLayout {
+            id: monitorOption
+            required property ShellScreen modelData
             Layout.fillWidth: true
             spacing: Style.marginS
 
             NText {
-              text: (modelData.name || "Unknown")
+              text: (monitorOption.modelData.name || "Unknown")
               color: Color.mPrimary
               font.weight: Style.fontWeightBold
               pointSize: Style.fontSizeM
@@ -157,11 +161,11 @@ ColumnLayout {
 
             NTextInputButton {
               id: monitorDirInput
-              text: WallpaperService.getMonitorDirectory(modelData.name)
+              text: WallpaperService.getMonitorDirectory(monitorOption.modelData.name)
               buttonIcon: "folder-open"
               Layout.fillWidth: true
-              onInputEditingFinished: WallpaperService.setMonitorDirectory(modelData.name, monitorDirInput.text)
-              onButtonClicked: root.openMonitorFolderPicker(modelData.name)
+              onInputEditingFinished: WallpaperService.setMonitorDirectory(monitorOption.modelData.name, monitorDirInput.text)
+              onButtonClicked: root.openMonitorFolderPicker(monitorOption.modelData.name)
             }
           }
         }

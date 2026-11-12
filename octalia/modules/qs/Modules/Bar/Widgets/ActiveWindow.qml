@@ -241,7 +241,7 @@ Item {
           IconImage {
             id: windowIcon
             anchors.fill: parent
-            source: getAppIcon()
+            source: root.getAppIcon()
             asynchronous: true
             smooth: true
             visible: source !== ""
@@ -284,8 +284,8 @@ Item {
           fadeCornerRadius: Style.radiusM
 
           NText {
-            text: windowTitle
-            pointSize: barFontSize
+            text: root.windowTitle
+            pointSize: root.barFontSize
             applyUiScale: false
             font.weight: Style.fontWeightMedium
             color: root.textColor
@@ -315,7 +315,7 @@ Item {
           IconImage {
             id: windowIconVertical
             anchors.fill: parent
-            source: getAppIcon()
+            source: root.getAppIcon()
             asynchronous: true
             smooth: true
             visible: source !== ""
@@ -361,16 +361,16 @@ Item {
     target: CompositorService
     function onActiveWindowChanged() {
       try {
-        windowIcon.source = Qt.binding(getAppIcon);
-        windowIconVertical.source = Qt.binding(getAppIcon);
+        windowIcon.source = Qt.binding(root.getAppIcon);
+        windowIconVertical.source = Qt.binding(root.getAppIcon);
       } catch (e) {
         Logger.w("ActiveWindow", "Error in onActiveWindowChanged:", e);
       }
     }
     function onWindowListChanged() {
       try {
-        windowIcon.source = Qt.binding(getAppIcon);
-        windowIconVertical.source = Qt.binding(getAppIcon);
+        windowIcon.source = Qt.binding(root.getAppIcon);
+        windowIconVertical.source = Qt.binding(root.getAppIcon);
       } catch (e) {
         Logger.w("ActiveWindow", "Error in onWindowListChanged:", e);
       }

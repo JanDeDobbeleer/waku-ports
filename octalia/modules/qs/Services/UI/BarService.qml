@@ -195,10 +195,10 @@ Singleton {
         if (!Settings.hasScreenOverride(screenName, "displayMode")) {
           displayMode = Settings.getBarDisplayModeForScreen(screenName);
           if (displayMode === "auto_hide") {
-            setScreenHidden(screenName, true);
+            root.setScreenHidden(screenName, true);
           } else {
             if (root.screenAutoHideState[screenName].hidden) {
-              setScreenHidden(screenName, false);
+              root.setScreenHidden(screenName, false);
             }
           }
         }
@@ -214,11 +214,11 @@ Singleton {
         displayMode = Settings.getBarDisplayModeForScreen(screenName);
         if (displayMode === "auto_hide") {
           if (!root.screenAutoHideState[screenName].hidden) {
-            setScreenHidden(screenName, true);
+            root.setScreenHidden(screenName, true);
           }
         } else {
           if (root.screenAutoHideState[screenName].hidden) {
-            setScreenHidden(screenName, false);
+            root.setScreenHidden(screenName, false);
           }
         }
       }
@@ -239,9 +239,9 @@ Singleton {
       var screen = root._pendingWorkspaceScreen;
       root._pendingWorkspaceScreen = "";
       if (screen) {
-        setScreenHidden(screen, false);
+        root.setScreenHidden(screen, false);
         if (!root.isBarHovered(screen)) {
-          barHoverStateChanged(screen, false);
+          root.barHoverStateChanged(screen, false);
         }
       }
     }

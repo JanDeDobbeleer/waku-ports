@@ -133,7 +133,7 @@ Singleton {
 
     // Handle left click: cb left "identifier"
     function left(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.leftClickExec || button.textCommand) {
           button.clicked();
@@ -145,12 +145,12 @@ Singleton {
       }
 
       // Fallback: read from Settings
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
-      const cmd = resolveCommand(config, "leftClickExec");
+      const cmd = root.resolveCommand(config, "leftClickExec");
       if (cmd) {
         Quickshell.execDetached(["cmd", "/c", cmd]);
         Logger.i("CustomButtonIPCService", `Triggered left click on button '${identifier}' (from settings)`);
@@ -161,7 +161,7 @@ Singleton {
 
     // Handle right click: cb right "identifier"
     function right(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.rightClickExec) {
           button.rightClicked();
@@ -172,12 +172,12 @@ Singleton {
         return;
       }
 
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
-      const cmd = resolveCommand(config, "rightClickExec");
+      const cmd = root.resolveCommand(config, "rightClickExec");
       if (cmd) {
         Quickshell.execDetached(["cmd", "/c", cmd]);
         Logger.i("CustomButtonIPCService", `Triggered right click on button '${identifier}' (from settings)`);
@@ -188,7 +188,7 @@ Singleton {
 
     // Handle middle click: cb middle "identifier"
     function middle(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.middleClickExec) {
           button.middleClicked();
@@ -199,12 +199,12 @@ Singleton {
         return;
       }
 
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
-      const cmd = resolveCommand(config, "middleClickExec");
+      const cmd = root.resolveCommand(config, "middleClickExec");
       if (cmd) {
         Quickshell.execDetached(["cmd", "/c", cmd]);
         Logger.i("CustomButtonIPCService", `Triggered middle click on button '${identifier}' (from settings)`);
@@ -215,7 +215,7 @@ Singleton {
 
     // Handle wheel up: cb up "identifier"
     function up(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.wheelMode === "separate" && button.wheelUpExec) {
           button.wheeled(1);
@@ -226,15 +226,15 @@ Singleton {
         return;
       }
 
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
       const mode = config.wheelMode || BarWidgetRegistry.widgetMetadata["CustomButton"].wheelMode;
-      const cmd = resolveCommand(config, "wheelUpExec");
+      const cmd = root.resolveCommand(config, "wheelUpExec");
       if (mode === "separate" && cmd) {
-        const resolved = substituteWheelDelta(cmd, 1);
+        const resolved = root.substituteWheelDelta(cmd, 1);
         Quickshell.execDetached(["cmd", "/c", resolved]);
         Logger.i("CustomButtonIPCService", `Triggered wheel up on button '${identifier}' (from settings)`);
       } else {
@@ -244,7 +244,7 @@ Singleton {
 
     // Handle wheel down: cb down "identifier"
     function down(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.wheelMode === "separate" && button.wheelDownExec) {
           button.wheeled(-1);
@@ -255,15 +255,15 @@ Singleton {
         return;
       }
 
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
       const mode = config.wheelMode || BarWidgetRegistry.widgetMetadata["CustomButton"].wheelMode;
-      const cmd = resolveCommand(config, "wheelDownExec");
+      const cmd = root.resolveCommand(config, "wheelDownExec");
       if (mode === "separate" && cmd) {
-        const resolved = substituteWheelDelta(cmd, -1);
+        const resolved = root.substituteWheelDelta(cmd, -1);
         Quickshell.execDetached(["cmd", "/c", resolved]);
         Logger.i("CustomButtonIPCService", `Triggered wheel down on button '${identifier}' (from settings)`);
       } else {
@@ -273,7 +273,7 @@ Singleton {
 
     // Handle wheel action: cb wheel "identifier"
     function wheel(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (button) {
         if (button.wheelMode === "unified" && button.wheelExec) {
           button.wheeled(1);
@@ -284,15 +284,15 @@ Singleton {
         return;
       }
 
-      const config = findButtonConfig(identifier);
+      const config = root.findButtonConfig(identifier);
       if (!config) {
         Logger.w("CustomButtonIPCService", `Button with identifier '${identifier}' not found`);
         return;
       }
       const mode = config.wheelMode || BarWidgetRegistry.widgetMetadata["CustomButton"].wheelMode;
-      const cmd = resolveCommand(config, "wheelExec");
+      const cmd = root.resolveCommand(config, "wheelExec");
       if (mode === "unified" && cmd) {
-        const resolved = substituteWheelDelta(cmd, 1);
+        const resolved = root.substituteWheelDelta(cmd, 1);
         Quickshell.execDetached(["cmd", "/c", resolved]);
         Logger.i("CustomButtonIPCService", `Triggered wheel action on button '${identifier}' (from settings)`);
       } else {
@@ -302,7 +302,7 @@ Singleton {
 
     // Handle refresh: cb refresh "identifier"
     function refresh(identifier: string) {
-      const button = findButton(identifier);
+      const button = root.findButton(identifier);
       if (!button) {
         Logger.w("CustomButtonIPCService", `Button '${identifier}' is not currently loaded — refresh requires a live widget instance`);
         return;

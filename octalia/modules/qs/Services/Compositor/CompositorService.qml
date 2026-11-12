@@ -57,7 +57,7 @@ Singleton {
     target: typeof ShellState !== 'undefined' ? ShellState : null
     function onIsLoadedChanged() {
       if (ShellState.isLoaded) {
-        loadDisplayScalesFromState();
+        root.loadDisplayScalesFromState();
       }
     }
   }
@@ -80,7 +80,7 @@ Singleton {
           item.msgCommand = "scrollmsg";
         }
         root.backend = item;
-        setupBackendConnections();
+        root.setupBackendConnections();
         root.backend.initialize();
       }
     }
@@ -518,7 +518,7 @@ Singleton {
     running: false
     onTriggered: {
       // A custom sleep command is honoured by suspend()
-      suspend();
+      root.suspend();
     }
   }
 }

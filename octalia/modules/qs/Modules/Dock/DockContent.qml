@@ -823,6 +823,7 @@ Item {
             Component {
               id: groupDotsIndicatorComponent
               Item {
+                id: groupDots
                 readonly property int maxVisibleDots: 5
                 readonly property int totalCount: Math.max(0, appButton.groupedCount)
                 readonly property int focusedIndex: appButton.focusedWindowIndex >= 0 ? appButton.focusedWindowIndex : 0
@@ -843,18 +844,18 @@ Item {
                 height: root.dockRoot.isVertical ? (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing) : dotSize
 
                 Repeater {
-                  model: parent.visibleCount
+                  model: groupDots.visibleCount
                   delegate: Rectangle {
                     id: groupDot
                     required property int index
-                    readonly property int absoluteIndex: parent.windowStart + groupDot.index
+                    readonly property int absoluteIndex: groupDots.windowStart + groupDot.index
                     readonly property bool isFocusedDot: appButton.focusedWindowIndex >= 0 && absoluteIndex === appButton.focusedWindowIndex
-                    readonly property bool isOverflowHint: (groupDot.index === 0 && parent.hasHiddenLeft) || (groupDot.index === parent.visibleCount - 1 && parent.hasHiddenRight)
-                    width: isOverflowHint && !isFocusedDot ? Math.max(2, Math.round(parent.dotSize * 0.72)) : parent.dotSize
+                    readonly property bool isOverflowHint: (groupDot.index === 0 && groupDots.hasHiddenLeft) || (groupDot.index === groupDots.visibleCount - 1 && groupDots.hasHiddenRight)
+                    width: isOverflowHint && !isFocusedDot ? Math.max(2, Math.round(groupDots.dotSize * 0.72)) : groupDots.dotSize
                     height: width
                     radius: width / 2
-                    x: root.dockRoot.isVertical ? Math.round((parent.dotSize - width) / 2) : (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2))
-                    y: root.dockRoot.isVertical ? (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2)) : Math.round((parent.dotSize - width) / 2)
+                    x: root.dockRoot.isVertical ? Math.round((groupDots.dotSize - width) / 2) : (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2))
+                    y: root.dockRoot.isVertical ? (groupDot.index * groupDots.pitch + Math.round((groupDots.dotSize - width) / 2)) : Math.round((groupDots.dotSize - width) / 2)
                     color: isFocusedDot ? Color.mPrimary : Qt.alpha(Color.mOutline, 0.9)
                     opacity: isOverflowHint && !isFocusedDot ? 0.55 : 1.0
                   }

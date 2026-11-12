@@ -41,7 +41,7 @@ Singleton {
     }
 
     onLoaded: {
-      loadFromCache();
+      root.loadFromCache();
     }
   }
 
@@ -104,7 +104,7 @@ Singleton {
     interval: 300000
     running: true
     repeat: true
-    onTriggered: loadEvents()
+    onTriggered: root.loadEvents()
   }
 
   // Core functions

@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQml
 import QtQuick 6.10
 
@@ -349,20 +350,20 @@ Singleton {
     model: root.deviceModel
     delegate: Connections {
       required property var modelData
-      property var device: findDevice(modelData.key)
+      property var device: root.findDevice(modelData.key)
       target: device
 
       function onPercentageChanged() {
         if (device.isLaptopBattery && modelData.key !== "__default__") {
           return;
         }
-        checkDevice(device);
+        root.checkDevice(device);
       }
       function onStateChanged() {
         if (device.isLaptopBattery && modelData.key !== "__default__") {
           return;
         }
-        checkDevice(device);
+        root.checkDevice(device);
       }
     }
   }

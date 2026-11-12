@@ -22,11 +22,11 @@ Singleton {
         return;
 
       if (Settings.data.colorSchemes.useWallpaperColors) {
-        generateFromWallpaper();
+        root.generateFromWallpaper();
       } else if (ColorSchemeService.lastPredefinedSchemeData) {
         // Regenerate templates only; skip applyScheme so colors.json and scheme reload stay untouched
         // when outputs are unchanged (see template processor skip-identical writes).
-        generateFromPredefinedScheme(ColorSchemeService.lastPredefinedSchemeData);
+        root.generateFromPredefinedScheme(ColorSchemeService.lastPredefinedSchemeData);
       } else {
         ColorSchemeService.applyScheme(Settings.data.colorSchemes.predefinedScheme);
       }
@@ -37,17 +37,17 @@ Singleton {
     target: Settings.data.colorSchemes
     function onDarkModeChanged() {
       Logger.d("AppThemeService", "Detected dark mode change");
-      generate();
+      root.generate();
     }
     function onMonitorForColorsChanged() {
       if (Settings.data.colorSchemes.useWallpaperColors) {
         Logger.d("AppThemeService", "Monitor for colors changed to:", Settings.data.colorSchemes.monitorForColors);
-        generateFromWallpaper();
+        root.generateFromWallpaper();
       }
     }
     function onGenerationMethodChanged() {
       Logger.d("AppThemeService", "Generation method changed to:", Settings.data.colorSchemes.generationMethod);
-      generate();
+      root.generate();
     }
   }
 

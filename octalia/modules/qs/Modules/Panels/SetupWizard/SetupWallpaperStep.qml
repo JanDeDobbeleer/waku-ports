@@ -203,8 +203,8 @@ ColumnLayout {
               anchors.fill: parent
               imagePath: thumbDelegate.cachedPath
               radius: thumbDelegate.thumbRadius
-              borderColor: selectedWallpaper === thumbDelegate.modelData ? Color.mPrimary : Color.mOutline
-              borderWidth: selectedWallpaper === thumbDelegate.modelData ? 2 : 1
+              borderColor: root.selectedWallpaper === thumbDelegate.modelData ? Color.mPrimary : Color.mOutline
+              borderWidth: root.selectedWallpaper === thumbDelegate.modelData ? 2 : 1
               imageFillMode: Image.PreserveAspectCrop
             }
 
@@ -245,7 +245,7 @@ ColumnLayout {
 
             // Selection badge
             Rectangle {
-              visible: selectedWallpaper === thumbDelegate.modelData
+              visible: root.selectedWallpaper === thumbDelegate.modelData
               anchors.right: parent.right
               anchors.bottom: parent.bottom
               anchors.margins: 6
@@ -268,8 +268,8 @@ ColumnLayout {
 
             TapHandler {
               onTapped: {
-                selectedWallpaper = thumbDelegate.modelData;
-                wallpaperChanged(thumbDelegate.modelData);
+                root.selectedWallpaper = thumbDelegate.modelData;
+                root.wallpaperChanged(thumbDelegate.modelData);
               }
             }
           }
@@ -335,7 +335,7 @@ ColumnLayout {
       Layout.fillWidth: true
       onInputTextChanged: text => {
                             root.selectedDirectory = text;
-                            directoryChanged(text);
+                            root.directoryChanged(text);
                           }
       onButtonClicked: directoryPicker.open()
     }
@@ -401,7 +401,7 @@ ColumnLayout {
     enabled: typeof WallpaperService !== "undefined"
     function onWallpaperListChanged(screenName, count) {
       if (screenName === Screen.name) {
-        Qt.callLater(refreshWallpapers);
+        Qt.callLater(root.refreshWallpapers);
       }
     }
   }
@@ -411,7 +411,7 @@ ColumnLayout {
     interval: 1000
     running: false
     repeat: false
-    onTriggered: refreshWallpapers()
+    onTriggered: root.refreshWallpapers()
   }
 
   Component.onCompleted: {
@@ -434,7 +434,7 @@ ColumnLayout {
     onAccepted: paths => {
                   if (paths.length > 0) {
                     root.selectedDirectory = paths[0];
-                    directoryChanged(paths[0]);
+                    root.directoryChanged(paths[0]);
                   }
                 }
   }
@@ -457,7 +457,7 @@ ColumnLayout {
           }
         }
         root.wallpapersList = images;
-        updateFilteredWallpapers();
+        root.updateFilteredWallpapers();
         if (root.wallpapersList.length > 0 && root.selectedWallpaper === "") {
           root.selectedWallpaper = root.wallpapersList[0];
         }

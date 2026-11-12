@@ -82,30 +82,30 @@ Item {
           spacing: Settings.data.bar.showCapsule ? -5 : -3
           Repeater {
             id: repeater
-            model: I18n.locale.toString(now, formatHorizontal.trim()).split("\\n")
+            model: I18n.locale.toString(root.now, root.formatHorizontal.trim()).split("\\n")
             NText {
               id: horizontalClockLine
               required property string modelData
               required property int index
               visible: text !== ""
               text: horizontalClockLine.modelData
-              family: useCustomFont && customFont ? customFont : Settings.data.ui.fontDefault
+              family: root.useCustomFont && root.customFont ? root.customFont : Settings.data.ui.fontDefault
               Binding on pointSize {
                 value: {
                   if (repeater.model.length == 1) {
                     // Single line: Full size
-                    return barFontSize;
+                    return root.barFontSize;
                   } else if (repeater.model.length == 2) {
                     // Two lines: First line is bigger than the second
-                    return (horizontalClockLine.index == 0) ? Math.round(barFontSize * 0.9) : Math.round(barFontSize * 0.75);
+                    return (horizontalClockLine.index == 0) ? Math.round(root.barFontSize * 0.9) : Math.round(root.barFontSize * 0.75);
                   } else {
                     // More than two lines: Make it small!
-                    return Math.round(barFontSize * 0.75);
+                    return Math.round(root.barFontSize * 0.75);
                   }
                 }
               }
               applyUiScale: false
-              color: textColor
+              color: root.textColor
               wrapMode: Text.WordWrap
               Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
               features: ({
@@ -125,16 +125,16 @@ Item {
           anchors.centerIn: parent
           spacing: -2
           Repeater {
-            model: I18n.locale.toString(now, formatVertical.trim()).split(" ")
+            model: I18n.locale.toString(root.now, root.formatVertical.trim()).split(" ")
             delegate: NText {
               id: verticalClockLine
               required property string modelData
               visible: text !== ""
               text: verticalClockLine.modelData
-              family: useCustomFont && customFont ? customFont : Settings.data.ui.fontDefault
-              pointSize: barFontSize
+              family: root.useCustomFont && root.customFont ? root.customFont : Settings.data.ui.fontDefault
+              pointSize: root.barFontSize
               applyUiScale: false
-              color: textColor
+              color: root.textColor
               wrapMode: Text.WordWrap
               Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
               features: ({

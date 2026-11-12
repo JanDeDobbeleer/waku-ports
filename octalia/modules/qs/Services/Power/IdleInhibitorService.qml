@@ -128,7 +128,7 @@ Singleton {
 
       root.timeout -= 1;
       if (root.timeout <= 0) {
-        removeManualInhibitor();
+        root.removeManualInhibitor();
         return;
       }
     }

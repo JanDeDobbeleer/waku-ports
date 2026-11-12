@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -175,31 +177,33 @@ ColumnLayout {
       visible: Settings.data.dock.enabled
       model: Quickshell.screens || []
       delegate: NCheckbox {
+        id: monitorOption
+        required property ShellScreen modelData
         Layout.fillWidth: true
         readonly property real compositorScale: {
-          const info = CompositorService.displayScales[modelData.name];
+          const info = CompositorService.displayScales[monitorOption.modelData.name];
           return (info && info.scale) ? info.scale : 1.0;
         }
-        label: modelData.name || "Unknown"
+        label: monitorOption.modelData.name || "Unknown"
         visible: Settings.data.dock.enabled
         description: {
           I18n.tr("system.monitor-description", {
-                    "model": modelData.model,
-                    "width": modelData.width * compositorScale,
-                    "height": modelData.height * compositorScale,
+                    "model": monitorOption.modelData.model,
+                    "width": monitorOption.modelData.width * compositorScale,
+                    "height": monitorOption.modelData.height * compositorScale,
                     "scale": compositorScale
                   });
         }
-        checked: (Settings.data.dock.monitors || []).indexOf(modelData.name) !== -1
+        checked: (Settings.data.dock.monitors || []).indexOf(monitorOption.modelData.name) !== -1
         onToggled: checked => {
                      if (checked) {
                        const arr = (Settings.data.dock.monitors || []).slice();
-                       if (arr.indexOf(modelData.name) === -1)
-                       arr.push(modelData.name);
+                       if (arr.indexOf(monitorOption.modelData.name) === -1)
+                       arr.push(monitorOption.modelData.name);
                        Settings.data.dock.monitors = arr;
                      } else {
                        Settings.data.dock.monitors = (Settings.data.dock.monitors || []).filter(function (n) {
-                         return n !== modelData.name;
+                         return n !== monitorOption.modelData.name;
                        });
                      }
                    }

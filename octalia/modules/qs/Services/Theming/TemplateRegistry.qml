@@ -612,7 +612,7 @@ Singleton {
         Logger.d("TemplateRegistry", "User templates config already exists, skipping creation");
       } else {
         // File doesn't exist or is empty, create it
-        doWriteUserTemplatesToml();
+        root.doWriteUserTemplatesToml();
       }
     }
   }

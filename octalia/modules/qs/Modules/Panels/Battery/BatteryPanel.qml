@@ -22,15 +22,15 @@ SmartPanel {
 
     property real contentPreferredHeight: mainLayout.implicitHeight + Style.margin2L
 
-    property var batteryWidgetInstance: BarService.lookupWidget("Battery", screen ? screen.name : null)
+    property var batteryWidgetInstance: BarService.lookupWidget("Battery", root.screen ? root.screen.name : null)
     readonly property var batteryWidgetSettings: batteryWidgetInstance ? batteryWidgetInstance.widgetSettings : null
     readonly property var batteryWidgetMetadata: BarWidgetRegistry.widgetMetadata["Battery"]
     readonly property bool powerProfileAvailable: PowerProfileService.available
     readonly property var powerProfiles: [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
     readonly property bool profilesAvailable: PowerProfileService.available
     property int profileIndex: profileToIndex(PowerProfileService.profile)
-    readonly property bool showPowerProfiles: panelID ? panelID.showPowerProfiles : resolveWidgetSetting("showPowerProfiles", false)
-    readonly property bool showOctaliaPerformance: panelID ? panelID.showOctaliaPerformance : resolveWidgetSetting("showOctaliaPerformance", false)
+    readonly property bool showPowerProfiles: root.panelID ? root.panelID.showPowerProfiles : resolveWidgetSetting("showPowerProfiles", false)
+    readonly property bool showOctaliaPerformance: root.panelID ? root.panelID.showOctaliaPerformance : resolveWidgetSetting("showOctaliaPerformance", false)
     readonly property bool isLowBattery: BatteryService.isLowBattery
     readonly property bool isCriticalBattery: BatteryService.isCriticalBattery
     readonly property var primaryDevice: BatteryService.primaryDevice
@@ -67,7 +67,7 @@ SmartPanel {
     Connections {
       target: BarService
       function onActiveWidgetsChanged() {
-        panelContent.batteryWidgetInstance = BarService.lookupWidget("Battery", screen ? screen.name : null);
+        panelContent.batteryWidgetInstance = BarService.lookupWidget("Battery", root.screen ? root.screen.name : null);
       }
     }
 
@@ -324,7 +324,7 @@ SmartPanel {
               enabled: panelContent.profilesAvailable
               onPressedChanged: (pressed, v) => {
                                   if (!pressed) {
-                                    setProfileByIndex(v);
+                                    panelContent.setProfileByIndex(v);
                                   }
                                 }
               onMoved: v => {

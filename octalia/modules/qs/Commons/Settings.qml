@@ -110,7 +110,7 @@ Singleton {
     watchChanges: true
     onAdapterUpdated: saveTimer.start()
 
-    onFileChanged: scheduleExternalReload()
+    onFileChanged: root.scheduleExternalReload()
 
     // Trigger initial load when path changes from empty to actual path
     onPathChanged: {
@@ -132,7 +132,7 @@ Singleton {
         }
 
         // Run versioned migrations immediately, don't move it in upgradeSettings
-        runVersionedMigrations(rawJson);
+        root.runVersionedMigrations(rawJson);
 
         // Finally, update our local settings version
         adapter.settingsVersion = root.settingsVersion;
@@ -141,7 +141,7 @@ Singleton {
         root.isLoaded = true;
         root.settingsLoaded();
 
-        upgradeSettings();
+        root.upgradeSettings();
       } else {
         Logger.d("Settings", "Settings reloaded from external file change");
         root.settingsReloaded();
@@ -170,7 +170,7 @@ Singleton {
     path: root.directoriesCreated ? root.configDir : undefined
     printErrors: false
     watchChanges: true
-    onFileChanged: scheduleExternalReload()
+    onFileChanged: root.scheduleExternalReload()
   }
 
   // FileView to load default settings for comparison

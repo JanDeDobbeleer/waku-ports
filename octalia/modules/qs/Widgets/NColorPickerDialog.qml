@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml
 import QtQuick 6.10
 import QtQuick.Controls.Basic
@@ -667,12 +669,14 @@ Popup {
               ]
 
               Rectangle {
+                id: themeSwatch
+                required property var modelData
                 width: 24
                 height: 24
                 radius: Style.iRadiusXXS
-                color: modelData.color
-                border.color: root.selectedColor.toString() === modelData.color.toString() ? Color.mPrimary : Color.mOutline
-                border.width: Math.max(1, root.selectedColor.toString() === modelData.color.toString() ? Style.borderM : Style.borderS)
+                color: themeSwatch.modelData.color
+                border.color: root.selectedColor.toString() === themeSwatch.modelData.color.toString() ? Color.mPrimary : Color.mOutline
+                border.width: Math.max(1, root.selectedColor.toString() === themeSwatch.modelData.color.toString() ? Style.borderM : Style.borderS)
 
                 MouseArea {
                   anchors.fill: parent
@@ -680,7 +684,7 @@ Popup {
                   hoverEnabled: true
 
                   onClicked: {
-                    root.selectedColor = modelData.color;
+                    root.selectedColor = themeSwatch.modelData.color;
                   }
                 }
               }
@@ -703,12 +707,14 @@ Popup {
               model: ColorList.colors
 
               Rectangle {
+                id: paletteSwatch
+                required property var modelData
                 width: 24
                 height: 24
                 radius: Math.min(Style.iRadiusXS, width / 2)
-                color: modelData.color
-                border.color: root.selectedColor.toString() === modelData.color.toString() ? Color.mPrimary : Color.mOutline
-                border.width: root.selectedColor.toString() === modelData.color.toString() ? 2 : 1
+                color: paletteSwatch.modelData.color
+                border.color: root.selectedColor.toString() === paletteSwatch.modelData.color.toString() ? Color.mPrimary : Color.mOutline
+                border.width: root.selectedColor.toString() === paletteSwatch.modelData.color.toString() ? 2 : 1
 
                 MouseArea {
                   anchors.fill: parent
@@ -716,7 +722,7 @@ Popup {
                   hoverEnabled: true
 
                   onClicked: {
-                    root.selectedColor = modelData.color;
+                    root.selectedColor = paletteSwatch.modelData.color;
                   }
                 }
               }

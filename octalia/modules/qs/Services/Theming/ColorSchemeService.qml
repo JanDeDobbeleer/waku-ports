@@ -35,7 +35,7 @@ Singleton {
       Logger.d("ColorScheme", "Detected dark mode change");
       if (!Settings.data.colorSchemes.useWallpaperColors && Settings.data.colorSchemes.predefinedScheme) {
         // Re-apply current scheme to pick the right variant
-        applyScheme(Settings.data.colorSchemes.predefinedScheme);
+        root.applyScheme(Settings.data.colorSchemes.predefinedScheme);
       }
       root.pushSystemColorScheme();
       // Toast: dark/light mode switched
@@ -223,12 +223,12 @@ Singleton {
             variant = data.light || data.dark;
           }
         }
-        writeColorsToDisk(variant);
+        root.writeColorsToDisk(variant);
         root.lastPredefinedSchemeData = data;
-        Logger.i("ColorScheme", "Applying color scheme:", getBasename(path));
+        Logger.i("ColorScheme", "Applying color scheme:", root.getBasename(path));
 
         // Generate templates for predefined color schemes
-        if (hasEnabledTemplates() || Settings.data.templates.enableUserTheming) {
+        if (root.hasEnabledTemplates() || Settings.data.templates.enableUserTheming) {
           AppThemeService.generateFromPredefinedScheme(data);
         }
       } catch (e) {

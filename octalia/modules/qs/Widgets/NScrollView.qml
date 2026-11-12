@@ -30,14 +30,14 @@ ScrollView {
   property int smoothWheelAnimationDuration: Style.animationNormal
   property real _wheelTargetY: 0
 
-  function clampScrollY(value) {
+  function clampScrollY(value: real): real {
     if (!root._internalFlickable)
       return 0;
     const flickable = root._internalFlickable;
     return Math.max(0, Math.min(value, flickable.contentHeight - flickable.height));
   }
 
-  function applyWheelScroll(delta) {
+  function applyWheelScroll(delta: real) {
     if (!root._internalFlickable)
       return;
 
@@ -193,6 +193,7 @@ ScrollView {
   }
 
   ScrollBar.vertical: ScrollBar {
+    id: verticalScrollBar
     parent: root
     x: root.mirrored ? 0 : root.width - width
     y: root.topPadding
@@ -204,8 +205,8 @@ ScrollView {
       implicitWidth: root.handleWidth
       implicitHeight: 100
       radius: root.handleRadius
-      color: parent.pressed ? root.handlePressedColor : parent.hovered ? root.handleHoverColor : root.handleColor
-      opacity: parent.policy === ScrollBar.AlwaysOn ? 1.0 : root.verticalScrollable ? ((root.showScrollbarWhenScrollable || parent.active) ? 1.0 : 0.0) : 0.0
+      color: verticalScrollBar.pressed ? root.handlePressedColor : verticalScrollBar.hovered ? root.handleHoverColor : root.handleColor
+      opacity: verticalScrollBar.policy === ScrollBar.AlwaysOn ? 1.0 : root.verticalScrollable ? ((root.showScrollbarWhenScrollable || verticalScrollBar.active) ? 1.0 : 0.0) : 0.0
 
       Behavior on opacity {
         NumberAnimation {
@@ -224,7 +225,7 @@ ScrollView {
       implicitWidth: root.handleWidth
       implicitHeight: 100
       color: root.trackColor
-      opacity: parent.policy === ScrollBar.AlwaysOn ? 0.3 : root.verticalScrollable ? ((root.showScrollbarWhenScrollable || parent.active) ? 0.3 : 0.0) : 0.0
+      opacity: verticalScrollBar.policy === ScrollBar.AlwaysOn ? 0.3 : root.verticalScrollable ? ((root.showScrollbarWhenScrollable || verticalScrollBar.active) ? 0.3 : 0.0) : 0.0
       radius: root.handleRadius / 2
 
       Behavior on opacity {
@@ -236,6 +237,7 @@ ScrollView {
   }
 
   ScrollBar.horizontal: ScrollBar {
+    id: horizontalScrollBar
     parent: root
     x: root.leftPadding
     y: root.height - height
@@ -247,8 +249,8 @@ ScrollView {
       implicitWidth: 100
       implicitHeight: root.handleWidth
       radius: root.handleRadius
-      color: parent.pressed ? root.handlePressedColor : parent.hovered ? root.handleHoverColor : root.handleColor
-      opacity: parent.policy === ScrollBar.AlwaysOn ? 1.0 : root.horizontalScrollable ? ((root.showScrollbarWhenScrollable || parent.active) ? 1.0 : 0.0) : 0.0
+      color: horizontalScrollBar.pressed ? root.handlePressedColor : horizontalScrollBar.hovered ? root.handleHoverColor : root.handleColor
+      opacity: horizontalScrollBar.policy === ScrollBar.AlwaysOn ? 1.0 : root.horizontalScrollable ? ((root.showScrollbarWhenScrollable || horizontalScrollBar.active) ? 1.0 : 0.0) : 0.0
 
       Behavior on opacity {
         NumberAnimation {
@@ -267,7 +269,7 @@ ScrollView {
       implicitWidth: 100
       implicitHeight: root.handleWidth
       color: root.trackColor
-      opacity: parent.policy === ScrollBar.AlwaysOn ? 0.3 : root.horizontalScrollable ? ((root.showScrollbarWhenScrollable || parent.active) ? 0.3 : 0.0) : 0.0
+      opacity: horizontalScrollBar.policy === ScrollBar.AlwaysOn ? 0.3 : root.horizontalScrollable ? ((root.showScrollbarWhenScrollable || horizontalScrollBar.active) ? 0.3 : 0.0) : 0.0
       radius: root.handleRadius / 2
 
       Behavior on opacity {

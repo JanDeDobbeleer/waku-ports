@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -222,12 +224,14 @@ ColumnLayout {
               Layout.topMargin: Style.marginM
               model: I18n.locale.toString(root.now, root.valueFormatHorizontal.trim()).split("\\n")
               delegate: NText {
+                id: horizontalPreviewLine
+                required property string modelData
                 visible: text !== ""
-                text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                text: horizontalPreviewLine.modelData
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: textColor
+                color: root.textColor
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
@@ -253,12 +257,14 @@ ColumnLayout {
               Layout.topMargin: Style.marginM
               model: I18n.locale.toString(root.now, root.valueFormatVertical.trim()).split(" ")
               delegate: NText {
+                id: verticalPreviewLine
+                required property string modelData
                 visible: text !== ""
-                text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                text: verticalPreviewLine.modelData
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: textColor
+                color: root.textColor
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 

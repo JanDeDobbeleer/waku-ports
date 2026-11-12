@@ -125,7 +125,7 @@ Singleton {
   Timer {
     id: saveTimer
     interval: 500
-    onTriggered: performSave()
+    onTriggered: root.performSave()
   }
 
   property bool saveQueued: false

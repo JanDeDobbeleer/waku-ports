@@ -85,7 +85,7 @@ Singleton {
       if (!root.adapter || root.adapter.state === BluetoothAdapter.Enabling || root.adapter.state === BluetoothAdapter.Disabling) {
         return;
       }
-      checkAirplaneMode();
+      root.checkAirplaneMode();
     }
     function onEnabledChanged() {
       if (root.adapter?.enabled && Settings.data.network.bluetoothAutoConnect) {
@@ -125,7 +125,7 @@ Singleton {
     id: autoConnectTimer
     interval: 1500
     repeat: false
-    onTriggered: attemptAutoConnect()
+    onTriggered: root.attemptAutoConnect()
   }
 
   Timer {
@@ -136,7 +136,7 @@ Singleton {
       var device = root._autoConnectQueue.shift();
       if (device && device.paired && !device.connected && !device.blocked) {
         Logger.i("Bluetooth", "Auto-connecting to:", device.name || device.deviceName);
-        connectDeviceWithTrust(device);
+        root.connectDeviceWithTrust(device);
       }
       if (root._autoConnectQueue.length > 0) {
         autoConnectStepTimer.restart();

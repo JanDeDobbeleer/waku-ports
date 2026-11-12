@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -81,10 +83,12 @@ Popup {
 
     delegate: ItemDelegate {
       id: menuItem
+      required property var modelData
+      required property int index
       width: listView.availableWidth
       height: root.itemHeight
-      opacity: modelData.enabled !== false ? 1.0 : 0.5
-      enabled: modelData.enabled !== false
+      opacity: menuItem.modelData.enabled !== false ? 1.0 : 0.5
+      enabled: menuItem.modelData.enabled !== false
 
       // Store reference to the popup
       property var popup: root
@@ -105,8 +109,8 @@ Popup {
 
         // Optional icon
         NIcon {
-          visible: modelData.icon !== undefined
-          icon: modelData.icon || ""
+          visible: menuItem.modelData.icon !== undefined
+          icon: menuItem.modelData.icon || ""
           pointSize: Style.fontSizeM
           color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
           Layout.leftMargin: root.itemPadding
@@ -119,12 +123,12 @@ Popup {
         }
 
         NText {
-          text: modelData.label || modelData.text || ""
+          text: menuItem.modelData.label || menuItem.modelData.text || ""
           pointSize: Style.fontSizeM
           color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
           verticalAlignment: Text.AlignVCenter
           Layout.fillWidth: true
-          Layout.leftMargin: modelData.icon === undefined ? root.itemPadding : 0
+          Layout.leftMargin: menuItem.modelData.icon === undefined ? root.itemPadding : 0
 
           Behavior on color {
             ColorAnimation {
@@ -136,7 +140,7 @@ Popup {
 
       onClicked: {
         if (enabled) {
-          popup.triggered(modelData.action || modelData.key || index.toString());
+          popup.triggered(menuItem.modelData.action || menuItem.modelData.key || menuItem.index.toString());
           popup.close();
         }
       }

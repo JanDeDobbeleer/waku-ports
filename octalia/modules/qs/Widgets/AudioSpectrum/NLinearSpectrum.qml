@@ -41,10 +41,10 @@ Item {
       smooth: root.highQuality
 
       // Only update when value actually changes - reduces GPU load
-      width: vertical ? root.width * amp : root.barSlotSize * 0.5
-      height: vertical ? root.barSlotSize * 0.5 : root.height * amp
-      x: vertical ? (root.barPosition === "left" ? 0 : root.width - width) : spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25)
-      y: vertical ? spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25) : root.height - height
+      width: root.vertical ? root.width * amp : root.barSlotSize * 0.5
+      height: root.vertical ? root.barSlotSize * 0.5 : root.height * amp
+      x: root.vertical ? (root.barPosition === "left" ? 0 : root.width - width) : spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25)
+      y: root.vertical ? spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25) : root.height - height
 
       // Disable updates when invisible to save GPU
       visible: root.visible

@@ -77,7 +77,7 @@ Item {
     interval: 100 // milliseconds
     running: false
     repeat: false
-    onTriggered: _performFilteredItemsUpdate()
+    onTriggered: root._performFilteredItemsUpdate()
   }
 
   readonly property var statusSignature: {
@@ -371,7 +371,7 @@ Item {
           return "caret-down";
         }
       }
-      onClicked: toggleDrawer(this)
+      onClicked: root.toggleDrawer(this)
       onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, root.screen)
     }
 
@@ -384,24 +384,24 @@ Item {
         id: trayDelegate
         required property var modelData
         required property int index
-        width: isVertical ? barHeight : capsuleHeight
-        height: isVertical ? capsuleHeight : barHeight
+        width: root.isVertical ? root.barHeight : root.capsuleHeight
+        height: root.isVertical ? root.capsuleHeight : root.barHeight
         visible: trayDelegate.modelData
         readonly property bool isHovered: root.hoveredItemIndex === trayDelegate.index
 
         // Anchor representing the visual area (for proper menu positioning)
         Item {
           id: visualAnchor
-          width: capsuleHeight
-          height: capsuleHeight
+          width: root.capsuleHeight
+          height: root.capsuleHeight
           x: Style.pixelAlignCenter(parent.width, width)
           y: Style.pixelAlignCenter(parent.height, height)
         }
 
         IconImage {
           id: trayIcon
-          width: iconSize
-          height: iconSize
+          width: root.iconSize
+          height: root.iconSize
           x: Style.pixelAlignCenter(parent.width, width)
           y: Style.pixelAlignCenter(parent.height, height)
           asynchronous: true
@@ -425,7 +425,7 @@ Item {
           }
           opacity: status === Image.Ready ? 1 : 0
 
-          layer.enabled: widgetSettings.colorizeIcons !== false
+          layer.enabled: root.widgetSettings.colorizeIcons !== false
           layer.effect: ShaderEffect {
             property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
             property real colorizeMode: 1.0
@@ -439,7 +439,7 @@ Item {
           anchors.bottom: trayIcon.bottom
           anchors.bottomMargin: -2
           anchors.horizontalCenter: trayIcon.horizontalCenter
-          width: Style.toOdd(iconSize * 0.25)
+          width: Style.toOdd(root.iconSize * 0.25)
           height: 4
           color: trayDelegate.isHovered ? Color.mHover : "transparent"
           radius: Math.min(Style.radiusXXS, width / 2)

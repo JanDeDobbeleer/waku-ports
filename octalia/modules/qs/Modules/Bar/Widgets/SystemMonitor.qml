@@ -127,7 +127,7 @@ Item {
                    if (action === "sysmon-settings") {
                      let monitorCmd = Settings.data.systemMonitor.externalMonitor;
                      if (monitorCmd && monitorCmd.trim() !== "") {
-                       openExternalMonitor();
+                       root.openExternalMonitor();
                      } else {
                        SettingsPanelService.openToTab(SettingsPanel.Tab.System, 0, screen);
                      }
@@ -156,8 +156,8 @@ Item {
         ratio: 0
         orientation: Qt.Vertical
         fillColor: Color.mPrimary
-        width: miniGaugeWidth
-        height: iconSize
+        width: root.miniGaugeWidth
+        height: root.iconSize
       }
     }
 
@@ -233,8 +233,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.cpuUsage / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.cpuColor);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuUsage / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.cpuColor);
             }
           }
 
@@ -245,9 +245,9 @@ Item {
             delegate: NLinearGauge {
               id: coreGauge
               required property var modelData
-              width: isVertical ? iconSize : miniGaugeWidth
-              height: isVertical ? miniGaugeWidth : iconSize
-              orientation: isVertical ? Qt.Horizontal : Qt.Vertical
+              width: root.isVertical ? root.iconSize : root.miniGaugeWidth
+              height: root.isVertical ? root.miniGaugeWidth : root.iconSize
+              orientation: root.isVertical ? Qt.Horizontal : Qt.Vertical
               ratio: coreGauge.modelData / 100
               fillColor: SystemStatService.getCoreUsageColor(coreGauge.modelData)
             }
@@ -316,7 +316,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.cpuFreqRatio);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuFreqRatio);
             }
           }
         }
@@ -383,8 +383,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.cpuTemp / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.tempColor);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.cpuTemp / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.tempColor);
             }
           }
         }
@@ -451,8 +451,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.gpuTemp / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.gpuColor);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.gpuTemp / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.gpuColor);
             }
           }
         }
@@ -519,7 +519,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => Math.min(1, SystemStatService.loadAvg1 / SystemStatService.nproc));
+              (item as NLinearGauge).ratio = Qt.binding(() => Math.min(1, SystemStatService.loadAvg1 / SystemStatService.nproc));
             }
           }
         }
@@ -589,8 +589,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.memPercent / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.memColor);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.memPercent / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.memColor);
             }
           }
         }
@@ -661,8 +661,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.swapPercent / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.swapColor);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.swapPercent / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.swapColor);
             }
           }
         }
@@ -728,7 +728,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.rxRatio);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.rxRatio);
             }
           }
         }
@@ -794,7 +794,7 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => SystemStatService.txRatio);
+              (item as NLinearGauge).ratio = Qt.binding(() => SystemStatService.txRatio);
             }
           }
         }
@@ -865,8 +865,8 @@ Item {
             Layout.column: 1
 
             onLoaded: {
-              item.ratio = Qt.binding(() => (root.showDiskAvailable ? SystemStatService.diskAvailPercents[root.diskPath] : SystemStatService.diskPercents[root.diskPath] ?? 0) / 100);
-              item.fillColor = Qt.binding(() => SystemStatService.getDiskColor(root.diskPath, root.showDiskAvailable));
+              (item as NLinearGauge).ratio = Qt.binding(() => (root.showDiskAvailable ? SystemStatService.diskAvailPercents[root.diskPath] : SystemStatService.diskPercents[root.diskPath] ?? 0) / 100);
+              (item as NLinearGauge).fillColor = Qt.binding(() => SystemStatService.getDiskColor(root.diskPath, root.showDiskAvailable));
             }
           }
         }
@@ -887,7 +887,7 @@ Item {
                  } else if (mouse.button === Qt.RightButton) {
                    PanelService.showContextMenu(contextMenu, root, root.screen);
                  } else if (mouse.button === Qt.MiddleButton) {
-                   openExternalMonitor();
+                   root.openExternalMonitor();
                  }
                }
   }

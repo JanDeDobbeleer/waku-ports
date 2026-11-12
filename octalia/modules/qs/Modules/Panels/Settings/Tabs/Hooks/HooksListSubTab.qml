@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -48,7 +50,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.octalia-started-label")
     description: I18n.tr("panels.hooks.octalia-started-description")
     value: Settings.data.hooks.startup
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.octalia-started-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.octalia-started-placeholder"), value, newValue => {
                               Settings.data.hooks.startup = newValue;
                               Settings.saveImmediate();
                             }, val => {
@@ -61,7 +63,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.wallpaper-changed-label")
     description: I18n.tr("panels.hooks.wallpaper-changed-description")
     value: Settings.data.hooks.wallpaperChange
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.wallpaper-changed-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.wallpaper-changed-placeholder"), value, newValue => {
                               Settings.data.hooks.wallpaperChange = newValue;
                               Settings.saveImmediate();
                             }, val => {
@@ -75,7 +77,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.theme-changed-label")
     description: I18n.tr("panels.hooks.theme-changed-description")
     value: Settings.data.hooks.darkModeChange
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.theme-changed-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.theme-changed-placeholder"), value, newValue => {
                               Settings.data.hooks.darkModeChange = newValue;
                               Settings.saveImmediate();
                             }, val => {
@@ -89,7 +91,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.performance-mode-enabled-label")
     description: I18n.tr("panels.hooks.performance-mode-enabled-description")
     value: Settings.data.hooks.performanceModeEnabled
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.performance-mode-enabled-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.performance-mode-enabled-placeholder"), value, newValue => {
                               Settings.data.hooks.performanceModeEnabled = newValue;
                               Settings.saveImmediate();
                             }, val => {
@@ -103,7 +105,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.performance-mode-disabled-label")
     description: I18n.tr("panels.hooks.performance-mode-disabled-description")
     value: Settings.data.hooks.performanceModeDisabled
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.performance-mode-disabled-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.performance-mode-disabled-placeholder"), value, newValue => {
                               Settings.data.hooks.performanceModeDisabled = newValue;
                               Settings.saveImmediate();
                             }, val => {
@@ -117,7 +119,7 @@ ColumnLayout {
     label: I18n.tr("panels.hooks.session-label")
     description: I18n.tr("panels.hooks.session-description")
     value: Settings.data.hooks.session
-    onEditClicked: openEdit(label, description, I18n.tr("panels.hooks.session-placeholder"), value, newValue => {
+    onEditClicked: root.openEdit(label, description, I18n.tr("panels.hooks.session-placeholder"), value, newValue => {
                               Settings.data.hooks.session = newValue;
                               Settings.saveImmediate();
                             }, val => {

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell.Io
@@ -87,8 +89,10 @@ ColumnLayout {
     Repeater {
       model: ColorSchemeService.schemes
       delegate: Item {
+        id: schemeFile
+        required property string modelData
         FileView {
-          path: modelData
+          path: schemeFile.modelData
           blockLoading: false
           onLoaded: {
             var jsonData;
@@ -253,9 +257,10 @@ ColumnLayout {
 
         Rectangle {
           id: schemeItem
+          required property string modelData
 
-          property string schemePath: modelData
-          property string schemeName: root.extractSchemeName(modelData)
+          property string schemePath: schemeItem.modelData
+          property string schemeName: root.extractSchemeName(schemeItem.modelData)
 
           opacity: enabled ? 1.0 : 0.6
           Layout.fillWidth: true

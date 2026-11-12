@@ -49,7 +49,7 @@ Singleton {
     function onPopupMenuWindowRegistered(screen) {
       if (root.popupScheduled) {
         if (!root.viewChangelogTargetScreen || root.viewChangelogTargetScreen.name === screen.name) {
-          openWhenReady();
+          root.openWhenReady();
         }
       }
     }
@@ -77,7 +77,7 @@ Singleton {
     target: typeof ShellState !== 'undefined' ? ShellState : null
     function onIsLoadedChanged() {
       if (ShellState.isLoaded) {
-        loadChangelogState();
+        root.loadChangelogState();
       }
     }
   }
@@ -87,7 +87,7 @@ Singleton {
     id: saveDebouncer
     interval: 300
     repeat: false
-    onTriggered: executeSave()
+    onTriggered: root.executeSave()
   }
 
   function handleChangelogRequest() {

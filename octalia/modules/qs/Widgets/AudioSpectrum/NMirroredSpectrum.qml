@@ -35,7 +35,7 @@ Item {
       property real rawAmp: (root.values && root.values[valueIndex] !== undefined) ? root.values[valueIndex] : 0
       property real amp: (root.showMinimumSignal && rawAmp === 0) ? root.minimumSignalValue : rawAmp
 
-      property real barSize: (vertical ? root.width : root.height) * amp
+      property real barSize: (root.vertical ? root.width : root.height) * amp
 
       color: root.fillColor
       border.color: root.strokeColor
@@ -43,10 +43,10 @@ Item {
       antialiasing: root.highQuality
       smooth: root.highQuality
 
-      width: vertical ? barSize : root.barSlotSize * 0.8
-      height: vertical ? root.barSlotSize * 0.8 : barSize
-      x: vertical ? root.centerX - (barSize / 2) : spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25)
-      y: vertical ? spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25) : root.centerY - (barSize / 2)
+      width: root.vertical ? barSize : root.barSlotSize * 0.8
+      height: root.vertical ? root.barSlotSize * 0.8 : barSize
+      x: root.vertical ? root.centerX - (barSize / 2) : spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25)
+      y: root.vertical ? spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25) : root.centerY - (barSize / 2)
 
       // Disable updates when invisible to save GPU
       visible: root.visible

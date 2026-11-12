@@ -10,13 +10,13 @@ Singleton {
   id: root
 
   // Component registration - only poll when something needs system stat data
-  function registerComponent(componentId) {
+  function registerComponent(componentId: string) {
     root._registered[componentId] = true;
     root._registered = Object.assign({}, root._registered);
     Logger.d("SystemStat", "Component registered:", componentId, "- total:", root._registeredCount);
   }
 
-  function unregisterComponent(componentId) {
+  function unregisterComponent(componentId: string) {
     delete root._registered[componentId];
     root._registered = Object.assign({}, root._registered);
     Logger.d("SystemStat", "Component unregistered:", componentId, "- total:", root._registeredCount);
@@ -215,11 +215,11 @@ Singleton {
   readonly property bool swapCritical: swapPercent >= swapCriticalThreshold
 
   // Helper functions for disk (disk path is dynamic)
-  function isDiskWarning(diskPath, available = false) {
+  function isDiskWarning(diskPath, available = false): bool {
     return available ? (diskAvailPercents[diskPath] || 0) <= diskAvailWarningThreshold : (diskPercents[diskPath] || 0) >= diskWarningThreshold;
   }
 
-  function isDiskCritical(diskPath, available = false) {
+  function isDiskCritical(diskPath, available = false): bool {
     return available ? (diskAvailPercents[diskPath] || 0) <= diskAvailCriticalThreshold : (diskPercents[diskPath] || 0) >= diskCriticalThreshold;
   }
 
@@ -230,7 +230,7 @@ Singleton {
   readonly property color memColor: memCritical ? criticalColor : (memWarning ? warningColor : Color.mPrimary)
   readonly property color swapColor: swapCritical ? criticalColor : (swapWarning ? warningColor : Color.mPrimary)
 
-  function getCoreUsageColor(usage) {
+  function getCoreUsageColor(usage: real): color {
     if (usage >= cpuCriticalThreshold)
       return criticalColor;
     if (usage >= cpuWarningThreshold)
@@ -238,7 +238,7 @@ Singleton {
     return Color.mPrimary;
   }
 
-  function getDiskColor(diskPath, available = false) {
+  function getDiskColor(diskPath, available = false): color {
     return isDiskCritical(diskPath, available) ? criticalColor : (isDiskWarning(diskPath, available) ? warningColor : Color.mPrimary);
   }
 

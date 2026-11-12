@@ -15,7 +15,7 @@ Singleton {
   Connections {
     target: Settings.data.colorSchemes
     function onDarkModeChanged() {
-      executeDarkModeHook(Settings.data.colorSchemes.darkMode);
+      root.executeDarkModeHook(Settings.data.colorSchemes.darkMode);
     }
   }
 
@@ -43,7 +43,7 @@ Singleton {
         }
       }
       // No color generation, execute immediately
-      executeWallpaperHook(path, screenName);
+      root.executeWallpaperHook(path, screenName);
     }
   }
 
@@ -54,9 +54,9 @@ Singleton {
       if (root.pendingWallpaperHook) {
         const hook = root.pendingWallpaperHook;
         root.pendingWallpaperHook = null;
-        executeWallpaperHook(hook.path, hook.screenName);
+        root.executeWallpaperHook(hook.path, hook.screenName);
       }
-      executeColorGenerationHook();
+      root.executeColorGenerationHook();
     }
   }
 
@@ -78,11 +78,11 @@ Singleton {
     function onActiveChanged() {
       // Detect lock: was unlocked, now locked
       if (!root.wasLocked && PanelService.lockScreen.active) {
-        executeLockHook();
+        root.executeLockHook();
       }
       // Detect unlock: was locked, now not locked
       if (root.wasLocked && !PanelService.lockScreen.active) {
-        executeUnlockHook();
+        root.executeUnlockHook();
       }
       root.wasLocked = PanelService.lockScreen.active;
     }
@@ -98,11 +98,11 @@ Singleton {
 
       // Detect enabled: was disabled, now enabled
       if (!root.wasPerformanceModeEnabled && isEnabled) {
-        executePerformanceModeEnabledHook();
+        root.executePerformanceModeEnabledHook();
       }
       // Detect disabled: was enabled, now disabled
       if (root.wasPerformanceModeEnabled && !isEnabled) {
-        executePerformanceModeDisabledHook();
+        root.executePerformanceModeDisabledHook();
       }
       root.wasPerformanceModeEnabled = isEnabled;
     }

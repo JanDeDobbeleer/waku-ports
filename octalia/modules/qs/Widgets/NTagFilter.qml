@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -33,10 +35,12 @@ NCollapsible {
       model: [""].concat(root.tags)
 
       delegate: NButton {
-        text: root.formatTag(modelData)
-        backgroundColor: root.selectedTag === modelData ? Color.mPrimary : Color.mSurfaceVariant
-        textColor: root.selectedTag === modelData ? Color.mOnPrimary : Color.mOnSurfaceVariant
-        onClicked: root.selectedTag = modelData
+        id: tagButton
+        required property string modelData
+        text: root.formatTag(tagButton.modelData)
+        backgroundColor: root.selectedTag === tagButton.modelData ? Color.mPrimary : Color.mSurfaceVariant
+        textColor: root.selectedTag === tagButton.modelData ? Color.mOnPrimary : Color.mOnSurfaceVariant
+        onClicked: root.selectedTag = tagButton.modelData
         fontSize: Style.fontSizeS
         iconSize: Style.fontSizeS
         fontWeight: Style.fontWeightSemiBold

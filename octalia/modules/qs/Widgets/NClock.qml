@@ -133,6 +133,7 @@ Item {
 
   // Analog Clock Component
   component NClockAnalog: Item {
+    id: analogClock
     property var now
     property color backgroundColor: Color.mPrimary
     property color clockColor: Color.mOnPrimary
@@ -165,8 +166,8 @@ Item {
         var radius = Math.min(width, height) / 2;
 
         // Hour marks
-        ctx.strokeStyle = Qt.alpha(clockColor, markAlpha);
-        ctx.lineWidth = 2 * scaleRatio;
+        ctx.strokeStyle = Qt.alpha(analogClock.clockColor, markAlpha);
+        ctx.lineWidth = 2 * analogClock.scaleRatio;
         var scaleFactor = 0.7;
 
         for (i = 0; i < 12; i++) {
@@ -187,8 +188,8 @@ Item {
         ctx.save();
         var hourAngle = (hours % 12 + minutes / 60) * Math.PI / 6;
         ctx.rotate(hourAngle);
-        ctx.strokeStyle = clockColor;
-        ctx.lineWidth = 3 * scaleRatio;
+        ctx.strokeStyle = analogClock.clockColor;
+        ctx.lineWidth = 3 * analogClock.scaleRatio;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -200,8 +201,8 @@ Item {
         ctx.save();
         var minuteAngle = (minutes + seconds / 60) * Math.PI / 30;
         ctx.rotate(minuteAngle);
-        ctx.strokeStyle = clockColor;
-        ctx.lineWidth = 2 * scaleRatio;
+        ctx.strokeStyle = analogClock.clockColor;
+        ctx.lineWidth = 2 * analogClock.scaleRatio;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -213,8 +214,8 @@ Item {
         ctx.save();
         var secondAngle = seconds * Math.PI / 30;
         ctx.rotate(secondAngle);
-        ctx.strokeStyle = secondHandColor;
-        ctx.lineWidth = 1.6 * scaleRatio;
+        ctx.strokeStyle = analogClock.secondHandColor;
+        ctx.lineWidth = 1.6 * analogClock.scaleRatio;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -224,8 +225,8 @@ Item {
 
         // Center dot
         ctx.beginPath();
-        ctx.arc(0, 0, 3 * scaleRatio, 0, 2 * Math.PI);
-        ctx.fillStyle = clockColor;
+        ctx.arc(0, 0, 3 * analogClock.scaleRatio, 0, 2 * Math.PI);
+        ctx.fillStyle = analogClock.clockColor;
         ctx.fill();
       }
 
@@ -235,6 +236,7 @@ Item {
 
   // Digital Clock Component
   component NClockDigital: Item {
+    id: digitalClock
     property var now
     property color backgroundColor: Color.mPrimary
     property color clockColor: Color.mOnPrimary
@@ -252,13 +254,13 @@ Item {
     Canvas {
       id: secondsProgress
       anchors.fill: parent
-      visible: showProgress
-      property real progress: now.getSeconds() / 60
+      visible: digitalClock.showProgress
+      property real progress: digitalClock.now.getSeconds() / 60
       onProgressChanged: requestPaint()
       Connections {
         target: Time
         function onNowChanged() {
-          const total = now.getSeconds() * 1000 + now.getMilliseconds();
+          const total = digitalClock.now.getSeconds() * 1000 + digitalClock.now.getMilliseconds();
           secondsProgress.progress = total / 60000;
         }
       }
@@ -266,21 +268,21 @@ Item {
         var ctx = getContext("2d");
         var centerX = width / 2;
         var centerY = height / 2;
-        var radius = Math.min(width, height) / 2 - 3 * scaleRatio;
+        var radius = Math.min(width, height) / 2 - 3 * digitalClock.scaleRatio;
         ctx.reset();
 
         // Background circle
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.lineWidth = 2.5 * scaleRatio;
-        ctx.strokeStyle = Qt.alpha(clockColor, 0.15);
+        ctx.lineWidth = 2.5 * digitalClock.scaleRatio;
+        ctx.strokeStyle = Qt.alpha(digitalClock.clockColor, 0.15);
         ctx.stroke();
 
         // Progress arc
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + progress * 2 * Math.PI);
-        ctx.lineWidth = 2.5 * scaleRatio;
-        ctx.strokeStyle = progressColor;
+        ctx.lineWidth = 2.5 * digitalClock.scaleRatio;
+        ctx.strokeStyle = digitalClock.progressColor;
         ctx.lineCap = "round";
         ctx.stroke();
       }
@@ -293,22 +295,22 @@ Item {
 
       NText {
         text: {
-          var t = Settings.data.location.use12hourFormat ? I18n.locale.toString(now, "hh AP") : I18n.locale.toString(now, "HH");
+          var t = Settings.data.location.use12hourFormat ? I18n.locale.toString(digitalClock.now, "hh AP") : I18n.locale.toString(digitalClock.now, "HH");
           return t.split(" ")[0];
         }
 
-        pointSize: hoursFontSize
-        font.weight: hoursFontWeight
-        color: clockColor
+        pointSize: digitalClock.hoursFontSize
+        font.weight: digitalClock.hoursFontWeight
+        color: digitalClock.clockColor
         family: Settings.data.ui.fontFixed
         Layout.alignment: Qt.AlignHCenter
       }
 
       NText {
-        text: Qt.formatTime(now, "mm")
-        pointSize: minutesFontSize
-        font.weight: minutesFontWeight
-        color: clockColor
+        text: Qt.formatTime(digitalClock.now, "mm")
+        pointSize: digitalClock.minutesFontSize
+        font.weight: digitalClock.minutesFontWeight
+        color: digitalClock.clockColor
         family: Settings.data.ui.fontFixed
         Layout.alignment: Qt.AlignHCenter
       }
@@ -317,6 +319,7 @@ Item {
 
   // Binary Clock Component
   component NClockBinary: Item {
+    id: binaryClock
     property var now
     property color backgroundColor
     property color clockColor: Color.mOnPrimary
@@ -344,17 +347,17 @@ Item {
       RowLayout {
         spacing: parent.parent.width * 0.02
         BinaryColumn {
-          value: Math.floor(h / 10)
+          value: Math.floor(binaryClock.h / 10)
           bits: 2
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
         BinaryColumn {
-          value: h % 10
+          value: binaryClock.h % 10
           bits: 4
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
       }
@@ -363,17 +366,17 @@ Item {
       RowLayout {
         spacing: parent.parent.width * 0.02
         BinaryColumn {
-          value: Math.floor(m / 10)
+          value: Math.floor(binaryClock.m / 10)
           bits: 3
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
         BinaryColumn {
-          value: m % 10
+          value: binaryClock.m % 10
           bits: 4
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
       }
@@ -382,17 +385,17 @@ Item {
       RowLayout {
         spacing: parent.parent.width * 0.02
         BinaryColumn {
-          value: Math.floor(s / 10)
+          value: Math.floor(binaryClock.s / 10)
           bits: 3
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
         BinaryColumn {
-          value: s % 10
+          value: binaryClock.s % 10
           bits: 4
           dotSize: root.width * 0.08
-          activeColor: clockColor
+          activeColor: binaryClock.clockColor
           Layout.alignment: Qt.AlignBottom
         }
       }
@@ -409,7 +412,7 @@ Item {
     spacing: dotSize * 0.4
 
     Repeater {
-      model: bits
+      model: binaryColumn.bits
 
       Rectangle {
         id: binaryDot
@@ -420,7 +423,7 @@ Item {
         width: binaryColumn.dotSize
         height: binaryColumn.dotSize
         radius: binaryColumn.dotSize / 2
-        color: isActive ? activeColor : Qt.alpha(binaryColumn.activeColor, 0.2)
+        color: isActive ? binaryColumn.activeColor : Qt.alpha(binaryColumn.activeColor, 0.2)
 
         Behavior on color {
           ColorAnimation {

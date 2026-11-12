@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml.Models
 import QtQuick 6.10
 import QtQuick.Layouts
@@ -196,7 +198,11 @@ ColumnLayout {
     Repeater {
       model: root.rootSettings ? root.rootSettings._stateChecksListModel : null
       delegate: Item {
-        property int currentIndex: index
+        id: stateCheck
+        required property int index
+        required property string command
+        required property string icon
+        property int currentIndex: stateCheck.index
 
         implicitHeight: contentRow.implicitHeight
         Layout.fillWidth: true
@@ -209,9 +215,9 @@ ColumnLayout {
           NTextInput {
             Layout.fillWidth: true
             placeholderText: I18n.tr("panels.control-center.shortcuts-custom-button-state-checks-command")
-            text: model.command
+            text: stateCheck.command
             onTextChanged: {
-              updateStateCheck(currentIndex, text, model.icon);
+              root.updateStateCheck(stateCheck.currentIndex, text, stateCheck.icon);
             }
           }
 
@@ -220,9 +226,9 @@ ColumnLayout {
             spacing: Style?.marginS ?? 4
 
             NIcon {
-              icon: model.icon
+              icon: stateCheck.icon
               pointSize: Style?.fontSizeL ?? 20
-              visible: model.icon !== undefined && model.icon !== ""
+              visible: stateCheck.icon !== undefined && stateCheck.icon !== ""
             }
 
             NIconButton {
@@ -240,7 +246,7 @@ ColumnLayout {
               colorBgHover: Qt.alpha(Color.mError, Style.opacityMedium)
               colorFgHover: Color.mOnError
               onClicked: {
-                removeStateCheck(currentIndex);
+                root.removeStateCheck(stateCheck.currentIndex);
               }
             }
           }
@@ -248,9 +254,9 @@ ColumnLayout {
 
         NIconPicker {
           id: iconPickerDelegate
-          initialIcon: model.icon
+          initialIcon: stateCheck.icon
           onIconSelected: function (iconName) {
-            updateStateCheck(currentIndex, model.command, iconName);
+            root.updateStateCheck(stateCheck.currentIndex, stateCheck.command, iconName);
           }
         }
       }
@@ -266,7 +272,7 @@ ColumnLayout {
 
       NButton {
         text: I18n.tr("panels.control-center.shortcuts-custom-button-state-checks-add")
-        onClicked: addStateCheck()
+        onClicked: root.addStateCheck()
       }
     }
   }

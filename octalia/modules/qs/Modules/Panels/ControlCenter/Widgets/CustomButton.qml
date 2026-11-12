@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -47,7 +49,7 @@ Item {
       }
       root.enableOnStateLogic = root.widgetSettings.enableOnStateLogic || false;
 
-      updateState();
+      root.updateState();
     }
 
     function onWidgetSettingsChanged() {
@@ -71,7 +73,7 @@ Item {
       } else {
         // Command failed, try next one
         root._currentStateCheckIndex++;
-        _checkNextState();
+        root._checkNextState();
       }
     }
   }
@@ -84,7 +86,7 @@ Item {
     onTriggered: {
       if (root.enableOnStateLogic && root._parsedStateChecks.length > 0) {
         root._currentStateCheckIndex = 0;
-        _checkNextState();
+        root._checkNextState();
       } else {
         root._isHot = false;
         root._activeStateIcon = root.widgetSettings.icon || "heart";
@@ -125,19 +127,19 @@ Item {
     onClicked: {
       if (root.onClickedCommand) {
         Quickshell.execDetached(["cmd", "/c", root.onClickedCommand]);
-        updateState();
+        root.updateState();
       }
     }
     onRightClicked: {
       if (root.onRightClickedCommand) {
         Quickshell.execDetached(["cmd", "/c", root.onRightClickedCommand]);
-        updateState();
+        root.updateState();
       }
     }
     onMiddleClicked: {
       if (root.onMiddleClickedCommand) {
         Quickshell.execDetached(["cmd", "/c", root.onMiddleClickedCommand]);
-        updateState();
+        root.updateState();
       }
     }
   }

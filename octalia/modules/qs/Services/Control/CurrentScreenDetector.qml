@@ -125,7 +125,7 @@ Item {
                             monitors = Settings.data.bar.monitors || [];
                             const hasBar = monitors.length === 0 || monitors.includes(root.detectedScreen?.name);
                             if (!hasBar) {
-                              root.detectedScreen = findScreenWithBar();
+                              root.detectedScreen = root.findScreenWithBar();
                             }
                           }
 

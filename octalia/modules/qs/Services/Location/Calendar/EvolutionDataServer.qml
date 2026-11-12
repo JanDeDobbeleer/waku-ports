@@ -51,7 +51,7 @@ Singleton {
 
         if (CalendarService.available) {
           Logger.i("Calendar", "EDS libraries available");
-          loadCalendars();
+          root.loadCalendars();
         } else {
           Logger.w("Calendar", "EDS libraries not available: " + result);
           CalendarService.lastError = "Evolution Data Server libraries not installed";
@@ -84,7 +84,7 @@ Singleton {
 
           // Auto-load events after discovering calendars
           if (result.length > 0) {
-            loadEvents();
+            root.loadEvents();
           }
         } catch (e) {
           Logger.d("Calendar", "Failed to parse calendars: " + e);

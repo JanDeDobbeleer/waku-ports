@@ -303,18 +303,18 @@ Item {
   Connections {
     target: CompositorService
     function onWorkspacesChanged() {
-      scheduleRefresh();
+      root.scheduleRefresh();
     }
     function onWindowListChanged() {
       if (root.appVisible || root.showLabelsOnlyWhenOccupied) {
         root.windowRevision++;
-        scheduleRefresh();
+        root.scheduleRefresh();
       }
     }
     function onActiveWindowChanged() {
       if (root.appVisible) {
         root.windowRevision++;
-        scheduleRefresh();
+        root.scheduleRefresh();
       }
     }
   }
@@ -765,7 +765,7 @@ Item {
                         mouse.accepted = true;
                         root.selectedWindowId = "";
                         root.selectedAppId = "";
-                        openGroupedContextMenu(groupedContainer);
+                        root.openGroupedContextMenu(groupedContainer);
                       }
                     }
       }
@@ -806,7 +806,7 @@ Item {
               }
               smooth: true
               asynchronous: true
-              opacity: groupedTaskbarItem.isFocused ? Style.opacityFull : unfocusedIconsOpacity
+              opacity: groupedTaskbarItem.isFocused ? Style.opacityFull : root.unfocusedIconsOpacity
               layer.enabled: root.colorizeIcons && !groupedTaskbarItem.isFocused
 
               Rectangle {
@@ -846,7 +846,7 @@ Item {
                               mouse.accepted = true;
                               root.selectedWindowId = groupedTaskbarItem.modelData.id || groupedTaskbarItem.modelData.address || "";
                               root.selectedAppId = groupedTaskbarItem.modelData.appId;
-                              openGroupedContextMenu(groupedTaskbarItem);
+                              root.openGroupedContextMenu(groupedTaskbarItem);
                             }
                           }
             }
@@ -938,8 +938,8 @@ Item {
 
           family: Settings.data.ui.fontFixed
           font {
-            pointSize: barFontSize * 0.75
-            weight: fontWeight
+            pointSize: root.barFontSize * 0.75
+            weight: root.fontWeight
             capitalization: Font.AllUppercase
           }
           applyUiScale: false

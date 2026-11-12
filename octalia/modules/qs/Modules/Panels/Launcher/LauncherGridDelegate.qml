@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -115,9 +117,9 @@ Item {
           Component {
             id: gridTablerIconComponent
             NIcon {
-              icon: modelData.icon
+              icon: gridEntryContainer.modelData.icon
               pointSize: Style.fontSizeXXXL
-              visible: modelData.icon && !modelData.displayString
+              visible: gridEntryContainer.modelData.icon && !gridEntryContainer.modelData.displayString
               color: (gridEntryContainer.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface
             }
           }
@@ -126,8 +128,8 @@ Item {
             id: gridSystemIconComponent
             IconImage {
               anchors.fill: parent
-              source: modelData.icon ? ThemeIcons.iconFromName(modelData.icon, "application-x-executable") : ""
-              visible: modelData.icon && source !== "" && !modelData.displayString
+              source: gridEntryContainer.modelData.icon ? ThemeIcons.iconFromName(gridEntryContainer.modelData.icon, "application-x-executable") : ""
+              visible: gridEntryContainer.modelData.icon && source !== "" && !gridEntryContainer.modelData.displayString
               asynchronous: true
             }
           }

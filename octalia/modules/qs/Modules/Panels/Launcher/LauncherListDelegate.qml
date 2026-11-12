@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -126,16 +128,16 @@ NBox {
           sourceComponent: Component {
             Loader {
               anchors.fill: parent
-              sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && modelData.isTablerIcon ? tablerIconComponent : systemIconComponent
+              sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && entry.modelData.isTablerIcon ? tablerIconComponent : systemIconComponent
             }
           }
 
           Component {
             id: tablerIconComponent
             NIcon {
-              icon: modelData.icon
+              icon: entry.modelData.icon
               pointSize: Style.fontSizeXXXL
-              visible: modelData.icon && !modelData.displayString
+              visible: entry.modelData.icon && !entry.modelData.displayString
               color: (entry.isSelected && !Settings.data.appLauncher.showIconBackground) ? Color.mOnHover : Color.mOnSurface
             }
           }
@@ -144,8 +146,8 @@ NBox {
             id: systemIconComponent
             IconImage {
               anchors.fill: parent
-              source: modelData.icon ? ThemeIcons.iconFromName(modelData.icon, "application-x-executable") : ""
-              visible: modelData.icon && source !== "" && !modelData.displayString
+              source: entry.modelData.icon ? ThemeIcons.iconFromName(entry.modelData.icon, "application-x-executable") : ""
+              visible: entry.modelData.icon && source !== "" && !entry.modelData.displayString
               asynchronous: true
             }
           }

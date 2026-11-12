@@ -44,7 +44,7 @@ Singleton {
 
       if (CalendarService.available) {
         Logger.i("Calendar", "Khal available");
-        loadCalendars();
+        root.loadCalendars();
       } else {
         Logger.w("Calendar", "Khal not available");
         CalendarService.lastError = "khal binary not installed";
@@ -68,7 +68,7 @@ Singleton {
 
           // Auto-load events after discovering calendars
           if (calendars.length > 0) {
-            loadEvents();
+            root.loadEvents();
           }
         } catch (e) {
           Logger.d("Calendar", "Failed to parse calendars: " + e);
@@ -101,7 +101,7 @@ Singleton {
         CalendarService.loading = false;
 
         try {
-          const events = parseEvents(text.trim());
+          const events = root.parseEvents(text.trim());
           CalendarService.setEvents(events);
           Logger.d("Calendar", `Loaded ${events.length} events(s)`);
         } catch (e) {
