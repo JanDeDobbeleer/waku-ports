@@ -113,12 +113,12 @@ Panel {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
+  readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color fainter: Qt.darker(foreground, 2.1)
   // A literal gold: several themes' "yellow" is not yellow.
   readonly property color daylightMarker: "#E5C736"
-  readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
 
   // ---- the zoom
   // One number drives the list-to-globe transition: 0 is the list, 1 the globe.
@@ -399,7 +399,7 @@ Panel {
   }
 
   // Surrogate pairs rather than literal glyphs, which re-encoding can break.
-  function weatherGlyph(zone) {
+  function weatherGlyph(zone: var): string {
     var f = facts[Model.factsKey(zone)]
     if (!f || f.w === undefined) return ""
     var kind = Model.weatherKind(f.w)

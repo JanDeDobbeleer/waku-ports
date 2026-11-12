@@ -42,8 +42,8 @@ BarWidget {
       anchors.left: parent.left
       width: parent.width
       text: root.title
-      color: root.bar ? root.bar.barForeground : Commons.Color.foreground
-      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+      color: root.bar ? BarValues.barForeground(root.bar) : Commons.Color.foreground
+      font.family: root.bar ? BarValues.fontFamily(root.bar) : Style.font.family
       font.pixelSize: Style.font.body
       elide: Text.ElideRight
       opacity: 0.85

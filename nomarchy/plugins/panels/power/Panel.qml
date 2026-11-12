@@ -95,7 +95,7 @@ Panel {
   }
 
   readonly property color batteryFillColor: {
-    return root.bar ? root.bar.foreground : Commons.Color.foreground
+    return root.bar ? BarValues.foreground(root.bar) : Commons.Color.foreground
   }
 
   // Cute agent-flavored phrases shown in the hero status line, rotated on a
@@ -288,8 +288,8 @@ Panel {
             id: heroIcon
             textFormat: Text.PlainText
             text: root.batteryIcon()
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.display
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -309,8 +309,8 @@ Panel {
             Text {
               text: Commons.I18n.t("power.battery")
               textFormat: Text.PlainText
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -321,8 +321,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -335,8 +335,8 @@ Panel {
             id: heroPercent
             textFormat: Text.PlainText
             text: root.reading(root.batteryInfo.percentage) || "—"
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.displayLarge
             font.bold: true
             anchors.right: parent.right
@@ -355,7 +355,7 @@ Panel {
             id: barTrack
             anchors.fill: parent
             radius: height / 2
-            color: Qt.rgba(root.bar.foreground.r, root.bar.foreground.g, root.bar.foreground.b, 0.12)
+            color: Qt.rgba(BarValues.foreground(root.bar).r, BarValues.foreground(root.bar).g, BarValues.foreground(root.bar).b, 0.12)
           }
 
           Rectangle {
@@ -417,7 +417,7 @@ Panel {
         // The Windows power modes, through the engine's PowerProfiles.
         PanelSeparator {
           visible: root.profiles.length > 0
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
         }
 
         Column {
@@ -427,8 +427,8 @@ Panel {
 
           PanelSectionHeader {
             text: Commons.I18n.t("power.powerProfile")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: BarValues.foreground(root.bar)
+            fontFamily: BarValues.fontFamily(root.bar)
           }
 
           Row {
@@ -450,8 +450,8 @@ Panel {
                 iconSize: Style.font.title
                 text: Model.profileLabel(modelData, Commons.I18n.t)
                 fontSize: Style.font.bodySmall
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: BarValues.foreground(root.bar)
+                fontFamily: BarValues.fontFamily(root.bar)
                 horizontalPadding: Style.spacing.controlPaddingX
                 verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
                 bordered: true
@@ -487,16 +487,16 @@ Panel {
 
   component InfoLabel: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
+    color: BarValues.foreground(root.bar)
     opacity: 0.6
-    font.family: root.bar.fontFamily
+    font.family: BarValues.fontFamily(root.bar)
     font.pixelSize: Style.font.bodySmall
   }
 
   component InfoValue: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
-    font.family: root.bar.fontFamily
+    color: BarValues.foreground(root.bar)
+    font.family: BarValues.fontFamily(root.bar)
     font.pixelSize: Style.font.bodySmall
   }
 }

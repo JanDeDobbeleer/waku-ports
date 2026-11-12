@@ -15,17 +15,17 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Item panelFlick: panel.loadedContent ? panel.loadedContent.panelFlick : null
-  readonly property Item hero: panel.loadedContent ? panel.loadedContent.hero : null
-  readonly property Item column: panel.loadedContent ? panel.loadedContent.column : null
-  readonly property Item providerSections: panel.loadedContent ? panel.loadedContent.providerSections : null
+  readonly property Flickable panelFlick: panel.loadedContent ? panel.loadedContent.panelFlick : null
+  readonly property PanelHero hero: panel.loadedContent ? panel.loadedContent.hero : null
+  readonly property Column column: panel.loadedContent ? panel.loadedContent.column : null
+  readonly property Repeater providerSections: panel.loadedContent ? panel.loadedContent.providerSections : null
 
-  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
+  readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property color urgent: bar ? BarValues.urgent(bar) : Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color surface: Commons.Color.popups.background
   readonly property color track: Style.selectedFillFor(foreground, Commons.Color.accent)
-  readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
 
   // Every subscription on one page, limits first: the question this panel
   // answers is how much room is left, and where.
@@ -53,13 +53,13 @@ Panel {
     }
   }
 
-  function localStartBlocked(model) {
+  function localStartBlocked(model: var): bool {
     return !!model && model.unit !== "active" && model.unit !== "activating" && model.fits === false
   }
 
   // A start or stop runs steadily to 90% at the time the last one took, then
   // keeps creeping toward 98%, so one that runs long reads as slow, not stuck.
-  function phaseProgress(elapsed, expected) {
+  function phaseProgress(elapsed: real, expected: real): real {
     if (!(expected > 0)) return 0
     if (elapsed <= expected) return 0.9 * elapsed / expected
     return 0.9 + 0.08 * (1 - Math.exp(-(elapsed - expected) / expected))
@@ -202,7 +202,7 @@ Panel {
   // A line's rightmost button, where the cursor lands on it: a local model's
   // terminal while it runs, else its play; a subscription's terminal; the mark
   // only for a line with no button.
-  function lineStop(p) {
+  function lineStop(p: int): string {
     var provider = providers[p]
     if (!provider) return "provider"
     if (provider.localModel) {
@@ -236,7 +236,7 @@ Panel {
   }
 
   // The agent the cursor is in, by its position on the page.
-  function providerIndexOfKey() {
+  function providerIndexOfKey(): int {
     var target = keyTarget
     if (!target) return -1
     if (["provider", "providerSignin", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(target.kind) >= 0) return target.index
@@ -594,7 +594,7 @@ Panel {
     if (panel.loadedContent) panel.loadedContent.forceActiveFocus()
   }
 
-  function accountDetail(account) {
+  function accountDetail(account: var): string {
     var parts = []
     if (String(account.plan || "") !== "") parts.push(account.plan)
     if (account.resetCredits && Number(account.resetCredits.available) > 0)
@@ -604,7 +604,7 @@ Panel {
 
   // Only the agents `nomarchy-agent-account-add` signs in get the link; any
   // other agent's sign-in trouble stays text, with its own help to follow.
-  function supportsSignIn(p) {
+  function supportsSignIn(p: var): bool {
     for (let i = 0; i < addProviders.length; i++)
       if (p && addProviders[i].providerId === p.providerId) return true
     return false
@@ -612,7 +612,7 @@ Panel {
 
   // A lapsed or missing sign-in is something you can fix from here; any other
   // trouble is only reported.
-  function needsSignIn(item) {
+  function needsSignIn(item: var): bool {
     if (item && item.providerId && !supportsSignIn(item)) return false
     var status = String(item && item.usageStatusText || "")
     return status === "Sign-in expired" || status === "Waiting for auth"
@@ -621,7 +621,7 @@ Panel {
   // Whatever keeps the numbers from being current, said beside the last ones
   // known: they stay on show until a check succeeds again. A failed refresh
   // with numbers kept may leave the status empty and say why only in its help.
-  function usageNote(item) {
+  function usageNote(item: var): string {
     if (!item || needsSignIn(item)) return ""
     var status = String(item.usageStatusText || "")
     var stale = item.limitsStale === true || item.stale === true
@@ -713,12 +713,12 @@ Panel {
 
   // Claude spells its windows out ("Session (5-hour)"), Codex abbreviates
   // them ("5h window", "30m window"). Both have to land on the same record.
-  function windowIsLong(text) {
+  function windowIsLong(text: string): bool {
     return text.indexOf("week") >= 0 || text.indexOf("7-day") >= 0 || text.indexOf("seven") >= 0
       || text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0
   }
 
-  function windowSpanMs(label) {
+  function windowSpanMs(label: var): real {
     var text = String(label || "").toLowerCase()
     if (text.indexOf("month") >= 0 || text.indexOf("30-day") >= 0) return 30 * 24 * 3600 * 1000
     if (windowIsLong(text)) return 7 * 24 * 3600 * 1000
@@ -729,7 +729,7 @@ Panel {
     return 0
   }
 
-  function windowTitle(label) {
+  function windowTitle(label: var): string {
     var text = String(label || "").toLowerCase()
     if (text.indexOf("month") >= 0) return "Monthly"
     if (windowIsLong(text)) return "Weekly"
@@ -814,7 +814,7 @@ Panel {
     return isFinite(ms) ? ms - root.nowMs : -1
   }
 
-  function formatDuration(ms) {
+  function formatDuration(ms: real): string {
     if (!(ms > 0)) return Commons.I18n.t("agents.durationNow")
     var minutes = Math.floor(ms / 60000)
     var hours = Math.floor(minutes / 60)
@@ -826,7 +826,7 @@ Panel {
 
   // Window titles stay English in the records, where scopedPart() and the
   // collectors match on them; only what reaches the screen is translated.
-  function windowDisplayTitle(title) {
+  function windowDisplayTitle(title: var): string {
     var value = String(title || "")
     if (value === "Session") return Commons.I18n.t("agents.windowSession")
     if (value === "Weekly") return Commons.I18n.t("agents.windowWeekly")
@@ -840,7 +840,7 @@ Panel {
     return value
   }
 
-  function scopedAllowanceText(scoped, windowTitle) {
+  function scopedAllowanceText(scoped: var, windowTitle: var): string {
     var percent = Commons.I18n.formatNumber(Math.round(scoped.percent * 100))
     var value = String(windowTitle || "")
     if (value === "Session") return Commons.I18n.t("agents.scopedSession").arg(scoped.title).arg(percent)
@@ -851,7 +851,7 @@ Panel {
 
   // The collectors write a fixed English status; the ones that reach the
   // screen are shown in the current language.
-  function statusDisplayText(status) {
+  function statusDisplayText(status: var): string {
     var value = String(status || "")
     if (value === "Balance unavailable") return Commons.I18n.t("agents.balanceUnavailable")
     if (value === "Out of credits") return Commons.I18n.t("agents.outOfCredits")
@@ -868,7 +868,7 @@ Panel {
   // The usage collectors cache their help lines in English, so the fixed
   // ones are translated here; commands stay verbatim as arguments, and raw
   // error text from a provider passes through as it came.
-  function helpDisplayText(text) {
+  function helpDisplayText(text: var): string {
     var value = String(text || "")
     switch (value) {
     case "Run `claude auth login` to restore authoritative usage.":
@@ -902,7 +902,7 @@ Panel {
     return !!b && b.funded > 0 && b.remaining / b.funded <= 0.1
   }
 
-  function currencyPrefix(currency) {
+  function currencyPrefix(currency: var): string {
     var code = String(currency || "USD").toUpperCase()
     if (code === "USD") return "$"
     if (code === "EUR") return "€"
@@ -910,7 +910,7 @@ Panel {
     return code + " "
   }
 
-  function formatMoney(value, currency) {
+  function formatMoney(value: var, currency: var): string {
     var amount = Number(value)
     if (!isFinite(amount)) amount = 0
     return currencyPrefix(currency) + Commons.I18n.formatNumber(amount, 2)

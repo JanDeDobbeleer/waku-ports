@@ -213,13 +213,13 @@ QtObject {
   property var spacingOverrides: ({})
   readonly property real effectiveSpacingScale: spacingScale * (spacingScaleWithFont ? fontScale : 1)
 
-  function spaceReal(px) {
+  function spaceReal(px: var): real {
     var n = Number(px)
     if (!isFinite(n) || n <= 0) return 0
     return n * effectiveSpacingScale
   }
 
-  function space(px) {
+  function space(px: var): real {
     var n = spaceReal(px)
     if (n <= 0) return 0
     return Math.max(1, Math.round(n))

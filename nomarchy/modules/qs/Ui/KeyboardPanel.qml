@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -172,8 +173,8 @@ PanelWindow {
   // actually reactive — mapToItem on its own is a one-shot.
   TransformWatcher {
     id: anchorWatcher
-    a: anchorWindow ? anchorWindow.contentItem : null
-    b: anchorItem
+    a: root.anchorWindow ? root.anchorWindow.contentItem : null
+    b: root.anchorItem
   }
 
   // Anchor item's position within the bar's content surface. For a

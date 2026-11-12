@@ -102,7 +102,7 @@ Item {
   // and its masked layers have presented, so the picker lands in one
   // complete frame instead of flashing its images in as each asynchronous
   // decode and layer upload finishes.
-  function allPreviewsSettled() {
+  function allPreviewsSettled(): bool {
     if (!opened || !imagesLoaded || layoutSettled || imageArray.length === 0 || imageCards.count === 0) return false
     for (let i = 0; i < imageCards.count; i++) {
       let item = imageCards.itemAt(i)
@@ -533,7 +533,7 @@ Item {
     return nameForPath(currentPath())
   }
 
-  function canDeleteSelectedTheme() {
+  function canDeleteSelectedTheme(): bool {
     return false // Windows port: nomarchy-theme-remove does not exist
   }
 

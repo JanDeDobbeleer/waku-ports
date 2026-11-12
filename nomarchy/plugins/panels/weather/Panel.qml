@@ -591,8 +591,8 @@ Panel {
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: 5
             text: root.label || "—"
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             // Decorative condition emoji; intentionally larger than the
             // Style.font.* scale's displayLarge (28).
             // The Nerd Font condition glyphs sit small in their em box, so 64 drew a cloud ~35 px wide.
@@ -610,8 +610,8 @@ Panel {
               id: tempBig
               textFormat: Text.PlainText
               text: root.reportTempNum || "—"
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
               // Hero temperature read-out; deliberately oversized, outside
               // the Style.font.* scale.
               font.pixelSize: 56
@@ -620,8 +620,8 @@ Panel {
             Text {
               textFormat: Text.PlainText
               text: root.current ? root.tempUnit : ""
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.display
               anchors.top: tempBig.top
               anchors.topMargin: Style.space(10)
@@ -650,16 +650,16 @@ Panel {
 
             Text {
               text: ""  // nf-fa-map_marker
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.body
               anchors.verticalCenter: parent.verticalCenter
             }
             Text {
               textFormat: Text.PlainText
               text: (root.reportLocation || "").toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.body
               font.letterSpacing: 1
               anchors.verticalCenter: parent.verticalCenter
@@ -675,8 +675,8 @@ Panel {
               width: Style.space(190)
               enabled: !root.savingLocation
               placeholderText: Commons.I18n.t("weather.searchCity")
-              foreground: root.bar.foreground
-              font.family: root.bar.fontFamily
+              foreground: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
 
               onTextChanged: if (root.editingLocation && !root.savingLocation) geocodeDebounce.restart()
 
@@ -704,14 +704,14 @@ Panel {
               height: Style.space(18)
               anchors.verticalCenter: parent.verticalCenter
               radius: Math.min(4, Style.cornerRadius)
-              color: !root.savingLocation && clearLocationArea.containsMouse ? Style.hoverFillFor(root.bar.foreground, Commons.Color.accent) : "transparent"
+              color: !root.savingLocation && clearLocationArea.containsMouse ? Style.hoverFillFor(BarValues.foreground(root.bar), Commons.Color.accent) : "transparent"
 
               Text {
                 textFormat: Text.PlainText
                 anchors.centerIn: parent
                 text: root.savingLocation ? "󰦖" : "✕"
-                font.family: root.bar.fontFamily
-                color: Qt.darker(root.bar.foreground, 1.4)
+                font.family: BarValues.fontFamily(root.bar)
+                color: Qt.darker(BarValues.foreground(root.bar), 1.4)
                 font.pixelSize: Style.font.bodySmall
 
                 RotationAnimator on rotation {
@@ -743,16 +743,16 @@ Panel {
               Text {
                 text: Commons.I18n.t("weather.feels")
                 textFormat: Text.PlainText
-                color: Qt.darker(root.bar.foreground, 1.5)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.bodySmall
                 font.letterSpacing: 1
               }
               Text {
                 textFormat: Text.PlainText
                 text: root.reportFeels
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.title
               }
             }
@@ -762,16 +762,16 @@ Panel {
               Text {
                 text: Commons.I18n.t("weather.wind")
                 textFormat: Text.PlainText
-                color: Qt.darker(root.bar.foreground, 1.5)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.bodySmall
                 font.letterSpacing: 1
               }
               Text {
                 textFormat: Text.PlainText
                 text: root.reportWind
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.title
               }
             }
@@ -781,16 +781,16 @@ Panel {
               Text {
                 text: Commons.I18n.t("weather.humid")
                 textFormat: Text.PlainText
-                color: Qt.darker(root.bar.foreground, 1.5)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.bodySmall
                 font.letterSpacing: 1
               }
               Text {
                 textFormat: Text.PlainText
                 text: root.reportHumidity
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.title
               }
             }
@@ -814,7 +814,7 @@ Panel {
             width: parent.width
             height: suggestionRow.implicitHeight + Style.space(12)
             radius: Style.cornerRadius
-            color: index === root.suggestionIndex ? Style.hoverFillFor(root.bar.foreground, Commons.Color.accent) : "transparent"
+            color: index === root.suggestionIndex ? Style.hoverFillFor(BarValues.foreground(root.bar), Commons.Color.accent) : "transparent"
 
             Row {
               id: suggestionRow
@@ -826,16 +826,16 @@ Panel {
               Text {
                 textFormat: Text.PlainText
                 text: suggestionCell.modelData.name
-                color: suggestionCell.index === root.suggestionIndex ? Style.hoverStateColor(root.bar.foreground, Commons.Color.accent) : root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: suggestionCell.index === root.suggestionIndex ? Style.hoverStateColor(BarValues.foreground(root.bar), Commons.Color.accent) : BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.body
               }
               Text {
                 textFormat: Text.PlainText
                 visible: text !== ""
                 text: suggestionCell.modelData.description
-                color: Qt.darker(root.bar.foreground, 1.5)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.bodySmall
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -856,8 +856,8 @@ Panel {
         visible: !root.current
         text: Commons.I18n.t("weather.fetching")
         textFormat: Text.PlainText
-        color: Qt.darker(root.bar.foreground, 1.5)
-        font.family: root.bar.fontFamily
+        color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.bodySmall
         font.italic: true
       }
@@ -867,7 +867,7 @@ Panel {
         visible: root.forecastDays.length > 0
         width: parent.width
         height: Style.spacing.hairline
-        color: root.bar.foreground
+        color: BarValues.foreground(root.bar)
         opacity: 0.12
       }
 
@@ -896,8 +896,8 @@ Panel {
                 textFormat: Text.PlainText
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.dayIcon(forecastDayCell.modelData)
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Math.round(Style.font.display * 1.7)
               }
 
@@ -908,8 +908,8 @@ Panel {
                 Text {
                   textFormat: Text.PlainText
                   text: root.dayName(forecastDayCell.modelData.date).toUpperCase()
-                  color: Qt.darker(root.bar.foreground, 1.4)
-                  font.family: root.bar.fontFamily
+                  color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+                  font.family: BarValues.fontFamily(root.bar)
                   font.pixelSize: Style.font.caption
                   font.letterSpacing: 1
                 }
@@ -920,15 +920,15 @@ Panel {
                   Text {
                     textFormat: Text.PlainText
                     text: root.bareTempForDay(forecastDayCell.modelData, "max")
-                    color: root.bar.foreground
-                    font.family: root.bar.fontFamily
+                    color: BarValues.foreground(root.bar)
+                    font.family: BarValues.fontFamily(root.bar)
                     font.pixelSize: Style.font.body
                   }
                   Text {
                     textFormat: Text.PlainText
                     text: root.bareTempForDay(forecastDayCell.modelData, "min")
-                    color: Qt.darker(root.bar.foreground, 1.5)
-                    font.family: root.bar.fontFamily
+                    color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                    font.family: BarValues.fontFamily(root.bar)
                     font.pixelSize: Style.font.body
                   }
                 }

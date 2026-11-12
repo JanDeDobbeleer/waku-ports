@@ -21,8 +21,8 @@ BarWidget {
   readonly property real gap: Style.space(2)
   // Past this many programs the list stops growing: the rest show as "+N".
   readonly property int maxVisible: Number(setting("maxVisible", 12))
-  readonly property color ink: root.bar ? root.bar.barForeground : Commons.Color.foreground
-  readonly property string family: root.bar ? root.bar.fontFamily : Style.font.family
+  readonly property color ink: root.bar ? BarValues.barForeground(root.bar) : Commons.Color.foreground
+  readonly property string family: root.bar ? BarValues.fontFamily(root.bar) : Style.font.family
   // The attached Window is only available on an Item, so it is read here and handed to the model.
   readonly property var hostWindow: Window.window
 

@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
@@ -90,6 +91,7 @@ Item {
             model: [root.cancelText, root.confirmText]
 
             BorderSurface {
+              id: confirmOption
               required property int index
               required property string modelData
 
@@ -109,8 +111,8 @@ Item {
               Text {
                 textFormat: Text.PlainText
                 anchors.centerIn: parent
-                text: modelData
-                color: destructive ? (selected ? Commons.Color.urgent : root.foreground) : (selected ? root.selectedText : root.foreground)
+                text: confirmOption.modelData
+                color: confirmOption.destructive ? (confirmOption.selected ? Commons.Color.urgent : root.foreground) : (confirmOption.selected ? root.selectedText : root.foreground)
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
               }
@@ -119,9 +121,9 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onEntered: root.selectedIndex = index
+                onEntered: root.selectedIndex = confirmOption.index
                 onClicked: {
-                  if (index === 0) root.canceled()
+                  if (confirmOption.index === 0) root.canceled()
                   else root.confirmed()
                 }
               }

@@ -39,10 +39,10 @@ Panel {
     Commons.I18n.t("dropbox.phrase10")
   ]
   readonly property string heroPhraseText: activePhrases[phraseIndex % activePhrases.length]
-  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
-  readonly property color urgent: bar ? bar.urgent : Commons.Color.urgent
+  readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property color urgent: bar ? BarValues.urgent(bar) : Commons.Color.urgent
   readonly property color dim: Qt.darker(foreground, 1.55)
-  readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   readonly property color iconColor: dropbox.authenticated && dropbox.active ? foreground : dim
   readonly property string toggleHint: dropbox.active ? Commons.I18n.t("dropbox.pauseSyncing") : Commons.I18n.t("dropbox.resumeSyncing")
   readonly property color barIconColor: dropbox.authenticated && dropbox.active ? barForeground : Qt.darker(barForeground, 1.55)

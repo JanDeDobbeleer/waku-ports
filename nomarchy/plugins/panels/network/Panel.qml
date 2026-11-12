@@ -296,8 +296,8 @@ Panel {
   // `selectedIndex`). Mouse hover and keyboard nav both mutate this state
   // at the root; items never read containsMouse for visuals. See
   // CursorSurface for the shared chrome shared by rows and pills.
-  readonly property color hoverFill: bar ? Style.hoverFillFor(bar.foreground, Commons.Color.accent) : "transparent"
-  readonly property color selectedFill: bar ? Style.selectedFillFor(bar.foreground, Commons.Color.accent) : "transparent"
+  readonly property color hoverFill: bar ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
+  readonly property color selectedFill: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent) : "transparent"
 
   // scannerEnabled lives on the shared WifiDevice, which has no reference
   // counting, and a bar widget is instantiated once per monitor. Tracking the
@@ -409,7 +409,7 @@ Panel {
     return Model.canForgetNetwork(net)
   }
 
-  function canShareNetwork(net) {
+  function canShareNetwork(net: var): bool {
     if (!net || !net.connected) return false
     return net.security !== WifiSecurityType.Wpa2Eap && net.security !== WifiSecurityType.WpaEap
   }
@@ -1279,8 +1279,8 @@ Panel {
           id: heroIcon
           textFormat: Text.PlainText
           text: root.icon
-          color: root.restricted ? root.bar.urgent : root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: root.restricted ? BarValues.urgent(root.bar) : BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.display
           opacity: root.networkManagerAvailable ? 1.0 : 0.5
           anchors.left: parent.left
@@ -1300,8 +1300,8 @@ Panel {
             visible: root.canShareWifi
             iconText: "󰐲"
             tooltipText: Commons.I18n.t("network.showQrCode")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: BarValues.foreground(root.bar)
+            fontFamily: BarValues.fontFamily(root.bar)
             fontSize: Style.font.subtitle * 1.5
             hasCursor: root.qrHeaderHasCursor
             Layout.alignment: Qt.AlignVCenter
@@ -1314,8 +1314,8 @@ Panel {
             visible: root.canRunSpeedTest
             iconText: "󰓅"
             tooltipText: Commons.I18n.t("network.runSpeedTest")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: BarValues.foreground(root.bar)
+            fontFamily: BarValues.fontFamily(root.bar)
             fontSize: Style.font.subtitle * 1.5
             hasCursor: root.speedHeaderHasCursor
             Layout.alignment: Qt.AlignVCenter
@@ -1328,7 +1328,7 @@ Panel {
             visible: root.canToggleWifi
             checked: Networking.wifiEnabled
             hasCursor: root.toggleHeaderHasCursor
-            foreground: root.bar.foreground
+            foreground: BarValues.foreground(root.bar)
             Layout.alignment: Qt.AlignVCenter
             onHovered: function(on) { if (on) root.setHeaderCursor(root.toggleHeaderIndex) }
             onToggled: root.toggleNetwork()
@@ -1336,7 +1336,7 @@ Panel {
             PanelToolTip {
               visible: powerSwitch.containsMouse
               text: root.toggleHint
-              fontFamily: root.bar.fontFamily
+              fontFamily: BarValues.fontFamily(root.bar)
             }
           }
         }
@@ -1368,8 +1368,8 @@ Panel {
             readonly property string detail: root.headerDetail()
 
             text: heroSsid.detail !== "" ? heroSsid.title + " (" + heroSsid.detail + ")" : heroSsid.title
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.title
             font.bold: true
             elide: Text.ElideRight
@@ -1393,8 +1393,8 @@ Panel {
               return ""
             }
             visible: text !== ""
-            color: root.restricted ? root.bar.urgent : Qt.darker(root.bar.foreground, 1.4)
-            font.family: root.bar.fontFamily
+            color: root.restricted ? BarValues.urgent(root.bar) : Qt.darker(BarValues.foreground(root.bar), 1.4)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.caption
             font.bold: true
             font.letterSpacing: 1.2
@@ -1410,9 +1410,9 @@ Panel {
         width: parent.width
         text: Commons.I18n.t("network.openCaptivePortal")
         iconText: "󰏌"
-        foreground: root.bar.urgent
-        accent: root.bar.urgent
-        fontFamily: root.bar.fontFamily
+        foreground: BarValues.urgent(root.bar)
+        accent: BarValues.urgent(root.bar)
+        fontFamily: BarValues.fontFamily(root.bar)
         verticalPadding: Style.space(10)
         bordered: true
         active: true
@@ -1444,12 +1444,12 @@ Panel {
           InfoLabel { text: Commons.I18n.t("network.ping") }
           DetailValue {
             text: root.formatPingLatency(root.internetPingLatency)
-            color: root.hasInternetPing && root.internetPingPacketLoss > 0 ? root.bar.urgent : root.bar.foreground
+            color: root.hasInternetPing && root.internetPingPacketLoss > 0 ? BarValues.urgent(root.bar) : BarValues.foreground(root.bar)
           }
           InfoLabel { text: Commons.I18n.t("network.packetLoss") }
           DetailValue {
             text: root.formatPacketLoss(root.internetPingPacketLoss)
-            color: root.hasInternetPing && root.internetPingPacketLoss > 0 ? root.bar.urgent : root.bar.foreground
+            color: root.hasInternetPing && root.internetPingPacketLoss > 0 ? BarValues.urgent(root.bar) : BarValues.foreground(root.bar)
           }
 
           InfoLabel { text: Commons.I18n.t("network.receiving") }
@@ -1481,7 +1481,7 @@ Panel {
       // on more than one band -- a single-band AP has nothing to toggle.
       PanelSeparator {
         visible: root.canSelectBand
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
       }
 
       Column {
@@ -1499,8 +1499,8 @@ Panel {
           PanelSectionHeader {
             id: bandHeader
             text: root.bandSectionTitle
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: BarValues.foreground(root.bar)
+            fontFamily: BarValues.fontFamily(root.bar)
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
           }
@@ -1514,8 +1514,8 @@ Panel {
             PanelSectionHeader {
               id: bandAutoLabel
               text: Commons.I18n.t("network.automatic")
-              foreground: root.bar.foreground
-              fontFamily: root.bar.fontFamily
+              foreground: BarValues.foreground(root.bar)
+              fontFamily: BarValues.fontFamily(root.bar)
               anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -1533,7 +1533,7 @@ Panel {
               checked: !root.bandPinned
               busy: root.bandBusy
               hasCursor: root.cursorActive && root.focusSection === "band" && root.bandAutoFocused
-              foreground: root.bar.foreground
+              foreground: BarValues.foreground(root.bar)
               onToggled: root.toggleBandAuto()
 
               onHovered: function(isHovered) {
@@ -1548,7 +1548,7 @@ Panel {
                 text: root.bandPinned
                   ? Commons.I18n.t("network.bandAutoTooltip")
                   : Commons.I18n.t("network.stayOnBand").arg(root.bandLabel(root.bandCurrent))
-                fontFamily: root.bar.fontFamily
+                fontFamily: BarValues.fontFamily(root.bar)
               }
             }
           }
@@ -1612,7 +1612,7 @@ Panel {
       // DNS provider selection. Windows port: hidden, nothing here can set DNS (no resolvectl).
       PanelSeparator {
         visible: false
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
       }
 
       Column {
@@ -1622,8 +1622,8 @@ Panel {
 
         PanelSectionHeader {
           text: Commons.I18n.t("network.dnsProvider")
-          foreground: root.bar.foreground
-          fontFamily: root.bar.fontFamily
+          foreground: BarValues.foreground(root.bar)
+          fontFamily: BarValues.fontFamily(root.bar)
         }
 
         Row {
@@ -1672,14 +1672,14 @@ Panel {
       // Wi-Fi networks (only if a Wi-Fi station is available).
       PanelSeparator {
         visible: root.wifiStationAvailable
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
       }
 
       PanelSectionHeader {
         visible: root.wifiStationAvailable && root.scanning
         text: Commons.I18n.t("network.scanningWifi")
-        foreground: root.bar.foreground
-        fontFamily: root.bar.fontFamily
+        foreground: BarValues.foreground(root.bar)
+        fontFamily: BarValues.fontFamily(root.bar)
       }
 
       // Scrollable network list — cap the height so a busy neighbourhood
@@ -1722,8 +1722,8 @@ Panel {
             PanelSectionHeader {
               visible: wifiDelegate.sectionTitle !== ""
               text: wifiDelegate.sectionTitle
-              foreground: root.bar.foreground
-              fontFamily: root.bar.fontFamily
+              foreground: BarValues.foreground(root.bar)
+              fontFamily: BarValues.fontFamily(root.bar)
               height: visible ? implicitHeight : 0
             }
 
@@ -1751,8 +1751,8 @@ Panel {
     text: root.bandLabel(band)
     tooltipText: root.bandTooltip(band)
     fontSize: Style.font.bodySmall
-    foreground: root.bar.foreground
-    fontFamily: root.bar.fontFamily
+    foreground: BarValues.foreground(root.bar)
+    fontFamily: BarValues.fontFamily(root.bar)
     horizontalPadding: Style.spacing.controlPaddingX
     verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
     bordered: true
@@ -1782,8 +1782,8 @@ Panel {
 
     text: provider === "Custom" ? Commons.I18n.t("network.dnsCustom") : provider
     fontSize: Style.font.bodySmall
-    foreground: root.bar.foreground
-    fontFamily: root.bar.fontFamily
+    foreground: BarValues.foreground(root.bar)
+    fontFamily: BarValues.fontFamily(root.bar)
     horizontalPadding: Style.spacing.controlPaddingX
     verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
     bordered: true
@@ -1824,7 +1824,7 @@ Panel {
 
     hasCursor: root.cursorActive && isSelected && !root.wifiActionFocused
     current: isConnected
-    foreground: root.bar.foreground
+    foreground: BarValues.foreground(root.bar)
     fill: root.hoverFill
     currentFill: root.selectedFill
     // Gate on the matching *Kind/*Reason being non-empty so a hidden-SSID
@@ -1873,11 +1873,11 @@ Panel {
     }
 
     readonly property color statusColor: {
-      if (isFailed) return root.bar.urgent
-      if (isBusy) return root.bar.foreground
-      if (isConnected && root.kind === "wifi" && root.hasCaptivePortal) return root.bar.urgent
-      if (isConnected) return root.bar.foreground
-      return Qt.darker(root.bar.foreground, 1.5)
+      if (isFailed) return BarValues.urgent(root.bar)
+      if (isBusy) return BarValues.foreground(root.bar)
+      if (isConnected && root.kind === "wifi" && root.hasCaptivePortal) return BarValues.urgent(root.bar)
+      if (isConnected) return BarValues.foreground(root.bar)
+      return Qt.darker(BarValues.foreground(root.bar), 1.5)
     }
 
     implicitHeight: rowBody.implicitHeight + (isPasswordOpen ? passwordPanel.implicitHeight + Style.spacing.md : 0)
@@ -1933,7 +1933,7 @@ Panel {
         text: row.net ? Model.connectionIcon("wifi", row.net.signal,
           row.isConnected && root.kind === "wifi" ? root.connectivity : "") : ""
         color: row.statusColor
-        font.family: root.bar.fontFamily
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.title
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -1958,16 +1958,16 @@ Panel {
           anchors.verticalCenter: parent.verticalCenter
           horizontalAlignment: Text.AlignHCenter
           text: row.forgetVisible ? "󰅙" : "󰌾"
-          color: row.forgetVisible ? root.bar.urgent : Qt.darker(root.bar.foreground, 1.4)
-          font.family: root.bar.fontFamily
+          color: row.forgetVisible ? BarValues.urgent(root.bar) : Qt.darker(BarValues.foreground(root.bar), 1.4)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.subtitle
         }
 
         BorderSurface {
           anchors.fill: parent
           visible: row.forgetFocused
-          color: Style.hoverFillFor(root.bar.urgent, root.bar.urgent)
-          borderSpec: Border.controlSpec("hover-cursor", root.bar.urgent, root.bar.urgent)
+          color: Style.hoverFillFor(BarValues.urgent(root.bar), BarValues.urgent(root.bar))
+          borderSpec: Border.controlSpec("hover-cursor", BarValues.urgent(root.bar), BarValues.urgent(root.bar))
           radius: Style.cornerRadius
           z: -1
         }
@@ -1986,7 +1986,7 @@ Panel {
         PanelToolTip {
           visible: rightMouse.containsMouse || row.forgetFocused
           text: Commons.I18n.t("network.forgetNetwork")
-          fontFamily: root.bar.fontFamily
+          fontFamily: BarValues.fontFamily(root.bar)
         }
       }
 
@@ -2002,8 +2002,8 @@ Panel {
         Text {
           textFormat: Text.PlainText
           text: row.net ? (row.net.ssid || Commons.I18n.t("network.hidden")) : ""
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.body
           elide: Text.ElideRight
           width: parent.width
@@ -2019,7 +2019,7 @@ Panel {
           visible: row.statusText !== ""
           height: visible ? implicitHeight : 0
           color: row.statusColor
-          font.family: root.bar.fontFamily
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
           width: parent.width
@@ -2064,7 +2064,7 @@ Panel {
         placeholderText: Commons.I18n.t("network.identity")
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
         horizontalPadding: Style.spacing.controlGap
         verticalPadding: Style.spacing.controlPaddingY
         enabled: !row.isBusy
@@ -2090,7 +2090,7 @@ Panel {
         placeholderText: Commons.I18n.t("network.passphrase")
         font.family: Style.font.family
         font.pixelSize: Style.font.body
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
         horizontalPadding: Style.spacing.controlGap
         verticalPadding: Style.spacing.controlPaddingY
         enabled: !row.isBusy
@@ -2111,8 +2111,8 @@ Panel {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         height: Style.spacing.controlHeight
-        color: Style.normalFillFor(root.bar.foreground)
-        borderSpec: Border.controlSpec("normal", root.bar.foreground, Commons.Color.accent)
+        color: Style.normalFillFor(BarValues.foreground(root.bar))
+        borderSpec: Border.controlSpec("normal", BarValues.foreground(root.bar), Commons.Color.accent)
         radius: Style.cornerRadius
 
         Text {
@@ -2121,8 +2121,8 @@ Panel {
           horizontalAlignment: Text.AlignHCenter
           verticalAlignment: Text.AlignVCenter
           text: row.isFailed ? Commons.I18n.t("network.wrongPassword") : Commons.I18n.t("network.connecting")
-          color: row.isFailed ? root.bar.urgent : root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: row.isFailed ? BarValues.urgent(root.bar) : BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.bodySmall
         }
       }
@@ -2138,8 +2138,8 @@ Panel {
         enabled: row.net && pwField.text.length > 0 && (!row.isEnterprise || idField.text.length > 0)
         iconText: "󰄬"
         tooltipText: Commons.I18n.t("network.connect")
-        foreground: root.bar.foreground
-        fontFamily: root.bar.fontFamily
+        foreground: BarValues.foreground(root.bar)
+        fontFamily: BarValues.fontFamily(root.bar)
         onClicked: row.submitCredentials()
       }
     }
@@ -2166,22 +2166,22 @@ Panel {
     PanelToolTip {
       visible: valueMouse.enabled && valueMouse.containsMouse
       text: detailValue.tooltipText
-      fontFamily: root.bar.fontFamily
+      fontFamily: BarValues.fontFamily(root.bar)
     }
   }
 
   component InfoLabel: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
+    color: BarValues.foreground(root.bar)
     opacity: 0.6
-    font.family: root.bar.fontFamily
+    font.family: BarValues.fontFamily(root.bar)
     font.pixelSize: Style.font.bodySmall
   }
 
   component InfoValue: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
-    font.family: root.bar.fontFamily
+    color: BarValues.foreground(root.bar)
+    font.family: BarValues.fontFamily(root.bar)
     font.pixelSize: Style.font.bodySmall
   }
 }

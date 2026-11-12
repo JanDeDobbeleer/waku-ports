@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Shapes
 import qs.Commons
@@ -31,6 +32,7 @@ Item {
   }
 
   component Tile: ShapePath {
+    id: tile
     property real cx: 0
     property real cy: 0
     readonly property real tileWidth: root.width * 0.50
@@ -40,9 +42,9 @@ Item {
     strokeWidth: 0
     startX: cx
     startY: cy - tileHeight / 2
-    PathLine { x: cx + tileWidth / 2; y: cy }
-    PathLine { x: cx; y: cy + tileHeight / 2 }
-    PathLine { x: cx - tileWidth / 2; y: cy }
-    PathLine { x: cx; y: cy - tileHeight / 2 }
+    PathLine { x: tile.cx + tile.tileWidth / 2; y: tile.cy }
+    PathLine { x: tile.cx; y: tile.cy + tile.tileHeight / 2 }
+    PathLine { x: tile.cx - tile.tileWidth / 2; y: tile.cy }
+    PathLine { x: tile.cx; y: tile.cy - tile.tileHeight / 2 }
   }
 }

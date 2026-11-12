@@ -862,7 +862,7 @@ Item {
     root.loadProviderForMenu(id)
   }
 
-  function goBack() {
+  function goBack(): bool {
     if (root.activeMenu === "root") return false
 
     if (root.navStack.length > 0) {

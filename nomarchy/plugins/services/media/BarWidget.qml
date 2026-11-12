@@ -37,8 +37,8 @@ BarWidget {
       textFormat: Text.PlainText
       anchors.verticalCenter: parent.verticalCenter
       text: root.playIcon
-      color: root.activePlayer && root.activePlayer.isPlaying ? root.bar.barForeground : Qt.darker(root.bar.barForeground, 1.5)
-      font.family: root.bar.fontFamily
+      color: root.activePlayer && root.activePlayer.isPlaying ? BarValues.barForeground(root.bar) : Qt.darker(BarValues.barForeground(root.bar), 1.5)
+      font.family: BarValues.fontFamily(root.bar)
       font.pixelSize: Style.font.body
       Behavior on color {
         enabled: !root.bar || root.bar.foregroundAnimationEnabled
@@ -58,8 +58,8 @@ BarWidget {
         id: labelText
         textFormat: Text.PlainText
         text: root.title + (root.artist ? "  ·  " + root.artist : "")
-        color: root.bar.barForeground
-        font.family: root.bar.fontFamily
+        color: BarValues.barForeground(root.bar)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.body
         anchors.verticalCenter: parent.verticalCenter
 
@@ -129,8 +129,8 @@ BarWidget {
           width: Style.space(64)
           height: Style.space(64)
           radius: Style.spacing.labelGap
-          color: Style.normalFillFor(root.bar.foreground, Commons.Color.accent)
-          borderSpec: Border.controlSpec("normal", root.bar.foreground, Commons.Color.accent)
+          color: Style.normalFillFor(BarValues.foreground(root.bar), Commons.Color.accent)
+          borderSpec: Border.controlSpec("normal", BarValues.foreground(root.bar), Commons.Color.accent)
 
           // Decode the art at the size it is drawn, not the size the player
           // serves it at. The popup is built on every monitor at startup.
@@ -146,8 +146,8 @@ BarWidget {
             anchors.centerIn: parent
             visible: !root.activePlayer || !root.activePlayer.trackArtUrl
             text: "󰝚"
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.displayLarge
           }
         }
@@ -159,8 +159,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.title || I18n.t("media.nothingPlaying")
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.subtitle
             font.bold: true
             elide: Text.ElideRight
@@ -170,8 +170,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.artist
-            color: Qt.darker(root.bar.foreground, 1.3)
-            font.family: root.bar.fontFamily
+            color: Qt.darker(BarValues.foreground(root.bar), 1.3)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.bodySmall
             elide: Text.ElideRight
             width: parent.width
@@ -181,8 +181,8 @@ BarWidget {
           Text {
             textFormat: Text.PlainText
             text: root.activePlayer && root.activePlayer.trackAlbum ? root.activePlayer.trackAlbum : ""
-            color: Qt.darker(root.bar.foreground, 1.6)
-            font.family: root.bar.fontFamily
+            color: Qt.darker(BarValues.foreground(root.bar), 1.6)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.caption
             elide: Text.ElideRight
             width: parent.width
@@ -201,7 +201,7 @@ BarWidget {
 
         Button {
           iconText: "󰒮"
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
           horizontalPadding: Style.spacing.controlPaddingX
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoPrevious
@@ -211,7 +211,7 @@ BarWidget {
 
         Button {
           iconText: root.activePlayer && root.activePlayer.isPlaying ? "󰏤" : "󰐊"
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
           horizontalPadding: Style.spacing.panelGap
           verticalPadding: Style.spacing.controlPaddingY
           iconSize: Style.font.iconLarge
@@ -222,7 +222,7 @@ BarWidget {
 
         Button {
           iconText: "󰒭"
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
           horizontalPadding: Style.spacing.controlPaddingX
           verticalPadding: Style.spacing.controlPaddingY
           enabled: root.activePlayer && root.activePlayer.canGoNext
@@ -233,7 +233,7 @@ BarWidget {
 
       PanelSeparator {
         visible: root.sourcePlayers.length > 1
-        foreground: root.bar.foreground
+        foreground: BarValues.foreground(root.bar)
       }
 
       Column {
@@ -258,8 +258,8 @@ BarWidget {
             width: sourceList.width
             height: sourceInner.implicitHeight + Style.space(10)
             radius: Style.spacing.labelGap
-            color: selected ? Style.selectedFillFor(root.bar.foreground, Commons.Color.accent) : "transparent"
-            borderSpec: selected ? Border.controlSpec("normal", root.bar.foreground, Commons.Color.accent) : Border.none()
+            color: selected ? Style.selectedFillFor(BarValues.foreground(root.bar), Commons.Color.accent) : "transparent"
+            borderSpec: selected ? Border.controlSpec("normal", BarValues.foreground(root.bar), Commons.Color.accent) : Border.none()
 
             Row {
               id: sourceInner
@@ -273,8 +273,8 @@ BarWidget {
               Text {
                 textFormat: Text.PlainText
                 text: sourceRow.player && sourceRow.player.isPlaying ? "󰏤" : "󰐊"
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.body
                 width: Style.space(18)
                 horizontalAlignment: Text.AlignHCenter
@@ -289,8 +289,8 @@ BarWidget {
                 Text {
                   textFormat: Text.PlainText
                   text: sourceRow.sourceTitle
-                  color: root.bar.foreground
-                  font.family: root.bar.fontFamily
+                  color: BarValues.foreground(root.bar)
+                  font.family: BarValues.fontFamily(root.bar)
                   font.pixelSize: Style.font.bodySmall
                   font.bold: sourceRow.selected
                   elide: Text.ElideRight
@@ -300,8 +300,8 @@ BarWidget {
                 Text {
                   textFormat: Text.PlainText
                   text: sourceRow.sourceDetail
-                  color: Qt.darker(root.bar.foreground, 1.5)
-                  font.family: root.bar.fontFamily
+                  color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+                  font.family: BarValues.fontFamily(root.bar)
                   font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
                   width: parent.width

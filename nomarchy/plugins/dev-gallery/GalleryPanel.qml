@@ -119,7 +119,7 @@ Item {
     "toggle", "toggle-switch", "dropdown", "searchable-dropdown", "composed"
   ]
 
-  function sectionCount(section) {
+  function sectionCount(section: string): int {
     switch (section) {
       case "cursor-surface":      return 3
       case "button":              return 5
@@ -140,7 +140,7 @@ Item {
 
   // True for sections whose primitives lay out horizontally (a row of
   // buttons) — j/k jumps to the next/prev section, h/l walks within the row.
-  function sectionIsHorizontal(section) {
+  function sectionIsHorizontal(section: string): bool {
     return section === "button"
       || section === "button-group"
       || section === "panel-action-button"
@@ -148,7 +148,7 @@ Item {
   }
 
   // True for sections where h/l should adjust a value rather than walk.
-  function sectionAdjustsValue(section) {
+  function sectionAdjustsValue(section: string): bool {
     return section === "slider"
   }
 

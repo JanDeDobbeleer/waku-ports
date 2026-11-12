@@ -1,3 +1,4 @@
+import "BarValues.js" as BarValues
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
@@ -19,7 +20,7 @@ Item {
   property bool popoutSwitchClosing: false
 
   readonly property bool opened: panelController.open
-  readonly property color barForeground: bar ? bar.barForeground : Commons.Color.foreground
+  readonly property color barForeground: bar ? BarValues.barForeground(bar) : Commons.Color.foreground
 
   function open() { panelController.show() }
   function close() { panelController.hide() }

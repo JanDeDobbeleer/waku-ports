@@ -106,13 +106,13 @@ Panel {
   readonly property string toggleHint: root.adapter && root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOff") : Commons.I18n.t("bluetooth.turnOn")
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent)
     : "transparent"
 
-  function sectionCount(section) {
+  function sectionCount(section: string): int {
     if (section === "connected") return connectedDevices.length
     if (section === "known") return knownDevices.length
     if (section === "discovered") return discoveredDevices.length
@@ -714,8 +714,8 @@ Panel {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: root.icon
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: BarValues.foreground(root.bar)
+            font.family: BarValues.fontFamily(root.bar)
             font.pixelSize: Style.font.display
             opacity: root.adapter && root.adapter.enabled ? 1.0 : 0.5
           }
@@ -727,7 +727,7 @@ Panel {
             visible: !!root.adapter
             checked: !!root.adapter && root.adapter.enabled
             hasCursor: root.headerHasCursor
-            foreground: root.bar.foreground
+            foreground: BarValues.foreground(root.bar)
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             onHovered: function(on) { if (on) root.setHeaderCursor() }
@@ -736,7 +736,7 @@ Panel {
             PanelToolTip {
               visible: powerSwitch.containsMouse
               text: root.toggleHint
-              fontFamily: root.bar.fontFamily
+              fontFamily: BarValues.fontFamily(root.bar)
             }
           }
 
@@ -752,8 +752,8 @@ Panel {
             Text {
               text: Commons.I18n.t("bluetooth.title")
               textFormat: Text.PlainText
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -764,8 +764,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -778,7 +778,7 @@ Panel {
         // Scrollable device list — capped so a noisy neighborhood doesn't
         // grow the popup past the screen.
         PanelSeparator {
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
         }
 
         Column {
@@ -789,8 +789,8 @@ Panel {
 
           PanelSectionHeader {
             text: Commons.I18n.t("bluetooth.connected")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: BarValues.foreground(root.bar)
+            fontFamily: BarValues.fontFamily(root.bar)
           }
 
           Repeater {
@@ -809,7 +809,7 @@ Panel {
 
         PanelSeparator {
           visible: root.connectedDevices.length > 0 && root.scrollRows.length > 0
-          foreground: root.bar.foreground
+          foreground: BarValues.foreground(root.bar)
         }
 
         // ListView, not a Flickable: it owns the scroll position, so it keeps
@@ -856,15 +856,15 @@ Panel {
               PanelSeparator {
                 visible: bluetoothListRow.index > 0 && bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
-                foreground: root.bar.foreground
+                foreground: BarValues.foreground(root.bar)
               }
 
               PanelSectionHeader {
                 visible: bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
                 text: bluetoothListRow.sectionTitle
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: BarValues.foreground(root.bar)
+                fontFamily: BarValues.fontFamily(root.bar)
               }
 
               DeviceRow {
@@ -884,8 +884,8 @@ Panel {
           text: !root.adapter ? Commons.I18n.t("bluetooth.noBluetoothAdapter")
               : !root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOnToScan")
               : Commons.I18n.t("bluetooth.scanning")
-          color: Qt.darker(root.bar.foreground, 1.5)
-          font.family: root.bar.fontFamily
+          color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.bodySmall
           wrapMode: Text.WordWrap
           width: parent.width
@@ -919,7 +919,7 @@ Panel {
 
     hasCursor: rowSelected && !root.actionFocused
     current: isConnected
-    foreground: root.bar.foreground
+    foreground: BarValues.foreground(root.bar)
     fill: root.hoverFill
     currentFill: root.selectedFill
 
@@ -937,9 +937,9 @@ Panel {
     }
 
     readonly property color statusColor: {
-      if (isConnected) return root.bar.foreground
-      if (action !== "" || devState === 3 || dev.pairing === true) return root.bar.foreground
-      return Qt.darker(root.bar.foreground, 1.5)
+      if (isConnected) return BarValues.foreground(root.bar)
+      if (action !== "" || devState === 3 || dev.pairing === true) return BarValues.foreground(root.bar)
+      return Qt.darker(BarValues.foreground(root.bar), 1.5)
     }
 
     implicitHeight: rowContent.implicitHeight + Style.spacing.rowPaddingX
@@ -974,7 +974,7 @@ Panel {
     PanelToolTip {
       visible: row.actionTooltip !== "" && rowMouse.containsMouse && !root.actionFocused
       text: row.actionTooltip
-      fontFamily: root.bar.fontFamily
+      fontFamily: BarValues.fontFamily(root.bar)
     }
 
     Item {
@@ -991,7 +991,7 @@ Panel {
         textFormat: Text.PlainText
         text: row.isConnected ? "󰂱" : "󰂯"
         color: row.statusColor
-        font.family: root.bar.fontFamily
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.heading
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -1009,8 +1009,8 @@ Panel {
         Text {
           textFormat: Text.PlainText
           text: root.deviceLabel(row.dev) || Commons.I18n.t("bluetooth.device")
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.body
           elide: Text.ElideRight
           width: parent.width
@@ -1020,7 +1020,7 @@ Panel {
           visible: row.statusText !== ""
           text: row.statusText
           color: row.statusColor
-          font.family: root.bar.fontFamily
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
           width: parent.width
@@ -1034,9 +1034,9 @@ Panel {
         visible: row.showForgetButton
         iconText: "󰅙"
         tooltipText: Commons.I18n.t("bluetooth.forget")
-        foreground: root.bar.foreground
-        hoverColor: root.bar.foreground
-        fontFamily: root.bar.fontFamily
+        foreground: BarValues.foreground(root.bar)
+        hoverColor: BarValues.foreground(root.bar)
+        fontFamily: BarValues.fontFamily(root.bar)
         hasCursor: row.rowSelected && root.actionFocused
         onHovered: function(isHovered) {
           if (!isHovered) {

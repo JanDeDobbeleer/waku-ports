@@ -264,7 +264,7 @@ Item {
     return target ? (pluginObjectOwners.get(target) || null) : null
   }
 
-  function markPluginObject(pluginId, target, role) {
+  function markPluginObject(pluginId: var, target: var, role: var): bool {
     var key = String(pluginId || "")
     if (!key || !target) return false
     var record = root.pluginObjectRecord(target)
@@ -401,7 +401,7 @@ Item {
     return api
   }
 
-  function pluginBarApiUsed(pluginId) {
+  function pluginBarApiUsed(pluginId: var): bool {
     for (let i = 0; i < widgetHosts.length; i++) {
       let host = widgetHosts[i]
       if (host && host.pluginApiId === pluginId) return true
@@ -551,7 +551,7 @@ Item {
     return target && target.QsWindow ? target.QsWindow.window : null
   }
 
-  function targetBelongsToWindow(target, window) {
+  function targetBelongsToWindow(target: var, window: var): bool {
     return !!target && !!window && targetWindow(target) === window
   }
 
@@ -560,19 +560,19 @@ Item {
     return targetWindow(slot.activeItem) || targetWindow(slot)
   }
 
-  function sameScreen(left, right) {
+  function sameScreen(left: var, right: var): bool {
     if (!left || !right) return false
     if (left === right) return true
     return !!left.name && !!right.name && left.name === right.name
   }
 
-  function sameWindow(left, right) {
+  function sameWindow(left: var, right: var): bool {
     if (!left || !right) return false
     if (left === right) return true
     return sameScreen(left.screen, right.screen)
   }
 
-  function targetTooltipHovered(target) {
+  function targetTooltipHovered(target: var): bool {
     return !!target && target.visible !== false && target.opacity !== 0 && target.tooltipHovered === true
   }
 
@@ -871,7 +871,7 @@ Item {
     return slot ? String(slot.moduleName || "") : ""
   }
 
-  function switchPanelFrom(owner, direction) {
+  function switchPanelFrom(owner: var, direction: var): bool {
     if (!owner) return false
 
     var currentSlot = null
@@ -954,21 +954,21 @@ Item {
     return chosen ? chosen.activeItem : null
   }
 
-  function summonBarWidget(pluginId) {
+  function summonBarWidget(pluginId: var): bool {
     var item = findPanelWidget(pluginId)
     if (!item || typeof item.open !== "function") return false
     item.open()
     return true
   }
 
-  function hideBarWidget(pluginId) {
+  function hideBarWidget(pluginId: var): bool {
     var item = findPanelWidget(pluginId)
     if (!item || typeof item.close !== "function") return false
     item.close()
     return true
   }
 
-  function isBarWidgetOpen(pluginId) {
+  function isBarWidgetOpen(pluginId: var): bool {
     var item = findPanelWidget(pluginId)
     return !!item && item.opened === true
   }
@@ -1436,7 +1436,7 @@ Item {
     }
   }
 
-  function isPendingRemoval(key) {
+  function isPendingRemoval(key: var): bool {
     return !!barRemoval && barRemoval.key === key
   }
 

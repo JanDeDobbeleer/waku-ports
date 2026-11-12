@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+import "BarValues.js" as BarValues
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
@@ -7,10 +9,10 @@ Item {
 
   property var bar: null
   property string text: ""
-  property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   property real fontSize: Style.font.body
-  property color foreground: bar ? bar.barForeground : Commons.Color.foreground
-  property color activeColor: bar ? bar.urgent : Commons.Color.urgent
+  property color foreground: bar ? BarValues.barForeground(bar) : Commons.Color.foreground
+  property color activeColor: bar ? BarValues.urgent(bar) : Commons.Color.urgent
   property bool active: false
   property real horizontalMargin: 8.5
   property real verticalPadding: 6
@@ -79,7 +81,7 @@ Item {
   readonly property real iconCenterErrorY: iconLabel && iconLoader.item
     ? iconLoader.y + iconLoader.item.paintedCenterY - height / 2 : 0
 
-  function isIconGlyph(value) {
+  function isIconGlyph(value: var): bool {
     var text = String(value || "")
     if (!text) return false
     var code = text.codePointAt(0)

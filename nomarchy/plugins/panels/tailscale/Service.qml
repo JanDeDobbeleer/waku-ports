@@ -432,7 +432,7 @@ Item {
     actionProcess.running = true
   }
 
-  function openAuthUrlFrom(text, allowFallback) {
+  function openAuthUrlFrom(text: var, allowFallback: var): bool {
     if (_loginUrlOpened) return true
     var match = String(text || "").match(/https?:\/\/\S+/)
     var url = match && match[0] ? match[0] : (allowFallback === true ? authUrl : "")
@@ -575,7 +575,7 @@ Item {
           root.accountsAccessDenied = true
           root.lastError = I18n.t("tailscale.authorizeToShowConnections")
         } else {
-          root.lastError = elideStatus(stderr || stdout || I18n.t("tailscale.listConnectionsFailed"))
+          root.lastError = root.elideStatus(stderr || stdout || I18n.t("tailscale.listConnectionsFailed"))
         }
       }
     }
@@ -605,7 +605,7 @@ Item {
       var stderr = String(actionStderr.text || root._actionError || "")
       if (exitCode !== 0) {
         root._desired = -1
-        root.lastError = elideStatus(stderr || stdout || I18n.t("tailscale.commandFailed"))
+        root.lastError = root.elideStatus(stderr || stdout || I18n.t("tailscale.commandFailed"))
         root.actionStatus = root.lastError
         actionStatusTimer.restart()
       } else {
@@ -628,7 +628,7 @@ Item {
       if (exitCode !== 0 && !opened) {
         root._desired = -1
         root._loginInProgress = false
-        root.lastError = elideStatus(combined || I18n.t("tailscale.upFailed"))
+        root.lastError = root.elideStatus(combined || I18n.t("tailscale.upFailed"))
         root.actionStatus = root.lastError
         actionStatusTimer.restart()
       } else if (!opened) {
@@ -649,7 +649,7 @@ Item {
       var stdout = String(switchStdout.text || root._switchOutput || "")
       var stderr = String(switchStderr.text || root._switchError || "")
       if (exitCode !== 0) {
-        root.lastError = elideStatus(stderr || stdout || I18n.t("tailscale.switchFailed"))
+        root.lastError = root.elideStatus(stderr || stdout || I18n.t("tailscale.switchFailed"))
         root.actionStatus = root.lastError
         actionStatusTimer.restart()
       } else {
@@ -672,7 +672,7 @@ Item {
       var stdout = String(exitNodeStdout.text || root._exitNodeOutput || "")
       var stderr = String(exitNodeStderr.text || root._exitNodeError || "")
       if (exitCode !== 0) {
-        root.lastError = elideStatus(stderr || stdout || I18n.t("tailscale.exitNodeFailed"))
+        root.lastError = root.elideStatus(stderr || stdout || I18n.t("tailscale.exitNodeFailed"))
         root.actionStatus = root.lastError
         actionStatusTimer.restart()
       } else {
@@ -694,7 +694,7 @@ Item {
       var stdout = String(operatorStdout.text || root._operatorOutput || "")
       var stderr = String(operatorStderr.text || root._operatorError || "")
       if (exitCode !== 0) {
-        root.lastError = elideStatus(stderr || stdout || I18n.t("tailscale.authorizationFailed"))
+        root.lastError = root.elideStatus(stderr || stdout || I18n.t("tailscale.authorizationFailed"))
         root.actionStatus = root.lastError
         actionStatusTimer.restart()
       } else {

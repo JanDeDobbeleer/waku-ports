@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -271,6 +272,7 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
 
             delegate: Rectangle {
+              id: emojiCell
               required property int index
               required property string emoji
 
@@ -283,7 +285,7 @@ Item {
 
               Text {
                 textFormat: Text.PlainText
-                text: parent.emoji
+                text: emojiCell.emoji
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.display
                 anchors.centerIn: parent
@@ -298,12 +300,12 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onContainsMouseChanged: if (containsMouse) {
                   root.cursorActive = true
-                  root.selectedIndex = index
+                  root.selectedIndex = emojiCell.index
                 }
                 onClicked: {
                   root.cursorActive = true
-                  root.selectedIndex = index
-                  root.activateIndex(index)
+                  root.selectedIndex = emojiCell.index
+                  root.activateIndex(emojiCell.index)
                 }
               }
             }

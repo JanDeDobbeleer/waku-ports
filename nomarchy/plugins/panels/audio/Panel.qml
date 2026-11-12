@@ -240,27 +240,27 @@ Panel {
   readonly property string toggleHint: anyAudible ? Commons.I18n.t("audio.mute") : Commons.I18n.t("audio.unmute")
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent)
     : "transparent"
 
-  function sectionCount(section) {
+  function sectionCount(section: string): int {
     if (section === "output") return displayAudioSinks.length
     if (section === "input") return displayAudioSources.length
     if (section === "streams") return displayAudioStreams.length
     return 0
   }
 
-  function sectionVisible(section) {
+  function sectionVisible(section: string): bool {
     if (section === "output") return true
     if (section === "input") return displayAudioSources.length > 0 || !!source
     if (section === "streams") return displayAudioStreams.length > 0
     return false
   }
 
-  function sectionHasSlider(section) {
+  function sectionHasSlider(section: string): bool {
     if (section === "output") return true
     if (section === "input") return !!source
     return false  // stream rows carry their own sliders inline; not a section-level slider
@@ -475,7 +475,7 @@ Panel {
     if (selectedIndex < floor) selectedIndex = floor
   }
 
-  function outputIcon(volume) {
+  function outputIcon(volume): string {
     // Match the old Waybar pulseaudio glyph set. The Material Design speaker
     // icons render visually smaller in JetBrainsMono Nerd Font.
     if (!sink || !sink.audio) return ""
@@ -488,7 +488,7 @@ Panel {
     return ""
   }
 
-  function inputIcon() {
+  function inputIcon(): string {
     if (!hasInput) return "󰍭"
     return inputMuted ? "󰍭" : "󰍬"
   }
@@ -795,8 +795,8 @@ Panel {
               id: heroIcon
               textFormat: Text.PlainText
               text: root.outputIcon()
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: BarValues.foreground(root.bar)
+              font.family: BarValues.fontFamily(root.bar)
               font.pixelSize: Style.font.display
               opacity: root.outputMuted ? 0.5 : 1.0
               anchors.left: parent.left
@@ -810,7 +810,7 @@ Panel {
               id: powerSwitch
               checked: root.anyAudible
               hasCursor: root.headerHasCursor
-              foreground: root.bar.foreground
+              foreground: BarValues.foreground(root.bar)
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               onHovered: function(on) { if (on) root.setHeaderCursor() }
@@ -819,7 +819,7 @@ Panel {
               PanelToolTip {
                 visible: powerSwitch.containsMouse
                 text: root.toggleHint
-                fontFamily: root.bar.fontFamily
+                fontFamily: BarValues.fontFamily(root.bar)
               }
             }
 
@@ -835,8 +835,8 @@ Panel {
               Text {
                 text: Commons.I18n.t("audio.title")
                 textFormat: Text.PlainText
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
+                color: BarValues.foreground(root.bar)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.title
                 font.bold: true
                 elide: Text.ElideRight
@@ -850,8 +850,8 @@ Panel {
                   outputSlider.dragging ? outputSlider.liveValue : root.outputVolume,
                   root.outputMuted
                 ).toUpperCase()
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 font.letterSpacing: 1.2
@@ -863,7 +863,7 @@ Panel {
 
           // ---- Output devices ----
           PanelSeparator {
-            foreground: root.bar.foreground
+            foreground: BarValues.foreground(root.bar)
           }
 
           Column {
@@ -877,8 +877,8 @@ Panel {
               PanelSectionHeader {
                 id: outputHeader
                 text: Commons.I18n.t("audio.output")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: BarValues.foreground(root.bar)
+                fontFamily: BarValues.fontFamily(root.bar)
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -887,8 +887,8 @@ Panel {
                 id: outputPercent
                 textFormat: Text.PlainText
                 text: Commons.I18n.formatNumber(Math.round((outputSlider.dragging ? outputSlider.liveValue : root.outputVolume) * 100)) + "%"
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -904,7 +904,7 @@ Panel {
               height: outputSlider.implicitHeight + Style.spacing.controlGap
               hasCursor: root.cursorActive && root.focusSection === "output" && root.selectedIndex === -1
               onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(outputSliderRow)
-              foreground: root.bar.foreground
+              foreground: BarValues.foreground(root.bar)
               outline: true
 
               PanelSlider {
@@ -949,7 +949,7 @@ Panel {
           // ---- Input ----
           PanelSeparator {
             visible: root.displayAudioSources.length > 0 || !!root.source
-            foreground: root.bar.foreground
+            foreground: BarValues.foreground(root.bar)
           }
 
           Column {
@@ -964,8 +964,8 @@ Panel {
               PanelSectionHeader {
                 id: microphoneHeader
                 text: Commons.I18n.t("audio.input")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: BarValues.foreground(root.bar)
+                fontFamily: BarValues.fontFamily(root.bar)
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -974,8 +974,8 @@ Panel {
                 id: microphonePercent
                 textFormat: Text.PlainText
                 text: root.inputLevelKnown ? Commons.I18n.formatNumber(Math.round((inputSlider.dragging ? inputSlider.liveValue : root.inputVolume) * 100)) + "%" : "–"
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(BarValues.foreground(root.bar), 1.4)
+                font.family: BarValues.fontFamily(root.bar)
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -992,7 +992,7 @@ Panel {
               height: inputControls.implicitHeight + Style.spacing.controlGap
               hasCursor: root.cursorActive && root.focusSection === "input" && root.selectedIndex === -1
               onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(inputSliderRow)
-              foreground: root.bar.foreground
+              foreground: BarValues.foreground(root.bar)
               outline: true
 
               Column {
@@ -1025,13 +1025,13 @@ Panel {
                   visible: root.inputLevelShown
                   width: parent.width
                   height: Math.max(Style.space(5), Style.spacing.xs)
-                  color: Util.alpha(root.bar.foreground, 0.18)
+                  color: Util.alpha(BarValues.foreground(root.bar), 0.18)
                   opacity: root.inputMuted ? 0.35 : 1.0
 
                   Rectangle {
                     height: parent.height
                     width: parent.width * Math.max(0, Math.min(1, inputPeakMonitor.peak))
-                    color: root.bar.foreground
+                    color: BarValues.foreground(root.bar)
                     Behavior on width { NumberAnimation { duration: Style.duration(70) } }
                   }
                 }
@@ -1062,7 +1062,7 @@ Panel {
           // ---- Per-app streams ----
           PanelSeparator {
             visible: root.displayAudioStreams.length > 0
-            foreground: root.bar.foreground
+            foreground: BarValues.foreground(root.bar)
           }
 
           Column {
@@ -1072,8 +1072,8 @@ Panel {
 
             PanelSectionHeader {
               text: Commons.I18n.t("audio.sources")
-              foreground: root.bar.foreground
-              fontFamily: root.bar.fontFamily
+              foreground: BarValues.foreground(root.bar)
+              fontFamily: BarValues.fontFamily(root.bar)
             }
 
             Repeater {
@@ -1107,7 +1107,7 @@ Panel {
     hasCursor: root.cursorActive && root.focusSection === "output" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sinkRow)
     current: isActive
-    foreground: root.bar.foreground
+    foreground: BarValues.foreground(root.bar)
     fill: root.hoverFill
     currentFill: root.selectedFill
     implicitHeight: sinkInner.implicitHeight + Style.spacing.xl
@@ -1124,8 +1124,8 @@ Panel {
       Text {
         textFormat: Text.PlainText
         text: root.sinkGlyph(sinkRow.node)
-        color: root.bar.foreground
-        font.family: root.bar.fontFamily
+        color: BarValues.foreground(root.bar)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.title
         width: Style.space(22)
         horizontalAlignment: Text.AlignHCenter
@@ -1135,8 +1135,8 @@ Panel {
       Text {
         textFormat: Text.PlainText
         text: root.nodeLabel(sinkRow.node)
-        color: root.bar.foreground
-        font.family: root.bar.fontFamily
+        color: BarValues.foreground(root.bar)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.body
         font.bold: sinkRow.isActive
         elide: Text.ElideRight
@@ -1168,7 +1168,7 @@ Panel {
     hasCursor: root.cursorActive && root.focusSection === "input" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sourceRow)
     current: isActive
-    foreground: root.bar.foreground
+    foreground: BarValues.foreground(root.bar)
     fill: root.hoverFill
     currentFill: root.selectedFill
     implicitHeight: sourceInner.implicitHeight + Style.spacing.xl
@@ -1185,8 +1185,8 @@ Panel {
       Text {
         textFormat: Text.PlainText
         text: root.sourceGlyph(sourceRow.node)
-        color: root.bar.foreground
-        font.family: root.bar.fontFamily
+        color: BarValues.foreground(root.bar)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.title
         width: Style.space(22)
         horizontalAlignment: Text.AlignHCenter
@@ -1196,8 +1196,8 @@ Panel {
       Text {
         textFormat: Text.PlainText
         text: root.nodeLabel(sourceRow.node)
-        color: root.bar.foreground
-        font.family: root.bar.fontFamily
+        color: BarValues.foreground(root.bar)
+        font.family: BarValues.fontFamily(root.bar)
         font.pixelSize: Style.font.body
         font.bold: sourceRow.isActive
         elide: Text.ElideRight
@@ -1235,7 +1235,7 @@ Panel {
     hasCursor: root.cursorActive && root.focusSection === "streams" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(streamRow)
     current: isActive
-    foreground: root.bar.foreground
+    foreground: BarValues.foreground(root.bar)
     fill: root.hoverFill
     currentFill: root.selectedFill
     implicitHeight: streamColumn.implicitHeight + Style.spacing.xl
@@ -1257,8 +1257,8 @@ Panel {
           id: streamMuteIcon
           textFormat: Text.PlainText
           text: streamRow.streamMuted ? "󰝟" : "󰕾"
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.title
           width: Style.space(22)
           horizontalAlignment: Text.AlignHCenter
@@ -1278,8 +1278,8 @@ Panel {
         Text {
           textFormat: Text.PlainText
           text: root.streamLabel(streamRow.node)
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          color: BarValues.foreground(root.bar)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.body
           font.bold: streamRow.isActive
           elide: Text.ElideRight
@@ -1291,8 +1291,8 @@ Panel {
           id: streamPct
           textFormat: Text.PlainText
           text: Commons.I18n.formatNumber(Math.round(streamRow.streamVolume * 100)) + "%"
-          color: Qt.darker(root.bar.foreground, 1.5)
-          font.family: root.bar.fontFamily
+          color: Qt.darker(BarValues.foreground(root.bar), 1.5)
+          font.family: BarValues.fontFamily(root.bar)
           font.pixelSize: Style.font.caption
           font.bold: true
           width: Style.space(36)

@@ -18,8 +18,8 @@ BarWidget {
   property bool trayMenuOpen: false
   property var activeTrayItem: null
   property var activeTrayAnchor: null
-  readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
-  readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   readonly property var pinnedIds: settings.pinned instanceof Array ? settings.pinned : []
   readonly property var hiddenIds: settings.hidden instanceof Array ? settings.hidden : []
   readonly property var pinnedItems: bucket("pinned")
@@ -171,7 +171,7 @@ BarWidget {
   // Symbolic icons ship a fixed fill (light or dark) that the host is meant
   // to recolor to its foreground; detect them by the freedesktop "-symbolic"
   // name suffix so they can be tinted instead of rendered as-is.
-  function iconIsSymbolic(icon) {
+  function iconIsSymbolic(icon: var): bool {
     var name = String(icon || "").split("?")[0]
     return name.slice(-9) === "-symbolic"
   }
@@ -180,7 +180,7 @@ BarWidget {
     return item.tooltipTitle || item.title || item.id || ""
   }
 
-  function classifyItem(item) {
+  function classifyItem(item: var): string {
     var iid = String(item.id || "")
     if (hiddenIds.indexOf(iid) !== -1) return "hidden"
     if (pinnedIds.indexOf(iid) !== -1) return "pinned"

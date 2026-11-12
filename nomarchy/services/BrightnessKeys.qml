@@ -23,7 +23,7 @@ Item {
 
   // Returns false when the focused display is not one to handle here, so the
   // caller falls back to the script.
-  function handle(action) {
+  function handle(action: var): bool {
     var monitor = Hyprland.focusedMonitor
     var name = monitor ? String(monitor.name || "") : ""
     if (!/^(eDP|LVDS|DSI)-/.test(name) || !device) return false

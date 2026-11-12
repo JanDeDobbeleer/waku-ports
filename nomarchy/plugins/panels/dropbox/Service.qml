@@ -138,7 +138,7 @@ Item {
     return "file://" + parts.join("/")
   }
 
-  function openAuthUrlFrom(text) {
+  function openAuthUrlFrom(text: var): bool {
     if (_loginUrlOpened) return true
     var match = String(text || "").match(/https?:\/\/\S+/)
     if (match && match[0]) {

@@ -92,16 +92,7 @@ QtObject {
     return { colors: colors, angle: angle, enabled: colors.length > 1 }
   }
 
-  function sameColor(a, b) {
-    if (typeof Qt === "undefined" || !Qt.color) return String(a) === String(b)
-    var ca = typeof a === "string" ? Qt.color(a) : a
-    var cb = typeof b === "string" ? Qt.color(b) : b
-    if (!ca || !cb || ca.r === undefined || cb.r === undefined) return String(a) === String(b)
-    return Math.round(ca.r * 255) === Math.round(cb.r * 255)
-      && Math.round(ca.g * 255) === Math.round(cb.g * 255)
-      && Math.round(ca.b * 255) === Math.round(cb.b * 255)
-      && Math.round((ca.a === undefined ? 1 : ca.a) * 255) === Math.round((cb.a === undefined ? 1 : cb.a) * 255)
-  }
+  function sameColor(a: var, b: var): bool { return Geometry.sameColor(a, b) }
 
   function localOrSurfaceSpec(section, token, localColor, defaultColor, fallbackWidth, alphaKey) {
     if (!sameColor(localColor, defaultColor)) return flat(localColor, fallbackWidth)
@@ -182,14 +173,14 @@ QtObject {
     return Style.normalStateColor(foreground, accent, urgent)
   }
 
-  function controlAlpha(prefix) {
+  function controlAlpha(prefix: string): real {
     if (prefix === "focus") return Style.focusBorderAlpha
     if (prefix === "hover-cursor") return Style.hoverBorderAlpha
     if (prefix === "selected") return Style.selectedBorderAlpha
     return Style.normalBorderAlpha
   }
 
-  function controlFallbackWidth(prefix) {
+  function controlFallbackWidth(prefix: string): int {
     if (prefix === "focus") return Style.focusBorderWidth
     if (prefix === "hover-cursor") return Style.hoverBorderWidth
     if (prefix === "selected") return Style.selectedBorderWidth
@@ -226,18 +217,18 @@ QtObject {
     return { color: resolved.color, widths: controlWidths(prefix), gradient: resolved.gradient }
   }
 
-  function withWidth(spec, width) {
+  function withWidth(spec: var, width: var): var {
     if (!spec) return flat("transparent", 0)
-    return { color: spec.color, gradient: spec.gradient, widths: Geometry.parseWidthSpec(width, 0) }
+    return Geometry.withWidth(spec, width)
   }
 
-  function isNone(spec) { return !spec || Geometry.maxWidth(spec.widths) <= 0 }
-  function needsOverlay(spec) { return Geometry.needsOverlay(spec) }
-  function canUseNative(spec) { return Geometry.canUseNative(spec) }
-  function top(spec) { return spec && spec.widths ? spec.widths.top : 0 }
-  function right(spec) { return spec && spec.widths ? spec.widths.right : 0 }
-  function bottom(spec) { return spec && spec.widths ? spec.widths.bottom : 0 }
-  function left(spec) { return spec && spec.widths ? spec.widths.left : 0 }
-  function uniformWidth(spec) { return spec && spec.widths ? spec.widths.top : 0 }
-  function color(spec) { return spec ? spec.color : "transparent" }
+  function isNone(spec: var): bool { return Geometry.isNone(spec) }
+  function needsOverlay(spec: var): bool { return Geometry.needsOverlay(spec) }
+  function canUseNative(spec: var): bool { return Geometry.canUseNative(spec) }
+  function top(spec: var): var { return Geometry.side(spec, "top") }
+  function right(spec: var): var { return Geometry.side(spec, "right") }
+  function bottom(spec: var): var { return Geometry.side(spec, "bottom") }
+  function left(spec: var): var { return Geometry.side(spec, "left") }
+  function uniformWidth(spec: var): var { return Geometry.side(spec, "top") }
+  function color(spec: var): var { return Geometry.specColor(spec) }
 }
