@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -394,7 +396,7 @@ Variants {
     // Visual Component
     sourceComponent: PanelWindow {
       id: panel
-      screen: modelData
+      screen: root.modelData
 
       // Position configuration
       readonly property string location: Settings.data.osd?.location || "top_right"
@@ -740,6 +742,7 @@ Variants {
                 model: textVerticalLayout.verticalTextChars
 
                 NText {
+                  required property var modelData
                   text: modelData || ""
                   color: root.getProgressColor()
                   pointSize: Style.fontSizeS

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -570,7 +572,7 @@ NBox {
                     colorBgHover: Qt.alpha(Color.mOnPrimary, Style.opacityLight)
                     colorFgHover: Color.mOnPrimary
                     onClicked: {
-                      root.openWidgetSettings(index, modelData);
+                      root.openWidgetSettings(widgetItem.index, widgetItem.modelData);
                     }
                   }
                 }
