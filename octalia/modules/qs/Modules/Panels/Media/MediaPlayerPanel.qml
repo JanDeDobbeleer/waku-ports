@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -168,6 +170,8 @@ SmartPanel {
                 Repeater {
                   model: MediaService.getAvailablePlayers()
                   delegate: Rectangle {
+                    id: playerOption
+                    required property var modelData
                     Layout.fillWidth: true
                     Layout.preferredHeight: 30
                     color: "transparent"
@@ -184,14 +188,14 @@ SmartPanel {
                       spacing: Style.marginS
 
                       NIcon {
-                        visible: MediaService.currentPlayer && MediaService.currentPlayer.identity === modelData.identity
+                        visible: MediaService.currentPlayer && MediaService.currentPlayer.identity === playerOption.modelData.identity
                         icon: "check"
                         color: itemMouse.containsMouse ? Color.mOnPrimary : Color.mPrimary
                         pointSize: Style.fontSizeS
                       }
 
                       NText {
-                        text: modelData.identity
+                        text: playerOption.modelData.identity
                         pointSize: Style.fontSizeS
                         color: itemMouse.containsMouse ? Color.mOnPrimary : Color.mOnSurface
                         Layout.fillWidth: true
@@ -205,7 +209,7 @@ SmartPanel {
                       hoverEnabled: true
                       cursorShape: Qt.PointingHandCursor
                       onClicked: {
-                        MediaService.currentPlayer = modelData;
+                        MediaService.currentPlayer = playerOption.modelData;
                         playerContextMenu.close();
                       }
                     }

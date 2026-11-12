@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -241,12 +243,13 @@ Item {
             model: (root.compactMode && root.showCpuCores) ? SystemStatService.coresUsage : []
 
             delegate: NLinearGauge {
+              id: coreGauge
               required property var modelData
               width: isVertical ? iconSize : miniGaugeWidth
               height: isVertical ? miniGaugeWidth : iconSize
               orientation: isVertical ? Qt.Horizontal : Qt.Vertical
-              ratio: modelData / 100
-              fillColor: SystemStatService.getCoreUsageColor(modelData)
+              ratio: coreGauge.modelData / 100
+              fillColor: SystemStatService.getCoreUsageColor(coreGauge.modelData)
             }
           }
         }

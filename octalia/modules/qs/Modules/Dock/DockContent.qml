@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -406,16 +408,18 @@ Item {
           model: dockRoot.dockApps
 
           delegate: Item {
+            required property var modelData
+            required property int index
             id: appButton
             readonly property real indicatorMargin: Math.max(3, Math.round(dockRoot.iconSize * 0.18))
             Layout.preferredWidth: dockRoot.isVertical ? dockRoot.iconSize + indicatorMargin * 2 : dockRoot.iconSize
             Layout.preferredHeight: dockRoot.isVertical ? dockRoot.iconSize : dockRoot.iconSize + indicatorMargin * 2
             Layout.alignment: Qt.AlignCenter
 
-            property var toplevels: dock.getValidToplevels(modelData)
+            property var toplevels: dock.getValidToplevels(appButton.modelData)
             property bool isActive: ToplevelManager && ToplevelManager.activeToplevel && toplevels.includes(ToplevelManager.activeToplevel)
             property bool hovered: appMouseArea.containsMouse
-            property string appId: modelData ? modelData.appId : ""
+            property string appId: appButton.modelData ? appButton.modelData.appId : ""
             property int groupedCount: toplevels.length
             property int focusedWindowIndex: {
               if (!ToplevelManager || !ToplevelManager.activeToplevel)
@@ -424,27 +428,27 @@ Item {
             }
             property string groupedIndicatorText: focusedWindowIndex >= 0 ? (focusedWindowIndex + 1) + "/" + groupedCount : groupedCount.toString()
             property string appTitle: {
-              if (!modelData)
+              if (!appButton.modelData)
                 return "";
-              const primaryToplevel = dock.getPrimaryToplevel(modelData);
+              const primaryToplevel = dock.getPrimaryToplevel(appButton.modelData);
               if (primaryToplevel) {
                 const toplevelTitle = primaryToplevel.title || "";
                 // If title is "Loading..." or empty, use desktop entry name
                 if (!toplevelTitle || toplevelTitle === "Loading..." || toplevelTitle.trim() === "") {
-                  return dockRoot.getAppNameFromDesktopEntry(modelData.appId) || modelData.appId;
+                  return dockRoot.getAppNameFromDesktopEntry(appButton.modelData.appId) || appButton.modelData.appId;
                 }
                 return toplevelTitle;
               }
               // For pinned apps that aren't running, use the stored title
-              return modelData.title || modelData.appId || "";
+              return appButton.modelData.title || appButton.modelData.appId || "";
             }
             property bool isRunning: toplevels.length > 0
             readonly property bool baseIndicatorVisible: Settings.data.dock.inactiveIndicators ? isRunning : isActive
             // Grouped indicators should be visible whenever grouped windows are running, even if none is focused.
             readonly property bool showGroupedIndicator: Settings.data.dock.groupApps && groupedCount > 1 && isRunning
 
-            // Store index for drag-and-drop
-            property int modelIndex: index
+            // Store appButton.index for drag-and-drop
+            property int modelIndex: appButton.index
             objectName: "dockAppButton"
 
             DropArea {
@@ -471,7 +475,7 @@ Item {
 
             // Listen for the toplevel being closed
             Connections {
-              target: modelData?.toplevel
+              target: appButton.modelData?.toplevel
               function onClosed() {
                 Qt.callLater(dockRoot.updateDockApps);
               }
@@ -489,11 +493,11 @@ Item {
               property bool dragging: appMouseArea.drag.active
               onDraggingChanged: {
                 if (dragging) {
-                  dockRoot.dragSourceIndex = index;
+                  dockRoot.dragSourceIndex = appButton.index;
                 } else {
                   // Reset if not handled by drop (e.g. dropped outside)
                   Qt.callLater(() => {
-                                 if (!appMouseArea.drag.active && dockRoot.dragSourceIndex === index) {
+                                 if (!appMouseArea.drag.active && dockRoot.dragSourceIndex === appButton.index) {
                                    dockRoot.dragSourceIndex = -1;
                                    dockRoot.dragTargetIndex = -1;
                                  }
@@ -507,7 +511,7 @@ Item {
               Drag.hotSpot.y: height / 2
               Drag.keys: ["dock-app"]
 
-              z: (dockRoot.dragSourceIndex === index) ? 1000 : ((dragging ? 1000 : 0))
+              z: (dockRoot.dragSourceIndex === appButton.index) ? 1000 : ((dragging ? 1000 : 0))
               scale: dragging ? 1.1 : (appButton.hovered ? 1.15 : 1.0)
               Behavior on scale {
                 NumberAnimation {
@@ -518,7 +522,7 @@ Item {
               }
 
               // Visual shifting logic
-              readonly property bool isDragged: dockRoot.dragSourceIndex === index
+              readonly property bool isDragged: dockRoot.dragSourceIndex === appButton.index
               property real shiftOffset: 0
 
               Binding on shiftOffset {
@@ -526,12 +530,12 @@ Item {
                   if (dockRoot.dragSourceIndex !== -1 && dockRoot.dragTargetIndex !== -1 && !iconContainer.isDragged) {
                     if (dockRoot.dragSourceIndex < dockRoot.dragTargetIndex) {
                       // Dragging Forward: Items between source and target shift Backward
-                      if (index > dockRoot.dragSourceIndex && index <= dockRoot.dragTargetIndex) {
+                      if (appButton.index > dockRoot.dragSourceIndex && appButton.index <= dockRoot.dragTargetIndex) {
                         return -1 * (dockRoot.isVertical ? dockRoot.iconSize + Style.marginS : dockRoot.iconSize + Style.marginS);
                       }
                     } else if (dockRoot.dragSourceIndex > dockRoot.dragTargetIndex) {
                       // Dragging Backward: Items between target and source shift Forward
-                      if (index >= dockRoot.dragTargetIndex && index < dockRoot.dragSourceIndex) {
+                      if (appButton.index >= dockRoot.dragTargetIndex && appButton.index < dockRoot.dragSourceIndex) {
                         return (dockRoot.isVertical ? dockRoot.iconSize + Style.marginS : dockRoot.iconSize + Style.marginS);
                       }
                     }
@@ -563,7 +567,7 @@ Item {
                 anchors.fill: parent
                 source: {
                   dockRoot.iconRevision; // Force re-evaluation when revision changes
-                  return dock.getAppIcon(modelData);
+                  return dock.getAppIcon(appButton.modelData);
                 }
                 visible: source.toString() !== ""
                 smooth: true
@@ -706,15 +710,15 @@ Item {
                              }
                              // Close any other existing context menu first
                              dockRoot.closeAllContextMenus();
-                             contextMenu.show(appButton, modelData, targetScreen);
+                             contextMenu.show(appButton, appButton.modelData, targetScreen);
                              return;
                            }
 
                            // Close any existing context menu for non-right-click actions
                            dockRoot.closeAllContextMenus();
 
-                           const runningToplevels = dock.getValidToplevels(modelData);
-                           const primaryToplevel = dock.getPrimaryToplevel(modelData);
+                           const runningToplevels = dock.getValidToplevels(appButton.modelData);
+                           const primaryToplevel = dock.getPrimaryToplevel(appButton.modelData);
 
                            if (mouse.button === Qt.MiddleButton) {
                              if (primaryToplevel && primaryToplevel.close) {
@@ -723,7 +727,7 @@ Item {
                              }
                            } else if (mouse.button === Qt.LeftButton) {
                              if (runningToplevels.length === 0) {
-                               dock.launchAppById(modelData?.appId);
+                               dock.launchAppById(appButton.modelData?.appId);
                                return;
                              }
 
@@ -738,9 +742,9 @@ Item {
                              if (clickAction === "list") {
                                const targetScreen = dockRoot.modelData || dockRoot.screen || null;
                                // Left-click list should always open the grouped window list view.
-                               contextMenu.show(appButton, modelData, targetScreen, "list");
+                               contextMenu.show(appButton, appButton.modelData, targetScreen, "list");
                              } else {
-                               const appKey = modelData?.appId || "";
+                               const appKey = appButton.modelData?.appId || "";
                                const state = dockRoot.groupCycleIndices || {};
                                const nextIndex = (state[appKey] || 0) % runningToplevels.length;
                                const nextToplevel = runningToplevels[nextIndex];
@@ -840,14 +844,16 @@ Item {
                 Repeater {
                   model: parent.visibleCount
                   delegate: Rectangle {
-                    readonly property int absoluteIndex: parent.windowStart + index
+                    id: groupDot
+                    required property int index
+                    readonly property int absoluteIndex: parent.windowStart + groupDot.index
                     readonly property bool isFocusedDot: appButton.focusedWindowIndex >= 0 && absoluteIndex === appButton.focusedWindowIndex
-                    readonly property bool isOverflowHint: (index === 0 && parent.hasHiddenLeft) || (index === parent.visibleCount - 1 && parent.hasHiddenRight)
+                    readonly property bool isOverflowHint: (groupDot.index === 0 && parent.hasHiddenLeft) || (groupDot.index === parent.visibleCount - 1 && parent.hasHiddenRight)
                     width: isOverflowHint && !isFocusedDot ? Math.max(2, Math.round(parent.dotSize * 0.72)) : parent.dotSize
                     height: width
                     radius: width / 2
-                    x: dockRoot.isVertical ? Math.round((parent.dotSize - width) / 2) : (index * parent.pitch + Math.round((parent.dotSize - width) / 2))
-                    y: dockRoot.isVertical ? (index * parent.pitch + Math.round((parent.dotSize - width) / 2)) : Math.round((parent.dotSize - width) / 2)
+                    x: dockRoot.isVertical ? Math.round((parent.dotSize - width) / 2) : (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2))
+                    y: dockRoot.isVertical ? (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2)) : Math.round((parent.dotSize - width) / 2)
                     color: isFocusedDot ? Color.mPrimary : Qt.alpha(Color.mOutline, 0.9)
                     opacity: isOverflowHint && !isFocusedDot ? 0.55 : 1.0
                   }

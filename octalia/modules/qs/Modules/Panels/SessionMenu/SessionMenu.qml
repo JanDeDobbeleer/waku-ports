@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -627,20 +629,23 @@ SmartPanel {
         Repeater {
           model: powerOptions
           delegate: LargeButton {
+            id: largePowerOption
+            required property var modelData
+            required property int index
             Layout.preferredWidth: Math.round(largeButtonsGrid.buttonSize)
             Layout.preferredHeight: Math.round(largeButtonsGrid.buttonSize)
-            icon: modelData.icon
-            title: modelData.title
-            isShutdown: modelData.isShutdown || false
-            isSelected: index === selectedIndex
-            number: index + 1
-            buttonIndex: index
+            icon: largePowerOption.modelData.icon
+            title: largePowerOption.modelData.title
+            isShutdown: largePowerOption.modelData.isShutdown || false
+            isSelected: largePowerOption.index === selectedIndex
+            number: largePowerOption.index + 1
+            buttonIndex: largePowerOption.index
             onClicked: {
-              selectedIndex = index;
-              startTimer(modelData.action);
+              selectedIndex = largePowerOption.index;
+              startTimer(largePowerOption.modelData.action);
             }
-            pending: timerActive && pendingAction === modelData.action
-            keybind: modelData.keybind || ""
+            pending: timerActive && pendingAction === largePowerOption.modelData.action
+            keybind: largePowerOption.modelData.keybind || ""
           }
         }
       }
@@ -710,19 +715,23 @@ SmartPanel {
           Repeater {
             model: powerOptions
             delegate: PowerButton {
+              id: powerOption
+              required property var modelData
+              required property int index
               Layout.fillWidth: true
-              icon: modelData.icon
-              title: modelData.title
-              isShutdown: modelData.isShutdown || false
-              isSelected: index === selectedIndex
-              number: index + 1
-              buttonIndex: index
+              icon: powerOption.modelData.icon
+              title: powerOption.modelData.title
+              isShutdown: powerOption.modelData.isShutdown || false
+              isSelected: powerOption.index === selectedIndex
+              number: powerOption.index + 1
+              buttonIndex: powerOption.index
+              action: powerOption.modelData.action
               onClicked: {
-                selectedIndex = index;
-                startTimer(modelData.action);
+                selectedIndex = powerOption.index;
+                startTimer(powerOption.modelData.action);
               }
-              pending: timerActive && pendingAction === modelData.action
-              keybind: modelData.keybind || ""
+              pending: timerActive && pendingAction === powerOption.modelData.action
+              keybind: powerOption.modelData.keybind || ""
             }
           }
         }
@@ -752,6 +761,7 @@ SmartPanel {
   component PowerButton: Rectangle {
     id: buttonRoot
 
+    property string action: ""
     property string icon: ""
     property string title: ""
     property bool pending: false
@@ -833,7 +843,7 @@ SmartPanel {
         // Countdown as plain text (left of keybind)
         NText {
           id: countdownText
-          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && timerActive && pendingAction === modelData.action
+          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && timerActive && pendingAction === buttonRoot.action
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
           text: Math.ceil(timeRemaining / 1000)

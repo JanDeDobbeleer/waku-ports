@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -354,20 +356,23 @@ SmartPanel {
               }
             ]
             delegate: RowLayout {
+              id: progressStep
+              required property var modelData
+              required property int index
               spacing: Style.marginS
 
               Rectangle {
                 width: 24
                 height: 24
                 radius: width / 2
-                color: index <= currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                border.color: index === currentStep ? Color.mPrimary : "transparent"
-                border.width: index === currentStep ? 2 : 0
+                color: progressStep.index <= currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                border.color: progressStep.index === currentStep ? Color.mPrimary : "transparent"
+                border.width: progressStep.index === currentStep ? 2 : 0
 
                 NIcon {
-                  icon: modelData.icon
+                  icon: progressStep.modelData.icon
                   pointSize: Style.fontSizeS
-                  color: index <= currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                  color: progressStep.index <= currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
                   anchors.centerIn: parent
                 }
 
@@ -379,10 +384,10 @@ SmartPanel {
               }
 
               NText {
-                text: modelData.label
+                text: progressStep.modelData.label
                 pointSize: Style.fontSizeS
-                color: index <= currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
-                font.weight: index === currentStep ? Style.fontWeightBold : Style.fontWeightRegular
+                color: progressStep.index <= currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
+                font.weight: progressStep.index === currentStep ? Style.fontWeightBold : Style.fontWeightRegular
 
                 Behavior on color {
                   ColorAnimation {
@@ -396,8 +401,8 @@ SmartPanel {
                 width: 40
                 height: 2
                 radius: 1
-                color: index < currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                visible: index < totalSteps - 1
+                color: progressStep.index < currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                visible: progressStep.index < totalSteps - 1
 
                 Behavior on color {
                   ColorAnimation {

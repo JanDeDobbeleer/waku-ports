@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -219,26 +221,28 @@ DraggableDesktopWidget {
       Repeater {
         model: root.legendItems
         delegate: RowLayout {
+          id: sideLegendItem
+          required property var modelData
           Layout.alignment: Qt.AlignHCenter
           spacing: Math.round(Style.marginXXS * root.widgetScale)
 
           NIcon {
-            visible: !!modelData.icon
-            icon: modelData.icon || ""
-            color: modelData.color
+            visible: !!sideLegendItem.modelData.icon
+            icon: sideLegendItem.modelData.icon || ""
+            color: sideLegendItem.modelData.color
             pointSize: Style.fontSizeS * root.widgetScale
-            opacity: modelData.opacity !== undefined ? modelData.opacity : 1.0
+            opacity: sideLegendItem.modelData.opacity !== undefined ? sideLegendItem.modelData.opacity : 1.0
           }
 
           NText {
-            text: modelData.text
-            color: modelData.color
+            text: sideLegendItem.modelData.text
+            color: sideLegendItem.modelData.color
             pointSize: Style.fontSizeS * root.widgetScale
             font.family: Settings.data.ui.fontFixed
-            font.weight: modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
-            opacity: modelData.opacity !== undefined ? modelData.opacity : 1.0
-            elide: modelData.elide ? Text.ElideMiddle : Text.ElideNone
-            Layout.maximumWidth: modelData.elide ? Math.round(56 * root.widgetScale) : -1
+            font.weight: sideLegendItem.modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
+            opacity: sideLegendItem.modelData.opacity !== undefined ? sideLegendItem.modelData.opacity : 1.0
+            elide: sideLegendItem.modelData.elide ? Text.ElideMiddle : Text.ElideNone
+            Layout.maximumWidth: sideLegendItem.modelData.elide ? Math.round(56 * root.widgetScale) : -1
             horizontalAlignment: Text.AlignHCenter
           }
         }
@@ -275,28 +279,30 @@ DraggableDesktopWidget {
       Repeater {
         model: root.legendItems
         delegate: RowLayout {
+          id: bottomLegendItem
+          required property var modelData
           Layout.alignment: Qt.AlignVCenter
           spacing: Math.round(Style.marginXXS * root.widgetScale)
 
           NIcon {
             Layout.alignment: Qt.AlignVCenter
-            visible: !!modelData.icon
-            icon: modelData.icon || ""
-            color: modelData.color
+            visible: !!bottomLegendItem.modelData.icon
+            icon: bottomLegendItem.modelData.icon || ""
+            color: bottomLegendItem.modelData.color
             pointSize: Style.fontSizeS * root.widgetScale
-            opacity: modelData.opacity !== undefined ? modelData.opacity : 1.0
+            opacity: bottomLegendItem.modelData.opacity !== undefined ? bottomLegendItem.modelData.opacity : 1.0
           }
 
           NText {
             Layout.alignment: Qt.AlignVCenter
-            text: modelData.text
-            color: modelData.color
+            text: bottomLegendItem.modelData.text
+            color: bottomLegendItem.modelData.color
             pointSize: Style.fontSizeS * root.widgetScale
             font.family: Settings.data.ui.fontFixed
-            font.weight: modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
-            opacity: modelData.opacity !== undefined ? modelData.opacity : 1.0
-            elide: modelData.elide ? Text.ElideMiddle : Text.ElideNone
-            Layout.maximumWidth: modelData.elide ? Math.round(56 * root.widgetScale) : -1
+            font.weight: bottomLegendItem.modelData.bold ? Style.fontWeightBold : Style.fontWeightRegular
+            opacity: bottomLegendItem.modelData.opacity !== undefined ? bottomLegendItem.modelData.opacity : 1.0
+            elide: bottomLegendItem.modelData.elide ? Text.ElideMiddle : Text.ElideNone
+            Layout.maximumWidth: bottomLegendItem.modelData.elide ? Math.round(56 * root.widgetScale) : -1
           }
         }
       }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -212,12 +214,14 @@ SmartPanel {
           Repeater {
             model: Quickshell.screens || []
             delegate: NBox {
+              id: monitorControl
+              required property var modelData
               Layout.fillWidth: true
               Layout.preferredHeight: outputColumn.implicitHeight + Style.margin2M
 
-              property var brightnessMonitor: BrightnessService.getMonitorForScreen(modelData)
+              property var brightnessMonitor: BrightnessService.getMonitorForScreen(monitorControl.modelData)
               readonly property real compositorScale: {
-                const info = CompositorService.displayScales[modelData.name];
+                const info = CompositorService.displayScales[monitorControl.modelData.name];
                 return (info && info.scale) ? info.scale : 1.0;
               }
 
@@ -230,13 +234,13 @@ SmartPanel {
                 spacing: Style.marginS
 
                 NLabel {
-                  label: modelData.name || "Unknown"
+                  label: monitorControl.modelData.name || "Unknown"
                   labelColor: Color.mPrimary
                   description: {
                     I18n.tr("system.monitor-description", {
-                              "model": modelData.model,
-                              "width": modelData.width * compositorScale,
-                              "height": modelData.height * compositorScale,
+                              "model": monitorControl.modelData.model,
+                              "width": monitorControl.modelData.width * compositorScale,
+                              "height": monitorControl.modelData.height * compositorScale,
                               "scale": compositorScale
                             });
                   }

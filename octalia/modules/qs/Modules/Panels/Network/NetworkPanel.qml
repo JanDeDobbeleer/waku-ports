@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -440,10 +442,11 @@ SmartPanel {
                   Repeater {
                     model: NetworkService.ethernetInterfaces || []
                     delegate: NBox {
+                      required property var modelData
                       id: ethItem
 
                       function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
-                        if (modelData.connected) {
+                        if (ethItem.modelData.connected) {
                           return [Color.mPrimary, Color.mOnPrimary];
                         }
                         return defaultColors;
@@ -485,9 +488,9 @@ SmartPanel {
                             spacing: 2
 
                             NText {
-                              text: modelData.connectionName || modelData.ifname
+                              text: ethItem.modelData.connectionName || ethItem.modelData.ifname
                               pointSize: Style.fontSizeM
-                              font.weight: modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
+                              font.weight: ethItem.modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
                               color: ethItem.getContentColors()[1]
                               elide: Text.ElideRight
                               Layout.fillWidth: true
@@ -498,7 +501,7 @@ SmartPanel {
 
                               NText {
                                 text: {
-                                  if (modelData.connected) {
+                                  if (ethItem.modelData.connected) {
                                     switch (NetworkService.networkConnectivity) {
                                     case "full":
                                       return I18n.tr("common.connected");
@@ -519,7 +522,7 @@ SmartPanel {
 
                               // Network speed indicators (visible when connected and speed > 0)
                               RowLayout {
-                                visible: (modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
+                                visible: (ethItem.modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
                                 spacing: 2
                                 Layout.leftMargin: Style.marginXS
                                 Layout.fillWidth: false
@@ -574,12 +577,12 @@ SmartPanel {
                             enabled: true
                             visible: NetworkService.ethernetConnected
                             onClicked: {
-                              if (NetworkService.activeEthernetIf === modelData.ifname && ethernetInfoExpanded) {
+                              if (NetworkService.activeEthernetIf === ethItem.modelData.ifname && ethernetInfoExpanded) {
                                 ethernetInfoExpanded = false;
                                 return;
                               }
-                              if (NetworkService.activeEthernetIf !== modelData.ifname) {
-                                NetworkService.activeEthernetIf = modelData.ifname;
+                              if (NetworkService.activeEthernetIf !== ethItem.modelData.ifname) {
+                                NetworkService.activeEthernetIf = ethItem.modelData.ifname;
                                 NetworkService.activeEthernetDetailsTimestamp = 0;
                               }
                               ethernetInfoExpanded = true;
@@ -592,12 +595,12 @@ SmartPanel {
                         TapHandler {
                           target: ethHeaderRow
                           onTapped: {
-                            if (NetworkService.activeEthernetIf === modelData.ifname && ethernetInfoExpanded) {
+                            if (NetworkService.activeEthernetIf === ethItem.modelData.ifname && ethernetInfoExpanded) {
                               ethernetInfoExpanded = false;
                               return;
                             }
-                            if (NetworkService.activeEthernetIf !== modelData.ifname) {
-                              NetworkService.activeEthernetIf = modelData.ifname;
+                            if (NetworkService.activeEthernetIf !== ethItem.modelData.ifname) {
+                              NetworkService.activeEthernetIf = ethItem.modelData.ifname;
                               NetworkService.activeEthernetDetailsTimestamp = 0;
                             }
                             ethernetInfoExpanded = true;
@@ -608,7 +611,7 @@ SmartPanel {
                         // Inline Ethernet details
                         Rectangle {
                           id: ethInfoInline
-                          visible: ethernetInfoExpanded && NetworkService.activeEthernetIf === modelData.ifname
+                          visible: ethernetInfoExpanded && NetworkService.activeEthernetIf === ethItem.modelData.ifname
                           Layout.fillWidth: true
                           color: Color.mSurfaceVariant
                           radius: Style.radiusXS

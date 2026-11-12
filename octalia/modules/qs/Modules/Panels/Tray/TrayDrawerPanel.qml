@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
@@ -181,6 +183,8 @@ SmartPanel {
         model: root.trayValues
 
         delegate: Item {
+          id: trayEntry
+          required property var modelData
           width: root.cellSize
           height: root.cellSize
 
@@ -190,7 +194,7 @@ SmartPanel {
             asynchronous: true
             backer.fillMode: Image.PreserveAspectFit
             source: {
-              let icon = modelData?.icon || "";
+              let icon = trayEntry.modelData?.icon || "";
               if (!icon)
                 return "";
               if (icon.includes("?path=")) {
@@ -217,17 +221,17 @@ SmartPanel {
               acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
               onClicked: mouse => {
-                           if (!modelData)
+                           if (!trayEntry.modelData)
                            return;
                            if (mouse.button === Qt.LeftButton) {
-                             if (!modelData.onlyMenu) {
-                               modelData.activate();
+                             if (!trayEntry.modelData.onlyMenu) {
+                               trayEntry.modelData.activate();
                              }
                              if ((PanelService.openedPanel !== null) && !PanelService.openedPanel.isClosing) {
                                PanelService.openedPanel.close();
                              }
                            } else if (mouse.button === Qt.MiddleButton) {
-                             modelData.secondaryActivate && modelData.secondaryActivate();
+                             trayEntry.modelData.secondaryActivate && trayEntry.modelData.secondaryActivate();
                              if ((PanelService.openedPanel !== null) && !PanelService.openedPanel.isClosing) {
                                PanelService.openedPanel.close();
                              }
@@ -237,7 +241,7 @@ SmartPanel {
                                return;
                              }
 
-                             if (modelData.hasMenu && modelData.menu && panelContent.trayMenu && panelContent.trayMenu.item) {
+                             if (trayEntry.modelData.hasMenu && trayEntry.modelData.menu && panelContent.trayMenu && panelContent.trayMenu.item) {
                                const barPosition = Settings.getBarPositionForScreen(root.screen?.name);
                                // Increased spacing for better alignment with other context menus
                                let menuX, menuY;
@@ -259,16 +263,16 @@ SmartPanel {
                                  menuY = trayIcon.height + Style.marginL;
                                }
 
-                               PanelService.showTrayMenu(root.screen, modelData, panelContent.trayMenu.item, trayIcon, menuX, menuY, root.widgetSection, root.widgetIndex);
+                               PanelService.showTrayMenu(root.screen, trayEntry.modelData, panelContent.trayMenu.item, trayIcon, menuX, menuY, root.widgetSection, root.widgetIndex);
                              }
                            }
                          }
 
               onWheel: wheel => {
                          if (wheel.angleDelta.y > 0)
-                         modelData?.scrollUp();
+                         trayEntry.modelData?.scrollUp();
                          else if (wheel.angleDelta.y < 0)
-                         modelData?.scrollDown();
+                         trayEntry.modelData?.scrollDown();
                        }
 
               onEntered: {

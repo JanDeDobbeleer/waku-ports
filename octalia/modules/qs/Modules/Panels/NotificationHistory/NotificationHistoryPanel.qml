@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -566,14 +568,16 @@ SmartPanel {
                   model: NotificationService.historyModel
 
                   delegate: Item {
+                    required property var model
+                    required property int index
                     id: notificationDelegate
                     width: parent.width
-                    visible: panelContent.isInCurrentRange(model.timestamp)
+                    visible: panelContent.isInCurrentRange(notificationDelegate.model.timestamp)
                     height: visible && !isRemoving ? contentColumn.height + Style.margin2M : 0
 
-                    property int listIndex: index
-                    property string notificationId: model.id
-                    property string appName: model.appName || ""
+                    property int listIndex: notificationDelegate.index
+                    property string notificationId: notificationDelegate.model.id
+                    property string appName: notificationDelegate.model.appName || ""
                     property bool isExpanded: scrollView.expandedId === notificationId
                     property bool canExpand: summaryText.truncated || bodyText.truncated
                     property real swipeOffset: 0
@@ -691,9 +695,9 @@ SmartPanel {
                     }
 
                     // Parse actions safely
-                    property var actionsList: parseActions(model.actionsJson)
+                    property var actionsList: parseActions(notificationDelegate.model.actionsJson)
 
-                    property bool isFocused: index === panelContent.focusIndex
+                    property bool isFocused: notificationDelegate.index === panelContent.focusIndex
 
                     Rectangle {
                       anchors.fill: parent
@@ -725,7 +729,7 @@ SmartPanel {
                       hoverEnabled: true
                       cursorShape: Qt.ArrowCursor
                       onPressed: mouse => {
-                                   panelContent.focusIndex = index;
+                                   panelContent.focusIndex = notificationDelegate.index;
                                    panelContent.actionIndex = -1;
 
                                    if (notificationDelegate.isExpanded) {
@@ -851,7 +855,7 @@ SmartPanel {
                           width: notificationDelegate.iconSize
                           height: notificationDelegate.iconSize
                           radius: Math.min(Style.radiusL, width / 2)
-                          imagePath: model.cachedImage || model.originalImage || ""
+                          imagePath: notificationDelegate.model.cachedImage || notificationDelegate.model.originalImage || ""
                           borderColor: "transparent"
                           borderWidth: 0
                           fallbackIcon: "bell"
@@ -874,11 +878,11 @@ SmartPanel {
                               height: 6
                               anchors.verticalCenter: parent.verticalCenter
                               radius: 3
-                              visible: model.urgency !== 1
+                              visible: notificationDelegate.model.urgency !== 1
                               color: {
-                                if (model.urgency === 2)
+                                if (notificationDelegate.model.urgency === 2)
                                   return Color.mError;
-                                else if (model.urgency === 0)
+                                else if (notificationDelegate.model.urgency === 0)
                                   return Color.mOnSurfaceVariant;
                                 else
                                   return "transparent";
@@ -886,7 +890,7 @@ SmartPanel {
                             }
 
                             NText {
-                              text: model.appName || "Unknown App"
+                              text: notificationDelegate.model.appName || "Unknown App"
                               pointSize: Style.fontSizeXS
                               font.weight: Style.fontWeightBold
                               color: Color.mSecondary
@@ -894,7 +898,7 @@ SmartPanel {
 
                             NText {
                               textFormat: Text.PlainText
-                              text: " " + Time.formatRelativeTime(model.timestamp)
+                              text: " " + Time.formatRelativeTime(notificationDelegate.model.timestamp)
                               pointSize: Style.fontSizeXXS
                               color: Color.mOnSurfaceVariant
                               anchors.bottom: parent.bottom
@@ -905,7 +909,7 @@ SmartPanel {
                           NText {
                             id: summaryText
                             width: parent.width
-                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (model.summaryMarkdown || I18n.tr("common.no-summary")) : (model.summary || I18n.tr("common.no-summary"))
+                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (notificationDelegate.model.summaryMarkdown || I18n.tr("common.no-summary")) : (notificationDelegate.model.summary || I18n.tr("common.no-summary"))
                             pointSize: Style.fontSizeM
                             color: Color.mOnSurface
                             textFormat: notificationDelegate.notificationTextFormat
@@ -918,7 +922,7 @@ SmartPanel {
                           NText {
                             id: bodyText
                             width: parent.width
-                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (model.bodyMarkdown || "") : (model.body || "")
+                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (notificationDelegate.model.bodyMarkdown || "") : (notificationDelegate.model.body || "")
                             pointSize: Style.fontSizeS
                             color: Color.mOnSurfaceVariant
                             textFormat: notificationDelegate.notificationTextFormat
@@ -938,11 +942,14 @@ SmartPanel {
                               model: notificationDelegate.actionsList
 
                               delegate: NButton {
-                                text: modelData.text
+                                id: historyAction
+                                required property var modelData
+                                required property int index
+                                text: historyAction.modelData.text
                                 fontSize: Style.fontSizeS
 
                                 readonly property bool actionNavActive: notificationDelegate.isFocused && panelContent.actionIndex !== -1
-                                readonly property bool isSelected: actionNavActive && panelContent.actionIndex === index
+                                readonly property bool isSelected: actionNavActive && panelContent.actionIndex === historyAction.index
 
                                 backgroundColor: isSelected ? Color.mSecondary : Color.mPrimary
                                 textColor: isSelected ? Color.mOnSecondary : Color.mOnPrimary
@@ -956,8 +963,8 @@ SmartPanel {
                                   }
                                 }
 
-                                // Capture modelData in a property to avoid reference errors
-                                property var actionData: modelData
+                                // Capture historyAction.modelData in a property to avoid reference errors
+                                property var actionData: historyAction.modelData
                                 onClicked: {
                                   if (NotificationService.invokeAction(notificationDelegate.notificationId, actionData.identifier))
                                     root.close();

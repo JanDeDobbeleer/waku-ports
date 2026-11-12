@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -388,12 +390,13 @@ SmartPanel {
             Repeater {
               model: Quickshell.screens
               NTabButton {
+                id: screenTab
                 required property var modelData
                 required property int index
-                text: modelData.name || `Screen ${index + 1}`
-                tabIndex: index
+                text: screenTab.modelData.name || `Screen ${screenTab.index + 1}`
+                tabIndex: screenTab.index
                 checked: {
-                  screenTabBar.currentIndex === index;
+                  screenTabBar.currentIndex === screenTab.index;
                 }
               }
             }
@@ -650,7 +653,9 @@ SmartPanel {
               id: screenRepeater
               model: Quickshell.screens
               delegate: WallpaperScreenView {
-                targetScreen: modelData
+                id: screenView
+                required property var modelData
+                targetScreen: screenView.modelData
               }
             }
           }
@@ -1086,6 +1091,8 @@ SmartPanel {
 
         delegate: Item {
           id: wallpaperItemWrapper
+          required property var model
+          required property int index
           width: wallpaperGridView.cellWidth
           height: wallpaperGridView.cellHeight
 
@@ -1094,14 +1101,14 @@ SmartPanel {
             anchors.fill: parent
             anchors.margins: Style.marginXS
 
-            property string wallpaperPath: model.path ?? ""
-            property bool isDirectory: model.isDirectory ?? false
+            property string wallpaperPath: wallpaperItemWrapper.model.path ?? ""
+            property bool isDirectory: wallpaperItemWrapper.model.isDirectory ?? false
             property bool isSelected: !isDirectory && (wallpaperPath === currentWallpaper)
             property bool isFavorited: {
               WallpaperService.favoritesRevision;
               return !isDirectory && WallpaperService.isFavorite(wallpaperPath);
             }
-            property string filename: model.name ?? wallpaperPath.split('/').pop()
+            property string filename: wallpaperItemWrapper.model.name ?? wallpaperPath.split('/').pop()
             property string cachedPath: ""
 
             spacing: Style.marginXS
@@ -1133,7 +1140,7 @@ SmartPanel {
                 color: Color.mSurfaceVariant
                 radius: Style.radiusM
                 visible: wallpaperItem.isDirectory
-                border.color: wallpaperGridView.currentIndex === index ? Color.mHover : Color.mSurface
+                border.color: wallpaperGridView.currentIndex === wallpaperItemWrapper.index ? Color.mHover : Color.mSurface
                 border.width: Math.max(1, Style.borderL * 1.5)
 
                 ColumnLayout {
@@ -1163,7 +1170,7 @@ SmartPanel {
                   if (wallpaperItem.isSelected) {
                     return Color.mSecondary;
                   }
-                  if (wallpaperGridView.currentIndex === index) {
+                  if (wallpaperGridView.currentIndex === wallpaperItemWrapper.index) {
                     return Color.mHover;
                   }
                   return Color.mSurface;
@@ -1232,7 +1239,7 @@ SmartPanel {
                 width: 28
                 height: 28
                 radius: width / 2
-                visible: !wallpaperItem.isDirectory && (wallpaperItem.isFavorited || hoverHandler.hovered || wallpaperGridView.currentIndex === index)
+                visible: !wallpaperItem.isDirectory && (wallpaperItem.isFavorited || hoverHandler.hovered || wallpaperGridView.currentIndex === wallpaperItemWrapper.index)
                 color: {
                   if (wallpaperItem.isFavorited)
                     return starHoverHandler.hovered ? Color.mHover : Color.mPrimary;
@@ -1344,10 +1351,12 @@ SmartPanel {
                     model: paletteRow.colors
 
                     Rectangle {
+                      id: paletteColor
+                      required property var modelData
                       width: paletteRow.diameter
                       height: paletteRow.diameter
                       radius: width * 0.5
-                      color: modelData
+                      color: paletteColor.modelData
                       border.color: Color.mShadow
                       border.width: Style.borderS
                     }
@@ -1366,7 +1375,7 @@ SmartPanel {
                 height: imageContainer.imageHeight
                 color: Color.mSurface
                 radius: Style.radiusM
-                opacity: (hoverHandler.hovered || wallpaperItem.isSelected || wallpaperGridView.currentIndex === index) ? 0 : 0.3
+                opacity: (hoverHandler.hovered || wallpaperItem.isSelected || wallpaperGridView.currentIndex === wallpaperItemWrapper.index) ? 0 : 0.3
                 Behavior on opacity {
                   NumberAnimation {
                     duration: Style.animationFast
@@ -1381,7 +1390,7 @@ SmartPanel {
               TapHandler {
                 onTapped: {
                   wallpaperGridView.forceActiveFocus();
-                  wallpaperGridView.currentIndex = index;
+                  wallpaperGridView.currentIndex = wallpaperItemWrapper.index;
                   selectItem(wallpaperItem.wallpaperPath, wallpaperItem.isDirectory);
                 }
               }
@@ -1390,7 +1399,7 @@ SmartPanel {
             NText {
               text: wallpaperItem.filename
               visible: !Settings.data.wallpaper.hideWallpaperFilenames
-              color: (hoverHandler.hovered || wallpaperItem.isSelected || wallpaperGridView.currentIndex === index) ? Color.mOnSurface : Color.mOnSurfaceVariant
+              color: (hoverHandler.hovered || wallpaperItem.isSelected || wallpaperGridView.currentIndex === wallpaperItemWrapper.index) ? Color.mOnSurface : Color.mOnSurfaceVariant
               pointSize: Style.fontSizeXS
               Layout.fillWidth: true
               Layout.leftMargin: Style.marginS
@@ -1585,6 +1594,8 @@ SmartPanel {
 
           delegate: Item {
             id: wallhavenItemWrapper
+            required property var modelData
+            required property int index
             width: wallhavenGridView.cellWidth
             height: wallhavenGridView.cellHeight
 
@@ -1593,8 +1604,8 @@ SmartPanel {
               anchors.fill: parent
               anchors.margins: Style.marginXS
 
-              property string thumbnailUrl: (modelData && typeof WallhavenService !== "undefined") ? WallhavenService.getThumbnailUrl(modelData, "large") : ""
-              property string wallpaperId: (modelData && modelData.id) ? modelData.id : ""
+              property string thumbnailUrl: (wallhavenItemWrapper.modelData && typeof WallhavenService !== "undefined") ? WallhavenService.getThumbnailUrl(wallhavenItemWrapper.modelData, "large") : ""
+              property string wallpaperId: (wallhavenItemWrapper.modelData && wallhavenItemWrapper.modelData.id) ? wallhavenItemWrapper.modelData.id : ""
 
               spacing: Style.marginXS
 
@@ -1614,7 +1625,7 @@ SmartPanel {
                   imagePath: wallhavenItem.thumbnailUrl
                   radius: Style.radiusM
                   borderColor: {
-                    if (wallhavenGridView.currentIndex === index) {
+                    if (wallhavenGridView.currentIndex === wallhavenItemWrapper.index) {
                       return Color.mHover;
                     }
                     return Color.mSurface;
@@ -1656,7 +1667,7 @@ SmartPanel {
                   height: imageContainer.imageHeight
                   color: Color.mSurface
                   radius: Style.radiusM
-                  opacity: (hoverHandler.hovered || wallhavenGridView.currentIndex === index) ? 0 : 0.3
+                  opacity: (hoverHandler.hovered || wallhavenGridView.currentIndex === wallhavenItemWrapper.index) ? 0 : 0.3
                   Behavior on opacity {
                     NumberAnimation {
                       duration: Style.animationFast
@@ -1671,8 +1682,8 @@ SmartPanel {
                 TapHandler {
                   onTapped: {
                     wallhavenGridView.forceActiveFocus();
-                    wallhavenGridView.currentIndex = index;
-                    wallhavenDownloadAndApply(modelData);
+                    wallhavenGridView.currentIndex = wallhavenItemWrapper.index;
+                    wallhavenDownloadAndApply(wallhavenItemWrapper.modelData);
                   }
                 }
               }
@@ -1680,7 +1691,7 @@ SmartPanel {
               NText {
                 text: wallhavenItem.wallpaperId || I18n.tr("common.unknown")
                 visible: !Settings.data.wallpaper.hideWallpaperFilenames
-                color: (hoverHandler.hovered || wallhavenGridView.currentIndex === index) ? Color.mOnSurface : Color.mOnSurfaceVariant
+                color: (hoverHandler.hovered || wallhavenGridView.currentIndex === wallhavenItemWrapper.index) ? Color.mOnSurface : Color.mOnSurfaceVariant
                 pointSize: Style.fontSizeXS
                 Layout.fillWidth: true
                 Layout.leftMargin: Style.marginS

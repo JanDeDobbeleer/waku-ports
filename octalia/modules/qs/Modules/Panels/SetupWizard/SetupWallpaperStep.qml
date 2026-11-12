@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -174,6 +176,7 @@ ColumnLayout {
         Repeater {
           model: root.filteredWallpapers
           delegate: Item {
+            required property string modelData
             id: thumbDelegate
             readonly property int baseWidth: 120
             readonly property int baseHeight: 80
@@ -185,12 +188,12 @@ ColumnLayout {
 
             Component.onCompleted: {
               if (ImageCacheService.initialized) {
-                ImageCacheService.getThumbnail(modelData, function (path, success) {
+                ImageCacheService.getThumbnail(thumbDelegate.modelData, function (path, success) {
                   if (thumbDelegate)
-                    thumbDelegate.cachedPath = success ? path : modelData;
+                    thumbDelegate.cachedPath = success ? path : thumbDelegate.modelData;
                 });
               } else {
-                cachedPath = modelData;
+                cachedPath = thumbDelegate.modelData;
               }
             }
 
@@ -200,8 +203,8 @@ ColumnLayout {
               anchors.fill: parent
               imagePath: thumbDelegate.cachedPath
               radius: thumbDelegate.thumbRadius
-              borderColor: selectedWallpaper === modelData ? Color.mPrimary : Color.mOutline
-              borderWidth: selectedWallpaper === modelData ? 2 : 1
+              borderColor: selectedWallpaper === thumbDelegate.modelData ? Color.mPrimary : Color.mOutline
+              borderWidth: selectedWallpaper === thumbDelegate.modelData ? 2 : 1
               imageFillMode: Image.PreserveAspectCrop
             }
 
@@ -242,7 +245,7 @@ ColumnLayout {
 
             // Selection badge
             Rectangle {
-              visible: selectedWallpaper === modelData
+              visible: selectedWallpaper === thumbDelegate.modelData
               anchors.right: parent.right
               anchors.bottom: parent.bottom
               anchors.margins: 6
@@ -265,8 +268,8 @@ ColumnLayout {
 
             TapHandler {
               onTapped: {
-                selectedWallpaper = modelData;
-                wallpaperChanged(modelData);
+                selectedWallpaper = thumbDelegate.modelData;
+                wallpaperChanged(thumbDelegate.modelData);
               }
             }
           }

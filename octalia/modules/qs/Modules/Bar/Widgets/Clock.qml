@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -82,8 +84,11 @@ Item {
             id: repeater
             model: I18n.locale.toString(now, formatHorizontal.trim()).split("\\n")
             NText {
+              id: horizontalClockLine
+              required property string modelData
+              required property int index
               visible: text !== ""
-              text: modelData
+              text: horizontalClockLine.modelData
               family: useCustomFont && customFont ? customFont : Settings.data.ui.fontDefault
               Binding on pointSize {
                 value: {
@@ -92,7 +97,7 @@ Item {
                     return barFontSize;
                   } else if (repeater.model.length == 2) {
                     // Two lines: First line is bigger than the second
-                    return (index == 0) ? Math.round(barFontSize * 0.9) : Math.round(barFontSize * 0.75);
+                    return (horizontalClockLine.index == 0) ? Math.round(barFontSize * 0.9) : Math.round(barFontSize * 0.75);
                   } else {
                     // More than two lines: Make it small!
                     return Math.round(barFontSize * 0.75);
@@ -122,8 +127,10 @@ Item {
           Repeater {
             model: I18n.locale.toString(now, formatVertical.trim()).split(" ")
             delegate: NText {
+              id: verticalClockLine
+              required property string modelData
               visible: text !== ""
-              text: modelData
+              text: verticalClockLine.modelData
               family: useCustomFont && customFont ? customFont : Settings.data.ui.fontDefault
               pointSize: barFontSize
               applyUiScale: false

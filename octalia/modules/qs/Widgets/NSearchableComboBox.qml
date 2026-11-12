@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -266,22 +268,24 @@ RowLayout {
             id: defaultDelegate
             ItemDelegate {
               id: delegateRoot
+              required property var model
+              required property int index
               width: listView.availableWidth
               leftPadding: Style.marginM
               rightPadding: Style.marginM
               topPadding: Style.marginS
               bottomPadding: Style.marginS
               hoverEnabled: true
-              highlighted: ListView.view.currentIndex === index
+              highlighted: ListView.view.currentIndex === delegateRoot.index
 
               onHoveredChanged: {
                 if (hovered) {
-                  ListView.view.currentIndex = index;
+                  ListView.view.currentIndex = delegateRoot.index;
                 }
               }
 
               onClicked: {
-                var selectedKey = listView.model.get(index).key;
+                var selectedKey = listView.model.get(delegateRoot.index).key;
                 root.selected(selectedKey);
                 combo.popup.close();
               }
@@ -291,7 +295,7 @@ RowLayout {
                 spacing: Style.marginM
 
                 NText {
-                  text: name
+                  text: delegateRoot.model.name
                   pointSize: Style.fontSizeM
                   color: delegateRoot.highlighted ? Color.mOnHover : Color.mOnSurface
                   verticalAlignment: Text.AlignVCenter
@@ -306,26 +310,27 @@ RowLayout {
                   // Generic badge renderer
                   Repeater {
                     model: {
-                      if (typeof badges === 'undefined' || badges === null)
+                      if (typeof delegateRoot.model.badges === 'undefined' || delegateRoot.model.badges === null)
                         return 0;
                       // Handle both arrays and ListModels
-                      if (typeof badges.length !== 'undefined')
-                        return badges.length;
-                      if (typeof badges.count !== 'undefined')
-                        return badges.count;
+                      if (typeof delegateRoot.model.badges.length !== 'undefined')
+                        return delegateRoot.model.badges.length;
+                      if (typeof delegateRoot.model.badges.count !== 'undefined')
+                        return delegateRoot.model.badges.count;
                       return 0;
                     }
 
                     delegate: NIcon {
+                      id: badgeIcon
                       required property int index
                       readonly property var badgeData: {
-                        if (typeof badges === 'undefined' || badges === null)
+                        if (typeof delegateRoot.model.badges === 'undefined' || delegateRoot.model.badges === null)
                           return null;
                         // Handle both arrays and ListModels
-                        if (typeof badges.length !== 'undefined')
-                          return badges[index];
-                        if (typeof badges.get !== 'undefined')
-                          return badges.get(index);
+                        if (typeof delegateRoot.model.badges.length !== 'undefined')
+                          return delegateRoot.model.badges[badgeIcon.index];
+                        if (typeof delegateRoot.model.badges.get !== 'undefined')
+                          return delegateRoot.model.badges.get(badgeIcon.index);
                         return null;
                       }
 
@@ -340,7 +345,7 @@ RowLayout {
                         else
                           return Style.fontSizeXS;
                       }
-                      color: highlighted ? Color.mOnHover : (badgeData && badgeData.color ? badgeData.color : Color.mOnSurface)
+                      color: delegateRoot.highlighted ? Color.mOnHover : (badgeData && badgeData.color ? badgeData.color : Color.mOnSurface)
                       Layout.preferredWidth: Math.round(Style.baseWidgetSize * 0.6)
                       Layout.preferredHeight: Math.round(Style.baseWidgetSize * 0.6)
                       visible: badgeData && badgeData.icon !== undefined && badgeData.icon !== ""

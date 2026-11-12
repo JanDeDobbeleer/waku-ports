@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -34,16 +36,17 @@ RowLayout {
       model: Color.colorKeyModel
 
       Rectangle {
+        required property var modelData
         id: colorCircle
 
-        property bool isSelected: root.currentKey === modelData.key
+        property bool isSelected: root.currentKey === colorCircle.modelData.key
         property bool isHovered: circleMouseArea.containsMouse
 
         Layout.alignment: Qt.AlignHCenter
         implicitWidth: root.diameter
         implicitHeight: root.diameter
         radius: root.diameter * 0.5
-        color: (modelData.key === "none" && root.noneColor !== undefined) ? root.noneColor : Color.resolveColorKey(modelData.key)
+        color: (colorCircle.modelData.key === "none" && root.noneColor !== undefined) ? root.noneColor : Color.resolveColorKey(colorCircle.modelData.key)
         border.color: (isSelected || isHovered) ? Color.mOnSurface : Color.mOutline
         border.width: Style.borderM
 
@@ -54,8 +57,8 @@ RowLayout {
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
           onClicked: {
-            root.currentKey = modelData.key;
-            root.selected(modelData.key);
+            root.currentKey = colorCircle.modelData.key;
+            root.selected(colorCircle.modelData.key);
           }
         }
 
@@ -63,7 +66,7 @@ RowLayout {
           anchors.centerIn: parent
           icon: "check"
           pointSize: Math.max(Style.fontSizeXS, colorCircle.width * 0.4)
-          color: (modelData.key === "none" && root.noneOnColor !== undefined) ? root.noneOnColor : Color.resolveOnColorKey(modelData.key)
+          color: (colorCircle.modelData.key === "none" && root.noneOnColor !== undefined) ? root.noneOnColor : Color.resolveOnColorKey(colorCircle.modelData.key)
           font.weight: Style.fontWeightBold
           visible: colorCircle.isSelected
         }

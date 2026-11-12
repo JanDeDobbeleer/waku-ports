@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -17,11 +19,13 @@ ColumnLayout {
     Repeater {
       model: Quickshell.screens || []
       delegate: NBox {
+        id: monitorSettings
+        required property ShellScreen modelData
         Layout.fillWidth: true
         implicitHeight: Math.round(contentCol.implicitHeight + Style.margin2L)
         color: Color.mSurface
 
-        property var brightnessMonitor: BrightnessService.getMonitorForScreen(modelData)
+        property var brightnessMonitor: BrightnessService.getMonitorForScreen(monitorSettings.modelData)
         property real localBrightness: 0.5
         property bool localBrightnessChanging: false
         readonly property string automaticOptionLabel: {
@@ -99,7 +103,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBottom
 
             NText {
-              text: modelData.name || "Unknown"
+              text: monitorSettings.modelData.name || "Unknown"
               pointSize: Style.fontSizeL
               font.weight: Style.fontWeightSemiBold
               Layout.alignment: Qt.AlignBottom
@@ -108,14 +112,14 @@ ColumnLayout {
             NText {
               Layout.fillWidth: true
               readonly property real compositorScale: {
-                const info = CompositorService.displayScales[modelData.name];
+                const info = CompositorService.displayScales[monitorSettings.modelData.name];
                 return (info && info.scale) ? info.scale : 1.0;
               }
               text: {
                 I18n.tr("system.monitor-description", {
-                          "model": modelData.model,
-                          "width": modelData.width * compositorScale,
-                          "height": modelData.height * compositorScale,
+                          "model": monitorSettings.modelData.model,
+                          "width": monitorSettings.modelData.width * compositorScale,
+                          "height": monitorSettings.modelData.height * compositorScale,
                           "scale": compositorScale
                         });
               }
@@ -205,8 +209,8 @@ ColumnLayout {
               label: I18n.tr("panels.display.monitors-backlight-device-label")
               description: I18n.tr("panels.display.monitors-backlight-device-description")
               model: backlightDeviceOptions
-              currentKey: BrightnessService.getMappedBacklightDevice(modelData.name) || ""
-              onSelected: key => BrightnessService.setMappedBacklightDevice(modelData.name, key)
+              currentKey: BrightnessService.getMappedBacklightDevice(monitorSettings.modelData.name) || ""
+              onSelected: key => BrightnessService.setMappedBacklightDevice(monitorSettings.modelData.name, key)
             }
           }
         }

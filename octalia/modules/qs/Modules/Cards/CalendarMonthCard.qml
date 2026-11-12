@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -147,13 +149,15 @@ NBox {
         Repeater {
           model: 7
           Item {
+            id: weekDayLabel
+            required property int index
             Layout.fillWidth: true
             Layout.preferredHeight: Style.fontSizeS * 2
 
             NText {
               anchors.centerIn: parent
               text: {
-                let dayIndex = (root.firstDayOfWeek + index) % 7;
+                let dayIndex = (root.firstDayOfWeek + weekDayLabel.index) % 7;
                 const dayName = I18n.locale.dayName(dayIndex, Locale.ShortFormat);
                 return dayName.substring(0, 2).toUpperCase();
               }
@@ -252,6 +256,8 @@ NBox {
         Repeater {
           model: parent.weekNumbers
           Item {
+            id: weekNumber
+            required property int modelData
             Layout.preferredWidth: Style.baseWidgetSize * 0.7
             Layout.preferredHeight: Style.baseWidgetSize * 0.9
 
@@ -259,7 +265,7 @@ NBox {
               anchors.centerIn: parent
               color: Qt.alpha(Color.mPrimary, 0.7)
               pointSize: Style.fontSizeXXS
-              text: modelData
+              text: weekNumber.modelData
             }
           }
         }
@@ -334,6 +340,8 @@ NBox {
           model: grid.daysModel
 
           Item {
+            id: calendarDay
+            required property var modelData
             Layout.fillWidth: true
             Layout.preferredHeight: Style.baseWidgetSize * 0.9
 
@@ -342,39 +350,41 @@ NBox {
               height: Style.baseWidgetSize * 0.9
               anchors.centerIn: parent
               radius: Style.radiusM
-              color: modelData.today ? Color.mSecondary : "transparent"
+              color: calendarDay.modelData.today ? Color.mSecondary : "transparent"
 
               NText {
                 anchors.centerIn: parent
-                text: modelData.day
+                text: calendarDay.modelData.day
                 color: {
-                  if (modelData.today)
+                  if (calendarDay.modelData.today)
                     return Color.mOnSecondary;
-                  if (modelData.currentMonth)
+                  if (calendarDay.modelData.currentMonth)
                     return Color.mOnSurface;
                   return Color.mOnSurfaceVariant;
                 }
-                opacity: modelData.currentMonth ? 1.0 : 0.4
+                opacity: calendarDay.modelData.currentMonth ? 1.0 : 0.4
                 pointSize: Style.fontSizeM
-                font.weight: modelData.today ? Style.fontWeightBold : Style.fontWeightMedium
+                font.weight: calendarDay.modelData.today ? Style.fontWeightBold : Style.fontWeightMedium
               }
 
               // Event indicator dots
               Row {
-                visible: Settings.data.location.showCalendarEvents && parent.parent.parent.parent.hasEventsOnDate(modelData.year, modelData.month, modelData.day)
+                visible: Settings.data.location.showCalendarEvents && parent.parent.parent.parent.hasEventsOnDate(calendarDay.modelData.year, calendarDay.modelData.month, calendarDay.modelData.day)
                 spacing: 2
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: Style.marginXS
 
                 Repeater {
-                  model: parent.parent.parent.parent.parent.getEventsForDate(modelData.year, modelData.month, modelData.day)
+                  model: parent.parent.parent.parent.parent.getEventsForDate(calendarDay.modelData.year, calendarDay.modelData.month, calendarDay.modelData.day)
 
                   Rectangle {
+                    id: eventDot
+                    required property var modelData
                     width: 4
                     height: width
                     radius: Style.radiusXXS
-                    color: parent.parent.parent.parent.parent.getEventColor(modelData, modelData.today)
+                    color: parent.parent.parent.parent.parent.getEventColor(eventDot.modelData, eventDot.modelData.today)
                   }
                 }
               }
@@ -385,7 +395,7 @@ NBox {
                 enabled: Settings.data.location.showCalendarEvents
 
                 onClicked: {
-                  const dateWithSlashes = `${(modelData.month + 1).toString().padStart(2, '0')}/${modelData.day.toString().padStart(2, '0')}/${modelData.year.toString().substring(2)}`;
+                  const dateWithSlashes = `${(calendarDay.modelData.month + 1).toString().padStart(2, '0')}/${calendarDay.modelData.day.toString().padStart(2, '0')}/${calendarDay.modelData.year.toString().substring(2)}`;
                   if (ProgramCheckerService.gnomeCalendarAvailable) {
                     Quickshell.execDetached(["gnome-calendar", "--date", dateWithSlashes]);
                   }

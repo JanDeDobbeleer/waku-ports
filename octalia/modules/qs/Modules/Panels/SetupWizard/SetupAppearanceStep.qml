@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -274,10 +276,11 @@ ColumnLayout {
             model: ColorSchemeService.schemes
 
             delegate: Rectangle {
+              required property string modelData
               id: schemeItem
 
-              property string schemePath: modelData
-              property string schemeName: root.extractSchemeName(modelData)
+              property string schemePath: schemeItem.modelData
+              property string schemeName: root.extractSchemeName(schemeItem.modelData)
 
               Layout.fillWidth: true
               Layout.alignment: Qt.AlignHCenter
@@ -376,8 +379,10 @@ ColumnLayout {
     Repeater {
       model: ColorSchemeService.schemes
       delegate: Item {
+        id: schemeLoader
+        required property string modelData
         FileView {
-          path: modelData
+          path: schemeLoader.modelData
           blockLoading: false
           onLoaded: {
             var jsonData;

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell.Bluetooth
@@ -344,22 +346,23 @@ Item {
   Component {
     id: nboxDelegate
     NBox {
+      required property var modelData
       id: device
 
-      readonly property bool canConnect: BluetoothService.canConnect(modelData)
-      readonly property bool canDisconnect: BluetoothService.canDisconnect(modelData)
-      readonly property bool canPair: BluetoothService.canPair(modelData)
-      readonly property bool isBusy: BluetoothService.isDeviceBusy(modelData)
-      readonly property bool isExpanded: root.expandedDeviceKey === BluetoothService.deviceKey(modelData)
+      readonly property bool canConnect: BluetoothService.canConnect(device.modelData)
+      readonly property bool canDisconnect: BluetoothService.canDisconnect(device.modelData)
+      readonly property bool canPair: BluetoothService.canPair(device.modelData)
+      readonly property bool isBusy: BluetoothService.isDeviceBusy(device.modelData)
+      readonly property bool isExpanded: root.expandedDeviceKey === BluetoothService.deviceKey(device.modelData)
 
       function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
-        if (modelData.pairing || modelData.state === BluetoothDeviceState.Connecting) {
+        if (device.modelData.pairing || device.modelData.state === BluetoothDeviceState.Connecting) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting) {
+        if (device.modelData.connected && device.modelData.state !== BluetoothDeviceState.Disconnecting) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (modelData.blocked || modelData.state === BluetoothDeviceState.Disconnecting) {
+        if (device.modelData.blocked || device.modelData.state === BluetoothDeviceState.Disconnecting) {
           return [Color.mError, Color.mOnError];
         }
         return defaultColors;
@@ -387,7 +390,7 @@ Item {
           NIcon {
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             horizontalAlignment: Text.AlignLeft
-            icon: BluetoothService.getDeviceIcon(modelData)
+            icon: BluetoothService.getDeviceIcon(device.modelData)
             pointSize: Style.fontSizeXXL
             color: device.getContentColors()[1]
           }
@@ -397,9 +400,9 @@ Item {
             spacing: Style.marginXXS
 
             NText {
-              text: modelData.name || modelData.deviceName
+              text: device.modelData.name || device.modelData.deviceName
               pointSize: Style.fontSizeM
-              font.weight: modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
+              font.weight: device.modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
               elide: Text.ElideRight
               color: device.getContentColors()[1]
               Layout.fillWidth: true
@@ -407,7 +410,7 @@ Item {
 
             NText {
               text: {
-                const k = BluetoothService.getStatusKey(modelData);
+                const k = BluetoothService.getStatusKey(device.modelData);
                 if (k === "pairing")
                   return I18n.tr("common.pairing");
                 if (k === "blocked")
@@ -424,11 +427,11 @@ Item {
             }
 
             RowLayout {
-              visible: modelData.batteryAvailable
+              visible: device.modelData.batteryAvailable
               spacing: Style.marginS
               NIcon {
                 icon: {
-                  var b = BluetoothService.getBatteryPercent(modelData);
+                  var b = BluetoothService.getBatteryPercent(device.modelData);
                   return BatteryService.getIcon(b !== null ? b : 0, false, false, b !== null);
                 }
                 pointSize: Style.fontSizeXS
@@ -436,7 +439,7 @@ Item {
               }
               NText {
                 text: {
-                  var b = BluetoothService.getBatteryPercent(modelData);
+                  var b = BluetoothService.getBatteryPercent(device.modelData);
                   return b === null ? "-" : (b + "%");
                 }
                 pointSize: Style.fontSizeXS
@@ -460,7 +463,7 @@ Item {
             }
 
             NIconButton {
-              visible: modelData.connected && modelData.state !== BluetoothDeviceState.Disconnecting
+              visible: device.modelData.connected && device.modelData.state !== BluetoothDeviceState.Disconnecting
               icon: "info"
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mSurfaceVariant
@@ -468,48 +471,48 @@ Item {
               colorBorder: "transparent"
               colorBorderHover: "transparent"
               onClicked: {
-                const key = BluetoothService.deviceKey(modelData);
+                const key = BluetoothService.deviceKey(device.modelData);
                 root.expandedDeviceKey = (root.expandedDeviceKey === key) ? "" : key;
               }
             }
 
             NIconButton {
-              visible: !root.showOnlyLists && (modelData.paired || modelData.trusted) && !modelData.connected && !device.isBusy && !modelData.blocked
+              visible: !root.showOnlyLists && (device.modelData.paired || device.modelData.trusted) && !device.modelData.connected && !device.isBusy && !device.modelData.blocked
               icon: "trash"
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mPrimary
               colorFg: Color.mOnPrimary
               colorBorder: "transparent"
               colorBorderHover: "transparent"
-              onClicked: BluetoothService.unpairDevice(modelData)
+              onClicked: BluetoothService.unpairDevice(device.modelData)
             }
 
             NButton {
               id: button
-              visible: modelData.state !== BluetoothDeviceState.Connecting && modelData.state !== BluetoothDeviceState.Disconnecting
+              visible: device.modelData.state !== BluetoothDeviceState.Connecting && device.modelData.state !== BluetoothDeviceState.Disconnecting
               enabled: (device.canConnect || device.canDisconnect || (root.showOnlyLists ? false : device.canPair)) && !device.isBusy
               fontSize: Style.fontSizeS
-              backgroundColor: modelData.connected ? Color.mSurfaceVariant : Color.mPrimary
-              textColor: modelData.connected ? Color.mOnSurface : Color.mOnPrimary
+              backgroundColor: device.modelData.connected ? Color.mSurfaceVariant : Color.mPrimary
+              textColor: device.modelData.connected ? Color.mOnSurface : Color.mOnPrimary
               text: {
-                if (modelData.pairing)
+                if (device.modelData.pairing)
                   return I18n.tr("common.pairing");
-                if (modelData.blocked)
+                if (device.modelData.blocked)
                   return I18n.tr("bluetooth.panel.blocked");
-                if (modelData.connected)
+                if (device.modelData.connected)
                   return I18n.tr("common.disconnect");
                 if (!root.showOnlyLists && device.canPair)
                   return I18n.tr("common.pair");
                 return I18n.tr("common.connect");
               }
               onClicked: {
-                if (modelData.connected) {
-                  BluetoothService.disconnectDevice(modelData);
+                if (device.modelData.connected) {
+                  BluetoothService.disconnectDevice(device.modelData);
                 } else {
                   if (!root.showOnlyLists && device.canPair) {
-                    BluetoothService.pairDevice(modelData);
+                    BluetoothService.pairDevice(device.modelData);
                   } else {
-                    BluetoothService.connectDeviceWithTrust(modelData);
+                    BluetoothService.connectDeviceWithTrust(device.modelData);
                   }
                 }
               }
@@ -558,7 +561,7 @@ Item {
               spacing: Style.marginXS
               NIcon {
                 icon: {
-                  var b = BluetoothService.getBatteryPercent(modelData);
+                  var b = BluetoothService.getBatteryPercent(device.modelData);
                   return BatteryService.getIcon(b !== null ? b : 0, false, false, b !== null);
                 }
                 pointSize: Style.fontSizeXS
@@ -566,7 +569,7 @@ Item {
               }
               NText {
                 text: {
-                  var b = BluetoothService.getBatteryPercent(modelData);
+                  var b = BluetoothService.getBatteryPercent(device.modelData);
                   return b === null ? "-" : (b + "%");
                 }
                 pointSize: Style.fontSizeXS
@@ -585,7 +588,7 @@ Item {
                 color: Color.mOnSurface
               }
               NText {
-                text: modelData.paired ? I18n.tr("common.yes") : I18n.tr("common.no")
+                text: device.modelData.paired ? I18n.tr("common.yes") : I18n.tr("common.no")
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
                 Layout.fillWidth: true
@@ -602,7 +605,7 @@ Item {
                 color: Color.mOnSurface
               }
               NText {
-                text: modelData.trusted ? I18n.tr("common.yes") : I18n.tr("common.no")
+                text: device.modelData.trusted ? I18n.tr("common.yes") : I18n.tr("common.no")
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
                 Layout.fillWidth: true
@@ -619,7 +622,7 @@ Item {
                 color: Color.mOnSurface
               }
               NText {
-                text: modelData.address || "-"
+                text: device.modelData.address || "-"
                 pointSize: Style.fontSizeXS
                 color: Color.mOnSurface
                 Layout.fillWidth: true
@@ -633,15 +636,15 @@ Item {
               spacing: Style.marginXS
               visible: Settings.data.network.bluetoothAutoConnect
               NIcon {
-                icon: BluetoothService.getDeviceAutoConnect(modelData) ? "repeat" : "repeat-off"
+                icon: BluetoothService.getDeviceAutoConnect(device.modelData) ? "repeat" : "repeat-off"
                 pointSize: Style.fontSizeXS
               }
               NCheckbox {
                 label: I18n.tr("common.auto-connect")
                 labelSize: Style.fontSizeXS
                 baseSize: Style.baseWidgetSize * 0.5
-                checked: BluetoothService.getDeviceAutoConnect(modelData)
-                onToggled: checked => BluetoothService.setDeviceAutoConnect(modelData, checked)
+                checked: BluetoothService.getDeviceAutoConnect(device.modelData)
+                onToggled: checked => BluetoothService.setDeviceAutoConnect(device.modelData, checked)
               }
             }
           }

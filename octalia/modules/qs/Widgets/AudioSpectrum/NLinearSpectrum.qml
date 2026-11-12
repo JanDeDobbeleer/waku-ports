@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import qs.Commons
 
@@ -25,7 +27,9 @@ Item {
     model: root.totalBars
 
     Rectangle {
-      property int valueIndex: root.mirrored ? (index < root.valuesCount ? root.valuesCount - 1 - index : index - root.valuesCount) : index
+      id: spectrumBar
+      required property int index
+      property int valueIndex: root.mirrored ? (spectrumBar.index < root.valuesCount ? root.valuesCount - 1 - index : spectrumBar.index - root.valuesCount) : spectrumBar.index
 
       property real rawAmp: (root.values && root.values[valueIndex] !== undefined) ? root.values[valueIndex] : 0
       property real amp: (root.showMinimumSignal && rawAmp === 0) ? root.minimumSignalValue : rawAmp
@@ -39,8 +43,8 @@ Item {
       // Only update when value actually changes - reduces GPU load
       width: vertical ? root.width * amp : root.barSlotSize * 0.5
       height: vertical ? root.barSlotSize * 0.5 : root.height * amp
-      x: vertical ? (root.barPosition === "left" ? 0 : root.width - width) : index * root.barSlotSize + (root.barSlotSize * 0.25)
-      y: vertical ? index * root.barSlotSize + (root.barSlotSize * 0.25) : root.height - height
+      x: vertical ? (root.barPosition === "left" ? 0 : root.width - width) : spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25)
+      y: vertical ? spectrumBar.index * root.barSlotSize + (root.barSlotSize * 0.25) : root.height - height
 
       // Disable updates when invisible to save GPU
       visible: root.visible

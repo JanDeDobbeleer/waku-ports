@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -272,7 +274,7 @@ Variants {
 
           delegate: Loader {
             id: widgetLoader
-            active: modelData.id in root.registeredWidgets
+            active: widgetLoader.modelData.id in root.registeredWidgets
 
             required property var modelData
             required property int index
@@ -290,15 +292,15 @@ Variants {
             }
 
             function _loadWidget() {
-              var widgetId = modelData.id;
+              var widgetId = widgetLoader.modelData.id;
               var comp = root.registeredWidgets[widgetId];
               if (!comp)
                 return;
 
               var props = {
                 "screen": window.screen,
-                "widgetData": modelData,
-                "widgetIndex": index
+                "widgetData": widgetLoader.modelData,
+                "widgetIndex": widgetLoader.index
               };
 
               // Use explicit URL (inline Component.url

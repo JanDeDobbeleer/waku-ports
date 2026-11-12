@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 
@@ -222,23 +224,24 @@ Item {
   Component {
     id: nboxDelegate
     NBox {
+      required property var modelData
       id: networkItem
 
-      readonly property bool isBusy: NetworkService.connectingTo === modelData.ssid || NetworkService.disconnectingFrom === modelData.ssid || NetworkService.forgettingNetwork === modelData.ssid
-      readonly property bool isExpanded: root.infoSsid === modelData.ssid
-      readonly property bool isEnterprise: NetworkService.isEnterprise(modelData.security)
+      readonly property bool isBusy: NetworkService.connectingTo === networkItem.modelData.ssid || NetworkService.disconnectingFrom === networkItem.modelData.ssid || NetworkService.forgettingNetwork === networkItem.modelData.ssid
+      readonly property bool isExpanded: root.infoSsid === networkItem.modelData.ssid
+      readonly property bool isEnterprise: NetworkService.isEnterprise(networkItem.modelData.security)
 
       function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
-        if (NetworkService.connectingTo === modelData.ssid) {
+        if (NetworkService.connectingTo === networkItem.modelData.ssid) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (modelData.connected && NetworkService.internetConnectivity && NetworkService.disconnectingFrom !== modelData.ssid) {
+        if (networkItem.modelData.connected && NetworkService.internetConnectivity && NetworkService.disconnectingFrom !== networkItem.modelData.ssid) {
           return [Color.mPrimary, Color.mOnPrimary];
         }
-        if (NetworkService.disconnectingFrom === modelData.ssid || NetworkService.forgettingNetwork === modelData.ssid) {
+        if (NetworkService.disconnectingFrom === networkItem.modelData.ssid || NetworkService.forgettingNetwork === networkItem.modelData.ssid) {
           return [Color.mError, Color.mOnError];
         }
-        if (modelData.connected && !NetworkService.internetConnectivity) {
+        if (networkItem.modelData.connected && !NetworkService.internetConnectivity) {
           return [Color.mError, Color.mOnError];
         }
         return defaultColors;
@@ -266,7 +269,7 @@ Item {
           NIcon {
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             horizontalAlignment: Text.AlignLeft
-            icon: NetworkService.getSignalInfo(modelData.signal, modelData.connected).icon
+            icon: NetworkService.getSignalInfo(networkItem.modelData.signal, networkItem.modelData.connected).icon
             pointSize: Style.fontSizeXXL
             color: networkItem.getContentColors()[1]
           }
@@ -276,9 +279,9 @@ Item {
             spacing: Style.marginXXS
 
             NText {
-              text: modelData.ssid
+              text: networkItem.modelData.ssid
               pointSize: Style.fontSizeM
-              font.weight: modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
+              font.weight: networkItem.modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
               elide: Text.ElideRight
               color: networkItem.getContentColors()[1]
               Layout.fillWidth: true
@@ -288,21 +291,21 @@ Item {
               spacing: Style.marginXS
 
               NIcon {
-                icon: NetworkService.isSecured(modelData.security) ? "lock" : "lock-open"
+                icon: NetworkService.isSecured(networkItem.modelData.security) ? "lock" : "lock-open"
                 pointSize: Style.fontSizeXXS
                 color: Qt.alpha(networkItem.getContentColors()[1], Style.opacityHeavy)
-                visible: !modelData.connected && NetworkService.disconnectingFrom !== modelData.ssid && NetworkService.forgettingNetwork !== modelData.ssid
+                visible: !networkItem.modelData.connected && NetworkService.disconnectingFrom !== networkItem.modelData.ssid && NetworkService.forgettingNetwork !== networkItem.modelData.ssid
               }
 
               NText {
                 text: {
-                  if (NetworkService.disconnectingFrom === modelData.ssid) {
+                  if (NetworkService.disconnectingFrom === networkItem.modelData.ssid) {
                     return I18n.tr("wifi.panel.disconnecting");
                   }
-                  if (NetworkService.forgettingNetwork === modelData.ssid) {
+                  if (NetworkService.forgettingNetwork === networkItem.modelData.ssid) {
                     return I18n.tr("wifi.panel.forgetting");
                   }
-                  if (modelData.connected) {
+                  if (networkItem.modelData.connected) {
                     switch (NetworkService.networkConnectivity) {
                     case "full":
                       return I18n.tr("common.connected");
@@ -314,7 +317,7 @@ Item {
                       return NetworkService.networkConnectivity;
                     }
                   }
-                  return NetworkService.isSecured(modelData.security) ? modelData.security : I18n.tr("wifi.panel.security-open");
+                  return NetworkService.isSecured(networkItem.modelData.security) ? networkItem.modelData.security : I18n.tr("wifi.panel.security-open");
                 }
                 pointSize: Style.fontSizeXXS
                 color: Qt.alpha(networkItem.getContentColors()[1], Style.opacityHeavy)
@@ -322,7 +325,7 @@ Item {
 
               // Network speed indicators (visible when connected and speed > 0)
               RowLayout {
-                visible: (modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
+                visible: (networkItem.modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
                 spacing: 2
                 Layout.leftMargin: Style.marginXS
                 Layout.fillWidth: false
@@ -381,7 +384,7 @@ Item {
             }
 
             NIconButton {
-              visible: modelData.connected && NetworkService.disconnectingFrom !== modelData.ssid
+              visible: networkItem.modelData.connected && NetworkService.disconnectingFrom !== networkItem.modelData.ssid
               icon: "info"
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mSurfaceVariant
@@ -389,10 +392,10 @@ Item {
               colorBorder: "transparent"
               colorBorderHover: "transparent"
               onClicked: {
-                if (root.infoSsid === modelData.ssid) {
+                if (root.infoSsid === networkItem.modelData.ssid) {
                   root.infoSsid = "";
                 } else {
-                  root.infoSsid = modelData.ssid;
+                  root.infoSsid = networkItem.modelData.ssid;
                   NetworkService.refreshActiveWifiDetails();
                 }
               }
@@ -400,13 +403,13 @@ Item {
 
             NButton {
               id: button
-              visible: modelData.existing && !modelData.connected && NetworkService.connectingTo !== modelData.ssid
+              visible: networkItem.modelData.existing && !networkItem.modelData.connected && NetworkService.connectingTo !== networkItem.modelData.ssid
               enabled: !NetworkService.connecting && !networkItem.isBusy
               fontSize: Style.fontSizeS
               backgroundColor: Color.mPrimary
               textColor: Color.mOnPrimary
               text: I18n.tr("common.connect")
-              onClicked: NetworkService.connect(modelData.ssid)
+              onClicked: NetworkService.connect(networkItem.modelData.ssid)
             }
           }
         }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -106,21 +108,22 @@ Item {
       Repeater {
         model: root.maxKeybinds
         delegate: MouseArea {
+          required property int index
           id: slotArea
           width: Math.round(180 * Style.uiScaleRatio)
           height: root._pillHeight
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
 
-          readonly property bool isOccupied: index < root.currentKeybinds.length
-          readonly property bool isRecordingThis: root.recordingIndex === index
-          readonly property string keybindText: isRecordingThis ? I18n.tr("placeholders.keybind-recording") : (isOccupied ? root.currentKeybinds[index] : I18n.tr("placeholders.add-new-keybind"))
+          readonly property bool isOccupied: slotArea.index < root.currentKeybinds.length
+          readonly property bool isRecordingThis: root.recordingIndex === slotArea.index
+          readonly property string keybindText: isRecordingThis ? I18n.tr("placeholders.keybind-recording") : (isOccupied ? root.currentKeybinds[slotArea.index] : I18n.tr("placeholders.add-new-keybind"))
 
           onClicked: {
             if (isRecordingThis) {
               root.recordingIndex = -1;
             } else {
-              root.recordingIndex = index;
+              root.recordingIndex = slotArea.index;
               keybindInput.forceActiveFocus();
             }
           }
@@ -185,7 +188,7 @@ Item {
                   baseSize: Style.baseWidgetSize * 0.7
                   onClicked: {
                     var newKeybinds = Array.from(root.currentKeybinds);
-                    newKeybinds.splice(index, 1);
+                    newKeybinds.splice(slotArea.index, 1);
                     root.keybindsChanged(newKeybinds);
                   }
                 }

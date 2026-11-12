@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import "../Helpers/ColorsConvert.js" as ColorsConvert
@@ -398,6 +400,7 @@ Item {
   }
 
   component BinaryColumn: Column {
+    id: binaryColumn
     property int value: 0
     property int bits: 4
     property real dotSize: 10
@@ -409,13 +412,15 @@ Item {
       model: bits
 
       Rectangle {
-        property int bitIndex: (bits - 1) - index
-        property bool isActive: (value >> bitIndex) & 1
+        id: binaryDot
+        required property int index
+        property int bitIndex: (binaryColumn.bits - 1) - binaryDot.index
+        property bool isActive: (binaryColumn.value >> bitIndex) & 1
 
-        width: dotSize
-        height: dotSize
-        radius: dotSize / 2
-        color: isActive ? activeColor : Qt.alpha(activeColor, 0.2)
+        width: binaryColumn.dotSize
+        height: binaryColumn.dotSize
+        radius: binaryColumn.dotSize / 2
+        color: isActive ? activeColor : Qt.alpha(binaryColumn.activeColor, 0.2)
 
         Behavior on color {
           ColorAnimation {

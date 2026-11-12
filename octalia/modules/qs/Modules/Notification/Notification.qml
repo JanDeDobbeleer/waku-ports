@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -58,7 +60,7 @@ Variants {
 
     sourceComponent: PanelWindow {
       id: notifWindow
-      screen: modelData
+      screen: root.modelData
 
       WlrLayershell.namespace: "octalia-notifications-" + (screen?.name || "unknown")
       WlrLayershell.layer: (Settings.data.notifications?.overlayLayer) ? WlrLayer.Overlay : WlrLayer.Top
@@ -212,13 +214,15 @@ Variants {
 
           delegate: Item {
             id: card
+            required property var model
+            required property int index
 
-            property string notificationId: model.id
-            property var notificationData: model
+            property string notificationId: card.model.id
+            property var notificationData: card.model
             property bool isHovered: false
             property bool isRemoving: false
 
-            readonly property int animationDelay: index * 100
+            readonly property int animationDelay: card.index * 100
             readonly property int slideDistance: 300
 
             Layout.preferredWidth: notifWidth + notifWindow.shadowPadding * 2
@@ -522,7 +526,7 @@ Variants {
                               if (card.suppressClick)
                               return;
 
-                              var actions = model.actionsJson ? JSON.parse(model.actionsJson) : [];
+                              var actions = card.model.actionsJson ? JSON.parse(card.model.actionsJson) : [];
                               var hasDefault = actions.some(function (a) {
                                 return a.identifier === "default";
                               });
@@ -531,7 +535,7 @@ Variants {
                               } else {
                                 // Without a default action, or if invoking it fails,
                                 // the best fallback is focusing the sender window by app identity.
-                                NotificationService.focusSenderWindow(model.appName);
+                                NotificationService.focusSenderWindow(card.model.appName);
                                 card.animateOut();
                               }
                             }
@@ -563,11 +567,11 @@ Variants {
                     id: progressBar
                     readonly property real progressWidth: cardBackground.width - (2 * cardBackground.radius)
                     height: parent.height
-                    x: cardBackground.radius + (progressWidth * (1 - model.progress)) / 2
-                    width: progressWidth * model.progress
+                    x: cardBackground.radius + (progressWidth * (1 - card.model.progress)) / 2
+                    width: progressWidth * card.model.progress
 
                     color: {
-                      var baseColor = model.urgency === 2 ? Color.mError : model.urgency === 0 ? Color.mOnSurface : Color.mPrimary;
+                      var baseColor = card.model.urgency === 2 ? Color.mError : card.model.urgency === 0 ? Color.mOnSurface : Color.mPrimary;
                       return Qt.alpha(baseColor, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0);
                     }
 
@@ -619,7 +623,7 @@ Variants {
                     Layout.preferredHeight: Math.round(40 * Style.uiScaleRatio)
                     Layout.alignment: Qt.AlignVCenter
                     radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
-                    imagePath: model.originalImage || ""
+                    imagePath: card.model.originalImage || ""
                     borderColor: "transparent"
                     borderWidth: 0
                     fallbackIcon: "bell"
@@ -640,11 +644,11 @@ Variants {
                         Layout.preferredHeight: 6
                         Layout.alignment: Qt.AlignVCenter
                         radius: Style.radiusXS
-                        color: model.urgency === 2 ? Color.mError : model.urgency === 0 ? Color.mOnSurface : Color.mPrimary
+                        color: card.model.urgency === 2 ? Color.mError : card.model.urgency === 0 ? Color.mOnSurface : Color.mPrimary
                       }
 
                       NText {
-                        text: model.appName || "Unknown App"
+                        text: card.model.appName || "Unknown App"
                         pointSize: Style.fontSizeXS
                         font.weight: Style.fontWeightBold
                         color: Color.mSecondary
@@ -652,7 +656,7 @@ Variants {
 
                       NText {
                         textFormat: Text.PlainText
-                        text: " " + Time.formatRelativeTime(model.timestamp)
+                        text: " " + Time.formatRelativeTime(card.model.timestamp)
                         pointSize: Style.fontSizeXXS
                         color: Color.mOnSurfaceVariant
                         Layout.alignment: Qt.AlignBottom
@@ -664,7 +668,7 @@ Variants {
                     }
 
                     NText {
-                      text: model.summary || I18n.tr("common.no-summary")
+                      text: card.model.summary || I18n.tr("common.no-summary")
                       pointSize: Style.fontSizeM
                       font.weight: Style.fontWeightMedium
                       color: Color.mOnSurface
@@ -678,7 +682,7 @@ Variants {
                     }
 
                     NText {
-                      text: model.body || ""
+                      text: card.model.body || ""
                       pointSize: Style.fontSizeM
                       color: Color.mOnSurface
                       textFormat: Text.StyledText
@@ -701,7 +705,7 @@ Variants {
                       property string parentNotificationId: card.notificationId
                       property var parsedActions: {
                         try {
-                          return model.actionsJson ? JSON.parse(model.actionsJson) : [];
+                          return card.model.actionsJson ? JSON.parse(card.model.actionsJson) : [];
                         } catch (e) {
                           return [];
                         }
@@ -712,7 +716,9 @@ Variants {
                         model: parent.parsedActions
 
                         delegate: NButton {
-                          property var actionData: modelData
+                          id: notificationAction
+                          required property var modelData
+                          property var actionData: notificationAction.modelData
 
                           text: {
                             var actionText = actionData.text || "Open";
@@ -765,7 +771,7 @@ Variants {
                   Layout.preferredHeight: Math.round(24 * Style.uiScaleRatio)
                   Layout.alignment: Qt.AlignVCenter
                   radius: Style.radiusXS
-                  imagePath: model.originalImage || ""
+                  imagePath: card.model.originalImage || ""
                   borderColor: "transparent"
                   borderWidth: 0
                   fallbackIcon: "bell"
@@ -777,7 +783,7 @@ Variants {
                   spacing: Style.marginXS
 
                   NText {
-                    text: model.summary || I18n.tr("common.no-summary")
+                    text: card.model.summary || I18n.tr("common.no-summary")
                     pointSize: Style.fontSizeM
                     font.weight: Style.fontWeightMedium
                     color: Color.mOnSurface
@@ -788,9 +794,9 @@ Variants {
                   }
 
                   NText {
-                    visible: model.body && model.body.length > 0
+                    visible: card.model.body && card.model.body.length > 0
                     Layout.fillWidth: true
-                    text: model.body || ""
+                    text: card.model.body || ""
                     pointSize: Style.fontSizeS
                     color: Color.mOnSurfaceVariant
                     textFormat: Text.StyledText

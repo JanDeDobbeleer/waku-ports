@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Widgets
@@ -780,9 +782,10 @@ Item {
           model: groupedContainer.liveWindows
 
           delegate: Item {
+            required property var modelData
             id: groupedTaskbarItem
 
-            readonly property bool isFocused: modelData?.isFocused ?? false
+            readonly property bool isFocused: groupedTaskbarItem.modelData?.isFocused ?? false
 
             width: root.iconSize
             height: root.iconSize
@@ -799,7 +802,7 @@ Item {
 
               source: {
                 root.iconRevision; // Force re-evaluation when revision changes
-                return ThemeIcons.iconForAppId(modelData?.appId?.toLowerCase());
+                return ThemeIcons.iconForAppId(groupedTaskbarItem.modelData?.appId?.toLowerCase());
               }
               smooth: true
               asynchronous: true
@@ -833,16 +836,16 @@ Item {
               preventStealing: true
 
               onPressed: mouse => {
-                           if (mouse.button === Qt.LeftButton && modelData) {
-                             CompositorService.focusWindow(modelData);
+                           if (mouse.button === Qt.LeftButton && groupedTaskbarItem.modelData) {
+                             CompositorService.focusWindow(groupedTaskbarItem.modelData);
                            }
                          }
 
               onReleased: mouse => {
-                            if (mouse.button === Qt.RightButton && modelData) {
+                            if (mouse.button === Qt.RightButton && groupedTaskbarItem.modelData) {
                               mouse.accepted = true;
-                              root.selectedWindowId = modelData.id || modelData.address || "";
-                              root.selectedAppId = modelData.appId;
+                              root.selectedWindowId = groupedTaskbarItem.modelData.id || groupedTaskbarItem.modelData.address || "";
+                              root.selectedAppId = groupedTaskbarItem.modelData.appId;
                               openGroupedContextMenu(groupedTaskbarItem);
                             }
                           }

@@ -13,6 +13,8 @@ Singleton {
   property var locale: Qt.locale()
   property string systemDetectedLangCode: ""
   property string fullLocaleCode: "" // Preserves regional locale variants
+  property string _detectedLanguageCode: "en"
+  property string _detectedFullLocale: "en"
   property var translations: ({})
   property var fallbackTranslations: ({})
 
@@ -70,7 +72,7 @@ Singleton {
         }
       } catch (e) {
         Logger.e("I18n", `Failed to parse translation file: ${e}`);
-        setLanguage("en");
+        root.setLanguage("en");
       }
     }
     onLoadFailed: function (error) {
@@ -85,24 +87,24 @@ Singleton {
 
       // Qt.callLater is needed because FileView doesn't re-trigger when path
       // is changed inside its own onLoadFailed handler
-      var strippedCode = stripScript(root.langCode);
+      var strippedCode = root.stripScript(root.langCode);
       if (strippedCode !== root.langCode) {
         Logger.d("I18n", `Translation file for "${root.langCode}" not found, trying "${strippedCode}"`);
         root.langCode = strippedCode;
-        Qt.callLater(loadTranslations);
+        Qt.callLater(root.loadTranslations);
       } else {
         // Try language-only code (e.g. "zh-CN" → "zh")
         shortCode = root.langCode.substring(0, 2);
         if (shortCode !== root.langCode) {
           Logger.d("I18n", `Translation file for "${root.langCode}" not found, trying "${shortCode}"`);
           root.langCode = shortCode;
-          Qt.callLater(loadTranslations);
+          Qt.callLater(root.loadTranslations);
         } else {
           Logger.w("I18n", `Translation file for "${root.langCode}" not found, falling back to English`);
           root.langCode = "en";
           root.fullLocaleCode = "en";
           root.locale = Qt.locale("en");
-          Qt.callLater(loadTranslations);
+          Qt.callLater(root.loadTranslations);
         }
       }
     }
@@ -135,10 +137,10 @@ Singleton {
       var userLang = Settings.data.general.language;
       if (userLang !== "" && userLang !== root.langCode && root.availableLanguages.includes(userLang)) {
         Logger.i("I18n", `Applying user language preference: "${userLang}"`);
-        setLanguage(userLang);
+        root.setLanguage(userLang);
       } else if (userLang === "" && root.systemDetectedLangCode !== "" && root.systemDetectedLangCode !== root.langCode) {
         Logger.i("I18n", `Language reset to default, reverting to system language: "${root.systemDetectedLangCode}"`);
-        setLanguage(root.systemDetectedLangCode);
+        root.setLanguage(root.systemDetectedLangCode);
       }
     }
   }
@@ -146,17 +148,17 @@ Singleton {
   Component.onCompleted: {
     Logger.i("I18n", "Service started");
 
-    var lang = determineFastLanguage();
-    langCode = lang.code;
-    fullLocaleCode = lang.fullLocale;
-    locale = Qt.locale(lang.fullLocale);
-    systemDetectedLangCode = lang.code;
-    Logger.i("I18n", `Loading "${lang.code}" (locale: "${lang.fullLocale}")`);
+    root.determineFastLanguage();
+    langCode = _detectedLanguageCode;
+    fullLocaleCode = _detectedFullLocale;
+    locale = Qt.locale(fullLocaleCode);
+    systemDetectedLangCode = langCode;
+    Logger.i("I18n", `Loading "${langCode}" (locale: "${fullLocaleCode}")`);
     loadTranslations();
   }
 
   // Strip 4-letter script subtag from a BCP 47 tag (e.g. "fr-Latn-FR" → "fr-FR")
-  function stripScript(tag) {
+  function stripScript(tag: string): string {
     var i;
     var parts = tag.split("-");
     var result = [];
@@ -170,15 +172,14 @@ Singleton {
   }
 
   // Determine the best language match against availableLanguages
-  function determineFastLanguage() {
+  function determineFastLanguage(): void {
     var fullLang, i, short_, stripped;
     // User preference from Settings (defaults to "" if not yet loaded from disk)
     var userLang = Settings.data.general.language;
     if (userLang !== "" && availableLanguages.includes(userLang)) {
-      return {
-        code: userLang,
-        fullLocale: userLang
-      };
+      _detectedLanguageCode = userLang;
+      _detectedFullLocale = userLang;
+      return;
     }
 
     // Match system locale against available translations
@@ -187,48 +188,43 @@ Singleton {
 
       // Exact match (e.g. "zh-CN")
       if (availableLanguages.includes(fullLang)) {
-        return {
-          code: fullLang,
-          fullLocale: fullLang
-        };
+        _detectedLanguageCode = fullLang;
+        _detectedFullLocale = fullLang;
+        return;
       }
 
       // Script-stripped match (e.g. "zh-Hans-CN" → "zh-CN")
       stripped = stripScript(fullLang);
       if (stripped !== fullLang && availableLanguages.includes(stripped)) {
-        return {
-          code: stripped,
-          fullLocale: fullLang
-        };
+        _detectedLanguageCode = stripped;
+        _detectedFullLocale = fullLang;
+        return;
       }
 
       // Language-only match (e.g. "fr-FR" → "fr")
       short_ = fullLang.substring(0, 2);
       if (availableLanguages.includes(short_)) {
-        return {
-          code: short_,
-          fullLocale: fullLang
-        };
+        _detectedLanguageCode = short_;
+        _detectedFullLocale = fullLang;
+        return;
       }
     }
 
-    return {
-      code: "en",
-      fullLocale: "en"
-    };
+    _detectedLanguageCode = "en";
+    _detectedFullLocale = "en";
   }
 
-  function dateFormat() {
+  function dateFormat(): string {
     var lang = langCode.split("-")[0];
     return dateFormats[lang] || "dddd, d MMMM";
   }
 
   // -------------------------------------------
-  function setLanguage(newLangCode, fullLocale) {
-    if (typeof fullLocale === "undefined") {
-      fullLocale = newLangCode;
-    }
+  function setLanguage(newLangCode: string): void {
+    setLanguageForLocale(newLangCode, newLangCode);
+  }
 
+  function setLanguageForLocale(newLangCode: string, fullLocale: string): void {
     if (newLangCode !== langCode && availableLanguages.includes(newLangCode)) {
       langCode = newLangCode;
       fullLocaleCode = fullLocale;
@@ -242,7 +238,7 @@ Singleton {
   }
 
   // -------------------------------------------
-  function loadTranslations() {
+  function loadTranslations(): void {
     if (langCode === "")
       return;
     const filePath = `${Quickshell.shellDir}/Assets/Translations/${langCode}.json`;
@@ -252,7 +248,7 @@ Singleton {
 
   // -------------------------------------------
   // Check if a translation exists
-  function hasTranslation(key) {
+  function hasTranslation(key: string): bool {
     var i;
     if (!isLoaded)
       return false;
@@ -295,7 +291,7 @@ Singleton {
 
   // -------------------------------------------
   // Reload translations (useful for development)
-  function reload() {
+  function reload(): void {
     Logger.d("I18n", "Reloading translations");
     loadTranslations();
   }

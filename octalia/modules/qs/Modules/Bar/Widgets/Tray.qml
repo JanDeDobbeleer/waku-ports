@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.SystemTray
@@ -104,9 +106,11 @@ Item {
     model: SystemTray.items && SystemTray.items.values ? SystemTray.items.values : []
 
     delegate: Item {
+      id: statusItem
+      required property var modelData
       Connections {
-        target: modelData
-        enabled: modelData !== null && modelData !== undefined
+        target: statusItem.modelData
+        enabled: statusItem.modelData !== null && statusItem.modelData !== undefined
         function onStatusChanged() {
           if (root.hidePassive) {
             root.updateFilteredItems();
@@ -382,8 +386,8 @@ Item {
         required property int index
         width: isVertical ? barHeight : capsuleHeight
         height: isVertical ? capsuleHeight : barHeight
-        visible: modelData
-        readonly property bool isHovered: root.hoveredItemIndex === index
+        visible: trayDelegate.modelData
+        readonly property bool isHovered: root.hoveredItemIndex === trayDelegate.index
 
         // Anchor representing the visual area (for proper menu positioning)
         Item {
@@ -465,7 +469,7 @@ Item {
             }
           }
           onClicked: mouse => {
-                       if (!modelData) {
+                       if (!trayDelegate.modelData) {
                          return;
                        }
 
@@ -475,8 +479,8 @@ Item {
                            popupMenuWindow.close();
                          }
 
-                         if (!modelData.onlyMenu) {
-                           modelData.activate();
+                         if (!trayDelegate.modelData.onlyMenu) {
+                           trayDelegate.modelData.activate();
                          }
                        } else if (mouse.button === Qt.MiddleButton) {
                          // Close the menu if it was visible
@@ -484,7 +488,7 @@ Item {
                            popupMenuWindow.close();
                            return;
                          }
-                         modelData.secondaryActivate && modelData.secondaryActivate();
+                         trayDelegate.modelData.secondaryActivate && trayDelegate.modelData.secondaryActivate();
                        } else if (mouse.button === Qt.RightButton) {
                          // Close the menu if it was visible
                          if (popupMenuWindow && popupMenuWindow.visible) {
@@ -497,7 +501,7 @@ Item {
                            PanelService.openedPanel.close();
                          }
 
-                         if (modelData.hasMenu && modelData.menu && trayMenu && trayMenu.item) {
+                         if (trayDelegate.modelData.hasMenu && trayDelegate.modelData.menu && trayMenu && trayMenu.item) {
                            // Calculate menu position after ensuring menu is loaded
                            const calculateAndShow = () => {
                              // Position menu based on bar position, using visualAnchor for proper positioning
@@ -517,13 +521,13 @@ Item {
                                menuY = visualAnchor.height + Style.marginS;
                              }
 
-                             PanelService.showTrayMenu(root.screen, modelData, trayMenu.item, visualAnchor, menuX, menuY, root.section, root.sectionWidgetIndex);
+                             PanelService.showTrayMenu(root.screen, trayDelegate.modelData, trayMenu.item, visualAnchor, menuX, menuY, root.section, root.sectionWidgetIndex);
                            };
 
                            // Use Qt.callLater to ensure menu dimensions are calculated
                            Qt.callLater(calculateAndShow);
                          } else {
-                           Logger.d("Tray", "No menu available for", modelData.id, "or trayMenu not set");
+                           Logger.d("Tray", "No menu available for", trayDelegate.modelData.id, "or trayMenu not set");
                          }
                        }
                      }

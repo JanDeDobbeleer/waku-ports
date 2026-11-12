@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -50,16 +52,20 @@ DraggableDesktopWidget {
       opacity: root.widgetOpacity
 
       Repeater {
+        id: clockLines
         model: I18n.locale.toString(root.now, root.format.trim()).split("\\n")
         delegate: NText {
+          id: clockLine
+          required property string modelData
+          required property int index
           visible: text !== ""
-          text: modelData
+          text: clockLine.modelData
           family: root.useCustomFont && root.customFont ? root.customFont : Settings.data.ui.fontDefault
           pointSize: {
-            if (model.length == 1) {
+            if (clockLines.count == 1) {
               return Math.round(Style.fontSizeXXL * root.widgetScale);
             } else {
-              return Math.round((index == 0) ? Style.fontSizeXXL * root.widgetScale : Style.fontSizeM * root.widgetScale);
+              return Math.round((clockLine.index == 0) ? Style.fontSizeXXL * root.widgetScale : Style.fontSizeM * root.widgetScale);
             }
           }
           font.weight: Style.fontWeightBold

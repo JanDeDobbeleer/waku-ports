@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -263,7 +265,7 @@ PopupWindow {
 
           Layout.preferredWidth: parent.width
           Layout.preferredHeight: {
-            if (modelData?.isSeparator) {
+            if (entry.modelData?.isSeparator) {
               return 8;
             } else {
               // Calculate based on text content

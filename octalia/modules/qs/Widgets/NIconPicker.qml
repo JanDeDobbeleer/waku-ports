@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -93,19 +95,21 @@ Popup {
       gradientColor: Color.mSurface
 
       delegate: Rectangle {
+        id: iconOption
+        required property string modelData
         width: grid.cellWidth
         height: grid.cellHeight
         radius: Style.iRadiusS
 
-        color: (root.selectedIcon === modelData) ? Qt.alpha(Color.mPrimary, 0.15) : "transparent"
-        border.color: (root.selectedIcon === modelData) ? Color.mPrimary : "transparent"
-        border.width: (root.selectedIcon === modelData) ? Style.borderS : 0
+        color: (root.selectedIcon === iconOption.modelData) ? Qt.alpha(Color.mPrimary, 0.15) : "transparent"
+        border.color: (root.selectedIcon === iconOption.modelData) ? Color.mPrimary : "transparent"
+        border.width: (root.selectedIcon === iconOption.modelData) ? Style.borderS : 0
 
         MouseArea {
           anchors.fill: parent
-          onClicked: root.selectedIcon = modelData
+          onClicked: root.selectedIcon = iconOption.modelData
           onDoubleClicked: {
-            root.selectedIcon = modelData;
+            root.selectedIcon = iconOption.modelData;
             root.iconSelected(root.selectedIcon);
             root.close();
           }
@@ -121,7 +125,7 @@ Popup {
           }
           NIcon {
             Layout.alignment: Qt.AlignHCenter
-            icon: modelData
+            icon: iconOption.modelData
             pointSize: 42
           }
           NText {
@@ -134,7 +138,7 @@ Popup {
             horizontalAlignment: Text.AlignHCenter
             color: Color.mOnSurfaceVariant
             pointSize: Style.fontSizeXS
-            text: modelData
+            text: iconOption.modelData
           }
           Item {
             Layout.fillHeight: true

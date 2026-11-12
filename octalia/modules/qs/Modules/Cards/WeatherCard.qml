@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -195,6 +197,8 @@ NBox {
       Repeater {
         model: root.weatherReady ? Math.min(root.forecastDays, LocationService.data.weather.daily.time.length) : 0
         delegate: ColumnLayout {
+          id: forecastDay
+          required property int index
           Layout.fillWidth: true
           spacing: Style.marginXS
           Item {
@@ -203,7 +207,7 @@ NBox {
           NText {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             text: {
-              var weatherDate = new Date(LocationService.data.weather.daily.time[index].replace(/-/g, "/"));
+              var weatherDate = new Date(LocationService.data.weather.daily.time[forecastDay.index].replace(/-/g, "/"));
               return I18n.locale.toString(weatherDate, "ddd");
             }
             color: Color.mOnSurface
@@ -217,7 +221,7 @@ NBox {
             NIcon {
               visible: !LocationService.taliaWeatherMascotActive
               anchors.centerIn: parent
-              icon: LocationService.weatherSymbolFromCode(LocationService.data.weather.daily.weathercode[index])
+              icon: LocationService.weatherSymbolFromCode(LocationService.data.weather.daily.weathercode[forecastDay.index])
               pointSize: Style.fontSizeXXL * 1.6
               color: Color.mPrimary
             }
@@ -232,7 +236,7 @@ NBox {
                   smooth: true
                   mipmap: true
                   asynchronous: true
-                  source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(LocationService.data.weather.daily.weathercode[index]))
+                  source: Qt.resolvedUrl(LocationService.taliaWeatherImageFromCode(LocationService.data.weather.daily.weathercode[forecastDay.index]))
                 }
               }
             }
@@ -240,8 +244,8 @@ NBox {
           NText {
             Layout.alignment: Qt.AlignHCenter
             text: {
-              var max = LocationService.data.weather.daily.temperature_2m_max[index];
-              var min = LocationService.data.weather.daily.temperature_2m_min[index];
+              var max = LocationService.data.weather.daily.temperature_2m_max[forecastDay.index];
+              var min = LocationService.data.weather.daily.temperature_2m_min[forecastDay.index];
               if (Settings.data.location.useFahrenheit) {
                 max = LocationService.celsiusToFahrenheit(max);
                 min = LocationService.celsiusToFahrenheit(min);

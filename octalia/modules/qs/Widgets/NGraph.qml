@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import qs.Commons
 import qs.compat
@@ -175,8 +177,9 @@ Item {
       model: _dataRow.width
 
       Rectangle {
+        id: dataPoint
         required property int index
-        x: index
+        x: dataPoint.index
         width: 1
         height: 1
         color: {
@@ -186,13 +189,13 @@ Item {
           let eMax1 = root._effectiveMax1;
           let eMax2 = root._effectiveMax2;
 
-          if (index < n1)
-            r = root._normalize(root.values[index], root.minValue, eMax1);
+          if (dataPoint.index < n1)
+            r = root._normalize(root.values[dataPoint.index], root.minValue, eMax1);
           else if (n1 > 0)
             r = root._normalize(root._pred1, root.minValue, eMax1);
 
-          if (index < n2)
-            g = root._normalize(root.values2[index], root.minValue2, eMax2);
+          if (dataPoint.index < n2)
+            g = root._normalize(root.values2[dataPoint.index], root.minValue2, eMax2);
           else if (n2 > 0)
             g = root._normalize(root._pred2, root.minValue2, eMax2);
 
