@@ -17,6 +17,14 @@ call shell call nomarchy.menu open {"menu":"trigger"}
 call shell call nomarchy.menu open {"menu":"setup"}
 call shell call nomarchy.menu open {"menu":"system"}
 call shell hide nomarchy.menu
+# The theme picker light-dismisses: summoning the menu over it closes it.
+call shell toggle nomarchy.image-picker {"source":"themes"}
+sleep 3
+call shell call nomarchy.image-picker debugState x => opened.{1,4}true
+call shell summon nomarchy.menu {"menu":"root"} => ok
+sleep 1
+call shell call nomarchy.image-picker debugState x => opened.{1,4}false
+call shell hide nomarchy.menu
 call nomarchy.audio open
 call nomarchy.audio close
 call nomarchy.bluetooth open
