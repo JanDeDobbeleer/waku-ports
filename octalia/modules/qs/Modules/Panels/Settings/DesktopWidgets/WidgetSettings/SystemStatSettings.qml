@@ -64,7 +64,7 @@ ColumnLayout {
     }
     onSelected: key => {
                   root.valueStatType = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.statType
   }
@@ -84,7 +84,7 @@ ColumnLayout {
     currentKey: root.valueDiskPath
     onSelected: key => {
                   root.valueDiskPath = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.diskPath
   }
@@ -100,7 +100,7 @@ ColumnLayout {
     checked: root.valueShowBackground
     onToggled: checked => {
                  root.valueShowBackground = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showBackground
   }
@@ -113,7 +113,7 @@ ColumnLayout {
     checked: root.valueRoundedCorners
     onToggled: checked => {
                  root.valueRoundedCorners = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.roundedCorners
   }
@@ -140,7 +140,7 @@ ColumnLayout {
     ]
     onSelected: key => {
                   root.valueLayout = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.layout
   }

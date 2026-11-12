@@ -46,7 +46,7 @@ ColumnLayout {
       checked: root.valueShowCapsLock
       onToggled: checked => {
                    root.valueShowCapsLock = checked;
-                   saveSettings();
+                   root.saveSettings();
                  }
       defaultValue: root.widgetMetadata.showCapsLock
     }
@@ -71,7 +71,7 @@ ColumnLayout {
     query: "letter-c"
     onIconSelected: function (iconName) {
       root.capsIcon = iconName;
-      saveSettings();
+      root.saveSettings();
     }
   }
 
@@ -84,7 +84,7 @@ ColumnLayout {
       checked: root.valueShowNumLock
       onToggled: checked => {
                    root.valueShowNumLock = checked;
-                   saveSettings();
+                   root.saveSettings();
                  }
       defaultValue: root.widgetMetadata.showNumLock
     }
@@ -109,7 +109,7 @@ ColumnLayout {
     query: "letter-n"
     onIconSelected: function (iconName) {
       root.numIcon = iconName;
-      saveSettings();
+      root.saveSettings();
     }
   }
 
@@ -122,7 +122,7 @@ ColumnLayout {
       checked: root.valueShowScrollLock
       onToggled: checked => {
                    root.valueShowScrollLock = checked;
-                   saveSettings();
+                   root.saveSettings();
                  }
       defaultValue: root.widgetMetadata.showScrollLock
     }
@@ -147,7 +147,7 @@ ColumnLayout {
     query: "letter-s"
     onIconSelected: function (iconName) {
       root.scrollIcon = iconName;
-      saveSettings();
+      root.saveSettings();
     }
   }
 
@@ -162,7 +162,7 @@ ColumnLayout {
     checked: root.valueHideWhenOff
     onToggled: checked => {
                  root.valueHideWhenOff = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideWhenOff
   }

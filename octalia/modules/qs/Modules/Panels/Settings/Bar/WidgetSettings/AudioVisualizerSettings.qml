@@ -33,7 +33,7 @@ ColumnLayout {
     description: I18n.tr("bar.audio-visualizer.width-description")
     text: root.widgetData.width || root.widgetMetadata.width
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
-    onTextChanged: saveSettings()
+    onTextChanged: root.saveSettings()
     defaultValue: String(root.widgetMetadata.width)
   }
 
@@ -44,7 +44,7 @@ ColumnLayout {
     currentKey: root.valueColorName
     onSelected: key => {
                   root.valueColorName = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.colorName
   }
@@ -55,7 +55,7 @@ ColumnLayout {
     checked: root.valueHideWhenIdle
     onToggled: checked => {
                  root.valueHideWhenIdle = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideWhenIdle
   }

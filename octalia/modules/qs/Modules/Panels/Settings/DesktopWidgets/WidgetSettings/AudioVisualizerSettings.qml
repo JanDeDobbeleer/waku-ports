@@ -44,7 +44,7 @@ ColumnLayout {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
         root.valueWidth = parsed;
-        saveSettings();
+        root.saveSettings();
       } else {
         text = String(root.valueWidth);
       }
@@ -64,7 +64,7 @@ ColumnLayout {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
         root.valueHeight = parsed;
-        saveSettings();
+        root.saveSettings();
       } else {
         text = String(root.valueHeight);
       }
@@ -93,7 +93,7 @@ ColumnLayout {
     currentKey: root.valueVisualizerType
     onSelected: key => {
                   root.valueVisualizerType = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.visualizerType
   }
@@ -105,7 +105,7 @@ ColumnLayout {
     currentKey: root.valueColorName
     onSelected: key => {
                   root.valueColorName = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.colorName
   }
@@ -117,7 +117,7 @@ ColumnLayout {
     checked: root.valueHideWhenIdle
     onToggled: checked => {
                  root.valueHideWhenIdle = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideWhenIdle
   }
@@ -133,7 +133,7 @@ ColumnLayout {
     checked: root.valueShowBackground
     onToggled: checked => {
                  root.valueShowBackground = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showBackground
   }
@@ -146,7 +146,7 @@ ColumnLayout {
     checked: root.valueRoundedCorners
     onToggled: checked => {
                  root.valueRoundedCorners = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.roundedCorners
   }

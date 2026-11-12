@@ -53,7 +53,7 @@ ColumnLayout {
     currentKey: root.valueDisplayMode
     onSelected: key => {
                   root.valueDisplayMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.displayMode
   }
@@ -63,7 +63,7 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.iconColor
   }
@@ -72,7 +72,7 @@ ColumnLayout {
     currentKey: root.valueTextColor
     onSelected: key => {
                   root.valueTextColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.textColor
   }

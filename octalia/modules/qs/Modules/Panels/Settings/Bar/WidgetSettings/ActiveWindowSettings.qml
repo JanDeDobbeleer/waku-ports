@@ -64,7 +64,7 @@ ColumnLayout {
     currentKey: root.valueHideMode
     onSelected: key => {
                   root.valueHideMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.hideMode
   }
@@ -74,7 +74,7 @@ ColumnLayout {
     currentKey: root.valueTextColor
     onSelected: key => {
                   root.valueTextColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.textColor
   }
@@ -86,7 +86,7 @@ ColumnLayout {
     checked: root.valueShowText
     onToggled: checked => {
                  root.valueShowText = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showText
   }
@@ -98,7 +98,7 @@ ColumnLayout {
     checked: root.valueShowIcon
     onToggled: checked => {
                  root.valueShowIcon = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showIcon
   }
@@ -110,7 +110,7 @@ ColumnLayout {
     checked: root.valueColorizeIcons
     onToggled: checked => {
                  root.valueColorizeIcons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueShowIcon
     defaultValue: root.widgetMetadata.colorizeIcons
@@ -123,7 +123,7 @@ ColumnLayout {
     description: I18n.tr("bar.media-mini.max-width-description")
     placeholderText: root.widgetMetadata.maxWidth
     text: root.valueMaxWidth
-    onTextChanged: saveSettings()
+    onTextChanged: root.saveSettings()
     defaultValue: String(root.widgetMetadata.maxWidth)
   }
 
@@ -134,7 +134,7 @@ ColumnLayout {
     checked: root.valueUseFixedWidth
     onToggled: checked => {
                  root.valueUseFixedWidth = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.useFixedWidth
   }
@@ -160,7 +160,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.scrollingMode
     onSelected: key => {
                   root.valueScrollingMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     minimumWidth: 200
   }

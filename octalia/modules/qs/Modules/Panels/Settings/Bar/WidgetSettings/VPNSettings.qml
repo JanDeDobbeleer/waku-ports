@@ -47,7 +47,7 @@ ColumnLayout {
     currentKey: root.valueDisplayMode
     onSelected: key => {
                   root.valueDisplayMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 
@@ -56,7 +56,7 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 
@@ -64,7 +64,7 @@ ColumnLayout {
     currentKey: root.valueTextColor
     onSelected: key => {
                   root.valueTextColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 }

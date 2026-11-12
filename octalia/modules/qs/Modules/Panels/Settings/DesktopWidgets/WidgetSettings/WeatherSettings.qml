@@ -29,7 +29,7 @@ ColumnLayout {
     checked: root.valueShowBackground
     onToggled: checked => {
                  root.valueShowBackground = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showBackground
   }
@@ -42,7 +42,7 @@ ColumnLayout {
     checked: root.valueRoundedCorners
     onToggled: checked => {
                  root.valueRoundedCorners = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.roundedCorners
   }

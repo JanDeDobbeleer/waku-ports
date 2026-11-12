@@ -73,7 +73,7 @@ ColumnLayout {
     currentKey: root.valueClockColor
     onSelected: key => {
                   root.valueClockColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.clockColor
   }
@@ -85,7 +85,7 @@ ColumnLayout {
     checked: root.valueUseCustomFont
     onToggled: checked => {
                  root.valueUseCustomFont = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.useCustomFont
   }
@@ -103,7 +103,7 @@ ColumnLayout {
     minimumWidth: 300
     onSelected: function (key) {
       root.valueCustomFont = key;
-      saveSettings();
+      root.saveSettings();
     }
     defaultValue: Settings.data.ui.fontDefault
   }
@@ -140,7 +140,7 @@ ColumnLayout {
         text: root.valueFormatHorizontal
         onTextChanged: {
           root.valueFormatHorizontal = text;
-          saveSettings();
+          root.saveSettings();
         }
         Component.onCompleted: {
           if (inputItem) {
@@ -168,7 +168,7 @@ ColumnLayout {
         text: root.valueFormatVertical
         onTextChanged: {
           root.valueFormatVertical = text;
-          saveSettings();
+          root.saveSettings();
         }
         Component.onCompleted: {
           if (inputItem) {

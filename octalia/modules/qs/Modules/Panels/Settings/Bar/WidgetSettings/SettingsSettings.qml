@@ -28,7 +28,7 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 }

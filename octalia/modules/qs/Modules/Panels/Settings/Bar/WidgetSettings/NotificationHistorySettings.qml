@@ -37,7 +37,7 @@ ColumnLayout {
     checked: root.valueShowUnreadBadge
     onToggled: checked => {
                  root.valueShowUnreadBadge = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showUnreadBadge
   }
@@ -47,7 +47,7 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.iconColor
   }
@@ -58,7 +58,7 @@ ColumnLayout {
     currentKey: root.valueUnreadBadgeColor
     onSelected: key => {
                   root.valueUnreadBadgeColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     visible: root.valueShowUnreadBadge
     defaultValue: root.widgetMetadata.unreadBadgeColor
@@ -70,7 +70,7 @@ ColumnLayout {
     checked: root.valueHideWhenZero
     onToggled: checked => {
                  root.valueHideWhenZero = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     enabled: !root.valueHideWhenZeroUnread
     defaultValue: root.widgetMetadata.hideWhenZero
@@ -82,7 +82,7 @@ ColumnLayout {
     checked: root.valueHideWhenZeroUnread
     onToggled: checked => {
                  root.valueHideWhenZeroUnread = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideWhenZeroUnread
   }

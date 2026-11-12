@@ -69,7 +69,7 @@ ColumnLayout {
     checked: root.valueCompactMode
     onToggled: checked => {
                  root.valueCompactMode = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.compactMode
   }
@@ -79,7 +79,7 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.iconColor
   }
@@ -88,7 +88,7 @@ ColumnLayout {
     currentKey: root.valueTextColor
     onSelected: key => {
                   root.valueTextColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     visible: !root.valueCompactMode
     defaultValue: root.widgetMetadata.textColor
@@ -101,7 +101,7 @@ ColumnLayout {
     checked: root.valueUseMonospaceFont
     onToggled: checked => {
                  root.valueUseMonospaceFont = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: !root.valueCompactMode
     defaultValue: root.widgetMetadata.useMonospaceFont
@@ -114,7 +114,7 @@ ColumnLayout {
     checked: root.valueUsePadding && !root.isVerticalBar && root.valueUseMonospaceFont
     onToggled: checked => {
                  root.valueUsePadding = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: !root.valueCompactMode
     enabled: !root.isVerticalBar && root.valueUseMonospaceFont
@@ -133,7 +133,7 @@ ColumnLayout {
     checked: root.valueShowCpuUsage
     onToggled: checked => {
                  root.valueShowCpuUsage = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showCpuUsage
   }
@@ -146,7 +146,7 @@ ColumnLayout {
     checked: root.valueShowCpuCores
     onToggled: checked => {
                  root.valueShowCpuCores = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueCompactMode
   }
@@ -159,7 +159,7 @@ ColumnLayout {
     checked: root.valueShowCpuFreq
     onToggled: checked => {
                  root.valueShowCpuFreq = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showCpuFreq
   }
@@ -172,7 +172,7 @@ ColumnLayout {
     checked: root.valueShowCpuTemp
     onToggled: checked => {
                  root.valueShowCpuTemp = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showCpuTemp
   }
@@ -185,7 +185,7 @@ ColumnLayout {
     checked: root.valueShowGpuTemp
     onToggled: checked => {
                  root.valueShowGpuTemp = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: SystemStatService.gpuAvailable
     defaultValue: root.widgetMetadata.showGpuTemp
@@ -199,7 +199,7 @@ ColumnLayout {
     checked: root.valueShowMemoryUsage
     onToggled: checked => {
                  root.valueShowMemoryUsage = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showMemoryUsage
   }
@@ -212,7 +212,7 @@ ColumnLayout {
     checked: root.valueShowMemoryAsPercent
     onToggled: checked => {
                  root.valueShowMemoryAsPercent = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueShowMemoryUsage
     defaultValue: root.widgetMetadata.showMemoryAsPercent
@@ -226,7 +226,7 @@ ColumnLayout {
     checked: root.valueShowSwapUsage
     onToggled: checked => {
                  root.valueShowSwapUsage = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showSwapUsage
   }
@@ -239,7 +239,7 @@ ColumnLayout {
     checked: root.valueShowNetworkStats
     onToggled: checked => {
                  root.valueShowNetworkStats = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showNetworkStats
   }
@@ -256,7 +256,7 @@ ColumnLayout {
     checked: root.valueShowDiskUsage
     onToggled: checked => {
                  root.valueShowDiskUsage = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showDiskUsage
   }
@@ -269,7 +269,7 @@ ColumnLayout {
     checked: root.valueShowDiskUsageAsPercent
     onToggled: checked => {
                  root.valueShowDiskUsageAsPercent = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showDiskUsageAsPercent
   }
@@ -282,7 +282,7 @@ ColumnLayout {
     checked: root.valueShowDiskAvailable
     onToggled: checked => {
                  root.valueShowDiskAvailable = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showDiskAvailable
   }
@@ -302,7 +302,7 @@ ColumnLayout {
     currentKey: root.valueDiskPath
     onSelected: key => {
                   root.valueDiskPath = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.diskPath
   }

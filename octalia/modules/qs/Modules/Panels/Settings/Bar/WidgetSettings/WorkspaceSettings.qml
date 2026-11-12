@@ -83,7 +83,7 @@ ColumnLayout {
     currentKey: root.widgetData.labelMode || root.widgetMetadata.labelMode
     onSelected: key => {
                   root.valueLabelMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     minimumWidth: 200
   }
@@ -96,7 +96,7 @@ ColumnLayout {
     value: root.valueCharacterCount
     onValueChanged: {
       root.valueCharacterCount = value;
-      saveSettings();
+      root.saveSettings();
     }
     visible: root.valueLabelMode === "name"
   }
@@ -112,7 +112,7 @@ ColumnLayout {
     showReset: true
     onMoved: value => {
                root.valuePillSize = value;
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.round(root.valuePillSize * 100) + "%"
     visible: !root.valueShowApplications
@@ -143,7 +143,7 @@ ColumnLayout {
     currentKey: root.widgetData.fontWeight || root.widgetMetadata.fontWeight
     onSelected: key => {
                   root.valueFontWeight = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     minimumWidth: 200
   }
@@ -154,7 +154,7 @@ ColumnLayout {
     checked: root.valueHideUnoccupied
     onToggled: checked => {
                  root.valueHideUnoccupied = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
   }
 
@@ -164,7 +164,7 @@ ColumnLayout {
     checked: root.valueShowLabelsOnlyWhenOccupied
     onToggled: checked => {
                  root.valueShowLabelsOnlyWhenOccupied = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
   }
 
@@ -174,7 +174,7 @@ ColumnLayout {
     checked: root.valueFollowFocusedScreen
     onToggled: checked => {
                  root.valueFollowFocusedScreen = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
   }
 
@@ -184,7 +184,7 @@ ColumnLayout {
     checked: root.valueEnableScrollWheel
     onToggled: checked => {
                  root.valueEnableScrollWheel = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
   }
 
@@ -198,7 +198,7 @@ ColumnLayout {
     checked: root.valueShowApplications
     onToggled: checked => {
                  root.valueShowApplications = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
   }
 
@@ -208,7 +208,7 @@ ColumnLayout {
     checked: root.valueShowApplicationsHover
     onToggled: checked => {
                  root.valueShowApplicationsHover = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueShowApplications
   }
@@ -219,7 +219,7 @@ ColumnLayout {
     checked: root.valueShowBadge
     onToggled: checked => {
                  root.valueShowBadge = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueShowApplications
   }
@@ -230,7 +230,7 @@ ColumnLayout {
     checked: root.valueColorizeIcons
     onToggled: checked => {
                  root.valueColorizeIcons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     visible: root.valueShowApplications
   }
@@ -246,7 +246,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.unfocusedIconsOpacity
     onMoved: value => {
                root.valueUnfocusedIconsOpacity = value;
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.floor(root.valueUnfocusedIconsOpacity * 100) + "%"
     visible: root.valueShowApplications
@@ -263,7 +263,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.groupedBorderOpacity
     onMoved: value => {
                root.valueGroupedBorderOpacity = value;
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.floor(root.valueGroupedBorderOpacity * 100) + "%"
     visible: root.valueShowApplications
@@ -280,7 +280,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.iconScale
     onMoved: value => {
                root.valueIconScale = value;
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.round(root.valueIconScale * 100) + "%"
     visible: root.valueShowApplications
@@ -296,7 +296,7 @@ ColumnLayout {
     currentKey: root.valueFocusedColor
     onSelected: key => {
                   root.valueFocusedColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 
@@ -306,7 +306,7 @@ ColumnLayout {
     currentKey: root.valueOccupiedColor
     onSelected: key => {
                   root.valueOccupiedColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 
@@ -316,7 +316,7 @@ ColumnLayout {
     currentKey: root.valueEmptyColor
     onSelected: key => {
                   root.valueEmptyColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
   }
 }

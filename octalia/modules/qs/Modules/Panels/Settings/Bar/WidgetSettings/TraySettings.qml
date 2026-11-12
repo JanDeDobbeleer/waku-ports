@@ -46,7 +46,7 @@ ColumnLayout {
     checked: root.valueDrawerEnabled
     onToggled: checked => {
                  root.valueDrawerEnabled = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.drawerEnabled
   }
@@ -57,7 +57,7 @@ ColumnLayout {
     currentKey: root.valueChevronColor
     onSelected: key => {
                   root.valueChevronColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     visible: root.valueDrawerEnabled
     defaultValue: root.widgetMetadata.chevronColor
@@ -70,7 +70,7 @@ ColumnLayout {
     checked: root.valueColorizeIcons
     onToggled: checked => {
                  root.valueColorizeIcons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.colorizeIcons
   }
@@ -82,7 +82,7 @@ ColumnLayout {
     checked: root.valueHidePassive
     onToggled: checked => {
                  root.valueHidePassive = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hidePassive
   }
@@ -121,7 +121,7 @@ ColumnLayout {
                                       "rule": newRule
                                     });
               newRuleInput.text = "";
-              saveSettings();
+              root.saveSettings();
             }
           }
         }
@@ -174,7 +174,7 @@ ColumnLayout {
           colorFgHover: Color.mOnError
           onClicked: {
             blacklistModel.remove(index);
-            saveSettings();
+            root.saveSettings();
           }
         }
       }

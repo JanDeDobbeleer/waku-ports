@@ -79,7 +79,7 @@ ColumnLayout {
     currentKey: root.valueHideMode
     onSelected: key => {
                   root.valueHideMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.hideMode
   }
@@ -90,7 +90,7 @@ ColumnLayout {
     checked: root.valueShowAlbumArt
     onToggled: checked => {
                  root.valueShowAlbumArt = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showAlbumArt
   }
@@ -101,7 +101,7 @@ ColumnLayout {
     checked: root.valueShowArtistFirst
     onToggled: checked => {
                  root.valueShowArtistFirst = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showArtistFirst
   }
@@ -113,7 +113,7 @@ ColumnLayout {
     description: I18n.tr("bar.media-mini.max-width-description")
     placeholderText: root.widgetMetadata.maxWidth
     text: root.valueMaxWidth
-    onTextChanged: saveSettings()
+    onTextChanged: root.saveSettings()
     defaultValue: String(root.widgetMetadata.maxWidth)
   }
 
@@ -123,7 +123,7 @@ ColumnLayout {
     checked: root.valueUseFixedWidth
     onToggled: checked => {
                  root.valueUseFixedWidth = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.useFixedWidth
   }
@@ -134,7 +134,7 @@ ColumnLayout {
     checked: root.valueShowProgressRing
     onToggled: checked => {
                  root.valueShowProgressRing = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showProgressRing
   }
@@ -143,7 +143,7 @@ ColumnLayout {
     currentKey: root.valueTextColor
     onSelected: key => {
                   root.valueTextColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.textColor
   }
@@ -168,7 +168,7 @@ ColumnLayout {
     currentKey: root.valueScrollingMode
     onSelected: key => {
                   root.valueScrollingMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     minimumWidth: 200
     defaultValue: root.widgetMetadata.scrollingMode
@@ -191,7 +191,7 @@ ColumnLayout {
     checked: root.valuePanelShowAlbumArt
     onToggled: checked => {
                  root.valuePanelShowAlbumArt = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.panelShowAlbumArt
   }
@@ -202,7 +202,7 @@ ColumnLayout {
     checked: root.valueCompactMode
     onToggled: checked => {
                  root.valueCompactMode = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.compactMode
   }

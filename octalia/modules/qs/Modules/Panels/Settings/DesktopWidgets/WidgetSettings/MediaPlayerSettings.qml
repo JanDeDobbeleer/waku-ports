@@ -39,7 +39,7 @@ ColumnLayout {
     checked: root.valueShowBackground
     onToggled: checked => {
                  root.valueShowBackground = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showBackground
   }
@@ -51,7 +51,7 @@ ColumnLayout {
     checked: root.valueRoundedCorners
     onToggled: checked => {
                  root.valueRoundedCorners = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.roundedCorners
   }
@@ -63,7 +63,7 @@ ColumnLayout {
     checked: root.valueShowAlbumArt
     onToggled: checked => {
                  root.valueShowAlbumArt = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showAlbumArt
   }
@@ -75,7 +75,7 @@ ColumnLayout {
     checked: root.valueShowButtons
     onToggled: checked => {
                  root.valueShowButtons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showButtons
   }
@@ -101,7 +101,7 @@ ColumnLayout {
     currentKey: root.valueHideMode
     onSelected: key => {
                   root.valueHideMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.hideMode
   }

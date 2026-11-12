@@ -72,7 +72,7 @@ ColumnLayout {
     currentKey: root.valueHideMode
     onSelected: key => {
                   root.valueHideMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.hideMode
   }
@@ -84,7 +84,7 @@ ColumnLayout {
     checked: root.valueOnlySameOutput
     onToggled: checked => {
                  root.valueOnlySameOutput = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.onlySameOutput
   }
@@ -96,7 +96,7 @@ ColumnLayout {
     checked: root.valueOnlyActiveWorkspaces
     onToggled: checked => {
                  root.valueOnlyActiveWorkspaces = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.onlyActiveWorkspaces
   }
@@ -108,7 +108,7 @@ ColumnLayout {
     checked: root.valueColorizeIcons
     onToggled: checked => {
                  root.valueColorizeIcons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.colorizeIcons
   }
@@ -120,7 +120,7 @@ ColumnLayout {
     checked: root.valueShowPinnedApps
     onToggled: checked => {
                  root.valueShowPinnedApps = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showPinnedApps
   }
@@ -137,7 +137,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.iconScale
     onMoved: value => {
                root.valueIconScale = value;
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.round(root.valueIconScale * 100) + "%"
   }
@@ -149,7 +149,7 @@ ColumnLayout {
     checked: root.valueShowTitle
     onToggled: checked => {
                  root.valueShowTitle = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     enabled: !root.isVerticalBar
     defaultValue: root.widgetMetadata.showTitle
@@ -163,7 +163,7 @@ ColumnLayout {
     description: I18n.tr("bar.taskbar.title-width-description")
     text: root.widgetData.titleWidth || root.widgetMetadata.titleWidth
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
-    onTextChanged: saveSettings()
+    onTextChanged: root.saveSettings()
     defaultValue: String(root.widgetMetadata.titleWidth)
   }
 
@@ -175,7 +175,7 @@ ColumnLayout {
     checked: root.valueSmartWidth
     onToggled: checked => {
                  root.valueSmartWidth = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.smartWidth
   }
@@ -193,7 +193,7 @@ ColumnLayout {
     defaultValue: root.widgetMetadata.maxTaskbarWidth
     onMoved: value => {
                root.valueMaxTaskbarWidth = Math.round(value);
-               saveSettings();
+               root.saveSettings();
              }
     text: Math.round(root.valueMaxTaskbarWidth) + "%"
   }

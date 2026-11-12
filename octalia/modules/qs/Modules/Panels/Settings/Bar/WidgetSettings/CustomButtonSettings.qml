@@ -109,7 +109,7 @@ ColumnLayout {
           description: I18n.tr("bar.custom-button.left-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
           text: root.widgetData?.leftClickExec || root.widgetMetadata.leftClickExec
-          onTextChanged: saveSettings()
+          onTextChanged: root.saveSettings()
           defaultValue: root.widgetMetadata.leftClickExec
         }
 
@@ -121,7 +121,7 @@ ColumnLayout {
           checked: root.widgetData?.leftClickUpdateText ?? root.widgetMetadata.leftClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
           defaultValue: root.widgetMetadata.leftClickUpdateText
         }
@@ -137,7 +137,7 @@ ColumnLayout {
           description: I18n.tr("bar.custom-button.right-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
           text: root.widgetData?.rightClickExec || root.widgetMetadata.rightClickExec
-          onTextChanged: saveSettings()
+          onTextChanged: root.saveSettings()
           defaultValue: root.widgetMetadata.rightClickExec
         }
 
@@ -149,7 +149,7 @@ ColumnLayout {
           checked: root.widgetData?.rightClickUpdateText ?? root.widgetMetadata.rightClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
           defaultValue: root.widgetMetadata.rightClickUpdateText
         }
@@ -165,7 +165,7 @@ ColumnLayout {
           description: I18n.tr("bar.custom-button.middle-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
           text: root.widgetData?.middleClickExec || root.widgetMetadata.middleClickExec
-          onTextChanged: saveSettings()
+          onTextChanged: root.saveSettings()
           defaultValue: root.widgetMetadata.middleClickExec
         }
 
@@ -177,7 +177,7 @@ ColumnLayout {
           checked: root.widgetData?.middleClickUpdateText ?? root.widgetMetadata.middleClickUpdateText
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
           defaultValue: root.widgetMetadata.middleClickUpdateText
         }
@@ -192,7 +192,7 @@ ColumnLayout {
         checked: internalChecked
         onToggled: checked => {
                      internalChecked = checked;
-                     saveSettings();
+                     root.saveSettings();
                    }
         defaultValue: root.widgetMetadata.wheelMode === "separate"
       }
@@ -212,7 +212,7 @@ ColumnLayout {
             description: I18n.tr("bar.custom-button.wheel-description")
             placeholderText: I18n.tr("placeholders.enter-command")
             text: root.widgetData?.wheelExec || root.widgetMetadata?.wheelExec
-            onTextChanged: saveSettings()
+            onTextChanged: root.saveSettings()
             defaultValue: root.widgetMetadata.wheelExec
           }
 
@@ -224,7 +224,7 @@ ColumnLayout {
             checked: root.widgetData?.wheelUpdateText ?? root.widgetMetadata?.wheelUpdateText
             onToggled: isChecked => {
                          checked = isChecked;
-                         saveSettings();
+                         root.saveSettings();
                        }
             defaultValue: root.widgetMetadata.wheelUpdateText
           }
@@ -245,7 +245,7 @@ ColumnLayout {
               description: I18n.tr("bar.custom-button.wheel-up-description")
               placeholderText: I18n.tr("placeholders.enter-command")
               text: root.widgetData?.wheelUpExec || root.widgetMetadata?.wheelUpExec
-              onTextChanged: saveSettings()
+              onTextChanged: root.saveSettings()
               defaultValue: root.widgetMetadata.wheelUpExec
             }
 
@@ -257,7 +257,7 @@ ColumnLayout {
               checked: root.widgetData?.wheelUpUpdateText ?? root.widgetMetadata?.wheelUpUpdateText
               onToggled: isChecked => {
                            checked = isChecked;
-                           saveSettings();
+                           root.saveSettings();
                          }
               defaultValue: root.widgetMetadata.wheelUpUpdateText
             }
@@ -273,7 +273,7 @@ ColumnLayout {
               description: I18n.tr("bar.custom-button.wheel-down-description")
               placeholderText: I18n.tr("placeholders.enter-command")
               text: root.widgetData?.wheelDownExec || root.widgetMetadata?.wheelDownExec
-              onTextChanged: saveSettings()
+              onTextChanged: root.saveSettings()
               defaultValue: root.widgetMetadata.wheelDownExec
             }
 
@@ -285,7 +285,7 @@ ColumnLayout {
               checked: root.widgetData?.wheelDownUpdateText ?? root.widgetMetadata?.wheelDownUpdateText
               onToggled: isChecked => {
                            checked = isChecked;
-                           saveSettings();
+                           root.saveSettings();
                          }
               defaultValue: root.widgetMetadata.wheelDownUpdateText
             }
@@ -305,7 +305,7 @@ ColumnLayout {
         checked: root.valueShowIcon
         onToggled: checked => {
                      root.valueShowIcon = checked;
-                     saveSettings();
+                     root.saveSettings();
                    }
         visible: textCommandInput.text !== ""
         defaultValue: root.widgetMetadata.showIcon
@@ -338,7 +338,7 @@ ColumnLayout {
         initialIcon: root.valueIcon
         onIconSelected: function (iconName) {
           root.valueIcon = iconName;
-          saveSettings();
+          root.saveSettings();
         }
       }
 
@@ -369,7 +369,7 @@ ColumnLayout {
         currentKey: root.valueIconPosition
         onSelected: key => {
                       root.valueIconPosition = key;
-                      saveSettings();
+                      root.saveSettings();
                     }
         defaultValue: root.widgetMetadata.iconPosition
       }
@@ -380,7 +380,7 @@ ColumnLayout {
         currentKey: root.valueColorizeSystemIcon
         onSelected: key => {
                       root.valueColorizeSystemIcon = key;
-                      saveSettings();
+                      root.saveSettings();
                     }
         defaultValue: root.widgetMetadata.colorizeSystemIcon
       }
@@ -393,7 +393,7 @@ ColumnLayout {
         text: root.valueIpcIdentifier
         onTextChanged: {
           root.valueIpcIdentifier = text;
-          saveSettings();
+          root.saveSettings();
         }
         defaultValue: root.widgetMetadata.ipcIdentifier
       }
@@ -409,7 +409,7 @@ ColumnLayout {
         currentKey: root.valueColorizeSystemText
         onSelected: key => {
                       root.valueColorizeSystemText = key;
-                      saveSettings();
+                      root.saveSettings();
                     }
         defaultValue: root.widgetMetadata.colorizeSystemText
       }
@@ -422,7 +422,7 @@ ColumnLayout {
         value: root.valueMaxTextLengthHorizontal
         onValueChanged: {
           root.valueMaxTextLengthHorizontal = value;
-          saveSettings();
+          root.saveSettings();
         }
         defaultValue: root.widgetMetadata.maxTextLength.horizontal
       }
@@ -435,7 +435,7 @@ ColumnLayout {
         value: root.valueMaxTextLengthVertical
         onValueChanged: {
           root.valueMaxTextLengthVertical = value;
-          saveSettings();
+          root.saveSettings();
         }
         defaultValue: root.widgetMetadata.maxTextLength.vertical
       }
@@ -447,7 +447,7 @@ ColumnLayout {
         checked: root.valueTextStream
         onToggled: checked => {
                      root.valueTextStream = checked;
-                     saveSettings();
+                     root.saveSettings();
                    }
         defaultValue: root.widgetMetadata.textStream
       }
@@ -459,7 +459,7 @@ ColumnLayout {
         checked: root.valueParseJson
         onToggled: checked => {
                      root.valueParseJson = checked;
-                     saveSettings();
+                     root.saveSettings();
                    }
         defaultValue: root.widgetMetadata.parseJson
       }
@@ -471,7 +471,7 @@ ColumnLayout {
         description: root.valueTextStream ? I18n.tr("bar.custom-button.display-command-output-stream-description") : I18n.tr("bar.custom-button.display-command-output-description")
         placeholderText: I18n.tr("placeholders.command-example")
         text: root.widgetData?.textCommand || root.widgetMetadata.textCommand
-        onTextChanged: saveSettings()
+        onTextChanged: root.saveSettings()
         defaultValue: root.widgetMetadata.textCommand
       }
 
@@ -483,7 +483,7 @@ ColumnLayout {
         description: I18n.tr("bar.custom-button.collapse-condition-description")
         placeholderText: I18n.tr("placeholders.enter-text-to-collapse")
         text: root.widgetData?.textCollapse || root.widgetMetadata.textCollapse
-        onTextChanged: saveSettings()
+        onTextChanged: root.saveSettings()
         defaultValue: root.widgetMetadata.textCollapse
       }
 
@@ -495,7 +495,7 @@ ColumnLayout {
         description: I18n.tr("bar.custom-button.refresh-interval-description")
         placeholderText: String(root.widgetMetadata.textIntervalMs)
         text: root.widgetData && root.widgetData.textIntervalMs !== undefined ? String(root.widgetData.textIntervalMs) : ""
-        onTextChanged: saveSettings()
+        onTextChanged: root.saveSettings()
         defaultValue: String(root.widgetMetadata.textIntervalMs)
       }
 
@@ -520,7 +520,7 @@ ColumnLayout {
         currentKey: root.valueHideMode
         onSelected: key => {
                       root.valueHideMode = key;
-                      saveSettings();
+                      root.saveSettings();
                     }
         visible: textCommandInput.text !== "" && root.valueTextStream == true
         defaultValue: root.widgetMetadata.hideMode

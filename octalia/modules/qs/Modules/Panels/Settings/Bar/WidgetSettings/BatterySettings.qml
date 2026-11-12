@@ -47,7 +47,7 @@ ColumnLayout {
     currentKey: root.valueDeviceNativePath
     onSelected: key => {
                   root.valueDeviceNativePath = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.deviceNativePath
   }
@@ -82,7 +82,7 @@ ColumnLayout {
     currentKey: root.valueDisplayMode
     onSelected: key => {
                   root.valueDisplayMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.displayMode
   }
@@ -93,7 +93,7 @@ ColumnLayout {
     checked: root.valueHideIfNotDetected
     onToggled: checked => {
                  root.valueHideIfNotDetected = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideIfNotDetected
   }
@@ -104,7 +104,7 @@ ColumnLayout {
     checked: root.valueHideIfIdle
     onToggled: checked => {
                  root.valueHideIfIdle = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.hideIfIdle
   }
@@ -119,7 +119,7 @@ ColumnLayout {
     checked: root.valueShowPowerProfiles
     onToggled: checked => {
                  root.valueShowPowerProfiles = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showPowerProfiles
   }
@@ -130,7 +130,7 @@ ColumnLayout {
     checked: root.valueShowOctaliaPerformance
     onToggled: checked => {
                  root.valueShowOctaliaPerformance = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showOctaliaPerformance
   }

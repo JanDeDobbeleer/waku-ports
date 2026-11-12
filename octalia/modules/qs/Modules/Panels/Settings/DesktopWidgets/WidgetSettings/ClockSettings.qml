@@ -95,7 +95,7 @@ ColumnLayout {
     ]
     onSelected: key => {
                   root.valueClockStyle = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.clockStyle
   }
@@ -106,7 +106,7 @@ ColumnLayout {
     currentKey: root.valueClockColor
     onSelected: key => {
                   root.valueClockColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     defaultValue: root.widgetMetadata.clockColor
   }
@@ -118,7 +118,7 @@ ColumnLayout {
     checked: root.valueUseCustomFont
     onToggled: checked => {
                  root.valueUseCustomFont = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.useCustomFont
   }
@@ -136,7 +136,7 @@ ColumnLayout {
     minimumWidth: 300
     onSelected: function (key) {
       root.valueCustomFont = key;
-      saveSettings();
+      root.saveSettings();
     }
     enabled: root.valueClockStyle === "minimal"
     defaultValue: Settings.data.ui.fontDefault
@@ -176,7 +176,7 @@ ColumnLayout {
         text: root.valueFormat
         onTextChanged: {
           root.valueFormat = text;
-          settingsChanged(saveSettings());
+          settingsChanged(root.saveSettings());
         }
         Component.onCompleted: {
           if (inputItem) {
@@ -273,7 +273,7 @@ ColumnLayout {
     checked: root.valueShowBackground
     onToggled: checked => {
                  root.valueShowBackground = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.showBackground
   }
@@ -286,7 +286,7 @@ ColumnLayout {
     checked: root.valueRoundedCorners
     onToggled: checked => {
                  root.valueRoundedCorners = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.roundedCorners
   }

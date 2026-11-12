@@ -40,7 +40,7 @@ ColumnLayout {
     checked: root.valueEnableColorization
     onToggled: checked => {
                  root.valueEnableColorization = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.enableColorization
   }
@@ -52,7 +52,7 @@ ColumnLayout {
     currentKey: root.valueColorizeSystemIcon
     onSelected: function (key) {
       root.valueColorizeSystemIcon = key;
-      saveSettings();
+      root.saveSettings();
     }
     defaultValue: root.widgetMetadata.colorizeSystemIcon
   }
@@ -103,7 +103,7 @@ ColumnLayout {
     onIconSelected: iconName => {
                       root.valueIcon = iconName;
                       root.valueCustomIconPath = "";
-                      saveSettings();
+                      root.saveSettings();
                     }
   }
 
@@ -116,7 +116,7 @@ ColumnLayout {
     onAccepted: paths => {
                   if (paths.length > 0) {
                     root.valueCustomIconPath = paths[0];
-                    saveSettings();
+                    root.saveSettings();
                   }
                 }
   }

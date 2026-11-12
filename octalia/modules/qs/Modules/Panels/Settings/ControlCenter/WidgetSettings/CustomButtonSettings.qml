@@ -126,7 +126,7 @@ ColumnLayout {
     initialIcon: _settings.icon
     onIconSelected: function (iconName) {
       _settings.icon = iconName;
-      saveSettings();
+      root.saveSettings();
     }
   }
 
@@ -138,7 +138,7 @@ ColumnLayout {
     text: _settings.onClicked
     onTextChanged: {
       _settings.onClicked = text;
-      saveSettings();
+      root.saveSettings();
     }
     defaultValue: root.widgetMetadata.onClicked
   }
@@ -151,7 +151,7 @@ ColumnLayout {
     text: _settings.onRightClicked
     onTextChanged: {
       _settings.onRightClicked = text;
-      saveSettings();
+      root.saveSettings();
     }
     defaultValue: root.widgetMetadata.onRightClicked
   }
@@ -164,7 +164,7 @@ ColumnLayout {
     text: _settings.onMiddleClicked
     onTextChanged: {
       _settings.onMiddleClicked = text;
-      saveSettings();
+      root.saveSettings();
     }
     defaultValue: root.widgetMetadata.onMiddleClicked
   }
@@ -179,7 +179,7 @@ ColumnLayout {
     checked: _settings.enableOnStateLogic
     onToggled: checked => {
                  _settings.enableOnStateLogic = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
     defaultValue: root.widgetMetadata.enableOnStateLogic
   }
