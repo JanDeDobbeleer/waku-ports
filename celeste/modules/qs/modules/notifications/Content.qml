@@ -10,6 +10,7 @@ import qs.components.containers
 import qs.components.widgets
 import qs.services
 import qs.modules.utilities as Utilities
+import "NotificationsContentHelpers.js" as NotificationsContentHelpers
 
 Item {
     id: root
@@ -20,6 +21,7 @@ Item {
     required final property Item utilitiesPanel
     readonly final property int padding: Tokens.padding.large
     readonly final property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
+    readonly final property real currentScreenHeight: Screen.height
 
     anchors.top: parent.top
     anchors.bottom: parent.bottom
@@ -48,12 +50,12 @@ Item {
         }
 
         if (screenState.utilities) {
-            const h = ((QsWindow.window as QsWindow)?.screen.height ?? 0) - (utilitiesPanel as Utilities.Wrapper).nonAnimHeight - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
+            const h = (currentScreenHeight) - (utilitiesPanel as Utilities.Wrapper).nonAnimHeight - Config.border.thickness * 2 - padding * 2 - Tokens.spacing.extraLarge;
             if (height > h)
                 height = h;
         }
 
-        return Math.min(((QsWindow.window as QsWindow)?.screen?.height ?? 0) + padding - clampedPadding * 2 - Config.border.thickness, height + padding + clampedPadding);
+        return Math.min((currentScreenHeight) + padding - clampedPadding * 2 - Config.border.thickness, height + padding + clampedPadding);
     }
 
     ClippingWrapperRectangle {
@@ -69,14 +71,14 @@ Item {
             id: list
 
             model: ScriptModel {
-                values: Notifs.popups.filter(n => !n.closed)
+                values: Notifs.popups.filter(NotificationsContentHelpers.isOpen)
             }
 
             anchors.fill: parent
 
             orientation: Qt.Vertical
             spacing: 0
-            cacheBuffer: (QsWindow.window as QsWindow)?.screen.height ?? 0
+            cacheBuffer: root.currentScreenHeight
 
             delegate: NotifWrapper {}
 
