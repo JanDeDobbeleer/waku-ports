@@ -3,6 +3,7 @@ import QtQuick.Templates
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledSpinBoxHelpers.js" as StyledSpinBoxHelpers
 
 DoubleSpinBox {
     id: root
@@ -33,14 +34,15 @@ DoubleSpinBox {
     decimals: stepSize < 1 ? Math.max(1, Math.ceil(-Math.log10(stepSize))) : 0
     spacing: Tokens.spacing.small
 
-    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
-    implicitHeight: Math.max(up.indicator.implicitHeight, down.indicator.implicitHeight, contentItem.implicitHeight) + topPadding + bottomPadding
+    implicitWidth: textField.implicitWidth + leftPadding + rightPadding
+    implicitHeight: Math.max(upButton.implicitHeight, downButton.implicitHeight, textField.implicitHeight) + topPadding + bottomPadding
 
-    leftPadding: up.indicator.implicitWidth + Tokens.spacing.extraSmall / 2
-    rightPadding: down.indicator.implicitWidth + Tokens.spacing.extraSmall / 2
+    leftPadding: upButton.implicitWidth + Tokens.spacing.extraSmall / 2
+    rightPadding: downButton.implicitWidth + Tokens.spacing.extraSmall / 2
 
     contentItem: TextFieldBase {
-        text: root.textFromValue(root.value, root.locale)
+        id: textField
+        text: StyledSpinBoxHelpers.textFromValue(root, root.value, root.locale)
 
         readOnly: !root.editable
         validator: root.validator
