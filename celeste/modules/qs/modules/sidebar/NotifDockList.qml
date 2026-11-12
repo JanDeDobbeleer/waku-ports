@@ -6,6 +6,7 @@ import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "NotifDockListHelpers.js" as NotifDockListHelpers
 
 LazyListView {
     id: root
@@ -26,7 +27,7 @@ LazyListView {
     // Port: the ListView stand-in never asks for a viewport adjustment (onViewportAdjustNeeded).
 
     useCustomViewport: true
-    viewport: Qt.rect(0, container.contentY, width, container.height)
+    viewport: NotifDockListHelpers.viewport(Qt, container, width)
 
     removeDuration: Tokens.anim.durations.normal
 
@@ -45,14 +46,7 @@ LazyListView {
     }
 
     model: ScriptModel {
-        values: {
-            const map = new Map();
-            for (const n of Notifs.notClosed)
-                map.set(n.appName, null);
-            for (const n of Notifs.list)
-                map.set(n.appName, null);
-            return [...map.keys()];
-        }
+        values: NotifDockListHelpers.appNames(Notifs.notClosed, Notifs.list)
     }
 
     delegate: Component {
@@ -120,16 +114,7 @@ LazyListView {
                 interval: 15
                 repeat: true
                 triggeredOnStart: true
-                onTriggered: {
-                    const notifs = Notifs.notClosed.filter(n => n.appName === notif.modelData);
-                    if (notifs.length === 0) {
-                        stop();
-                        return;
-                    }
-
-                    for (const n of notifs.slice(0, 30))
-                        n.close();
-                }
+                onTriggered: NotifDockListHelpers.closeBatch(Notifs.notClosed, notif.modelData, clearTimer)
             }
 
             NotifGroup {
