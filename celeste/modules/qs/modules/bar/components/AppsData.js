@@ -62,3 +62,4 @@ function appAt(column, x, y) {
     const c = column.childAt(x, y);
     return c?.isApp ? c : null;
 }
+function length(values) { return values.length; }

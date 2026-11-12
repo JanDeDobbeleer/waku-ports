@@ -40,7 +40,7 @@ Item {
     readonly final property real avail: {
         return AD.avail(bar, fullCell);
     }
-    readonly final property int count: all.length
+    readonly final property int count: AD.length(all)
     readonly final property real cell: count > 0 ? Math.max(minCell, Math.min(fullCell, (avail + gap) / count - gap)) : fullCell
     readonly final property int capacity: Math.max(1, Math.floor((avail + gap) / (cell + gap)))
     readonly final property bool overflow: count > capacity
@@ -82,7 +82,7 @@ Item {
         spacing: root.gap
 
         Repeater {
-            model: root.shown.length
+            model: AD.length(root.shown)
 
             delegate: Item {
                 id: app
@@ -268,7 +268,7 @@ Item {
 
             StyledText {
                 anchors.centerIn: parent
-                text: "+" + (root.count - root.shown.length)
+                text: "+" + (root.count - AD.length(root.shown))
                 color: Colours.palette.m3onSurfaceVariant
             }
         }
