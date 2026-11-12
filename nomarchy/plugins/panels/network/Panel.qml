@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -1589,6 +1590,7 @@ Panel {
               model: root.bandAvailable
 
               delegate: Item {
+                id: bandDelegate
                 required property var modelData
                 required property int index
                 width: bandRow.cellWidth
@@ -1596,8 +1598,8 @@ Panel {
 
                 BandPill {
                   id: bandPill
-                  band: modelData
-                  slot: index
+                  band: bandDelegate.modelData
+                  slot: bandDelegate.index
                   width: parent.width
                 }
               }
@@ -1705,6 +1707,7 @@ Panel {
         // (which doesn't bind into nested `component` declarations like
         // NetworkRow) and passes them down explicitly.
         delegate: Item {
+          id: wifiDelegate
           required property var modelData
           required property int index
           readonly property string sectionTitle: root.wifiSectionTitle(index)
@@ -1717,18 +1720,17 @@ Panel {
             spacing: Style.space(4)
 
             PanelSectionHeader {
-              visible: sectionTitle !== ""
-              text: sectionTitle
+              visible: wifiDelegate.sectionTitle !== ""
+              text: wifiDelegate.sectionTitle
               foreground: root.bar.foreground
               fontFamily: root.bar.fontFamily
               height: visible ? implicitHeight : 0
             }
 
             NetworkRow {
-              id: row
               width: parent.width
-              net: modelData
-              index: parent.parent.index
+              net: wifiDelegate.modelData
+              index: wifiDelegate.index
             }
           }
         }
@@ -1742,7 +1744,7 @@ Panel {
   // pinned, so only the live band lights up and the two can no longer read as
   // a contradiction. They land on the same pill once a band is pinned.
   component BandPill: Button {
-    id: pill
+    id: bandPillImpl
     required property string band
     required property int slot
 
@@ -1766,7 +1768,7 @@ Panel {
       if (!isHovered) return
       root.cursorActive = true
       root.focusSection = "band"
-      root.bandIndex = pill.slot
+      root.bandIndex = bandPillImpl.slot
     }
   }
 
@@ -1774,7 +1776,7 @@ Panel {
   // CursorSurface; this component just binds them to the panel's cursor
   // state and renders the label/tooltip/click target.
   component DnsProviderPill: Button {
-    id: pill
+    id: dnsPillImpl
     required property string provider
     required property int index
 
@@ -1796,7 +1798,7 @@ Panel {
       if (!isHovered) return
       root.cursorActive = true
       root.focusSection = "dns"
-      root.dnsIndex = pill.index
+      root.dnsIndex = dnsPillImpl.index
     }
   }
 
@@ -2145,6 +2147,7 @@ Panel {
 
 
   component DetailValue: InfoValue {
+    id: detailValue
     property bool copyable: false
     property string tooltipText: Commons.I18n.t("network.copyToClipboard")
 
@@ -2154,15 +2157,15 @@ Panel {
     MouseArea {
       id: valueMouse
       anchors.fill: parent
-      enabled: copyable && parent.text !== ""
+      enabled: detailValue.copyable && detailValue.text !== ""
       hoverEnabled: enabled
       cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-      onClicked: root.copyToClipboard(parent.text)
+      onClicked: root.copyToClipboard(detailValue.text)
     }
 
     PanelToolTip {
       visible: valueMouse.enabled && valueMouse.containsMouse
-      text: tooltipText
+      text: detailValue.tooltipText
       fontFamily: root.bar.fontFamily
     }
   }
