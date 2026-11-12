@@ -113,7 +113,7 @@ Item {
   property string searchableDemoValue: ""
   property int numberDemoValue: 15
 
-  readonly property var visibleSections: [
+  readonly property list<string> visibleSections: [
     "cursor-surface", "button", "button-group", "panel-action-button",
     "panel-tool-tip", "slider", "text-field", "number-field",
     "toggle", "toggle-switch", "dropdown", "searchable-dropdown", "composed"

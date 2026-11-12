@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import Quickshell.Services.Mpris
 import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
@@ -9,7 +10,7 @@ BarWidget {
   moduleName: "nomarchy.media"
 
   readonly property var mediaService: bar?.shell?.firstPartyServiceFor("nomarchy.media")
-  readonly property var activePlayer: mediaService ? mediaService.activePlayer : null
+  readonly property MprisPlayer activePlayer: mediaService ? mediaService.activePlayer as MprisPlayer : null
   readonly property var sourcePlayers: mediaService ? mediaService.sourcePlayers : []
 
   readonly property bool hasMedia: activePlayer !== null && (activePlayer.trackTitle || activePlayer.trackArtist)
@@ -110,11 +111,11 @@ BarWidget {
   PopupCard {
     id: popup
     anchorItem: root
-    bar: root.bar
+    hostBar: root.bar
     owner: root
     open: root.popupOpen
-    contentWidth: popup.fittedContentWidth(Style.space(320))
-    contentHeight: popup.fittedContentHeight(column.implicitHeight)
+    cardWidth: popup.fittedContentWidth(Style.space(320))
+    cardHeight: popup.fittedContentHeight(column.implicitHeight)
 
     Column {
       id: column

@@ -525,7 +525,7 @@ Panel {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: root.ipcTarget
 
     function open(): void { root.openFromHotkey() }

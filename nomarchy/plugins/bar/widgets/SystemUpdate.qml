@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 
 BarWidget {
@@ -23,7 +24,7 @@ BarWidget {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.system-update"
 
     function refresh(): void {

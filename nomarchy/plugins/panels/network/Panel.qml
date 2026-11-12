@@ -58,7 +58,7 @@ Panel {
   // are real yet or the row should read "--".
   readonly property bool hasTransferStats: info.rx_bytes !== undefined
   property int connectionPhraseIndex: 0
-  readonly property var connectionPhrases: [
+  readonly property list<string> connectionPhrases: [
     Commons.I18n.t("network.phrase1"),
     Commons.I18n.t("network.phrase2"),
     Commons.I18n.t("network.phrase3"),
@@ -141,7 +141,7 @@ Panel {
   readonly property bool speedHeaderHasCursor: cursorActive && focusSection === "header" && headerIndex === speedHeaderIndex
   readonly property bool toggleHeaderHasCursor: cursorActive && focusSection === "header" && headerIndex === toggleHeaderIndex
   readonly property string toggleHint: Networking.wifiEnabled ? Commons.I18n.t("network.turnWifiOff") : Commons.I18n.t("network.turnWifiOn")
-  readonly property var dnsProviders: ["DHCP", "Cloudflare", "Google", "Custom"]
+  readonly property list<string> dnsProviders: ["DHCP", "Cloudflare", "Google", "Custom"]
   property int dnsIndex: 0
   // ["2.4", "5", ...], or empty when there is nothing to choose between.
   // Wi-Fi only: on Ethernet the band of a secondary radio is not what the
@@ -212,7 +212,7 @@ Panel {
     Qt.callLater(function() { root.refresh(true) })
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.network"
 
     function open() { root.open() }

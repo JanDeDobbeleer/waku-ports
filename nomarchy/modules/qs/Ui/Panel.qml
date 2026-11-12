@@ -1,6 +1,5 @@
 import "BarValues.js" as BarValues
 import QtQuick
-import qs.Commons
 import qs.Commons as Commons
 
 // Base item for plugin popup widgets. Many first-party plugins expose a bar
@@ -46,7 +45,7 @@ Item {
     id: panelController
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     // A panel that answers its target itself leaves this one without one.
     target: root.manageIpc ? root.ipcTarget : ""
 

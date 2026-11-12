@@ -869,10 +869,10 @@ Item {
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
               event.accepted = true
-            } else if (Util.readingKey(event) === Qt.Key_Left || (event.key === Qt.Key_Tab && event.modifiers & Qt.ShiftModifier) || event.key === Qt.Key_Backtab) {
+            } else if (Util.readingKey(event, false) === Qt.Key_Left || (event.key === Qt.Key_Tab && event.modifiers & Qt.ShiftModifier) || event.key === Qt.Key_Backtab) {
               root.selectAdjacent(-1)
               event.accepted = true
-            } else if (Util.readingKey(event) === Qt.Key_Right || event.key === Qt.Key_Tab) {
+            } else if (Util.readingKey(event, false) === Qt.Key_Right || event.key === Qt.Key_Tab) {
               root.selectAdjacent(1)
               event.accepted = true
             } else if (root.filterable && event.text && event.text.length === 1 && event.text.charCodeAt(0) >= 32 && event.text.charCodeAt(0) !== 127 && (event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier)) {

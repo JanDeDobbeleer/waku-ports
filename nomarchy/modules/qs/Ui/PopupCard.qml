@@ -8,12 +8,12 @@ PopupWindow {
   id: root
 
   required property Item anchorItem
-  required property QtObject bar
+  required property QtObject hostBar
   property var owner: null
-  property int margin: Style.gapsOut
+  property int edgeMargin: Style.gapsOut
   property int padding: Style.spacing.popupPadding
-  property int contentWidth: Style.space(280)
-  property int contentHeight: Style.space(200)
+  property int cardWidth: Style.space(280)
+  property int cardHeight: Style.space(200)
   property color borderColor: Commons.Color.popups.border
   property var borderSpec: Border.localOrSurfaceSpec("popups", "border", borderColor, Commons.Color.popups.border, Math.max(1, Style.space(2)))
   property bool open: false
@@ -32,13 +32,13 @@ PopupWindow {
   // included. The bar window spans its whole screen (only the strip inside
   // it is painted and takes input), so the window's dimensions say nothing
   // about the bar.
-  readonly property real barThickness: !bar ? 0
-    : (typeof bar.barSizeFor === "function" && popupScreen ? bar.barSizeFor(popupScreen.name) : bar.barSize)
+  readonly property real barThickness: !hostBar ? 0
+    : (typeof hostBar.barSizeFor === "function" && popupScreen ? hostBar.barSizeFor(popupScreen.name) : hostBar.barSize)
   readonly property real availableCardWidth: screenW > 0
-    ? Math.max(120, screenW - ((bar && (bar.position === "left" || bar.position === "right")) ? barThickness : 0) - root.margin * 2)
+    ? Math.max(120, screenW - ((hostBar && (hostBar.position === "left" || hostBar.position === "right")) ? barThickness : 0) - root.edgeMargin * 2)
     : 0
   readonly property real availableCardHeight: screenH > 0
-    ? Math.max(120, screenH - ((bar && (bar.position === "top" || bar.position === "bottom")) ? barThickness : 0) - root.margin * 2)
+    ? Math.max(120, screenH - ((hostBar && (hostBar.position === "top" || hostBar.position === "bottom")) ? barThickness : 0) - root.edgeMargin * 2)
     : 0
   readonly property real verticalContentInset: padding * 2 + Border.top(borderSpec) + Border.bottom(borderSpec)
 
@@ -73,14 +73,14 @@ PopupWindow {
   color: "transparent"
   // A closing card stays mapped until its fade ends; it must not take clicks
   // meant for the bar underneath while it does.
-  implicitWidth: contentWidth
-  implicitHeight: contentHeight
+  implicitWidth: cardWidth
+  implicitHeight: cardHeight
 
 
   onOpenChanged: {
-    if (!bar) return
-    if (open) bar.requestPopout(coordinatorKey)
-    else if (bar.activePopout === coordinatorKey) bar.releasePopout(coordinatorKey)
+    if (!hostBar) return
+    if (open) hostBar.requestPopout(coordinatorKey)
+    else if (hostBar.activePopout === coordinatorKey) hostBar.releasePopout(coordinatorKey)
   }
 
   // Outside-click dismissal via Hyprland's focus grab. While `active`, input
@@ -94,7 +94,6 @@ PopupWindow {
   }
 
   anchor {
-    id: popupAnchor
     item: root.anchorItem
   }
 
@@ -119,9 +118,9 @@ PopupWindow {
     }
     opacity: shown
     scale: 0.97 + 0.03 * shown
-    transformOrigin: !root.bar || root.bar.position === "top" ? Item.Top
-      : root.bar.position === "bottom" ? Item.Bottom
-      : root.bar.position === "left" ? Item.Left : Item.Right
+    transformOrigin: !root.hostBar || root.hostBar.position === "top" ? Item.Top
+      : root.hostBar.position === "bottom" ? Item.Bottom
+      : root.hostBar.position === "left" ? Item.Left : Item.Right
 
     Item {
       id: contentHolder

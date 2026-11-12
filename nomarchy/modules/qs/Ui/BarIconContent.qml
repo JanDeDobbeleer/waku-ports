@@ -32,7 +32,7 @@ Item {
 
   IconContentBounds {
     id: bounds
-    sourceItem: content.item
+    sourceItem: content.item as Item
     boundsParent: content
   }
 }

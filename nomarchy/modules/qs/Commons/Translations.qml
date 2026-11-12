@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import "Plural.js" as Plural
+import "Catalog.js" as Catalog
 
 // Strings for a plugin that ships its own catalogs, following the language
 // picked under Setup > Language the same way the shell's I18n does. Point it
@@ -44,9 +45,9 @@ QtObject {
     root.failedPaths[key] = path
     Qt.callLater(root.bump)
   }
-  readonly property var englishStrings: (root.rev, parseCatalog(englishFile.text()))
-  readonly property var baseStrings: (root.rev, parseCatalog(baseFile.text()))
-  readonly property var languageStrings: (root.rev, parseCatalog(languageFile.text()))
+  readonly property var englishStrings: readCatalog(root.rev, englishFile.text())
+  readonly property var baseStrings: readCatalog(root.rev, baseFile.text())
+  readonly property var languageStrings: readCatalog(root.rev, languageFile.text())
   readonly property var strings: {
     var merged = ({})
     var layers = [root.englishStrings, root.baseStrings, root.languageStrings]
@@ -74,14 +75,8 @@ QtObject {
     return fallback !== undefined ? fallback : key
   }
 
-  function parseCatalog(raw) {
-    try {
-      let parsed = JSON.parse(raw || "{}")
-      return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
-    } catch (e) {
-      return ({})
-    }
-  }
+  function parseCatalog(raw: var): var { return Catalog.parse(raw) }
+  function readCatalog(revision: int, raw: var): var { return Catalog.parse(raw) }
 
   function catalogPath(code) {
     return root.directoryPath !== "" ? root.directoryPath + "/" + code + ".json" : ""

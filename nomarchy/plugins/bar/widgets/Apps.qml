@@ -6,6 +6,7 @@ import waku.services as S
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "AppsModel.js" as AppsModel
 
 // Windows port: the running applications, one icon per program, right of the workspaces. The rows
 // are the engine's `TaskbarModel` (every window the taskbar lists, on every virtual desktop),
@@ -61,14 +62,9 @@ BarWidget {
   // Raise a program: the window after the focused one, else the first (the last for `last`). The
   // only window of a program that already has focus is left alone, as a click on a taskbar button
   // would minimize it.
-  function clickGroup(g, last) {
-    if (!g || g.windows.length === 0) return
-    var target = g.windows[last ? g.windows.length - 1 : 0]
-    var focusedAt = -1
-    for (let i = 0; i < g.windows.length; i++) if (g.windows[i].active) focusedAt = i
-    if (focusedAt >= 0 && g.windows.length === 1) return
-    if (focusedAt >= 0 && !last) target = g.windows[(focusedAt + 1) % g.windows.length]
-    taskbar.activate(target.index)
+  function clickGroup(g: var, last: bool): void {
+    let index = AppsModel.activationIndex(g, last)
+    if (index >= 0) taskbar.activate(index)
   }
 
   // The preview card of a program with several windows: opens on hover, stays while the pointer is
@@ -280,7 +276,7 @@ BarWidget {
     anchorItem: root.hoverItem ? root.hoverItem : root
     anchor.rect: root.previewRect
     owner: root
-    bar: root.bar
+    hostBar: root.bar
     triggerMode: "hover"
     open: root.previewOpen && root.previewGroup !== null
 
@@ -288,23 +284,23 @@ BarWidget {
     readonly property real boxH: Style.space(150)
     readonly property real cardPad: Style.space(6)
     readonly property real cardW: boxW + cardPad * 2
-    readonly property real gap: Style.space(8)
+    readonly property real tileGap: Style.space(8)
     readonly property int count: root.previewGroup ? root.previewGroup.windows.length : 0
     // A single strip while it fits in 60% of the screen, then a wrapping grid.
     readonly property real maxW: Math.max(cardW, (preview.screenW > 0 ? preview.screenW : 1920) * 0.6 - preview.padding * 2)
     readonly property int cols: count <= 0 ? 1
-      : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
+      : (count * cardW + (count - 1) * tileGap <= maxW ? count : Math.max(1, Math.floor((maxW + tileGap) / (cardW + tileGap))))
 
     // The card pads and borders the content on both sides; the height already counts them.
-    contentWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec))
-    contentHeight: preview.fittedContentHeight(grid.implicitHeight)
+    cardWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec))
+    cardHeight: preview.fittedContentHeight(grid.implicitHeight)
 
     GridLayout {
       id: grid
       anchors.fill: parent
       columns: preview.cols
-      columnSpacing: preview.gap
-      rowSpacing: preview.gap
+      columnSpacing: preview.tileGap
+      rowSpacing: preview.tileGap
 
       Repeater {
         model: root.previewGroup ? root.previewGroup.windows : []

@@ -3,6 +3,7 @@ import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import "MediaModel.js" as MediaModel
 import qs.Commons
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -25,7 +26,7 @@ Item {
   }
   readonly property var sourcePlayers: orderedSourcePlayers()
   readonly property var sourceCyclePlayers: orderedCycleSourcePlayers()
-  readonly property var activePlayer: selectActivePlayer()
+  readonly property MprisPlayer activePlayer: selectActivePlayer() as MprisPlayer
   readonly property bool hasMedia: activePlayer !== null && (activePlayer.trackTitle || activePlayer.trackArtist)
   readonly property string title: activePlayer ? (activePlayer.trackTitle || "") : ""
   readonly property string artist: activePlayer ? (activePlayer.trackArtist || "") : ""
@@ -434,8 +435,8 @@ Item {
   // sink it feeds on every press, from the live routing. An ALSA sink is its
   // own physical sink, so only then do the keys act here; any other default
   // sink falls back to the script.
-  readonly property var defaultSink: Pipewire.defaultAudioSink
-  readonly property var volumeSink: defaultSink && String(defaultSink.name).indexOf("alsa_output.") === 0 ? defaultSink : null
+  readonly property PwNode defaultSink: Pipewire.defaultAudioSink
+  readonly property PwNode volumeSink: defaultSink && String(defaultSink.name).indexOf("alsa_output.") === 0 ? defaultSink : null
   property double lastMuteToggle: 0
 
   // Returns false when the default sink is not one to control here, so the
@@ -500,7 +501,7 @@ Item {
     return true
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     id: ipcHandler
     target: "media"
 

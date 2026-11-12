@@ -33,7 +33,7 @@ Item {
   property var tailnetExitNodes: []
   property var mullvadExitNodes: []
   property var mullvadRegions: []
-  property var accounts: []
+  property list<var> accounts: []
   property string selectedAccountId: ""
   property string selectedAccountLabel: ""
   property string switchingAccountId: ""

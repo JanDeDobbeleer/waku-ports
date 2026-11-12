@@ -308,8 +308,23 @@ function parseAccounts(raw, tr) {
   }
 }
 
+function copyOptionsFor(peer) {
+  var options = []
+  if (!peer) return options
+  var name = String(peer.DisplayName || peer.HostName || "")
+  var dns = String(peer.DNSName || "")
+  var ipv6 = peer.TailscaleIPv6 && peer.TailscaleIPv6.length > 0 ? String(peer.TailscaleIPv6[0] || "") : ""
+  var ip = peer.TailscaleIPs && peer.TailscaleIPs.length > 0 ? String(peer.TailscaleIPs[0]) : ""
+  if (name !== "") options.push({ kind: "name", label: name })
+  if (dns !== "") options.push({ kind: "dns", label: dns })
+  if (ipv6 !== "") options.push({ kind: "ipv6", label: ipv6 })
+  if (ip !== "") options.push({ kind: "ip", label: ip })
+  return options
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    copyOptionsFor: copyOptionsFor,
     filterIPv4: filterIPv4,
     filterIPv6: filterIPv6,
     cleanDnsName: cleanDnsName,

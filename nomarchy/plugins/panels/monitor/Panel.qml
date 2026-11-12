@@ -181,7 +181,7 @@ Panel {
   // shut in clamshell, and an external one. A mirror set up in
   // the user's own monitors.lua is theirs to undo, so Extend isn't offered.
   readonly property bool mirrorAvailable: internalEnabled && externalMonitor !== "" && (!mirrorEnabled || mirrorManaged || pendingMirror !== "")
-  readonly property var mirrorModes: ["mirror", "extend"]
+  readonly property list<string> mirrorModes: ["mirror", "extend"]
 
   function displayGlyph(entry) {
     return entry && entry.builtIn ? "󰌢" : "󰍹"
@@ -231,7 +231,7 @@ Panel {
     reflowSettle.restart()
   }
 
-  readonly property var visibleSections: {
+  readonly property list<string> visibleSections: {
     var list = []
     if (segments.length > 1) list.push("displays")
     if (currentBrightness >= 0) list.push("brightness")
@@ -364,7 +364,7 @@ Panel {
     })
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.monitor"
 
     function brightness(percent: string): string { return root.brightnessIpc(percent) }

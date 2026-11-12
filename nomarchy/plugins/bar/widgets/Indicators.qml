@@ -1,7 +1,8 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
+import "IndicatorModel.js" as IndicatorModel
 
 BarWidget {
   id: root
@@ -33,43 +34,10 @@ BarWidget {
   property string inactiveIndicatorJson: ""
   property bool inactiveIndicatorsMirrored: false
 
-  function entryId(entry) {
-    if (typeof entry === "string") return entry
-    if (Util.isPlainObject(entry)) {
-      let id = entry["id"]
-      if (id !== undefined && id !== null && String(id) !== "") return String(id)
-    }
-    return ""
-  }
-
-  function entrySettings(entry) {
-    if (!Util.isPlainObject(entry)) return {}
-    var copy = {}
-    for (let key in entry) {
-      if (key === "id") continue
-      copy[key] = entry[key]
-    }
-    return copy
-  }
-
-  function indicatorEntriesFromSettings(settings) {
-    var source = defaultIndicatorEntries
-    if (settings.items && typeof settings.items.length === "number" && settings.items.length > 0) source = settings.items
-    else if (settings.indicators && typeof settings.indicators.length === "number" && settings.indicators.length > 0) source = settings.indicators
-
-    var result = []
-    for (let i = 0; i < source.length; i++) {
-      let item = source[i]
-      if (typeof item !== "string" && item !== null && typeof item === "object") {
-        try {
-          item = JSON.parse(JSON.stringify(item))
-        } catch (error) {
-        }
-      }
-      let id = entryId(item)
-      if (id !== "") result.push(item)
-    }
-    return result
+  function entryId(entry: var): string { return IndicatorModel.entryId(entry) }
+  function entrySettings(entry: var): var { return IndicatorModel.entrySettings(entry) }
+  function indicatorEntriesFromSettings(settings: var): var {
+    return IndicatorModel.entries(settings, defaultIndicatorEntries)
   }
 
   function setIndicatorAreaHovered(hovered) {
@@ -198,7 +166,7 @@ BarWidget {
   implicitWidth: orientationLoader.item ? orientationLoader.item.implicitWidth : 0
   implicitHeight: orientationLoader.item ? orientationLoader.item.implicitHeight : 0
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.indicators"
 
     function refresh(): void {

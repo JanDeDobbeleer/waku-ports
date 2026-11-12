@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "Model.js" as Model
 
 Panel {
   id: root
@@ -90,19 +91,7 @@ Panel {
   property int copyIndex: 0
   readonly property var copyOptions: copyOptionsFor(copyPeer)
 
-  function copyOptionsFor(peer) {
-    var options = []
-    if (!peer) return options
-    var name = String(peer.DisplayName || peer.HostName || "")
-    var dns = String(peer.DNSName || "")
-    var ipv6 = peer.TailscaleIPv6 && peer.TailscaleIPv6.length > 0 ? String(peer.TailscaleIPv6[0] || "") : ""
-    var ip = peer.TailscaleIPs && peer.TailscaleIPs.length > 0 ? String(peer.TailscaleIPs[0]) : ""
-    if (name !== "") options.push({ kind: "name", label: name })
-    if (dns !== "") options.push({ kind: "dns", label: dns })
-    if (ipv6 !== "") options.push({ kind: "ipv6", label: ipv6 })
-    if (ip !== "") options.push({ kind: "ip", label: ip })
-    return options
-  }
+  function copyOptionsFor(peer: var): var { return Model.copyOptionsFor(peer) }
 
   function clampCopyIndex() {
     copyIndex = Math.max(0, Math.min(copyIndex, copyOptions.length - 1))
@@ -281,7 +270,7 @@ Panel {
     if (focusSection === "exitNodes" && !showExitNodes) focusSection = showPeers ? "peers" : (tailscale.accountsAccessDenied ? "auth" : (tailscale.accounts.length > 1 ? "accounts" : "header"))
   }
 
-  function moveCursor(dx, dy) {
+  function moveCursor(dx: int, dy: int): void {
     cursorActive = true
     ensureCursor()
     if (dy !== 0) {
@@ -485,7 +474,7 @@ Panel {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: root.ipcTarget
     function open(): void { root.open() }
     function close(): void { root.close() }
@@ -944,7 +933,7 @@ Panel {
               modal: false
               focus: true
               closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-              function handleKey(event) {
+              function handleKey(event: KeyEvent): void {
                 if (event.key === Qt.Key_Escape) {
                   close()
                   event.accepted = true

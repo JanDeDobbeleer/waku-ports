@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
-import qs.Commons
+import qs.Commons as Commons
 import "BatteryModel.js" as BatteryModel
 
 Item {
@@ -118,7 +118,7 @@ Item {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "battery"
 
     function refreshPowerProfile(): void { root.refreshPowerProfile() }

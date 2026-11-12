@@ -8,7 +8,7 @@ BarWidget {
   moduleName: "nomarchy.microphone"
 
 
-  readonly property var source: Pipewire.defaultAudioSource
+  readonly property PwNode source: Pipewire.defaultAudioSource
   // A virtual source is untyped in Quickshell, so it has no PwNode.audio; its
   // volume and mute go through wpctl (UntypedInput).
   readonly property bool viaWpctl: UntypedInput.active

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
 
@@ -137,7 +138,7 @@ BarWidget {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.clock"
 
     function refresh(): void { root.broadcast("refresh") }

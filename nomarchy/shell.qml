@@ -1741,7 +1741,7 @@ ShellRoot {
     return loader && loader.item ? loader.item : null
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "image-selector"
 
     function open(imageDirs: string,
@@ -1793,7 +1793,7 @@ ShellRoot {
 
   // ---------------------------------------------------------- shell IPC
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "shell"
 
     function prepareThemeIntro(fromPath: string, token: string, colorsB64: string, shellB64: string): void {

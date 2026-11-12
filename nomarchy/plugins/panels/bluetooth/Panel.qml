@@ -126,7 +126,7 @@ Panel {
     return false
   }
 
-  readonly property var visibleSections: {
+  readonly property list<string> visibleSections: {
     return Model.visibleSections(deviceGroups, adapter && adapter.discovering)
   }
 
@@ -647,7 +647,7 @@ Panel {
     adapter.enabled = !adapter.enabled
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.bluetooth"
 
     function open() { root.open() }

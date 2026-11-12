@@ -97,7 +97,7 @@ PanelWindow {
   // declare children directly keep the old eager behaviour.
   property Component panelContent: null
   property bool contentRequested: false
-  readonly property Item loadedContent: contentLoader.item
+  readonly property Item loadedContent: contentLoader.item as Item
   readonly property real loadedContentHeight: contentLoader.item ? contentLoader.item.implicitHeight : 0
 
   // Build the content without opening the panel, for callers that need to

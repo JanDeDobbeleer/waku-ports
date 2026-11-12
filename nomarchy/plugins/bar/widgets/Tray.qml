@@ -463,10 +463,10 @@ BarWidget {
     id: managePopup
     anchorItem: root
     owner: root
-    bar: root.bar
+    hostBar: root.bar
     open: root.managePopupOpen
-    contentWidth: managePopup.fittedContentWidth(Style.space(300))
-    contentHeight: managePopup.fittedContentHeight(manageColumn.implicitHeight)
+    cardWidth: managePopup.fittedContentWidth(Style.space(300))
+    cardHeight: managePopup.fittedContentHeight(manageColumn.implicitHeight)
 
     Column {
       id: manageColumn
@@ -589,7 +589,7 @@ BarWidget {
     id: trayMenuPopup
     anchorItem: root.activeTrayAnchor || root
     owner: root
-    bar: root.bar
+    hostBar: root.bar
     open: root.trayMenuOpen
     // The card fades out over 140ms (visible stays true for that whole time --
     // see PopupCard's own visible: open || card.opacity > 0), so resetting on
@@ -600,8 +600,8 @@ BarWidget {
     onVisibleChanged: if (!visible) root.resetTrayMenu()
     padding: Style.space(8)
     borderColor: Qt.rgba(root.foreground.r, root.foreground.g, root.foreground.b, 0.45)
-    contentWidth: trayMenuPopup.fittedContentWidth(Style.space(232))
-    contentHeight: trayMenuPopup.fittedContentHeight(menuHeaderHeight + trayMenuColumn.implicitHeight, Style.space(420))
+    cardWidth: trayMenuPopup.fittedContentWidth(Style.space(232))
+    cardHeight: trayMenuPopup.fittedContentHeight(menuHeaderHeight + trayMenuColumn.implicitHeight, Style.space(420))
 
     // Column skips invisible children but keeps reporting their height, so
     // read the header's extent through its own visibility.

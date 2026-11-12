@@ -16,7 +16,7 @@ Item {
   readonly property bool boxItem: sourceItem instanceof Rectangle
     || sourceItem instanceof Canvas || sourceItem instanceof ShaderEffect
 
-  function unionBounds(a, b) {
+  function unionBounds(a: rect, b: rect): rect {
     if (b.width <= 0 || b.height <= 0) return a
     if (a.width <= 0 || a.height <= 0) return b
     var x = Math.min(a.x, b.x)
@@ -25,7 +25,7 @@ Item {
       Math.max(a.y + a.height, b.y + b.height) - y)
   }
 
-  function shapeBounds(item) {
+  function shapeBounds(item: Shape): rect {
     var bounds = item.boundingRect
     var sx = 1
     var sy = 1
@@ -49,22 +49,24 @@ Item {
     var bounds = Qt.rect(0, 0, 0, 0)
     if (!item || !item.visible || item.opacity <= 0) return bounds
     if (textItem) {
+      let text = item as Text
       let ink = textMetrics.tightBoundingRect
-      let spareWidth = item.width - item.leftPadding - item.rightPadding - item.contentWidth
-      let textX = item.leftPadding
-      if (item.effectiveHorizontalAlignment === Text.AlignHCenter) textX += spareWidth / 2
-      else if (item.effectiveHorizontalAlignment === Text.AlignRight) textX += spareWidth
-      bounds = Qt.rect(textX + ink.x, item.baselineOffset + ink.y, ink.width, ink.height)
+      let spareWidth = text.width - text.leftPadding - text.rightPadding - text.contentWidth
+      let textX = text.leftPadding
+      if (text.effectiveHorizontalAlignment === Text.AlignHCenter) textX += spareWidth / 2
+      else if (text.effectiveHorizontalAlignment === Text.AlignRight) textX += spareWidth
+      bounds = Qt.rect(textX + ink.x, text.baselineOffset + ink.y, ink.width, ink.height)
     } else if (imageItem) {
-      let w = item.paintedWidth
-      let h = item.paintedHeight
-      let x = item.horizontalAlignment === Image.AlignLeft ? 0
-        : (item.horizontalAlignment === Image.AlignRight ? item.width - w : (item.width - w) / 2)
-      let y = item.verticalAlignment === Image.AlignTop ? 0
-        : (item.verticalAlignment === Image.AlignBottom ? item.height - h : (item.height - h) / 2)
-      if (item.fillMode === Image.PreserveAspectFit) {
+      let image = item as Image
+      let w = image.paintedWidth
+      let h = image.paintedHeight
+      let x = image.horizontalAlignment === Image.AlignLeft ? 0
+        : (image.horizontalAlignment === Image.AlignRight ? item.width - w : (item.width - w) / 2)
+      let y = image.verticalAlignment === Image.AlignTop ? 0
+        : (image.verticalAlignment === Image.AlignBottom ? item.height - h : (item.height - h) / 2)
+      if (image.fillMode === Image.PreserveAspectFit) {
         bounds = Qt.rect(x, y, w, h)
-      } else if (item.fillMode === Image.Pad) {
+      } else if (image.fillMode === Image.Pad) {
         let left = Math.max(0, x)
         let top = Math.max(0, y)
         bounds = Qt.rect(left, top, Math.max(0, Math.min(item.width, x + w) - left),
@@ -73,7 +75,7 @@ Item {
         bounds = Qt.rect(0, 0, item.width, item.height)
       }
     } else if (shapeItem) {
-      bounds = shapeBounds(item)
+      bounds = shapeBounds(item as Shape)
     } else if (boxItem) {
       bounds = Qt.rect(0, 0, item.width, item.height)
     }
@@ -99,7 +101,7 @@ Item {
   }
 
   function configureSource() {
-    if (sourceItem instanceof Text) sourceItem.renderType = Text.CurveRendering
+    if (sourceItem instanceof Text) (sourceItem as Text).renderType = Text.CurveRendering
     updateMappedBounds()
   }
 
@@ -110,8 +112,8 @@ Item {
 
   TextMetrics {
     id: textMetrics
-    font: root.textItem ? root.sourceItem.font : Qt.font({ pixelSize: 12 })
-    text: root.textItem ? root.sourceItem.text : ""
+    font: root.textItem ? (root.sourceItem as Text).font : Qt.font({ pixelSize: 12 })
+    text: root.textItem ? (root.sourceItem as Text).text : ""
   }
 
   Connections {

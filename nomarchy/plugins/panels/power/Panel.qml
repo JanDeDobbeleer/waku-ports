@@ -157,7 +157,7 @@ Panel {
     if (root.bar && root.bar.shell) root.bar.shell.updateEntryInline(root.moduleName, root.settings)
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.power"
 
     function open() { root.open() }

@@ -127,7 +127,7 @@ QtObject {
   // The arrow a horizontal key press means along the reading direction: in a
   // right-to-left layout, mirrored, Left moves forward and Right back. With
   // vim set, h and l count as Left and Right too.
-  function readingKey(event, vim) {
+  function readingKey(event: KeyEvent, vim: bool): int {
     var key = event.key
     if (vim && (key === Qt.Key_H || event.text === "h")) key = Qt.Key_Left
     else if (vim && (key === Qt.Key_L || event.text === "l")) key = Qt.Key_Right
@@ -138,7 +138,7 @@ QtObject {
     return key
   }
 
-  function editsFilter(event, text) {
+  function editsFilter(event: KeyEvent, text: string): bool {
     if (!text) return false
     // Alt/Meta-modified sequences belong to other shortcuts — never edit here.
     if (event.modifiers & (Qt.AltModifier | Qt.MetaModifier)) return false
@@ -148,7 +148,7 @@ QtObject {
   }
 
   // New filter text after applying an edit key. Assumes editsFilter(event, text).
-  function editedFilter(event, text) {
+  function editedFilter(event: KeyEvent, text: string): string {
     if (event.key === Qt.Key_U) return ""                        // Ctrl+U: clear
     if (event.modifiers & Qt.ControlModifier)                    // Ctrl+Backspace: word
       return text.replace(/\s+$/, "").replace(/\S+$/, "")

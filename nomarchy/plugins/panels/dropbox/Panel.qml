@@ -162,7 +162,7 @@ Panel {
     function onFilesChanged() { root.ensureCursor() }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: root.ipcTarget
     function open(): void { root.open() }
     function close(): void { root.close() }

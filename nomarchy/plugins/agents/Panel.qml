@@ -1189,7 +1189,7 @@ Panel {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: root.ipcTarget
     function open(): void { root.open() }
     function close(): void { root.close() }
@@ -1452,9 +1452,9 @@ Panel {
           id: choice
           required property var modelData
           required property int index
-          readonly property string state: root.addChecks[modelData.providerId] || ""
+          readonly property string checkState: root.addChecks[modelData.providerId] || ""
           readonly property bool local: modelData.providerId === "local"
-          readonly property bool available: local ? root.localAddRecipes.length > 0 : state === "first" || state === "additional"
+          readonly property bool available: local ? root.localAddRecipes.length > 0 : checkState === "first" || checkState === "additional"
           // Local AI stays offered once everything that fits is installed,
           // greyed out and saying so.
           opacity: local && !available ? 0.4 : 1

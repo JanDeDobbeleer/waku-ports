@@ -201,10 +201,10 @@ Item {
           } else if (Util.editsFilter(event, root.filterText)) {
             root.setFilter(Util.editedFilter(event, root.filterText))
             event.accepted = true
-          } else if (Util.readingKey(event) === Qt.Key_Left) {
+          } else if (Util.readingKey(event, false) === Qt.Key_Left) {
             root.select(-1)
             event.accepted = true
-          } else if (Util.readingKey(event) === Qt.Key_Right) {
+          } else if (Util.readingKey(event, false) === Qt.Key_Right) {
             root.select(1)
             event.accepted = true
           } else if (event.key === Qt.Key_Up) {

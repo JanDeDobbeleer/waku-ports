@@ -12,6 +12,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import qs.Commons
+import qs.Commons as Commons
 
 import "Store.js" as Store
 import "Security.js" as Security
@@ -1392,7 +1393,7 @@ Item {
     return true
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     id: ipcHandler
     target: "notifications"
 

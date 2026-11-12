@@ -22,7 +22,7 @@ Item {
   // The change in progress, named by its cover's token.
   property string token: ""
   property string still: ""
-  property string clip: ""
+  property string clipPath: ""
   // Whether OWE already holds the clip decoded, as a theme switch prepares it
   // while its templates render.
   property bool prepared: false
@@ -95,7 +95,7 @@ Item {
     serial += 1
     token = "background-" + serial
     still = path
-    clip = clipPath
+    root.clipPath = clipPath
     prepared = false
     linked = false
     started = false
@@ -123,7 +123,7 @@ Item {
     if (!intro || tok !== intro.themeToken) return "superseded"
     token = tok
     still = stillPath
-    clip = clipPath
+    root.clipPath = clipPath
     prepared = preparedFlag === "true"
     linked = true
     started = false
@@ -154,14 +154,14 @@ Item {
     // old one cannot flash between the clip and the still. With the
     // background plugin disabled the cover still has to come down.
     if (backgroundService) backgroundService.setBackground(still, true)
-    if (clip && coverStatus !== "error") {
+    if (clipPath && coverStatus !== "error") {
       playProc.forToken = token
       playProc.command = prepared
-        ? ["owe", "intro", "--start", "first-frame", "--refresh", clip]
-        : ["C:/Program Files/Git/usr/bin/bash.exe", "-c", 'owe refresh >/dev/null && exec owe intro --start first-frame "$1"', "_", clip]
+        ? ["owe", "intro", "--start", "first-frame", "--refresh", clipPath]
+        : ["C:/Program Files/Git/usr/bin/bash.exe", "-c", 'owe refresh >/dev/null && exec owe intro --start first-frame "$1"', "_", clipPath]
       playProc.running = true
     } else {
-      intro.finishTheme(token, !clip)
+      intro.finishTheme(token, !clipPath)
     }
   }
 

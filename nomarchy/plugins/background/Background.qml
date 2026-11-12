@@ -311,7 +311,7 @@ Item {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "background"
 
     function refresh(): void {

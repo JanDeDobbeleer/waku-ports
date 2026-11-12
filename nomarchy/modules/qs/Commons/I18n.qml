@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import "Plural.js" as Plural
 import "Numbers.js" as Numbers
+import "Catalog.js" as Catalog
 
 // Display-language strings for the shell. The selected code lives in
 // ~/.config/nomarchy/language (nomarchy-language owns it); a missing file
@@ -37,8 +38,8 @@ QtObject {
     root.failedPaths[key] = path
     Qt.callLater(root.bump)
   }
-  readonly property string language: (root.rev, languageFile.path, languageCode(languageFile.text()))
-  readonly property var localeSettings: (root.rev, registryFile.path, parseCatalog(registryFile.text()))[root.language] || ({})
+  readonly property string language: readLanguage(root.rev, languageFile.path, languageFile.text())
+  readonly property var localeSettings: readCatalog(root.rev, registryFile.path, registryFile.text())[root.language] || ({})
   readonly property string formatLocale: localeSettings.formatLocale || "en-US"
   // From the registry: how numbers are written and which way text runs.
   readonly property string decimal: localeSettings.decimal || "."
@@ -47,8 +48,8 @@ QtObject {
 
   // Reading text() makes blockLoading take effect on the first lookup.
   // These bindings also rebuild the maps when a watched catalog changes.
-  readonly property var englishStrings: (root.rev, englishCatalogFile.path, parseCatalog(englishCatalogFile.text()))
-  readonly property var languageStrings: (root.rev, languageCatalogFile.path, parseCatalog(languageCatalogFile.text()))
+  readonly property var englishStrings: readCatalog(root.rev, englishCatalogFile.path, englishCatalogFile.text())
+  readonly property var languageStrings: readCatalog(root.rev, languageCatalogFile.path, languageCatalogFile.text())
   readonly property var strings: {
     var merged = ({})
     for (let k in root.englishStrings) merged[k] = root.englishStrings[k]
@@ -82,16 +83,11 @@ QtObject {
     return Numbers.format(value, decimals, root.decimal, root.zeroDigit)
   }
 
-  function parseCatalog(raw) {
-    try {
-      let parsed = JSON.parse(raw || "{}")
-      return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
-    } catch (e) {
-      return ({})
-    }
-  }
+  function parseCatalog(raw: var): var { return Catalog.parse(raw) }
+  function readCatalog(revision: int, path: var, raw: var): var { return Catalog.parse(raw) }
+  function readLanguage(revision: int, path: var, raw: var): string { return languageCode(raw) }
 
-  function languageCode(raw) {
+  function languageCode(raw: var): string {
     var code = String(raw || "").trim()
     if (!/^[a-z]{2,3}(-[A-Za-z]{2})?$/.test(code)) code = "en"
     return code

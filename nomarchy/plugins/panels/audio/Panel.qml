@@ -16,12 +16,12 @@ Panel {
   moduleName: "nomarchy.audio"
   ipcTarget: "nomarchy.audio"
 
-  readonly property var sink: Pipewire.defaultAudioSink
-  readonly property var source: Pipewire.defaultAudioSource
+  readonly property PwNode sink: Pipewire.defaultAudioSink
+  readonly property PwNode source: Pipewire.defaultAudioSource
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var mprisPlayers: Mpris.players ? Mpris.players.values : []
   readonly property var mediaService: bar?.shell?.firstPartyServiceFor("nomarchy.media")
-  readonly property var activeMediaPlayer: mediaService ? mediaService.activePlayer : null
+  readonly property MprisPlayer activeMediaPlayer: mediaService ? mediaService.activePlayer as MprisPlayer : null
 
   // Nodes of a platform's audio processing, which are neither devices nor apps,
   // stay out of every list (AudioNodes.platformHides). Most machines have none.
@@ -145,13 +145,13 @@ Panel {
   // Carry sub-notch touchpad deltas between wheel events.
   property real wheelAccumulator: 0
 
-  readonly property var volumeSink: {
+  readonly property PwNode volumeSink: {
     if (volumeSinkName === "" || !sink) return sink
     if (volumeSinkName === String(sink.name)) return sink
     for (let i = 0; i < nodes.length; i++) {
       let n = nodes[i]
       if (n && n.isSink && !n.isStream && String(n.name) === volumeSinkName && n.audio)
-        return n
+        return n as PwNode
     }
     return sink
   }
@@ -268,7 +268,7 @@ Panel {
 
   // Order of visible sections, recomputed reactively so dropping a section
   // (e.g. no input devices) doesn't leave the cursor pointing at it.
-  readonly property var visibleSections: {
+  readonly property list<string> visibleSections: {
     var list = []
     if (sectionVisible("output")) list.push("output")
     if (sectionVisible("input")) list.push("input")

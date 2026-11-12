@@ -22,7 +22,7 @@ Item {
   signal canceled()
   signal confirmed()
 
-  function handleKey(event) {
+  function handleKey(event: KeyEvent): bool {
     if (!root.opened) return false
 
     if (event.key === Qt.Key_Escape) {
