@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Celeste.Config
 import qs.components
 import qs.services
+import "HeaderBarHelpers.js" as HeaderBarHelpers
 
 StyledRect {
     id: root
@@ -29,8 +30,8 @@ StyledRect {
 
             StateLayer {
                 radius: Tokens.rounding.medium
-                disabled: root.dialog.cwd.length === 1
-                onClicked: root.dialog.cwd.pop()
+                disabled: HeaderBarHelpers.isRoot(root.dialog)
+                onClicked: HeaderBarHelpers.goUp(root.dialog)
             }
 
             MaterialIcon {
@@ -38,7 +39,7 @@ StyledRect {
 
                 anchors.centerIn: parent
                 text: "drive_folder_upload"
-                color: root.dialog.cwd.length === 1 ? Colours.palette.m3outline : Colours.palette.m3onSurface
+                color: HeaderBarHelpers.isRoot(root.dialog) ? Colours.palette.m3outline : Colours.palette.m3onSurface
                 grade: 200
             }
         }
@@ -61,7 +62,7 @@ StyledRect {
                 spacing: Tokens.spacing.small
 
                 Repeater {
-                    model: root.dialog.cwd
+                    model: HeaderBarHelpers.cwd(root.dialog)
 
                     RowLayout {
                         id: folder
@@ -89,10 +90,10 @@ StyledRect {
                             Loader {
                                 asynchronous: true
                                 anchors.fill: parent
-                                active: folder.index < root.dialog.cwd.length - 1
+                                active: !HeaderBarHelpers.isLast(root.dialog, folder.index)
                                 sourceComponent: StateLayer {
                                     onClicked: {
-                                        root.dialog.cwd = root.dialog.cwd.slice(0, folder.index + 1);
+                                        HeaderBarHelpers.navigate(root.dialog, folder.index);
                                     }
 
                                     radius: Tokens.rounding.medium
@@ -108,10 +109,10 @@ StyledRect {
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.leftMargin: Tokens.padding.medium
 
-                                active: folder.index === 0 && folder.modelData === "Home"
+                                active: HeaderBarHelpers.isHome(folder.index, folder.modelData)
                                 sourceComponent: MaterialIcon {
                                     text: "home"
-                                    color: root.dialog.cwd.length === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                                    color: HeaderBarHelpers.isRoot(root.dialog) ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
                                     fill: 1
                                 }
                             }
@@ -124,7 +125,7 @@ StyledRect {
                                 anchors.leftMargin: homeIcon.active ? Tokens.padding.extraSmall : 0
 
                                 text: folder.modelData
-                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                                color: !HeaderBarHelpers.isLast(root.dialog, folder.index) ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
                                 font: Tokens.styled("body", "small", { weight: Font.Bold })
                             }
                         }

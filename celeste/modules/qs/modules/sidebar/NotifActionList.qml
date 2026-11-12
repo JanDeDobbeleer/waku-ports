@@ -9,6 +9,7 @@ import qs.components
 import qs.components.containers
 import qs.components.effects
 import qs.services
+import "NotifActionListHelpers.js" as NotifActionListHelpers
 
 Item {
     id: root
@@ -101,15 +102,7 @@ Item {
             spacing: Tokens.spacing.small
 
             Repeater {
-                model: [
-                    {
-                        isClose: true
-                    },
-                    ...(root.notif?.actions ?? []),
-                    {
-                        isCopy: true
-                    }
-                ]
+                model: NotifActionListHelpers.actions(root.notif)
 
                 StyledRect {
                     id: action
@@ -129,40 +122,28 @@ Item {
                         id: copyTimer
 
                         interval: 3000
-                        onTriggered: (actionInner.item as MaterialIcon).text = "content_copy"
+                        onTriggered: NotifActionListHelpers.setIconText(actionInner.item, "content_copy")
                     }
 
                     StateLayer {
                         id: actionStateLayer
 
-                        onClicked: {
-                            if (action.modelData.isClose) {
-                                root.notif.close();
-                            } else if (action.modelData.isCopy) {
-                                Quickshell.clipboardText = root.notif.body;
-                                (actionInner.item as MaterialIcon).text = "inventory";
-                                copyTimer.start();
-                            } else if (action.modelData.invoke) {
-                                action.modelData.invoke();
-                            } else if (!root.notif.resident) {
-                                root.notif.close();
-                            }
-                        }
+                        onClicked: NotifActionListHelpers.activate(action.modelData, root.notif, Quickshell, actionInner.item, copyTimer)
                     }
 
                     Loader {
                         id: actionInner
 
                         anchors.centerIn: parent
-                        sourceComponent: action.modelData.isClose || action.modelData.isCopy ? iconBtn : root.notif?.hasActionIcons ? iconComp : textComp
+                        sourceComponent: NotifActionListHelpers.isSpecial(action.modelData) ? iconBtn : root.notif?.hasActionIcons ? iconComp : textComp
                     }
 
                     Component {
                         id: iconBtn
 
                         MaterialIcon {
-                            animate: action.modelData.isCopy ?? false
-                            text: action.modelData.isCopy ? "content_copy" : "close"
+                            animate: NotifActionListHelpers.isCopy(action.modelData)
+                            text: NotifActionListHelpers.iconText(action.modelData)
                             color: Colours.palette.m3onSurfaceVariant
                         }
                     }
@@ -172,7 +153,7 @@ Item {
 
                         IconImage {
                             asynchronous: true
-                            source: Quickshell.iconPath(action.modelData.identifier)
+                            source: Quickshell.iconPath(NotifActionListHelpers.identifier(action.modelData))
                         }
                     }
 
@@ -180,7 +161,7 @@ Item {
                         id: textComp
 
                         StyledText {
-                            text: action.modelData.text
+                            text: NotifActionListHelpers.actionText(action.modelData)
                             color: Colours.palette.m3onSurfaceVariant
                         }
                     }
