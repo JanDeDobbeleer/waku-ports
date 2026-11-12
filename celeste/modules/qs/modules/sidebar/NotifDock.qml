@@ -11,18 +11,19 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.utils
+import "NotifDockHelpers.js" as NotifDockHelpers
 
 Item {
     id: root
 
     required final property Props props
     required final property ScreenState screenState
-    readonly final property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
+    readonly final property int notifCount: NotifDockHelpers.count(Notifs.list)
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.medium
 
-    Component.onCompleted: Notifs.list.forEach(n => n.popup = false)
+    Component.onCompleted: NotifDockHelpers.disablePopups(Notifs.list)
 
     Item {
         id: title
@@ -160,24 +161,7 @@ Item {
         repeat: true
         triggeredOnStart: true
         interval: Math.max(15, Math.min(80, 69.8 - 12.3 * Math.log(Notifs.notClosed.length)))
-        onTriggered: {
-            const first = Notifs.notClosed[0];
-            if (!first) {
-                stop();
-                return;
-            }
-
-            const appName = first.appName;
-            let cleared = 0;
-            for (const n of Notifs.notClosed.filter(n => n.appName === appName)) {
-                n.close();
-                cleared++;
-                if (cleared > 30) {
-                    interval = 5;
-                    return;
-                }
-            }
-        }
+        onTriggered: NotifDockHelpers.clearNext(Notifs.notClosed, clearTimer)
     }
 
     Loader {
@@ -199,9 +183,9 @@ Item {
 
             Elevation {
                 anchors.fill: parent
-                radius: parent.radius
+                radius: clearBtn.radius
                 z: -1
-                level: clearBtn.stateLayer.containsMouse ? 4 : 3
+                level: clearBtn.hovered ? 4 : 3
             }
         }
 
