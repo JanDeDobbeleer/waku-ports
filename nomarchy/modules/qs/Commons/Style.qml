@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons as Commons
 import Quickshell
@@ -230,37 +231,39 @@ QtObject {
     return (isFinite(n) && n >= 0) ? Math.round(n) : space(fallback)
   }
 
-  readonly property QtObject spacing: QtObject {
-    readonly property real scale: root.effectiveSpacingScale
+  component SpacingTokens: QtObject {
+    final readonly property real scale: root.effectiveSpacingScale
 
-    readonly property int hairline: root.space(1)
-    readonly property int xxs: root.spacingToken("xxs", 2)
-    readonly property int xs: root.spacingToken("xs", 3)
-    readonly property int sm: root.spacingToken("sm", 4)
-    readonly property int md: root.spacingToken("md", 6)
-    readonly property int lg: root.spacingToken("lg", 8)
-    readonly property int xl: root.spacingToken("xl", 10)
-    readonly property int xxl: root.spacingToken("xxl", 12)
-    readonly property int xxxl: root.spacingToken("xxxl", 14)
-    readonly property int huge: root.spacingToken("huge", 18)
+    final readonly property int hairline: root.space(1)
+    final readonly property int xxs: root.spacingToken("xxs", 2)
+    final readonly property int xs: root.spacingToken("xs", 3)
+    final readonly property int sm: root.spacingToken("sm", 4)
+    final readonly property int md: root.spacingToken("md", 6)
+    final readonly property int lg: root.spacingToken("lg", 8)
+    final readonly property int xl: root.spacingToken("xl", 10)
+    final readonly property int xxl: root.spacingToken("xxl", 12)
+    final readonly property int xxxl: root.spacingToken("xxxl", 14)
+    final readonly property int huge: root.spacingToken("huge", 18)
 
-    readonly property int controlGap: root.spacingToken("control-gap", 8)
-    readonly property int controlPaddingX: root.spacingToken("control-padding-x", 10)
-    readonly property int controlPaddingY: root.spacingToken("control-padding-y", 6)
-    readonly property int inputPaddingY: root.spacingToken("input-padding-y", 7)
-    readonly property int controlHeight: root.spacingToken("control-height", 28)
-    readonly property int popupRowHeight: root.spacingToken("popup-row-height", 28)
-    readonly property int dropdownWidth: root.spacingToken("dropdown-width", 240)
-    readonly property int searchableDropdownWidth: root.spacingToken("searchable-dropdown-width", 260)
-    readonly property int numberFieldWidth: root.spacingToken("number-field-width", 120)
-    readonly property int searchablePopupMinHeight: root.spacingToken("searchable-popup-min-height", 220)
-    readonly property int rowGap: root.spacingToken("row-gap", 8)
-    readonly property int rowPaddingX: root.spacingToken("row-padding-x", 12)
-    readonly property int labelGap: root.spacingToken("label-gap", 4)
-    readonly property int panelGap: root.spacingToken("panel-gap", 14)
-    readonly property int panelPadding: root.spacingToken("panel-padding", 18)
-    readonly property int popupPadding: root.spacingToken("popup-padding", 14)
+    final readonly property int controlGap: root.spacingToken("control-gap", 8)
+    final readonly property int controlPaddingX: root.spacingToken("control-padding-x", 10)
+    final readonly property int controlPaddingY: root.spacingToken("control-padding-y", 6)
+    final readonly property int inputPaddingY: root.spacingToken("input-padding-y", 7)
+    final readonly property int controlHeight: root.spacingToken("control-height", 28)
+    final readonly property int popupRowHeight: root.spacingToken("popup-row-height", 28)
+    final readonly property int dropdownWidth: root.spacingToken("dropdown-width", 240)
+    final readonly property int searchableDropdownWidth: root.spacingToken("searchable-dropdown-width", 260)
+    final readonly property int numberFieldWidth: root.spacingToken("number-field-width", 120)
+    final readonly property int searchablePopupMinHeight: root.spacingToken("searchable-popup-min-height", 220)
+    final readonly property int rowGap: root.spacingToken("row-gap", 8)
+    final readonly property int rowPaddingX: root.spacingToken("row-padding-x", 12)
+    final readonly property int labelGap: root.spacingToken("label-gap", 4)
+    final readonly property int panelGap: root.spacingToken("panel-gap", 14)
+    final readonly property int panelPadding: root.spacingToken("panel-padding", 18)
+    final readonly property int popupPadding: root.spacingToken("popup-padding", 14)
   }
+
+  final readonly property SpacingTokens spacing: SpacingTokens {}
 
   // ---------------------------------------------------------- typography
   //
@@ -313,42 +316,46 @@ QtObject {
     return (override && override.length > 0) ? override : fontFamily
   }
 
-  readonly property QtObject font: QtObject {
-    readonly property string family: root.fontFamily
-    readonly property string resolvedFamily: root.resolvedFontFamily
-    readonly property string menuFamily: root.menuFontFamily
-    readonly property int baseSize: root.fontBaseSize
+  component FontTokens: QtObject {
+    final readonly property string family: root.fontFamily
+    final readonly property string resolvedFamily: root.resolvedFontFamily
+    final readonly property string menuFamily: root.menuFontFamily
+    final readonly property int baseSize: root.fontBaseSize
 
-    readonly property int caption:      root.fontToken("caption",       root.fontPx(0.833))   // 10
-    readonly property int bodySmall:    root.fontToken("body-small",    root.fontPx(0.917))   // 11
-    readonly property int body:         root.fontToken("body",          root.fontPx(1.0))     // 12
-    readonly property int subtitle:     root.fontToken("subtitle",      root.fontPx(1.083))   // 13
-    readonly property int title:        root.fontToken("title",         root.fontPx(1.167))   // 14
-    readonly property int heading:      root.fontToken("heading",       root.fontPx(1.333))   // 16
-    readonly property int display:      root.fontToken("display",       root.fontPx(2.0))     // 24
-    readonly property int displayLarge: root.fontToken("display-large", root.fontPx(2.333))   // 28
+    final readonly property int caption:      root.fontToken("caption",       root.fontPx(0.833))   // 10
+    final readonly property int bodySmall:    root.fontToken("body-small",    root.fontPx(0.917))   // 11
+    final readonly property int body:         root.fontToken("body",          root.fontPx(1.0))     // 12
+    final readonly property int subtitle:     root.fontToken("subtitle",      root.fontPx(1.083))   // 13
+    final readonly property int title:        root.fontToken("title",         root.fontPx(1.167))   // 14
+    final readonly property int heading:      root.fontToken("heading",       root.fontPx(1.333))   // 16
+    final readonly property int display:      root.fontToken("display",       root.fontPx(2.0))     // 24
+    final readonly property int displayLarge: root.fontToken("display-large", root.fontPx(2.333))   // 28
 
-    readonly property int iconSmall:    root.fontToken("icon-small",    bodySmall)
-    readonly property int icon:         root.fontToken("icon",          title)
-    readonly property int iconLarge:    root.fontToken("icon-large",    root.fontPx(1.5))     // 18
+    final readonly property int iconSmall:    root.fontToken("icon-small",    bodySmall)
+    final readonly property int icon:         root.fontToken("icon",          title)
+    final readonly property int iconLarge:    root.fontToken("icon-large",    root.fontPx(1.5))     // 18
   }
 
-  readonly property QtObject bar: QtObject {
-    readonly property int sizeHorizontal: root.barToken("size-horizontal", 26)
-    readonly property int sizeVertical:   root.barToken("size-vertical",   28)
+  final readonly property FontTokens font: FontTokens {}
+
+  component BarTokens: QtObject {
+    final readonly property int sizeHorizontal: root.barToken("size-horizontal", 26)
+    final readonly property int sizeVertical:   root.barToken("size-vertical",   28)
     // Calibrated notch cutout height in logical px, for panels whose real
     // cutout differs from the derived default (see BarModel.notchHeight).
     // 0 means derive it. Physical alignment, so it never scales with font.
-    readonly property int notchHeight: {
+    final readonly property int notchHeight: {
       var v = Number(root.barOverrides["notch-height"])
       return (isFinite(v) && v > 0) ? Math.round(v) : 0
     }
-    readonly property int iconSlot:       root.barToken("icon-slot",       27)
-    readonly property int iconCanvas:     root.barToken("icon-canvas",     16)
-    readonly property int iconFont:       root.barToken("icon-font",       13)
-    readonly property int iconSize:       Math.min(iconCanvas, root.barToken("icon-size", 12))
-    readonly property int statusSlot:     root.barToken("status-slot",     21)
+    final readonly property int iconSlot:       root.barToken("icon-slot",       27)
+    final readonly property int iconCanvas:     root.barToken("icon-canvas",     16)
+    final readonly property int iconFont:       root.barToken("icon-font",       13)
+    final readonly property int iconSize:       Math.min(iconCanvas, root.barToken("icon-size", 12))
+    final readonly property int statusSlot:     root.barToken("status-slot",     21)
   }
+
+  final readonly property BarTokens bar: BarTokens {}
 
   // Off with Hyprland's own animations, as `nomarchy toggle animations` turns
   // them off for machines that render on the CPU. Every shell animation runs
