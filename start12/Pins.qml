@@ -24,11 +24,11 @@ QtObject {
     function save(next: list<string>): void {
         ids = next;
         exists = true;
-        pinsFile.setText(JSON.stringify({ ids: next }));
+        pinsFile.setText(JSON.stringify({ ids: Array.from(next) }));
     }
 
     function toggle(id: string): void {
-        save(has(id) ? Data.without(ids, id) : ids.concat([id]));
+        save(has(id) ? Data.without(ids, id) : Array.from(ids).concat([id]));
     }
 
     // Start from the apps used most, once the catalogue has loaded.
