@@ -45,7 +45,7 @@ Item {
                 StyledText {
                     Layout.leftMargin: Tokens.padding.medium
                     text: group.modelData.label
-                    font: Tokens.font.body.builders.medium.weight(Font.DemiBold).build()
+                    font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
                     color: Colours.palette.m3onSurface
                 }
 

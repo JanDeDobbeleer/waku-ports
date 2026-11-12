@@ -66,7 +66,7 @@ TextFieldBase {
 
         text: "search"
         color: Colours.palette.m3onSurfaceVariant
-        fontStyle: Tokens.font.icon.builders.medium.scale(0.9).build()
+        fontStyle: Tokens.styled("icon", "medium", { scale: 0.9 })
     }
 
     IconButton {

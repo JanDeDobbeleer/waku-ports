@@ -117,7 +117,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: Tr.tr("All up to date!")
                     color: Colours.palette.m3outlineVariant
-                    font: Tokens.font.headline.builders.small.width(90).build()
+                    font: Tokens.styled("headline", "small", { width: 90 })
                 }
             }
 

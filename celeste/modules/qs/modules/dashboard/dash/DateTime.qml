@@ -25,14 +25,14 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: Time.hourStr
             color: Colours.palette.m3secondary
-            font: Tokens.font.clock.size(28).weight(Font.DemiBold).build()
+            font: Tokens.clockFont({ size: 28, weight: Font.DemiBold })
         }
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: "•••"
             color: Colours.palette.m3primary
-            font: Tokens.font.clock.size(28 * 0.9).build()
+            font: Tokens.clockFont({ size: 28 * 0.9 })
         }
 
         StyledText {
@@ -40,7 +40,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: Time.minuteStr
             color: Colours.palette.m3secondary
-            font: Tokens.font.clock.size(28).weight(Font.DemiBold).build()
+            font: Tokens.clockFont({ size: 28, weight: Font.DemiBold })
         }
 
         Loader {
@@ -53,7 +53,7 @@ Item {
             sourceComponent: StyledText {
                 text: "•••"
                 color: Colours.palette.m3primary
-                font: Tokens.font.clock.size(28 * 0.9).build()
+                font: Tokens.clockFont({ size: 28 * 0.9 })
             }
         }
         Loader {
@@ -66,7 +66,7 @@ Item {
             sourceComponent: StyledText {
                 text: Time.format("ss")
                 color: Colours.palette.m3secondary
-                font: Tokens.font.clock.size(28).weight(Font.DemiBold).build()
+                font: Tokens.clockFont({ size: 28, weight: Font.DemiBold })
             }
         }
 
@@ -80,7 +80,7 @@ Item {
             sourceComponent: StyledText {
                 text: Time.amPmStr
                 color: Colours.palette.m3primary
-                font: Tokens.font.clock.size(18).weight(Font.DemiBold).build()
+                font: Tokens.clockFont({ size: 18, weight: Font.DemiBold })
             }
         }
     }

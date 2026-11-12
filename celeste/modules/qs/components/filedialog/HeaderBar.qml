@@ -78,7 +78,7 @@ StyledRect {
                             sourceComponent: StyledText {
                                 text: "/"
                                 color: Colours.palette.m3onSurfaceVariant
-                                font: Tokens.font.body.builders.small.weight(Font.Bold).build()
+                                font: Tokens.styled("body", "small", { weight: Font.Bold })
                             }
                         }
 
@@ -125,7 +125,7 @@ StyledRect {
 
                                 text: folder.modelData
                                 color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
-                                font: Tokens.font.body.builders.small.weight(Font.Bold).build()
+                                font: Tokens.styled("body", "small", { weight: Font.Bold })
                             }
                         }
                     }

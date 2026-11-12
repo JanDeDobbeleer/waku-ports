@@ -67,7 +67,7 @@ StyledRect {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: Strings.percentOne(root.percentage)
-                        font: Tokens.font.title.builders.large.width(90).build()
+                        font: Tokens.styled("title", "large", { width: 90 })
                         color: root.accent
                     }
 

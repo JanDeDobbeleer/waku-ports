@@ -206,7 +206,7 @@ Item {
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
                 text: "sentiment_sad"
-                fontStyle: Tokens.font.icon.builders.large.scale(2).build()
+                fontStyle: Tokens.styled("icon", "large", { scale: 2 })
                 color: Colours.palette.m3outline
             }
 

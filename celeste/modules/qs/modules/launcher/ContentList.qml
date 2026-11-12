@@ -136,7 +136,7 @@ Item {
             StyledText {
                 text: root.state === "wallpapers" ? Tr.tr("No wallpapers found") : Tr.tr("No results")
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.styled("body", "large", { weight: Font.Medium })
             }
 
             StyledText {

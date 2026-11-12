@@ -65,7 +65,7 @@ Item {
             anchors.centerIn: parent
             text: "image"
             color: Colours.tPalette.m3outline
-            fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.DemiBold).build()
+            fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2, weight: Font.DemiBold })
         }
 
         Visual {

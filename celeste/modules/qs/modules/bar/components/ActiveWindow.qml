@@ -87,7 +87,7 @@ Item {
         id: metrics
 
         text: root.windowTitle
-        font: Tokens.font.body.builders.small.letterSpacing(1.4).build()
+        font: Tokens.styled("body", "small", { letterSpacing: 1.4 })
         elide: Qt.ElideRight
         elideWidth: root.maxHeight - icon.height
 

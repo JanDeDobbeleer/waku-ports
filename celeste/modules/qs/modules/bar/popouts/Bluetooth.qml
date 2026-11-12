@@ -35,7 +35,7 @@ ColumnLayout {
         Layout.topMargin: Tokens.padding.medium
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Bluetooth")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     Toggle {

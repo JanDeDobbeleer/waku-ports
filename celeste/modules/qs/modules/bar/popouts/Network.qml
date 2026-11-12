@@ -30,7 +30,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Tokens.padding.medium : 0
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Wireless")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     Toggle {
@@ -59,7 +59,7 @@ ColumnLayout {
             text: Nmcli.active ? Tr.tr("Connected to %1").arg(Nmcli.active.ssid) : Tr.tr("Not connected to wireless")
             elide: Text.ElideRight
             color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
     }
 
@@ -151,7 +151,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: networkItem.modelData.ssid
                 elide: Text.ElideRight
-                font: Tokens.font.body.builders.medium.weight(networkItem.modelData.active ? Font.Medium : Font.Normal).build()
+                font: Tokens.styled("body", "medium", { weight: networkItem.modelData.active ? Font.Medium : Font.Normal })
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
@@ -270,7 +270,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Tokens.padding.medium : 0
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Ethernet")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     StyledText {
@@ -334,7 +334,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: ethernetItem.modelData.iface || Tr.trCtx("Unknown", "unknown network interface")
                 elide: Text.ElideRight
-                font: Tokens.font.body.builders.medium.weight(ethernetItem.modelData.connected ? Font.Medium : Font.Normal).build()
+                font: Tokens.styled("body", "medium", { weight: ethernetItem.modelData.connected ? Font.Medium : Font.Normal })
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 

@@ -108,7 +108,7 @@ Item {
 
                             anchors.centerIn: parent
                             text: "queue_music"
-                            fontStyle: Tokens.font.icon.builders.large.scale(2).build()
+                            fontStyle: Tokens.styled("icon", "large", { scale: 2 })
                             color: Colours.palette.m3onPrimaryContainer
                         }
                     }

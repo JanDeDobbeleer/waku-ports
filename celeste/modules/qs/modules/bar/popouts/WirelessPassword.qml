@@ -181,13 +181,13 @@ ColumnLayout {
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
                 text: "lock"
-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).build()
+                fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2 })
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: Tr.tr("Enter password")
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.styled("body", "large", { weight: Font.Medium })
             }
 
             StyledText {
@@ -253,7 +253,7 @@ ColumnLayout {
                     return "";
                 }
                 color: connectButton.hasError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.builders.small.weight(Font.Normal).build()
+                font: Tokens.styled("body", "small", { weight: Font.Normal })
                 wrapMode: Text.WordWrap
                 Layout.maximumWidth: parent.width - Tokens.padding.extraLargeIncreased
             }

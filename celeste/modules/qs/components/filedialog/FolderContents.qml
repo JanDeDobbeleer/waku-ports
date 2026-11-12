@@ -57,13 +57,13 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: "scan_delete"
                 color: Colours.palette.m3outline
-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.Medium).build()
+                fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2, weight: Font.Medium })
             }
 
             StyledText {
                 text: Tr.tr("This folder is empty")
                 color: Colours.palette.m3outline
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.styled("body", "large", { weight: Font.Medium })
             }
         }
 
@@ -229,7 +229,7 @@ Item {
             }
             color: Colours.palette.m3primary
             fill: 1
-            fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.6).build()
+            fontStyle: Tokens.styled("icon", "extraLarge", { scale: 1.6 })
         }
 
         StyledText {

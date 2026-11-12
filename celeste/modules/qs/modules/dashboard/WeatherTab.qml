@@ -31,7 +31,7 @@ Item {
 
                 StyledText {
                     text: Weather.city || Tr.tr("Loading...")
-                    font: Tokens.font.body.builders.large.size(28).weight(Font.DemiBold).build()
+                    font: Tokens.styled("body", "large", { size: 28, weight: Font.DemiBold })
                     color: Colours.palette.m3onSurface
                 }
 
@@ -81,7 +81,7 @@ Item {
                 MaterialIcon {
                     Layout.alignment: Qt.AlignVCenter
                     text: Weather.icon
-                    fontStyle: Tokens.font.icon.builders.extraLarge.scale(3).build()
+                    fontStyle: Tokens.styled("icon", "extraLarge", { scale: 3 })
                     color: Colours.palette.m3secondary
                     animate: true
                 }
@@ -92,7 +92,7 @@ Item {
 
                     StyledText {
                         text: Weather.temp
-                        font: Tokens.font.body.builders.large.size(28 * 2).weight(Font.Medium).build()
+                        font: Tokens.styled("body", "large", { size: 28 * 2, weight: Font.Medium })
                         color: Colours.palette.m3primary
                     }
 
@@ -135,7 +135,7 @@ Item {
             Layout.leftMargin: Tokens.padding.medium
             visible: forecastRepeater.count > 0
             text: Tr.tr("7-day forecast")
-            font: Tokens.font.body.builders.medium.weight(Font.DemiBold).build()
+            font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
             color: Colours.palette.m3onSurface
         }
 
@@ -169,7 +169,7 @@ Item {
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
                             text: forecastItem.index === 0 ? Tr.trCtx("Today", "forecast column") : Tr.formatDateTime(new Date(forecastItem.modelData.date), "ddd")
-                            font: Tokens.font.body.builders.medium.weight(Font.DemiBold).build()
+                            font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
                             color: Colours.palette.m3primary
                         }
 
@@ -196,7 +196,7 @@ Item {
                                 const max = Weather.formatTemp(forecastItem.modelData.maxTempC, true);
                                 return Tr.trCtx("%1 / %2", "min/max temperature").arg(min).arg(max);
                             }
-                            font: Tokens.font.body.builders.small.weight(Font.DemiBold).build()
+                            font: Tokens.styled("body", "small", { weight: Font.DemiBold })
                             color: Colours.palette.m3tertiary
                         }
                     }
@@ -241,7 +241,7 @@ Item {
                 }
                 StyledText {
                     text: detailRoot.value
-                    font: Tokens.font.body.builders.small.weight(Font.DemiBold).build()
+                    font: Tokens.styled("body", "small", { weight: Font.DemiBold })
                     horizontalAlignment: Text.AlignLeft
                 }
             }
@@ -272,7 +272,7 @@ Item {
             }
             StyledText {
                 text: weatherStat.value
-                font: Tokens.font.body.builders.small.weight(Font.DemiBold).build()
+                font: Tokens.styled("body", "small", { weight: Font.DemiBold })
                 color: Colours.palette.m3onSurface
             }
         }

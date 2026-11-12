@@ -33,7 +33,7 @@ StyledRect {
             Layout.bottomMargin: Tokens.spacing.medium
             text: Tr.trCtx("Files", "file dialog sidebar heading")
             color: Colours.palette.m3onSurface
-            font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+            font: Tokens.styled("body", "large", { weight: Font.Bold })
         }
 
         Repeater {

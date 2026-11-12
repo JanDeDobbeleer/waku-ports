@@ -10,8 +10,11 @@ GpuType 1.0 GpuType.qml
 LyricsBackend 1.0 LyricsBackend.qml
 NotifsFullscreen 1.0 NotifsFullscreen.qml
 ScaledTokens 1.0 ScaledTokens.qml
+SizeTokens 1.0 SizeTokens.qml
 TemperatureUnit 1.0 TemperatureUnit.qml
 singleton TokenConfig 1.0 TokenConfig.qml
 TokenFontStyle 1.0 TokenFontStyle.qml
+TokenFonts 1.0 TokenFonts.qml
 singleton Tokens 1.0 Tokens.qml
+TransparencyTokens 1.0 TransparencyTokens.qml
 WallpaperTransition 1.0 WallpaperTransition.qml

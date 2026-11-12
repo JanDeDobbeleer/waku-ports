@@ -36,7 +36,7 @@ Item {
 
         StyledText {
             text: Tr.trCtx("Output device", "audio output device")
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         Repeater {
@@ -58,7 +58,7 @@ Item {
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
             text: Tr.trCtx("Input device", "audio input device")
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         Repeater {
@@ -78,7 +78,7 @@ Item {
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
             text: Audio.muted ? Tr.tr("Volume (muted)") : Tr.tr("Volume (%1%)").arg(Math.round(Audio.volume * 100))
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         CustomMouseArea {

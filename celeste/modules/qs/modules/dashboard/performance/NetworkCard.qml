@@ -124,7 +124,7 @@ StyledRect {
 
             StyledText {
                 text: Units.formatBytes(NetworkUsage.downloadSpeed ?? 0, true)
-                font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+                font: Tokens.styled("body", "medium", { weight: Font.Medium })
                 color: Colours.palette.m3tertiary
             }
         }
@@ -152,7 +152,7 @@ StyledRect {
 
             StyledText {
                 text: Units.formatBytes(NetworkUsage.uploadSpeed ?? 0, true)
-                font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+                font: Tokens.styled("body", "medium", { weight: Font.Medium })
                 color: Colours.palette.m3secondary
             }
         }

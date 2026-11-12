@@ -104,7 +104,7 @@ CustomMouseArea {
                 isRound: true
                 icon: "chevron_left"
                 type: IconButton.Text
-                font: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+                font: Tokens.styled("icon", "small", { weight: Font.Bold })
                 padding: Tokens.padding.small
                 onClicked: root.screenState.dashboardDate = new Date(root.nonAnimCurrYear, root.nonAnimCurrMonth - 1, 1)
             }
@@ -143,7 +143,7 @@ CustomMouseArea {
                     anchors.centerIn: parent
                     text: grid.title
                     color: Colours.palette.m3primary
-                    font: Tokens.font.title.builders.small.capitalisation(Font.Capitalize).build()
+                    font: Tokens.styled("title", "small", { capitalisation: Font.Capitalize })
                 }
             }
 
@@ -151,7 +151,7 @@ CustomMouseArea {
                 isRound: true
                 icon: "chevron_right"
                 type: IconButton.Text
-                font: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+                font: Tokens.styled("icon", "small", { weight: Font.Bold })
                 padding: Tokens.padding.small
                 onClicked: root.screenState.dashboardDate = new Date(root.nonAnimCurrYear, root.nonAnimCurrMonth + 1, 1)
             }
@@ -168,7 +168,7 @@ CustomMouseArea {
 
                 horizontalAlignment: Text.AlignHCenter
                 text: model.shortName
-                font: Tokens.font.body.builders.small.weight(Font.Medium).build()
+                font: Tokens.styled("body", "small", { weight: Font.Medium })
                 color: (model.day === 0 || model.day === 6) ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
             }
         }

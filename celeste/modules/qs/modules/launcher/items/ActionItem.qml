@@ -33,7 +33,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: root.modelData?.icon ?? ""
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.builders.large.scale(1.3).build()
+            fontStyle: Tokens.styled("icon", "large", { scale: 1.3 })
         }
 
         Item {

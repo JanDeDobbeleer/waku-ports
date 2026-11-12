@@ -85,7 +85,7 @@ StyledRect {
                         return Colours.palette.m3onError;
                     return Colours.palette.m3onSurfaceVariant;
                 }
-                fontStyle: Tokens.font.icon.builders.large.scale(1.2).build()
+                fontStyle: Tokens.styled("icon", "large", { scale: 1.2 })
             }
         }
 

@@ -22,7 +22,7 @@ ColumnLayout {
     StyledText {
         Layout.topMargin: Tokens.padding.medium
         text: Tr.tr("Tray")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     Grid {

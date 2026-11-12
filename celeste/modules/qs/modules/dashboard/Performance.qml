@@ -27,7 +27,7 @@ Item {
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
                 text: "tune"
-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).build()
+                fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2 })
                 color: Colours.palette.m3onSurfaceVariant
             }
 

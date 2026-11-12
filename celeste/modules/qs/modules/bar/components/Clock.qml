@@ -12,12 +12,11 @@ StyledRect {
 
     readonly property color colour: Colours.palette.m3tertiary
     readonly property int padding: Config.bar.clock.background ? Tokens.padding.medium : Tokens.padding.extraSmall
-    readonly property var font: Tokens.font.body.builders.small.scale(1.1)
 
     function fontFor(text: string, metricWidth: int): font {
         // We don't count seconds for the max width because it changes too often
         const scale = text === "11" ? 1.15 : Math.min(1.05, Math.max(hourMetrics.width, minMetrics.width) / metricWidth);
-        return root.font.width(scale * 100).letterSpacing(scale).build();
+        return Tokens.styled("body", "small", { scale: 1.1, width: scale * 100, letterSpacing: scale });
     }
 
     // Port: a click opens the dashboard (handled in Bar.qml; no cast in the click path).
@@ -64,14 +63,14 @@ StyledRect {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: Time.format("ddd")
-                    font: Tokens.font.body.builders.small.scale(0.9).build()
+                    font: Tokens.styled("body", "small", { scale: 0.9 })
                     color: root.colour
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: Time.format("d")
-                    font: root.font.scale(1.1).build()
+                    font: Tokens.styled("body", "small", { scale: [1.1, 1.1] })
                     color: root.colour
                 }
 
@@ -96,7 +95,7 @@ StyledRect {
             TextMetrics {
                 id: hourMetrics
 
-                font: root.font.build()
+                font: Tokens.styled("body", "small", { scale: 1.1 })
                 text: Time.hourStr
             }
         }
@@ -111,7 +110,7 @@ StyledRect {
             TextMetrics {
                 id: minMetrics
 
-                font: root.font.build()
+                font: Tokens.styled("body", "small", { scale: 1.1 })
                 text: Time.minuteStr
             }
         }
@@ -131,7 +130,7 @@ StyledRect {
                 TextMetrics {
                     id: secMetrics
 
-                    font: root.font.build()
+                    font: Tokens.styled("body", "small", { scale: 1.1 })
                     text: Time.format("ss")
                 }
             }
@@ -146,7 +145,7 @@ StyledRect {
 
             sourceComponent: StyledText {
                 text: Time.amPmStr.toLowerCase()
-                font: Tokens.font.body.builders.small.scale(0.9).build()
+                font: Tokens.styled("body", "small", { scale: 0.9 })
                 color: root.colour
             }
         }

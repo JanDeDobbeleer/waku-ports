@@ -97,7 +97,7 @@ StyledRect {
             StyledText {
                 // Port: Windows has no CPU/GPU sensor without a driver; the services report NaN.
                 text: isNaN(root.temperature) ? "--" : Units.formatSensorTemp(root.temperature)
-                font: Tokens.font.body.builders.medium.build()
+                font: Tokens.styled("body", "medium", {  })
             }
         }
 
@@ -146,7 +146,7 @@ StyledRect {
             anchors.centerIn: parent
             text: isNaN(root.usage) ? "..." : Strings.percentOne(root.usage)
             color: root.accent
-            font: Tokens.font.headline.builders.small.width(50).build()
+            font: Tokens.styled("headline", "small", { width: 50 })
         }
     }
 }

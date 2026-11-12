@@ -252,7 +252,7 @@ Item {
                 anchors.verticalCenterOffset: Math.round(fontInfo.pointSize * 0.1)
                 text: SysInfo.wm + "..."
                 color: Colours.palette.m3onSecondaryContainer
-                font: Tokens.font.body.builders.small.vaxis("slnt", -4).build()
+                font: Tokens.styled("body", "small", { vaxis: ["slnt", -4] })
                 width: Math.min(implicitWidth, Tokens.sizes.dashboard.userWidth - wmContainer.x - Tokens.padding.medium * 2 - wmIcon.implicitWidth - wmLabel.spacing - Tokens.padding.extraLarge)
                 elide: Text.ElideRight
             }

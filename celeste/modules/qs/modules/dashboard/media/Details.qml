@@ -129,7 +129,7 @@ ColumnLayout {
             isRound: true
             shapeMorph: true
             checked: Players.active?.shuffle ?? false
-            font: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("icon", "medium", { weight: Font.Medium })
             disabled: !Players.active?.shuffleSupported
             onClicked: Players.active.shuffle = !Players.active?.shuffle
             implicitWidth: Math.round(implicitHeight * 0.9)
@@ -178,7 +178,7 @@ ColumnLayout {
             isRound: true
             shapeMorph: true
             checked: Players.active?.loopState === MprisLoopState.Track || Players.active?.loopState === MprisLoopState.Playlist
-            font: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("icon", "medium", { weight: Font.Medium })
             disabled: !Players.active?.loopSupported
             onClicked: {
                 const state = Players.active.loopState;
