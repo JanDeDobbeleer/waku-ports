@@ -49,7 +49,8 @@ QtObject {
     final property int urgency: NotificationUrgency.Normal
     final property bool resident
     final property bool hasActionIcons
-    final property list<var> actions
+    final property var actions: []
+    final property int actionCount: NotifDataHelpers.count(actions)
 
     // waku gap: no fullscreen detection (upstream asks Hyprland).
     readonly final property bool hasFullscreen: false

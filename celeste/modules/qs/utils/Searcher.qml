@@ -17,7 +17,7 @@ Singleton {
     readonly final property var fzf: useFuzzy ? [] : new Fzf.Finder(list, Object.assign({
         selector
     }, extraOpts))
-    readonly final property list<var> fuzzyPrepped: useFuzzy ? list.map(e => {
+    readonly final property var fuzzyPrepped: useFuzzy ? list.map(e => {
         const obj = {
             _item: e
         };

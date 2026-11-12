@@ -34,7 +34,7 @@ function serialize(notifications) {
             urgency: notification.urgency,
             resident: notification.resident,
             hasActionIcons: notification.hasActionIcons,
-            actions: notification.actions
+            actions: Array.from(notification.actions)
         });
     }
     return JSON.stringify(result);
@@ -67,5 +67,5 @@ function track(notification, root, component) {
         popup: root.shouldShowPopup(),
         notification: notification
     });
-    root.list = [item].concat(root.list);
+    root.list = [item, ...root.list];
 }

@@ -15,7 +15,7 @@ Item {
 
     scale: PathView.isCurrentItem ? 1 : PathView.onPath ? 0.8 : 0
     opacity: PathView.onPath ? 1 : 0
-    z: WallpaperItemHelpers.pathZ(root)
+    z: WallpaperItemHelpers.pathZ(root.PathView)
 
     implicitWidth: image.width + Tokens.padding.medium * 2
     implicitHeight: image.height + label.height + Tokens.spacing.extraSmall + Tokens.padding.large + Tokens.padding.medium

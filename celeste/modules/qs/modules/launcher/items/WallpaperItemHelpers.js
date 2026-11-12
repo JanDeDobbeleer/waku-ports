@@ -1,6 +1,7 @@
 .pragma library
 
-function pathZ(item) { return item.PathView.z || 0; }
+// Takes the PathView attached object: attached properties only resolve in QML scope.
+function pathZ(attached) { return (attached && attached.z) || 0; }
 function path(entry) { return entry ? entry.path : ""; }
 function relativePath(entry) { return entry ? entry.relativePath : ""; }
 function setWallpaper(service, entry) {

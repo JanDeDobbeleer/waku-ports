@@ -27,3 +27,4 @@ function actions(source) {
     }
     return result;
 }
+function count(list) { return list ? list.length : 0; }

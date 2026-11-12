@@ -86,7 +86,7 @@ StyledRect {
                 return;
 
             const actions = root.modelData.actions;
-            if (actions.length === 1)
+            if (root.modelData.actionCount === 1)
                 actions[0].invoke();
         }
 
@@ -468,7 +468,7 @@ StyledRect {
                 IconButton {
                     isRound: true
                     shapeMorph: true
-                    fillWidth: root.modelData.actions.length === 0
+                    fillWidth: root.modelData.actionCount === 0
                     inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                     inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
                     icon: "close"
@@ -503,7 +503,7 @@ StyledRect {
                 IconButton {
                     isRound: true
                     shapeMorph: true
-                    fillWidth: root.modelData.actions.length === 0
+                    fillWidth: root.modelData.actionCount === 0
                     inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                     inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
                     icon: copyTimer.running ? "inventory" : "content_copy"
