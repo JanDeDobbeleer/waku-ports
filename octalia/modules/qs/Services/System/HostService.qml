@@ -4,7 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.compat
 
 // Octalia's HostService on Windows: the user and machine names come from the engine's ControlCenter
 // (the Windows account) and the environment. There is no distro, so `osPretty` is "Windows" and
