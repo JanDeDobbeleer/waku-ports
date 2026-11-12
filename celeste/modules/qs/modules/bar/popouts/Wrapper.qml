@@ -18,6 +18,8 @@ Item {
 
     readonly final property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? contentItem.implicitWidth
     readonly final property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? contentItem.implicitHeight
+    // Port: the submenu depth of the open tray menu. The port has no tray menu popout, so it is 0.
+    readonly final property int currentDepth: 0
     readonly final property Item current: (contentItem.item as Content)?.current ?? null
     readonly final property bool isDetached: detachedMode.length > 0
 

@@ -19,42 +19,47 @@ Item {
     required final property ShellScreen screen
     required final property ScreenState screenState
     required final property Bar.BarWrapper bar
+    required final property real barWidth
     required final property real borderThickness
 
-    readonly property alias osd: osd
-    readonly property alias osdWrapper: osdWrapper
-    readonly property alias notifications: notifications
-    readonly property alias session: session
-    readonly property alias sessionWrapper: sessionWrapper
-    readonly property alias launcher: launcher
-    readonly property alias dashboard: dashboard
-    readonly property alias popouts: popoutsWrapper.content
-    readonly property alias popoutsWrapper: popoutsWrapper
-    readonly property alias utilities: utilities
-    readonly property alias toasts: toasts
-    readonly property alias sidebar: sidebarItem
+    readonly final property Osd.Wrapper osd: osdItem
+    readonly final property Item osdWrapper: osdWrapperItem
+    readonly final property Notifications.Wrapper notifications: notificationsItem
+    readonly final property Session.Wrapper session: sessionItem
+    readonly final property Item sessionWrapper: sessionWrapperItem
+    readonly final property Launcher.Wrapper launcher: launcherItem
+    readonly final property Dashboard.Wrapper dashboard: dashboardItem
+    readonly final property BarPopouts.Wrapper popouts: popoutsWrapperItem.content
+    readonly final property BarPopouts.ClipWrapper popoutsWrapper: popoutsWrapperItem
+    readonly final property Utilities.Wrapper utilities: utilitiesItem
+    readonly final property Toasts.Toasts toasts: toastsItem
+    readonly final property Sidebar.Wrapper sidebar: sidebarItem
 
     anchors.fill: parent
     anchors.margins: borderThickness
-    anchors.leftMargin: bar.implicitWidth
+    anchors.leftMargin: barWidth
+
+    function closePopouts(): void {
+        popoutsWrapperItem.close();
+    }
 
     Item {
-        id: osdWrapper
+        id: osdWrapperItem
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
-        anchors.rightMargin: sessionWrapper.anchors.rightMargin + session.width * (1 - session.offsetScale)
-        clip: sidebarItem.visible || session.visible
+        anchors.rightMargin: sessionWrapperItem.anchors.rightMargin + sessionItem.width * (1 - sessionItem.offsetScale)
+        clip: sidebarItem.visible || sessionItem.visible
 
-        implicitWidth: osd.implicitWidth * (1 - osd.offsetScale)
-        implicitHeight: osd.implicitHeight
+        implicitWidth: osdItem.implicitWidth * (1 - osdItem.offsetScale)
+        implicitHeight: osdItem.implicitHeight
 
         Osd.Wrapper {
-            id: osd
+            id: osdItem
 
             screen: root.screen
             screenState: root.screenState
-            sidebarOrSessionVisible: sidebarItem.visible || session.visible
+            sidebarOrSessionVisible: sidebarItem.visible || sessionItem.visible
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -62,31 +67,31 @@ Item {
     }
 
     Notifications.Wrapper {
-        id: notifications
+        id: notificationsItem
 
         screenState: root.screenState
         sidebarPanel: sidebarItem
-        osdPanel: osdWrapper
-        sessionPanel: sessionWrapper
-        utilitiesPanel: utilities
+        osdPanel: osdWrapperItem
+        sessionPanel: sessionWrapperItem
+        utilitiesPanel: utilitiesItem
 
         anchors.top: parent.top
         anchors.right: parent.right
     }
 
     Item {
-        id: sessionWrapper
+        id: sessionWrapperItem
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: sidebarItem.width * (1 - sidebarItem.offsetScale)
         clip: sidebarItem.visible
 
-        implicitWidth: session.implicitWidth * (1 - session.offsetScale)
-        implicitHeight: session.implicitHeight
+        implicitWidth: sessionItem.implicitWidth * (1 - sessionItem.offsetScale)
+        implicitHeight: sessionItem.implicitHeight
 
         Session.Wrapper {
-            id: session
+            id: sessionItem
 
             screenState: root.screenState
             sidebarVisible: sidebarItem.visible
@@ -97,7 +102,7 @@ Item {
     }
 
     Launcher.Wrapper {
-        id: launcher
+        id: launcherItem
 
         screen: root.screen
         screenState: root.screenState
@@ -108,7 +113,7 @@ Item {
     }
 
     Dashboard.Wrapper {
-        id: dashboard
+        id: dashboardItem
 
         screenState: root.screenState
 
@@ -117,27 +122,27 @@ Item {
     }
 
     BarPopouts.ClipWrapper {
-        id: popoutsWrapper
+        id: popoutsWrapperItem
 
         screen: root.screen
         borderThickness: root.borderThickness
     }
 
     Utilities.Wrapper {
-        id: utilities
+        id: utilitiesItem
 
         screenState: root.screenState
         sidebar: sidebarItem
-        popouts: popoutsWrapper.content
+        popouts: popoutsWrapperItem.content
 
         anchors.bottom: parent.bottom
         anchors.right: parent.right
     }
 
     Toasts.Toasts {
-        id: toasts
+        id: toastsItem
 
-        anchors.bottom: sidebarItem.visible ? parent.bottom : utilities.top
+        anchors.bottom: sidebarItem.visible ? parent.bottom : utilitiesItem.top
         anchors.right: sidebarItem.left
         anchors.margins: Tokens.padding.medium
     }
@@ -147,9 +152,9 @@ Item {
 
         screenState: root.screenState
 
-        anchors.top: notifications.bottom
-        anchors.bottom: utilities.top
+        anchors.top: notificationsItem.bottom
+        anchors.bottom: utilitiesItem.top
         anchors.right: parent.right
-        anchors.topMargin: -notifications.anchors.topMargin
+        anchors.topMargin: -notificationsItem.anchors.topMargin
     }
 }

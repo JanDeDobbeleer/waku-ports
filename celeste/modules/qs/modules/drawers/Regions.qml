@@ -9,16 +9,19 @@ Region {
     id: root
 
     required final property Bar.BarWrapper bar
+    required final property real barWidth
     required final property Panels panels
-    required final property var win
+    required final property real winWidth
+    required final property real winHeight
+    required final property real dragMaskPadding
 
-    readonly final property real borderThickness: win.Config.border.thickness
-    readonly final property real clampedThickness: win.Config.border.clampedThickness
+    readonly final property real borderThickness: Config.border.thickness
+    readonly final property real clampedThickness: Config.border.clampedThickness
 
-    x: bar.clampedWidth + win.dragMaskPadding
-    y: clampedThickness + win.dragMaskPadding
-    width: win.width - bar.clampedWidth - clampedThickness - win.dragMaskPadding * 2
-    height: win.height - clampedThickness * 2 - win.dragMaskPadding * 2
+    x: bar.clampedWidth + dragMaskPadding
+    y: clampedThickness + dragMaskPadding
+    width: winWidth - bar.clampedWidth - clampedThickness - dragMaskPadding * 2
+    height: winHeight - clampedThickness * 2 - dragMaskPadding * 2
     intersection: Intersection.Xor
 
     R {
@@ -29,7 +32,7 @@ Region {
 
     R {
         panel: root.panels.launcher
-        y: root.win.height - h_
+        y: root.winHeight - h_
         h_: panel.height * (1 - root.panels.launcher.offsetScale) + root.borderThickness
     }
 
@@ -37,7 +40,7 @@ Region {
         id: sessionRegion
 
         panel: root.panels.sessionWrapper
-        x: root.win.width - w_
+        x: root.winWidth - w_
         w_: panel.width * (1 - root.panels.session.offsetScale) + root.borderThickness + sidebarRegion.w_
     }
 
@@ -45,13 +48,13 @@ Region {
         id: sidebarRegion
 
         panel: root.panels.sidebar
-        x: root.win.width - w_
+        x: root.winWidth - w_
         w_: panel.width * (1 - root.panels.sidebar.offsetScale) + root.borderThickness
     }
 
     R {
         panel: root.panels.osdWrapper
-        x: root.win.width - w_
+        x: root.winWidth - w_
         w_: panel.width * (1 - root.panels.osd.offsetScale) + root.borderThickness + sessionRegion.w_
     }
 
@@ -63,7 +66,7 @@ Region {
 
     R {
         panel: root.panels.utilities
-        y: root.win.height - h_
+        y: root.winHeight - h_
         h_: panel.height * (1 - root.panels.utilities.offsetScale) + root.borderThickness
     }
 
@@ -80,7 +83,7 @@ Region {
         final property real w_: panel.width
         final property real h_: panel.height
 
-        x: panel.x + root.bar.implicitWidth
+        x: panel.x + root.barWidth
         y: panel.y + root.borderThickness
         width: w_
         height: h_

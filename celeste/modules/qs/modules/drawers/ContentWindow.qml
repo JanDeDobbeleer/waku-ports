@@ -32,7 +32,7 @@ StyledWindow {
     // which removes this binding), so the window does it itself.
     readonly final property bool lightDismissOpen: {
         const s = screenState;
-        const conf = contentItem.Config;
+        const conf = Config;
         if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))
             return true;
         // Port: with hover on, a dashboard opened by hovering closes when the pointer leaves; one
@@ -40,7 +40,7 @@ StyledWindow {
         // elsewhere dismisses it.
         if ((!conf.dashboard.showOnHover || interactions.dashboardShortcutActive) && s.dashboard && conf.dashboard.enabled)
             return true;
-        if (panelsItem.popouts.currentName.startsWith("traymenu") && (panelsItem.popouts.current?.depth ?? 0) > 1)
+        if (panelsItem.popouts.currentName.startsWith("traymenu") && panelsItem.popouts.currentDepth > 1)
             return true;
         return false;
     }
@@ -73,17 +73,22 @@ StyledWindow {
             return 0;
 
         const thresholds = [];
-        for (const panel of ["dashboard", "launcher", "session", "sidebar"])
-            if (contentItem.Config[panel].enabled)
-                thresholds.push(contentItem.Config[panel].dragThreshold);
-        return Math.max(...thresholds);
+        if (Config.dashboard.enabled)
+            thresholds.push(Config.dashboard.dragThreshold);
+        if (Config.launcher.enabled)
+            thresholds.push(Config.launcher.dragThreshold);
+        if (Config.session.enabled)
+            thresholds.push(Config.session.dragThreshold);
+        if (Config.sidebar.enabled)
+            thresholds.push(Config.sidebar.dragThreshold);
+        return thresholds.length > 0 ? Math.max.apply(null, thresholds) : -Infinity;
     }
 
     onHasFullscreenChanged: {
         screenState.launcher = false;
         screenState.session = false;
         screenState.dashboard = false;
-        panelsItem.popouts.close();
+        panelsItem.closePopouts();
     }
 
     name: "drawers"
@@ -138,7 +143,10 @@ StyledWindow {
 
         bar: barItem
         panels: panelsItem
-        win: root
+        barWidth: barItem.implicitWidth
+        winWidth: root.width
+        winHeight: root.height
+        dragMaskPadding: root.dragMaskPadding
     }
 
     Region {
@@ -217,7 +225,7 @@ StyledWindow {
             id: blobGroup
 
             color: root.surfaceColour
-            smoothing: root.Config.border.smoothing
+            smoothing: Config.border.smoothing
         }
 
         BlobInvertedRect {
@@ -329,10 +337,18 @@ StyledWindow {
         screenState: root.screenState
         panels: panelsItem
         bar: barItem
+        barWidth: barItem.implicitWidth
         borderThickness: root.borderLayoutThickness
         fullscreen: root.hasFullscreen
         lightDismiss: root.lightDismissOpen
         onDismissRequested: root.dismiss()
+        onBarWheel: (y, angleDelta) => barItem.handleWheel(y, angleDelta)
+        onBarClicked: (x, y) => {
+            if (barItem.emptyAt(x, y))
+                barItem.clickClock();
+        }
+        onBarTrayCloseRequested: barItem.closeTray()
+        onBarPopoutCheckRequested: y => barItem.checkPopout(y)
 
         Panels {
             id: panelsItem
@@ -340,6 +356,7 @@ StyledWindow {
             screen: root.screen
             screenState: root.screenState
             bar: barItem
+            barWidth: barItem.implicitWidth
             borderThickness: root.borderThickness
 
             utilities.horizontalStretch: (sidebarBg.rawDeformMatrix.m11 - 1) / 2 + 1
@@ -410,6 +427,8 @@ StyledWindow {
     }
 
     component PanelBg: BlobRect {
+        id: panelBg
+
         required final property Item panel
         final property real deformAmount: 0.15
         // Port: edges the panel is flush with. The waku blob stub does not fuse shapes, so a
@@ -434,7 +453,7 @@ StyledWindow {
         // end of an attached edge gets a fillet piece (the square minus a quarter circle) in the
         // group colour. The radius is the frame's own, in logical px, not scaled by the UI scale.
         // Fillets lie in free space beside the panel, outside the open-panel mask regions.
-        readonly final property real filletMax: root.Config.border.smoothing * (1 - root.fsTransitionProg)
+        readonly final property real filletMax: Config.border.smoothing * (1 - root.fsTransitionProg)
         // Inner edges of the frame in this item's coordinates.
         readonly final property real frameL: barItem.implicitWidth - x
         readonly final property real frameR: root.width - root.borderThickness - x
@@ -450,44 +469,52 @@ StyledWindow {
         // The junction is the panel's own right edge, which is the neighbouring panel's left edge
         // for session and osd when the sidebar is open, and the frame otherwise.
         Fillet {
-            r: parent.filletRight
-            active: parent.attachRight && !parent.attachTop
-            px: parent.width + parent.coverRight; py: 0; ax: 0; ay: -1; bx: -1; by: 0
+            bg: panelBg
+            r: panelBg.filletRight
+            active: panelBg.attachRight && !panelBg.attachTop
+            px: panelBg.width + panelBg.coverRight; py: 0; ax: 0; ay: -1; bx: -1; by: 0
         }
         Fillet {
-            r: parent.filletRight
-            active: parent.attachRight && !parent.attachBottom
-            px: parent.width + parent.coverRight; py: parent.height; ax: 0; ay: 1; bx: -1; by: 0
+            bg: panelBg
+            r: panelBg.filletRight
+            active: panelBg.attachRight && !panelBg.attachBottom
+            px: panelBg.width + panelBg.coverRight; py: panelBg.height; ax: 0; ay: 1; bx: -1; by: 0
         }
         Fillet {
-            r: parent.filletLeft
-            active: parent.attachLeft
-            px: parent.frameL; py: 0; ax: 0; ay: -1; bx: 1; by: 0
+            bg: panelBg
+            r: panelBg.filletLeft
+            active: panelBg.attachLeft
+            px: panelBg.frameL; py: 0; ax: 0; ay: -1; bx: 1; by: 0
         }
         Fillet {
-            r: parent.filletLeft
-            active: parent.attachLeft
-            px: parent.frameL; py: parent.height; ax: 0; ay: 1; bx: 1; by: 0
+            bg: panelBg
+            r: panelBg.filletLeft
+            active: panelBg.attachLeft
+            px: panelBg.frameL; py: panelBg.height; ax: 0; ay: 1; bx: 1; by: 0
         }
         Fillet {
-            r: parent.filletTop
-            active: parent.attachTop && !parent.attachLeft
-            px: 0; py: parent.frameT; ax: -1; ay: 0; bx: 0; by: 1
+            bg: panelBg
+            r: panelBg.filletTop
+            active: panelBg.attachTop && !panelBg.attachLeft
+            px: 0; py: panelBg.frameT; ax: -1; ay: 0; bx: 0; by: 1
         }
         Fillet {
-            r: parent.filletTop
-            active: parent.attachTop && !parent.attachRight
-            px: parent.width; py: parent.frameT; ax: 1; ay: 0; bx: 0; by: 1
+            bg: panelBg
+            r: panelBg.filletTop
+            active: panelBg.attachTop && !panelBg.attachRight
+            px: panelBg.width; py: panelBg.frameT; ax: 1; ay: 0; bx: 0; by: 1
         }
         Fillet {
-            r: parent.filletBottom
-            active: parent.attachBottom && !parent.attachLeft
-            px: 0; py: parent.frameB; ax: -1; ay: 0; bx: 0; by: -1
+            bg: panelBg
+            r: panelBg.filletBottom
+            active: panelBg.attachBottom && !panelBg.attachLeft
+            px: 0; py: panelBg.frameB; ax: -1; ay: 0; bx: 0; by: -1
         }
         Fillet {
-            r: parent.filletBottom
-            active: parent.attachBottom && !parent.attachRight
-            px: parent.width; py: parent.frameB; ax: 1; ay: 0; bx: 0; by: -1
+            bg: panelBg
+            r: panelBg.filletBottom
+            active: panelBg.attachBottom && !panelBg.attachRight
+            px: panelBg.width; py: panelBg.frameB; ax: 1; ay: 0; bx: 0; by: -1
         }
 
         group: blobGroup
@@ -514,6 +541,9 @@ StyledWindow {
     // The piece is the square of side r at the junction minus the quarter circle centred on the
     // square's far corner.
     component Fillet: Shape {
+        id: fillet
+
+        required final property BlobRect bg
         final property real r: 0
         final property real px: 0
         final property real py: 0
@@ -532,7 +562,7 @@ StyledWindow {
         // The panel's own squash and stretch, so the fillet stays on the deformed edge. Fillets are
         // children of the panel's BlobRect, in the same coordinates as its deform matrix.
         transform: Matrix4x4 {
-            matrix: parent.deformMatrix
+            matrix: fillet.bg.deformMatrix
         }
 
         ShapePath {
@@ -546,11 +576,11 @@ StyledWindow {
             // the arc's thin tip, where it turns tangent to the frame, always sits on solid colour.
             PathSvg {
                 readonly final property real n: 3
-                path: `M${px - (ax + bx) * n},${py - (ay + by) * n}`
-                    + ` L${px + ax * r - bx * n},${py + ay * r - by * n}`
-                    + ` L${px + ax * r},${py + ay * r}`
-                    + ` A${r},${r} 0 0 ${sweep} ${px + bx * r},${py + by * r}`
-                    + ` L${px + bx * r - ax * n},${py + by * r - ay * n} Z`
+                path: `M${fillet.px - (fillet.ax + fillet.bx) * n},${fillet.py - (fillet.ay + fillet.by) * n}`
+                    + ` L${fillet.px + fillet.ax * fillet.r - fillet.bx * n},${fillet.py + fillet.ay * fillet.r - fillet.by * n}`
+                    + ` L${fillet.px + fillet.ax * fillet.r},${fillet.py + fillet.ay * fillet.r}`
+                    + ` A${fillet.r},${fillet.r} 0 0 ${fillet.sweep} ${fillet.px + fillet.bx * fillet.r},${fillet.py + fillet.by * fillet.r}`
+                    + ` L${fillet.px + fillet.bx * fillet.r - fillet.ax * n},${fillet.py + fillet.by * fillet.r - fillet.ay * n} Z`
             }
         }
     }

@@ -11,8 +11,12 @@ Item {
     required final property ShellScreen screen
     required final property real borderThickness
 
-    readonly property alias content: contentItem
+    readonly final property Wrapper content: contentItem
     final property real offsetScale: x > 0 || contentItem.hasCurrent ? 0 : 1
+
+    function close(): void {
+        contentItem.close();
+    }
 
     visible: width > 0 && height > 0
     clip: true

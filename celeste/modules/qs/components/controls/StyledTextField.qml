@@ -19,11 +19,11 @@ TextFieldBase {
     final property int smallFontSize: Tokens.font.label.small.pointSize
     readonly final property real smallFontScale: smallFontSize / font.pointSize
 
-    property int verticalPadding: Tokens.padding.large
-    property int horizontalPadding: Tokens.padding.large
     property int radius: Tokens.rounding.small
-    readonly final property int clampedRadius: Math.min(horizontalPadding, Math.min(width, height) / 2, radius)
+    readonly final property int clampedRadius: Math.min(fieldHorizontalPadding, Math.min(width, height) / 2, radius)
 
+    final property int fieldVerticalPadding: Tokens.padding.large
+    final property int fieldHorizontalPadding: Tokens.padding.large
     final property string leadingIcon
     final property string trailingIcon
     readonly final property int leadingOffset: leadingIcon ? leadingIconLoader.width + leadingIconLoader.anchors.leftMargin : 0
@@ -40,10 +40,10 @@ TextFieldBase {
 
     readonly final property int filledOffset: type === StyledTextField.Filled ? Tokens.spacing.small : 0
 
-    leftPadding: horizontalPadding + leadingOffset
-    rightPadding: horizontalPadding + trailingOffset
-    topPadding: verticalPadding + filledOffset
-    bottomPadding: verticalPadding + supportingTextOffset - filledOffset
+    leftPadding: fieldHorizontalPadding + leadingOffset
+    rightPadding: fieldHorizontalPadding + trailingOffset
+    topPadding: fieldVerticalPadding + filledOffset
+    bottomPadding: fieldVerticalPadding + supportingTextOffset - filledOffset
 
     onPressed: {
         if (!stateLayer.disabled)
@@ -108,7 +108,7 @@ TextFieldBase {
 
                     PropertyChanges {
                         placeholder.scale: root.smallFontScale
-                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.horizontalPadding + -Tokens.spacing.extraSmall
+                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.fieldHorizontalPadding + -Tokens.spacing.extraSmall
                     }
                     AnchorChanges {
                         target: placeholder
@@ -121,7 +121,7 @@ TextFieldBase {
 
                     PropertyChanges {
                         placeholder.scale: root.smallFontScale
-                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.horizontalPadding + root.leadingOffset
+                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.fieldHorizontalPadding + root.leadingOffset
                     }
                     AnchorChanges {
                         target: placeholder
@@ -179,7 +179,7 @@ TextFieldBase {
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        anchors.leftMargin: root.horizontalPadding
+        anchors.leftMargin: root.fieldHorizontalPadding
         active: root.effectiveSupportingText
 
         sourceComponent: StyledText {
@@ -214,7 +214,7 @@ TextFieldBase {
                 fillColor: "transparent"
                 capStyle: ShapePath.RoundCap
 
-                startX: path.inset + root.horizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2 + path.outlineGap * path.outlineGapScale
+                startX: path.inset + root.fieldHorizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2 + path.outlineGap * path.outlineGapScale
 
                 PathLine {
                     x: bg.width - path.inset - root.clampedRadius
@@ -256,7 +256,7 @@ TextFieldBase {
                     radiusY: root.clampedRadius
                 }
                 PathLine {
-                    x: path.inset + root.horizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2
+                    x: path.inset + root.fieldHorizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2
                 }
 
                 Behavior on outlineGapScale {
