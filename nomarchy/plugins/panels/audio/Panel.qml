@@ -1108,7 +1108,7 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property bool isActive: root.sink && node && root.sink.id === node.id
+    readonly property bool isActive: !!root.sink && root.sink === node
     hasCursor: root.cursorActive && root.focusSection === "output" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sinkRow)
     current: isActive
@@ -1169,7 +1169,7 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property bool isActive: root.source && node && root.source.id === node.id
+    readonly property bool isActive: !!root.source && root.source === node
     hasCursor: root.cursorActive && root.focusSection === "input" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sourceRow)
     current: isActive
