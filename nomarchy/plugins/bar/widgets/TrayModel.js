@@ -76,3 +76,8 @@ if (typeof module !== "undefined") {
     ownedByNomarchy: ownedByNomarchy
   }
 }
+
+function settingArray(settings, key) {
+  var value = settings ? settings[key] : null
+  return value instanceof Array ? value : []
+}

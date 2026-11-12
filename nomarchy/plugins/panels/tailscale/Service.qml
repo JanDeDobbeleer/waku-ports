@@ -85,21 +85,21 @@ Item {
   // "still loading" apart from "this tailnet has no machines".
   property bool peersLoaded: false
 
-  function publishPeers(next) {
+  function publishPeers(next: var): void {
     var sig = JSON.stringify(next)
     if (sig === _peersSig) return
     _peersSig = sig
     peers = next
   }
 
-  function publishTailnetExitNodes(next) {
+  function publishTailnetExitNodes(next: var): void {
     var sig = JSON.stringify(next)
     if (sig === _tailnetExitNodesSig) return
     _tailnetExitNodesSig = sig
     tailnetExitNodes = next
   }
 
-  function syncExitNodes() {
+  function syncExitNodes(): void {
     var next = running ? tailnetExitNodes.concat(mullvadRegions) : []
     var sig = JSON.stringify(next)
     if (sig === _exitNodesSig) return
@@ -107,12 +107,12 @@ Item {
     exitNodes = next
   }
 
-  function setting(name, fallback) {
+  function setting(name: string, fallback: var): var {
     var value = settings ? settings[name] : undefined
     return value === undefined || value === null ? fallback : value
   }
 
-  function intSetting(name, fallback, min, max) {
+  function intSetting(name: string, fallback: int, min: int, max: int): int {
     var n = parseInt(String(setting(name, fallback)), 10)
     if (!isFinite(n)) n = fallback
     if (n < min) n = min
@@ -120,7 +120,7 @@ Item {
     return n
   }
 
-  function filterIPv4(ips) {
+  function filterIPv4(ips: var): var {
     return Model.filterIPv4(ips)
   }
 
@@ -144,34 +144,34 @@ Item {
     return Model.accountLabel(account, I18n.t)
   }
 
-  function copyToClipboard(value, label) {
+  function copyToClipboard(value: string, label: string): void {
     var text = String(value || "")
     if (text === "") return
     Quickshell.execDetached(["C:/Program Files/Git/usr/bin/bash.exe", "-c", "printf %s " + Util.shellQuote(text) + " | wl-copy"])
   }
 
-  function copyPeerIp(peer) {
+  function copyPeerIp(peer: var): void {
     if (!peer) return
-    var ips = filterIPv4(peer.TailscaleIPs || [])
-    copyToClipboard(ips.length > 0 ? ips[0] : "", displayHostName(peer.HostName, peer.DNSName) + " IP")
+    var ips = filterIPv4(Model.field(peer, "TailscaleIPs") || [])
+    copyToClipboard(Model.arrayLength(ips) > 0 ? ips[0] : "", displayHostName(Model.field(peer, "HostName"), Model.field(peer, "DNSName")) + " IP")
   }
 
-  function copyPeerName(peer) {
+  function copyPeerName(peer: var): void {
     if (!peer) return
-    copyToClipboard(displayHostName(peer.HostName, peer.DNSName), displayHostName(peer.HostName, peer.DNSName) + " name")
+    copyToClipboard(displayHostName(Model.field(peer, "HostName"), Model.field(peer, "DNSName")), displayHostName(Model.field(peer, "HostName"), Model.field(peer, "DNSName")) + " name")
   }
 
-  function copyPeerDnsName(peer) {
+  function copyPeerDnsName(peer: var): void {
     if (!peer) return
-    copyToClipboard(cleanDnsName(peer.DNSName), displayHostName(peer.HostName, peer.DNSName) + " DNS name")
+    copyToClipboard(cleanDnsName(Model.field(peer, "DNSName")), displayHostName(Model.field(peer, "HostName"), Model.field(peer, "DNSName")) + " DNS name")
   }
 
   function peerAddress(peer: var): string {
     if (!peer) return ""
-    if (peer.DNSName) return cleanDnsName(peer.DNSName)
-    if (peer.HostName) return String(peer.HostName)
-    var ips = filterIPv4(peer.TailscaleIPs || [])
-    return ips.length > 0 ? ips[0] : ""
+    if (Model.field(peer, "DNSName")) return cleanDnsName(Model.field(peer, "DNSName"))
+    if (Model.field(peer, "HostName")) return String(Model.field(peer, "HostName"))
+    var ips = filterIPv4(Model.field(peer, "TailscaleIPs") || [])
+    return Model.arrayLength(ips) > 0 ? ips[0] : ""
   }
 
   function canSendFiles(peer: var): bool {
@@ -179,14 +179,14 @@ Item {
     return Model.isTaildropTarget(peer, selfUserId)
   }
 
-  function sendFile(peer) {
+  function sendFile(peer: var): void {
     if (!canSendFiles(peer)) return
     var target = peerAddress(peer)
     if (target === "") return
     Quickshell.execDetached(["nomarchy-tailscale-send", target])
   }
 
-  function refresh(forceAccounts, fullPeers) {
+  function refresh(forceAccounts: bool, fullPeers: bool): void {
     if (installed) {
       refreshStatusAndAccounts(forceAccounts === true, fullPeers === true)
       return
@@ -198,7 +198,7 @@ Item {
     }
   }
 
-  function refreshStatusAndAccounts(forceAccounts, fullPeers) {
+  function refreshStatusAndAccounts(forceAccounts: bool, fullPeers: bool): void {
     if (!installed) return
     var launched = false
     if (!statusProcess.running) {
@@ -246,7 +246,7 @@ Item {
     return value.length > 140 ? value.substring(0, 137) + "…" : value
   }
 
-  function resetUnavailable(message) {
+  function resetUnavailable(message: string): void {
     running = false
     needsLogin = false
     _desired = -1
@@ -273,7 +273,7 @@ Item {
     accountsAccessDenied = false
   }
 
-  function parseStatus(raw) {
+  function parseStatus(raw: string): void {
     var parsed = Model.parseStatus(raw, I18n.t)
     if (!parsed.ok) {
       resetUnavailable(parsed.message || "Status error")
@@ -328,7 +328,7 @@ Item {
     lastError = ""
   }
 
-  function parseAccounts(raw) {
+  function parseAccounts(raw: string): void {
     var parsed = Model.parseAccounts(raw, I18n.t)
     accounts = parsed.accounts
     selectedAccountId = parsed.selectedAccountId
@@ -336,7 +336,7 @@ Item {
     accountsAccessDenied = false
   }
 
-  function parseMullvadExitNodes(raw) {
+  function parseMullvadExitNodes(raw: string): void {
     // The raw node list is small and nothing hot binds to it, so publish it
     // unconditionally; only the derived regions need the churn guard.
     mullvadExitNodes = Model.parseExitNodeList(raw)
@@ -349,20 +349,20 @@ Item {
     syncExitNodes()
   }
 
-  function toggleTailscale() {
+  function toggleTailscale(): void {
     if (!installed) return
     if (active) down()
     else loginOrUp()
   }
 
-  function down() {
+  function down(): void {
     // No progress status here — the greyed icon and hero line already convey
     // the optimistic off; only surface a message if the command fails.
     _desired = 0
-    runAction(["tailscale", "down"])
+    runAction(["tailscale", "down"], "")
   }
 
-  function loginOrUp() {
+  function loginOrUp(): void {
     if (!installed || loginProcess.running) return
     _desired = -1
     var plan = Model.loginPlan(needsLogin, authUrl)
@@ -383,7 +383,7 @@ Item {
     if (needsLogin) loginTimeoutTimer.restart()
   }
 
-  function switchAccount(id) {
+  function switchAccount(id: string): void {
     var accountId = String(id || "")
     if (!installed || accountId === "" || accountId === selectedAccountId || switchProcess.running) return
     _switchOutput = ""
@@ -393,28 +393,28 @@ Item {
     switchProcess.running = true
   }
 
-  function exitNodeTarget(peer) {
+  function exitNodeTarget(peer: var): string {
     if (!peer) return ""
-    if (peer.Mullvad === true) {
-      let mullvadIps = filterIPv4(peer.TailscaleIPs || [])
-      if (mullvadIps.length > 0) return mullvadIps[0]
+    if (Model.field(peer, "Mullvad") === true) {
+      let mullvadIps = filterIPv4(Model.field(peer, "TailscaleIPs") || [])
+      if (Model.arrayLength(mullvadIps) > 0) return mullvadIps[0]
     }
     return peerAddress(peer)
   }
 
-  function setExitNode(peer) {
+  function setExitNode(peer: var): void {
     if (!installed || !running || !peer || exitNodeProcess.running) return
-    var active = peer.ExitNode === true
+    var active = Model.field(peer, "ExitNode") === true
     var target = active ? "" : exitNodeTarget(peer)
     if (!active && target === "") return
     _exitNodeOutput = ""
     _exitNodeError = ""
-    settingExitNodeId = String(peer.id || "")
+    settingExitNodeId = String(Model.field(peer, "id") || "")
     exitNodeProcess.command = ["tailscale", "set", "--exit-node=" + target]
     exitNodeProcess.running = true
   }
 
-  function authorizeTailscaleOperator() {
+  function authorizeTailscaleOperator(): void {
     if (!installed || operatorProcess.running || userName === "") return
     _operatorOutput = ""
     _operatorError = ""
@@ -423,7 +423,7 @@ Item {
     operatorProcess.running = true
   }
 
-  function runAction(command, label) {
+  function runAction(command: var, label: string): void {
     if (actionProcess.running) return
     _actionOutput = ""
     _actionError = ""
@@ -448,7 +448,7 @@ Item {
     return false
   }
 
-  function handleLoginOutput(data, isError) {
+  function handleLoginOutput(data: string, isError: bool): void {
     var text = String(data || "")
     if (isError) _loginError += text + "\n"
     else _loginOutput += text + "\n"
@@ -461,7 +461,7 @@ Item {
     repeat: true
     running: true
     triggeredOnStart: true
-    onTriggered: root.refresh()
+    onTriggered: root.refresh(false, false)
   }
 
   Timer {
@@ -476,7 +476,7 @@ Item {
     onTriggered: {
       ticks += 1
       if (root.running || ticks >= 15) startupRamp.running = false
-      else root.refresh()
+      else root.refresh(false, false)
     }
   }
 
@@ -484,7 +484,7 @@ Item {
     id: delayedRefresh
     interval: 600
     repeat: false
-    onTriggered: root.refresh()
+    onTriggered: root.refresh(false, false)
   }
 
   Timer {
@@ -529,7 +529,7 @@ Item {
     command: []
     onExited: function(exitCode) {
       root.installed = exitCode === 0
-      if (root.installed) root.refreshStatusAndAccounts()
+      if (root.installed) root.refreshStatusAndAccounts(false, false)
       else {
         root.refreshing = false
         root.resetUnavailable("Not installed")

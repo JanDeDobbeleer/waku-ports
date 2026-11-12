@@ -5,6 +5,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
+import "Dynamic.js" as Dynamic
 import "Greetings.js" as Greet
 
 // One city: name, weather, the people there, date (or a local greeting on
@@ -19,24 +20,24 @@ Rectangle {
   // The owning Panel: the row reads its clock, facts and drag state.
   property var panel
 
-  readonly property color foreground: panel.foreground
-  readonly property color dim: panel.dim
-  readonly property color fainter: panel.fainter
-  readonly property string fontFamily: panel.fontFamily
+  readonly property color foreground: Dynamic.value(panel, "foreground")
+  readonly property color dim: Dynamic.value(panel, "dim")
+  readonly property color fainter: Dynamic.value(panel, "fainter")
+  readonly property string fontFamily: Dynamic.value(panel, "fontFamily")
 
-  readonly property var rowData: panel.clockRows[index]
-    || ({ ready: false, label: modelData.label, id: modelData.id })
-  readonly property bool ready: rowData.ready
-  readonly property var greeting: Greet.greeting(rowData.id, ready ? rowData.hour : 0)
-  readonly property bool removable: panel.clockRows.length > 1
-  readonly property bool dragged: panel.dragIndex === index
-  readonly property var people: modelData.people || []
-  readonly property bool editingPeople: panel.peopleEditIndex === index
+  readonly property var rowData: Dynamic.value(panel, "clockRows")[index]
+    || ({ ready: false, label: Dynamic.value(modelData, "label"), id: Dynamic.value(modelData, "id") })
+  readonly property bool ready: Dynamic.value(rowData, "ready")
+  readonly property var greeting: Greet.greeting(Dynamic.value(rowData, "id"), ready ? Dynamic.value(rowData, "hour") : 0)
+  readonly property bool removable: Dynamic.value(Dynamic.value(panel, "clockRows"), "length") > 1
+  readonly property bool dragged: Dynamic.value(panel, "dragIndex") === index
+  readonly property var people: Dynamic.value(modelData, "people") || []
+  readonly property bool editingPeople: Dynamic.value(panel, "peopleEditIndex") === index
 
   // Lightest at midday, darkest at night, so the list dims into the small hours.
   readonly property real dayFill: 0.10
   readonly property real phaseFill: {
-    var p = ready ? rowData.phase : "day"
+    var p = ready ? Dynamic.value(rowData, "phase") : "day"
     if (p === "day") return dayFill
     if (p === "night") return 0.035
     return 0.07
@@ -49,13 +50,13 @@ Rectangle {
   width: parent.width
   // The top pad is measured to the cap height, not the line box, so the row
   // looks as tall above the name as below the strip.
-  implicitHeight: (pad - panel.capGap) + rowLabels.implicitHeight + stripGap + strip.trackHeight + pad
+  implicitHeight: (pad - Dynamic.value(panel, "capGap")) + rowLabels.implicitHeight + stripGap + strip.trackHeight + pad
   radius: Style.cornerRadius
   // Opaque: knocked-aside rows pass over one another and over the globe.
   // Hover lifts a row from its own time of day. The picked city takes the
   // brightest lifted fill whatever its time of day, so a night row picked by the
   // arrow keys never reads darker than the daytime rows around it.
-  readonly property bool picked: panel.focusIndex === index && !panel.addSelected
+  readonly property bool picked: Dynamic.value(panel, "focusIndex") === index && !Dynamic.value(panel, "addSelected")
   readonly property bool lit: rowHover.hovered || picked
   color: Model.mix(Commons.Color.popups.background, foreground,
     picked ? dayFill + hoverLift : rowHover.hovered ? phaseFill + hoverLift : phaseFill)
@@ -64,23 +65,23 @@ Rectangle {
   // globe's way, then the drag offset.
   transform: [
     Translate {
-      x: Model.knockX(row.index, row.panel.zoom, Style.space(95))
-      y: Model.knockY(row.index, row.panel.zoom, row.panel.knockFall)
+      x: Model.knockX(row.index, Dynamic.value(row.panel, "zoom"), Style.space(95))
+      y: Model.knockY(row.index, Dynamic.value(row.panel, "zoom"), Dynamic.value(row.panel, "knockFall"))
     },
     Rotation {
       origin.x: row.width / 2
       origin.y: row.height / 2
-      angle: Model.knockTilt(row.index, row.panel.zoom)
+      angle: Model.knockTilt(row.index, Dynamic.value(row.panel, "zoom"))
     },
     Scale {
       origin.x: row.width / 2
       origin.y: row.height / 2
-      xScale: Model.knockShrink(row.index, row.panel.zoom)
-      yScale: Model.knockShrink(row.index, row.panel.zoom)
+      xScale: Model.knockShrink(row.index, Dynamic.value(row.panel, "zoom"))
+      yScale: Model.knockShrink(row.index, Dynamic.value(row.panel, "zoom"))
     },
     Translate {
-      y: Model.rowShift(row.index, row.panel.dragIndex, row.panel.dragTarget,
-                        row.panel.dragOffset, row.panel.rowPitch)
+      y: Model.rowShift(row.index, Dynamic.value(row.panel, "dragIndex"), Dynamic.value(row.panel, "dragTarget"),
+                        Dynamic.value(row.panel, "dragOffset"), Dynamic.value(row.panel, "rowPitch"))
       // The dragged row follows the pointer one-to-one; the others ease aside.
       Behavior on y {
         enabled: !row.dragged
@@ -110,9 +111,9 @@ Rectangle {
 
     // Measured in the Column, which does not move; the row's own frame slides
     // with the drag and would feed the offset back into itself.
-    function pointerY(mouse) { return grab.mapToItem(row.parent, 0, mouse.y).y }
+    function pointerY(mouse: var): real { return Dynamic.value(Dynamic.call(grab, "mapToItem", [row.parent, 0, Dynamic.value(mouse, "y")]), "y") }
 
-    function finish() {
+    function finish(): void {
       armed = false
       strip.dismissUnlessChanged(chipAtPress)
     }
@@ -129,18 +130,18 @@ Rectangle {
       if (!armed) {
         if (Math.abs(dy) < Style.space(4)) return
         armed = true
-        row.panel.beginRowDrag(row.index, row.height + (row.parent as Column).spacing)
+        Dynamic.call(row.panel, "beginRowDrag", [row.index, row.height + Dynamic.value(row.parent as Column, "spacing")])
       }
-      row.panel.moveRowDrag(dy)
+      Dynamic.call(row.panel, "moveRowDrag", [dy])
     }
 
     onReleased: {
-      if (armed) row.panel.releaseRowDrag()
-      else row.panel.focusOn(row.index)
+      if (armed) Dynamic.call(row.panel, "releaseRowDrag", [])
+      else Dynamic.call(row.panel, "focusOn", [row.index])
       finish()
     }
     onCanceled: {
-      row.panel.cancelRowDrag()
+      Dynamic.call(row.panel, "cancelRowDrag", [])
       finish()
     }
   }
@@ -152,7 +153,7 @@ Rectangle {
     anchors.right: timeBlock.left
     anchors.rightMargin: Style.spacing.xl
     anchors.top: parent.top
-    anchors.topMargin: row.pad - row.panel.capGap
+    anchors.topMargin: row.pad - Dynamic.value(row.panel, "capGap")
     spacing: Style.space(2)
 
     // A layout so the name is what gives way when the line is tight.
@@ -164,10 +165,10 @@ Rectangle {
       // shrinks as it elides, which would make the cap circular.
       TextMetrics {
         id: nameMetrics
-        font.family: row.fontFamily
+        font.family: Dynamic.value(row, "fontFamily")
         font.pixelSize: Style.font.subtitle
         font.weight: Font.DemiBold
-        text: row.rowData.label
+        text: Dynamic.value(row.rowData, "label")
       }
 
       Text {
@@ -176,9 +177,9 @@ Rectangle {
         Layout.minimumWidth: 0
         Layout.alignment: Qt.AlignBaseline
         textFormat: Text.PlainText
-        text: row.rowData.label
-        color: row.foreground
-        font.family: row.fontFamily
+        text: Dynamic.value(row.rowData, "label")
+        color: Dynamic.value(row, "foreground")
+        font.family: Dynamic.value(row, "fontFamily")
         font.pixelSize: Style.font.subtitle
         font.weight: Font.DemiBold
         elide: Text.ElideRight
@@ -191,9 +192,9 @@ Rectangle {
 
       Caption {
         Layout.alignment: Qt.AlignBaseline
-        text: Model.tempLabel(row.panel.facts[Model.factsKey(row.rowData)], row.panel.units, row.panel.words)
+        text: Model.tempLabel(Dynamic.value(row.panel, "facts")[Model.factsKey(row.rowData)], Dynamic.value(row.panel, "units"), Dynamic.value(row.panel, "words"))
         visible: text !== ""
-        color: tempHover.hovered ? row.foreground : row.dim
+        color: tempHover.hovered ? row.foreground : Dynamic.value(row, "dim")
 
         HoverHandler {
           id: tempHover
@@ -214,7 +215,7 @@ Rectangle {
     RowLayout {
       width: parent.width
       spacing: Style.space(6)
-      visible: row.people.length > 0 && !row.editingPeople
+      visible: Dynamic.value(Dynamic.value(row, "people"), "length") > 0 && !row.editingPeople
 
       Row {
         // Overlapping, the way a group photo stands.
@@ -222,20 +223,20 @@ Rectangle {
         Layout.alignment: Qt.AlignVCenter
 
         Repeater {
-          model: row.people.slice(0, 4)
+          model: Dynamic.value(row, "people").slice(0, 4)
 
           Avatar {
             required property var modelData
-            name: Model.personName(modelData, row.panel.profiles)
+            name: Model.personName(modelData, Dynamic.value(row.panel, "profiles"))
             source: {
-              var profile = row.panel.profiles[Model.personHandle(modelData)]
+              var profile = Dynamic.value(row.panel, "profiles")[Model.personHandle(modelData)]
               return profile ? profile.avatar : ""
             }
-            stamp: row.panel.profileStamp
+            stamp: Dynamic.value(row.panel, "profileStamp")
             size: Math.round(peopleNames.font.pixelSize * 1.45)
-            foreground: row.foreground
+            foreground: Dynamic.value(row, "foreground")
             ground: row.color
-            fontFamily: row.fontFamily
+            fontFamily: Dynamic.value(row, "fontFamily")
           }
         }
       }
@@ -245,8 +246,8 @@ Rectangle {
         Layout.fillWidth: true
         Layout.minimumWidth: 0
         Layout.alignment: Qt.AlignVCenter
-        text: row.people.map(function(p) { return Model.personName(p, row.panel.profiles) }).join(", ")
-        color: row.dim
+        text: Dynamic.value(row, "people").map(function(p: var): string { return Model.personName(p, Dynamic.value(row.panel, "profiles")) }).join(", ")
+        color: Dynamic.value(row, "dim")
         elide: Text.ElideRight
       }
     }
@@ -258,14 +259,14 @@ Rectangle {
       visible: row.editingPeople
       verticalPadding: Style.space(3)
       font.pixelSize: Style.font.caption
-      font.family: row.fontFamily
-      foreground: row.foreground
+      font.family: Dynamic.value(row, "fontFamily")
+      foreground: Dynamic.value(row, "foreground")
       placeholderText: Commons.I18n.t("elsewhen.peoplePlaceholder")
       // Focused a beat later, as the city search does: in the same pass the
       // field is not yet shown and the focus does not hold.
       onVisibleChanged: if (visible) {
-        text = Model.peopleText(row.people)
-        cursorPosition = text.length
+        text = Model.peopleText(Dynamic.value(row, "people"))
+        cursorPosition = Dynamic.value(text, "length")
         Qt.callLater(function() { if (peopleField.visible) peopleField.forceActiveFocus() })
       }
       // Leaving the field keeps what was typed, the way Return does.
@@ -280,49 +281,49 @@ Rectangle {
       implicitHeight: dateLine.implicitHeight
 
       // No greeting before the probe lands: a wrong one is worse than none.
-      readonly property bool greeting: row.ready && rowHover.hovered
+      readonly property bool greeting: Dynamic.value(row, "ready") && rowHover.hovered
 
       Row {
         id: dateLine
         spacing: Style.spacing.sm
-        opacity: parent.greeting ? 0 : 1
+        opacity: Dynamic.value(parent, "greeting") ? 0 : 1
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Style.duration(110) } }
 
         Caption {
-          text: row.ready ? row.rowData.date : "\u2026"
-          color: row.ready && row.rowData.dayLabel !== "" ? row.dim : row.fainter
+          text: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "date") : "\u2026"
+          color: Dynamic.value(row, "ready") && Dynamic.value(row.rowData, "dayLabel") !== "" ? row.dim : Dynamic.value(row, "fainter")
         }
 
         Caption {
           text: "\u00b7"
-          visible: row.ready && row.rowData.dayLabel !== ""
-          color: row.fainter
+          visible: Dynamic.value(row, "ready") && Dynamic.value(row.rowData, "dayLabel") !== ""
+          color: Dynamic.value(row, "fainter")
         }
 
         Caption {
-          text: row.ready ? row.rowData.dayLabel : ""
+          text: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "dayLabel") : ""
           visible: text !== ""
         }
       }
 
       Row {
         spacing: Style.space(5)
-        opacity: parent.greeting ? 1 : 0
+        opacity: Dynamic.value(parent, "greeting") ? 1 : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Style.duration(110) } }
 
         // Non-Latin scripts fall back per character through fontconfig.
         Caption {
-          text: row.greeting.text
-          color: row.foreground
+          text: Dynamic.value(Dynamic.value(row, "greeting"), "text")
+          color: Dynamic.value(row, "foreground")
         }
 
         // A pronunciation, not a translation; absent for Latin scripts.
         Caption {
-          text: row.greeting.roman
+          text: Dynamic.value(Dynamic.value(row, "greeting"), "roman")
           visible: text !== ""
-          color: row.fainter
+          color: Dynamic.value(row, "fainter")
         }
       }
     }
@@ -337,20 +338,20 @@ Rectangle {
     anchors.verticalCenter: parent.bottom
     anchors.verticalCenterOffset: -(row.pad + trackHeight / 2)
 
-    ready: row.ready
-    offsetMinutes: row.ready ? row.rowData.offsetMinutes : 0
-    progress: row.ready ? row.rowData.progress : 0
-    fallbackLit: row.ready && row.rowData.lit
-    place: row.panel.facts[Model.factsKey(row.modelData)] || null
-    nowMs: row.panel.effectiveMs
+    ready: Dynamic.value(row, "ready")
+    offsetMinutes: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "offsetMinutes") : 0
+    progress: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "progress") : 0
+    fallbackLit: Dynamic.value(row, "ready") && Dynamic.value(row.rowData, "lit")
+    place: Dynamic.value(row.panel, "facts")[Model.factsKey(row.modelData)] || null
+    nowMs: Dynamic.value(row.panel, "effectiveMs")
     hovered: rowHover.hovered
-    hour24: row.panel.hour24
-    words: row.panel.words
-    moonPhase: row.panel.moonPhase
-    foreground: row.foreground
-    fainter: row.fainter
-    daylightMarker: row.panel.daylightMarker
-    fontFamily: row.fontFamily
+    hour24: Dynamic.value(row.panel, "hour24")
+    words: Dynamic.value(row.panel, "words")
+    moonPhase: Dynamic.value(row.panel, "moonPhase")
+    foreground: Dynamic.value(row, "foreground")
+    fainter: Dynamic.value(row, "fainter")
+    daylightMarker: Dynamic.value(row.panel, "daylightMarker")
+    fontFamily: Dynamic.value(row, "fontFamily")
 
     onScrubStarted: function(fraction) { row.panel.beginScrub(row.rowData, fraction) }
     onScrubMoved: function(fraction) { row.panel.scrubTo(row.rowData, fraction) }
@@ -366,13 +367,13 @@ Rectangle {
     anchors.verticalCenter: parent.top
     size: fontSize + (Style.space(22) - fontSize) * 0.85
     radius: size / 2
-    color: Model.mix(Commons.Color.popups.background, row.foreground, _hot ? 0.24 : 0.14)
-    borderSpec: Border.flat(Model.mix(Commons.Color.popups.background, row.foreground, _hot ? 0.65 : 0.35), Style.space(1))
+    color: Model.mix(Commons.Color.popups.background, Dynamic.value(row, "foreground"), _hot ? 0.24 : 0.14)
+    borderSpec: Border.flat(Model.mix(Commons.Color.popups.background, Dynamic.value(row, "foreground"), _hot ? 0.65 : 0.35), Style.space(1))
     iconText: "\u00d7"
     tooltipText: Commons.I18n.t("elsewhen.remove")
-    foreground: row.dim
-    hoverColor: row.foreground
-    fontFamily: row.fontFamily
+    foreground: Dynamic.value(row, "dim")
+    hoverColor: Dynamic.value(row, "foreground")
+    fontFamily: Dynamic.value(row, "fontFamily")
     fontSize: Style.font.bodySmall
     enabled: row.removable
     opacity: row.removable && (rowHover.hovered || removeButton._hot) ? 1 : 0
@@ -390,13 +391,13 @@ Rectangle {
     anchors.verticalCenter: parent.top
     size: removeButton.size
     radius: size / 2
-    color: Model.mix(Commons.Color.popups.background, row.foreground, _hot ? 0.24 : 0.14)
-    borderSpec: Border.flat(Model.mix(Commons.Color.popups.background, row.foreground, _hot ? 0.65 : 0.35), Style.space(1))
+    color: Model.mix(Commons.Color.popups.background, Dynamic.value(row, "foreground"), _hot ? 0.24 : 0.14)
+    borderSpec: Border.flat(Model.mix(Commons.Color.popups.background, Dynamic.value(row, "foreground"), _hot ? 0.65 : 0.35), Style.space(1))
     iconText: "\udb80\udc14"  // account-plus
     tooltipText: Commons.I18n.t("elsewhen.editPeople")
-    foreground: row.dim
-    hoverColor: row.foreground
-    fontFamily: row.fontFamily
+    foreground: Dynamic.value(row, "dim")
+    hoverColor: Dynamic.value(row, "foreground")
+    fontFamily: Dynamic.value(row, "fontFamily")
     fontSize: Style.font.caption
     opacity: !row.editingPeople && (rowHover.hovered || peopleButton._hot) ? 1 : 0
     visible: opacity > 0
@@ -407,7 +408,7 @@ Rectangle {
   Column {
     id: timeBlock
     // One width for every row, so the labels beside it line up.
-    width: Math.max(row.panel.timeColumnWidth, implicitWidth)
+    width: Math.max(Dynamic.value(row.panel, "timeColumnWidth"), implicitWidth)
     anchors.right: parent.right
     anchors.rightMargin: Style.spacing.rowPaddingX
     anchors.verticalCenter: rowLabels.verticalCenter
@@ -423,18 +424,18 @@ Rectangle {
       Text {
         id: bigTime
         textFormat: Text.PlainText
-        text: row.ready ? row.rowData.time : "--:--"
-        color: row.foreground
-        font.family: row.fontFamily
+        text: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "time") : "--:--"
+        color: Dynamic.value(row, "foreground")
+        font.family: Dynamic.value(row, "fontFamily")
         font.pixelSize: Style.font.heading
         font.weight: Font.DemiBold
       }
 
       Caption {
         anchors.baseline: bigTime.baseline
-        text: row.rowData.meridiem || ""
+        text: Dynamic.value(row.rowData, "meridiem") || ""
         visible: text !== ""
-        color: timeLine.hovered ? row.foreground : row.dim
+        color: timeLine.hovered ? row.foreground : Dynamic.value(row, "dim")
       }
     }
 
@@ -442,26 +443,26 @@ Rectangle {
       id: offsetLine
       anchors.right: parent.right
       spacing: Style.space(5)
-      visible: row.ready
+      visible: Dynamic.value(row, "ready")
       onClicked: { row.panel.toggleOffsetMode(); strip.dismissChips() }
 
       Caption {
-        text: row.ready ? row.rowData.abbr : ""
-        color: offsetLine.hovered ? row.dim : row.fainter
+        text: Dynamic.value(row, "ready") ? Dynamic.value(row.rowData, "abbr") : ""
+        color: offsetLine.hovered ? row.dim : Dynamic.value(row, "fainter")
       }
 
       Caption {
         text: row.panel.offsetTextFor(row.rowData)
         visible: text !== ""
-        color: offsetLine.hovered ? row.foreground : row.fainter
+        color: offsetLine.hovered ? row.foreground : Dynamic.value(row, "fainter")
       }
     }
   }
 
   component Caption: Text {
     textFormat: Text.PlainText
-    color: row.dim
-    font.family: row.fontFamily
+    color: Dynamic.value(row, "dim")
+    font.family: Dynamic.value(row, "fontFamily")
     font.pixelSize: Style.font.caption
   }
 

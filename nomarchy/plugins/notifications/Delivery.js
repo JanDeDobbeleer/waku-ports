@@ -96,3 +96,13 @@ function deckMargins(barPosition, thickness, gap) {
     right: (position === "right" ? bar : 0) + edge
   }
 }
+
+function field(value, key) {
+  return value == null ? undefined : value[key]
+}
+
+function pointerOver(item, card, x, y) {
+  var origin = item.mapToItem(card, 0, 0)
+  return x >= origin.x && x <= origin.x + item.width
+    && y >= origin.y && y <= origin.y + item.height
+}

@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "../panels/elsewhen/Model.js" as Reorder
+import "Dynamic.js" as Dynamic
 
 Panel {
   id: root
@@ -15,10 +16,10 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Flickable panelFlick: panel.loadedContent ? (panel.loadedContent as LazyContent).panelFlick : null
-  readonly property PanelHero hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
-  readonly property Column column: panel.loadedContent ? (panel.loadedContent as LazyContent).column : null
-  readonly property Repeater providerSections: panel.loadedContent ? (panel.loadedContent as LazyContent).providerSections : null
+  final readonly property Flickable agentsFlickable: panel.loadedContent ? (panel.loadedContent as LazyContent).contentFlick : null
+  final readonly property PanelHero agentsHero: panel.loadedContent ? (panel.loadedContent as LazyContent).contentHero : null
+  final readonly property Column agentsColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).contentColumn : null
+  final readonly property Repeater agentsProviderSections: panel.loadedContent ? (panel.loadedContent as LazyContent).contentSections : null
 
   readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   readonly property color urgent: bar ? BarValues.urgent(bar) : Commons.Color.urgent
@@ -31,30 +32,30 @@ Panel {
   // answers is how much room is left, and where.
   readonly property var providers: dragProviders !== null ? dragProviders : usage.panelProviders
 
-  function localActions(model) {
+  function localActions(model: var): var {
     var actions = []
-    if (model.unit === "removing") return actions
-    if (model.unit !== "deactivating") actions.push("toggle")
-    if (model.unit === "active") actions.push("launch")
+    if (Dynamic.value(model, "unit") === "removing") return actions
+    if (Dynamic.value(model, "unit") !== "deactivating") actions.push("toggle")
+    if (Dynamic.value(model, "unit") === "active") actions.push("launch")
     return actions
   }
 
-  function runLocalAction(model, action) {
+  function runLocalAction(model: var, action: string): void {
     if (action === "launch") {
-      Util.execArgv(["nomarchy-agent", "--local-model", model.recipe])
+      Util.execArgv(["nomarchy-agent", "--local-model", Dynamic.value(model, "recipe")])
       root.close()
     } else if (action === "toggle") {
-      let running = model.unit === "active" || model.unit === "activating"
+      let running = Dynamic.value(model, "unit") === "active" || Dynamic.value(model, "unit") === "activating"
       // Greyed out means not startable by any route: click, Return or Enter.
       if (!running && localStartBlocked(model)) return
       // The panel has no terminal: a start that fails records its reason,
       // which the model's line shows.
-      Util.execArgv(["nomarchy-agent-local", running ? "stop" : "start", model.recipe])
+      Util.execArgv(["nomarchy-agent-local", running ? "stop" : "start", Dynamic.value(model, "recipe")])
     }
   }
 
   function localStartBlocked(model: var): bool {
-    return !!model && model.unit !== "active" && model.unit !== "activating" && model.fits === false
+    return !!model && Dynamic.value(model, "unit") !== "active" && Dynamic.value(model, "unit") !== "activating" && Dynamic.value(model, "fits") === false
   }
 
   // A start or stop runs steadily to 90% at the time the last one took, then
@@ -66,7 +67,7 @@ Panel {
   }
 
   property double loadNowMs: Date.now()
-  readonly property bool localLoading: providers.some(function(p) { return p.localModel && ["activating", "deactivating", "removing"].indexOf(p.localModel.unit) >= 0 })
+  readonly property bool localLoading: providers.some(function(p: var): bool { return Dynamic.value(p, "localModel") && ["activating", "deactivating", "removing"].indexOf(Dynamic.value(Dynamic.value(p, "localModel"), "unit")) >= 0 })
   Timer {
     interval: 250
     running: root.opened && root.localLoading
@@ -76,22 +77,22 @@ Panel {
   }
 
   property var deleteTarget: null
-  function deleteSelected() {
+  function deleteSelected(): void {
     var target = keyTarget
     if (!target || ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(keyTargetKind) < 0) return
     deleteTarget = providers[keyTargetIndex]
   }
 
-  function confirmDelete() {
+  function confirmDelete(): void {
     var target = deleteTarget
     deleteTarget = null
     if (!target) return
-    if (target.localModel) {
-      Util.execArgv(["nomarchy-agent-local", "remove", target.localModel.recipe])
+    if (Dynamic.value(target, "localModel")) {
+      Util.execArgv(["nomarchy-agent-local", "remove", Dynamic.value(Dynamic.value(target, "localModel"), "recipe")])
     } else if (BarValues.hasShell(bar)) {
       let next = JSON.parse(JSON.stringify(settings || {}))
       if (!next.providers) next.providers = {}
-      next.providers[target.providerId] = Object.assign({}, next.providers[target.providerId] || {}, { enabled: false })
+      next.providers[Dynamic.value(target, "providerId")] = Object.assign({}, next.providers[Dynamic.value(target, "providerId")] || {}, { enabled: false })
       BarValues.updateEntryInline(bar, moduleName, next)
     }
   }
@@ -107,10 +108,10 @@ Panel {
   // a picked account is what moves new sessions to it.
   readonly property var accountEntries: {
     var out = []
-    for (let i = 0; i < providers.length; i++) {
+    for (let i = 0; i < Dynamic.value(providers, "length"); i++) {
       let list = providerAccounts(providers[i])
-      if (list.length < 2) continue
-      for (let j = 0; j < list.length; j++) out.push({ provider: providers[i], account: list[j] })
+      if (Dynamic.value(list, "length") < 2) continue
+      for (let j = 0; j < Dynamic.value(list, "length"); j++) out.push({ provider: providers[i], account: list[j] })
     }
     return out
   }
@@ -127,13 +128,13 @@ Panel {
     var rows = []
     var hero = []
     if (addButtonShown) hero.push({ kind: "add", index: 0 })
-    if (hero.length > 0) rows.push(hero)
+    if (Dynamic.value(hero, "length") > 0) rows.push(hero)
     if (picking) {
       let choices = []
-      for (let k = 0; k < addProviders.length; k++) choices.push({ kind: "choice", index: k })
+      for (let k = 0; k < Dynamic.value(addProviders, "length"); k++) choices.push({ kind: "choice", index: k })
       rows.push(choices)
     } else if (addStage === "local") {
-      for (let r = 0; r < localAddRecipes.length; r++) rows.push([{ kind: "localAdd", index: r }])
+      for (let r = 0; r < Dynamic.value(localAddRecipes, "length"); r++) rows.push([{ kind: "localAdd", index: r }])
     } else if (addStage === "") {
       // Accounts count in the same order as accountEntries. Only what can be
       // done is a stop: one that isn't active offers Autoswitch beside Use, a
@@ -141,33 +142,33 @@ Panel {
       // fix is skipped.
       let entry = 0
       let p
-      for (p = 0; p < providers.length; p++) {
+      for (p = 0; p < Dynamic.value(providers, "length"); p++) {
         if (providers[p].localModel) {
           let actions = localActions(providers[p].localModel)
-          rows.push(actions.length > 0 ? actions.map(function(action) { return { kind: action === "toggle" ? "modelToggle" : "modelLaunch", index: p } }) : [{ kind: "modelHeader", index: p }])
+          rows.push(Dynamic.value(actions, "length") > 0 ? actions.map(function(action: string): var { return { kind: action === "toggle" ? "modelToggle" : "modelLaunch", index: p } }) : [{ kind: "modelHeader", index: p }])
           continue
         }
         // Every agent's line is a stop, so Ctrl+Up/Down can move it: its
         // terminal button when it has a harness of its own, else its mark.
         rows.push([{ kind: lineStop(p), index: p }])
         let accounts = providerAccounts(providers[p])
-        if (accounts.length < 2) {
+        if (Dynamic.value(accounts, "length") < 2) {
           if (needsSignIn(providers[p])) rows.push([{ kind: "providerSignin", index: p }])
           continue
         }
-        for (let a = 0; a < accounts.length; a++, entry++) {
+        for (let a = 0; a < Dynamic.value(accounts, "length"); a++, entry++) {
           let row = []
           if (needsSignIn(accounts[a])) row.push({ kind: "signin", index: entry })
           if (!accounts[a].active) {
             row.push({ kind: "autoswitch", index: entry })
             row.push({ kind: "account", index: entry })
           }
-          if (row.length > 0) rows.push(row)
+          if (Dynamic.value(row, "length") > 0) rows.push(row)
         }
       }
       if (!blankSlate) {
         let tiles = []
-        for (let j = 0; j < starterPrompts.length; j++) tiles.push({ kind: "starter", index: j })
+        for (let j = 0; j < Dynamic.value(starterPrompts, "length"); j++) tiles.push({ kind: "starter", index: j })
         rows.push(tiles)
       }
     }
@@ -176,20 +177,20 @@ Panel {
   property int keyRow: 0
   property int keyColumn: 0
   readonly property var keyTarget: {
-    if (!cursorActive || keyRow < 0 || keyRow >= keyRows.length) return null
+    if (!cursorActive || keyRow < 0 || keyRow >= Dynamic.value(keyRows, "length")) return null
     var row = keyRows[keyRow]
-    return row[Math.min(keyColumn, row.length - 1)]
+    return row[Math.min(keyColumn, Dynamic.value(row, "length") - 1)]
   }
 
-  final readonly property string keyTargetKind: keyTarget ? keyTarget.kind : ""
-  final readonly property int keyTargetIndex: keyTarget ? keyTarget.index : -1
+  final readonly property string keyTargetKind: keyTarget ? Dynamic.value(keyTarget, "kind") : ""
+  final readonly property int keyTargetIndex: keyTarget ? Dynamic.value(keyTarget, "index") : -1
 
   function hasKey(kind: var, index: var): bool {
     return !!keyTarget && keyTargetKind === kind && keyTargetIndex === (index || 0)
   }
 
   function pointAt(kind: var, index: var): void {
-    for (let r = 0; r < keyRows.length; r++) {
+    for (let r = 0; r < Dynamic.value(keyRows, "length"); r++) {
       for (let c = 0; c < keyRows[r].length; c++) {
         if (keyRows[r][c].kind === kind && keyRows[r][c].index === (index || 0)) {
           keyRow = r
@@ -208,8 +209,8 @@ Panel {
   function lineStop(p: int): string {
     var provider = providers[p]
     if (!provider) return "provider"
-    if (provider.localModel) {
-      let actions = localActions(provider.localModel)
+    if (Dynamic.value(provider, "localModel")) {
+      let actions = localActions(Dynamic.value(provider, "localModel"))
       if (actions.indexOf("launch") >= 0) return "modelLaunch"
       return actions.indexOf("toggle") >= 0 ? "modelToggle" : "modelHeader"
     }
@@ -217,22 +218,22 @@ Panel {
   }
 
   function moveKey(dx: int, dy: int): void {
-    if (keyRows.length === 0) return
+    if (Dynamic.value(keyRows, "length") === 0) return
     if (!cursorActive) {
-      keyRow = clamp(keyRow, 0, keyRows.length - 1)
+      keyRow = clamp(keyRow, 0, Dynamic.value(keyRows, "length") - 1)
       keyColumn = 0
       cursorActive = true
       return
     }
     if (dy !== 0) {
-      keyRow = clamp(keyRow + dy, 0, keyRows.length - 1)
+      keyRow = clamp(keyRow + dy, 0, Dynamic.value(keyRows, "length") - 1)
       // Arriving on an account lands on Use; left reaches Autoswitch. Arriving
       // on an agent's line lands on its rightmost button: terminal, or play.
       let row = keyRows[keyRow]
       let use = -1
-      for (let c = 0; c < row.length; c++) if (row[c].kind === "account") use = c
+      for (let c = 0; c < Dynamic.value(row, "length"); c++) if (row[c].kind === "account") use = c
       let line = ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(row[0].kind) >= 0
-      keyColumn = use >= 0 ? use : line ? row.length - 1 : Math.min(keyColumn, row.length - 1)
+      keyColumn = use >= 0 ? use : line ? Dynamic.value(row, "length") - 1 : Math.min(keyColumn, Dynamic.value(row, "length") - 1)
     } else if (dx !== 0) {
       keyColumn = clamp(Math.min(keyColumn, keyRows[keyRow].length - 1) + dx, 0, keyRows[keyRow].length - 1)
     }
@@ -245,7 +246,7 @@ Panel {
     if (["provider", "providerSignin", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(keyTargetKind) >= 0) return keyTargetIndex
     if (["account", "autoswitch", "signin"].indexOf(keyTargetKind) < 0) return -1
     var entry = accountEntries[keyTargetIndex]
-    return entry ? providers.indexOf(entry.provider) : -1
+    return entry ? providers.indexOf(Dynamic.value(entry, "provider")) : -1
   }
 
   // Ctrl+Up/Down carries the agent the cursor is in up or down the page, and
@@ -254,7 +255,7 @@ Panel {
     if (dragIndex >= 0) return
     var from = providerIndexOfKey()
     if (from < 0) return
-    var to = clamp(from + dy, 0, providers.length - 1)
+    var to = clamp(from + dy, 0, Dynamic.value(providers, "length") - 1)
     if (to === from) return
     usage.moveProvider(providers[from].providerId, to)
     Qt.callLater(function() { pointAt(lineStop(to), to) })
@@ -272,10 +273,10 @@ Panel {
   property bool renaming: false
 
   function beginProviderDrag(index: int, y: real): void {
-    if (dragIndex >= 0 || !providerSections) return
+    if (dragIndex >= 0 || !agentsProviderSections) return
     var pitches = []
-    for (let i = 0; i < providerSections.count; i++)
-      pitches.push(providerSections.itemAt(i).height + column.spacing)
+    for (let i = 0; i < agentsProviderSections.count; i++)
+      pitches.push(agentsProviderSections.itemAt(i).height + agentsColumn.spacing)
     rowPitches = pitches
     // Keep the same model object so grabbing does not rebuild the delegates.
     dragProviders = providers
@@ -290,10 +291,10 @@ Panel {
     if (dragIndex < 0 || settling) return
     dragOffset = y - dragPressY
     dragTarget = Reorder.dragTargetFor(dragIndex, dragOffset, rowPitches[dragIndex],
-                                      dragTarget, providers.length, rowPitches)
+                                      dragTarget, Dynamic.value(providers, "length"), rowPitches)
   }
 
-  function resetProviderDrag() {
+  function resetProviderDrag(): void {
     dropAnimation.stop()
     dragIndex = -1
     dragTarget = -1
@@ -303,7 +304,7 @@ Panel {
     dragProviders = null
   }
 
-  function finishProviderDrag() {
+  function finishProviderDrag(): void {
     var id = dragProviderId
     var to = dragTarget
     var moved = dragIndex >= 0 && to !== dragIndex
@@ -329,7 +330,7 @@ Panel {
     }
   }
 
-  function dropProvider() {
+  function dropProvider(): void {
     if (!settling) settleProviderDrag(false)
   }
 
@@ -344,40 +345,40 @@ Panel {
   }
 
   // Keeps whatever the cursor lands on inside the scrolled view.
-  function revealItem(item) {
-    if (!item || !column || !panelFlick || !panelFlick.interactive) return
-    var top = item.mapToItem(column, 0, 0).y
+  function revealItem(item: Item): void {
+    if (!item || !agentsColumn || !agentsFlickable || !agentsFlickable.interactive) return
+    var top = item.mapToItem(agentsColumn, 0, 0).y
     var margin = Style.space(12)
-    if (top - margin < panelFlick.contentY)
-      panelFlick.contentY = Math.max(0, top - margin)
-    else if (top + item.height + margin > panelFlick.contentY + panelFlick.height)
-      panelFlick.contentY = Math.min(panelFlick.contentHeight - panelFlick.height, top + item.height + margin - panelFlick.height)
+    if (top - margin < agentsFlickable.contentY)
+      agentsFlickable.contentY = Math.max(0, top - margin)
+    else if (top + item.height + margin > agentsFlickable.contentY + agentsFlickable.height)
+      agentsFlickable.contentY = Math.min(agentsFlickable.contentHeight - agentsFlickable.height, top + item.height + margin - agentsFlickable.height)
   }
 
   // The bar icon lights up when any account new sessions use is nearly out,
   // or a prepaid balance is down to its last 10%.
   readonly property bool alarming: {
-    for (let i = 0; i < providers.length; i++) {
+    for (let i = 0; i < Dynamic.value(providers, "length"); i++) {
       let window = bindingWindow(providers[i])
-      if (window && window.percent >= 0.9) return true
+      if (window && Dynamic.value(window, "percent") >= 0.9) return true
       if (balanceAlarming(providers[i].balance)) return true
     }
     return false
   }
 
   function clamp(v: real, lo: real, hi: real): real { return Math.max(lo, Math.min(hi, v)) }
-  function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
+  function alpha(c: color, a: real): color { return Qt.rgba(c.r, c.g, c.b, a) }
 
   // A provider's accounts, when it has any. The list arrives as a sequence
   // rather than a JS array once it has passed through a model, so it's
   // judged by its length.
-  function providerAccounts(p) {
-    return p && p.accounts && p.accounts.length > 0 ? p.accounts : []
+  function providerAccounts(p: var): var {
+    return p && Dynamic.value(p, "accounts") && Dynamic.value(Dynamic.value(p, "accounts"), "length") > 0 ? Dynamic.value(p, "accounts") : []
   }
 
-  readonly property bool localBlocked: providers.some(function(p) { return p.localModel && p.localModel.fits === false })
+  readonly property bool localBlocked: providers.some(function(p: var): bool { return Dynamic.value(p, "localModel") && Dynamic.value(Dynamic.value(p, "localModel"), "fits") === false })
 
-  function refreshNow() {
+  function refreshNow(): void {
     usage.refreshAll(true)
   }
 
@@ -399,29 +400,22 @@ Panel {
   // Local AI offers the catalog's recipes that fit this machine and aren't
   // set up yet, recommended first. Each downloads tens of GB, so setting one
   // up runs in a terminal that shows its progress.
-  readonly property bool localFits: (usage.localRecipes || []).some(function(recipe) { return recipe && recipe.available })
-  readonly property var localAddRecipes: {
-    var models = usage.localModel && usage.localModel.models ? usage.localModel.models : {}
-    var recipes = (usage.localRecipes || []).filter(function(recipe) {
-      return recipe && recipe.available && !models[recipe.id]
-    })
-    recipes.sort(function(a, b) { return (b.best ? 1 : 0) - (a.best ? 1 : 0) })
-    return recipes
-  }
+  readonly property bool localFits: (usage.localRecipes || []).some(function(recipe: var): bool { return recipe && Dynamic.value(recipe, "available") })
+  readonly property var localAddRecipes: Dynamic.localAddRecipes(usage.localRecipes, usage.localModel)
 
-  function recipeFacts(recipe) {
+  function recipeFacts(recipe: var): string {
     var facts = []
-    if (recipe.architecture === "moe") facts.push(Commons.I18n.t("agents.localMoe"))
-    else if (recipe.architecture === "dense") facts.push(Commons.I18n.t("agents.localDense"))
-    if (recipe.memory_gib != null) facts.push(Commons.I18n.t("agents.localMemoryFact").arg(Commons.I18n.formatNumber(recipe.memory_gib, 0)))
-    if (recipe.context != null) facts.push(Commons.I18n.t("agents.localContextFact").arg(Commons.I18n.formatNumber(Math.round(recipe.context / 1024), 0)))
-    if (recipe.decode_tok_s != null) facts.push(Commons.I18n.t("agents.localSpeedFact").arg(Commons.I18n.formatNumber(Math.round(recipe.decode_tok_s), 0)))
+    if (Dynamic.value(recipe, "architecture") === "moe") facts.push(Commons.I18n.t("agents.localMoe"))
+    else if (Dynamic.value(recipe, "architecture") === "dense") facts.push(Commons.I18n.t("agents.localDense"))
+    if (Dynamic.value(recipe, "memory_gib") != null) facts.push(Commons.I18n.t("agents.localMemoryFact").arg(Commons.I18n.formatNumber(Dynamic.value(recipe, "memory_gib"), 0)))
+    if (Dynamic.value(recipe, "context") != null) facts.push(Commons.I18n.t("agents.localContextFact").arg(Commons.I18n.formatNumber(Math.round(Dynamic.value(recipe, "context") / 1024), 0)))
+    if (Dynamic.value(recipe, "decode_tok_s") != null) facts.push(Commons.I18n.t("agents.localSpeedFact").arg(Commons.I18n.formatNumber(Math.round(Dynamic.value(recipe, "decode_tok_s")), 0)))
     return facts.join(" · ")
   }
 
-  function setUpLocal(recipe) {
+  function setUpLocal(recipe: var): void {
     if (!recipe) return
-    Util.execArgv(["nomarchy-launch-floating-terminal-with-presentation", "nomarchy-agent-local use " + Util.shellQuote(String(recipe.id))])
+    Util.execArgv(["nomarchy-launch-floating-terminal-with-presentation", "nomarchy-agent-local use " + Util.shellQuote(String(Dynamic.value(recipe, "id")))])
     cancelAdd()
     root.close()
   }
@@ -437,13 +431,13 @@ Panel {
   // page does too.
   property bool addPrivate: false
 
-  function addProviderName(id) {
-    for (let i = 0; i < addProviders.length; i++)
+  function addProviderName(id: string): string {
+    for (let i = 0; i < Dynamic.value(addProviders, "length"); i++)
       if (addProviders[i].providerId === id) return addProviders[i].providerName
     return id
   }
 
-  function addAccount() {
+  function addAccount(): void {
     if (addStage === "running") return
     addStage = "pick"
     addChecks = ({})
@@ -452,7 +446,7 @@ Panel {
 
   function chooseAddProvider(id: var): void {
     if (id === "local") {
-      if (localAddRecipes.length > 0) addStage = "local"
+      if (Dynamic.value(localAddRecipes, "length") > 0) addStage = "local"
       return
     }
     var state = addChecks[id] || ""
@@ -477,7 +471,7 @@ Panel {
     addProcess.running = true
   }
 
-  function cancelAdd() {
+  function cancelAdd(): void {
     if (addProcess.running) addProcess.signal(15)
     addStage = ""
     root.focusKeys()
@@ -509,7 +503,7 @@ Panel {
           usage.refreshLimits()
           addDoneTimer.restart()
           // Nothing to show yet means the sign-in is what counts as set up.
-          if (usage.enabledProviders.length === 0 && !checkProcess.running) {
+          if (Dynamic.value(usage.enabledProviders, "length") === 0 && !checkProcess.running) {
             addChecks = ({})
             checkProcess.running = true
           }
@@ -524,7 +518,7 @@ Panel {
     if (url && addUrl === "") addUrl = url[1]
   }
 
-  function reopenSignIn() {
+  function reopenSignIn(): void {
     if (addUrl === "") return
     Util.execArgv(addPrivate ? ["nomarchy-launch-browser", "--private", addUrl] : ["nomarchy-launch-browser", addUrl])
   }
@@ -541,38 +535,38 @@ Panel {
     Util.execArgv(["nomarchy-agent-prompt", prompt])
   }
 
-  function renameAccount(p, account, label) {
+  function renameAccount(p: var, account: var, label: string): void {
     if (!p || !account) return
-    Util.execArgv(["nomarchy-agent-account-rename", p.providerId, String(account.id), label])
+    Util.execArgv(["nomarchy-agent-account-rename", Dynamic.value(p, "providerId"), String(Dynamic.value(account, "id")), label])
   }
 
-  function useAccount(p, account) {
-    if (!p || !account || account.active) return
-    Util.execArgv(["nomarchy-agent-account-use", p.providerId, String(account.id)])
+  function useAccount(p: var, account: var): void {
+    if (!p || !account || Dynamic.value(account, "active")) return
+    Util.execArgv(["nomarchy-agent-account-use", Dynamic.value(p, "providerId"), String(Dynamic.value(account, "id"))])
   }
 
-  function autoSwitchFor(p) {
-    return !!p && !!p.accountSwitch && p.accountSwitch.mode === "auto"
+  function autoSwitchFor(p: var): bool {
+    return !!p && !!Dynamic.value(p, "accountSwitch") && Dynamic.value(p, "accountSwitch").mode === "auto"
   }
 
-  function switchThreshold(p) {
-    return p && p.accountSwitch ? Number(p.accountSwitch.threshold || 95) : 95
+  function switchThreshold(p: var): real {
+    return p && Dynamic.value(p, "accountSwitch") ? Number(Dynamic.value(Dynamic.value(p, "accountSwitch"), "threshold") || 95) : 95
   }
 
-  function setSwitchMode(p, mode) {
-    if (!p || providerAccounts(p).length < 2 || mode === (autoSwitchFor(p) ? "auto" : "manual")) return
+  function setSwitchMode(p: var, mode: string): void {
+    if (!p || Dynamic.value(providerAccounts(p), "length") < 2 || mode === (autoSwitchFor(p) ? "auto" : "manual")) return
     Util.execArgv(["C:/Program Files/Git/usr/bin/bash.exe", "-c", 'nomarchy-agent-account-mode "$1" "$2" >/dev/null && nomarchy-agent-usage-update --limits-only "$1"',
-                   "nomarchy-agent-account-mode", p.providerId, mode])
+                   "nomarchy-agent-account-mode", Dynamic.value(p, "providerId"), mode])
   }
 
   // `m` flips autoswitch for the picked account's provider, or the first
   // provider with several accounts when nothing is picked.
-  function toggleSwitchMode() {
-    var p = pickedEntry ? pickedEntry.provider : (accountEntries.length > 0 ? accountEntries[0].provider : null)
+  function toggleSwitchMode(): void {
+    var p = pickedEntry ? Dynamic.value(pickedEntry, "provider") : (Dynamic.value(accountEntries, "length") > 0 ? accountEntries[0].provider : null)
     if (p) setSwitchMode(p, autoSwitchFor(p) ? "manual" : "auto")
   }
 
-  function activateSelection() {
+  function activateSelection(): void {
     var target = keyTarget
     if (!target) refreshNow()
     else if (keyTargetKind === "add") addStage !== "" ? cancelAdd() : addAccount()
@@ -582,42 +576,42 @@ Panel {
     else if (keyTargetKind === "providerLaunch") launchHarness(providers[keyTargetIndex])
     else if (keyTargetKind === "starter") startPrompt(starterPrompts[keyTargetIndex].prompt)
     else if (keyTargetKind === "providerSignin") signInAgain(providers[keyTargetIndex], null)
-    else if (keyTargetKind === "signin") signInAgain(pickedEntry.provider, pickedEntry.account)
-    else if (keyTargetKind === "autoswitch") setSwitchMode(pickedEntry.provider, autoSwitchFor(pickedEntry.provider) ? "manual" : "auto")
-    else if (pickedEntry && !pickedEntry.account.active) useAccount(pickedEntry.provider, pickedEntry.account)
+    else if (keyTargetKind === "signin") signInAgain(Dynamic.value(pickedEntry, "provider"), Dynamic.value(pickedEntry, "account"))
+    else if (keyTargetKind === "autoswitch") setSwitchMode(Dynamic.value(pickedEntry, "provider"), autoSwitchFor(Dynamic.value(pickedEntry, "provider")) ? "manual" : "auto")
+    else if (pickedEntry && !Dynamic.value(Dynamic.value(pickedEntry, "account"), "active")) useAccount(Dynamic.value(pickedEntry, "provider"), Dynamic.value(pickedEntry, "account"))
   }
 
-  function isPicked(p, account) {
+  function isPicked(p: var, account: var): bool {
     return !!pickedEntry && !!p && !!account
-      && pickedEntry.provider.providerId === p.providerId && pickedEntry.account.id === account.id
+      && Dynamic.value(Dynamic.value(pickedEntry, "provider"), "providerId") === Dynamic.value(p, "providerId") && Dynamic.value(Dynamic.value(pickedEntry, "account"), "id") === Dynamic.value(account, "id")
   }
 
   // Hands the keyboard back to the panel after an inline edit.
-  function focusKeys() {
+  function focusKeys(): void {
     if (panel.loadedContent) panel.loadedContent.forceActiveFocus()
   }
 
   function accountDetail(account: var): string {
     var parts = []
-    if (String(account.plan || "") !== "") parts.push(account.plan)
-    if (account.resetCredits && Number(account.resetCredits.available) > 0)
-      parts.push(freeResetsText(Number(account.resetCredits.available)))
+    if (String(Dynamic.value(account, "plan") || "") !== "") parts.push(Dynamic.value(account, "plan"))
+    if (Dynamic.value(account, "resetCredits") && Number(Dynamic.value(Dynamic.value(account, "resetCredits"), "available")) > 0)
+      parts.push(freeResetsText(Number(Dynamic.value(Dynamic.value(account, "resetCredits"), "available"))))
     return parts.join(" · ")
   }
 
   // Only the agents `nomarchy-agent-account-add` signs in get the link; any
   // other agent's sign-in trouble stays text, with its own help to follow.
   function supportsSignIn(p: var): bool {
-    for (let i = 0; i < addProviders.length; i++)
-      if (p && addProviders[i].providerId === p.providerId) return true
+    for (let i = 0; i < Dynamic.value(addProviders, "length"); i++)
+      if (p && addProviders[i].providerId === Dynamic.value(p, "providerId")) return true
     return false
   }
 
   // A lapsed or missing sign-in is something you can fix from here; any other
   // trouble is only reported.
   function needsSignIn(item: var): bool {
-    if (item && item.providerId && !supportsSignIn(item)) return false
-    var status = String(item && item.usageStatusText || "")
+    if (item && Dynamic.value(item, "providerId") && !supportsSignIn(item)) return false
+    var status = String(item && Dynamic.value(item, "usageStatusText") || "")
     return status === "Sign-in expired" || status === "Waiting for auth"
   }
 
@@ -626,18 +620,18 @@ Panel {
   // with numbers kept may leave the status empty and say why only in its help.
   function usageNote(item: var): string {
     if (!item || needsSignIn(item)) return ""
-    var status = String(item.usageStatusText || "")
-    var stale = item.limitsStale === true || item.stale === true
-    if (status === "" && !(stale && String(item.authHelpText || "") !== "")) return ""
-    return helpDisplayText(item.authHelpText) || statusDisplayText(status)
+    var status = String(Dynamic.value(item, "usageStatusText") || "")
+    var stale = Dynamic.value(item, "limitsStale") === true || Dynamic.value(item, "stale") === true
+    if (status === "" && !(stale && String(Dynamic.value(item, "authHelpText") || "") !== "")) return ""
+    return helpDisplayText(Dynamic.value(item, "authHelpText")) || statusDisplayText(status)
   }
 
   // Sign an account that's already here in again, following along in the
   // add view just like adding one.
-  function signInAgain(p, account) {
+  function signInAgain(p: var, account: var): void {
     if (!supportsSignIn(p) || addStage === "running") return
-    addProvider = p.providerId
-    addPrivate = !!account && account.primary !== true
+    addProvider = Dynamic.value(p, "providerId")
+    addPrivate = !!account && Dynamic.value(account, "primary") !== true
     addStatus = Commons.I18n.t("agents.starting")
     addCode = ""
     addUrl = ""
@@ -648,14 +642,14 @@ Panel {
     addResult = ""
     addStage = "running"
     addProcess.command = ["nomarchy-agent-account-add", "--events", "--reauth",
-      account && account.primary !== true ? String(account.id) : ":primary", p.providerId]
+      account && Dynamic.value(account, "primary") !== true ? String(Dynamic.value(account, "id")) : ":primary", Dynamic.value(p, "providerId")]
     addProcess.running = true
   }
 
-  function resetCreditsText(credits) {
-    if (!credits || !(Number(credits.available) > 0)) return ""
-    var count = Number(credits.available)
-    var expires = new Date(String(credits.nextExpiresAt || "")).getTime()
+  function resetCreditsText(credits: var): string {
+    if (!credits || !(Number(Dynamic.value(credits, "available")) > 0)) return ""
+    var count = Number(Dynamic.value(credits, "available"))
+    var expires = new Date(String(Dynamic.value(credits, "nextExpiresAt") || "")).getTime()
     if (isFinite(expires) && expires > nowMs) {
       return Commons.I18n.tn("agents.freeResetsExpires", count)
         .arg(Commons.I18n.formatNumber(count)).arg(formatDuration(expires - nowMs))
@@ -667,13 +661,13 @@ Panel {
     return Commons.I18n.tn("agents.freeResets", count).arg(Commons.I18n.formatNumber(count))
   }
 
-  function planLabel(p) {
-    var tier = String(p && p.tierLabel || "")
+  function planLabel(p: var): string {
+    var tier = String(p && Dynamic.value(p, "tierLabel") || "")
     if (tier === "Prepaid") return Commons.I18n.t("agents.tierPrepaid")
     return tier === "" ? "" : tier.charAt(0).toUpperCase() + tier.slice(1)
   }
 
-  function launchAgent() {
+  function launchAgent(): void {
     if (root.bar) BarValues.run(root.bar, "nomarchy-agent --pick")
     root.close()
   }
@@ -697,11 +691,11 @@ Panel {
     qwen: "qwen"
   })
 
-  function harnessFor(provider) {
-    return provider && harnesses[provider.providerId] ? harnesses[provider.providerId] : ""
+  function harnessFor(provider: var): string {
+    return provider && harnesses[Dynamic.value(provider, "providerId")] ? harnesses[Dynamic.value(provider, "providerId")] : ""
   }
 
-  function launchHarness(provider) {
+  function launchHarness(provider: var): void {
     var harness = harnessFor(provider)
     if (harness === "") return
     Util.execArgv(["nomarchy-agent", "--agent", harness])
@@ -745,7 +739,7 @@ Panel {
   // and that beats reading it back out of the label: a model-scoped limit is
   // titled after its model, and a name like "Opus 5 (1M context)" would parse
   // as a one-minute window.
-  function limitWindow(label, percent, resetAt, title) {
+  function limitWindow(label: var, percent: var, resetAt: var, title: var): var {
     var reset = new Date(String(resetAt || "")).getTime()
     var expired = isFinite(reset) && reset <= root.nowMs
     return {
@@ -755,14 +749,14 @@ Panel {
     }
   }
 
-  function limitWindows(p) {
+  function limitWindows(p: var): var {
     if (!p) return []
     var out = []
-    var list = p.limits || []
-    for (let i = 0; i < list.length; i++) {
+    var list = Dynamic.value(p, "limits") || []
+    for (let i = 0; i < Dynamic.value(list, "length"); i++) {
       let entry = list[i] || {}
-      let percent = Number(entry.percent)
-      if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))
+      let percent = Number(Dynamic.value(entry, "percent"))
+      if (percent >= 0) out.push(limitWindow(Dynamic.value(entry, "label"), percent, entry.resetsAt, Dynamic.value(entry, "title")))
     }
     return out
   }
@@ -771,27 +765,27 @@ Panel {
   // on the same clock as the window it's named for, so it's shown attached to
   // that row rather than as a row of its own. One with nothing to attach to
   // still gets its own row.
-  function scopedPart(title) {
+  function scopedPart(title: var): var {
     var match = String(title || "").match(/^(.+) (Session|Weekly|Monthly)$/)
     return match ? { model: match[1], window: match[2] } : null
   }
 
-  function displayWindows(p) {
+  function displayWindows(p: var): var {
     var windows = limitWindows(p)
     var out = []
     var byTitle = {}
-    for (let i = 0; i < windows.length; i++) {
+    for (let i = 0; i < Dynamic.value(windows, "length"); i++) {
       if (scopedPart(windows[i].title)) continue
       windows[i].scoped = []
       out.push(windows[i])
       byTitle[windows[i].title] = windows[i]
     }
-    for (let j = 0; j < windows.length; j++) {
+    for (let j = 0; j < Dynamic.value(windows, "length"); j++) {
       let part = scopedPart(windows[j].title)
       if (!part) continue
-      let base = byTitle[part.window]
+      let base = byTitle[Dynamic.value(part, "window")]
       if (base) {
-        base.scoped.push({ title: part.model, percent: windows[j].percent, resetAt: windows[j].resetAt })
+        Dynamic.value(base, "scoped").push({ title: Dynamic.value(part, "model"), percent: windows[j].percent, resetAt: windows[j].resetAt })
       } else {
         windows[j].scoped = []
         out.push(windows[j])
@@ -802,18 +796,18 @@ Panel {
 
   // The window that decides how much room is left — the fullest one, since
   // that is what stops the next prompt.
-  function bindingWindow(p) {
+  function bindingWindow(p: var): var {
     var windows = limitWindows(p)
     var best = null
-    for (let i = 0; i < windows.length; i++) {
-      if (!best || windows[i].percent > best.percent) best = windows[i]
+    for (let i = 0; i < Dynamic.value(windows, "length"); i++) {
+      if (!best || windows[i].percent > Dynamic.value(best, "percent")) best = windows[i]
     }
     return best
   }
 
-  function resetMsFor(w) {
-    if (!w || w.resetAt === "") return -1
-    var ms = new Date(w.resetAt).getTime()
+  function resetMsFor(w: var): real {
+    if (!w || Dynamic.value(w, "resetAt") === "") return -1
+    var ms = new Date(Dynamic.value(w, "resetAt")).getTime()
     return isFinite(ms) ? ms - root.nowMs : -1
   }
 
@@ -837,19 +831,19 @@ Panel {
     if (value === "Spend limit") return Commons.I18n.t("agents.windowSpendLimit")
     if (value === "Limit") return Commons.I18n.t("agents.windowLimit")
     var part = scopedPart(value)
-    if (part && part.window === "Session") return Commons.I18n.t("agents.modelSession").arg(part.model)
-    if (part && part.window === "Weekly") return Commons.I18n.t("agents.modelWeekly").arg(part.model)
-    if (part && part.window === "Monthly") return Commons.I18n.t("agents.modelMonthly").arg(part.model)
+    if (part && Dynamic.value(part, "window") === "Session") return Commons.I18n.t("agents.modelSession").arg(Dynamic.value(part, "model"))
+    if (part && Dynamic.value(part, "window") === "Weekly") return Commons.I18n.t("agents.modelWeekly").arg(Dynamic.value(part, "model"))
+    if (part && Dynamic.value(part, "window") === "Monthly") return Commons.I18n.t("agents.modelMonthly").arg(Dynamic.value(part, "model"))
     return value
   }
 
   function scopedAllowanceText(scoped: var, windowTitle: var): string {
-    var percent = Commons.I18n.formatNumber(Math.round(scoped.percent * 100))
+    var percent = Commons.I18n.formatNumber(Math.round(Dynamic.value(scoped, "percent") * 100))
     var value = String(windowTitle || "")
-    if (value === "Session") return Commons.I18n.t("agents.scopedSession").arg(scoped.title).arg(percent)
-    if (value === "Weekly") return Commons.I18n.t("agents.scopedWeekly").arg(scoped.title).arg(percent)
-    if (value === "Monthly") return Commons.I18n.t("agents.scopedMonthly").arg(scoped.title).arg(percent)
-    return Commons.I18n.t("agents.scopedOther").arg(scoped.title).arg(percent).arg(windowDisplayTitle(value))
+    if (value === "Session") return Commons.I18n.t("agents.scopedSession").arg(Dynamic.value(scoped, "title")).arg(percent)
+    if (value === "Weekly") return Commons.I18n.t("agents.scopedWeekly").arg(Dynamic.value(scoped, "title")).arg(percent)
+    if (value === "Monthly") return Commons.I18n.t("agents.scopedMonthly").arg(Dynamic.value(scoped, "title")).arg(percent)
+    return Commons.I18n.t("agents.scopedOther").arg(Dynamic.value(scoped, "title")).arg(percent).arg(windowDisplayTitle(value))
   }
 
   // The collectors write a fixed English status; the ones that reach the
@@ -901,8 +895,8 @@ Panel {
 
   // A prepaid account runs low the way a subscription window fills up: the
   // last 10% of the funded credits lights the same alarm.
-  function balanceAlarming(b) {
-    return !!b && b.funded > 0 && b.remaining / b.funded <= 0.1
+  function balanceAlarming(b: var): bool {
+    return !!b && Dynamic.value(b, "funded") > 0 && Dynamic.value(b, "remaining") / Dynamic.value(b, "funded") <= 0.1
   }
 
   function currencyPrefix(currency: var): string {
@@ -919,11 +913,11 @@ Panel {
     return currencyPrefix(currency) + Commons.I18n.formatNumber(amount, 2)
   }
 
-  function balanceDetailText(b) {
-    if (!b || !(b.funded > 0)) return ""
-    var spent = formatMoney(b.spent, b.currency)
-    var funded = formatMoney(b.funded, b.currency)
-    return b.estimated
+  function balanceDetailText(b: var): string {
+    if (!b || !(Dynamic.value(b, "funded") > 0)) return ""
+    var spent = formatMoney(Dynamic.value(b, "spent"), Dynamic.value(b, "currency"))
+    var funded = formatMoney(Dynamic.value(b, "funded"), Dynamic.value(b, "currency"))
+    return Dynamic.value(b, "estimated")
       ? Commons.I18n.t("agents.balanceSpentEstimated").arg(spent).arg(funded)
       : Commons.I18n.t("agents.balanceSpent").arg(spent).arg(funded)
   }
@@ -942,10 +936,10 @@ Panel {
     var byDay = {}
     var byModel = {}
     var providers = usage.enabledProviders
-    for (let i = 0; i < providers.length; i++) {
+    for (let i = 0; i < Dynamic.value(providers, "length"); i++) {
       let p = providers[i]
       let days = p.recentDays || []
-      for (let d = 0; d < days.length; d++) {
+      for (let d = 0; d < Dynamic.value(days, "length"); d++) {
         let tokens = Number(days[d].messageCount || 0)
         week += tokens
         byDay[days[d].date] = (byDay[days[d].date] || 0) + tokens
@@ -987,12 +981,12 @@ Panel {
     ? addHeading
     : (shownPhrase !== "" ? shownPhrase : Commons.I18n.t("agents.subscriptions"))
 
-  function showPhrase() {
-    var n = summaryPhrases.length
+  function showPhrase(): void {
+    var n = Dynamic.value(summaryPhrases, "length")
     shownPhrase = n > 0 ? summaryPhrases[phraseIndex % n] : ""
   }
 
-  onSummaryPhrasesChanged: if (shownPhrase === "" || summaryPhrases.length <= 1) showPhrase()
+  onSummaryPhrasesChanged: if (shownPhrase === "" || Dynamic.value(summaryPhrases, "length") <= 1) showPhrase()
 
   // The held line was written in the language it was shown in; once a new
   // language's strings arrive and the phrases rebuild, show it again.
@@ -1011,7 +1005,7 @@ Panel {
   function footerText(): string {
     if (usage.syncStatusText !== "") return usage.syncStatusText
     var providers = usage.enabledProviders
-    for (let i = 0; i < providers.length; i++) {
+    for (let i = 0; i < Dynamic.value(providers, "length"); i++) {
       let count = Number(providers[i].syncDeviceCount || 0)
       if (providers[i].syncEnabled && count > 0)
         return Commons.I18n.tn("agents.merged", count).arg(Commons.I18n.formatNumber(count))
@@ -1028,7 +1022,7 @@ Panel {
     return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4)
   }
 
-  function colorLuminance(color) {
+  function colorLuminance(color: color): real {
     return 0.2126 * colorChannelLuminance(color.r)
       + 0.7152 * colorChannelLuminance(color.g)
       + 0.0722 * colorChannelLuminance(color.b)
@@ -1037,12 +1031,12 @@ Panel {
   // Marks resolve by convention, so a new agent's data file needs nothing
   // from this panel: assets/<id>.svg if it ships one, the module's bar glyph
   // if it doesn't.
-  function iconCandidatesForProvider(p, surfaceColor) {
+  function iconCandidatesForProvider(p: var, surfaceColor: color): var {
     if (!p) return []
     var candidates = []
     if (colorLuminance(surfaceColor || Commons.Color.background) >= 0.5)
-      candidates.push(Qt.resolvedUrl("assets/" + p.providerId + "-light.svg"))
-    candidates.push(Qt.resolvedUrl("assets/" + p.providerId + ".svg"))
+      candidates.push(Qt.resolvedUrl("assets/" + Dynamic.value(p, "providerId") + "-light.svg"))
+    candidates.push(Qt.resolvedUrl("assets/" + Dynamic.value(p, "providerId") + ".svg"))
     return candidates
   }
 
@@ -1055,7 +1049,7 @@ Panel {
   }
   // Local history counts as set up, so a machine with no subscription still
   // gets its summary rather than the picker.
-  readonly property bool blankSlate: usage.enabledProviders.length === 0 && !anySignedIn && !providers.some(function(p) { return !!p.localModel })
+  readonly property bool blankSlate: Dynamic.value(usage.enabledProviders, "length") === 0 && !anySignedIn && !providers.some(function(p: var): bool { return !!Dynamic.value(p, "localModel") })
   // Choosing a provider: asked for with the +, or simply what the panel is
   // while nothing is set up. It's derived rather than switched into, so
   // records that load a moment after the panel opens take its place.
@@ -1070,7 +1064,7 @@ Panel {
     : Commons.I18n.t("agents.addProviderAccount").arg(addProviderName(addProvider))
   onAddStageChanged: {
     phraseSwap.stop()
-    if (hero) hero.metaOpacity = 1.0
+    if (agentsHero) agentsHero.metaOpacity = 1.0
     resetKeys()
   }
 
@@ -1084,13 +1078,13 @@ Panel {
   // A package upgrade may have brought new recipes; the listing Local AI
   // offers from is rewritten whenever the picker shows, from + or as a blank
   // slate, including one the panel opens on.
-  function refreshLocalListing() {
+  function refreshLocalListing(): void {
     usage.refreshLocal()
   }
 
   // Picking an agent to add starts on the first one, ready for Enter. The
   // rows follow the same stage change, so the cursor waits a tick for them.
-  function resetKeys() {
+  function resetKeys(): void {
     cursorActive = false
     keyRow = 0
     keyColumn = 0
@@ -1108,9 +1102,9 @@ Panel {
     deleteTarget = null
     if (addStage !== "running") addStage = ""
     resetKeys()
-    if (usage.enabledProviders.length === 0 && !checkProcess.running) checkProcess.running = true
+    if (Dynamic.value(usage.enabledProviders, "length") === 0 && !checkProcess.running) checkProcess.running = true
     nowMs = Date.now()
-    if (panelFlick) panelFlick.contentY = 0
+    if (agentsFlickable) agentsFlickable.contentY = 0
     usage.refreshLimits()
     // "Doesn't fit" was true when a model last started or stopped; memory an
     // app has since let go of only shows after a fresh look, once per open.
@@ -1131,7 +1125,7 @@ Panel {
     stdout: SplitParser {
       onRead: function(line) {
         var parts = String(line).trim().split(" ")
-        if (parts.length !== 2) return
+        if (Dynamic.value(parts, "length") !== 2) return
         var checks = Object.assign({}, root.addChecks)
         checks[parts[0]] = parts[1]
         root.addChecks = checks
@@ -1169,7 +1163,7 @@ Panel {
 
   Timer {
     interval: 2800
-    running: root.opened && root.summaryPhrases.length > 1 && root.addStage === "" && !root.blankSlate
+    running: root.opened && Dynamic.value(root.summaryPhrases, "length") > 1 && root.addStage === "" && !root.blankSlate
     repeat: true
     onTriggered: phraseSwap.restart()
   }
@@ -1177,17 +1171,17 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: root.hero; property: "metaOpacity"
+      target: root.agentsHero; property: "metaOpacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: {
-        root.phraseIndex = (root.phraseIndex + 1) % Math.max(1, root.summaryPhrases.length)
+        root.phraseIndex = (root.phraseIndex + 1) % Math.max(1, Dynamic.value(root.summaryPhrases, "length"))
         root.showPhrase()
       }
     }
     PropertyAnimation {
-      target: root.hero; property: "metaOpacity"
+      target: root.agentsHero; property: "metaOpacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -1229,10 +1223,10 @@ Panel {
 
     component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      final property alias panelFlick: panelFlickItem
-      final property alias hero: hero
-      final property alias column: agentColumn
-      final property alias providerSections: providerSections
+      final property alias contentFlick: panelFlickItem
+      final property alias contentHero: hero
+      final property alias contentColumn: agentColumn
+      final property alias contentSections: providerSections
       ConfirmDialog {
         id: deleteConfirm
         anchors.fill: parent
@@ -1249,9 +1243,9 @@ Panel {
           handleKey(event)
           event.accepted = true
         }
-        message: !root.deleteTarget ? "" : root.deleteTarget.localModel
-          ? Commons.I18n.t("agents.localRemoveConfirm").arg(root.deleteTarget.localModel.name || root.deleteTarget.localModel.recipe)
-          : Commons.I18n.t("agents.hideProviderConfirm").arg(root.deleteTarget.providerName)
+        message: !root.deleteTarget ? "" : Dynamic.value(root.deleteTarget, "localModel")
+          ? Commons.I18n.t("agents.localRemoveConfirm").arg(Dynamic.value(Dynamic.value(root.deleteTarget, "localModel"), "name") || Dynamic.value(Dynamic.value(root.deleteTarget, "localModel"), "recipe"))
+          : Commons.I18n.t("agents.hideProviderConfirm").arg(Dynamic.value(root.deleteTarget, "providerName"))
         foreground: root.foreground
         background: root.surface
         fontFamily: root.fontFamily
@@ -1282,7 +1276,7 @@ Panel {
       onTextKey: function(t) {
         if (t === "r" || t === "R") root.refreshNow()
         else if (t === "m" || t === "M") root.toggleSwitchMode()
-        else if (root.addStage === "" && t >= "1" && t <= "9" && Number(t) <= root.accountEntries.length) root.pointAt("account", Number(t) - 1)
+        else if (root.addStage === "" && t >= "1" && t <= "9" && Number(t) <= Dynamic.value(root.accountEntries, "length")) root.pointAt("account", Number(t) - 1)
       }
 
       Flickable {
@@ -1400,9 +1394,9 @@ Panel {
                   hasCursor: root.hasKey("starter", index)
                   onHovered: root.pointAt("starter", index)
                   width: (tileRow.width - tileRow.spacing * 2) / 3
-                  glyph: modelData.glyph
-                  title: modelData.label
-                  onClicked: root.startPrompt(modelData.prompt)
+                  glyph: Dynamic.value(modelData, "glyph")
+                  title: Dynamic.value(modelData, "label")
+                  onClicked: root.startPrompt(Dynamic.value(modelData, "prompt"))
                 }
               }
             }
@@ -1457,14 +1451,14 @@ Panel {
           id: choice
           required property var modelData
           required property int index
-          readonly property string checkState: root.addChecks[modelData.providerId] || ""
-          readonly property bool local: modelData.providerId === "local"
-          readonly property bool available: local ? root.localAddRecipes.length > 0 : checkState === "first" || checkState === "additional"
+          readonly property string checkState: root.addChecks[Dynamic.value(modelData, "providerId")] || ""
+          readonly property bool local: Dynamic.value(modelData, "providerId") === "local"
+          readonly property bool available: local ? Dynamic.value(root.localAddRecipes, "length") > 0 : checkState === "first" || checkState === "additional"
           // Local AI stays offered once everything that fits is installed,
           // greyed out and saying so.
           opacity: local && !available ? 0.4 : 1
           readonly property bool hasCursor: root.hasKey("choice", index)
-          width: (choiceRow.width - choiceRow.spacing * (root.addProviders.length - 1)) / root.addProviders.length
+          width: (choiceRow.width - choiceRow.spacing * (Dynamic.value(root.addProviders, "length") - 1)) / Dynamic.value(root.addProviders, "length")
           implicitHeight: choiceBody.implicitHeight + Style.space(16)
           onHasCursorChanged: if (hasCursor) root.revealItem(choice)
 
@@ -1484,7 +1478,7 @@ Panel {
             Text {
               anchors.horizontalCenter: parent.horizontalCenter
               textFormat: Text.PlainText
-              text: choice.modelData.providerName
+              text: Dynamic.value(choice.modelData, "providerName")
               color: choice.hasCursor ? Commons.Color.accent : root.foreground
               font.family: root.fontFamily
               font.pixelSize: Style.font.body
@@ -1496,13 +1490,13 @@ Panel {
             id: choiceMouse
             anchors.fill: parent
             hoverEnabled: true
-            cursorShape: choice.available ? Qt.PointingHandCursor : Qt.ArrowCursor
+            cursorShape: Dynamic.value(choice, "available") ? Qt.PointingHandCursor : Qt.ArrowCursor
             onEntered: root.pointAt("choice", choice.index)
-            onClicked: root.chooseAddProvider(choice.modelData.providerId)
+            onClicked: root.chooseAddProvider(Dynamic.value(choice.modelData, "providerId"))
           }
 
           PanelToolTip {
-            visible: choice.local && !choice.available && choiceMouse.containsMouse
+            visible: choice.local && !Dynamic.value(choice, "available") && choiceMouse.containsMouse
             text: Commons.I18n.t("agents.localAllInstalled")
           }
         }
@@ -1543,7 +1537,7 @@ Panel {
             anchors.verticalCenter: parent.verticalCenter
             // As tall as the name and details, so the lit box frames both.
             size: Math.max(Style.font.heading, recipeBody.implicitHeight - Style.space(10))
-            provider: ({ providerId: String(recipeRow.modelData.vendor || "local") })
+            provider: ({ providerId: String(Dynamic.value(recipeRow.modelData, "vendor") || "local") })
           }
 
           Column {
@@ -1562,7 +1556,7 @@ Panel {
                 id: recipeName
                 anchors.left: parent.left
                 textFormat: Text.PlainText
-                text: String(recipeRow.modelData.name || recipeRow.modelData.id)
+                text: String(Dynamic.value(recipeRow.modelData, "name") || Dynamic.value(recipeRow.modelData, "id"))
                 color: recipeRow.hasCursor ? Commons.Color.accent : root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.body
@@ -1573,7 +1567,7 @@ Panel {
                 anchors.left: recipeName.right
                 anchors.leftMargin: Style.space(8)
                 anchors.baseline: recipeName.baseline
-                visible: recipeRow.modelData.best === true
+                visible: Dynamic.value(recipeRow.modelData, "best") === true
                 textFormat: Text.PlainText
                 text: Commons.I18n.t("agents.localRecommended")
                 color: root.dim
@@ -1729,12 +1723,12 @@ Panel {
     id: section
     property var provider: null
     property int providerIndex: -1
-    readonly property var model: provider ? (provider.localModel || null) : null
-    readonly property bool loading: !!model && model.unit === "activating"
-    readonly property bool running: !!model && model.unit === "active"
-    readonly property bool stopping: !!model && model.unit === "deactivating"
+    readonly property var model: provider ? (Dynamic.value(provider, "localModel") || null) : null
+    readonly property bool loading: !!model && Dynamic.value(model, "unit") === "activating"
+    readonly property bool running: !!model && Dynamic.value(model, "unit") === "active"
+    readonly property bool stopping: !!model && Dynamic.value(model, "unit") === "deactivating"
     // Removing stops it first, then deletes its weights; one bar covers both.
-    readonly property bool removing: !!model && model.unit === "removing"
+    readonly property bool removing: !!model && Dynamic.value(model, "unit") === "removing"
     // When a start or stop ends, its bar fills to the end before the row
     // changes over to memory (or goes), rather than vanishing near 90%.
     property string finishing: ""
@@ -1747,16 +1741,16 @@ Panel {
       interval: Style.duration(450)
       onTriggered: section.finishing = ""
     }
-    readonly property real loadSeconds: model && Number(model.expected_load_seconds) > 0 ? Number(model.expected_load_seconds) : 60
-    readonly property real stopSeconds: model && Number(model.expected_stop_seconds) > 0 ? Number(model.expected_stop_seconds) : 10
-    readonly property real removeSeconds: model && Number(model.expected_remove_seconds) > 0 ? Number(model.expected_remove_seconds) : 10
+    readonly property real loadSeconds: model && Number(Dynamic.value(model, "expected_load_seconds")) > 0 ? Number(Dynamic.value(model, "expected_load_seconds")) : 60
+    readonly property real stopSeconds: model && Number(Dynamic.value(model, "expected_stop_seconds")) > 0 ? Number(Dynamic.value(model, "expected_stop_seconds")) : 10
+    readonly property real removeSeconds: model && Number(Dynamic.value(model, "expected_remove_seconds")) > 0 ? Number(Dynamic.value(model, "expected_remove_seconds")) : 10
     readonly property real phaseSeconds: removing ? removeSeconds : stopping ? stopSeconds : loadSeconds
-    readonly property real elapsed: model ? Math.max(0, (root.loadNowMs - Number(model.since_ms || root.loadNowMs)) / 1000) : 0
-    readonly property real memory: model && model.observed ? Number(model.observed.ram_used_gib || 0) : 0
+    readonly property real elapsed: model ? Math.max(0, (root.loadNowMs - Number(Dynamic.value(model, "since_ms") || root.loadNowMs)) / 1000) : 0
+    readonly property real memory: model && Dynamic.value(model, "observed") ? Number(Dynamic.value(Dynamic.value(model, "observed"), "ram_used_gib") || 0) : 0
     readonly property var accounts: root.providerAccounts(provider)
-    readonly property bool multi: accounts.length > 1
+    readonly property bool multi: Dynamic.value(accounts, "length") > 1
     readonly property var windows: root.displayWindows(provider)
-    readonly property var balance: provider ? (provider.balance || null) : null
+    readonly property var balance: provider ? (Dynamic.value(provider, "balance") || null) : null
     spacing: Style.space(16)
     readonly property bool dragged: root.dragIndex === providerIndex
     z: dragged ? 2 : 0
@@ -1797,7 +1791,7 @@ Panel {
         id: sectionMark
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        provider: section.model ? ({ providerId: section.model.vendor || "ollama" }) : section.provider
+        provider: section.model ? ({ providerId: Dynamic.value(section.model, "vendor") || "ollama" }) : Dynamic.value(section, "provider")
 
         // The mark is the handle for dragging the agent up or down the page.
         MouseArea {
@@ -1807,10 +1801,10 @@ Panel {
           preventStealing: true
           cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
           onPressed: function(mouse) {
-            root.beginProviderDrag(section.providerIndex, mapToItem(root.column, mouse.x, mouse.y).y)
+            root.beginProviderDrag(section.providerIndex, mapToItem(root.agentsColumn, mouse.x, mouse.y).y)
           }
           onPositionChanged: function(mouse) {
-            if (pressed) root.dragProviderOver(mapToItem(root.column, mouse.x, mouse.y).y)
+            if (pressed) root.dragProviderOver(mapToItem(root.agentsColumn, mouse.x, mouse.y).y)
           }
           onReleased: root.dropProvider()
           onCanceled: root.settleProviderDrag(true)
@@ -1825,11 +1819,11 @@ Panel {
         textFormat: Text.PlainText
         width: section.model ? Math.max(0, Math.min(implicitWidth, sectionHead.width - sectionMark.width - sectionPlan.implicitWidth - (localToggle.visible ? localToggle.width : 0) - (sectionLaunch.visible ? sectionLaunch.width : 0) - Style.space(40))) : implicitWidth
         elide: Text.ElideRight
-        text: section.model ? (section.model.name || section.model.recipe) : section.provider ? section.provider.providerName : ""
+        text: section.model ? (Dynamic.value(section.model, "name") || Dynamic.value(section.model, "recipe")) : Dynamic.value(section, "provider") ? Dynamic.value(Dynamic.value(section, "provider"), "providerName") : ""
         HoverHandler { id: localNameHover }
         PanelToolTip {
           visible: !!section.model && localNameHover.hovered
-          text: section.model ? Commons.I18n.t("agents.localEndpoint").arg(section.model.endpoint || "").arg(section.model.recipe) : ""
+          text: section.model ? Commons.I18n.t("agents.localEndpoint").arg(Dynamic.value(section.model, "endpoint") || "").arg(Dynamic.value(section.model, "recipe")) : ""
         }
         color: root.foreground
         font.family: root.fontFamily
@@ -1845,7 +1839,7 @@ Panel {
         anchors.baseline: sectionName.baseline
         visible: !section.multi && text !== ""
         textFormat: Text.PlainText
-        text: section.model ? "" : root.planLabel(section.provider)
+        text: section.model ? "" : root.planLabel(Dynamic.value(section, "provider"))
         color: root.dim
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
@@ -1856,7 +1850,7 @@ Panel {
         anchors.leftMargin: Style.space(8)
         anchors.verticalCenter: sectionName.verticalCenter
         visible: !section.multi && message !== ""
-        record: section.provider
+        record: Dynamic.value(section, "provider")
       }
 
       PanelActionButton {
@@ -1891,13 +1885,13 @@ Panel {
         id: sectionLaunch
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        visible: section.model ? section.running : root.harnessFor(section.provider) !== ""
+        visible: section.model ? section.running : root.harnessFor(Dynamic.value(section, "provider")) !== ""
         iconText: "󰞷"
-        tooltipText: section.model ? Commons.I18n.t("agents.localLaunch") : Commons.I18n.t("agents.launchHarness").arg(section.provider ? section.provider.providerName : "")
+        tooltipText: section.model ? Commons.I18n.t("agents.localLaunch") : Commons.I18n.t("agents.launchHarness").arg(Dynamic.value(section, "provider") ? Dynamic.value(Dynamic.value(section, "provider"), "providerName") : "")
         foreground: root.foreground
         fontFamily: root.fontFamily
         hasCursor: root.hasKey(section.model ? "modelLaunch" : "providerLaunch", section.providerIndex)
-        onClicked: section.model ? root.runLocalAction(section.model, "launch") : root.launchHarness(section.provider)
+        onClicked: section.model ? root.runLocalAction(section.model, "launch") : root.launchHarness(Dynamic.value(section, "provider"))
       }
     }
 
@@ -1927,7 +1921,7 @@ Panel {
         anchors.rightMargin: Style.space(20)
         anchors.verticalCenter: parent.verticalCenter
         value: section.finishing !== "" ? 1 : section.loading || section.stopping || section.removing ? root.phaseProgress(section.elapsed, section.phaseSeconds)
-          : Number(usage.localModel.ram_total_gib) > 0 ? section.memory / Number(usage.localModel.ram_total_gib) : 0
+          : Number(Dynamic.value(Dynamic.value(usage, "localModel"), "ram_total_gib")) > 0 ? section.memory / Number(Dynamic.value(Dynamic.value(usage, "localModel"), "ram_total_gib")) : 0
       }
       Text {
         id: localMeterValue
@@ -1944,10 +1938,10 @@ Panel {
     }
 
     Text {
-      visible: !!section.model && !section.running && !section.loadingShown && !section.stoppingShown && !section.removing && String(section.model.error || "") !== ""
+      visible: !!section.model && !section.running && !section.loadingShown && !section.stoppingShown && !section.removing && String(Dynamic.value(section.model, "error") || "") !== ""
       width: parent.width
       textFormat: Text.PlainText
-      text: section.model ? String(section.model.error || "") : ""
+      text: section.model ? String(Dynamic.value(section.model, "error") || "") : ""
       color: root.urgent
       font.family: root.fontFamily
       font.pixelSize: Style.font.bodySmall
@@ -1957,17 +1951,17 @@ Panel {
     // A sign-in to redo for a single-account provider; with several, each
     // account says so on its own line.
     TextLink {
-      visible: !section.multi && root.needsSignIn(section.provider)
+      visible: !section.multi && root.needsSignIn(Dynamic.value(section, "provider"))
       picked: root.hasKey("providerSignin", section.providerIndex)
       text: Commons.I18n.t("agents.signInRequired")
       idleColor: root.urgent
-      tooltip: Commons.I18n.t("agents.signInAgainProvider").arg(section.provider ? section.provider.providerName : "")
-      onClicked: root.signInAgain(section.provider, null)
+      tooltip: Commons.I18n.t("agents.signInAgainProvider").arg(Dynamic.value(section, "provider") ? Dynamic.value(Dynamic.value(section, "provider"), "providerName") : "")
+      onClicked: root.signInAgain(Dynamic.value(section, "provider"), null)
     }
 
 
     Column {
-      visible: !section.multi && section.windows.length > 0
+      visible: !section.multi && Dynamic.value(section.windows, "length") > 0
       width: parent.width
       spacing: Style.space(12)
 
@@ -1978,8 +1972,8 @@ Panel {
           required property var modelData
           width: section.width
           window: modelData
-          stale: !!section.provider && section.provider.limitsStale === true
-          fetchedAt: section.provider ? Number(section.provider.limitsFetchedAt || 0) : 0
+          stale: !!Dynamic.value(section, "provider") && Dynamic.value(Dynamic.value(section, "provider"), "limitsStale") === true
+          fetchedAt: Dynamic.value(section, "provider") ? Number(Dynamic.value(Dynamic.value(section, "provider"), "limitsFetchedAt") || 0) : 0
         }
       }
 
@@ -1987,7 +1981,7 @@ Panel {
         textFormat: Text.PlainText
         visible: text !== ""
         width: parent.width
-        text: root.resetCreditsText(section.provider ? section.provider.resetCredits : null)
+        text: root.resetCreditsText(Dynamic.value(section, "provider") ? Dynamic.value(Dynamic.value(section, "provider"), "resetCredits") : null)
         color: root.dim
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
@@ -1997,7 +1991,7 @@ Panel {
     // The meter shows what is left, not what is used: a prepaid account
     // drains toward empty rather than filling toward a cap.
     Column {
-      visible: !!section.balance
+      visible: !!Dynamic.value(section, "balance")
       width: parent.width
       spacing: Style.space(6)
 
@@ -2021,8 +2015,8 @@ Panel {
           anchors.right: balanceValue.left
           anchors.rightMargin: Style.spacing.md
           anchors.verticalCenter: parent.verticalCenter
-          value: section.balance && section.balance.funded > 0 ? section.balance.remaining / section.balance.funded : -1
-          alarming: root.balanceAlarming(section.balance)
+          value: Dynamic.value(section, "balance") && Dynamic.value(Dynamic.value(section, "balance"), "funded") > 0 ? Dynamic.value(Dynamic.value(section, "balance"), "remaining") / Dynamic.value(Dynamic.value(section, "balance"), "funded") : -1
+          alarming: root.balanceAlarming(Dynamic.value(section, "balance"))
         }
 
         Text {
@@ -2032,8 +2026,8 @@ Panel {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
           horizontalAlignment: Text.AlignRight
-          text: section.balance ? root.formatMoney(section.balance.remaining, section.balance.currency) : ""
-          color: root.balanceAlarming(section.balance) ? root.urgent : root.dim
+          text: Dynamic.value(section, "balance") ? root.formatMoney(Dynamic.value(Dynamic.value(section, "balance"), "remaining"), Dynamic.value(Dynamic.value(section, "balance"), "currency")) : ""
+          color: root.balanceAlarming(Dynamic.value(section, "balance")) ? root.urgent : root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
         }
@@ -2043,7 +2037,7 @@ Panel {
         textFormat: Text.PlainText
         visible: text !== ""
         width: parent.width
-        text: root.balanceDetailText(section.balance)
+        text: root.balanceDetailText(Dynamic.value(section, "balance"))
         color: root.dim
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
@@ -2051,7 +2045,7 @@ Panel {
     }
 
     Repeater {
-      model: section.multi ? section.accounts : []
+      model: section.multi ? Dynamic.value(section, "accounts") : []
 
       Column {
         id: accountBlock
@@ -2064,8 +2058,8 @@ Panel {
         AccountHeader {
           width: parent.width
           account: accountBlock.modelData
-          owner: section.provider
-          picked: root.isPicked(section.provider, accountBlock.modelData)
+          owner: Dynamic.value(section, "provider")
+          picked: root.isPicked(Dynamic.value(section, "provider"), accountBlock.modelData)
         }
 
         Column {
@@ -2073,14 +2067,14 @@ Panel {
           spacing: Style.space(12)
 
           Repeater {
-            model: root.displayWindows({ limits: accountBlock.modelData.limits || [] })
+            model: root.displayWindows({ limits: Dynamic.value(accountBlock.modelData, "limits") || [] })
 
             CompactLimit {
               required property var modelData
               width: accountBlock.width
               window: modelData
-              stale: accountBlock.modelData.stale === true
-              fetchedAt: Number(accountBlock.modelData.fetchedAt || 0)
+              stale: Dynamic.value(accountBlock.modelData, "stale") === true
+              fetchedAt: Number(Dynamic.value(accountBlock.modelData, "fetchedAt") || 0)
             }
           }
         }
@@ -2104,13 +2098,13 @@ Panel {
     Image {
       id: markImage
       anchors.fill: parent
-      source: mark.candidateIndex < mark.candidates.length ? mark.candidates[mark.candidateIndex] : ""
+      source: mark.candidateIndex < Dynamic.value(mark.candidates, "length") ? mark.candidates[mark.candidateIndex] : ""
       sourceSize.width: mark.size * 2
       sourceSize.height: mark.size * 2
       fillMode: Image.PreserveAspectFit
       // Advancing source from inside its own status change trips the
       // binding-loop detector; defer the step one tick.
-      onStatusChanged: if (status === Image.Error && mark.candidateIndex < mark.candidates.length)
+      onStatusChanged: if (status === Image.Error && mark.candidateIndex < Dynamic.value(mark.candidates, "length"))
         Qt.callLater(function() { mark.candidateIndex++ })
     }
 
@@ -2156,7 +2150,7 @@ Panel {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: tile.title
+        text: Dynamic.value(tile, "title")
         color: tile.hasCursor ? Commons.Color.accent : root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.body
@@ -2175,7 +2169,7 @@ Panel {
 
     PanelToolTip {
       visible: tileMouse.containsMouse
-      text: Commons.I18n.t("agents.startOnNew").arg(tile.title.toLowerCase())
+      text: Commons.I18n.t("agents.startOnNew").arg(Dynamic.value(tile, "title").toLowerCase())
     }
   }
 
@@ -2264,11 +2258,11 @@ Panel {
     property bool editing: false
     // The new name shows at once; the record catches up a moment later.
     property string renamedTo: ""
-    readonly property bool isActive: account.active === true
+    readonly property bool isActive: Dynamic.value(account, "active") === true
     readonly property bool autoOn: root.autoSwitchFor(owner)
     // Which of the row's links the keyboard is on, when it's on this row.
     readonly property string pickedKind: picked && root.keyTarget ? root.keyTargetKind : ""
-    readonly property string label: renamedTo !== "" ? renamedTo : String(account.label || account.id || "")
+    readonly property string label: renamedTo !== "" ? renamedTo : String(Dynamic.value(account, "label") || Dynamic.value(account, "id") || "")
 
     onAccountChanged: renamedTo = ""
     onEditingChanged: root.renaming = editing
@@ -2278,14 +2272,14 @@ Panel {
     HoverHandler { id: useHover }
     implicitHeight: Math.max(headText.implicitHeight, headAction.implicitHeight)
 
-    function startRename() {
+    function startRename(): void {
       editing = true
       nameField.text = label
       nameField.forceActiveFocus()
       nameField.selectAll()
     }
 
-    function finishRename(save) {
+    function finishRename(save: bool): void {
       if (!editing) return
       var value = nameField.text.trim()
       editing = false
@@ -2312,7 +2306,7 @@ Panel {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(implicitWidth, parent.width * 0.6)
-        text: head.label
+        text: Dynamic.value(head, "label")
         color: head.picked ? Commons.Color.accent : root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.body
@@ -2329,8 +2323,8 @@ Panel {
         }
 
         PanelToolTip {
-          visible: nameMouse.containsMouse && String(head.account.email || "") !== ""
-          text: String(head.account.email || "")
+          visible: nameMouse.containsMouse && String(Dynamic.value(Dynamic.value(head, "account"), "email") || "") !== ""
+          text: String(Dynamic.value(Dynamic.value(head, "account"), "email") || "")
         }
       }
 
@@ -2354,7 +2348,7 @@ Panel {
             - (signInLink.visible ? signInLink.implicitWidth + detailRow.spacing : 0)))
           elide: Text.ElideRight
           text: {
-            var detail = root.accountDetail(head.account)
+            var detail = root.accountDetail(Dynamic.value(head, "account"))
             return detail !== "" ? "· " + detail : ""
           }
           color: root.dim
@@ -2364,13 +2358,13 @@ Panel {
 
         UsageNote {
           id: accountNote
-          record: head.account
+          record: Dynamic.value(head, "account")
         }
 
         // The dot is punctuation, not part of the link.
         Text {
           id: signInDot
-          visible: root.needsSignIn(head.account)
+          visible: root.needsSignIn(Dynamic.value(head, "account"))
           text: "·"
           color: root.dim
           font.family: root.fontFamily
@@ -2379,12 +2373,12 @@ Panel {
 
         TextLink {
           id: signInLink
-          visible: root.needsSignIn(head.account)
+          visible: root.needsSignIn(Dynamic.value(head, "account"))
           picked: head.pickedKind === "signin"
           text: Commons.I18n.t("agents.signInRequired")
           idleColor: root.urgent
           tooltip: Commons.I18n.t("agents.signInAgainAccount")
-          onClicked: root.signInAgain(head.owner, head.account)
+          onClicked: root.signInAgain(head.owner, Dynamic.value(head, "account"))
         }
       }
 
@@ -2453,7 +2447,7 @@ Panel {
           visible: !head.autoOn || useHover.hovered || head.picked
           text: Commons.I18n.t("agents.use") + (head.pickedKind === "account" ? " ⏎" : "")
           picked: head.pickedKind === "account"
-          onClicked: root.useAccount(head.owner, head.account)
+          onClicked: root.useAccount(head.owner, Dynamic.value(head, "account"))
         }
       }
     }
@@ -2491,30 +2485,30 @@ Panel {
     // The age of numbers kept past a failed check is shown only on hover.
     property bool stale: false
     property real fetchedAt: 0
-    readonly property var scoped: window && window.scoped ? window.scoped : []
-    readonly property bool alarming: window && window.percent >= 0.9
+    readonly property var scoped: window && Dynamic.value(window, "scoped") ? Dynamic.value(window, "scoped") : []
+    readonly property bool alarming: window && Dynamic.value(window, "percent") >= 0.9
     readonly property real resetMs: root.resetMsFor(window)
     implicitHeight: Math.max(compactTitle.implicitHeight, compactValue.implicitHeight)
 
     HoverHandler { id: compactHover }
 
     PanelToolTip {
-      visible: compactHover.hovered && !!compact.window
+      visible: compactHover.hovered && !!Dynamic.value(compact, "window")
       text: {
         var lines = []
-        if (compact.window) {
-          let windowName = root.windowDisplayTitle(compact.window.title)
-          let used = Commons.I18n.formatNumber(Math.round(compact.window.percent * 100))
+        if (Dynamic.value(compact, "window")) {
+          let windowName = root.windowDisplayTitle(Dynamic.value(Dynamic.value(compact, "window"), "title"))
+          let used = Commons.I18n.formatNumber(Math.round(Dynamic.value(Dynamic.value(compact, "window"), "percent") * 100))
           lines.push(compact.resetMs > 0
             ? Commons.I18n.t("agents.windowUsedResets").arg(windowName).arg(used).arg(root.formatDuration(compact.resetMs))
             : Commons.I18n.t("agents.windowUsed").arg(windowName).arg(used))
         }
-        if (compact.stale)
-          lines.push(compact.fetchedAt > 0 && root.nowMs - compact.fetchedAt > 60000
-            ? Commons.I18n.t("agents.lastUpdatedAgo").arg(root.formatDuration(root.nowMs - compact.fetchedAt))
-            : compact.fetchedAt > 0 ? Commons.I18n.t("agents.lastUpdatedJustNow") : Commons.I18n.t("agents.lastUpdatedUnknown"))
-        for (let i = 0; i < compact.scoped.length; i++)
-          lines.push(root.scopedAllowanceText(compact.scoped[i], compact.window ? compact.window.title : ""))
+        if (Dynamic.value(compact, "stale"))
+          lines.push(Dynamic.value(compact, "fetchedAt") > 0 && root.nowMs - Dynamic.value(compact, "fetchedAt") > 60000
+            ? Commons.I18n.t("agents.lastUpdatedAgo").arg(root.formatDuration(root.nowMs - Dynamic.value(compact, "fetchedAt")))
+            : Dynamic.value(compact, "fetchedAt") > 0 ? Commons.I18n.t("agents.lastUpdatedJustNow") : Commons.I18n.t("agents.lastUpdatedUnknown"))
+        for (let i = 0; i < Dynamic.value(Dynamic.value(compact, "scoped"), "length"); i++)
+          lines.push(root.scopedAllowanceText(Dynamic.value(compact, "scoped")[i], Dynamic.value(compact, "window") ? Dynamic.value(Dynamic.value(compact, "window"), "title") : ""))
         return lines.join("\n")
       }
     }
@@ -2524,7 +2518,7 @@ Panel {
       textFormat: Text.PlainText
       width: parent.width * 0.3
       anchors.verticalCenter: parent.verticalCenter
-      text: compact.window ? root.windowDisplayTitle(compact.window.title) : ""
+      text: Dynamic.value(compact, "window") ? root.windowDisplayTitle(Dynamic.value(Dynamic.value(compact, "window"), "title")) : ""
       color: root.foreground
       font.family: root.fontFamily
       font.pixelSize: Style.font.bodySmall
@@ -2536,9 +2530,9 @@ Panel {
       anchors.right: compactValue.left
       anchors.rightMargin: Style.space(20)
       anchors.verticalCenter: parent.verticalCenter
-      value: compact.window ? compact.window.percent : -1
+      value: Dynamic.value(compact, "window") ? Dynamic.value(Dynamic.value(compact, "window"), "percent") : -1
       alarming: compact.alarming
-      markers: compact.scoped
+      markers: Dynamic.value(compact, "scoped")
     }
 
     // Sized to the widest time left ("19h 40m"), so every meter ends in the
@@ -2609,7 +2603,7 @@ Panel {
         anchors.verticalCenter: meterTrack.verticalCenter
         // Explicit x doesn't mirror, so the tick measures from the end the
         // fill grows from.
-        readonly property real along: root.clamp(meterTrack.width * root.clamp(Number(modelData.percent), 0, 1) - width / 2, 0, meterTrack.width - width)
+        readonly property real along: root.clamp(meterTrack.width * root.clamp(Number(Dynamic.value(modelData, "percent")), 0, 1) - width / 2, 0, meterTrack.width - width)
         x: LayoutMirroring.enabled ? meterTrack.width - width - along : along
         color: meter.alarming ? root.urgent : root.foreground
       }

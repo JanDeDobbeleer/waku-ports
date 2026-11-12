@@ -28,7 +28,7 @@ BarWidget {
   // keyboard sharing it. A switch moves that set together, so it needs all three.
   property int layoutIndex: 0
   property int layoutCount: 0
-  property var syncNames: []
+  property list<var> syncNames: []
   // Short language code per layout description ("English (US)": "en"), read from
   // xkb's own table rather than maintained by hand.
   property var layoutBriefs: ({})
@@ -39,7 +39,7 @@ BarWidget {
   readonly property bool needsBriefs: layoutsRead && (multipleLayouts || multipleInputs)
   onNeedsBriefsChanged: loadBriefs()
 
-  function loadBriefs() {
+  function loadBriefs(): var {
     if (!needsBriefs || briefsRequested) return
     briefsRequested = true
     briefsProc.running = true
@@ -54,7 +54,7 @@ BarWidget {
   // rather than dropping it; nothing else would correct the label afterwards.
   property bool refreshPending: false
 
-  function refresh() {
+  function refresh(): var {
     if (queryProc.running) {
       refreshPending = true
       return
@@ -66,7 +66,7 @@ BarWidget {
 
   // Keyboards someone can actually type on, which is not everything Hyprland
   // calls a keyboard.
-  function typedKeyboards(keyboards) {
+  function typedKeyboards(keyboards: var): var {
     return keyboards.filter(k => KeyboardLayoutModel.isTypedKeyboard(k.name))
   }
 
@@ -75,7 +75,7 @@ BarWidget {
   // nothing to read at all, and once that unbinds it lands on whichever device
   // Hyprland saw last, a power button included. Go by layout progress instead,
   // and by the keyboard activelayout named.
-  function selectKeyboard(typed) {
+  function selectKeyboard(typed: var): var {
     return KeyboardLayoutModel.selectKeyboard(typed, root.typedKeyboardName)
   }
 
@@ -100,7 +100,7 @@ BarWidget {
   //
   // Keyboards given their own kb_layout hold a different list and are left out:
   // an index into this list would not mean the same layout to them.
-  function cycleLayout() {
+  function cycleLayout(): var {
     if (!root.bar || root.layoutCount < 2 || root.syncNames.length === 0) return
     const next = (root.layoutIndex + 1) % root.layoutCount
     BarValues.run(root.bar, root.syncNames.map(name =>
@@ -112,7 +112,7 @@ BarWidget {
 
   Connections {
     target: Hyprland
-    function onRawEvent(event) {
+    function onRawEvent(event: var): var {
       if (!event || !event.name) return
       var name = String(event.name)
       // The event names the keyboard that switched ahead of the layout it moved
@@ -236,7 +236,7 @@ BarWidget {
   // seat again whenever /dev/input changes.
   Connections {
     target: InputDevices
-    function onChanged() { root.refresh() }
+    function onChanged(): var { root.refresh() }
   }
 
   // Ask again until a first reading lands, so a query that failed at login
@@ -262,7 +262,7 @@ BarWidget {
     fontSize: Style.font.caption
     horizontalMargin: 6
     tooltipText: KeyboardLayoutModel.inputTooltip(root.inputState, root.layoutFull, root.multipleLayouts)
-    onPressed: function(button) {
+    onPressed: function(button: int): var {
       if (root.multipleInputs && button === Qt.LeftButton) {
         InputMethodState.cycle()
       } else if (root.multipleLayouts) {

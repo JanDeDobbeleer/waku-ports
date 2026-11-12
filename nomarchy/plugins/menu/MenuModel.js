@@ -722,3 +722,48 @@ if (typeof module !== "undefined") {
     applyTranslations: applyTranslations
   }
 }
+
+function parseJsonOrDefault(raw, fallback) {
+  try { return JSON.parse(raw) } catch (e) { return fallback }
+}
+
+function parseCatalog(raw) {
+  try {
+    var parsed = JSON.parse(raw || "{}")
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : ({})
+  } catch (e) {
+    return ({})
+  }
+}
+
+function appendKeywords(aliases, keywords) {
+  try {
+    return keywords && typeof keywords.join === "function" ? aliases.concat(keywords) : aliases
+  } catch (e) {
+    return aliases
+  }
+}
+
+function foldedListHeight(totals, available, baseRowHeight, rowPeek, rowSpacing) {
+  var count = totals.length
+  if (count === 0) return baseRowHeight
+  if (totals[count - 1] <= available) return totals[count - 1]
+  var full = 0
+  while (full < count && totals[full] <= available) full++
+  while (full > 1 && totals[full - 1] + rowSpacing + rowPeek > available) full--
+  if (full < 1) return Math.max(available, baseRowHeight)
+  return totals[full - 1] + rowSpacing + rowPeek
+}
+
+function screenName(screen) {
+  return screen ? screen.name : null
+}
+
+function appLibraryForShell(shell) {
+  return shell ? shell.appLibrary : null
+}
+
+function rootCatalogLabel(catalog) {
+  var root = catalog ? catalog.root : null
+  return root ? root.label : undefined
+}

@@ -37,7 +37,7 @@ Item {
     id: fallbackBarWidgetRegistry
     property var widgets: ({})
     property int revision: 0
-    function metadataFor(id) { return null }
+    function metadataFor(id: var): var { return null }
   }
   // Mirrors the on-disk `bar-off` flag so the user can hide the bar without
   // killing the entire shell. Hidden panels stay mapped but park off-screen
@@ -51,7 +51,7 @@ Item {
     background: "opaque",
     layout: { left: [], centerBegin: [], center: [], centerEnd: [], right: [] }
   })
-  property var layoutConfig: fallbackBarConfig.layout
+  property var layoutConfig: ({ left: [], centerBegin: [], center: [], centerEnd: [], right: [], tray: [] })
   property bool requestedTransparent: false
   property bool useTransparentForeground: false
   property bool transparent: false
@@ -118,18 +118,14 @@ Item {
 
   // Reported by the open panel. Only a screen name and four numbers are kept,
   // whoever reports them; the section comes from the bar's own layout.
-  function notePopoutCard(card) {
-    popoutCard = card ? { screen: String(card.screen || ""), section: popoutSectionOf(activePopout),
-                          x: Number(card.x) || 0, y: Number(card.y) || 0,
-                          width: Number(card.width) || 0, height: Number(card.height) || 0 } : null
+  function notePopoutCard(card: var): void {
+    popoutCard = BarModel.copyPopoutCard(card, popoutSectionOf(activePopout))
   }
 
   // The last card, copied, for a panel taking over in the same section: one
   // switching across the bar opens fresh instead of flying the card over it.
-  function popoutCardFor(owner) {
-    var card = popoutCard
-    if (!card || !card.section || card.section !== popoutSectionOf(owner)) return null
-    return { screen: card.screen, x: card.x, y: card.y, width: card.width, height: card.height }
+  function popoutCardFor(owner: var): var {
+    return BarModel.popoutCardFor(popoutCard, popoutSectionOf(owner))
   }
   // A widget is being dragged that could go into the tray section, so the
   // tray's drawer opens to show where.
@@ -145,12 +141,12 @@ Item {
     }
     return false
   }
-  property var barDragSource: null
+  property ModuleSlot barDragSource: null
   // Where the dragged widget would land: { slot, after } beside a widget, or
   // { region, after } at an end of a section (see BarModel.centerDropTarget
   // and BarModel.traySectionDropTarget).
   property var barDragTarget: null
-  readonly property string barDragRegion: barDragTarget ? (barDragTarget.slot ? barDragTarget.slot.region : barDragTarget.region) : ""
+  readonly property string barDragRegion: BarModel.dropRegion(barDragTarget)
   // Where room is open for the dragged widget (BarModel.dropRoom), and that
   // room's length along the bar.
   property var barDragRoom: null
@@ -167,14 +163,14 @@ Item {
   // `barDragHome`, where it keeps its room in its slot.
   property var barDragShares: ({})
   readonly property var barDragLengths: BarModel.roomLengths(barDragExtent, barDragShares)
-  readonly property string barDragPlaces: Object.keys(barDragShares).filter(function(place) { return barDragShares[place] > 0 }).sort().join(",")
+  readonly property string barDragPlaces: Object.keys(barDragShares).filter(function(place: var): var { return barDragShares[place] > 0 }).sort().join(",")
   property string barDragHome: ""
   // The keys each section showed as the drag started (layoutWidgets). They
   // hold while no widget moves about.
   property string barDragKeys: ""
   // The spacers a drag has put in the sections, where a released widget can
   // land (DragSpacer).
-  property var dragSpacers: []
+  property list<DragSpacer> dragSpacers: []
   // A released widget's ghost gliding from the pointer to where it lands
   // (settleBarDrag), and how far along it is.
   property var barSettle: null
@@ -207,12 +203,12 @@ Item {
   property string barMoveCandidate: ""
   property var barMoveWindow: null
   property var barMoveScreen: null
-  property var clickTargets: []
+  property list<var> clickTargets: []
   // Every widget's place on every bar surface (ModuleSlot), and every widget
   // itself (WidgetHost), which its slot borrows from its surface's pool.
-  property var moduleSlots: []
-  property var widgetHosts: []
-  property var centerBoxes: []
+  property list<ModuleSlot> moduleSlots: []
+  property list<WidgetHost> widgetHosts: []
+  property list<CenterBox> centerBoxes: []
   property var pluginBarApis: ({})
   // target -> { target, pluginId, clickTarget, popout }. Keyed by object so a
   // registration edits one entry in place instead of copying and rescanning an
@@ -225,7 +221,7 @@ Item {
     PluginBarApi { }
   }
 
-  function publicLayoutConfig() {
+  function publicLayoutConfig(): var {
     return JSON.parse(JSON.stringify(root.layoutConfig || {}))
   }
 
@@ -245,13 +241,13 @@ Item {
     api._centerHoverRevealSuppressed = Qt.binding(function(): bool { return root.centerHoverRevealSuppressed })
     api.traySectionDragActive = Qt.binding(function(): bool { return root.traySectionDragActive })
     api.traySectionPopoutOpen = Qt.binding(function(): bool { return root.traySectionPopoutOpen })
-    root.syncPluginBarApiObjects(api)
+    root.syncPluginBarApiObjects(api, undefined)
   }
 
   // Each api keeps its own detached copy of the layout. A flush serialises
   // the layout once and passes the string in so it is not re-serialised for
   // every plugin.
-  function syncPluginBarApiObjects(api, layoutSnapshot) {
+  function syncPluginBarApiObjects(api: var, layoutSnapshot: var): void {
     if (!api) return
     api.activePopout = root.pluginOwnsBarObject(api.pluginId, root.activePopout)
       ? root.activePopout : (root.activePopout ? api.foreignPopoutMarker : null)
@@ -260,7 +256,7 @@ Item {
       ? JSON.parse(layoutSnapshot) : root.publicLayoutConfig()
   }
 
-  function pluginObjectRecord(target) {
+  function pluginObjectRecord(target: var): var {
     return target ? (pluginObjectOwners.get(target) || null) : null
   }
 
@@ -290,7 +286,7 @@ Item {
     return !!record && record.pluginId === String(pluginId || "")
   }
 
-  function pluginClickTargets(pluginId) {
+  function pluginClickTargets(pluginId: var): var {
     var out = []
     for (let i = 0; i < root.clickTargets.length; i++) {
       let target = root.clickTargets[i]
@@ -305,13 +301,13 @@ Item {
   // into one resync per event-loop turn (as onWidgetHostsChanged already does
   // for prunePluginBarApis). bindPluginBarApi still syncs a brand-new api
   // directly so a widget never sees an empty api on its first read.
-  function schedulePluginBarApiSync() {
+  function schedulePluginBarApiSync(): var {
     if (pluginBarApiSyncQueued) return
     pluginBarApiSyncQueued = true
     Qt.callLater(root.syncAllPluginBarApiObjects)
   }
 
-  function syncAllPluginBarApiObjects() {
+  function syncAllPluginBarApiObjects(): var {
     pluginBarApiSyncQueued = false
     var layoutSnapshot = JSON.stringify(root.layoutConfig || {})
     for (let id in pluginBarApis) {
@@ -337,17 +333,17 @@ Item {
   function requestPluginPopout(pluginId: var, owner: var): void {
     if (!root.markPluginObject(pluginId, owner, "popout")) return
     root.requestPopout(owner)
-    root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")])
+    root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")], undefined)
   }
 
   function releasePluginPopout(pluginId: var, owner: var): void {
     if (!root.pluginOwnsBarObject(pluginId, owner)) return
     root.releasePopout(owner)
     root.unmarkPluginObject(pluginId, owner, "popout")
-    root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")])
+    root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")], undefined)
   }
 
-  function pluginBarApiFor(pluginId, moduleName, registered) {
+  function pluginBarApiFor(pluginId: var, moduleName: var, registered: var): var {
     var key = String(pluginId || "")
     if (!key) return null
 
@@ -372,22 +368,22 @@ Item {
       pluginId: key,
       moduleName: String(moduleName || ""),
       shell: pluginShell,
-      _showTooltip: function(target, text) { root.showTooltip(target, text) },
-      _hideTooltip: function(target) { root.hideTooltip(target) },
-      _registerClickTarget: function(target) { root.registerPluginClickTarget(key, target) },
-      _unregisterClickTarget: function(target) { root.unregisterPluginClickTarget(key, target) },
-      _requestPopout: function(owner) { root.requestPluginPopout(key, owner) },
-      _releasePopout: function(owner) { root.releasePluginPopout(key, owner) },
-      _switchPanelFrom: function(owner, direction) { return root.switchPanelFrom(owner, direction) },
-      _notePopoutCard: function(card) { root.notePopoutCard(card) },
-      _popoutCardFor: function(owner) { return root.popoutCardFor(owner) },
-      _targetBelongsToWindow: function(target, window) { return root.targetBelongsToWindow(target, window) },
-      _moduleWidgets: function(requestedId) {
+      _showTooltip: function(target: var, text: var): var { root.showTooltip(target, text) },
+      _hideTooltip: function(target: var): var { root.hideTooltip(target) },
+      _registerClickTarget: function(target: var): var { root.registerPluginClickTarget(key, target) },
+      _unregisterClickTarget: function(target: var): var { root.unregisterPluginClickTarget(key, target) },
+      _requestPopout: function(owner: var): var { root.requestPluginPopout(key, owner) },
+      _releasePopout: function(owner: var): var { root.releasePluginPopout(key, owner) },
+      _switchPanelFrom: function(owner: var, direction: var): var { return root.switchPanelFrom(owner, direction) },
+      _notePopoutCard: function(card: var): var { root.notePopoutCard(card) },
+      _popoutCardFor: function(owner: var): var { return root.popoutCardFor(owner) },
+      _targetBelongsToWindow: function(target: var, window: var): var { return root.targetBelongsToWindow(target, window) },
+      _moduleWidgets: function(requestedId: var): var {
         return String(requestedId || "") === String(moduleName || "")
           ? root.moduleWidgets(moduleName) : []
       },
-      _run: function(command) { root.run(command) },
-      _setCenterHoverRevealSuppressed: function(value) {
+      _run: function(command: var): var { root.run(command) },
+      _setCenterHoverRevealSuppressed: function(value: var): var {
         root.centerHoverRevealSuppressed = !!value
       }
     })
@@ -420,7 +416,7 @@ Item {
     }
   }
 
-  function prunePluginBarApis() {
+  function prunePluginBarApis(): var {
     var next = ({})
     for (let id in pluginBarApis) {
       let api = pluginBarApis[id]
@@ -462,19 +458,17 @@ Item {
   }
 
   function unregisterClickTarget(target: var): void {
-    var next = clickTargets.filter(function(item) { return item !== target })
+    var next = clickTargets.filter(function(item: var): var { return item !== target })
     clickTargets = next
   }
 
   function registerModuleSlot(slot: var): void {
     if (!slot || moduleSlots.indexOf(slot) !== -1) return
-    var next = moduleSlots.slice()
-    next.push(slot)
-    moduleSlots = next
+    moduleSlots = moduleSlots.concat([slot])
   }
 
   function unregisterModuleSlot(slot: var): void {
-    var next = moduleSlots.filter(function(item) { return item !== slot })
+    var next = moduleSlots.filter(function(item: var): var { return item !== slot })
     moduleSlots = next
   }
 
@@ -484,7 +478,7 @@ Item {
   }
 
   function unregisterWidgetHost(host: var): void {
-    widgetHosts = widgetHosts.filter(function(item) { return item !== host })
+    widgetHosts = widgetHosts.filter(function(item: var): var { return item !== host })
   }
 
   function registerCenterBox(box: var): void {
@@ -493,12 +487,12 @@ Item {
   }
 
   function unregisterCenterBox(box: var): void {
-    centerBoxes = centerBoxes.filter(function(item) { return item !== box })
+    centerBoxes = centerBoxes.filter(function(item: var): var { return item !== box })
   }
 
   // The center box drawn on a bar surface. Each surface declares one in the
   // middle of the bar and one beside the right section, and draws one of them.
-  function centerBoxFor(window) {
+  function centerBoxFor(window: var): var {
     for (let i = 0; i < centerBoxes.length; i++) {
       let box = centerBoxes[i]
       if (box && box.active && root.sameWindow(box.window, window)) return box
@@ -511,26 +505,19 @@ Item {
   // that lands in the box keeps landing there until the pointer leaves that
   // room, and it reaches the bar's thickness at least, so an empty box,
   // which takes no room, can still be hit.
-  function centerBoxDropRect(box) {
+  function centerBoxDropRect(box: CenterBox): var {
     if (!box) return null
-    try {
-      let point = box.mapToItem(null, 0, 0)
-      return BarModel.centerDropZone({ x: point.x, y: point.y, width: box.width, height: box.height }, box.crossSize, root.vertical)
-    } catch (e) {
-      return null
-    }
+    let point = BarModel.mapToItemSafely(box, 0, 0)
+    return point ? BarModel.centerDropZone({ x: point.x, y: point.y, width: box.width, height: box.height }, box.crossSize, root.vertical) : null
   }
 
-  function debugBarGeometry() {
+  function debugBarGeometry(): var {
     var out = []
     for (let i = 0; i < moduleSlots.length; i++) {
       let slot = moduleSlots[i]
       if (!slot || !slot.activeItem) continue
       let point = { x: slot.x, y: slot.y }
-      try {
-        point = slot.mapToItem(null, 0, 0)
-      } catch (e) {
-      }
+      point = BarModel.mapToItemSafely(slot, 0, 0) || point
       out.push({
         id: slot.moduleName,
         section: slot.region,
@@ -547,7 +534,7 @@ Item {
     return out
   }
 
-  function targetWindow(target) {
+  function targetWindow(target: var): var {
     return target && target.QsWindow ? target.QsWindow.window : null
   }
 
@@ -555,7 +542,7 @@ Item {
     return !!target && !!window && targetWindow(target) === window
   }
 
-  function slotWindow(slot) {
+  function slotWindow(slot: var): var {
     if (!slot) return null
     return targetWindow(slot.activeItem) || targetWindow(slot)
   }
@@ -576,7 +563,7 @@ Item {
     return !!target && target.visible !== false && target.opacity !== 0 && target.tooltipHovered === true
   }
 
-  function clearTooltip() {
+  function clearTooltip(): var {
     tooltipTimer.stop()
     if (tooltipShown) tooltipWarmTimer.restart()
     pendingTooltipTarget = null
@@ -586,7 +573,7 @@ Item {
     tooltipShown = false
   }
 
-  function clearBarDrag() {
+  function clearBarDrag(): var {
     barDragSource = null
     barDragWindow = null
     barDragScreen = null
@@ -612,7 +599,7 @@ Item {
     barDragOffsetY = 0
   }
 
-  function windowScreenPoint(scenePoint, window) {
+  function windowScreenPoint(scenePoint: var, window: var): var {
     var x = scenePoint ? scenePoint.x : 0
     var y = scenePoint ? scenePoint.y : 0
     if (!window || !window.screen) return { x: x, y: y }
@@ -625,14 +612,14 @@ Item {
     return { x: x, y: y }
   }
 
-  function barDragScreenPoint(scenePoint) {
+  function barDragScreenPoint(scenePoint: var): var {
     return windowScreenPoint(scenePoint, barDragWindow)
   }
 
   // Split the screen along its diagonals (in normalized space, so widescreens
   // don't bias toward left/right): whichever triangle holds the cursor names
   // the candidate edge.
-  function nearestScreenEdge(point, screen) {
+  function nearestScreenEdge(point: var, screen: var): var {
     var nx = screen.width > 0 ? Util.clamp(point.x / screen.width, 0, 1) : 0.5
     var ny = screen.height > 0 ? Util.clamp(point.y / screen.height, 0, 1) : 0.5
 
@@ -644,26 +631,26 @@ Item {
     return edge
   }
 
-  function beginBarMove(window) {
+  function beginBarMove(window: var): var {
     barMoveWindow = window
     barMoveScreen = window ? window.screen : null
     barMoveCandidate = position
     barMoveActive = true
   }
 
-  function updateBarMove(screenPoint) {
+  function updateBarMove(screenPoint: var): var {
     if (!barMoveActive || !barMoveScreen) return
     barMoveCandidate = nearestScreenEdge(screenPoint, barMoveScreen)
   }
 
-  function clearBarMove() {
+  function clearBarMove(): var {
     barMoveActive = false
     barMoveCandidate = ""
     barMoveWindow = null
     barMoveScreen = null
   }
 
-  function finishBarMove() {
+  function finishBarMove(): var {
     var edge = barMoveCandidate
     if (!barMoveActive || !edge || edge === position) {
       clearBarMove()
@@ -674,10 +661,10 @@ Item {
     setBarPosition(edge)
   }
 
-  function setBarPosition(value) {
+  function setBarPosition(value: var): var {
     var next = normalizePosition(value)
     if (root.shell && typeof root.shell.mutateShellConfig === "function") {
-      root.shell.mutateShellConfig(function(config) {
+      root.shell.mutateShellConfig(function(config: var): var {
         if (!Util.isPlainObject(config.bar)) config.bar = {}
         config.bar.position = next
       })
@@ -688,13 +675,13 @@ Item {
 
   // A copy of the widget for its ghost and its room to show. A widget that
   // changes size mid-drag is copied again, keeping the last copy until then.
-  function captureBarDragGhost(slot) {
+  function captureBarDragGhost(slot: var): var {
     var item = slot && slot.activeItem ? slot.activeItem : null
     if (!item || typeof item.grabToImage !== "function") return
 
     var grabWidth = Math.max(1, Math.ceil(slot.widgetWidth))
     var grabHeight = Math.max(1, Math.ceil(slot.widgetHeight))
-    item.grabToImage(function(result) {
+    item.grabToImage(function(result: var): var {
       if (root.barDragSource !== slot || !result || !result.url) return
       root.barDragImageUrl = result.url
     }, Qt.size(grabWidth, grabHeight))
@@ -749,7 +736,7 @@ Item {
 
   // The physical mode Hyprland reports for a screen, as hyprctl monitors does.
   // Qt's whole-number devicePixelRatio can't rebuild it at a fractional scale.
-  function panelModeFor(screen) {
+  function panelModeFor(screen: var): var {
     var monitor = screen ? Hyprland.monitorFor(screen) : null
     return monitor ? ({
       width: monitor.width,
@@ -762,7 +749,7 @@ Item {
   // cutout leaves a sliver of every window peeking out beside the camera, so
   // the cutout is this panel's minimum sensible top-bar height. An
   // intentionally taller bar still wins.
-  function thicknessFor(screen) {
+  function thicknessFor(screen: var): var {
     if (root.vertical || !screen) return root.barSize
     return Math.max(root.barSize, BarModel.notchFloor(root.displayCutouts, root.position, screen.name, screen.width, screen.height, screen.devicePixelRatio, root.panelModeFor(screen), Style.bar.notchHeight))
   }
@@ -787,11 +774,11 @@ Item {
 
   // The shared layout normalization, so the bar host and scriptable config
   // helpers can't drift on entry shape.
-  function normalizeLayout(layout) {
+  function normalizeLayout(layout: var): var {
     return Util.normalizeLayout(Util.isPlainObject(layout) ? layout : fallbackBarConfig.layout)
   }
 
-  function applyBarConfig() {
+  function applyBarConfig(): var {
     var config = Util.isPlainObject(barConfig) ? barConfig : fallbackBarConfig
 
     position = normalizePosition(config.position)
@@ -824,7 +811,7 @@ Item {
 
   onBarConfigChanged: applyBarConfig()
 
-  function layoutEntries(region) {
+  function layoutEntries(region: var): var {
     var serial = barConfigSerial
     var entries = layoutConfig ? layoutConfig[region] : null
     return Array.isArray(entries) ? entries : []
@@ -834,7 +821,7 @@ Item {
   // sections taken as one. Scoped to a single bar surface so tabbing walks the
   // bar the open panel belongs to instead of hopping the panel to another
   // monitor's copy of the same widget.
-  function panelNavigationSlots(region, window) {
+  function panelNavigationSlots(region: var, window: var): var {
     var regions = BarModel.navigationRegions(region)
     var slots = []
     for (let r = 0; r < regions.length; r++) {
@@ -906,7 +893,7 @@ Item {
 
   // Every live instance of a widget id. A bar surface is built per monitor, so
   // a widget that appears once in the layout is still live once per screen.
-  function moduleWidgets(pluginId) {
+  function moduleWidgets(pluginId: var): var {
     var id = String(pluginId || "")
     var items = []
     if (!id) return items
@@ -918,7 +905,7 @@ Item {
     return items
   }
 
-  function slotScreenName(slot) {
+  function slotScreenName(slot: var): var {
     var window = slotWindow(slot)
     return window && window.screen ? String(window.screen.name || "") : ""
   }
@@ -936,7 +923,7 @@ Item {
   // (clock, workspaces, tray) return null. Used by shell.summon/toggle so
   // panel hotkeys route through the bar instead of a per-target IPC handler
   // that only reaches whichever per-monitor instance claimed the target.
-  function findPanelWidget(pluginId) {
+  function findPanelWidget(pluginId: var): var {
     var id = String(pluginId || "")
     if (!id) return null
     var candidates = []
@@ -973,15 +960,15 @@ Item {
     return !!item && item.opened === true
   }
 
-  function entrySettings(entry) {
+  function entrySettings(entry: var): var {
     return BarModel.entrySettings(entry)
   }
 
-  function entryId(entry) {
+  function entryId(entry: var): var {
     return BarModel.entryId(entry)
   }
 
-  function moduleString(entry, key, fallback) {
+  function moduleString(entry: var, key: var, fallback: var): var {
     return BarModel.moduleString(entry, key, fallback)
   }
 
@@ -997,11 +984,11 @@ Item {
     return BarModel.customModuleSafeName(name)
   }
 
-  function customModuleType(entry) {
+  function customModuleType(entry: var): var {
     return BarModel.customModuleType(entry)
   }
 
-  function customModuleSource(entry) {
+  function customModuleSource(entry: var): var {
     var source = BarModel.customModulePath(entry, home, nomarchyConfigDir)
     return source ? Util.fileUrl(source) : ""
   }
@@ -1044,11 +1031,11 @@ Item {
 
   // Steps the bar background from clear to glassy to opaque and around. Through
   // nomarchy-bar, which keeps Hyprland's blur behind a glassy bar in step.
-  function cycleBackground() {
+  function cycleBackground(): var {
     Util.execDetached("nomarchy-bar background cycle")
   }
 
-  function moduleDropAtScene(scenePoint, sourceSlot) {
+  function moduleDropAtScene(scenePoint: var, sourceSlot: var): var {
     var sourceWindow = root.slotWindow(sourceSlot) || root.barDragWindow
     // A drop lands only over the bar strip. The window spans its whole
     // screen, so its own bounds are not the bar's.
@@ -1070,10 +1057,7 @@ Item {
       if (intoTraySection && slot.hostsTraySection) traySlot = slot
 
       let slotPoint = { x: slot.x, y: slot.y }
-      try {
-        slotPoint = slot.mapToItem(null, 0, 0)
-      } catch (e) {
-      }
+      slotPoint = BarModel.mapToItemSafely(slot, 0, 0) || slotPoint
 
       candidates.push({
         slot: slot,
@@ -1090,7 +1074,7 @@ Item {
     // of reach.
     var drawer = BarModel.traySectionDropTarget(candidates, root.traySectionDropRect(traySlot, sourceWindow), scenePoint, root.vertical, sourceSlot)
     if (drawer) return drawer
-    var onBar = candidates.filter(function(row) { return row.region !== "tray" })
+    var onBar = candidates.filter(function(row: var): var { return row.region !== "tray" })
     var box = sourceWindow ? root.centerBoxFor(sourceWindow) : null
     return BarModel.centerDropTarget(onBar, root.centerBoxDropRect(box), scenePoint, root.vertical, sourceSlot)
   }
@@ -1099,26 +1083,16 @@ Item {
   // scene coordinates: the section, any room a drag has opened there
   // included, reaching past it by half the bar's thickness either way, short
   // of the tray's own ends (BarModel.sectionDropZone).
-  function traySectionDropRect(slot, window) {
+  function traySectionDropRect(slot: ModuleSlot, window: PanelWindow): var {
     var shown = slot ? slot.traySectionNow() : null
     if (!shown || !window || !window.contentItem) return null
-    try {
-      let area = slot.widgetRoom
-      let origin = area.mapToItem(null, shown.x, shown.y)
-      let section = { x: origin.x, y: origin.y, width: shown.width, height: shown.height }
-      let corner = area.mapToItem(null, 0, 0)
-      let tray = { x: corner.x, y: corner.y, width: area.width, height: area.height }
-      let reach = thicknessFor(window.screen)
-      return BarModel.sectionDropZone(section, reach, vertical, tray)
-    } catch (e) {
-      return null
-    }
+    return BarModel.traySectionDropRect(slot.widgetRoom, shown, thicknessFor(window.screen), vertical)
   }
 
   // Lifts a widget off the bar by the point it was pressed at. Its room is the
   // length the section's layout gives it, which is whole pixels. Its panel
   // closes: placed when it opened, it wouldn't follow the widget anywhere.
-  function beginBarDrag(sourceSlot, pressX, pressY) {
+  function beginBarDrag(sourceSlot: var, pressX: var, pressY: var): var {
     // A widget still poofing away is written out first, so the drag starts
     // from the layout as it will be.
     commitBarRemoval()
@@ -1138,7 +1112,7 @@ Item {
   // indicator peek does, takes its room and its ghost with it. The ghost's
   // copy of it is taken again once the size settles, rather than on every
   // frame of a widget animating its size.
-  function resizeBarDrag() {
+  function resizeBarDrag(): var {
     var slot = barDragSource
     if (!slot) return
     var extent = Math.ceil(vertical ? slot.widgetHeight : slot.widgetWidth)
@@ -1155,13 +1129,13 @@ Item {
 
   Connections {
     target: root.barDragSource
-    function onWidgetWidthChanged() { root.resizeBarDrag() }
-    function onWidgetHeightChanged() { root.resizeBarDrag() }
+    function onWidgetWidthChanged(): var { root.resizeBarDrag() }
+    function onWidgetHeightChanged(): var { root.resizeBarDrag() }
   }
 
   // The room opens where the dragged widget is, which keeps all of it until
   // the room moves away.
-  function startDragRoom(sourceSlot) {
+  function startDragRoom(sourceSlot: var): var {
     barDragKeys = JSON.stringify(layoutWidgets.sections)
     barDragRoom = BarModel.dropRoom(null, { key: sourceSlot.widgetKey, region: sourceSlot.region }, layoutWidgets.sections, drawnKeys(barDragWindow))
     barDragHome = dragShareKey(barDragRoom)
@@ -1172,7 +1146,7 @@ Item {
 
   // Moves the room for the dragged widget to where a drop would land. The
   // place it leaves hands its room over to the new one (fadeDragRoom).
-  function moveDragRoom(drop) {
+  function moveDragRoom(drop: var): var {
     var source = barDragSource
     if (!source) return
     var next = BarModel.dropRoom(drop, { key: source.widgetKey, region: source.region }, layoutWidgets.sections, drawnKeys(barDragWindow))
@@ -1186,7 +1160,7 @@ Item {
   }
 
   // The keys of the widgets a bar surface draws, as they are now.
-  function drawnKeys(window) {
+  function drawnKeys(window: var): var {
     var drawn = {}
     for (let i = 0; i < moduleSlots.length; i++) {
       let slot = moduleSlots[i]
@@ -1195,14 +1169,14 @@ Item {
     return drawn
   }
 
-  function dragShareKey(room) {
+  function dragShareKey(room: var): var {
     return room ? room.region + ":" + room.index : ""
   }
 
   // A frame of the room moving, at an even pace: a place hands over the
   // whole room in 120ms.
   // Armed for removal, there is no target: every place gives its room up.
-  function fadeDragRoom(seconds) {
+  function fadeDragRoom(seconds: var): var {
     var duration = Style.duration(120)
     var step = duration > 0 ? seconds * 1000 / duration : 1
     var target = barDragRemoveArmed ? "" : dragShareKey(barDragRoom)
@@ -1218,7 +1192,7 @@ Item {
   // Where a section's list on a bar surface opens room for the dragged
   // widget, while it is dragged on that surface: each place holding some of
   // the room but the dragged widget's own, which keeps its room in its slot.
-  function sectionSpacers(region, window) {
+  function sectionSpacers(region: var, window: var): var {
     if (!barDragSource || !barDragPlaces || !window || !sameWindow(barDragWindow, window)) return []
     var places = []
     var held = barDragPlaces.split(",")
@@ -1229,17 +1203,17 @@ Item {
     return places
   }
 
-  function registerDragSpacer(spacer) {
+  function registerDragSpacer(spacer: var): var {
     dragSpacers = dragSpacers.concat([spacer])
   }
 
-  function unregisterDragSpacer(spacer) {
-    dragSpacers = dragSpacers.filter(function(item) { return item !== spacer })
+  function unregisterDragSpacer(spacer: var): var {
+    dragSpacers = dragSpacers.filter(function(item: var): var { return item !== spacer })
   }
 
   // Where a released widget lands: the room its drop opened, or its own room
   // when it goes back where it was.
-  function dropLandingItem(sourceSlot, room) {
+  function dropLandingItem(sourceSlot: var, room: var): var {
     if (!sourceSlot) return null
     if (!room || room.home) return sourceSlot.widgetRoom
     var sourceWindow = slotWindow(sourceSlot) || barDragWindow
@@ -1253,7 +1227,7 @@ Item {
   // Where letting go of the dragged widget now would move its entry
   // (BarModel.moveEntry): to before the widget the room is before, or the end
   // of the section. Null when it would go back where it was.
-  function dragMove() {
+  function dragMove(): var {
     var room = barDragRoom
     var source = barDragSource
     if (!room || room.home || !source) return null
@@ -1270,7 +1244,7 @@ Item {
   // Lets go of a dragged widget: its ghost glides from the pointer into where
   // it lands, and the move is written once it gets there, so the widget takes
   // its place from where it was let go rather than sliding in from the side.
-  function settleBarDrag(sourceSlot) {
+  function settleBarDrag(sourceSlot: var): var {
     var move = dragMove()
     if (Style.duration(180) === 0) {
       landBarDrag(move)
@@ -1289,12 +1263,9 @@ Item {
     if (!settle) return
     var landing = dropLandingItem(settle.source, settle.room)
     if (!landing) return
-    var center = null
-    try {
-      center = barDragScreenPoint(landing.mapToItem(null, landing.width / 2, landing.height / 2))
-    } catch (e) {
-      return
-    }
+    var point = BarModel.mapToItemSafely(landing, landing.width / 2, landing.height / 2)
+    if (!point) return
+    var center = barDragScreenPoint(point)
     var toX = center.x - barDragGhostWidth / 2 + barDragOffsetX
     var toY = center.y - barDragGhostHeight / 2 + barDragOffsetY
     barDragScreenX = settle.fromX + (toX - settle.fromX) * barSettleProgress
@@ -1314,7 +1285,7 @@ Item {
 
   // Lands a settling widget now: when its ghost arrives, or when a new press
   // can't wait for it.
-  function finishBarSettle() {
+  function finishBarSettle(): var {
     var settle = barSettle
     if (!settle) return
     barSettle = null
@@ -1327,7 +1298,7 @@ Item {
   // go for yet (onLayoutWidgetsChanged) would put it in the wrong place. Every
   // widget keeps its own instance through the move, the dragged one too,
   // whatever else shares its id (BarModel.layoutWidgets).
-  function landBarDrag(move) {
+  function landBarDrag(move: var): var {
     clearBarDrag()
     if (!move || JSON.stringify(layoutWidgets.sections) !== move.keys) return
     var expected = JSON.parse(move.keys)
@@ -1335,28 +1306,23 @@ Item {
     var before = move.to.index >= 0 ? into[move.to.index] : null
     expected[move.from.region].splice(move.from.index, 1)
     into.splice(before ? into.indexOf(before) : into.length, 0, move.key)
-    writeLayout(expected, function(config) {
-      BarModel.moveEntry(config, move, function(entry) { return Util.normalizeLayoutEntry(entry) })
+    writeLayout(expected, function(config: var): var {
+      BarModel.moveEntry(config, move, function(entry: var): var { return Util.normalizeLayoutEntry(entry) })
     })
   }
 
   // Writes a layout edit to shell.json. Widgets keep their instances through
   // the write as long as the sections come out as `expected`.
-  function writeLayout(expected, edit) {
+  function writeLayout(expected: var, edit: var): var {
     if (!root.shell || typeof root.shell.mutateShellConfig !== "function") return
-    widgetMemo.expected = expected
-    try {
-      root.shell.mutateShellConfig(edit)
-    } finally {
-      widgetMemo.expected = null
-    }
+    BarModel.mutateShellConfig(root.shell, widgetMemo, expected, edit)
   }
 
   // How far past the bar the drag point sits, in screen coordinates: past
   // the strip its screen's bar surface draws, thickness deep along its edge.
   // The strip, not the window, is the boundary: the window spans the whole
   // screen (BarPanel).
-  function moduleRemoveDistance(screenPoint) {
+  function moduleRemoveDistance(screenPoint: var): var {
     var screen = barDragScreen
     if (!screen) return 0
     var thickness = thicknessFor(screen)
@@ -1382,7 +1348,7 @@ Item {
   // Lets go of a widget pulled off the bar. It vanishes in a poof where it
   // was let go, its slot closing at once (ModuleSlot.removalPending), and
   // its entry leaves the layout once the poof has played.
-  function removeBarDrag(sourceSlot) {
+  function removeBarDrag(sourceSlot: var): var {
     barRemoval = { key: sourceSlot.widgetKey, region: sourceSlot.region, id: entryId(sourceSlot.entry) }
     // Up before the drag clears, so the ghost's surface never unmaps
     // between the ghost and the poof.
@@ -1393,7 +1359,7 @@ Item {
 
   // Writes a removed widget out of the layout. Every other widget keeps its
   // instance through the write (BarModel.layoutWidgets), as with a move.
-  function commitBarRemoval() {
+  function commitBarRemoval(): var {
     var removal = barRemoval
     barRemoval = null
     if (!removal) return
@@ -1402,14 +1368,14 @@ Item {
     var index = list.indexOf(removal.key)
     if (index < 0) return
     list.splice(index, 1)
-    writeLayout(expected, function(config) {
-      BarModel.removeEntry(config, { region: removal.region, index: index, id: removal.id }, function(entry) { return Util.normalizeLayoutEntry(entry) })
+    writeLayout(expected, function(config: var): var {
+      BarModel.removeEntry(config, { region: removal.region, index: index, id: removal.id }, function(entry: var): var { return Util.normalizeLayoutEntry(entry) })
     })
   }
 
   // Bursts out of the ghost where it was let go, so it runs before
   // clearBarDrag wipes the drag. With motion reduced there is nothing to play.
-  function playPoof() {
+  function playPoof(): var {
     if (Style.duration(620) === 0) return
     barPoof = {
       screen: barDragScreen,
@@ -1440,7 +1406,7 @@ Item {
     return !!barRemoval && barRemoval.key === key
   }
 
-  function moduleTargetClickable(target) {
+  function moduleTargetClickable(target: var): var {
     return target
       && target.visible !== false
       && target.opacity !== 0
@@ -1450,7 +1416,7 @@ Item {
       && typeof target.triggerPress === "function"
   }
 
-  function moduleClickTargetAt(slot, localX, localY) {
+  function moduleClickTargetAt(slot: var, localX: var, localY: var): var {
     for (let i = clickTargets.length - 1; i >= 0; i--) {
       let target = clickTargets[i]
       if (!moduleTargetClickable(target)) continue
@@ -1464,7 +1430,7 @@ Item {
     return null
   }
 
-  function pressModuleClickTarget(slot, button, localX, localY) {
+  function pressModuleClickTarget(slot: var, button: var, localX: var, localY: var): var {
     var target = moduleClickTargetAt(slot, localX, localY)
     if (!target) return false
 
@@ -1472,10 +1438,10 @@ Item {
     return true
   }
 
-  function colorHex(colorValue) {
+  function colorHex(colorValue: var): var {
     var c = colorValue
     if (typeof c === "string") c = Qt.color(c)
-    function hexChannel(value) {
+    function hexChannel(value: var): var {
       var s = Math.round(Util.clamp(value, 0, 1) * 255).toString(16)
       return s.length < 2 ? "0" + s : s
     }
@@ -1496,13 +1462,13 @@ Item {
     scheduleTransparentForegroundRefresh()
   }
 
-  function restoreForegroundAnimation() {
-    Qt.callLater(function() {
-      Qt.callLater(function() { root.foregroundAnimationEnabled = true })
+  function restoreForegroundAnimation(): var {
+    Qt.callLater(function(): var {
+      Qt.callLater(function(): var { root.foregroundAnimationEnabled = true })
     })
   }
 
-  function scheduleTransparentForegroundRefresh() {
+  function scheduleTransparentForegroundRefresh(): var {
     if (!requestedTransparent) {
       transparentForeground = themeForeground
       return
@@ -1510,7 +1476,7 @@ Item {
     transparentForegroundTimer.restart()
   }
 
-  function refreshTransparentForeground() {
+  function refreshTransparentForeground(): var {
     if (!requestedTransparent || transparentForegroundProc.running) return
 
     transparentForegroundProc.command = [
@@ -1538,7 +1504,7 @@ Item {
   Process {
     id: transparentForegroundProc
     stdout: SplitParser {
-      onRead: function(line) {
+      onRead: function(line: string): var {
         var value = String(line || "").trim()
         if (!/^#[0-9A-Fa-f]{6}$/.test(value)) return
 
@@ -1562,12 +1528,12 @@ Item {
     onFileChanged: root.scheduleTransparentForegroundRefresh()
   }
 
-  function runProcess(process) {
+  function runProcess(process: var): var {
     if (!process.running)
       process.running = true
   }
 
-  function showTooltip(target, text) {
+  function showTooltip(target: var, text: var): var {
     // The delay only guards the first tooltip against a passing pointer. Once
     // one is up, or was a moment ago, the next icon's shows at once, so
     // sliding along the bar reads each label without waiting on every one.
@@ -1584,7 +1550,7 @@ Item {
     pendingTooltipTarget = target
     pendingTooltipText = text
 
-    Qt.callLater(function() {
+    Qt.callLater(function(): var {
       if (request !== tooltipRequest) return
       if (!targetTooltipHovered(pendingTooltipTarget)) {
         clearTooltip()
@@ -1599,7 +1565,7 @@ Item {
     })
   }
 
-  function hideTooltip(target) {
+  function hideTooltip(target: var): var {
     if (tooltipTarget !== target && pendingTooltipTarget !== target) return
 
     tooltipRequest += 1
@@ -1637,7 +1603,7 @@ Item {
     id: barHiddenProbe
     running: true
     command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "[[ -f $HOME/.local/state/nomarchy/toggles/bar-off ]] && echo yes || echo no"]
-    stdout: SplitParser { onRead: function(line) { root.barHidden = String(line).trim() === "yes" } }
+    stdout: SplitParser { onRead: function(line: string): var { root.barHidden = String(line).trim() === "yes" } }
   }
   FileView {
     path: root.home + "/.local/state/nomarchy/toggles"
@@ -1665,7 +1631,7 @@ Item {
   // BarPanel reads it to drop its input under a fullscreen window.
   Connections {
     target: Hyprland
-    function onRawEvent(event) {
+    function onRawEvent(event: var): var {
       if (event && String(event.name) === "fullscreen") Hyprland.refreshToplevels()
     }
   }
@@ -1869,7 +1835,7 @@ Item {
 
       // Only hiding resets it: at a whole-number scale the ratio dips to 1 after the first frame.
       onVisibleChanged: if (!visible) revealed = false
-      onScaleReadyChanged: if (scaleReady) Qt.callLater(function() {
+      onScaleReadyChanged: if (scaleReady) Qt.callLater(function(): var {
         if (tooltipWindow.scaleReady) tooltipWindow.revealed = true
       })
 
@@ -2059,16 +2025,16 @@ Item {
       readonly property real margin: puffSize * 1.4 + Style.spaceReal(16)
 
       // A steady pseudo-random 0 to 1 for part n of this poof.
-      function noise(n) {
+      function noise(n: var): var {
         var v = Math.sin(n * 12.9898 + poof.spec.seed * 78.233) * 43758.5453
         return v - Math.floor(v)
       }
       // How far along a part starting `from` and ending `to` is.
-      function phase(from, to) {
+      function phase(from: var, to: var): var {
         return Util.clamp((progress - from) / (to - from), 0, 1)
       }
-      function outCubic(t) { return 1 - Math.pow(1 - t, 3) }
-      function outBack(t) { return 1 + 2.4 * Math.pow(t - 1, 3) + 1.4 * Math.pow(t - 1, 2) }
+      function outCubic(t: var): var { return 1 - Math.pow(1 - t, 3) }
+      function outBack(t: var): var { return 1 + 2.4 * Math.pow(t - 1, 3) + 1.4 * Math.pow(t - 1, 2) }
 
       visible: ghostWindow.poofShown
       x: Math.round(poof.spec.x)
@@ -2076,7 +2042,7 @@ Item {
 
       Connections {
         target: root
-        function onBarPoofChanged() {
+        function onBarPoofChanged(): var {
           if (!root.barPoof || !root.sameScreen(root.barPoof.screen, ghostWindow.ghostScreen)) return
           poof.spec = root.barPoof
           poofAnimation.restart()
@@ -2294,13 +2260,13 @@ Item {
     onWindowChanged: syncPeekEdge()
     Component.onCompleted: syncPeekEdge()
 
-    function syncPeekEdge() {
+    function syncPeekEdge(): var {
       if (active && window) window.peekEdge = BarModel.nextPeekEdge(window.peekEdge, boxStart, root.centerSectionRevealHeld)
     }
 
     Connections {
       target: root
-      function onCenterSectionRevealHeldChanged() { sections.syncPeekEdge() }
+      function onCenterSectionRevealHeldChanged(): var { sections.syncPeekEdge() }
     }
 
     ModuleList {
@@ -2462,7 +2428,7 @@ Item {
     cursorShape: dragging ? Qt.ClosedHandCursor : Qt.ArrowCursor
     pressAndHoldInterval: 200
 
-    function startDrag(x, y) {
+    function startDrag(x: var, y: var): var {
       if (dragging) return
       dragging = true
       root.beginBarMove(root.targetWindow(gestureArea))
@@ -2470,21 +2436,21 @@ Item {
       root.updateBarMove(root.windowScreenPoint(scenePoint, root.barMoveWindow))
     }
 
-    onPressed: function(mouse) {
+    onPressed: function(mouse: QQuickMouseEvent): var {
       dragging = false
       suppressClick = false
       pressedX = mouse.x
       pressedY = mouse.y
     }
 
-    onPressAndHold: function(mouse) {
+    onPressAndHold: function(mouse: QQuickMouseEvent): var {
       // A widget above us propagates its composed press-and-hold down here without
       // ever handing over the grab, so we'd get no release or cancel to end the move.
       if (!gestureArea.pressed) return
       startDrag(mouse.x, mouse.y)
     }
 
-    onPositionChanged: function(mouse) {
+    onPositionChanged: function(mouse: QQuickMouseEvent): var {
       if (!(mouse.buttons & Qt.LeftButton)) return
 
       if (!dragging) {
@@ -2498,7 +2464,7 @@ Item {
       root.updateBarMove(root.windowScreenPoint(scenePoint, root.barMoveWindow))
     }
 
-    onReleased: function(mouse) {
+    onReleased: function(mouse: QQuickMouseEvent): var {
       if (!dragging) return
       dragging = false
       suppressClick = true
@@ -2512,14 +2478,14 @@ Item {
       root.clearBarMove()
     }
 
-    onClicked: function(mouse) {
+    onClicked: function(mouse: QQuickMouseEvent): var {
       if (suppressClick) {
         suppressClick = false
         mouse.accepted = true
       }
     }
 
-    onDoubleClicked: function(mouse) {
+    onDoubleClicked: function(mouse: QQuickMouseEvent): var {
       if (suppressClick) {
         suppressClick = false
         return
@@ -2633,7 +2599,7 @@ Item {
 
     // A slot for a key takes its widget, from the pool or from the slot that
     // had it, whichever of the two lists changes first.
-    function claim(slot) {
+    function claim(slot: var): var {
       var key = slot.widgetKey
       var last = slots[key]
       if (last && last !== slot) last.host = null
@@ -2643,7 +2609,7 @@ Item {
       if (host) host.owner = slot
     }
 
-    function release(slot) {
+    function release(slot: var): var {
       var key = slot.widgetKey
       if (slots[key] !== slot) return
       delete slots[key]
@@ -2651,14 +2617,14 @@ Item {
       if (hosts[key]) hosts[key].owner = null
     }
 
-    function addHost(host) {
+    function addHost(host: var): var {
       hosts[host.key] = host
       var slot = slots[host.key] || null
       host.owner = slot
       if (slot) slot.host = host
     }
 
-    function removeHost(host) {
+    function removeHost(host: var): var {
       if (hosts[host.key] !== host) return
       delete hosts[host.key]
       var slot = slots[host.key]
@@ -2751,7 +2717,7 @@ Item {
     }
     Connections {
       target: host.owner
-      function onFixedEdgeChanged() { host.fixedEdge = host.owner.fixedEdge }
+      function onFixedEdgeChanged(): var { host.fixedEdge = host.owner.fixedEdge }
     }
 
     Loader {
@@ -2797,7 +2763,7 @@ Item {
     onModuleSettingsChanged: injectProps()
     onFixedEdgeChanged: injectProps()
 
-    function injectProps() {
+    function injectProps(): var {
       var target = activeItem
       if (!target) return
       // Ahead of bar: a widget can start laying itself out the moment it has
@@ -2881,7 +2847,7 @@ Item {
     }
     // Where the section is now, for a drop: as traySectionGeometry, or for a
     // tray cloned before trays said how much of it shows, the whole section.
-    function traySectionNow() {
+    function traySectionNow(): var {
       if (!hostsTraySection) return null
       if ("sectionShown" in activeItem) return traySectionGeometry
       var area = activeItem.sectionHost
@@ -2890,7 +2856,7 @@ Item {
       return { x: point.x, y: point.y, width: area.width, height: area.height }
     }
 
-    function traySectionContains(x, y) {
+    function traySectionContains(x: var, y: var): var {
       var area = hostsTraySection ? activeItem.sectionHost : null
       if (!area || !area.visible || area.width <= 0 || area.height <= 0) return false
       var point = slot.mapToItem(area, x, y)
@@ -3054,7 +3020,7 @@ Item {
       // ModuleSlot, and moving slot.x/slot.y by hand fights it. The ghost
       // follows the pointer instead.
 
-      onPressed: function(mouse) {
+      onPressed: function(mouse: QQuickMouseEvent): var {
         // A press on a widget in the tray's drawer belongs to that widget's
         // own slot, underneath this one, so it drags that widget, not the tray.
         if (slot.traySectionContains(mouse.x, mouse.y)) {
@@ -3070,20 +3036,20 @@ Item {
         root.clearBarDrag()
       }
 
-      function hold(target, button) {
+      function hold(target: var, button: int): void {
         if (heldTarget && heldTarget !== target && "heldButtons" in heldTarget) heldTarget.heldButtons = Qt.NoButton
         heldTarget = target && "heldButtons" in target ? target : null
         if (heldTarget) heldTarget.heldButtons = button
       }
 
-      onPositionChanged: function(mouse) {
+      onPositionChanged: function(mouse: QQuickMouseEvent): var {
         if (!canReorder || !(mouse.buttons & Qt.LeftButton)) return
 
         var distance = Math.abs(mouse.x - pressedX) + Math.abs(mouse.y - pressedY)
         if (distance >= dragThreshold) {
           if (!dragging) root.beginBarDrag(slot, pressedX, pressedY)
           dragging = true
-          hold(null)
+          hold(null, Qt.NoButton)
           root.hideTooltip(slot.activeItem)
         }
 
@@ -3104,9 +3070,9 @@ Item {
         }
       }
 
-      onReleased: function(mouse) {
+      onReleased: function(mouse: QQuickMouseEvent): var {
         var wasDragging = dragging
-        hold(null)
+        hold(null, Qt.NoButton)
 
         dragging = false
 
@@ -3124,11 +3090,11 @@ Item {
       onCanceled: {
         dragging = false
         suppressClick = false
-        hold(null)
+        hold(null, Qt.NoButton)
         root.clearBarDrag()
       }
 
-      onClicked: function(mouse) {
+      onClicked: function(mouse: QQuickMouseEvent): var {
         if (suppressClick) {
           suppressClick = false
           mouse.accepted = true
@@ -3151,12 +3117,12 @@ Item {
     property string outputTooltip: ""
     property bool outputActive: false
 
-    function setting(name, fallback) {
+    function setting(name: var, fallback: var): var {
       var value = settings ? settings[name] : undefined
       return value === undefined || value === null ? fallback : value
     }
 
-    function update(raw) {
+    function update(raw: var): var {
       var data = Util.parseModuleJson(raw)
       var klass = data.class || data.alt || ""
 
@@ -3174,7 +3140,7 @@ Item {
     verticalPadding: Number(setting("verticalPadding", 6))
     fontSize: Number(setting("fontSize", 12))
 
-    onPressed: function(button) {
+    onPressed: function(button: int): var {
       var command = ""
       if (button === Qt.RightButton)
         command = String(setting("onRightClick", ""))

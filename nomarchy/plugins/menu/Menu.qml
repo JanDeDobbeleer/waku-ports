@@ -20,9 +20,8 @@ Item {
   // `nomarchy-shell shell summon nomarchy.menu ...` and close() when hidden.
   property string pendingInitialMenu: "root"
 
-  function open(payloadJson) {
-    var payload = ({})
-    try { payload = JSON.parse(payloadJson || "{}") } catch (e) { payload = ({}) }
+  function open(payloadJson: var): var {
+    var payload = MenuModel.parseJsonOrDefault(payloadJson || "{}", ({}))
 
     if (payload.fontFamily) root.fontFamily = payload.fontFamily
     // A shell that started mid-update may never have read the shipped menu
@@ -36,7 +35,7 @@ Item {
     }
   }
 
-  function close() {
+  function close(): var {
     root.cancel()
   }
 
@@ -65,7 +64,7 @@ Item {
     return JSON.stringify({ opened: root.opened, rowsLoaded: root.rowsLoaded, activeMenu: root.activeMenu,
       items: Object.keys(root.items || {}).length, rows: displayModel.count, scrim: String(root.scrim),
       panelShown: panel.shown, panelVisible: panel.visible, panelW: panel.width, panelH: panel.height,
-      screen: panel.targetScreen ? panel.targetScreen.name : null, monitor: !!panel.targetMonitor,
+      screen: MenuModel.screenName(panel.targetScreen), monitor: !!panel.targetMonitor,
       ready: panel.contentReady, revealed: panel.contentRevealed, cardW: root.cardWidth, cardH: root.cardHeight })
   }
 
@@ -83,8 +82,8 @@ Item {
   property string language: "en"
   property var menuCatalog: ({})
   readonly property string languagePath: Quickshell.env("NOMARCHY_LANGUAGE_FILE") || ((Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/nomarchy/language")
-  property var defaultMenuItems: []
-  property var userMenuItems: []
+  property list<var> defaultMenuItems: []
+  property list<var> userMenuItems: []
   // Whether each file has answered once, loaded or (the user's) missing. At
   // startup both arrive separately, and evaluating guards for the first alone
   // would run the whole batch twice; an open before then evaluates anyway.
@@ -94,13 +93,13 @@ Item {
   property string mode: "menu"
   readonly property bool dmenuActive: mode === "select" || mode === "input"
   property string dmenuPrompt: ""
-  property var dmenuOptions: []
+  property list<var> dmenuOptions: []
   property bool dmenuMultiple: false
-  property var dmenuSelected: []
+  property list<var> dmenuSelected: []
   // What the last confirmed change applied; a failed change returns the checks here.
-  property var dmenuSaved: []
+  property list<var> dmenuSaved: []
   property string dmenuChangeKey: ""
-  property var dmenuOnChange: []
+  property list<var> dmenuOnChange: []
   property string selectionFile: ""
   property string doneFile: ""
   property int dmenuWidth: 300
@@ -116,15 +115,15 @@ Item {
   property int requestSerial: 0
   property int applySerial: 0
   property var items: ({})
-  property var itemOrder: []
-  property var navStack: []
+  property list<var> itemOrder: []
+  property list<var> navStack: []
   property var providersLoaded: ({})
-  property var providerQueue: []
+  property list<var> providerQueue: []
   property int providerRevision: 0
 
   // Shared application engine (entries, hidden filters, icons, launch,
   // removal), owned by the shell and also used by the standalone launcher.
-  readonly property var appLibrary: root.shell ? root.shell.appLibrary : null
+  readonly property var appLibrary: MenuModel.appLibraryForShell(root.shell)
   property bool deleteConfirmOpen: false
   property var deleteTarget: null
   onOpenedChanged: if (!opened) { deleteConfirmOpen = false; deleteTarget = null }
@@ -161,7 +160,7 @@ Item {
     ? Math.min(contentMargin * 2 + headerHeight + (mode === "input" ? 0 : contentSpacing + visibleRowsHeight), panel.height - Style.gapsOut * 2)
     : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight, panel.height - Style.gapsOut * 2)
 
-  function finishRequest(selection) {
+  function finishRequest(selection: var): var {
     if (!root.requestActive || !root.doneFile) {
       root.opened = false
       return
@@ -181,7 +180,7 @@ Item {
     resultProc.running = true
   }
 
-  function runAction(action) {
+  function runAction(action: var): var {
     var command = String(action || "")
     if (!command) return
 
@@ -214,18 +213,8 @@ Item {
   // When every row fits, the list gets its full height. When they don't,
   // the card must end mid-row: a clipped row is what tells the eye there is
   // more below the fold, so never come out even on a row boundary.
-  function foldedListHeight(totals, available) {
-    var count = totals.length
-    if (count === 0) return root.baseRowHeight
-    if (totals[count - 1] <= available) return totals[count - 1]
-
-    var peek = root.rowPeek
-    var full = 0
-    while (full < count && totals[full] <= available) full++
-    while (full > 1 && totals[full - 1] + root.rowSpacing + peek > available) full--
-    if (full < 1) return Math.max(available, root.baseRowHeight)
-
-    return totals[full - 1] + root.rowSpacing + peek
+  function foldedListHeight(totals: var, available: real): real {
+    return MenuModel.foldedListHeight(totals, available, root.baseRowHeight, root.rowPeek, root.rowSpacing)
   }
 
   function rowListHeight(_serial: int, _count: int, _filter: string, _divider: bool): real {
@@ -265,7 +254,7 @@ Item {
     return foldedListHeight(totals, available)
   }
 
-  function item(id) {
+  function item(id: var): var {
     return root.items[id] || null
   }
 
@@ -278,28 +267,23 @@ Item {
     return MenuModel.stripJsonc(raw)
   }
 
-  function normalizeAliases(value) {
+  function normalizeAliases(value: var): var {
     return MenuModel.normalizeAliases(value)
   }
 
-  function normalizeItem(id, raw) {
+  function normalizeItem(id: var, raw: var): var {
     return MenuModel.normalizeItem(id, raw)
   }
 
-  function parseMenuJsonc(raw) {
+  function parseMenuJsonc(raw: var): var {
     return MenuModel.parseMenuJsonc(raw)
   }
 
-  function parseCatalog(raw) {
-    try {
-      let parsed = JSON.parse(raw || "{}")
-      return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
-    } catch (e) {
-      return ({})
-    }
+  function parseCatalog(raw: var): var {
+    return MenuModel.parseCatalog(raw)
   }
 
-  function setLanguage(raw) {
+  function setLanguage(raw: var): var {
     var code = String(raw || "").trim()
     if (!/^[a-z]{2,3}(-[A-Za-z]{2})?$/.test(code)) code = "en"
     if (root.language === code) return
@@ -312,13 +296,13 @@ Item {
   // re-declaring the whole row).
   // Catalog-only rebuilds pass skipGuards: retitling rows cannot change any
   // when/checked answer, so re-running the guard batch would be pure waste.
-  function rebuildItemsFromSources(skipGuards) {
+  function rebuildItemsFromSources(skipGuards: var): var {
     var translatedDefaults = MenuModel.applyTranslations(root.defaultMenuItems, root.menuCatalog)
     // The root row is injected by the merge (it has no JSONC entry), so its
     // "Go" label comes from the catalog's root entry; the merge only uses
     // it for the injected row, never over a user-supplied heading.
-    var rootCatalog = root.menuCatalog.root
-    var mergedMenu = MenuModel.mergeMenuSources(translatedDefaults, root.userMenuItems, rootCatalog && rootCatalog.label)
+    var rootCatalogLabel = MenuModel.rootCatalogLabel(root.menuCatalog)
+    var mergedMenu = MenuModel.mergeMenuSources(translatedDefaults, root.userMenuItems, rootCatalogLabel)
     root.providerRevision += 1
     root.providersLoaded = ({})
     root.providerQueue = []
@@ -345,27 +329,27 @@ Item {
       script: "current=$(nomarchy-font-current 2>/dev/null); nomarchy-font-list 2>/dev/null | while read -r f; do [[ -z $f ]] && continue; printf '%s\\t%s\\t%s\\n' \"$f\" \"$f\" \"$current\"; done",
       icon: "",
       volatile: true,
-      actionFor: function(value) { return "nomarchy-font-set " + Util.shellQuote(value) }
+      actionFor: function(value: var): var { return "nomarchy-font-set " + Util.shellQuote(value) }
     },
     "power-profiles": {
       script: "current=$(powerprofilesctl get 2>/dev/null); nomarchy-powerprofiles-list 2>/dev/null | while read -r p; do [[ -z $p ]] && continue; printf '%s\\t%s\\t%s\\n' \"$p\" \"$p\" \"$current\"; done",
       icon: "\udb81\udc0b",
       // Profile names are powerprofilesctl ids; only the label is translated,
       // and the id stays searchable through searchTerms.
-      labelFor: function(value) {
+      labelFor: function(value: var): var {
         if (value === "power-saver") return Commons.I18n.t("menu.powerProfilePowerSaver")
         if (value === "balanced") return Commons.I18n.t("menu.powerProfileBalanced")
         if (value === "performance") return Commons.I18n.t("menu.powerProfilePerformance")
         return value
       },
-      actionFor: function(value) { return "nomarchy-powerprofiles-set autodetect " + Util.shellQuote(value) }
+      actionFor: function(value: var): var { return "nomarchy-powerprofiles-set autodetect " + Util.shellQuote(value) }
     },
     // Kernel names are package names, the same in every language.
     "kernels": {
       script: "current=$(nomarchy-kernel get 2>/dev/null); nomarchy-kernel list 2>/dev/null | while read -r k; do [[ -z $k ]] && continue; printf '%s\\t%s\\t%s\\n' \"$k\" \"$k\" \"$current\"; done",
       icon: "\uf17c",
       volatile: true,
-      actionFor: function(value) { return "nomarchy-kernel set " + Util.shellQuote(value) }
+      actionFor: function(value: var): var { return "nomarchy-kernel set " + Util.shellQuote(value) }
     },
     // Rows carry a fourth field (the English name) so searching "danish"
     // finds the row labeled with its native name; mergeProviderRows turns
@@ -374,7 +358,7 @@ Item {
       script: "current=$(nomarchy-language 2>/dev/null); nomarchy-language list 2>/dev/null | while IFS=$'\\t' read -r name code english; do [[ -z $code ]] && continue; printf '%s\\t%s\\t%s\\t%s\\n' \"$name\" \"$code\" \"$current\" \"$english\"; done",
       icon: "\uf1ab",
       volatile: true,
-      actionFor: function(value) { return "nomarchy-language " + Util.shellQuote(value) }
+      actionFor: function(value: var): var { return "nomarchy-language " + Util.shellQuote(value) }
     }
   })
 
@@ -385,7 +369,7 @@ Item {
   // The apps provider is QML-native: rows come from the shared AppLibrary
   // (DesktopEntries) instead of a bash enumeration, so they carry image
   // icons, launch feedback, and uninstall support like the launcher.
-  function mergeAppRows() {
+  function mergeAppRows(): var {
     if (!root.appLibrary) return
 
     var rows = root.appLibrary.sortedEntries("")
@@ -396,9 +380,7 @@ Item {
       if (!appId) continue
       let subtext = root.appLibrary.entrySubtext(entry)
       let aliases = subtext ? [subtext] : []
-      try {
-        if (entry.keywords && typeof entry.keywords.join === "function") aliases = aliases.concat(entry.keywords)
-      } catch (e) { }
+      aliases = MenuModel.appendKeywords(aliases, entry.keywords)
       appRows.push({
         id: "apps." + appId,
         parent: "apps",
@@ -427,7 +409,7 @@ Item {
     if (root.opened) root.rebuildDisplay()
   }
 
-  function startProviderForMenu(id) {
+  function startProviderForMenu(id: var): var {
     var entry = root.item(id)
     if (!entry || !entry.provider || root.providersLoaded[id]) return
     if (entry.provider === "apps") {
@@ -447,7 +429,7 @@ Item {
     providerProc.running = true
   }
 
-  function mergeProviderRows(rows, menuId, providerKey) {
+  function mergeProviderRows(rows: var, menuId: var, providerKey: var): var {
     var spec = root.providers[providerKey]
     if (!spec) return
     var lines = String(rows || "").split("\n")
@@ -494,7 +476,7 @@ Item {
     if (root.opened) root.rebuildDisplay()
   }
 
-  function startNextProvider() {
+  function startNextProvider(): var {
     if (providerProc.running) return
 
     while (root.providerQueue.length > 0) {
@@ -510,13 +492,13 @@ Item {
   // Entering a submenu is the one moment a volatile list is worth paying for
   // again: it may have been reshaped by the last pick from it. Search doesn't
   // invalidate, or every keystroke would restart the same enumeration.
-  function invalidateVolatileProvider(id) {
+  function invalidateVolatileProvider(id: var): var {
     var entry = root.item(id)
     var spec = entry && entry.provider ? root.providers[entry.provider] : null
     if (spec && spec.volatile) root.providersLoaded[id] = false
   }
 
-  function loadProviderForMenu(id) {
+  function loadProviderForMenu(id: var): var {
     var entry = root.item(id)
     if (!entry || !entry.provider || root.providersLoaded[id]) return
 
@@ -534,7 +516,7 @@ Item {
     root.startProviderForMenu(id)
   }
 
-  function loadProvidersForSearch() {
+  function loadProvidersForSearch(): var {
     var active = root.item(root.activeMenu) ? root.activeMenu : "root"
 
     for (let i = 0; i < root.itemOrder.length; i++) {
@@ -569,13 +551,13 @@ Item {
   // Guarded items are hidden when their `when:` evaluates false. Static
   // submenus are also hidden when none of their descendants are visible;
   // provider-backed menus stay visible because their rows load on demand.
-  function isVisible(entry) {
+  function isVisible(entry: var): var {
     return MenuModel.isVisible(root.items, root.itemOrder, root.whenResults, entry)
   }
 
   // Label with the ✓ marker baked in when `checked:` or `disabled:` evaluated
   // truthy.
-  function labelFor(entry) {
+  function labelFor(entry: var): var {
     return MenuModel.labelFor(entry, root.checkedResults, root.disabledResults)
   }
 
@@ -583,11 +565,11 @@ Item {
     return MenuModel.searchableToken(value)
   }
 
-  function leafIdFor(id) {
+  function leafIdFor(id: var): var {
     return MenuModel.leafIdFor(id)
   }
 
-  function nameSearchText(entry) {
+  function nameSearchText(entry: var): var {
     return MenuModel.nameSearchText(entry)
   }
 
@@ -601,22 +583,22 @@ Item {
 
   // Rows whose `disabled:` evaluated truthy stay listed but dimmed, and the
   // cursor steps over them.
-  function isDisabled(entry) {
+  function isDisabled(entry: var): var {
     return MenuModel.isDisabled(root.disabledResults, entry)
   }
 
   // A disabled row earns its place in the submenu it belongs to, where the
   // list around it is the point. Search is a list of what you can do, so it
   // leaves them out.
-  function matchesQuery(entry, query) {
+  function matchesQuery(entry: var, query: var): var {
     return MenuModel.matchesQuery(entry, query, root.isVisible(entry) && !root.isDisabled(entry))
   }
 
-  function searchScore(entry, query) {
+  function searchScore(entry: var, query: var): var {
     return MenuModel.searchScore(root.items, entry, query)
   }
 
-  function displayRow(entry, detail, score, section) {
+  function displayRow(entry: var, detail: var, score: var, section: var): var {
     return MenuModel.displayRow(root.items, root.itemOrder, root.checkedResults, root.disabledResults, entry, detail, score, section)
   }
 
@@ -645,13 +627,13 @@ Item {
   // Park the cursor on a selectable row after the rows underneath it changed.
   // A menu with nothing selectable in it -- every app in it already installed
   // -- shows no cursor at all, and grows one the moment a row can take it.
-  function settleCursor() {
+  function settleCursor(): var {
     var target = root.nextSelectable(root.selectedIndex, 1)
     root.selectedIndex = target >= 0 ? target : 0
     root.cursorActive = target >= 0
   }
 
-  function rebuildDmenuDisplay() {
+  function rebuildDmenuDisplay(): var {
     displayModel.clear()
     root.searchDivider = false
 
@@ -706,12 +688,12 @@ Item {
     else if (selectedIndex >= displayModel.count) selectedIndex = displayModel.count - 1
     else if (selectedIndex < 0) selectedIndex = 0
 
-    Qt.callLater(function() {
+    Qt.callLater(function(): var {
       if (displayModel.count > 0) root.revealCursor()
     })
   }
 
-  function updateDmenuChecks() {
+  function updateDmenuChecks(): var {
     for (let i = 0; i < displayModel.count; i++) {
       let row = displayModel.get(i)
       if (row.itemId === "dmenu.apply") {
@@ -723,7 +705,7 @@ Item {
     }
   }
 
-  function rebuildDisplay() {
+  function rebuildDisplay(): var {
     if (root.dmenuActive) {
       root.rebuildDmenuDisplay()
       return
@@ -750,12 +732,12 @@ Item {
         if (!root.matchesQuery(entry, query)) continue
 
         let detail = root.parentPathFor(entry.id)
-        let row = root.displayRow(entry, detail, root.searchScore(entry, query))
+        let row = root.displayRow(entry, detail, root.searchScore(entry, query), undefined)
         if (entry.parent === active) currentRows.push(row)
         else drilldownRows.push(row)
       }
 
-      let searchSort = function(a, b) {
+      let searchSort = function(a: var, b: var): var {
         if (a.score !== b.score) return a.score - b.score
         return a.path.localeCompare(b.path)
       }
@@ -772,13 +754,13 @@ Item {
         let child = root.item(root.itemOrder[j])
         if (!child || child.parent !== active) continue
         if (!root.isVisible(child)) continue
-        rows.push(root.displayRow(child, child.description, child.order))
+        rows.push(root.displayRow(child, child.description, child.order, undefined))
       }
 
       // DesktopEntries can reorder its values when an application starts.
       // Keep the Apps menu alphabetical independently of provider refreshes.
       if (active === "apps") {
-        rows.sort(function(a, b) {
+        rows.sort(function(a: var, b: var): var {
           var aLabel = String(a.label || "").toLowerCase()
           var bLabel = String(b.label || "").toLowerCase()
           if (aLabel < bLabel) return -1
@@ -797,7 +779,7 @@ Item {
 
     root.settleCursor()
 
-    Qt.callLater(function() {
+    Qt.callLater(function(): var {
       if (displayModel.count > 0) root.revealCursor()
     })
   }
@@ -805,7 +787,7 @@ Item {
   // Contain alone parks the cursor row flush with the viewport edge, hiding
   // the neighbor entirely and losing the fold affordance. Keep the next
   // hidden row peeking past the cursor in the direction of travel.
-  function revealCursor() {
+  function revealCursor(): var {
     if (displayModel.count === 0) return
     resultList.positionViewAtIndex(root.selectedIndex, ListView.Contain)
 
@@ -824,7 +806,7 @@ Item {
     }
   }
 
-  function select(delta) {
+  function select(delta: var): var {
     if (displayModel.count === 0) return
 
     root.disarmPointer()
@@ -837,7 +819,7 @@ Item {
     revealCursor()
   }
 
-  function setFilter(nextFilter) {
+  function setFilter(nextFilter: var): var {
     panel.freezeCardTop()
     root.filterText = nextFilter
     root.selectedIndex = 0
@@ -847,7 +829,7 @@ Item {
     root.rebuildDisplay()
   }
 
-  function setActiveMenu(id, pushHistory, fromPointer) {
+  function setActiveMenu(id: var, pushHistory: var, fromPointer: var): var {
     panel.freezeCardTop()
     if (!root.item(id)) id = "root"
     if (pushHistory && id !== root.activeMenu) root.navStack = root.navStack.concat([root.activeMenu])
@@ -868,16 +850,16 @@ Item {
     if (root.navStack.length > 0) {
       let previous = root.navStack[root.navStack.length - 1]
       root.navStack = root.navStack.slice(0, root.navStack.length - 1)
-      root.setActiveMenu(previous, false)
+      root.setActiveMenu(previous, false, false)
       return true
     }
 
     var active = root.item(root.activeMenu)
-    root.setActiveMenu((active && active.parent) ? active.parent : "root", false)
+    root.setActiveMenu((active && active.parent) ? active.parent : "root", false, false)
     return true
   }
 
-  function activateIndex(index, fromPointer) {
+  function activateIndex(index: var, fromPointer: var): var {
     if (root.deleteConfirmOpen) return
     if (root.dmenuActive) {
       if (root.mode === "input") {
@@ -922,7 +904,7 @@ Item {
     }
   }
 
-  function requestDeleteSelected() {
+  function requestDeleteSelected(): var {
     if (!root.cursorActive || root.selectedIndex < 0 || root.selectedIndex >= displayModel.count) return
     var row = displayModel.get(root.selectedIndex)
     if (!row || row.kind !== "app") return
@@ -931,15 +913,15 @@ Item {
     root.deleteConfirmOpen = true
   }
 
-  function cancelDelete() {
+  function cancelDelete(): var {
     root.deleteConfirmOpen = false
     root.deleteTarget = null
     deleteConfirm.selectedIndex = 1
     root.disarmPointer()
-    Qt.callLater(function() { filterInput.forceActiveFocus() })
+    Qt.callLater(function(): var { filterInput.forceActiveFocus() })
   }
 
-  function confirmDelete() {
+  function confirmDelete(): var {
     var target = root.deleteTarget
     root.deleteConfirmOpen = false
     root.deleteTarget = null
@@ -948,14 +930,14 @@ Item {
     if (root.appLibrary) root.appLibrary.remove(target.appId, target.label)
   }
 
-  function applyDmenuSelection(value) {
+  function applyDmenuSelection(value: var): var {
     applySerial = requestSerial
     opened = false
     filterText = ""
     root.finishRequest(value)
   }
 
-  function applySelected(id, action) {
+  function applySelected(id: var, action: var): var {
     if (!id) { cancel(); return }
 
     applySerial = requestSerial
@@ -964,13 +946,13 @@ Item {
     root.runAction(action)
   }
 
-  function cancel() {
+  function cancel(): var {
     if (root.dmenuActive) root.finishRequest(null)
     opened = false
     filterText = ""
   }
 
-  function openExistingMenu(initialMenu) {
+  function openExistingMenu(initialMenu: var): var {
     requestSerial += 1
     mode = "menu"
     requestActive = false
@@ -991,17 +973,17 @@ Item {
     // their icons. Refresh here even when the desktop entry list did not change.
     if (root.appLibrary) root.appLibrary.refreshIcons()
 
-    Qt.callLater(function() { filterInput.forceActiveFocus() })
+    Qt.callLater(function(): var { filterInput.forceActiveFocus() })
   }
 
-  function openDmenu(payload) {
+  function openDmenu(payload: var): var {
     requestSerial += 1
     mode = payload.mode === "input" ? "input" : "select"
     dmenuPrompt = String(payload.prompt || (mode === "input" ? Commons.I18n.t("menu.inputPrompt") : Commons.I18n.t("menu.selectPrompt")))
     dmenuOptions = Array.isArray(payload.options) ? payload.options : []
     dmenuMultiple = mode === "select" && payload.multiple === true
     dmenuOnChange = dmenuMultiple && Array.isArray(payload.onChange)
-      && payload.onChange.every(function(arg) { return typeof arg === "string" }) ? payload.onChange : []
+      && payload.onChange.every(function(arg: var): var { return typeof arg === "string" }) ? payload.onChange : []
     dmenuChangeKey = String(payload.changeKey || JSON.stringify(dmenuOnChange))
     dmenuSelected = MenuModel.dmenuSelections(dmenuOptions, Array.isArray(payload.selected) ? payload.selected : [], dmenuOnChange.length > 0)
     dmenuSaved = dmenuSelected
@@ -1021,7 +1003,7 @@ Item {
     opened = true
     rebuildDisplay()
 
-    Qt.callLater(function() { filterInput.forceActiveFocus() })
+    Qt.callLater(function(): var { filterInput.forceActiveFocus() })
   }
   ListModel { id: displayModel }
 
@@ -1032,11 +1014,11 @@ Item {
   // Callers may pass a real id (`system`, `setup.power`) or an alias declared
   // in JSONC (`power`, `reminder-set`). Unknown strings fall through to the
   // id-as-route behavior so misspellings still attempt to open the literal id.
-  function resolveRoute(input) {
+  function resolveRoute(input: var): var {
     return MenuModel.resolveRoute(root.items, root.itemOrder, input)
   }
 
-  function openRoute(initialMenu) {
+  function openRoute(initialMenu: var): var {
     var id = root.resolveRoute(initialMenu)
     var entry = root.items[id]
     // If the resolved id is an action (i.e. the user invoked an alias for
@@ -1054,11 +1036,11 @@ Item {
     return "ok"
   }
 
-  function disarmPointer() {
+  function disarmPointer(): var {
     pointerGate.reset()
   }
 
-  function selectFromPointer(index, item, mouse) {
+  function selectFromPointer(index: var, item: var, mouse: var): var {
     if (!pointerGate.moved(item, mouse)) return
     if (!root.rowSelectable(index)) return
     root.cursorActive = true
@@ -1072,7 +1054,7 @@ Item {
     property string collected: ""
     property int revision: 0
     stdout: SplitParser {
-      onRead: function(data) { providerProc.collected += data + "\n" }
+      onRead: function(data: string): var { providerProc.collected += data + "\n" }
     }
     onExited: {
       if (providerProc.revision === root.providerRevision) {
@@ -1091,7 +1073,7 @@ Item {
     property var queue: []
     property string collected: ""
 
-    function requestedSelection() {
+    function requestedSelection(): var {
       for (let i = queue.length - 1; i >= 0; i--) {
         if (queue[i].key === root.dmenuChangeKey) return queue[i].selected
       }
@@ -1099,7 +1081,7 @@ Item {
       return root.dmenuSelected
     }
 
-    function enqueue(values) {
+    function enqueue(values: var): var {
       var selected = MenuModel.dmenuSelections(root.dmenuOptions, values, true)
       queue = queue.concat([{
         serial: root.requestSerial, key: root.dmenuChangeKey, selected: selected,
@@ -1108,7 +1090,7 @@ Item {
       if (!running) startNext()
     }
 
-    function startNext() {
+    function startNext(): var {
       if (queue.length === 0) return
       var change = queue[0]
       queue = queue.slice(1)
@@ -1124,7 +1106,7 @@ Item {
       waitForEnd: true
       onStreamFinished: selectionProc.collected = text
     }
-    onExited: function(exitCode) {
+    onExited: function(exitCode: int): var {
       if (changeKey === root.dmenuChangeKey && root.dmenuActive && root.dmenuOnChange.length > 0) {
         if (exitCode === 0) {
           let applied = selected
@@ -1158,7 +1140,7 @@ Item {
 
   Connections {
     target: root.appLibrary
-    function onAppsChanged() {
+    function onAppsChanged(): var {
       if (root.providersLoaded["apps"]) root.mergeAppRows()
     }
   }
@@ -1171,7 +1153,7 @@ Item {
     path: root.defaultMenuPath
     watchChanges: true
     printErrors: false
-    onLoaded: { root.defaultMenuItems = MenuModel.keepMenuRows(root.defaultMenuItems, text(), true); root.defaultMenuSettled = true; root.rebuildItemsFromSources() }
+    onLoaded: { root.defaultMenuItems = MenuModel.keepMenuRows(root.defaultMenuItems, text(), true); root.defaultMenuSettled = true; root.rebuildItemsFromSources(undefined) }
     // A user file that loaded first held its evaluation for this one.
     onLoadFailed: { root.defaultMenuSettled = true; if (root.userMenuSettled) root.evaluateGuards() }
     onFileChanged: reload()
@@ -1182,8 +1164,8 @@ Item {
     path: root.userMenuPath
     watchChanges: true
     printErrors: false
-    onLoaded: { root.userMenuItems = MenuModel.keepMenuRows(root.userMenuItems, text(), false); root.userMenuSettled = true; root.rebuildItemsFromSources() }
-    onLoadFailed: { root.userMenuItems = []; root.userMenuSettled = true; root.rebuildItemsFromSources() }
+    onLoaded: { root.userMenuItems = MenuModel.keepMenuRows(root.userMenuItems, text(), false); root.userMenuSettled = true; root.rebuildItemsFromSources(undefined) }
+    onLoadFailed: { root.userMenuItems = []; root.userMenuSettled = true; root.rebuildItemsFromSources(undefined) }
     onFileChanged: reload()
   }
 
@@ -1221,7 +1203,7 @@ Item {
   property var disabledResults: ({})   // id → true|false (dim, skip cursor)
   property bool guardsPending: false
 
-  function evaluateGuards() {
+  function evaluateGuards(): var {
     // Process ignores a command change while it is running, and `collected`
     // belongs to the run in flight, so a second evaluation cannot overwrite
     // the first: it would throw away the lines already read and never start.
@@ -1250,15 +1232,15 @@ Item {
     id: guardProc
     property string collected: ""
     stdout: SplitParser {
-      onRead: function(data) { guardProc.collected += data + "\n" }
+      onRead: function(data: string): var { guardProc.collected += data + "\n" }
     }
-    onExited: function(exitCode, exitStatus) {
+    onExited: function(exitCode: int, exitStatus: QsProcess.ExitStatus): var {
       // A batch that was killed rather than finished has only told us about
       // the rows it reached, and a row whose `when:` went unanswered shows.
       // Keep the last complete set rather than let a half-read one through.
       // A signal leaves the exit code at 0, so the status is what tells us.
       if (exitCode !== 0 || exitStatus !== 0) {
-        if (root.guardsPending) Qt.callLater(function() { root.evaluateGuards() })
+        if (root.guardsPending) Qt.callLater(function(): var { root.evaluateGuards() })
         return
       }
 
@@ -1287,7 +1269,7 @@ Item {
       if (root.opened) root.rebuildDisplay()
       // Run the evaluation that had to stand aside. Deferred by a turn so the
       // process is settled before its command is set again.
-      if (root.guardsPending) Qt.callLater(function() { root.evaluateGuards() })
+      if (root.guardsPending) Qt.callLater(function(): var { root.evaluateGuards() })
     }
   }
   OverlayWindow {
@@ -1306,7 +1288,7 @@ Item {
     property int maxRowsHeight: -1
     readonly property int centeredTop: Math.max(Style.gapsOut, Math.round((height - root.cardHeight) / 2))
     readonly property int effectiveCardTop: cardTop >= 0 ? cardTop : centeredTop
-    function freezeCardTop() {
+    function freezeCardTop(): var {
       if (shown && cardTop < 0) {
         cardTop = effectiveCardTop
         maxRowsHeight = root.visibleRowsHeight
@@ -1344,7 +1326,7 @@ Item {
         z: root.deleteConfirmOpen ? 20 : 0
 
         // Focus is on filterInput, which forwards every key here first.
-        Keys.onPressed: function(event) {
+        Keys.onPressed: function(event: QQuickKeyEvent): var {
           if (root.deleteConfirmOpen) {
             // Swallow the rest too, or it would type into the search line behind the dialog.
             deleteConfirm.handleKey(event)
@@ -1380,8 +1362,8 @@ Item {
           } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || Util.readingKey(event, false) === Qt.Key_Right) {
             if (root.dmenuActive) {
               if (root.mode === "input") root.applyDmenuSelection(root.filterText)
-              else if (displayModel.count > 0) root.activateIndex(root.cursorActive ? root.selectedIndex : 0)
-            } else if (root.cursorActive) root.activateIndex(root.selectedIndex)
+              else if (displayModel.count > 0) root.activateIndex(root.cursorActive ? root.selectedIndex : 0, false)
+            } else if (root.cursorActive) root.activateIndex(root.selectedIndex, false)
             else root.settleCursor()
             event.accepted = true
           }
@@ -1464,7 +1446,7 @@ Item {
 
             WheelHandler {
               target: null
-              onWheel: function(event) {
+              onWheel: function(event: QQuickWheelEvent): var {
                 var delta = event.pixelDelta.y || event.angleDelta.y / 120 * root.rowHeightForDetail("") * 3
                 var bottom = resultList.originY + Math.max(0, resultList.contentHeight - resultList.height)
                 resultList.contentY = Math.max(resultList.originY, Math.min(bottom, resultList.contentY - delta))
@@ -1641,7 +1623,7 @@ Item {
                   x: mouseArea.mouseX,
                   y: mouseArea.mouseY
                 })
-                onPositionChanged: function(mouse) {
+                onPositionChanged: function(mouse: QQuickMouseEvent): var {
                   root.selectFromPointer(row.index, row, mouse)
                 }
                 onClicked: {

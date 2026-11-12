@@ -1,3 +1,34 @@
+function field(object, key) {
+  return object ? object[key] : undefined
+}
+
+function arrayLength(value) {
+  return value ? value.length : 0
+}
+
+function setField(object, key, value) {
+  if (object) object[key] = value
+}
+
+function callMethod(object, name, args) {
+  return object[name].apply(object, args || [])
+}
+
+function mapToItemX(item, target, x, y) {
+  return item.mapToItem(target, x, y).x
+}
+
+function mapToItemY(item, target, x, y) {
+  return item.mapToItem(target, x, y).y
+}
+
+function recentRegions(settings) {
+  var regions = settings && settings.recentMullvadRegions
+  if (Array.isArray(regions)) return regions
+  var countries = settings && settings.recentMullvadCountries
+  return Array.isArray(countries) ? countries : []
+}
+
 function filterIPv4(ips) {
   var result = []
   if (!ips || typeof ips.length !== "number") return result

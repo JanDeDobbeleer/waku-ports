@@ -34,7 +34,7 @@ BarWidget {
   }
 
   // [{ number, active, occupied, exists }]
-  readonly property var slots: {
+  readonly property list<var> slots: {
     var list = root.monitor ? (root.monitor.workspaces || []) : []
     var out = []
     for (let i = 0; i < list.length; i++) {
@@ -50,14 +50,14 @@ BarWidget {
     return out
   }
 
-  function focusWorkspace(number) {
+  function focusWorkspace(number: var): var {
     S.Workspaces.focus(0, String(number - 1))
   }
 
   // A wheel notch moves one entry along the row, and a touchpad adds up its smaller deltas.
   property real wheelAccumulator: 0
 
-  function scrollWorkspaces(delta) {
+  function scrollWorkspaces(delta: var): var {
     var wheel = Util.wheelSteps(root.wheelAccumulator, delta)
     root.wheelAccumulator = wheel.remainder
     if (wheel.steps === 0) return
@@ -94,10 +94,10 @@ BarWidget {
         verticalPadding: 6
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
-        onPressed: function() {
+        onPressed: function(): var {
           if (modelData.exists && !modelData.active) root.focusWorkspace(modelData.number)
         }
-        onWheelMoved: function(delta) { root.scrollWorkspaces(delta) }
+        onWheelMoved: function(delta: int): var { root.scrollWorkspaces(delta) }
       }
     }
   }

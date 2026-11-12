@@ -28,11 +28,11 @@ BarWidget {
   readonly property var hostWindow: Window.window
 
   // [{ key, exe, iconUrl, windows: [{ index, title, active, minimized }] }]
-  property var groups: []
+  property list<var> groups: []
   // The programs in the order they first showed up, kept while rows come and go.
-  property var known: []
+  property list<var> known: []
 
-  function rebuild() {
+  function rebuild(): var {
     var byExe = {}
     var order = []
     for (let i = 0; i < rows.count; i++) {
@@ -73,14 +73,14 @@ BarWidget {
   property Item hoverItem: null
   readonly property bool previewOpen: hoverGroup !== null && hoverItem !== null && hoverGroup.windows.length > 1
 
-  function hoverEnter(group, item) {
+  function hoverEnter(group: var, item: var): var {
     closeTimer.stop()
     root.hoverGroup = group
     root.hoverItem = item
   }
-  function hoverLeave() { closeTimer.restart() }
+  function hoverLeave(): var { closeTimer.restart() }
   // PopupCard.close() calls this on its owner.
-  function close() {
+  function close(): var {
     closeTimer.stop()
     root.hoverGroup = null
     root.hoverItem = null
@@ -161,8 +161,8 @@ BarWidget {
         id: app
         required property var modelData
 
-        readonly property bool focused: modelData.windows.some(function(w) { return w.active })
-        readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(function(w) { return w.minimized })
+        readonly property bool focused: modelData.windows.some(function(w: var): var { return w.active })
+        readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(function(w: var): var { return w.minimized })
         readonly property int count: modelData.windows.length
         readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
@@ -245,7 +245,7 @@ BarWidget {
           hoverEnabled: true
           acceptedButtons: Qt.LeftButton | Qt.MiddleButton
           cursorShape: Qt.PointingHandCursor
-          onClicked: function(mouse) { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
+          onClicked: function(mouse: QQuickMouseEvent): var { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
           onEntered: root.hoverEnter(app.modelData, app)
           onExited: root.hoverLeave()
         }

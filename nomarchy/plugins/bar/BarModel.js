@@ -726,3 +726,43 @@ if (typeof module !== "undefined") {
     customModulePath: customModulePath
   }
 }
+
+function mapToItemSafely(item, x, y) {
+  try { return item.mapToItem(null, x, y) } catch (e) { return null }
+}
+
+function traySectionDropRect(area, shown, reach, vertical) {
+  try {
+    var origin = area.mapToItem(null, shown.x, shown.y)
+    var section = { x: origin.x, y: origin.y, width: shown.width, height: shown.height }
+    var corner = area.mapToItem(null, 0, 0)
+    var tray = { x: corner.x, y: corner.y, width: area.width, height: area.height }
+    return sectionDropZone(section, reach, vertical, tray)
+  } catch (e) {
+    return null
+  }
+}
+
+function mutateShellConfig(shell, memo, expected, edit) {
+  memo.expected = expected
+  try {
+    shell.mutateShellConfig(edit)
+  } finally {
+    memo.expected = null
+  }
+}
+
+function copyPopoutCard(card, section) {
+  return card ? { screen: String(card.screen || ""), section: section,
+    x: Number(card.x) || 0, y: Number(card.y) || 0,
+    width: Number(card.width) || 0, height: Number(card.height) || 0 } : null
+}
+
+function popoutCardFor(card, section) {
+  if (!card || !card.section || card.section !== section) return null
+  return { screen: card.screen, x: card.x, y: card.y, width: card.width, height: card.height }
+}
+
+function dropRegion(target) {
+  return target ? (target.slot ? target.slot.region : target.region) : ""
+}

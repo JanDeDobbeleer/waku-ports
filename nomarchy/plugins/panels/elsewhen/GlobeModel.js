@@ -298,3 +298,41 @@ if (typeof module !== "undefined") {
     shortestTurn: shortestTurn
   }
 }
+
+function probeZones(allCities, jumpMatches) {
+  var zones = []
+  var seen = {}
+  function add(id) {
+    if (!seen[id]) {
+      seen[id] = true
+      zones.push(id)
+    }
+  }
+  for (var i = 0; i < allCities.length; i++) add(allCities[i][1])
+  for (var j = 0; j < jumpMatches.length; j++) add(jumpMatches[j].value)
+  return zones
+}
+
+function parseJson(text) {
+  try {
+    return { ok: true, value: JSON.parse(text) }
+  } catch (error) {
+    return { ok: false, value: null }
+  }
+}
+
+function parseWorld(text) {
+  var land
+  try {
+    land = JSON.parse(text)
+  } catch (error) {
+    return null
+  }
+  var coarse = []
+  try {
+    for (var i = 0; i < land.length; i++) coarse.push(decimateRing(land[i], 2, 8))
+    return { land: land, coarse: coarse, coarseComplete: true }
+  } catch (error) {
+    return { land: land, coarse: null, coarseComplete: false }
+  }
+}

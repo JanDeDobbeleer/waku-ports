@@ -20,11 +20,11 @@ BarWidget {
   property var activeTrayAnchor: null
   readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   readonly property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
-  readonly property var pinnedIds: settings.pinned instanceof Array ? settings.pinned : []
-  readonly property var hiddenIds: settings.hidden instanceof Array ? settings.hidden : []
-  readonly property var pinnedItems: bucket("pinned")
-  readonly property var drawerItems: bucket("drawer")
-  readonly property var allItems: bucket("all")
+  readonly property list<var> pinnedIds: TrayModel.settingArray(settings, "pinned")
+  readonly property list<var> hiddenIds: TrayModel.settingArray(settings, "hidden")
+  readonly property list<var> pinnedItems: bucket("pinned")
+  readonly property list<var> drawerItems: bucket("drawer")
+  readonly property list<var> allItems: bucket("all")
   readonly property int drawerCount: drawerItems.length
   readonly property int trayItemExtent: Style.bar.iconSlot
   readonly property int trayItemGap: 0
@@ -72,7 +72,7 @@ BarWidget {
   // keeps its own live opener: a child entry is owned by its parent opener's
   // model, so collapsing the stack to a single opener would destroy the very
   // entry being displayed (submenu turns up empty).
-  property var submenuStack: []
+  property list<var> submenuStack: []
   readonly property int submenuDepth: submenuStack.length
   readonly property string currentTitle: submenuDepth > 0 ? submenuStack[submenuDepth - 1].title : ""
   readonly property var currentChildren: submenuDepth > 0
@@ -97,12 +97,12 @@ BarWidget {
     onTriggered: root.menuLevelSettling = false
   }
 
-  function settleMenuLevel() {
+  function settleMenuLevel(): var {
     menuLevelSettling = true
     menuLevelSettleTimer.restart()
   }
 
-  function resetTrayMenu() {
+  function resetTrayMenu(): var {
     menuLevelSettling = false
     menuLevelSettleTimer.stop()
     // Flickable keeps its offset across a model swap whenever the new content
@@ -119,7 +119,7 @@ BarWidget {
     for (let i = openers.length - 1; i >= 0; i--) openers[i].opener.destroy()
   }
 
-  function enterSubmenu(entry, title) {
+  function enterSubmenu(entry: var, title: var): var {
     var opener = submenuOpenerComponent.createObject(root, { menu: entry })
     if (!opener) return
     var stack = submenuStack.slice()
@@ -128,7 +128,7 @@ BarWidget {
     settleMenuLevel()
   }
 
-  function leaveSubmenu() {
+  function leaveSubmenu(): var {
     if (submenuStack.length === 0) return
     var stack = submenuStack.slice()
     var top = stack.pop()
@@ -137,12 +137,12 @@ BarWidget {
     settleMenuLevel()
   }
 
-  function close() {
+  function close(): var {
     managePopupOpen = false
     trayMenuOpen = false
   }
 
-  function openTrayMenu(item, anchorItem, mouse) {
+  function openTrayMenu(item: var, anchorItem: var, mouse: var): var {
     if (!item || !item.menu) {
       let point = anchorItem.QsWindow.contentItem.mapFromItem(anchorItem, mouse.x, mouse.y)
       item.display(anchorItem.QsWindow.window, point.x, point.y)
@@ -159,7 +159,7 @@ BarWidget {
     trayMenuOpen = true
   }
 
-  function trayIconSource(icon) {
+  function trayIconSource(icon: var): var {
     // Quickshell already resolves the tray icon into a ready-to-use image://
     // URL, including a "?path=" fallback search dir for apps that ship their
     // tray icon outside a standard theme (e.g. Steam's flat public/ dir). Hand
@@ -176,7 +176,7 @@ BarWidget {
     return name.slice(-9) === "-symbolic"
   }
 
-  function trayTooltip(item) {
+  function trayTooltip(item: var): var {
     return item.tooltipTitle || item.title || item.id || ""
   }
 
@@ -187,12 +187,12 @@ BarWidget {
     return "drawer"
   }
 
-  function ownedByNomarchy(item) {
+  function ownedByNomarchy(item: var): var {
     var layout = root.bar && BarValues.layoutConfig(root.bar) ? BarValues.layoutConfig(root.bar) : null
     return TrayModel.ownedByNomarchy(item, layout)
   }
 
-  function bucket(category) {
+  function bucket(category: var): var {
     var values = SystemTray.items.values
     var result = []
     for (let i = 0; i < values.length; i++) {
@@ -208,13 +208,13 @@ BarWidget {
     return result
   }
 
-  function persistTrayState(pinned, hidden) {
+  function persistTrayState(pinned: var, hidden: var): var {
     if (!BarValues.hasUpdateEntryInline(root.bar)) return
     var id = root.moduleName || "nomarchy.tray"
     BarValues.updateEntryInline(root.bar, id, { id: id, pinned: pinned, hidden: hidden })
   }
 
-  function togglePin(iid) {
+  function togglePin(iid: var): var {
     var p = pinnedIds.slice(), h = hiddenIds.slice()
     var idx = p.indexOf(iid)
     if (idx !== -1) p.splice(idx, 1)
@@ -226,7 +226,7 @@ BarWidget {
     persistTrayState(p, h)
   }
 
-  function toggleHide(iid) {
+  function toggleHide(iid: var): var {
     var p = pinnedIds.slice(), h = hiddenIds.slice()
     var idx = h.indexOf(iid)
     if (idx !== -1) h.splice(idx, 1)
@@ -250,7 +250,7 @@ BarWidget {
   // The section from `start`, `length` long along the bar, as far as the
   // drawer's clip from `clipStart`, `clipLength` long, shows it
   // (TrayModel.shownSpan).
-  function shownSection(clipStart, clipLength, start, length) {
+  function shownSection(clipStart: var, clipLength: var, start: var, length: var): var {
     var span = TrayModel.shownSpan(clipStart, clipLength, start, length)
     if (!span) return null
     return vertical
@@ -308,7 +308,7 @@ BarWidget {
           height: implicitHeight
           x: root.fixedAtStart ? root.revealExtent : 0
           text: root.fixedAtStart ? "\uf054" : "\uf053"
-          onPressed: function(button) {
+          onPressed: function(button: int): var {
             if (button === Qt.RightButton) root.managePopupOpen = !root.managePopupOpen
           }
         }
@@ -399,7 +399,7 @@ BarWidget {
           y: root.fixedAtStart ? root.revealExtent : 0
           text: root.fixedAtStart ? "\uf054" : "\uf053"
           textRotation: 90
-          onPressed: function(button) {
+          onPressed: function(button: int): var {
             if (button === Qt.RightButton) root.managePopupOpen = !root.managePopupOpen
           }
         }
@@ -881,7 +881,7 @@ BarWidget {
     implicitWidth: visible ? root.trayItemExtent : 0
     implicitHeight: visible ? root.trayItemExtent : 0
 
-    function displayMenu(mouse) {
+    function displayMenu(mouse: var): var {
       root.openTrayMenu(trayItemRoot.modelData, trayItemRoot, mouse)
     }
 
@@ -901,13 +901,13 @@ BarWidget {
       cursorShape: Qt.PointingHandCursor
       onEntered: if (root.bar) BarValues.showTooltip(root.bar, trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
       onExited: if (root.bar) BarValues.hideTooltip(root.bar, trayItemRoot)
-      onPressed: function(mouse) {
+      onPressed: function(mouse: QQuickMouseEvent): var {
         if (mouse.button === Qt.RightButton) {
           trayItemRoot.displayMenu(mouse)
           mouse.accepted = true
         }
       }
-      onClicked: function(mouse) {
+      onClicked: function(mouse: QQuickMouseEvent): var {
         if (mouse.button === Qt.RightButton) {
           mouse.accepted = true
         } else if (mouse.button === Qt.MiddleButton) {
@@ -918,7 +918,7 @@ BarWidget {
           trayItemRoot.modelData.activate()
         }
       }
-      onWheel: function(wheel) {
+      onWheel: function(wheel: QQuickWheelEvent): var {
         trayItemRoot.modelData.scroll(wheel.angleDelta.y, false)
       }
     }

@@ -10,11 +10,11 @@ import "BorderGeometry.js" as Geometry
 QtObject {
   id: root
 
-  function none() {
+  function none(): var {
     return flat("transparent", 0)
   }
 
-  function flat(color, width) {
+  function flat(color: var, width: var): var {
     return {
       color: color || "transparent",
       widths: Geometry.parseWidthSpec(width, 0),
@@ -22,20 +22,20 @@ QtObject {
     }
   }
 
-  function value(section, key) {
+  function value(section: string, key: string): var {
     var v = Commons.Color.shellValues[section + "." + key]
     return (v === undefined || v === null) ? "" : v
   }
 
-  function valueOr(section, keys) {
-    for (let i = 0; i < keys.length; i++) {
+  function valueOr(section: string, keys: var): var {
+    for (let i = 0; i < Geometry.arrayLength(keys); i++) {
       let v = value(section, keys[i])
       if (String(v).length > 0) return v
     }
     return ""
   }
 
-  function resolveValueRef(raw) {
+  function resolveValueRef(raw: var): string {
     var s = String(raw || "").replace(/^\s+|\s+$/g, "")
     var seen = {}
     while (s.match(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/) && !seen[s]) {
@@ -47,24 +47,17 @@ QtObject {
     return s
   }
 
-  function alpha(section, key, fallback) {
+  function alpha(section: string, key: string, fallback: real): real {
     var raw = value(section, key)
     if (String(raw).length === 0) return fallback
     var n = Number(raw)
     return isFinite(n) ? Geometry.clampAlpha(n) : fallback
   }
 
-  function cssColor(color, opacity) {
+  function cssColor(color: var, opacity: real): var {
     var a = opacity === undefined || opacity === null ? 1 : Geometry.clampAlpha(opacity)
-    if (color && typeof color === "object" && color.r !== undefined) {
-      if (typeof Qt !== "undefined" && Qt.rgba) {
-        return Qt.rgba(color.r, color.g, color.b, (color.a === undefined ? 1 : color.a) * a)
-      }
-      return "#"
-        + Geometry.padHex(color.r * 255)
-        + Geometry.padHex(color.g * 255)
-        + Geometry.padHex(color.b * 255)
-        + Geometry.padHex((color.a === undefined ? 1 : color.a) * a * 255)
+    if (color && typeof color === "object" && Geometry.field(color, "r") !== undefined) {
+      return Geometry.qmlHexColor(Geometry.padHex(Number(Geometry.field(color, "r")) * 255) + Geometry.padHex(Number(Geometry.field(color, "g")) * 255) + Geometry.padHex(Number(Geometry.field(color, "b")) * 255), (Geometry.field(color, "a") === undefined ? 1 : Number(Geometry.field(color, "a"))) * a * 255)
     }
 
     var s = String(color || "").replace(/^\s+|\s+$/g, "")
@@ -77,7 +70,7 @@ QtObject {
     return Geometry.canonicalColor(s, a)
   }
 
-  function resolvedGradient(raw, fallbackColor, opacity) {
+  function resolvedGradient(raw: var, fallbackColor: var, opacity: real): var {
     var s = String(raw || "").replace(/^\s+|\s+$/g, "")
     if (s.length === 0) return { colors: [], angle: 0, enabled: false }
 
@@ -94,12 +87,12 @@ QtObject {
 
   function sameColor(a: var, b: var): bool { return Geometry.sameColor(a, b) }
 
-  function localOrSurfaceSpec(section, token, localColor, defaultColor, fallbackWidth, alphaKey) {
+  function localOrSurfaceSpec(section: string, token: string, localColor: var, defaultColor: var, fallbackWidth: int, alphaKey: string): var {
     if (!sameColor(localColor, defaultColor)) return flat(localColor, fallbackWidth)
     return surfaceSpec(section, token, localColor, fallbackWidth, alphaKey)
   }
 
-  function surfaceWidths(section, token, fallbackWidth) {
+  function surfaceWidths(section: string, token: string, fallbackWidth: int): var {
     var base = valueOr(section, token === "border" ? ["border-width"] : [token + "-width", "border-width"])
     var widths = Geometry.parseWidthSpec(base, fallbackWidth)
     return Geometry.withSideOverrides(
@@ -111,37 +104,37 @@ QtObject {
     )
   }
 
-  function borderValue(raw, fallbackColor, opacity, legacyGradientRaw) {
+  function borderValue(raw: var, fallbackColor: var, opacity: real, legacyGradientRaw: var): var {
     var fallback = cssColor(fallbackColor, opacity)
     var primaryRaw = String(raw || "").replace(/^\s+|\s+$/g, "")
     var primary = resolvedGradient(primaryRaw.length > 0 ? primaryRaw : fallbackColor, fallbackColor, opacity)
-    var color = primary.colors.length > 0 ? primary.colors[0] : fallback
-    var gradient = primary.enabled ? primary : { colors: [], angle: 0, enabled: false }
+    var color = Geometry.arrayLength(Geometry.field(primary, "colors")) > 0 ? Geometry.field(Geometry.field(primary, "colors"), 0) : fallback
+    var gradient = Geometry.field(primary, "enabled") ? primary : { colors: [], angle: 0, enabled: false }
 
     // Backward compatibility for existing configs written during the separate
     // border-gradient experiment. New configs put solid colors and gradients in
     // the same border token.
-    if (!gradient.enabled && String(legacyGradientRaw || "").replace(/^\s+|\s+$/g, "").length > 0) {
+    if (!Geometry.field(gradient, "enabled") && String(legacyGradientRaw || "").replace(/^\s+|\s+$/g, "").length > 0) {
       let legacy = resolvedGradient(legacyGradientRaw, color, opacity)
-      if (legacy.enabled) gradient = legacy
+      if (Geometry.field(legacy, "enabled")) gradient = legacy
     }
 
     return { color: color, gradient: gradient }
   }
 
-  function surfaceSpec(section, token, fallbackColor, fallbackWidth, alphaKey) {
+  function surfaceSpec(section: string, token: string, fallbackColor: var, fallbackWidth: int, alphaKey: string): var {
     var opacity = alpha(section, alphaKey || token + "-alpha", 1.0)
     var legacyGradientRaw = valueOr(section, token === "border" ? ["border-gradient"] : [token + "-gradient", "border-gradient"])
     var resolved = borderValue(resolveValueRef(value(section, token)), fallbackColor, opacity, legacyGradientRaw)
 
     return {
-      color: resolved.color,
+      color: Geometry.field(resolved, "color"),
       widths: surfaceWidths(section, token, fallbackWidth),
-      gradient: resolved.gradient,
+      gradient: Geometry.field(resolved, "gradient"),
     }
   }
 
-  function hyprlandActiveSpec(fallbackColor, fallbackWidth) {
+  function hyprlandActiveSpec(fallbackColor: var, fallbackWidth: int): var {
     var raw = value("hyprland", "active-border")
     var opacity = alpha("hyprland", "active-border-alpha", 1.0)
 
@@ -155,18 +148,18 @@ QtObject {
 
     var resolved = borderValue(resolveValueRef(raw), fallbackColor, opacity, "")
     return {
-      color: resolved.color,
+      color: Geometry.field(resolved, "color"),
       widths: Geometry.parseWidthSpec(value("hyprland", "active-border-width"), fallbackWidth),
-      gradient: resolved.gradient,
+      gradient: Geometry.field(resolved, "gradient"),
     }
   }
 
-  function controlPrefix(state) {
+  function controlPrefix(state: string): string {
     if (state === "hover" || state === "hot") return "hover-cursor"
     return state || "normal"
   }
 
-  function controlColor(prefix, foreground, accent, urgent) {
+  function controlColor(prefix: string, foreground: var, accent: var, urgent: var): var {
     if (prefix === "focus") return Style.focusStateColor(foreground, accent, urgent)
     if (prefix === "hover-cursor") return Style.hoverStateColor(foreground, accent, urgent)
     if (prefix === "selected") return Style.selectedStateColor(foreground, accent, urgent)
@@ -187,7 +180,7 @@ QtObject {
     return Style.normalBorderWidth
   }
 
-  function controlWidths(state) {
+  function controlWidths(state: string): var {
     var prefix = controlPrefix(state)
     var fallbackWidth = controlFallbackWidth(prefix)
     var base = Style.styleOverrides[prefix + "-border-width"]
@@ -201,11 +194,11 @@ QtObject {
     )
   }
 
-  function controlHasWidth(state) {
+  function controlHasWidth(state: string): bool {
     return Geometry.maxWidth(controlWidths(state)) > 0
   }
 
-  function controlSpec(state, foreground, accent, urgent) {
+  function controlSpec(state: string, foreground: var, accent: var, urgent: var): var {
     var prefix = controlPrefix(state)
     var resolved = borderValue(
       Style.styleOverrides[prefix + "-border"],
@@ -214,7 +207,7 @@ QtObject {
       Style.styleOverrides[prefix + "-border-gradient"]
     )
 
-    return { color: resolved.color, widths: controlWidths(prefix), gradient: resolved.gradient }
+    return { color: Geometry.field(resolved, "color"), widths: controlWidths(prefix), gradient: Geometry.field(resolved, "gradient") }
   }
 
   function withWidth(spec: var, width: var): var {

@@ -9,6 +9,7 @@ import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
+import "Dynamic.js" as Dynamic
 import qs.compat
 
 Panel {
@@ -30,18 +31,18 @@ Panel {
   // stay out of every list (AudioNodes.platformHides). Most machines have none.
   readonly property var nodeNames: {
     var names = []
-    for (let i = 0; i < nodes.length; i++)
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++)
       if (nodes[i] && nodes[i].name) names.push(String(nodes[i].name))
     return names
   }
 
-  function platformHides(node) {
-    return !!node && AudioNodes.platformHides(node.name, nodeNames)
+  function platformHides(node: var): bool {
+    return !!node && AudioNodes.platformHides(Dynamic.value(node, "name"), nodeNames)
   }
 
   readonly property var candidateSinks: {
     var list = []
-    for (let i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
       if (!n || !n.isSink || n.isStream || platformHides(n)) continue
       list.push(n)
@@ -51,11 +52,11 @@ Panel {
 
   readonly property var candidateSources: {
     var list = []
-    for (let i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
       if (!n || n.isSink || n.isStream) continue
       if (!isAudioSource(n) && !Model.isUntypedSource(n, sourceAvailability)) continue
-      let name = n.name || ""
+      let name = Dynamic.value(n, "name") || ""
       if (name === "quickshell" || platformHides(n)) continue
       list.push(n)
     }
@@ -64,12 +65,12 @@ Panel {
 
   readonly property var candidateStreams: {
     var list = []
-    for (let i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
       if (!n || !n.isStream || !isPlaybackStream(n)) continue
       // A tuning's output is a playback stream too, but it is the processing
       // itself rather than an application, so it does not belong in the list.
-      if (String(n.name || "").indexOf("nomarchy_speaker_tuning") === 0) continue
+      if (String(Dynamic.value(n, "name") || "").indexOf("nomarchy_speaker_tuning") === 0) continue
       if (platformHides(n)) continue
       list.push(n)
     }
@@ -87,11 +88,11 @@ Panel {
   // in how `type` is exposed (media.class, enum name, or numeric enum), but
   // playback streams consistently accept audio input from clients and publish
   // `isSink: true`; capture streams publish as stream sources.
-  function isPlaybackStream(node) {
+  function isPlaybackStream(node: var): bool {
     return Model.isPlaybackStream(node)
   }
 
-  function isAudioSource(node) {
+  function isAudioSource(node: var): bool {
     return Model.isAudioSource(node)
   }
 
@@ -100,7 +101,7 @@ Panel {
 
   readonly property var rawAudioSinks: {
     var list = []
-    for (let i = 0; i < candidateSinks.length; i++)
+    for (let i = 0; i < Dynamic.value(candidateSinks, "length"); i++)
       if (sinkAvailable(candidateSinks[i])) list.push(candidateSinks[i])
     if (sink && list.indexOf(sink) < 0) list.unshift(sink)
     return list
@@ -112,12 +113,12 @@ Panel {
     return list
   }
 
-  readonly property var audioSinks: rawAudioSinks.length > 0 ? rawAudioSinks : cachedAudioSinks
-  readonly property var audioSources: rawAudioSources.length > 0 ? rawAudioSources : cachedAudioSources
+  readonly property var audioSinks: Dynamic.value(rawAudioSinks, "length") > 0 ? rawAudioSinks : cachedAudioSinks
+  readonly property var audioSources: Dynamic.value(rawAudioSources, "length") > 0 ? rawAudioSources : cachedAudioSources
 
   readonly property var audioStreams: {
     var list = []
-    for (let i = 0; i < candidateStreams.length; i++)
+    for (let i = 0; i < Dynamic.value(candidateStreams, "length"); i++)
       if (candidateStreams[i].audio) list.push(candidateStreams[i])
     return list
   }
@@ -150,10 +151,10 @@ Panel {
 
   readonly property PwNode volumeSink: {
     if (volumeSinkName === "" || !sink) return sink
-    if (volumeSinkName === String(sink.name)) return sink
-    for (let i = 0; i < nodes.length; i++) {
+    if (volumeSinkName === String(Dynamic.value(sink, "name"))) return sink
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
-      if (n && n.isSink && !n.isStream && String(n.name) === volumeSinkName && n.audio)
+      if (n && n.isSink && !n.isStream && String(Dynamic.value(n, "name")) === volumeSinkName && Dynamic.value(n, "audio"))
         return n as PwNode
     }
     return sink
@@ -176,12 +177,12 @@ Panel {
   property int volumeSinkGeneration: 0
   property int volumeSinkRequest: -1
 
-  function resolveVolumeSink() {
+  function resolveVolumeSink(): void {
     volumeSinkGeneration++
     // A hardware output is its own volume sink, as nomarchy-audio-output-sink
     // reports without looking further, so only a DSP sink needs the script.
-    if (!sink || String(sink.name) !== "") {
-      volumeSinkName = sink ? String(sink.name) : ""
+    if (!sink || String(Dynamic.value(sink, "name")) !== "") {
+      volumeSinkName = sink ? String(Dynamic.value(sink, "name")) : ""
       return
     }
     if (volumeSinkProc.running) {
@@ -201,21 +202,21 @@ Panel {
     onFileChanged: volumeSinkResolveTimer.restart()
   }
 
-  readonly property real outputVolume: volumeSink && volumeSink.audio ? volumeSink.audio.volume : 0
-  readonly property bool outputMuted: volumeSink && volumeSink.audio ? volumeSink.audio.muted : false
+  readonly property real outputVolume: volumeSink && Dynamic.value(volumeSink, "audio") ? volumeSink.audio.volume : 0
+  readonly property bool outputMuted: volumeSink && Dynamic.value(volumeSink, "audio") ? volumeSink.audio.muted : false
   // A virtual source is untyped in Quickshell (see Model.isUntypedSource), so
   // its volume and mute go through wpctl (UntypedInput), and the panel shows no
   // level meter for it: Quickshell's peak monitor takes typed nodes only.
   readonly property bool inputViaWpctl: UntypedInput.active
   readonly property bool inputLevelKnown: !inputViaWpctl || UntypedInput.known
-  readonly property real inputVolume: inputViaWpctl ? UntypedInput.volume : (source && source.audio ? source.audio.volume : 0)
-  readonly property bool inputMuted: inputViaWpctl ? UntypedInput.muted : (source && source.audio ? source.audio.muted : false)
+  readonly property real inputVolume: inputViaWpctl ? UntypedInput.volume : (source && Dynamic.value(source, "audio") ? source.audio.volume : 0)
+  readonly property bool inputMuted: inputViaWpctl ? UntypedInput.muted : (source && Dynamic.value(source, "audio") ? source.audio.muted : false)
   readonly property var inputPeakNode: inputViaWpctl ? null : source
   // Windows port: PwNodePeakMonitor is a stub, so the meter would only be an empty bar.
   readonly property bool inputLevelShown: false
 
-  onRawAudioSinksChanged: if (rawAudioSinks.length > 0) cachedAudioSinks = rawAudioSinks
-  onRawAudioSourcesChanged: if (rawAudioSources.length > 0) cachedAudioSources = rawAudioSources
+  onRawAudioSinksChanged: if (Dynamic.value(rawAudioSinks, "length") > 0) cachedAudioSinks = rawAudioSinks
+  onRawAudioSourcesChanged: if (Dynamic.value(rawAudioSources, "length") > 0) cachedAudioSources = rawAudioSources
 
   // Single cursor model shared by keyboard and mouse. Sections:
   //   "output"  — output slider + sink device list
@@ -237,8 +238,8 @@ Panel {
   // Only channels that actually exist get a vote. A box with no default source
   // would otherwise report "input unmuted" forever, leaving the hero switch
   // able to mute but never to unmute.
-  readonly property bool hasOutput: !!(volumeSink && volumeSink.audio)
-  readonly property bool hasInput: !!(source && source.audio) || (inputViaWpctl && UntypedInput.known)
+  readonly property bool hasOutput: !!(volumeSink && Dynamic.value(volumeSink, "audio"))
+  readonly property bool hasInput: !!(source && Dynamic.value(source, "audio")) || (inputViaWpctl && UntypedInput.known)
   readonly property bool anyAudible: (hasOutput && !outputMuted) || (hasInput && !inputMuted)
   readonly property string toggleHint: anyAudible ? Commons.I18n.t("audio.mute") : Commons.I18n.t("audio.unmute")
 
@@ -250,16 +251,16 @@ Panel {
     : "transparent"
 
   function sectionCount(section: string): int {
-    if (section === "output") return displayAudioSinks.length
-    if (section === "input") return displayAudioSources.length
-    if (section === "streams") return displayAudioStreams.length
+    if (section === "output") return Dynamic.value(displayAudioSinks, "length")
+    if (section === "input") return Dynamic.value(displayAudioSources, "length")
+    if (section === "streams") return Dynamic.value(displayAudioStreams, "length")
     return 0
   }
 
   function sectionVisible(section: string): bool {
     if (section === "output") return true
-    if (section === "input") return displayAudioSources.length > 0 || !!source
-    if (section === "streams") return displayAudioStreams.length > 0
+    if (section === "input") return Dynamic.value(displayAudioSources, "length") > 0 || !!source
+    if (section === "streams") return Dynamic.value(displayAudioStreams, "length") > 0
     return false
   }
 
@@ -279,9 +280,9 @@ Panel {
     return list
   }
 
-  function moveCursor(delta) {
+  function moveCursor(delta: int): void {
     var sections = visibleSections
-    if (sections.length === 0) return
+    if (Dynamic.value(sections, "length") === 0) return
     if (focusSection === "header") {
       if (delta > 0) { focusSection = sections[0]; selectedIndex = sectionHasSlider(sections[0]) ? -1 : 0 }
       return
@@ -297,7 +298,7 @@ Panel {
     if (delta > 0) {
       if (idx < max) { selectedIndex = idx + 1; return }
       // Fall through to next section.
-      if (sIdx < sections.length - 1) {
+      if (sIdx < Dynamic.value(sections, "length") - 1) {
         focusSection = sections[sIdx + 1]
         selectedIndex = sectionHasSlider(focusSection) ? -1 : 0
       }
@@ -314,18 +315,18 @@ Panel {
     }
   }
 
-  function setHeaderCursor() {
+  function setHeaderCursor(): void {
     cursorActive = true
     focusSection = "header"
     selectedIndex = -1
   }
 
-  function moveSection(delta) {
+  function moveSection(delta: int): void {
     var sections = visibleSections
-    if (sections.length === 0) return
+    if (Dynamic.value(sections, "length") === 0) return
     var current = sections.indexOf(focusSection)
     if (current < 0) current = delta > 0 ? -1 : 0
-    var next = (current + delta + sections.length) % sections.length
+    var next = (current + delta + Dynamic.value(sections, "length")) % Dynamic.value(sections, "length")
     focusSection = sections[next]
     selectedIndex = sectionHasSlider(focusSection) ? -1 : 0
     cursorActive = true
@@ -337,7 +338,7 @@ Panel {
   // For device rows (selectedIndex >= 0 in output/input) h/l is a no-op
   // — the cursor is on a discrete row, not on the slider, and silently
   // moving the global slider would surprise the user.
-  function adjustVolume(delta) {
+  function adjustVolume(delta: real): void {
     if (focusSection === "output" && selectedIndex === -1) {
       setOutputVolume(outputVolume + delta)
       return
@@ -346,14 +347,14 @@ Panel {
       setInputVolume(inputVolume + delta)
       return
     }
-    if (focusSection === "streams" && selectedIndex >= 0 && selectedIndex < displayAudioStreams.length) {
+    if (focusSection === "streams" && selectedIndex >= 0 && selectedIndex < Dynamic.value(displayAudioStreams, "length")) {
       let s = nodeFor(displayAudioStreams[selectedIndex])
-      if (s && s.audio) s.audio.volume = Math.max(0, Math.min(1.5, s.audio.volume + delta))
+      if (s && Dynamic.value(s, "audio")) s.audio.volume = Math.max(0, Math.min(1.5, Dynamic.value(s, "audio").volume + delta))
     }
   }
 
   // Enter/Space: activate whatever the cursor is on.
-  function activateCursor() {
+  function activateCursor(): void {
     if (focusSection === "header") { toggleAllMuted(); return }
     if (focusSection === "output") {
       if (selectedIndex === -1) { toggleOutputMute(); return }
@@ -369,7 +370,7 @@ Panel {
     }
     if (focusSection === "streams" && selectedIndex >= 0) {
       let st = nodeFor(displayAudioStreams[selectedIndex])
-      if (st && st.audio) st.audio.muted = !st.audio.muted
+      if (st && Dynamic.value(st, "audio")) st.audio.muted = !Dynamic.value(Dynamic.value(st, "audio"), "muted")
     }
   }
 
@@ -390,23 +391,23 @@ Panel {
   onAudioSourcesChanged: scheduleDisplayAudioModelRefresh()
   onAudioStreamsChanged: scheduleDisplayAudioModelRefresh()
 
-  function rowSnapshot(list) {
+  function rowSnapshot(list: var): var {
     return Model.rowSnapshot(list)
   }
 
   // A row that outlives its node resolves to null, or to a node PipeWire recreated
   // under the same id and name; every binding below guards for null, and a row
   // that never held the node cannot dangle.
-  function nodeFor(row) {
+  function nodeFor(row: var): var {
     if (!row) return null
-    for (let i = 0; i < nodes.length; i++) {
+    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
       let n = nodes[i]
-      if (n && n.id === row.id && String(n.name || "") === row.name) return n
+      if (n && n.id === row.id && String(Dynamic.value(n, "name") || "") === Dynamic.value(row, "name")) return n
     }
     return null
   }
 
-  function refreshDisplayAudioModels() {
+  function refreshDisplayAudioModels(): void {
     if (!opened) return
     displayAudioSinks = rowSnapshot(audioSinks)
     displayAudioSources = rowSnapshot(audioSources)
@@ -414,12 +415,12 @@ Panel {
     clampCursor()
   }
 
-  function scheduleDisplayAudioModelRefresh() {
+  function scheduleDisplayAudioModelRefresh(): void {
     if (!opened) return
     audioModelRefreshTimer.restart()
   }
 
-  function clearDisplayAudioModels() {
+  function clearDisplayAudioModels(): void {
     audioModelRefreshTimer.stop()
     displayAudioSinks = []
     displayAudioSources = []
@@ -431,14 +432,14 @@ Panel {
   // StreamRow) calls this when it gains hasCursor. Without it, j/k can
   // walk the selection off-screen — wifi uses ListView.positionViewAtIndex
   // for this; we don't have that affordance with a multi-section Column.
-  function resetScroll() {
+  function resetScroll(): void {
     var scrollArea = PanelContent.scrollArea(panel.loadedContent)
     if (!scrollArea) return
     var flick = scrollArea.contentItem
     if (flick && flick.contentY !== undefined) flick.contentY = 0
   }
 
-  function ensureCursorVisible(item) {
+  function ensureCursorVisible(item: Item): void {
     var scrollArea = PanelContent.scrollArea(panel.loadedContent)
     if (!item || !scrollArea) return
     var flick = scrollArea.contentItem
@@ -459,9 +460,9 @@ Panel {
       flick.contentY = Math.max(0, Math.min(maxY, bottom + margin - flick.height))
   }
 
-  function clampCursor() {
+  function clampCursor(): void {
     var sections = visibleSections
-    if (!sections || !sections.length) return
+    if (!sections || !Dynamic.value(sections, "length")) return
     // "header" is virtual and never appears in visibleSections, so it has to
     // be let through: muting republishes the PipeWire snapshot, and clamping
     // would knock the cursor off the hero switch on every toggle.
@@ -478,10 +479,10 @@ Panel {
     if (selectedIndex < floor) selectedIndex = floor
   }
 
-  function outputIcon(volume): string {
+  function outputIcon(volume: var): string {
     // Match the old Waybar pulseaudio glyph set. The Material Design speaker
     // icons render visually smaller in JetBrainsMono Nerd Font.
-    if (!sink || !sink.audio) return ""
+    if (!sink || !Dynamic.value(sink, "audio")) return ""
     if (isHeadphones(sink)) return "󰋋"
     if (outputMuted) return ""
     var v = volume === undefined ? outputVolume : volume
@@ -499,18 +500,18 @@ Panel {
   // Playful mood-name for a given output volume. Mirrors the brightness
   // panel's brightnessName ladder; bands are wide enough that small
   // tweaks don't rename the room you're in.
-  function outputVolumeName(volume, muted) {
+  function outputVolumeName(volume: real, muted: bool): string {
     return Model.outputVolumeName(volume, muted, Commons.I18n.t)
   }
 
-  function setOutputVolume(v) {
-    if (!volumeSink || !volumeSink.audio) return outputVolume
+  function setOutputVolume(v: real): real {
+    if (!volumeSink || !Dynamic.value(volumeSink, "audio")) return outputVolume
     var volume = Math.max(0, Math.min(1, v))
     volumeSink.audio.volume = volume
     return volume
   }
 
-  function showVolumeOsd(volume) {
+  function showVolumeOsd(volume: real): void {
     if (!BarValues.hasShell(bar)) return
     BarValues.summon(bar, "nomarchy.osd", JSON.stringify({
       icon: outputIcon(volume),
@@ -518,128 +519,128 @@ Panel {
     }))
   }
 
-  function setInputVolume(v) {
+  function setInputVolume(v: real): void {
     if (inputViaWpctl) {
       UntypedInput.setVolume(v)
       return
     }
-    if (!source || !source.audio) return
+    if (!source || !Dynamic.value(source, "audio")) return
     source.audio.volume = Math.max(0, Math.min(1, v))
   }
 
-  function toggleOutputMute() {
-    if (volumeSink && volumeSink.audio) volumeSink.audio.muted = !volumeSink.audio.muted
+  function toggleOutputMute(): void {
+    if (volumeSink && Dynamic.value(volumeSink, "audio")) volumeSink.audio.muted = !Dynamic.value(Dynamic.value(volumeSink, "audio"), "muted")
   }
 
-  function toggleInputMute() {
+  function toggleInputMute(): void {
     if (inputViaWpctl) {
-      if (UntypedInput.known) UntypedInput.setMuted(!UntypedInput.muted)
+      if (UntypedInput.known) UntypedInput.setMuted(!Dynamic.value(UntypedInput, "muted"))
     }
-    else if (source && source.audio) source.audio.muted = !source.audio.muted
+    else if (source && Dynamic.value(source, "audio")) source.audio.muted = !Dynamic.value(Dynamic.value(source, "audio"), "muted")
   }
 
   // The hero switch is the whole panel's on/off, so it carries both channels
   // at once. It reads as on while anything is still audible, which keeps
   // muting a single channel from the row below flipping the master switch.
-  function toggleAllMuted() {
+  function toggleAllMuted(): void {
     var mute = anyAudible
     if (hasOutput) volumeSink.audio.muted = mute
     if (hasInput && inputViaWpctl) UntypedInput.setMuted(mute)
     else if (hasInput) source.audio.muted = mute
   }
 
-  function setDefaultSink(node) {
+  function setDefaultSink(node: var): void {
     if (!node) return
     Pipewire.preferredDefaultAudioSink = node
-    if (node.id !== undefined && node.name) {
+    if (node.id !== undefined && Dynamic.value(node, "name")) {
       Quickshell.execDetached([
         "nomarchy-audio-output-set-default",
         String(node.id),
-        String(node.name)
+        String(Dynamic.value(node, "name"))
       ])
     }
   }
 
-  function setDefaultSource(node) {
+  function setDefaultSource(node: var): void {
     if (!node) return
     // Quickshell refuses an untyped node; the command below still selects it.
-    if (node.audio) Pipewire.preferredDefaultAudioSource = node
-    if (node.id !== undefined && node.name) {
+    if (Dynamic.value(node, "audio")) Pipewire.preferredDefaultAudioSource = node
+    if (node.id !== undefined && Dynamic.value(node, "name")) {
       Quickshell.execDetached([
         "nomarchy-audio-input-set-default",
         String(node.id),
-        String(node.name)
+        String(Dynamic.value(node, "name"))
       ])
     }
   }
 
-  function sinkAvailable(node) {
-    if (!node || !node.name || !sinkAvailabilityLoaded) return true
-    var name = String(node.name)
+  function sinkAvailable(node: var): bool {
+    if (!node || !Dynamic.value(node, "name") || !sinkAvailabilityLoaded) return true
+    var name = String(Dynamic.value(node, "name"))
     return sinkAvailability[name] !== false
   }
 
-  function friendlyDeviceLabel(text) {
+  function friendlyDeviceLabel(text: string): string {
     return Model.friendlyDeviceLabel(text)
   }
 
-  function nodeLabel(node) {
+  function nodeLabel(node: var): string {
     return Model.nodeLabel(node, Commons.I18n.t)
   }
 
-  function nodeProps(node) {
+  function nodeProps(node: var): var {
     return Model.nodeProps(node)
   }
 
-  function isHeadphones(node) {
+  function isHeadphones(node: var): bool {
     return Model.isHeadphones(node)
   }
 
-  function sinkGlyph(node) {
+  function sinkGlyph(node: var): string {
     return Model.sinkGlyph(node)
   }
 
-  function sourceGlyph(node) {
+  function sourceGlyph(node: var): string {
     return Model.sourceGlyph(node)
   }
 
-  function friendlyStreamLabel(label) {
+  function friendlyStreamLabel(label: string): string {
     return Model.friendlyStreamLabel(label)
   }
 
-  function streamLabelKey(label) {
+  function streamLabelKey(label: string): string {
     return Model.streamLabelKey(label)
   }
 
-  function streamLabelIsGeneric(label) {
+  function streamLabelIsGeneric(label: string): bool {
     return Model.streamLabelIsGeneric(label)
   }
 
-  function rawStreamLabel(node) {
+  function rawStreamLabel(node: var): string {
     return Model.rawStreamLabel(node)
   }
 
-  function mprisPlayerLabel(player) {
+  function mprisPlayerLabel(player: MprisPlayer): string {
     return Model.mprisPlayerLabel(player)
   }
 
-  function mprisPlayerIsProxy(player) {
+  function mprisPlayerIsProxy(player: MprisPlayer): bool {
     return Model.mprisPlayerIsProxy(player)
   }
 
-  function streamRepresentsMprisPlayer(streamLabel, playerLabel) {
+  function streamRepresentsMprisPlayer(streamLabel: string, playerLabel: string): bool {
     return Model.streamRepresentsMprisPlayer(streamLabel, playerLabel)
   }
 
-  function mprisLabelsFor(predicate) {
+  function mprisLabelsFor(predicate: var): var {
     return Model.mprisLabelsFor(mprisPlayers, predicate)
   }
 
-  function matchingMprisStreamLabel(label) {
+  function matchingMprisStreamLabel(label: string): string {
     return Model.matchingMprisStreamLabel(label, mprisPlayers)
   }
 
-  function unmatchedMprisStreamLabel(label) {
+  function unmatchedMprisStreamLabel(label: string): string {
     // Spotify exposes its PipeWire stream as "audio-src". For generic stream
     // names, use the one MPRIS player not already represented by another audio
     // stream (e.g. Chromium, or ALSA apps like cliamp).
@@ -649,11 +650,11 @@ Panel {
   // These read the other streams' node properties, so they take the live list --
   // displayAudioStreams carries primitives now, and resolving each row back
   // would only rebuild what audioStreams already is.
-  function streamLabel(node) {
+  function streamLabel(node: var): string {
     return Model.streamLabel(node, mprisPlayers, audioStreams, Commons.I18n.t)
   }
 
-  function streamRepresentsPlayer(node, player) {
+  function streamRepresentsPlayer(node: var, player: MprisPlayer): bool {
     return Model.streamRepresentsPlayer(node, player, mprisPlayers, audioStreams)
   }
 
@@ -759,9 +760,9 @@ Panel {
         if (t === "m" || t === "M") {
           if (!root.cursorActive) return
           if (root.focusSection === "streams" && root.selectedIndex >= 0
-              && root.selectedIndex < root.displayAudioStreams.length) {
+              && root.selectedIndex < Dynamic.value(root.displayAudioStreams, "length")) {
             let s = root.nodeFor(root.displayAudioStreams[root.selectedIndex])
-            if (s && s.audio) s.audio.muted = !s.audio.muted
+            if (s && Dynamic.value(s, "audio")) s.audio.muted = !Dynamic.value(Dynamic.value(s, "audio"), "muted")
           } else if (root.focusSection === "input") {
             root.toggleInputMute()
           } else {
@@ -951,14 +952,14 @@ Panel {
 
           // ---- Input ----
           PanelSeparator {
-            visible: root.displayAudioSources.length > 0 || !!root.source
+            visible: Dynamic.value(root.displayAudioSources, "length") > 0 || !!root.source
             foreground: root.contentForeground
           }
 
           Column {
             width: parent.width
             spacing: Style.space(6)
-            visible: root.displayAudioSources.length > 0 || !!root.source
+            visible: Dynamic.value(root.displayAudioSources, "length") > 0 || !!root.source
 
             Item {
               width: parent.width
@@ -1064,14 +1065,14 @@ Panel {
 
           // ---- Per-app streams ----
           PanelSeparator {
-            visible: root.displayAudioStreams.length > 0
+            visible: Dynamic.value(root.displayAudioStreams, "length") > 0
             foreground: root.contentForeground
           }
 
           Column {
             width: parent.width
             spacing: Style.space(10)
-            visible: root.displayAudioStreams.length > 0
+            visible: Dynamic.value(root.displayAudioStreams, "length") > 0
 
             PanelSectionHeader {
               text: Commons.I18n.t("audio.sources")
@@ -1231,8 +1232,8 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property real streamVolume: node && node.audio ? node.audio.volume : 0
-    readonly property bool streamMuted: node && node.audio ? node.audio.muted : false
+    readonly property real streamVolume: node && Dynamic.value(node, "audio") ? node.audio.volume : 0
+    readonly property bool streamMuted: node && Dynamic.value(node, "audio") ? node.audio.muted : false
     readonly property bool isActive: root.streamRepresentsPlayer(node, root.activeMediaPlayer)
 
     hasCursor: root.cursorActive && root.focusSection === "streams" && root.selectedIndex === rowIndex
@@ -1272,8 +1273,8 @@ Panel {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-              if (streamRow.node && streamRow.node.audio)
-                streamRow.node.audio.muted = !streamRow.node.audio.muted
+              if (streamRow.node && Dynamic.value(streamRow.node, "audio"))
+                streamRow.node.audio.muted = !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted")
             }
           }
         }
@@ -1315,11 +1316,11 @@ Panel {
         opacity: streamRow.streamMuted ? 0.5 : 1.0
 
         onMoved: function(v) {
-          if (streamRow.node && streamRow.node.audio) streamRow.node.audio.volume = v
+          if (streamRow.node && Dynamic.value(streamRow.node, "audio")) streamRow.node.audio.volume = v
         }
         onRightClicked: {
-          if (streamRow.node && streamRow.node.audio)
-            streamRow.node.audio.muted = !streamRow.node.audio.muted
+          if (streamRow.node && Dynamic.value(streamRow.node, "audio"))
+            streamRow.node.audio.muted = !Dynamic.value(Dynamic.value(streamRow.node, "audio"), "muted")
         }
       }
     }

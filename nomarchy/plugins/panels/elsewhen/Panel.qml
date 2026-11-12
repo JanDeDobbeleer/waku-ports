@@ -5,6 +5,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
+import "Dynamic.js" as Dynamic
 import "GlobeModel.js" as Solar
 
 // A bar button that opens a panel of clocks, one row per city, and zooms into
@@ -33,9 +34,9 @@ Panel {
   // ---- settings
   // `cities` once written; until then the older `zones` string.
   readonly property var zones: Model.parseCities(setting("cities", null), setting("zones", ""))
-  readonly property var zoneIds: zones.map(function(z) { return z.id })
+  readonly property var zoneIds: zones.map(function(z: var): var { return Dynamic.value(z, "id") })
   // Never written: the first probe seeds the list around the local zone.
-  readonly property bool needsSeed: zones.length === 0
+  readonly property bool needsSeed: Dynamic.value(zones, "length") === 0
   readonly property var probeIds: needsSeed ? zoneIds.concat(Model.seedCandidateZones()) : zoneIds
 
   readonly property var formatLocale: Qt.locale(Commons.I18n.formatLocale)
@@ -44,7 +45,7 @@ Panel {
   // "home" shows the distance from here ("+2h"), "utc" the zone itself ("UTC-5").
   readonly property string offsetMode: setting("offsetMode", "home") === "utc" ? "utc" : "home"
   // Only the US measurement system means Fahrenheit.
-  readonly property string autoUnits: formatLocale.measurementSystem === Locale.ImperialUSSystem ? "F" : "C"
+  readonly property string autoUnits: Dynamic.value(formatLocale, "measurementSystem") === Locale.ImperialUSSystem ? "F" : "C"
   readonly property string units: Model.resolveUnits(setting("units", ""), autoUnits)
   readonly property bool globeEnabled: setting("globeEnabled", true) !== false
   // Draw the globe with less in it while it moves.
@@ -57,22 +58,22 @@ Panel {
       t: Commons.I18n.t,
       tn: Commons.I18n.tn,
       fmt: Commons.I18n.formatNumber,
-      am: locale.amText,
-      pm: locale.pmText,
-      date: function(parts) {
-        return new Date(parts.year, parts.month, parts.day, 12)
+      am: Dynamic.value(locale, "amText"),
+      pm: Dynamic.value(locale, "pmText"),
+      date: function(parts: var): string {
+        return new Date(Dynamic.value(parts, "year"), Dynamic.value(parts, "month"), Dynamic.value(parts, "day"), 12)
           .toLocaleString(locale, Commons.I18n.t("elsewhen.dateFormat"))
       }
     }
   }
 
-  function toggleHour24() { persistSettings({ hour24: !hour24 }) }
-  function toggleOffsetMode() { persistSettings({ offsetMode: offsetMode === "utc" ? "home" : "utc" }) }
-  function toggleUnits() { persistSettings({ units: units === "C" ? "F" : "C" }) }
+  function toggleHour24(): void { persistSettings({ hour24: !hour24 }) }
+  function toggleOffsetMode(): void { persistSettings({ offsetMode: offsetMode === "utc" ? "home" : "utc" }) }
+  function toggleUnits(): void { persistSettings({ units: units === "C" ? "F" : "C" }) }
 
-  function offsetTextFor(rowData) {
-    if (!rowData || !rowData.ready) return ""
-    return offsetMode === "utc" ? Model.utcOffsetLabel(rowData.offsetMinutes, words) : rowData.relative
+  function offsetTextFor(rowData: var): string {
+    if (!rowData || !Dynamic.value(rowData, "ready")) return ""
+    return offsetMode === "utc" ? Model.utcOffsetLabel(Dynamic.value(rowData, "offsetMinutes"), words) : Dynamic.value(rowData, "relative")
   }
 
   // ---- state
@@ -93,16 +94,16 @@ Panel {
   property bool searchProbeQueued: false
   property bool factsQueued: false
 
-  readonly property bool adding: citySearch ? citySearch.active : false
+  readonly property bool adding: citySearch ? Dynamic.value(citySearch, "active") : false
   onAddingChanged: if (!adding && scroller) scroller.scrollToTop()
-  readonly property bool choosingHere: hereSearch ? hereSearch.active : false
+  readonly property bool choosingHere: hereSearch ? Dynamic.value(hereSearch, "active") : false
   readonly property var zoneOptions: Model.zoneOptions(zoneCatalogText, zones)
   // The globe's jump box may go to a city that is already tracked.
   readonly property var allZoneOptions: Model.zoneOptions(zoneCatalogText, [])
   readonly property var searchZoneIds: {
     var out = []
     var matches = (citySearch ? citySearch.matches : []).concat(hereSearch ? hereSearch.matches : [])
-    for (let i = 0; i < matches.length; i++) {
+    for (let i = 0; i < Dynamic.value(matches, "length"); i++) {
       let id = matches[i].value
       if (out.indexOf(id) < 0) out.push(id)
     }
@@ -150,10 +151,10 @@ Panel {
   }
 
   // The globe opens on the list's focus, when its coordinates are known.
-  function showFocusOnGlobe() {
+  function showFocusOnGlobe(): void {
     var g = globeLoader ? globeLoader.item as Globe : null
     if (!g) return
-    if (focusIndex >= 0 && focusKnown) g.goTo(focusZone.label, focusZone.id)
+    if (focusIndex >= 0 && focusKnown) g.goTo(Dynamic.value(focusZone, "label"), Dynamic.value(focusZone, "id"))
     else g.showHome()
   }
 
@@ -162,44 +163,44 @@ Panel {
   // The tapped city brings what is known of where it is - a tracked or jumped-to
   // town's own coordinates and region - so here is never geocoded by name again.
   function claimHome(label: var, zone: var): void {
-    var stored = Model.homeCityAfterTap(label, zone, hereZone && hereZone.chosen ? hereZone.label : "", localZone)
+    var stored = Model.homeCityAfterTap(label, zone, hereZone && Dynamic.value(hereZone, "chosen") ? Dynamic.value(hereZone, "label") : "", localZone)
     if (stored === null) return
     if (stored === "") { setHere({ label: Model.labelForZoneId(localZone), id: localZone }); return }
     var pick = { label: stored, id: zone }
-    var known = zones.concat(sessionCities).filter(function(c) { return c.label === label && c.id === zone })[0]
-    var place = known && known.lat !== undefined ? known : placeOf(pick)
-    if (place) { pick.lat = place.lat; pick.lon = place.lon }
-    if (known && known.region) pick.region = known.region
+    var known = zones.concat(sessionCities).filter(function(c: var): bool { return Dynamic.value(c, "label") === label && Dynamic.value(c, "id") === zone })[0]
+    var place = known && Dynamic.value(known, "lat") !== undefined ? known : placeOf(pick)
+    if (place) { pick.lat = Dynamic.value(place, "lat"); pick.lon = Dynamic.value(place, "lon") }
+    if (known && Dynamic.value(known, "region")) pick.region = Dynamic.value(known, "region")
     setHere(pick)
   }
 
   // Here moves, and the row that stood for it follows, keeping its people. A
   // place on another zone moves the machine's clock first, and here only moves
   // once it has: a refused change leaves everything as it was.
-  function setHere(pick) {
+  function setHere(pick: var): void {
     var next = Model.hereAfterPick(zones, hereZone, pick, localZone)
     if (!next) return
-    if (next.zoneChange !== "") {
+    if (Dynamic.value(next, "zoneChange") !== "") {
       if (timezoneProc.running) return
       // Only here waits on the clock; the list is whatever it is by then.
-      timezoneProc.pending = { here: next.here, zoneChange: next.zoneChange }
-      timezoneProc.command = Model.timezoneCommand(next.zoneChange)
+      timezoneProc.pending = { here: Dynamic.value(next, "here"), zoneChange: Dynamic.value(next, "zoneChange") }
+      timezoneProc.command = Model.timezoneCommand(Dynamic.value(next, "zoneChange"))
       timezoneProc.running = true
       return
     }
     applyHere(next)
   }
 
-  function applyHere(next) {
-    var values = { here: next.here === null ? undefined : next.here, homeCity: undefined }
-    if (next.zones && next.zones !== zones) { values.cities = Model.serializeCities(next.zones); values.zones = undefined }
+  function applyHere(next: var): void {
+    var values = { here: Dynamic.value(next, "here") === null ? undefined : Dynamic.value(next, "here"), homeCity: undefined }
+    if (Dynamic.value(next, "zones") && Dynamic.value(next, "zones") !== zones) { values.cities = Model.serializeCities(Dynamic.value(next, "zones")); values.zones = undefined }
     persistSettings(values)
     refreshFacts()
   }
 
   function notify(title: var): void { Util.execArgv(["nomarchy-notification-send", title]) }
 
-  function startChoosingHere() { if (hereSearch && localZone !== "" && !globeMode) hereSearch.start() }
+  function startChoosingHere(): void { if (hereSearch && localZone !== "" && !globeMode) hereSearch.start() }
 
   function focusFromGlobe(label: var, zone: var): void {
     var i = Model.indexOfZone(zones, label, zone)
@@ -210,12 +211,12 @@ Panel {
   // from. The unused sum makes it recompute when the layout above moves.
   readonly property var heroCenter: {
     if (!hero || !stage) return null
-    var _ = hero.icon.width + hero.icon.height + stage.y + stage.width
-    var pt = hero.icon.mapToItem(stage, hero.icon.width / 2, hero.icon.height / 2)
-    return (pt && pt.x !== undefined) ? pt : null
+    var _ = hero.icon.width + Dynamic.value(hero.icon, "height") + Dynamic.value(stage, "y") + stage.width
+    var pt = hero.icon.mapToItem(stage, hero.icon.width / 2, Dynamic.value(hero.icon, "height") / 2)
+    return (pt && Dynamic.value(pt, "x") !== undefined) ? pt : null
   }
-  readonly property real heroCenterX: heroCenter ? heroCenter.x : (stage ? stage.width / 2 : 0)
-  readonly property real heroCenterY: heroCenter ? heroCenter.y : 0
+  readonly property real heroCenterX: heroCenter ? Dynamic.value(heroCenter, "x") : (stage ? stage.width / 2 : 0)
+  readonly property real heroCenterY: heroCenter ? Dynamic.value(heroCenter, "y") : 0
   readonly property real heroDiscRadius: hero ? Math.max(1, hero.icon.width / 2 - 1) : 1
 
   // ---- drag to reorder
@@ -234,32 +235,32 @@ Panel {
     rowPitch = pitch
     var gap = pitch - (cityRows && cityRows.itemAt(index) ? cityRows.itemAt(index).height : 0)
     var pitches = []
-    for (let i = 0; i < zones.length; i++) {
+    for (let i = 0; i < Dynamic.value(zones, "length"); i++) {
       let item = cityRows ? cityRows.itemAt(i) : null
-      pitches.push(item ? item.height + gap : pitch)
+      pitches.push(item ? Dynamic.value(item, "height") + gap : pitch)
     }
     rowPitches = pitches
   }
 
   function moveRowDrag(offset: real): void {
     dragOffset = offset
-    dragTarget = Model.dragTargetFor(dragIndex, dragOffset, rowPitch, dragTarget, zones.length, rowPitches)
+    dragTarget = Model.dragTargetFor(dragIndex, dragOffset, rowPitch, dragTarget, Dynamic.value(zones, "length"), rowPitches)
   }
 
   // Glide into the slot, then commit.
-  function releaseRowDrag() {
+  function releaseRowDrag(): void {
     if (dragIndex < 0) { cancelRowDrag(); return }
     dropAnimation.to = Model.dropOffset(dragIndex, dragTarget, rowPitch, rowPitches)
     dropAnimation.restart()
   }
 
-  function commitRowDrag() {
+  function commitRowDrag(): void {
     if (dragIndex >= 0 && dragTarget >= 0 && dragTarget !== dragIndex)
       persistSettings({ cities: Model.serializeCities(Model.moveZone(zones, dragIndex, dragTarget)), zones: undefined })
     cancelRowDrag()
   }
 
-  function cancelRowDrag() {
+  function cancelRowDrag(): void {
     dropAnimation.stop()
     dragIndex = -1
     dragTarget = -1
@@ -273,18 +274,18 @@ Panel {
   readonly property string scrubLabel: Model.formatScrubDelta(scrubMinutes, words)
 
   // Measured against the unscrubbed present, so a drag cannot drift.
-  function scrubTo(rowData, fraction) {
-    if (!rowData || !rowData.ready) return
-    var parts = Model.zoneParts(nowMs, rowData.offsetMinutes)
+  function scrubTo(rowData: var, fraction: real): void {
+    if (!rowData || !Dynamic.value(rowData, "ready")) return
+    var parts = Model.zoneParts(nowMs, Dynamic.value(rowData, "offsetMinutes"))
     scrubMinutes = Model.scrubDeltaMinutes(fraction, parts.hour * 60 + parts.minute)
   }
 
-  function beginScrub(rowData, fraction) {
+  function beginScrub(rowData: var, fraction: real): void {
     scrubHold.stop()
     scrubTo(rowData, fraction)
   }
 
-  function endScrub() { scrubHold.restart() }
+  function endScrub(): void { scrubHold.restart() }
 
   // Held until Escape or close: a key press has no release to time from. Unlike a
   // drag, which stays within the strip's day, the keys can run on into other days.
@@ -301,14 +302,14 @@ Panel {
   property int moonShowStep: 0
   readonly property real moonPhase: moonShowing && moonDemo >= 0 ? moonDemo : Solar.moonPhase(effectiveMs)
 
-  function startMoonShow() {
+  function startMoonShow(): void {
     moonShowStep = 0
     moonShowing = true
     moonDemo = moonShowStops[0]
     moonShowTimer.restart()
   }
 
-  function stopMoonShow() {
+  function stopMoonShow(): void {
     moonShowTimer.stop()
     // Before the value, so the tween does not run the phase back to -1.
     moonShowing = false
@@ -321,24 +322,24 @@ Panel {
   // The system zone names a representative city; a chosen `here` overrides it
   // while the machine stays on that zone, so a trip resets it on its own.
   readonly property var hereZone: Model.resolveHere(setting("here", null), setting("homeCity", ""), localZone)
-  readonly property string homeCity: hereZone ? hereZone.label : ""
+  readonly property string homeCity: hereZone ? Dynamic.value(hereZone, "label") : ""
   readonly property var homeZone: hereZone || ({ label: "", id: localZone })
 
-  function placeOf(zone) {
+  function placeOf(zone: var): var {
     var f = facts[Model.factsKey(zone)]
-    return (f && f.lat !== undefined && f.lon !== undefined) ? f : null
+    return (f && Dynamic.value(f, "lat") !== undefined && Dynamic.value(f, "lon") !== undefined) ? f : null
   }
 
   readonly property var homePlace: homeCity === "" || localZone === "" ? null : placeOf(homeZone)
 
   // Matched by name: Miami should not light up New York.
-  readonly property var trackedNames: zones.map(function(z) { return String(z.label).toLowerCase() })
+  readonly property var trackedNames: zones.map(function(z: var): string { return String(Dynamic.value(z, "label")).toLowerCase() })
 
-  function globeRows(list, rank) {
+  function globeRows(list: var, rank: int): var {
     var out = []
-    for (let i = 0; i < list.length; i++) {
+    for (let i = 0; i < Dynamic.value(list, "length"); i++) {
       let f = placeOf(list[i])
-      if (f) out.push([list[i].label, list[i].id, f.lat, f.lon, rank])
+      if (f) out.push([list[i].label, list[i].id, Dynamic.value(f, "lat"), Dynamic.value(f, "lon"), rank])
     }
     return out
   }
@@ -352,13 +353,13 @@ Panel {
   readonly property var focusZone: focusIndex >= 0 ? zones[focusIndex] : homeZone
   readonly property var focusPlace: placeOf(focusZone)
   readonly property bool focusKnown: focusPlace !== null
-  readonly property real focusLat: focusKnown ? focusPlace.lat : 0
-  readonly property real focusLon: focusKnown ? focusPlace.lon : 0
+  readonly property real focusLat: focusKnown ? Dynamic.value(focusPlace, "lat") : 0
+  readonly property real focusLon: focusKnown ? Dynamic.value(focusPlace, "lon") : 0
 
-  function focusOn(index) {
+  function focusOn(index: int): void {
     addSelected = false
     var from = hero ? hero.spin : 0
-    focusKey = index >= 0 && index < zones.length ? Model.factsKey(zones[index]) : ""
+    focusKey = index >= 0 && index < Dynamic.value(zones, "length") ? Model.factsKey(zones[index]) : ""
     if (focusKnown && hero) hero.turn(from, focusLon)
   }
 
@@ -367,10 +368,10 @@ Panel {
 
   // Up and down walk home, each city and then "Add a city", wrapping round like the
   // search list. The globe has no add row, so there the walk skips it.
-  function moveFocus(step) {
-    var at = addSelected ? zones.length : focusIndex
-    var next = Model.moveSelection(at + 1, step, zones.length + (globeMode ? 1 : 2)) - 1
-    if (next === zones.length) {
+  function moveFocus(step: int): void {
+    var at = addSelected ? Dynamic.value(zones, "length") : focusIndex
+    var next = Model.moveSelection(at + 1, step, Dynamic.value(zones, "length") + (globeMode ? 1 : 2)) - 1
+    if (next === Dynamic.value(zones, "length")) {
       addSelected = true
       scrollToItem(citySearch)
       return
@@ -382,20 +383,20 @@ Panel {
 
   // The picked city goes, as with its × button, and the cursor lands on the city
   // that takes its place. The last city stays, so there is always one clock.
-  function deleteFocused() {
-    if (globeMode || addSelected || focusIndex < 0 || zones.length < 2) return
+  function deleteFocused(): void {
+    if (globeMode || addSelected || focusIndex < 0 || Dynamic.value(zones, "length") < 2) return
     var at = focusIndex
     removeCityAt(at)
-    focusOn(Math.min(at, zones.length - 1))
+    focusOn(Math.min(at, Dynamic.value(zones, "length") - 1))
   }
 
-  function scrollToItem(item) {
+  function scrollToItem(item: Item): void {
     if (!scroller) return
     if (!item) { scroller.scrollToTop(); return }
     var top = item.mapToItem(scrollContent, 0, 0).y
     if (top < scroller.contentY) scroller.scrollTo(top)
-    else if (top + item.height > scroller.contentY + scroller.height)
-      scroller.scrollTo(Math.min(scroller.maxScroll, top + item.height - scroller.height))
+    else if (top + Dynamic.value(item, "height") > scroller.contentY + Dynamic.value(scroller, "height"))
+      scroller.scrollTo(Math.min(scroller.maxScroll, top + Dynamic.value(item, "height") - Dynamic.value(scroller, "height")))
   }
 
   // Surrogate pairs rather than literal glyphs, which re-encoding can break.
@@ -438,7 +439,7 @@ Panel {
   }
 
   readonly property real capGap: Math.max(0,
-    nameFontMetrics.height - nameFontMetrics.descent + nameCapMetrics.tightBoundingRect.y)
+    Dynamic.value(nameFontMetrics, "height") - nameFontMetrics.descent + Dynamic.value(nameCapMetrics.tightBoundingRect, "y"))
 
   // The widest a row's time gets, so every row's weather lines up against one
   // column rather than hugging "4:06" in one row and "10:06" in the next.
@@ -455,21 +456,21 @@ Panel {
     id: meridiemMetrics
     font.family: root.fontFamily
     font.pixelSize: Style.font.caption
-    text: root.formatLocale.pmText.length > root.formatLocale.amText.length
-      ? root.formatLocale.pmText : root.formatLocale.amText
+    text: Dynamic.value(Dynamic.value(root.formatLocale, "pmText"), "length") > Dynamic.value(root.formatLocale, "amText").length
+      ? Dynamic.value(root.formatLocale, "pmText") : Dynamic.value(root.formatLocale, "amText")
   }
 
   readonly property real timeColumnWidth: Math.ceil(widestTimeMetrics.advanceWidth
     + (hour24 ? 0 : Style.spacing.xs + meridiemMetrics.advanceWidth))
 
-  function tick() {
+  function tick(): void {
     nowMs = Date.now()
     localOffsetMinutes = -(new Date().getTimezoneOffset())
   }
 
   // Written straight back to this widget's shell.json entry, like the clock's.
   // An undefined value removes its key.
-  function persistSettings(values) {
+  function persistSettings(values: var): void {
     var entry = { id: root.moduleName }
     for (let existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
     for (let key in values) {
@@ -482,7 +483,7 @@ Panel {
       BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
-  function setZones(next) {
+  function setZones(next: var): void {
     if (next === zones) return
     persistSettings({ cities: Model.serializeCities(next), zones: undefined })
     refresh()
@@ -492,14 +493,14 @@ Panel {
 
   // The label matters as much as the zone: many cities share one. A place from
   // the geocoder brings its coordinates, so the row never has to look itself up.
-  function addCity(id, label, place) { setZones(Model.addZone(zones, id, label || "", place)) }
-  function removeCity(id) { setZones(Model.removeZone(zones, id)) }
+  function addCity(id: string, label: string, place: var): void { setZones(Model.addZone(zones, id, label || "", place)) }
+  function removeCity(id: string): void { setZones(Model.removeZone(zones, id)) }
   function removeCityAt(index: int): void { setZones(Model.removeZoneAt(zones, index)) }
 
-  function startAdding() { if (citySearch) citySearch.start() }
+  function startAdding(): void { if (citySearch) citySearch.start() }
 
-  function addSessionCity(label, id, place) {
-    for (let i = 0; i < sessionCities.length; i++)
+  function addSessionCity(label: string, id: string, place: var): void {
+    for (let i = 0; i < Dynamic.value(sessionCities, "length"); i++)
       if (sessionCities[i].label === label && sessionCities[i].id === id) return
     var city = Model.addZone([], id, label, place)[0]
     if (!city) return
@@ -509,15 +510,15 @@ Panel {
 
   // The local city plus four places spread round the clock from it. Home is
   // here, so a city already chosen is the one the list starts with.
-  function seedFirstRun() {
+  function seedFirstRun(): void {
     var offs = ({})
     for (let id in probe) offs[id] = probe[id].offsetMinutes
 
     var seeded = localZone === "" || !hereZone ? []
-      : Model.seedZones({ label: hereZone.label, id: localZone }, offs, 4)
-    if (seeded.length > 0 && hereZone.lat !== undefined) seeded[0] = Object.assign({}, seeded[0], hereZone)
-    if (seeded.length === 0) seeded = Model.parseZones(Model.DEFAULT_ZONES)
-    if (seeded.length === 0) return
+      : Model.seedZones({ label: Dynamic.value(hereZone, "label"), id: localZone }, offs, 4)
+    if (Dynamic.value(seeded, "length") > 0 && Dynamic.value(hereZone, "lat") !== undefined) seeded[0] = Object.assign({}, seeded[0], hereZone)
+    if (Dynamic.value(seeded, "length") === 0) seeded = Model.parseZones(Model.DEFAULT_ZONES)
+    if (Dynamic.value(seeded, "length") === 0) return
 
     persistSettings({ cities: Model.serializeCities(seeded), zones: undefined })
     refresh()
@@ -533,11 +534,11 @@ Panel {
   property int peopleEditIndex: -1
 
   function fetchProfiles() {
-    var wanted = Model.handlesIn(zones).filter(function(h) { return !profilesTried[h] })
-    if (wanted.length === 0) return
+    var wanted = Model.handlesIn(zones).filter(function(h: string): bool { return !profilesTried[h] })
+    if (Dynamic.value(wanted, "length") === 0) return
     if (peopleProc.running) { profilesQueued = true; return }
     var tried = Object.assign({}, profilesTried)
-    wanted.forEach(function(h) { tried[h] = true })
+    wanted.forEach(function(h: string): void { tried[h] = true })
     profilesTried = tried
     peopleProc.command = Model.profilesCommand(wanted)
     peopleProc.running = true
@@ -555,13 +556,13 @@ Panel {
     takeKeyboardBack()
   }
 
-  function cancelPeopleEdit() {
+  function cancelPeopleEdit(): void {
     peopleEditIndex = -1
     takeKeyboardBack()
   }
 
   // A hidden field keeps its focus, so the panel asks for the keyboard back.
-  function takeKeyboardBack() {
+  function takeKeyboardBack(): void {
     Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
   }
 
@@ -571,14 +572,14 @@ Panel {
   property var placeCache: ({})
   property string placeWanted: ""
 
-  function requestPlaces(text) {
+  function requestPlaces(text: string): void {
     var q = Model.placeQuery(text)
     if (q === "" || placeCache[q] !== undefined) return
     placeWanted = q
     placeDebounce.restart()
   }
 
-  function lookupPlaces() {
+  function lookupPlaces(): void {
     var q = placeWanted
     if (q === "" || placeCache[q] !== undefined) return
     if (placeProc.running) return
@@ -587,82 +588,82 @@ Panel {
     placeProc.running = true
   }
 
-  function placesFor(text) {
+  function placesFor(text: string): var {
     var q = Model.placeQuery(text)
     return q === "" ? [] : (placeCache[q] || [])
   }
 
-  function placesPending(text) {
+  function placesPending(text: string): bool {
     var q = Model.placeQuery(text)
     return q !== "" && placeCache[q] === undefined
   }
 
   // ---- processes
   // Each refresh queues behind one in flight rather than being dropped.
-  function refresh() {
-    if (probeIds.length === 0) return
+  function refresh(): void {
+    if (Dynamic.value(probeIds, "length") === 0) return
     if (probeProc.running) { probeQueued = true; return }
     probeProc.running = true
   }
 
   // The command is set here rather than bound: this runs from the ids' own
   // change handler, which can fire before a binding on them has caught up.
-  function probeSearchZones() {
-    if (searchZoneIds.length === 0) return
+  function probeSearchZones(): void {
+    if (Dynamic.value(searchZoneIds, "length") === 0) return
     if (searchProc.running) { searchProbeQueued = true; return }
     searchProc.command = Model.probeCommand(searchZoneIds, false)
     searchProc.running = true
   }
 
-  function refreshFacts() {
-    if (zones.length === 0) return
+  function refreshFacts(): void {
+    if (Dynamic.value(zones, "length") === 0) return
     if (geoProc.running || weatherProc.running) { factsQueued = true; return }
-    var missing = factsRequest.filter(function(row) {
+    var missing = factsRequest.filter(function(row: var): bool {
       var key = Model.factsKey(row)
       return !geo[key] && !pinnedGeo[key]
     })
-    if (missing.length === 0) { fetchWeather(); return }
+    if (Dynamic.value(missing, "length") === 0) { fetchWeather(); return }
     geoProc.rows = missing
     geoProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", 'for url; do curl -fsS --max-time 8 "$url"; printf "\\n\\036\\n"; done', "C:/Program Files/Git/usr/bin/bash.exe"]
-      .concat(missing.map(function(row) { return Model.geocodeUrl(row.label) }))
+      .concat(missing.map(function(row: var): string { return Model.geocodeUrl(Dynamic.value(row, "label")) }))
     geoProc.running = true
   }
 
-  function coordsFor(key) {
+  function coordsFor(key: string): var {
     return pinnedGeo[key] || geo[key] || fallbackGeo[key] || null
   }
 
-  function fetchWeather() {
+  function fetchWeather(): void {
     var now = Date.now()
     // A reading for somewhere else is stale too: a city's coordinates can move under its name.
-    var stale = factsRequest.map(Model.factsKey).filter(function(key) {
+    var stale = factsRequest.map(Model.factsKey).filter(function(key: string): bool {
       return coordsFor(key) && Model.weatherStale(weather[key], now, coordsFor(key))
     })
-    if (stale.length === 0) { publishFacts(); return }
+    if (Dynamic.value(stale, "length") === 0) { publishFacts(); return }
     weatherProc.keys = stale
     weatherProc.points = stale.map(coordsFor)
     weatherProc.command = ["curl", "-fsS", "--max-time", "8", Model.forecastUrl(stale.map(coordsFor))]
     weatherProc.running = true
   }
 
-  function publishFacts() {
+  function publishFacts(): void {
     var coords = {}
     var keys = factsRequest.map(Model.factsKey)
-    keys.forEach(function(key) { coords[key] = coordsFor(key) })
+    keys.forEach(function(key: string): void { coords[key] = coordsFor(key) })
     facts = Model.mergeFacts(keys, coords, weather)
     if (!factsQueued) return
     factsQueued = false
     Qt.callLater(refreshFacts)
   }
 
-  function loadCatalog() {
+  function loadCatalog(): void {
     if (zoneCatalogText !== "" || catalogProc.running) return
     catalogProc.running = true
   }
 
-  function utcLabelFor(zoneId) {
+  function utcLabelFor(zoneId: string): string {
     var known = searchProbe[zoneId]
-    return known === undefined ? "" : Model.utcOffsetLabel(known.offsetMinutes, words)
+    return known === undefined ? "" : Model.utcOffsetLabel(Dynamic.value(known, "offsetMinutes"), words)
   }
 
   // Tracked cities, the city you are in (for the globe's home) and session cities.
@@ -675,8 +676,8 @@ Panel {
   // Coordinates a city came with, from a place search: never geocoded by name.
   readonly property var pinnedGeo: {
     var out = {}
-    factsRequest.forEach(function(row) {
-      if (row.lat !== undefined) out[Model.factsKey(row)] = { lat: row.lat, lon: row.lon }
+    factsRequest.forEach(function(row: var): void {
+      if (Dynamic.value(row, "lat") !== undefined) out[Model.factsKey(row)] = { lat: Dynamic.value(row, "lat"), lon: Dynamic.value(row, "lon") }
     })
     return out
   }
@@ -686,12 +687,12 @@ Panel {
   // straight from the facts: focusKnown can flip a beat before focusLon lands.
   property bool spinPending: false
 
-  function homeMeridian() {
+  function homeMeridian(): var {
     var f = facts[Model.factsKey(focusZone)]
-    return (f && f.lon !== undefined && f.lon !== null) ? f.lon : null
+    return (f && Dynamic.value(f, "lon") !== undefined && Dynamic.value(f, "lon") !== null) ? Dynamic.value(f, "lon") : null
   }
 
-  function startOpeningSpin() {
+  function startOpeningSpin(): void {
     var lon = homeMeridian()
     if (lon === null) { spinPending = true; spinFallback.restart(); return }
     spinPending = false
@@ -786,10 +787,10 @@ Panel {
         var answers = text.split("\n\u001e\n")
         var nextGeo = Object.assign({}, root.geo)
         var nextFallback = {}
-        geoProc.rows.forEach(function(row, i) {
+        geoProc.rows.forEach(function(row: var, i: int): void {
           var key = Model.factsKey(row)
-          var found = Model.pickGeocode(answers[i] || "", row.id)
-          var place = found.place || Model.zoneTabCoords(zoneTab.text(), row.id)
+          var found = Model.pickGeocode(answers[i] || "", Dynamic.value(row, "id"))
+          var place = Dynamic.value(found, "place") || Model.zoneTabCoords(zoneTab.text(), Dynamic.value(row, "id"))
           if (!place) return
           if (found.answered) nextGeo[key] = place
           else nextFallback[key] = place
@@ -811,14 +812,14 @@ Panel {
       pending = null
       if (!next) return
       if (exitCode !== 0) {
-        root.notify(Commons.I18n.t("elsewhen.timezoneFailed").arg(next.zoneChange))
+        root.notify(Commons.I18n.t("elsewhen.timezoneFailed").arg(Dynamic.value(next, "zoneChange")))
         return
       }
-      root.localZone = next.zoneChange
+      root.localZone = Dynamic.value(next, "zoneChange")
       root.applyHere(next)
       root.tick()
       root.refresh()
-      root.notify(Commons.I18n.t("elsewhen.timezoneChanged").arg(root.homeCity).arg(next.zoneChange))
+      root.notify(Commons.I18n.t("elsewhen.timezoneChanged").arg(root.homeCity).arg(Dynamic.value(next, "zoneChange")))
     }
   }
 
@@ -869,7 +870,7 @@ Panel {
     property var points: []
     stdout: StdioCollector {
       onStreamFinished: {
-        root.weather = Object.assign({}, root.weather, Model.parseForecast(text, weatherProc.keys, Date.now(), weatherProc.points))
+        root.weather = Object.assign({}, Dynamic.value(root, "weather"), Model.parseForecast(text, weatherProc.keys, Date.now(), weatherProc.points))
         root.publishFacts()
       }
     }
@@ -896,7 +897,7 @@ Panel {
     repeat: true
     onTriggered: {
       root.moonShowStep++
-      if (root.moonShowStep >= root.moonShowStops.length) root.stopMoonShow()
+      if (root.moonShowStep >= Dynamic.value(root.moonShowStops, "length")) root.stopMoonShow()
       else root.moonDemo = root.moonShowStops[root.moonShowStep]
     }
   }
@@ -956,18 +957,18 @@ Panel {
       return JSON.stringify(root.clockRows)
     }
     function add(zone: string, label: string): string {
-      root.setZones(Model.addZone(root.zones, zone, label))
-      return Model.serializeZones(root.zones)
+      root.setZones(Model.addZone(Dynamic.value(root, "zones"), zone, label))
+      return Model.serializeZones(Dynamic.value(root, "zones"))
     }
-    function remove(zone: string): string { root.removeCity(zone); return Model.serializeZones(root.zones) }
+    function remove(zone: string): string { root.removeCity(zone); return Model.serializeZones(Dynamic.value(root, "zones")) }
 
     // The people in a city, by its name: "Emir, @sarahdev"; "" clears them.
     function who(city: string, people: string): string {
       var name = String(city).trim().toLowerCase()
-      for (let i = 0; i < root.zones.length; i++) {
-        if (root.zones[i].label.toLowerCase() !== name) continue
-        root.setZones(Model.setPeopleAt(root.zones, i, Model.parsePeople(people)))
-        return JSON.stringify(root.zones[i].people || [])
+      for (let i = 0; i < Dynamic.value(root, "zones").length; i++) {
+        if (Dynamic.value(root, "zones")[i].label.toLowerCase() !== name) continue
+        root.setZones(Model.setPeopleAt(Dynamic.value(root, "zones"), i, Model.parsePeople(people)))
+        return JSON.stringify(Dynamic.value(root, "zones")[i].people || [])
       }
       return "no city named " + city
     }
@@ -1081,7 +1082,7 @@ Panel {
         WheelHandler {
           acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
           onWheel: function(event) {
-            var d = event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.angleDelta.y / 120 * Style.space(40)
+            var d = Dynamic.value(event.pixelDelta, "y") !== 0 ? Dynamic.value(event.pixelDelta, "y") : Dynamic.value(event.angleDelta, "y") / 120 * Style.space(40)
             scroller.contentY -= d
             scroller.clamp()
           }
@@ -1126,8 +1127,8 @@ Panel {
             width: parent.width
             showButton: false
             options: root.allZoneOptions
-            placesFor: function(text) { return root.placesFor(text) }
-            placesPending: function(text) { return root.placesPending(text) }
+            placesFor: function(text: string): var { return root.placesFor(text) }
+            placesPending: function(text: string): bool { return root.placesPending(text) }
             loading: root.zoneCatalogText === ""
             placeholderText: Commons.I18n.t("elsewhen.whereAreYou")
             offsetLabel: function(zoneId) { return root.utcLabelFor(zoneId) }
@@ -1135,7 +1136,7 @@ Panel {
             dim: root.dim
             fainter: root.fainter
             fontFamily: root.fontFamily
-            onActiveChanged: if (active) { root.loadCatalog(); if (citySearch.active) citySearch.stop() }
+            onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(citySearch, "active")) citySearch.stop() }
             onQueryChanged: if (active) root.requestPlaces(query)
             onPicked: function(label, id, place) {
               var pick = { label: label, id: id }
@@ -1176,7 +1177,7 @@ Panel {
                   // rebuild every delegate mid-drag.
                   Repeater {
                     id: cityRows
-                    model: root.zones
+                    model: Dynamic.value(root, "zones")
 
                     CityRow { panel: root }
                   }
@@ -1187,9 +1188,9 @@ Panel {
                   visible: root.zoom < 1
                   width: parent.width
                   options: root.zoneOptions
-                  existing: root.zones
-                  placesFor: function(text) { return root.placesFor(text) }
-                  placesPending: function(text) { return root.placesPending(text) }
+                  existing: Dynamic.value(root, "zones")
+                  placesFor: function(text: string): var { return root.placesFor(text) }
+                  placesPending: function(text: string): bool { return root.placesPending(text) }
                   loading: root.zoneCatalogText === ""
                   offsetLabel: function(zoneId) { return root.utcLabelFor(zoneId) }
                   hasCursor: root.addSelected
@@ -1197,15 +1198,15 @@ Panel {
                   dim: root.dim
                   fainter: root.fainter
                   fontFamily: root.fontFamily
-                  onActiveChanged: if (active) { root.loadCatalog(); if (hereSearch.active) hereSearch.stop() }
+                  onActiveChanged: if (active) { root.loadCatalog(); if (Dynamic.value(hereSearch, "active")) hereSearch.stop() }
                   onQueryChanged: if (active) root.requestPlaces(query)
                   onPicked: function(label, id, place) { root.addCity(id, label, place) }
                   onDismissed: root.takeKeyboardBack()
 
                   // Knocked aside last, after every row.
                   transform: Translate {
-                    x: Model.knockX(root.zones.length, root.zoom, Style.space(95))
-                    y: Model.knockY(root.zones.length, root.zoom, root.knockFall)
+                    x: Model.knockX(Dynamic.value(root, "zones").length, root.zoom, Style.space(95))
+                    y: Model.knockY(Dynamic.value(root, "zones").length, root.zoom, root.knockFall)
                   }
                 }
               }
@@ -1246,38 +1247,38 @@ Panel {
               ]
 
               onLoaded: {
-                globe.foreground = Qt.binding(function() { return root.foreground })
-                globe.dim = Qt.binding(function() { return root.dim })
-                globe.fainter = Qt.binding(function() { return root.fainter })
-                globe.daylightMarker = Qt.binding(function() { return root.daylightMarker })
-                globe.moonPhase = Qt.binding(function() { return root.moonPhase })
-                globe.fontFamily = Qt.binding(function() { return root.fontFamily })
-                globe.hour24 = Qt.binding(function() { return root.hour24 })
-                globe.words = Qt.binding(function() { return root.words })
-                globe.trackedNames = Qt.binding(function() { return root.trackedNames })
-                globe.trackedCities = Qt.binding(function() { return root.trackedCities })
-                globe.sessionCities = Qt.binding(function() { return root.sessionPlaces })
-                globe.homeRow = Qt.binding(function() {
+                globe.foreground = Qt.binding(function(): color { return root.foreground })
+                globe.dim = Qt.binding(function(): color { return root.dim })
+                globe.fainter = Qt.binding(function(): color { return root.fainter })
+                globe.daylightMarker = Qt.binding(function(): color { return root.daylightMarker })
+                globe.moonPhase = Qt.binding(function(): real { return root.moonPhase })
+                globe.fontFamily = Qt.binding(function(): string { return root.fontFamily })
+                globe.hour24 = Qt.binding(function(): bool { return root.hour24 })
+                globe.words = Qt.binding(function(): var { return root.words })
+                globe.trackedNames = Qt.binding(function(): var { return root.trackedNames })
+                globe.trackedCities = Qt.binding(function(): var { return root.trackedCities })
+                globe.sessionCities = Qt.binding(function(): var { return root.sessionPlaces })
+                globe.homeRow = Qt.binding(function(): var {
                   var home = root.homePlace
-                  return home ? [root.homeCity, root.localZone, home.lat, home.lon, 0] : []
+                  return home ? [root.homeCity, root.localZone, Dynamic.value(home, "lat"), Dynamic.value(home, "lon"), 0] : []
                 })
-                globe.offsetMode = Qt.binding(function() { return root.offsetMode })
-                globe.homeOffsetMinutes = Qt.binding(function() { return root.localOffsetMinutes })
-                globe.smoothMotion = Qt.binding(function() { return root.smoothMotion })
-                globe.transitioning = Qt.binding(function() { return !root.zoomIdle })
-                globe.zoomLevel = Qt.binding(function() { return root.zoom })
+                globe.offsetMode = Qt.binding(function(): string { return Dynamic.value(root, "offsetMode") })
+                globe.homeOffsetMinutes = Qt.binding(function(): int { return root.localOffsetMinutes })
+                globe.smoothMotion = Qt.binding(function(): bool { return root.smoothMotion })
+                globe.transitioning = Qt.binding(function(): bool { return !root.zoomIdle })
+                globe.zoomLevel = Qt.binding(function(): real { return root.zoom })
                 // The footer and jump bar arrive once the globe has landed.
-                globe.chromeOpacity = Qt.binding(function() { return Util.clamp((root.zoom - 0.74) / 0.26, 0, 1) })
-                globe.jumpOptions = Qt.binding(function() { return root.allZoneOptions })
-                globe.placesFor = function(text) { return root.placesFor(text) }
-                globe.placesPending = function(text) { return root.placesPending(text) }
-                globe.placeSearchRequested.connect(function(text) { root.requestPlaces(text) })
-                globe.offsetModeToggleRequested.connect(function() { root.toggleOffsetMode() })
-                globe.jumpRequested.connect(function(label, zone, place) { root.addSessionCity(label, zone, place) })
-                globe.exitRequested.connect(function() { root.setGlobeMode(false, false) })
-                globe.jumpDismissed.connect(function() { Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() }) })
-                globe.citySelected.connect(function(label, zone) { root.focusFromGlobe(label, zone) })
-                globe.cityTapped.connect(function(label, zone) { root.claimHome(label, zone) })
+                globe.chromeOpacity = Qt.binding(function(): real { return Util.clamp((root.zoom - 0.74) / 0.26, 0, 1) })
+                globe.jumpOptions = Qt.binding(function(): var { return root.allZoneOptions })
+                globe.placesFor = function(text: string): var { return root.placesFor(text) }
+                globe.placesPending = function(text: string): bool { return root.placesPending(text) }
+                globe.placeSearchRequested.connect(function(text: string): void { root.requestPlaces(text) })
+                globe.offsetModeToggleRequested.connect(function(): void { root.toggleOffsetMode() })
+                globe.jumpRequested.connect(function(label: string, zone: string, place: var): void { root.addSessionCity(label, zone, place) })
+                globe.exitRequested.connect(function(): void { root.setGlobeMode(false, false) })
+                globe.jumpDismissed.connect(function(): void { Qt.callLater(function(): void { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() }) })
+                globe.citySelected.connect(function(label: string, zone: string): void { root.focusFromGlobe(label, zone) })
+                globe.cityTapped.connect(function(label: string, zone: string): void { root.claimHome(label, zone) })
                 // A cold start can finish loading after the mode switched on.
                 if (root.globeMode) root.showFocusOnGlobe()
               }

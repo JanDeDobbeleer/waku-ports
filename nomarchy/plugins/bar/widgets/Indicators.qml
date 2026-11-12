@@ -8,9 +8,9 @@ BarWidget {
   id: root
   moduleName: "nomarchy.indicators"
 
-  readonly property var defaultIndicatorEntries: [ "PasswordlessSudo", "ScreenRecording", "RemoteSession", "Reminder", "NightLight", "Dnd", "StayAwake" ]
-  readonly property var indicatorEntries: indicatorEntriesFromSettings(settings)
-  property var activeIndicatorIds: []
+  readonly property list<var> defaultIndicatorEntries: [ "PasswordlessSudo", "ScreenRecording", "RemoteSession", "Reminder", "NightLight", "Dnd", "StayAwake" ]
+  readonly property list<var> indicatorEntries: indicatorEntriesFromSettings(settings)
+  property list<var> activeIndicatorIds: []
   property var indicatorActiveStates: ({})
   property bool indicatorAreaHovered: false
   property bool indicatorItemHovered: false
@@ -40,13 +40,13 @@ BarWidget {
     return IndicatorModel.entries(settings, defaultIndicatorEntries)
   }
 
-  function setIndicatorAreaHovered(hovered) {
+  function setIndicatorAreaHovered(hovered: var): var {
     indicatorAreaHovered = hovered
     if (hovered) indicatorHideTimer.stop()
     else indicatorHideTimer.restart()
   }
 
-  function setIndicatorItemHovered(hovered) {
+  function setIndicatorItemHovered(hovered: var): var {
     if (hovered) {
       indicatorItemHovered = true
       indicatorHideTimer.stop()
@@ -55,14 +55,14 @@ BarWidget {
     }
   }
 
-  function hasIndicatorId(id) {
+  function hasIndicatorId(id: var): var {
     for (let i = 0; i < indicatorEntries.length; i++) {
       if (entryId(indicatorEntries[i]) === id) return true
     }
     return false
   }
 
-  function entryForId(id) {
+  function entryForId(id: var): var {
     for (let i = 0; i < indicatorEntries.length; i++) {
       let entry = indicatorEntries[i]
       if (entryId(entry) === id) return entry
@@ -71,14 +71,14 @@ BarWidget {
     return { id: id }
   }
 
-  function activeModelIndex(id) {
+  function activeModelIndex(id: var): var {
     for (let i = 0; i < activeIndicatorModel.count; i++) {
       if (activeIndicatorModel.get(i).activeId === id) return i
     }
     return -1
   }
 
-  function copyActiveStates() {
+  function copyActiveStates(): var {
     var states = {}
     for (let id in indicatorActiveStates) {
       if (indicatorActiveStates[id] === true) states[id] = true
@@ -86,7 +86,7 @@ BarWidget {
     return states
   }
 
-  function orderedActiveIds(states, preferredOrder) {
+  function orderedActiveIds(states: var, preferredOrder: var): var {
     var ids = []
 
     for (let i = 0; i < preferredOrder.length; i++) {
@@ -97,7 +97,7 @@ BarWidget {
     return ids
   }
 
-  function syncActiveIndicatorModel() {
+  function syncActiveIndicatorModel(): var {
     for (let i = activeIndicatorModel.count - 1; i >= 0; i--) {
       if (activeIndicatorIds.indexOf(activeIndicatorModel.get(i).activeId) === -1)
         activeIndicatorModel.remove(i)
@@ -111,7 +111,7 @@ BarWidget {
     }
   }
 
-  function setIndicatorActive(entry, active) {
+  function setIndicatorActive(entry: var, active: var): var {
     var id = entryId(entry)
     if (id === "") return
 
@@ -132,12 +132,12 @@ BarWidget {
     syncActiveIndicatorModel()
   }
 
-  function syncActiveIndicatorOrder() {
+  function syncActiveIndicatorOrder(): var {
     activeIndicatorIds = orderedActiveIds(indicatorActiveStates, activeIndicatorIds)
     syncActiveIndicatorModel()
   }
 
-  function syncInactiveIndicatorModel() {
+  function syncInactiveIndicatorModel(): var {
     var json = JSON.stringify(indicatorEntries)
     if (json !== inactiveIndicatorJson) {
       inactiveIndicatorJson = json
@@ -151,7 +151,7 @@ BarWidget {
     inactiveIndicatorsMirrored = fixedAtStart
   }
 
-  function refresh() { root.refreshRequested() }
+  function refresh(): var { root.refreshRequested() }
 
   onIndicatorEntriesChanged: {
     syncActiveIndicatorOrder()
@@ -473,14 +473,14 @@ BarWidget {
     Connections {
       target: indicatorSource.item
       ignoreUnknownSignals: true
-      function onActiveChanged() { indicatorSlot.syncActiveState() }
+      function onActiveChanged(): var { indicatorSlot.syncActiveState() }
     }
 
     function injectProps(): void {
       IndicatorModel.injectProps(indicatorSource.item, root.bar, indicatorId, indicatorSettings, indicatorBlock, root)
     }
 
-    function syncActiveState() {
+    function syncActiveState(): var {
       if (!reportActiveState || !indicatorsModule || !indicatorsModule.setIndicatorActive) return
 
       var active = IndicatorModel.isActive(indicatorSource.item)

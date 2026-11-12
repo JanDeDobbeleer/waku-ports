@@ -1,5 +1,8 @@
 .pragma library
 
+function arrayLength(value) { return value ? value.length : 0 }
+function field(object, key) { return object ? object[key] : undefined }
+
 function clamp(value, min, max) {
   var n = Number(value)
   if (!isFinite(n)) return min
