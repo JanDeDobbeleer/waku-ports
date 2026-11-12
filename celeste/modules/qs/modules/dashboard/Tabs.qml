@@ -8,6 +8,7 @@ import Celeste.Config
 import qs.components
 import qs.components.controls
 import qs.services
+import "TabsHelpers.js" as TabsHelpers
 
 Item {
     id: root
@@ -49,8 +50,8 @@ Item {
             delegate: Tab {
                 required final property var modelData
 
-                iconName: modelData.iconName
-                text: modelData.text
+                iconName: TabsHelpers.iconName(modelData)
+                text: TabsHelpers.text(modelData)
             }
         }
     }
@@ -64,7 +65,7 @@ Item {
         implicitWidth: {
             const tab = bar.currentItem;
             if (tab)
-                return tab.implicitWidth;
+                return TabsHelpers.implicitWidth(tab);
             const width = (root.nonAnimWidth - bar.spacing * (bar.count - 1)) / bar.count;
             return width;
         }
@@ -73,7 +74,7 @@ Item {
         x: {
             const tab = bar.currentItem;
             const width = (root.nonAnimWidth - bar.spacing * (bar.count - 1)) / bar.count;
-            const tabWidth = tab?.implicitWidth ?? width;
+            const tabWidth = TabsHelpers.implicitWidth(tab, width);
             return width * bar.currentIndex + (width - tabWidth) / 2;
         }
 
@@ -83,7 +84,7 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            implicitHeight: parent.implicitHeight * 2
+            implicitHeight: TabsHelpers.doubleHeight(parent)
 
             color: Colours.palette.m3primary
             radius: Tokens.rounding.full

@@ -26,7 +26,7 @@ Item {
     readonly final property string glyph: info[layoutName]?.icon ?? "dashboard"
 
     // Runs a step of the layout cycle: "next" or "previous". `dry` logs the command only.
-    function cycle(direction: string, dry = Paths.dryRun): string {
+    function cycle(direction: string, dry: bool): string {
         if (!active)
             return "none";
         if (dry) {
@@ -37,7 +37,7 @@ Item {
         return "cycle-layout " + direction;
     }
 
-    function click(dry = Paths.dryRun): string {
+    function click(dry: bool): string {
         return cycle("next", dry);
     }
 
@@ -66,7 +66,7 @@ Item {
         implicitHeight: icon.implicitHeight + Tokens.padding.small
         radius: Tokens.rounding.full
         color: Colours.palette.m3onSurface
-        onClicked: root.click()
+        onClicked: root.click(Paths.dryRun)
     }
 
     MaterialIcon {

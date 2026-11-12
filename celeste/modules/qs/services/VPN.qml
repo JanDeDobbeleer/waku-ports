@@ -5,6 +5,7 @@ import Quickshell
 import Celeste.Config
 import waku.services as S
 import qs.compat
+import "VPNHelpers.js" as VPNHelpers
 
 // Stub of upstream's VPN service (WireGuard, WARP, NetBird and Tailscale adapters that shell out to
 // their CLIs). waku knows only whether a VPN link is up (`Network.vpnActive`, `vpnName`), so
@@ -35,8 +36,8 @@ Singleton {
     final property int pingMs: -1
     final property string serverLocation: ""
 
-    readonly final property var providers: GlobalConfig.utilities.vpn.provider.values
-    readonly final property var selected: providers.find(p => p.id === selectedProvider) ?? null
+    readonly final property var providers: VPNHelpers.providers(GlobalConfig)
+    readonly final property var selected: VPNHelpers.selectedProvider(providers, selectedProvider)
     readonly final property var active: selected ?? ({
             name: S.Network.vpnName,
             interface: ""

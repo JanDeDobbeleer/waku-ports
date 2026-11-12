@@ -7,6 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "ContentListHelpers.js" as ContentListHelpers
 
 Item {
     id: root
@@ -19,7 +20,7 @@ Item {
     required final property int padding
     required final property int rounding
 
-    readonly final property bool showWallpapers: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `)
+    readonly final property bool showWallpapers: ContentListHelpers.showWallpapers(search, GlobalConfig.launcher.actionPrefix)
     readonly final property var currentList: showWallpapers ? wallpaperList.item : appList.item // Can be either ListView or PathView, so can't type properly
     final property string animState: showWallpapers ? "wallpapers" : "apps"
 
@@ -113,8 +114,8 @@ Item {
     Row {
         id: empty
 
-        opacity: root.currentList?.count === 0 ? 1 : 0
-        scale: root.currentList?.count === 0 ? 1 : 0.5
+        opacity: ContentListHelpers.isEmpty(root.currentList) ? 1 : 0
+        scale: ContentListHelpers.isEmpty(root.currentList) ? 1 : 0.5
 
         spacing: Tokens.spacing.medium
         padding: Tokens.padding.large

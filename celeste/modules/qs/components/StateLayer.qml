@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import Celeste
 import Celeste.Config
 import qs.services
+import "StateLayerHelpers.js" as StateLayerHelpers
 
 MouseArea {
     id: root
@@ -103,13 +104,11 @@ MouseArea {
         opacity: root.stateOpacity
         color: Colours.palette.m3onSurface
         // Pick up radius from parent if it has one (parent can be anything with radius props)
-        // qmllint disable missing-property
-        radius: root.parent?.radius ?? 0
-        topLeftRadius: root.parent?.topLeftRadius ?? radius ?? 0
-        topRightRadius: root.parent?.topRightRadius ?? radius ?? 0
-        bottomLeftRadius: root.parent?.bottomLeftRadius ?? radius ?? 0
-        bottomRightRadius: root.parent?.bottomRightRadius ?? radius ?? 0
-        // qmllint enable missing-property
+        radius: StateLayerHelpers.radius(root.parent)
+        topLeftRadius: StateLayerHelpers.cornerRadius(root.parent, "topLeftRadius", radius)
+        topRightRadius: StateLayerHelpers.cornerRadius(root.parent, "topRightRadius", radius)
+        bottomLeftRadius: StateLayerHelpers.cornerRadius(root.parent, "bottomLeftRadius", radius)
+        bottomRightRadius: StateLayerHelpers.cornerRadius(root.parent, "bottomRightRadius", radius)
     }
 
     Shape {

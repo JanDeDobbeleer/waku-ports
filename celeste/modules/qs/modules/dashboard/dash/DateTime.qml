@@ -6,6 +6,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "DateTimeHelpers.js" as DateTimeHelpers
 
 Item {
     id: root
@@ -44,7 +45,7 @@ Item {
         }
 
         Loader {
-            Layout.topMargin: -(((item as StyledText)?.font.pointSize ?? 0) * 0.4)
+            Layout.topMargin: -DateTimeHelpers.topMargin(item)
             Layout.alignment: Qt.AlignHCenter
             asynchronous: true
             active: Config.dashboard.showClockSeconds
@@ -57,7 +58,7 @@ Item {
             }
         }
         Loader {
-            Layout.topMargin: -(((item as StyledText)?.font.pointSize ?? 0) * 0.4)
+            Layout.topMargin: -DateTimeHelpers.topMargin(item)
             Layout.alignment: Qt.AlignHCenter
             asynchronous: true
             active: Config.dashboard.showClockSeconds

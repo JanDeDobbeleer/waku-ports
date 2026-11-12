@@ -11,6 +11,7 @@ import qs.components.containers
 import qs.components.controls
 import qs.components.effects
 import qs.services
+import "LyricListHelpers.js" as LyricListHelpers
 
 Item {
     id: root
@@ -23,6 +24,8 @@ Item {
         else
             Lyrics.clearTrack();
     }
+
+    function activeLyricIndex(): int { return Lyrics.indexForTime(LyricListHelpers.position(Players.active)); }
 
     readonly final property real fadeAmount: 0.1
     final property list<string> lyricList: Lyrics.lyrics
@@ -229,20 +232,15 @@ Item {
         displayMarginEnd: anchors.bottomMargin
 
         model: root.lyricList
-        Component.onCompleted: {
-            currentIndex = Qt.binding(() => {
-                model; // Force update when lyrics change
-                return Lyrics.indexForTime(Players.active?.position ?? 0);
-            });
-            positionViewAtIndex(currentIndex, ListView.Center);
-        }
+        currentIndex: root.activeLyricIndex()
+        Component.onCompleted: positionViewAtIndex(currentIndex, ListView.Center)
         onModelChanged: Qt.callLater(() => positionViewAtIndex(currentIndex, ListView.Center))
 
         highlightRangeMode: ListView.ApplyRange
         highlightMoveDuration: Tokens.anim.durations.large
         highlightMoveVelocity: -1
-        preferredHighlightBegin: (height - (currentItem?.implicitHeight ?? 0)) / 2
-        preferredHighlightEnd: (height + (currentItem?.implicitHeight ?? 0)) / 2
+        preferredHighlightBegin: (height - LyricListHelpers.itemHeight(currentItem)) / 2
+        preferredHighlightEnd: (height + LyricListHelpers.itemHeight(currentItem)) / 2
 
         spacing: Tokens.spacing.small
         opacity: 0
@@ -287,7 +285,7 @@ Item {
                 onClicked: {
                     const p = Players.active;
                     if (p)
-                        p.position = Lyrics.timeForIndex(lyric.index);
+                        LyricListHelpers.setPosition(p, Lyrics.timeForIndex(lyric.index));
                 }
             }
         }

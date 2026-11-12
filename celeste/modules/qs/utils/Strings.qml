@@ -18,7 +18,8 @@ Singleton {
 
     function testRegexList(filterList: list<string>, target: string): bool {
         const regexChecker = /^\^.*\$$/;
-        for (const filter of filterList) {
+        for (let i = 0; i < filterList.length; i++) {
+            const filter = filterList[i];
             if (regexChecker.test(filter)) {
                 let re = _regexCache[filter];
                 if (!re) {

@@ -224,7 +224,7 @@ function clickLayout(env) {
         return "no layout button";
     if (!env.Paths.dryRun)
         return "refused: not a dry run";
-    return b.click();
+    return b.click(env.Paths.dryRun);
 }
 
 function layoutButton(env) {
