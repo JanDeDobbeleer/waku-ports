@@ -4,6 +4,7 @@ import Celeste
 import Celeste.Config
 import qs.components.misc
 import qs.services
+import "ShortcutsHelpers.js" as ShortcutsHelpers
 
 Scope {
     id: root
@@ -117,8 +118,7 @@ Scope {
         }
 
         function list(): string {
-            const screenState = ShellState.forActive();
-            return Object.keys(screenState).filter(k => typeof screenState[k] === "boolean").join("\n");
+            return ShortcutsHelpers.listDrawers(ShellState.forActive());
         }
 
         function isOpen(drawer: string): string {
@@ -133,19 +133,19 @@ Scope {
 
     IpcHandler {
         function info(title: string, message: string, icon: string): void {
-            Toaster.toast(title, message, icon, Toast.Info);
+            Toaster.toast(title, message, icon, Toast.Info, 5000);
         }
 
         function success(title: string, message: string, icon: string): void {
-            Toaster.toast(title, message, icon, Toast.Success);
+            Toaster.toast(title, message, icon, Toast.Success, 5000);
         }
 
         function warn(title: string, message: string, icon: string): void {
-            Toaster.toast(title, message, icon, Toast.Warning);
+            Toaster.toast(title, message, icon, Toast.Warning, 5000);
         }
 
         function error(title: string, message: string, icon: string): void {
-            Toaster.toast(title, message, icon, Toast.Error);
+            Toaster.toast(title, message, icon, Toast.Error, 5000);
         }
 
         target: "toaster"
