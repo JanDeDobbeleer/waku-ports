@@ -357,8 +357,8 @@ function updateRows(root, rows) {
     root.foreground = null;
 }
 
-function engineSignature(S) {
-    return JSON.stringify([S.Workspaces.provider, S.Workspaces.connected, S.Workspaces.monitors]);
+function engineSignature(workspaces) {
+    return JSON.stringify([workspaces.provider, workspaces.connected, workspaces.monitors]);
 }
 
 function find(list, pred) {

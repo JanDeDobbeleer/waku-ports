@@ -1,8 +1,8 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Celeste.Config
 import Celeste.I18n
 import waku.services as S
 import qs.compat
@@ -347,7 +347,10 @@ Singleton {
     Connections {
         function onChanged(): void {
             // The engine emits `changed` for events that leave the workspaces as they were.
-            const sig = H.engineSignature(S.Workspaces);
+            const workspaces = S.Workspaces;
+            if (!workspaces)
+                return;
+            const sig = H.engineSignature(workspaces);
             if (sig === root.engineSig)
                 return;
             root.engineSig = sig;
