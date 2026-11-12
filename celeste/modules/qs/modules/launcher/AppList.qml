@@ -9,6 +9,7 @@ import qs.components.controls
 import qs.services
 import qs.modules.launcher.items
 import qs.modules.launcher.services
+import "AppListHelpers.js" as AppListHelpers
 
 StyledListView {
     id: root
@@ -18,20 +19,23 @@ StyledListView {
 
     final property string displayText
 
-    readonly final property string requestedState: stateForText(search.text)
+    readonly final property string requestedState: stateForText(AppListHelpers.searchText(root.search))
     readonly final property string displayState: stateForText(displayText)
 
     function syncDisplayText(): void {
         if (screenState.launcher && requestedState === displayState)
-            displayText = search.text;
+            displayText = AppListHelpers.searchText(root.search);
     }
 
     function stateForText(text: string): string {
         const prefix = GlobalConfig.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
-            for (const action of ["calc", "scheme", "variant"])
+            const actions = ["calc", "scheme", "variant"];
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
                 if (text.startsWith(`${prefix}${action} `))
                     return action;
+            }
 
             return "actions";
         }
@@ -75,7 +79,7 @@ StyledListView {
 
         y: root.currentItem?.y ?? 0
         implicitWidth: root.width
-        implicitHeight: root.currentItem?.implicitHeight ?? 0
+        implicitHeight: AppListHelpers.itemHeight(root.currentItem)
 
         Behavior on y {
             Anim {}
@@ -89,7 +93,7 @@ StyledListView {
             Schemes.reload();
     }
 
-    Component.onCompleted: displayText = search.text
+    Component.onCompleted: displayText = AppListHelpers.searchText(root.search)
 
     states: [
         State {
@@ -155,7 +159,7 @@ StyledListView {
                 value: null
             }
             ScriptAction {
-                script: root.displayText = root.search.text
+                script: root.displayText = AppListHelpers.searchText(root.search)
             }
             PropertyAction {
                 target: root

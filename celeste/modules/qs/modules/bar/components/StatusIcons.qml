@@ -8,6 +8,7 @@ import qs.components
 import qs.services
 import qs.utils
 import qs.modules.bar.components.status
+import "StatusIconsHelpers.js" as StatusIconsHelpers
 
 StyledRect {
     id: root
@@ -36,9 +37,7 @@ StyledRect {
 
     // Entries that can shrink to nothing, spacing included
     function collapsed(entry: var): bool {
-        if (entry.id === "lockStatus")
-            return !Hypr.capsLock && !Hypr.numLock;
-        return false;
+        return StatusIconsHelpers.collapsed(entry, Hypr.capsLock, Hypr.numLock);
     }
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.status.background ? Colours.tPalette.m3surfaceContainer.a : 0)
@@ -62,7 +61,7 @@ StyledRect {
             model: ScriptModel {
                 id: model
 
-                values: Config.bar.statusIcons.values.filter(e => e.enabled)
+                values: StatusIconsHelpers.enabledEntries(Config.bar.statusIcons)
             }
 
             DelegateChooser {
@@ -167,14 +166,14 @@ StyledRect {
         final property real topGap: present && index !== root.firstPresent ? margin : 0
         final property real bottomGap: present && index !== root.lastPresent ? margin : 0
         default final property Item item
-        final property string name: modelData.id.toLowerCase()
+        final property string name: StatusIconsHelpers.entryName(modelData)
 
         Layout.topMargin: Math.round(topGap)
         Layout.bottomMargin: Math.round(bottomGap)
         Layout.alignment: Qt.AlignHCenter
 
-        implicitWidth: item?.implicitWidth ?? 0
-        implicitHeight: item?.implicitHeight ?? 0
+        implicitWidth: StatusIconsHelpers.implicitWidth(item)
+        implicitHeight: StatusIconsHelpers.implicitHeight(item)
 
         children: item
 
