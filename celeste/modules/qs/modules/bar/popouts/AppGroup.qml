@@ -1,9 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import waku
 import Celeste.Config
 import qs.components
 import qs.services
+import "AppGroupHelpers.js" as AppGroupHelpers
 
 // Port: the flyout of an application in the bar's apps list (one window or several). One preview
 // card per window: a live DWM thumbnail (`WindowThumbnail`), below it the app icon, the title and
@@ -36,23 +39,20 @@ Item {
     readonly final property real cardW: boxW + cardPad * 2
     readonly final property real gap: Tokens.spacing.medium
     // The widest the flyout may be: 60% of the window (the screen), less the popout padding.
-    readonly final property real maxW: Math.max(cardW, (Window.window ? Window.window.width : 1920) * 0.6 - Tokens.padding.large * 2)
+    readonly final property real maxW: Math.max(cardW, (windowWatch.windowWidth || 1920) * 0.6 - Tokens.padding.large * 2)
     readonly final property int count: Hypr.groupCount(group)
     readonly final property int cols: count <= 0 ? 1 : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
 
     // Per card: "<hwnd> <available> <sourceWidth> <sourceHeight> <x>,<y>,<w>,<h>" (test IPC; the
     // rectangle is in logical window coordinates).
     function thumbState(): string {
-        const out = [];
-        for (let i = 0; i < cards.count; i++) {
-            const c = cards.itemAt(i);
-            if (!c)
-                continue;
-            const t = c.thumb;
-            const p = t.mapToItem(null, 0, 0);
-            out.push(`${c.hwnd} ${t.available} ${t.sourceWidth} ${t.sourceHeight} ${Math.round(p.x)},${Math.round(p.y)},${Math.round(t.width)},${Math.round(t.height)}`);
-        }
-        return out.join("; ");
+        return AppGroupHelpers.thumbState(cards);
+    }
+
+    Item {
+        id: windowWatch
+
+        readonly property real windowWidth: Window.width
     }
 
     implicitWidth: group ? Math.min(grid.implicitWidth, maxW) : 0
