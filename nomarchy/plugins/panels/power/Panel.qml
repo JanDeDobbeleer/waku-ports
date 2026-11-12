@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell.Services.UPower
 import qs.Commons
@@ -472,15 +473,16 @@ Panel {
   }
 
   component InfoPair: Row {
+    id: infoPair
     property string label: ""
     property string value: ""
 
     width: parent.width
     spacing: Style.space(8)
 
-    InfoLabel { text: label }
+    InfoLabel { text: infoPair.label }
     Item { width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth - parent.spacing * 2); height: 1 }
-    InfoValue { text: value }
+    InfoValue { text: infoPair.value }
   }
 
   component InfoLabel: Text {

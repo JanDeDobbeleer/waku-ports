@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 // The notification daemon: Quickshell's NotificationServer owns
 // org.freedesktop.Notifications. docs/notifications.md describes the system.
 //

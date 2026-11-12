@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
@@ -657,6 +658,7 @@ Panel {
                 model: root.weeks
 
                 Row {
+                  id: weekRow
                   required property var modelData
                   spacing: root.cellSpacing
 
@@ -666,7 +668,7 @@ Panel {
                     height: root.cellHeight
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    text: Commons.I18n.formatNumber(modelData.week)
+                    text: Commons.I18n.formatNumber(weekRow.modelData.week)
                     color: Qt.darker(root.contentForeground, 1.9)
                     font.family: root.contentFontFamily
                     font.pixelSize: Style.font.caption
@@ -678,9 +680,10 @@ Panel {
                   }
 
                   Repeater {
-                    model: modelData.days
+                    model: weekRow.modelData.days
 
                     Rectangle {
+                      id: dayCell
                       required property var modelData
 
                       width: root.cellWidth
@@ -695,13 +698,13 @@ Panel {
                       Text {
                         textFormat: Text.PlainText
                         anchors.centerIn: parent
-                        text: Commons.I18n.formatNumber(modelData.day)
-                        color: modelData.inMonth
-                          ? (modelData.weekend ? Qt.darker(root.contentForeground, 1.45) : root.contentForeground)
+                        text: Commons.I18n.formatNumber(dayCell.modelData.day)
+                        color: dayCell.modelData.inMonth
+                          ? (dayCell.modelData.weekend ? Qt.darker(root.contentForeground, 1.45) : root.contentForeground)
                           : Qt.darker(root.contentForeground, 2.2)
                         font.family: root.contentFontFamily
                         font.pixelSize: Style.font.body
-                        font.bold: modelData.today
+                        font.bold: dayCell.modelData.today
                       }
                     }
                   }

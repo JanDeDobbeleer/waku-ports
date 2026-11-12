@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -27,14 +28,14 @@ Panel {
     openedFromHotkey = false
     setCenterHoverRevealSuppressed(false)
     root.controller.show()
-    locationFile.reload()
+    root.locationFile.reload()
     root.refresh()
   }
 
   function openFromHotkey() {
     openedFromHotkey = true
     root.controller.show()
-    locationFile.reload()
+    root.locationFile.reload()
     root.refresh()
     // Set after showing, not before: showing hands the popout coordinator
     // over, which closes whichever panel was open, and that close clears the
@@ -120,7 +121,7 @@ Panel {
   Timer {
     interval: 1500
     running: true
-    onTriggered: locationFile.reload()
+    onTriggered: root.locationFile.reload()
   }
 
   property int forecastRetries: 0
@@ -478,7 +479,7 @@ Panel {
 
       // FileView handles changed locations. Explicitly refresh here too so
       // saving the already-active location cannot strand the spinner.
-      locationFile.reload()
+      root.locationFile.reload()
       if (!root.savingLocationQueryStarted) {
         root.savingLocationQueryStarted = true
         root.forecastRetries = 0
@@ -807,6 +808,7 @@ Panel {
           model: root.locationSuggestions
 
           Rectangle {
+            id: suggestionCell
             required property var modelData
             required property int index
             width: parent.width
@@ -823,15 +825,15 @@ Panel {
 
               Text {
                 textFormat: Text.PlainText
-                text: modelData.name
-                color: index === root.suggestionIndex ? Style.hoverStateColor(root.bar.foreground, Commons.Color.accent) : root.bar.foreground
+                text: suggestionCell.modelData.name
+                color: suggestionCell.index === root.suggestionIndex ? Style.hoverStateColor(root.bar.foreground, Commons.Color.accent) : root.bar.foreground
                 font.family: root.bar.fontFamily
                 font.pixelSize: Style.font.body
               }
               Text {
                 textFormat: Text.PlainText
                 visible: text !== ""
-                text: modelData.description
+                text: suggestionCell.modelData.description
                 color: Qt.darker(root.bar.foreground, 1.5)
                 font.family: root.bar.fontFamily
                 font.pixelSize: Style.font.bodySmall
@@ -843,8 +845,8 @@ Panel {
               anchors.fill: parent
               hoverEnabled: true
               cursorShape: Qt.PointingHandCursor
-              onPositionChanged: root.suggestionIndex = index
-              onClicked: root.pickSuggestion(modelData)
+              onPositionChanged: root.suggestionIndex = suggestionCell.index
+              onClicked: root.pickSuggestion(suggestionCell.modelData)
             }
           }
         }
@@ -885,6 +887,7 @@ Panel {
             model: root.forecastDays
 
             Row {
+              id: forecastDayCell
               required property var modelData
               required property int index
               spacing: Style.space(10)
@@ -892,7 +895,7 @@ Panel {
               Text {
                 textFormat: Text.PlainText
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.dayIcon(modelData)
+                text: root.dayIcon(forecastDayCell.modelData)
                 color: root.bar.foreground
                 font.family: root.bar.fontFamily
                 font.pixelSize: Math.round(Style.font.display * 1.7)
@@ -904,7 +907,7 @@ Panel {
 
                 Text {
                   textFormat: Text.PlainText
-                  text: root.dayName(modelData.date).toUpperCase()
+                  text: root.dayName(forecastDayCell.modelData.date).toUpperCase()
                   color: Qt.darker(root.bar.foreground, 1.4)
                   font.family: root.bar.fontFamily
                   font.pixelSize: Style.font.caption
@@ -916,14 +919,14 @@ Panel {
 
                   Text {
                     textFormat: Text.PlainText
-                    text: root.bareTempForDay(modelData, "max")
+                    text: root.bareTempForDay(forecastDayCell.modelData, "max")
                     color: root.bar.foreground
                     font.family: root.bar.fontFamily
                     font.pixelSize: Style.font.body
                   }
                   Text {
                     textFormat: Text.PlainText
-                    text: root.bareTempForDay(modelData, "min")
+                    text: root.bareTempForDay(forecastDayCell.modelData, "min")
                     color: Qt.darker(root.bar.foreground, 1.5)
                     font.family: root.bar.fontFamily
                     font.pixelSize: Style.font.body

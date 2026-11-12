@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import QtQuick
 import QtQuick.Controls.Basic
@@ -261,6 +262,20 @@ BarWidget {
     id: trayContent
     anchors.fill: parent
     sourceComponent: root.vertical ? verticalTray : horizontalTray
+  }
+
+  // The tray section's place in the drawer: the bar parents its widgets here.
+  // Empty, it takes no room.
+  component SectionArea: Item {
+    id: sectionArea
+    implicitWidth: childrenRect.width
+    implicitHeight: childrenRect.height
+
+    Component.onCompleted: root.sectionHost = sectionArea
+    // The bar can tear this area down after the widget itself is gone
+    // (a plugin rescan destroys them in its own order), so unregister
+    // only while the widget is still there to unregister from.
+    Component.onDestruction: if (root && root.sectionHost === sectionArea) root.sectionHost = null
   }
 
   Component {
@@ -857,20 +872,6 @@ BarWidget {
     }
   }
 
-  // The tray section's place in the drawer: the bar parents its widgets here.
-  // Empty, it takes no room.
-  component SectionArea: Item {
-    id: sectionArea
-    implicitWidth: childrenRect.width
-    implicitHeight: childrenRect.height
-
-    Component.onCompleted: root.sectionHost = sectionArea
-    // The bar can tear this area down after the widget itself is gone
-    // (a plugin rescan destroys them in its own order), so unregister
-    // only while the widget is still there to unregister from.
-    Component.onDestruction: if (root && root.sectionHost === sectionArea) root.sectionHost = null
-  }
-
   component TrayItem: Item {
     id: trayItemRoot
 
@@ -898,7 +899,7 @@ BarWidget {
       acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
-      onEntered: if (root.bar) root.bar.showTooltip(trayItemRoot, root.trayTooltip(modelData))
+      onEntered: if (root.bar) root.bar.showTooltip(trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
       onExited: if (root.bar) root.bar.hideTooltip(trayItemRoot)
       onPressed: function(mouse) {
         if (mouse.button === Qt.RightButton) {

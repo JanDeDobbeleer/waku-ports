@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -381,14 +382,14 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: root.phraseIndex = (root.phraseIndex + 1) % root.activePhrases.length
     }
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -531,15 +532,16 @@ Panel {
   }
 
   component InfoPair: Row {
+    id: infoPair
     property string label: ""
     property string value: ""
 
     width: parent.width
     spacing: Style.space(8)
 
-    InfoLabel { text: label }
+    InfoLabel { text: infoPair.label }
     Item { width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth - parent.spacing * 2); height: 1 }
-    InfoValue { text: value }
+    InfoValue { text: infoPair.value }
   }
 
   component InfoLabel: Text {

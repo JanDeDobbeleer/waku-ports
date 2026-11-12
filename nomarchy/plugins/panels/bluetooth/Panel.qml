@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
@@ -839,6 +840,7 @@ Panel {
           }
 
           delegate: Item {
+            id: bluetoothListRow
             required property var modelData
             required property int index
             readonly property string sectionTitle: root.scrollSectionTitle(index)
@@ -852,25 +854,25 @@ Panel {
               spacing: Style.space(10)
 
               PanelSeparator {
-                visible: index > 0 && sectionTitle !== ""
+                visible: bluetoothListRow.index > 0 && bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
                 foreground: root.bar.foreground
               }
 
               PanelSectionHeader {
-                visible: sectionTitle !== ""
+                visible: bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
-                text: sectionTitle
+                text: bluetoothListRow.sectionTitle
                 foreground: root.bar.foreground
                 fontFamily: root.bar.fontFamily
               }
 
               DeviceRow {
                 width: parent.width
-                dev: modelData.dev
-                rowIndex: modelData.indexInSection
-                sectionName: modelData.section
-                isDiscovered: modelData.section === "discovered"
+                dev: bluetoothListRow.modelData.dev
+                rowIndex: bluetoothListRow.modelData.indexInSection
+                sectionName: bluetoothListRow.modelData.section
+                isDiscovered: bluetoothListRow.modelData.section === "discovered"
               }
             }
           }
