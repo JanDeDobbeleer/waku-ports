@@ -126,7 +126,7 @@ Item {
                     return label;
 
                 const ws = Hypr.workspaceById(root.ws);
-                const wsName = !ws || ws.name == root.ws ? root.ws : Hypr.trimWsName(ws.name)[0];
+                const wsName = !ws || ws.name === root.ws ? root.ws : Hypr.trimWsName(ws.name)[0];
 
                 const capitalisation = Config.bar.workspaces.capitalisation;
                 if (capitalisation === BarWorkspaceCapitalisation.Upper)

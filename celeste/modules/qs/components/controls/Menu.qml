@@ -8,6 +8,7 @@ import Celeste.Config
 import qs.components
 import qs.components.effects
 import qs.services
+import "MenuHelpers.js" as MenuHelpers
 
 MouseArea {
     id: root
@@ -39,8 +40,7 @@ MouseArea {
     // instead of the interaction wrapper. Its items' hover then took the hover from the wrapper,
     // which read it as the mouse leaving and closed the dashboard. Duck-typed lookup instead.
     parent: {
-        const win = QsWindow.window; // qmllint disable missing-property
-        return win?.interactionWrapper ?? win?.contentItem ?? null;
+        return MenuHelpers.parentItem(QsWindow.window);
     }
     anchors.fill: parent
 
@@ -73,19 +73,11 @@ MouseArea {
 
         x: {
             CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
-            const item = root.attachTo;
-            let off = root.attachSideX === Menu.Left ? 0 : item.width;
-            if (root.thisSideX === Menu.Right)
-                off -= width;
-            return item.mapToItem(root.parent, off, 0).x + root.marginX;
+            return MenuHelpers.positionX(root.attachTo, root.parent, root.attachSideX, root.thisSideX, Menu.Left, Menu.Right, width, root.marginX);
         }
         y: {
             CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
-            const item = root.attachTo;
-            let off = root.attachSideY === Menu.Top ? 0 : item.height;
-            if (root.thisSideY === Menu.Bottom)
-                off -= height;
-            return item.mapToItem(root.parent, 0, off).y + root.marginY;
+            return MenuHelpers.positionY(root.attachTo, root.parent, root.attachSideY, root.thisSideY, Menu.Top, Menu.Bottom, height, root.marginY);
         }
 
         radius: Tokens.rounding.large
@@ -159,7 +151,7 @@ MouseArea {
                             onClicked: {
                                 root.itemSelected(menuItem.modelData);
                                 root.active = menuItem.modelData;
-                                menuItem.modelData.clicked();
+                                MenuHelpers.click(menuItem.modelData);
                                 root.expanded = false;
                             }
                         }

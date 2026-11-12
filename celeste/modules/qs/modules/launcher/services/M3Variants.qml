@@ -5,6 +5,7 @@ import Celeste
 import Celeste.Config
 import Celeste.I18n
 import qs.services
+import "M3VariantsHelpers.js" as M3VariantsHelpers
 import qs.utils
 
 Searcher {
@@ -79,9 +80,9 @@ Searcher {
         required final property string description
 
         function onClicked(list: var): void {
-            list.screenState.launcher = false;
+            M3VariantsHelpers.closeLauncher(list);
             Colours.flavour = variant;
-            Schemes.apply();
+            M3VariantsHelpers.applyScheme(Schemes);
             Toaster.toast(Tr.tr("Scheme variant changed"), name, "colors", Toast.Info, 2500);
         }
     }

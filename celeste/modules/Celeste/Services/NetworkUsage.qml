@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell.Io
 import Celeste
 import Celeste.Config
+import "NetworkUsageHelpers.js" as NetworkUsageHelpers
 
 // Port of celeste's NetworkUsage. waku's Network source has no throughput, so this polls
 // `netstat -e` (interface byte counters, summed over all interfaces) while referenced. Speeds are
@@ -35,18 +36,18 @@ QtObject {
     final property real _lastTx: -1
     final property double _lastTime: 0
 
-    readonly final property var timer: Timer {
+    readonly final property Timer timer: Timer {
         running: root.refs > 0
         repeat: true
         triggeredOnStart: true
         interval: GlobalConfig.dashboard.resourceUpdateInterval
         onTriggered: {
-            if (!proc.running)
-                proc.running = true;
+            if (!root.proc.running)
+                root.proc.running = true;
         }
     }
 
-    readonly final property var proc: Process {
+    readonly final property Process proc: Process {
         command: ["netstat", "-e"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -63,8 +64,8 @@ QtObject {
                     root.uploadSpeed = Math.max(0, tx - root._lastTx) / dt;
                     root.downloadTotal += Math.max(0, rx - root._lastRx);
                     root.uploadTotal += Math.max(0, tx - root._lastTx);
-                    root.downloadBuffer.push(root.downloadSpeed);
-                    root.uploadBuffer.push(root.uploadSpeed);
+                    NetworkUsageHelpers.push(root.downloadBuffer, root.downloadSpeed);
+                    NetworkUsageHelpers.push(root.uploadBuffer, root.uploadSpeed);
                 }
                 root._lastRx = rx;
                 root._lastTx = tx;

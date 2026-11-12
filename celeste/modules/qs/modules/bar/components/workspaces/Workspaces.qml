@@ -161,7 +161,7 @@ ClipRect {
             removeDuration: Tokens.anim.durations.expressiveDefaultEffects
 
             model: ScriptModel {
-                values: root.wsIds
+                values: WD.toArray(root.wsIds)
             }
 
             delegate: Workspace {
@@ -256,8 +256,7 @@ ClipRect {
                 anchors.margins: Tokens.padding.extraSmall
                 monitor: root.monitor
 
-                scale: 0.5
-                Component.onCompleted: scale = Qt.binding(() => root.onSpecial ? 1 : 0.5)
+                scale: root.onSpecial ? 1 : 0.5
 
                 Behavior on scale {
                     Anim {}

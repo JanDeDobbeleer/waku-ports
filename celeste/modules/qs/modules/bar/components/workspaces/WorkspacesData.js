@@ -55,3 +55,10 @@ function shownIds(list, mon, activeWsId, allMonitors, shown) {
 function itemWs(item) {
     return item?.ws ?? 0;
 }
+
+function toArray(values) {
+    var result = [];
+    for (var i = 0; i < values.length; i++)
+        result.push(values[i]);
+    return result;
+}
