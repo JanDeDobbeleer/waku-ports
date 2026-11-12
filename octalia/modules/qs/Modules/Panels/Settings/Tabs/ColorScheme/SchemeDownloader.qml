@@ -556,13 +556,11 @@ Popup {
       } else {
         downloadError = I18n.tr("panels.color-scheme.download-error-download-failed", {
                                   "code": 1
-                                }) + "
-" + failed;
+                                }) + "\n" + failed;
         Logger.e("ColorSchemeDownload", downloadError);
         ToastService.showError(I18n.tr("panels.color-scheme.download-error-title"), I18n.tr("panels.color-scheme.download-error-description", {
                                                                                               "scheme": schemeName
-                                                                                            }) + "
-" + failed);
+                                                                                            }) + "\n" + failed);
         Os.rm(targetDir, true);
       }
       downloading = false;

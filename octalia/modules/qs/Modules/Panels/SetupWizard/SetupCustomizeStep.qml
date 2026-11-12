@@ -22,8 +22,8 @@ ColumnLayout {
     spacing: Style.marginM
 
     Rectangle {
-      width: 40
-      height: 40
+      Layout.preferredWidth: 40
+      Layout.preferredHeight: 40
       radius: Style.radiusL
       color: Color.mSurfaceVariant
       opacity: 0.6
@@ -76,8 +76,8 @@ ColumnLayout {
           spacing: Style.marginS
 
           Rectangle {
-            width: 28
-            height: 28
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
             radius: Style.radiusM
             color: Color.mSurface
 
@@ -203,8 +203,8 @@ ColumnLayout {
         spacing: Style.marginM
 
         Rectangle {
-          width: 32
-          height: 32
+          Layout.preferredWidth: 32
+          Layout.preferredHeight: 32
           radius: Style.radiusM
           color: Color.mSurface
           NIcon {
@@ -329,8 +329,8 @@ ColumnLayout {
           Layout.fillWidth: true
           spacing: Style.marginS
           Rectangle {
-            width: 32
-            height: 32
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
             radius: Style.radiusM
             color: Color.mSurface
             NIcon {
@@ -391,8 +391,8 @@ ColumnLayout {
           spacing: Style.marginS
 
           Rectangle {
-            width: 28
-            height: 28
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
             radius: Style.radiusM
             color: Color.mSurface
 
@@ -518,8 +518,8 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Style.marginM
         Rectangle {
-          width: 32
-          height: 32
+          Layout.preferredWidth: 32
+          Layout.preferredHeight: 32
           radius: Style.radiusM
           color: Color.mSurface
           NIcon {
@@ -573,8 +573,8 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Style.marginM
         Rectangle {
-          width: 32
-          height: 32
+          Layout.preferredWidth: 32
+          Layout.preferredHeight: 32
           radius: Style.radiusM
           color: Color.mSurface
           NIcon {

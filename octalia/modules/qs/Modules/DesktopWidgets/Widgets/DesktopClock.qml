@@ -22,9 +22,10 @@ DraggableDesktopWidget {
   readonly property string customFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
   readonly property string format: widgetData.format !== undefined ? widgetData.format : widgetMetadata.format
 
+  readonly property Item clockContent: contentLoader.item as Item
   readonly property real contentPadding: Math.round((clockStyle === "minimal" ? Style.marginL : Style.marginXL) * widgetScale)
-  implicitWidth: contentLoader.item ? Math.round((contentLoader.item.implicitWidth || contentLoader.item.width || 0) + contentPadding * 2) : 0
-  implicitHeight: contentLoader.item ? Math.round((contentLoader.item.implicitHeight || contentLoader.item.height || 0) + contentPadding * 2) : 0
+  implicitWidth: clockContent ? Math.round((clockContent.implicitWidth || clockContent.width || 0) + contentPadding * 2) : 0
+  implicitHeight: clockContent ? Math.round((clockContent.implicitHeight || clockContent.height || 0) + contentPadding * 2) : 0
   width: implicitWidth
   height: implicitHeight
 

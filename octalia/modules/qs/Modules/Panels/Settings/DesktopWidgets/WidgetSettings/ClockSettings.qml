@@ -257,7 +257,7 @@ ColumnLayout {
 
   NDateTimeTokens {
     Layout.fillWidth: true
-    height: 200
+    Layout.preferredHeight: 200
     visible: root.isMinimalMode
     onTokenClicked: token => root.insertToken(token)
   }

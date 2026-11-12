@@ -56,8 +56,8 @@ ColumnLayout {
     spacing: Style.marginM
 
     Rectangle {
-      width: 40
-      height: 40
+      Layout.preferredWidth: 40
+      Layout.preferredHeight: 40
       radius: Style.radiusL
       color: Color.mSurfaceVariant
       opacity: 0.6
@@ -106,8 +106,8 @@ ColumnLayout {
         spacing: Style.marginM
 
         Rectangle {
-          width: 28
-          height: 28
+          Layout.preferredWidth: 28
+          Layout.preferredHeight: 28
           radius: Style.radiusM
           color: Color.mSurface
 
@@ -161,8 +161,8 @@ ColumnLayout {
         spacing: Style.marginM
 
         Rectangle {
-          width: 28
-          height: 28
+          Layout.preferredWidth: 28
+          Layout.preferredHeight: 28
           radius: Style.radiusM
           color: Color.mSurface
 
@@ -232,8 +232,8 @@ ColumnLayout {
           spacing: Style.marginS
 
           Rectangle {
-            width: 28
-            height: 28
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
             radius: Style.radiusM
             color: Color.mSurface
 
@@ -308,8 +308,8 @@ ColumnLayout {
                 }
 
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
                   color: root.cacheVersion >= 0 ? (function () {
                     var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
@@ -318,8 +318,8 @@ ColumnLayout {
                   })() : Color.mPrimary
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
                   color: root.cacheVersion >= 0 ? (function () {
                     var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
@@ -328,8 +328,8 @@ ColumnLayout {
                   })() : Color.mSecondary
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
                   color: root.cacheVersion >= 0 ? (function () {
                     var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
@@ -338,8 +338,8 @@ ColumnLayout {
                   })() : Color.mTertiary
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
                   color: root.cacheVersion >= 0 ? (function () {
                     var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";

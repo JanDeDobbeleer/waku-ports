@@ -24,6 +24,7 @@ Singleton {
   readonly property bool ethernetAvailable: S.Network.kind === "ethernet" || ethernetInterfaces.length > 0
   readonly property bool internetConnectivity: S.Network.kind === "wifi" || S.Network.kind === "ethernet"
   readonly property string networkConnectivity: internetConnectivity ? "full" : "none"
+  readonly property var _networkConnectivity: undefined
   property string lastError: ""
   property int activeDetailsTtlMs: 10000
 

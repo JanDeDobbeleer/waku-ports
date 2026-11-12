@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import Quickshell
@@ -147,8 +149,8 @@ ColumnLayout {
     // Octalia logo
     Image {
       source: ShellUrl.dir + "/Assets/octalia.svg"
-      width: 96 * Style.uiScaleRatio
-      height: width
+      Layout.preferredWidth: 96 * Style.uiScaleRatio
+      Layout.preferredHeight: width
       fillMode: Image.PreserveAspectFit
       sourceSize.width: width
       sourceSize.height: height
@@ -458,6 +460,7 @@ ColumnLayout {
       model: Quickshell.screens.length * 2
 
       NText {
+        required property int index
         readonly property int screenIndex: Math.floor(index / 2)
         readonly property bool isLabel: index % 2 === 0
         readonly property var screen: Quickshell.screens[screenIndex]

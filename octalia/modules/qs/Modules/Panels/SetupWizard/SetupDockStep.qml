@@ -19,8 +19,8 @@ ColumnLayout {
     spacing: Style.marginM
 
     Rectangle {
-      width: 40
-      height: 40
+      Layout.preferredWidth: 40
+      Layout.preferredHeight: 40
       radius: Style.radiusL
       color: Color.mSurfaceVariant
       opacity: 0.6

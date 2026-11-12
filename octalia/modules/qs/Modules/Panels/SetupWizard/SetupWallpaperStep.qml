@@ -45,8 +45,8 @@ ColumnLayout {
       spacing: Style.marginM
 
       Rectangle {
-        width: 40
-        height: 40
+        Layout.preferredWidth: 40
+        Layout.preferredHeight: 40
         radius: Style.radiusL
         color: Color.mSurfaceVariant
         opacity: 0.6
@@ -104,8 +104,8 @@ ColumnLayout {
 
       Rectangle {
         Layout.alignment: Qt.AlignHCenter
-        width: 64
-        height: 64
+        Layout.preferredWidth: 64
+        Layout.preferredHeight: 64
         radius: width / 2
         color: Color.mPrimary
 

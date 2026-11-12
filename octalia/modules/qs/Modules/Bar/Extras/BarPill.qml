@@ -36,13 +36,15 @@ Item {
   signal middleClicked
   signal wheel(int delta)
 
+  readonly property Item pillItem: pillLoader.item as Item
+
   // Size based on content for the content dimension, fill parent for the extended dimension
   // Horizontal bars: width = content, height = fill parent (for extended click area)
   // Vertical bars: width = fill parent, height = content
-  width: isVerticalBar ? parent.width : (pillLoader.item ? pillLoader.item.implicitWidth : 0)
-  height: isVerticalBar ? (pillLoader.item ? pillLoader.item.implicitHeight : 0) : parent.height
-  implicitWidth: pillLoader.item ? pillLoader.item.implicitWidth : 0
-  implicitHeight: pillLoader.item ? pillLoader.item.implicitHeight : 0
+  width: isVerticalBar ? parent.width : (root.pillItem ? root.pillItem.implicitWidth : 0)
+  height: isVerticalBar ? (root.pillItem ? root.pillItem.implicitHeight : 0) : parent.height
+  implicitWidth: root.pillItem ? root.pillItem.implicitWidth : 0
+  implicitHeight: root.pillItem ? root.pillItem.implicitHeight : 0
 
   // Loader fills BarPill so child components can extend to full bar dimension
   Loader {

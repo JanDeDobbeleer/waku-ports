@@ -15,7 +15,7 @@ RowLayout {
   property bool selectOnNavigation: true
   property string label: ""
   property string description: ""
-  property ListModel model: {}
+  property ListModel model: null
   property string currentKey: ""
   property string placeholder: ""
   property string searchPlaceholder: I18n.tr("placeholders.search")

@@ -347,8 +347,8 @@ Item {
 
                 Item {
                   visible: SystemStatService.rxSpeed > 0 && SystemStatService.txSpeed > 0
-                  width: Style.marginXS
-                  height: 1
+                  Layout.preferredWidth: Style.marginXS
+                  Layout.preferredHeight: 1
                 }
 
                 NIcon {

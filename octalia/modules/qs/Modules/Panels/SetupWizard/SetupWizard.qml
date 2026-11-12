@@ -362,8 +362,8 @@ SmartPanel {
               spacing: Style.marginS
 
               Rectangle {
-                width: 24
-                height: 24
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
                 radius: width / 2
                 color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
                 border.color: progressStep.index === panelContent.currentStep ? Color.mPrimary : "transparent"
@@ -398,8 +398,8 @@ SmartPanel {
 
               // Connector line
               Rectangle {
-                width: 40
-                height: 2
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 2
                 radius: 1
                 color: progressStep.index < panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
                 visible: progressStep.index < panelContent.totalSteps - 1

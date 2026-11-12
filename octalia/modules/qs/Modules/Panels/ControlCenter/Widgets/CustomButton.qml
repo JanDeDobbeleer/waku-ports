@@ -63,7 +63,7 @@ Item {
     id: stateCheckProcessExecutor
     running: false
     command: root._currentStateCheckIndex !== -1 && root._parsedStateChecks.length > root._currentStateCheckIndex ? ["cmd", "/c", root._parsedStateChecks[root._currentStateCheckIndex].command] : []
-    onExited: function (exitCode, stdout, stderr) {
+    onExited: function (exitCode) {
       var currentCheckItem = root._parsedStateChecks[root._currentStateCheckIndex];
       var currentCommand = currentCheckItem.command;
       if (exitCode === 0) {
