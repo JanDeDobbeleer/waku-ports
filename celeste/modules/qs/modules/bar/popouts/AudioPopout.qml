@@ -82,20 +82,22 @@ Item {
         }
 
         CustomMouseArea {
+            id: volumeArea
+
             Layout.fillWidth: true
             implicitHeight: Tokens.padding.medium * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
+                    Audio.incrementVolume(0);
                 else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
+                    Audio.decrementVolume(0);
             }
 
             StyledSlider {
                 anchors.left: parent.left
                 anchors.right: parent.right
-                implicitHeight: parent.implicitHeight
+                implicitHeight: volumeArea.implicitHeight
 
                 value: Audio.volume
                 onInteraction: value => Audio.setVolume(value)

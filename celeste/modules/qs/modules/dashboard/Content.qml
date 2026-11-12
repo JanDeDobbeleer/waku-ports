@@ -8,6 +8,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.components.filedialog
+import "DashboardContentHelpers.js" as DashboardContentHelpers
 
 Item {
     id: root
@@ -50,7 +51,7 @@ Item {
                 enabled: Config.dashboard.showUtilities
             }
         ];
-        return allTabs.filter(tab => tab.enabled);
+        return DashboardContentHelpers.enabledTabs(allTabs);
     }
 
     readonly final property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
@@ -105,8 +106,8 @@ Item {
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: currentItem?.implicitWidth ?? 0
-            implicitHeight: currentItem?.implicitHeight ?? 0
+            implicitWidth: DashboardContentHelpers.itemWidth(currentItem)
+            implicitHeight: DashboardContentHelpers.itemHeight(currentItem)
 
             contentX: currentItem?.x ?? 0
             contentWidth: row.implicitWidth
@@ -117,9 +118,9 @@ Item {
                     return;
 
                 const x = contentX - currentItem.x;
-                if (x > currentItem.implicitWidth / 2)
+                if (x > DashboardContentHelpers.itemWidth(currentItem) / 2)
                     root.screenState.dashboardTab = Math.min(root.screenState.dashboardTab + 1, tabs.count - 1);
-                else if (x < -currentItem.implicitWidth / 2)
+                else if (x < -DashboardContentHelpers.itemWidth(currentItem) / 2)
                     root.screenState.dashboardTab = Math.max(root.screenState.dashboardTab - 1, 0);
             }
 
@@ -128,12 +129,12 @@ Item {
                     return;
 
                 const x = contentX - currentItem.x;
-                if (x > currentItem.implicitWidth / 10)
+                if (x > DashboardContentHelpers.itemWidth(currentItem) / 10)
                     root.screenState.dashboardTab = Math.min(root.screenState.dashboardTab + 1, tabs.count - 1);
-                else if (x < -currentItem.implicitWidth / 10)
+                else if (x < -DashboardContentHelpers.itemWidth(currentItem) / 10)
                     root.screenState.dashboardTab = Math.max(root.screenState.dashboardTab - 1, 0);
                 else
-                    contentX = Qt.binding(() => currentItem?.x ?? 0);
+                    contentX = DashboardContentHelpers.contentXBinding(Qt, view);
             }
 
             RowLayout {
@@ -167,7 +168,7 @@ Item {
 
                         Layout.alignment: Qt.AlignTop
 
-                        sourceComponent: modelData.component
+                        sourceComponent: DashboardContentHelpers.component(modelData)
 
                         onImplicitWidthChanged: Qt.callLater(updateActive)
                         onXChanged: Qt.callLater(updateActive)
