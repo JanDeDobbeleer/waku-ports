@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell.Io
@@ -1173,7 +1174,7 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
@@ -1183,7 +1184,7 @@ Panel {
       }
     }
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }

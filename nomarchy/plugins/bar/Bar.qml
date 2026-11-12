@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
@@ -1874,7 +1875,6 @@ Item {
 
 
       anchor {
-        id: tooltipAnchor
         item: root.tooltipTarget
       }
 

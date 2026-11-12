@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
@@ -1420,6 +1421,7 @@ Panel {
             ]
 
             delegate: PopupMenuRow {
+              id: rotationRow
               required property var modelData
               required property int index
 
@@ -1427,7 +1429,7 @@ Panel {
               checked: root.rotateMenuTransform === modelData[0] / 90
               // Hover and the keyboard share one lit row.
               highlighted: root.rotateMenuIndex === index
-              HoverHandler { onHoveredChanged: if (hovered) root.rotateMenuIndex = index }
+              HoverHandler { onHoveredChanged: if (hovered) root.rotateMenuIndex = rotationRow.index }
               onTriggered: {
                 root.setRotation(root.rotateMenuName, modelData[0])
                 root.closeRotateMenu()

@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -1017,14 +1018,14 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: root.phraseIndex = (root.phraseIndex + 1) % root.activePhrases.length
     }
     PropertyAnimation {
-      target: hero; property: "metaOpacity"
+      target: root.hero; property: "metaOpacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -1195,7 +1196,7 @@ Panel {
 
       Text {
         textFormat: Text.PlainText
-        text: tailscale.osIcon(peer ? peer.OS : "")
+        text: tailscale.osIcon(peerRow.peer ? peerRow.peer.OS : "")
         color: root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.icon
@@ -1333,7 +1334,7 @@ Panel {
       Text {
         id: exitNodeGlyph
         textFormat: Text.PlainText
-        text: exitNodeRow.addMullvad ? "+" : (peer && peer.Mullvad === true ? "󰖂" : "󱇢")
+        text: exitNodeRow.addMullvad ? "+" : (exitNodeRow.peer && exitNodeRow.peer.Mullvad === true ? "󰖂" : "󱇢")
         color: exitNodeRow.activeExitNode || exitNodeRow.settingExitNode || exitNodeRow.addMullvad ? root.foreground : root.dim
         font.family: root.fontFamily
         font.pixelSize: Style.font.body
