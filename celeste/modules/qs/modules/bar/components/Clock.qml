@@ -101,7 +101,7 @@ StyledRect {
         }
 
         StyledText {
-            Layout.topMargin: -parent.spacing - 4
+            Layout.topMargin: -layout.spacing - 4
             Layout.alignment: Qt.AlignHCenter
             text: Time.minuteStr
             font: root.fontFor(text, minMetrics.width)
@@ -116,7 +116,7 @@ StyledRect {
         }
 
         Loader {
-            Layout.topMargin: -parent.spacing - 4
+            Layout.topMargin: -layout.spacing - 4
             Layout.alignment: Qt.AlignHCenter
             asynchronous: true
             active: Config.bar.clock.showSeconds
@@ -137,7 +137,7 @@ StyledRect {
         }
 
         Loader {
-            Layout.topMargin: -parent.spacing - 4
+            Layout.topMargin: -layout.spacing - 4
             Layout.alignment: Qt.AlignHCenter
             asynchronous: true
             active: Units.twelveHourClock

@@ -5,6 +5,7 @@ import QtQuick.Shapes
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledTextFieldHelpers.js" as StyledTextFieldHelpers
 
 TextFieldBase {
     id: root
@@ -34,7 +35,7 @@ TextFieldBase {
     final property bool isError
     final property bool emptyIsValid: true
     final property var validate // Regex or function
-    readonly final property bool valid: !validate || (!text && emptyIsValid) || (validate instanceof RegExp ? validate.test(text) : !!validate(text))
+    readonly final property bool valid: StyledTextFieldHelpers.isValid(validate, text, emptyIsValid)
     readonly final property string effectiveSupportingText: isError && errorText ? errorText : supportingText
     readonly final property int supportingTextOffset: effectiveSupportingText ? supportingTextLoader.height + Tokens.spacing.extraSmall : 0
 

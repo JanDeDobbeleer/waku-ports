@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Celeste.Config
 import qs.components
 import qs.services
+import "SplitButtonHelpers.js" as SplitButtonHelpers
 
 Row {
     id: root
@@ -54,7 +55,7 @@ Row {
             bottomRightRadius: parent.bottomRightRadius
             color: root.textColour
             disabled: root.disabled
-            onClicked: root.active?.clicked()
+            onClicked: SplitButtonHelpers.click(root.active)
         }
 
         RowLayout {

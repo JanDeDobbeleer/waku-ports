@@ -17,6 +17,8 @@ Switch {
     implicitHeight: implicitIndicatorHeight
 
     indicator: StyledRect {
+        id: switchTrack
+
         radius: Tokens.rounding.full
         color: {
             if (root.disabled)
@@ -28,6 +30,8 @@ Switch {
         implicitHeight: Tokens.font.body.medium.pointSize + Tokens.padding.small * 2
 
         StyledRect {
+            id: switchKnob
+
             readonly final property real nonAnimWidth: root.pressed ? implicitHeight * 1.2 : implicitHeight
 
             radius: Tokens.rounding.full
@@ -37,14 +41,14 @@ Switch {
                 return root.checked ? Colours.palette.m3onPrimary : Colours.layer(Colours.palette.m3outline, root.cLayer + 1);
             }
 
-            x: root.checked ? parent.implicitWidth - nonAnimWidth - Tokens.padding.extraSmall / 2 : Tokens.padding.extraSmall / 2
+            x: root.checked ? switchTrack.implicitWidth - nonAnimWidth - Tokens.padding.extraSmall / 2 : Tokens.padding.extraSmall / 2
             implicitWidth: nonAnimWidth
-            implicitHeight: parent.implicitHeight - Tokens.padding.extraSmall
+            implicitHeight: switchTrack.implicitHeight - Tokens.padding.extraSmall
             anchors.verticalCenter: parent.verticalCenter
 
             StyledRect {
                 anchors.fill: parent
-                radius: parent.radius
+                radius: switchKnob.radius
 
                 color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurface
                 opacity: root.pressed ? 0.1 : root.hovered ? 0.08 : 0
@@ -96,7 +100,7 @@ Switch {
 
                 anchors.centerIn: parent
                 width: height
-                height: parent.implicitHeight - Tokens.padding.medium
+                height: switchKnob.implicitHeight - Tokens.padding.medium
                 preferredRendererType: Shape.CurveRenderer
                 asynchronous: true
 

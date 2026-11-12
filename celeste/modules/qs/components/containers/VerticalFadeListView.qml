@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.components
 import qs.components.effects
+import "FadeHelpers.js" as FadeHelpers
 
 StyledListView {
     id: root
@@ -14,7 +15,7 @@ StyledListView {
 
     function fadeShouldBeActive(isStart: bool): bool {
         // When content is smaller than flickable size, hide fade when rebound starts
-        if (contentHeight + topMargin + bottomMargin < height && rebound.running && ((isStart ? verticalOvershoot > 0 : verticalOvershoot < 0)))
+        if (contentHeight + topMargin + bottomMargin < height && FadeHelpers.running(rebound) && ((isStart ? verticalOvershoot > 0 : verticalOvershoot < 0)))
             return false;
 
         if (isStart)
