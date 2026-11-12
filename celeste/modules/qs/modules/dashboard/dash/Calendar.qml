@@ -10,6 +10,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.services
+import "CalendarHelpers.js" as CalendarHelpers
 
 CustomMouseArea {
     id: root
@@ -46,7 +47,7 @@ CustomMouseArea {
         running: false
         target: root
         property: "animTranslate"
-        to: root.Tokens.padding.extraLarge * root.animDirection
+        to: Tokens.padding.extraLarge * root.animDirection
         type: Anim.FastSpatial
     }
 
@@ -66,7 +67,7 @@ CustomMouseArea {
             ScriptAction {
                 script: {
                     trOutAnim.complete();
-                    root.animTranslate = root.Tokens.padding.extraLarge * -root.animDirection;
+                    root.animTranslate = Tokens.padding.extraLarge * -root.animDirection;
                 }
             }
             PropertyAction {}
@@ -167,9 +168,9 @@ CustomMouseArea {
                 required final property var model
 
                 horizontalAlignment: Text.AlignHCenter
-                text: model.shortName
+                text: CalendarHelpers.dayName(model)
                 font: Tokens.styled("body", "small", { weight: Font.Medium })
-                color: (model.day === 0 || model.day === 6) ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
+                color: CalendarHelpers.weekendColour(model, Colours.palette.m3tertiary, Colours.palette.m3onSurface)
             }
         }
 
@@ -207,15 +208,9 @@ CustomMouseArea {
                         anchors.centerIn: parent
 
                         horizontalAlignment: Text.AlignHCenter
-                        text: grid.locale.toString(dayItem.model.day)
-                        color: {
-                            const dayOfWeek = dayItem.model.date.getDay();
-                            if (dayOfWeek === 0 || dayOfWeek === 6)
-                                return Colours.palette.m3tertiary;
-
-                            return Colours.palette.m3onSurfaceVariant;
-                        }
-                        opacity: dayItem.model.today || dayItem.model.month === grid.month ? 1 : 0.4
+                        text: CalendarHelpers.dateText(grid.locale, dayItem.model)
+                        color: CalendarHelpers.dateColour(dayItem.model, Colours.palette.m3tertiary, Colours.palette.m3onSurfaceVariant)
+                        opacity: CalendarHelpers.dateOpacity(dayItem.model, grid.month)
                         font: Tokens.font.body.small
                     }
                 }
@@ -224,7 +219,7 @@ CustomMouseArea {
             MaterialShape {
                 id: todayIndicator
 
-                readonly final property Item todayItem: grid.contentItem.children.find(c => c.model.today) ?? null
+                readonly final property Item todayItem: CalendarHelpers.findToday(grid)
                 final property Item today
 
                 onTodayItemChanged: {
@@ -235,7 +230,7 @@ CustomMouseArea {
                 x: today ? today.x + (today.width - implicitWidth) / 2 : 0
                 y: today ? today.y - Tokens.padding.extraSmall - 1 : 0
 
-                implicitSize: today ? Math.max(today.implicitWidth, today.implicitHeight) + Tokens.padding.extraSmall * 2 : 0
+                implicitSize: CalendarHelpers.todaySize(today, Tokens.padding.extraSmall)
                 shape: MaterialShape.Sunny
 
                 clip: true
