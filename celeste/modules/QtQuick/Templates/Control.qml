@@ -1,4 +1,5 @@
 import QtQuick
+import "ControlHelpers.js" as ControlHelpers
 
 // Pure QML stand-in for QtQuick.Templates.Control. The waku engine does not ship the real
 // QtQuick.Templates module, so the port provides the subset celeste's components use.
@@ -26,10 +27,10 @@ Item {
     final property Item background
     final property Item contentItem
 
-    readonly final property real implicitBackgroundWidth: background ? background.implicitWidth : 0
-    readonly final property real implicitBackgroundHeight: background ? background.implicitHeight : 0
-    readonly final property real implicitContentWidth: contentItem ? contentItem.implicitWidth : 0
-    readonly final property real implicitContentHeight: contentItem ? contentItem.implicitHeight : 0
+    readonly final property real implicitBackgroundWidth: ControlHelpers.implicitWidth(background)
+    readonly final property real implicitBackgroundHeight: ControlHelpers.implicitHeight(background)
+    readonly final property real implicitContentWidth: ControlHelpers.implicitWidth(contentItem)
+    readonly final property real implicitContentHeight: ControlHelpers.implicitHeight(contentItem)
 
     implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)

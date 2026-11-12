@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import "LyricsHelpers.js" as LyricsHelpers
 
 // Stub for celeste's C++ Lyrics service (local .lrc files, lrclib and NetEase lookups).
 // waku gap: no lookup runs. `lyrics` stays empty, `hasLyrics` false, and `loading` false.
@@ -16,7 +17,7 @@ QtObject {
             album: ""
         })
     readonly final property bool loading: false
-    readonly final property bool hasLyrics: lyrics.length > 0
+    readonly final property bool hasLyrics: LyricsHelpers.length(lyrics) > 0
     final property real offset: 0
     readonly final property string trackArtist: ""
     readonly final property string trackTitle: ""

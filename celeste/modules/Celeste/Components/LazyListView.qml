@@ -24,7 +24,9 @@ ListView {
     // Bumped after the delegates change, so bindings that read itemAtIndex() run again.
     final property int itemsDirty
 
-    onCountChanged: Qt.callLater(() => itemsDirty++)
+    onCountChanged: Qt.callLater(root.bumpItemsDirty)
+
+    function bumpItemsDirty(): void { itemsDirty++; }
 
     function itemAt(x: real, y: real): Item {
         return itemAtIndex(indexAt(x, y));

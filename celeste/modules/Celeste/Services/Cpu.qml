@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell.Io
 import Celeste.Config
 import waku.services as S
+import "SystemStatsHelpers.js" as SystemStatsHelpers
 
 // Port of celeste's Cpu over waku's Cpu source. percentage is 0..1. The name comes from the
 // registry (read only). Temperature is NaN: Windows exposes no CPU sensor without a driver, and
@@ -20,10 +21,10 @@ QtObject {
         refs = Math.max(0, refs - 1);
     }
     final property string name
-    readonly final property real percentage: src.percent / 100
+    readonly final property real percentage: SystemStatsHelpers.percent(src)
     readonly final property real temperature: NaN
 
-    readonly final property var src: S.Cpu {
+    readonly final property S.Cpu src: S.Cpu {
         active: root.refs > 0
         interval: GlobalConfig.dashboard.resourceUpdateInterval
     }

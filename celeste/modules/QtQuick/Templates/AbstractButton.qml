@@ -1,4 +1,5 @@
 import QtQuick
+import "AbstractButtonHelpers.js" as AbstractButtonHelpers
 
 // Stand-in for QtQuick.Templates.AbstractButton: text, checked, pressed, clicked and toggled.
 Control {
@@ -13,8 +14,8 @@ Control {
     final property Item indicator
     readonly final property bool pressed: area.pressed
     readonly final property bool down: area.pressed
-    readonly final property real implicitIndicatorWidth: indicator ? indicator.implicitWidth : 0
-    readonly final property real implicitIndicatorHeight: indicator ? indicator.implicitHeight : 0
+    readonly final property real implicitIndicatorWidth: AbstractButtonHelpers.implicitWidth(indicator)
+    readonly final property real implicitIndicatorHeight: AbstractButtonHelpers.implicitHeight(indicator)
 
     signal clicked
     signal toggled
