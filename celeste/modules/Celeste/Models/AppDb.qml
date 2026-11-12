@@ -1,4 +1,5 @@
 import QtQuick
+import "AppDbHelpers.js" as AppDbHelpers
 
 // Port of celeste's C++ AppDb: wraps DesktopEntry objects as AppEntry objects and sorts them by
 // favourite (the id matches a regex of favouriteApps), then launch count, then name.
@@ -24,62 +25,20 @@ QtObject {
     onFavouriteAppsChanged: resort()
 
     function incrementFrequency(id: string): void {
-        counts[id] = (counts[id] ?? 0) + 1;
-        for (const app of sorted) {
-            if (app.appId === id)
-                app.frequency = counts[id];
-        }
-        resort();
+        AppDbHelpers.incrementFrequency(root, id);
     }
 
     function isFavourite(id: string): bool {
-        for (const pattern of favouriteApps ?? []) {
-            try {
-                if (new RegExp(pattern).test(id))
-                    return true;
-            } catch (e) {
-            }
-        }
-        return false;
+        return AppDbHelpers.isFavourite(favouriteApps, id);
     }
 
     final property var cache: ({})
 
     function rebuild(): void {
-        const next = {};
-        const list = [];
-        for (const e of entries ?? []) {
-            if (!e)
-                continue;
-            const id = e.id;
-            let app = cache[id];
-            if (!app || app.entry !== e)
-                app = entryComponent.createObject(root, {
-                    entry: e,
-                    frequency: counts[id] ?? 0
-                });
-            next[id] = app;
-            list.push(app);
-        }
-        for (const id in cache) {
-            if (next[id] !== cache[id])
-                cache[id].destroy();
-        }
-        cache = next;
-        sorted = list;
-        resort();
+        AppDbHelpers.rebuild(root);
     }
 
     function resort(): void {
-        const list = [...sorted];
-        const fav = new Map(list.map(a => [a, isFavourite(a.appId)]));
-        list.sort((a, b) => {
-            if (fav.get(a) !== fav.get(b))
-                return fav.get(a) ? -1 : 1;
-            if (a.frequency !== b.frequency)
-                return b.frequency - a.frequency;
-            return a.name.localeCompare(b.name);
-        });
-        sorted = list;
+        AppDbHelpers.resort(root);
     }
 }

@@ -12,6 +12,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "BluetoothHelpers.js" as BluetoothHelpers
 
 ColumnLayout {
     id: root
@@ -25,7 +26,7 @@ ColumnLayout {
     Connections {
         function onErrorChanged(): void {
             if (S.Bluetooth.error)
-                Toaster.toast(Tr.tr("Bluetooth"), S.Bluetooth.error, "bluetooth_disabled", Toast.Error);
+                Toaster.toast(Tr.tr("Bluetooth"), S.Bluetooth.error, "bluetooth_disabled", Toast.Error, 5000);
         }
 
         target: S.Bluetooth
@@ -63,7 +64,7 @@ ColumnLayout {
         Layout.rightMargin: Tokens.padding.extraSmall
         text: {
             const devices = Bluetooth.devices.values;
-            const connected = devices.filter(d => d.connected).length;
+            const connected = BluetoothHelpers.connectedCount(devices);
             if (connected > 0)
                 // TRANSLATORS: %n = total paired devices, %1 = how many of them are connected
                 return Tr.trN("%n device available (%1 connected)", "%n devices available (%1 connected)", devices.length).arg(connected);
@@ -75,7 +76,7 @@ ColumnLayout {
 
     Repeater {
         model: ScriptModel {
-            values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name)).slice(0, 5)
+            values: BluetoothHelpers.sortedDevices(Bluetooth.devices.values)
         }
 
         RowLayout {
@@ -172,7 +173,7 @@ ColumnLayout {
 
                     StateLayer {
                         radius: Tokens.rounding.full
-                        onClicked: device.modelData.forget()
+                        onClicked: BluetoothHelpers.forgetDevice(device.modelData)
                     }
 
                     MaterialIcon {
