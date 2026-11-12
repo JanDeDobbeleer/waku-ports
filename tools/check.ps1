@@ -405,7 +405,8 @@ if ($File) {
   $byPort = @{}
   foreach ($f in $File) {
     $full = if ([IO.Path]::IsPathRooted($f)) { $f } else { Join-Path $root $f }
-    if (-not (Test-Path $full) -or $full -notmatch '\.(qml|m?js)$') { continue }
+    if ($full -notmatch '\.(qml|m?js)$') { continue }
+    if (-not (Test-Path $full)) { throw "-File $f not found; paths are relative to the repo root (e.g. nomarchy/shell.qml)" }
     $full = (Resolve-Path $full).Path
     $p = ($full.Substring($root.Length + 1) -split '[\\/]')[0]
     if ($p -notin @('celeste', 'octalia', 'nomarchy', 'start12')) { continue }
