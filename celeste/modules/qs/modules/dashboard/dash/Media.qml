@@ -10,14 +10,12 @@ import qs.components
 import qs.components.controls
 import qs.components.widgets
 import qs.services
+import "MediaHelpers.js" as MediaHelpers
 
 Item {
     id: root
 
-    final property real playerProgress: {
-        const active = Players.active;
-        return active?.length ? (active.position % active.length) / active.length : 0;
-    }
+    final property real playerProgress: MediaHelpers.progress(Players.active)
 
     readonly final property real arcCoverGap: Tokens.spacing.extraSmall
 
@@ -32,11 +30,11 @@ Item {
     }
 
     Timer {
-        running: Players.active?.isPlaying ?? false
+        running: MediaHelpers.isPlaying(Players.active)
         interval: GlobalConfig.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
-        onTriggered: Players.active?.positionChanged()
+        onTriggered: MediaHelpers.refreshPosition(Players.active)
     }
 
     ServiceRef {
@@ -84,7 +82,7 @@ Item {
         color: Colours.palette.m3primary
         font: Tokens.font.title.small
 
-        width: parent.implicitWidth - Tokens.padding.extraLargeIncreased
+        width: root.implicitWidth - Tokens.padding.extraLargeIncreased
         elide: Text.ElideRight
     }
 
@@ -101,7 +99,7 @@ Item {
         color: Colours.palette.m3outline
         font: Tokens.font.body.small
 
-        width: parent.implicitWidth - Tokens.padding.extraLargeIncreased
+        width: root.implicitWidth - Tokens.padding.extraLargeIncreased
         elide: Text.ElideRight
     }
 
@@ -117,7 +115,7 @@ Item {
         text: (Players.active?.trackArtist ?? Tr.tr("No media")) || Tr.tr("Unknown artist")
         color: Colours.palette.m3secondary
 
-        width: parent.implicitWidth - Tokens.padding.extraLargeIncreased
+        width: root.implicitWidth - Tokens.padding.extraLargeIncreased
         elide: Text.ElideRight
     }
 
@@ -137,18 +135,18 @@ Item {
             icon: "skip_previous"
             isRound: true
             shapeMorph: true
-            disabled: !Players.active?.canGoPrevious
-            onClicked: Players.active?.previous()
+            disabled: !MediaHelpers.canGoPrevious(Players.active)
+            onClicked: MediaHelpers.previous(Players.active)
         }
 
         IconButton {
             fillWidth: true
-            icon: Players.active?.isPlaying ? "pause" : "play_arrow"
+            icon: MediaHelpers.isPlaying(Players.active) ? "pause" : "play_arrow"
             isRound: true
             shapeMorph: true
-            checked: Players.active?.isPlaying ?? false
-            disabled: !Players.active?.canTogglePlaying
-            onClicked: Players.active?.togglePlaying()
+            checked: MediaHelpers.isPlaying(Players.active)
+            disabled: !MediaHelpers.canTogglePlaying(Players.active)
+            onClicked: MediaHelpers.togglePlaying(Players.active)
         }
 
         IconButton {
@@ -156,8 +154,8 @@ Item {
             icon: "skip_next"
             isRound: true
             shapeMorph: true
-            disabled: !Players.active?.canGoNext
-            onClicked: Players.active?.next()
+            disabled: !MediaHelpers.canGoNext(Players.active)
+            onClicked: MediaHelpers.next(Players.active)
         }
     }
 
@@ -172,10 +170,10 @@ Item {
         anchors.bottomMargin: Tokens.padding.large
         anchors.margins: Tokens.padding.extraLargeIncreased
 
-        playing: Players.active?.isPlaying ?? false
+        playing: MediaHelpers.isPlaying(Players.active)
         speed: Audio.beatTracker.bpm / Config.general.mediaGifSpeedAdjustment
         // Port: upstream paths use `root:/` for the shell directory, which Paths.absolutePath cannot resolve.
-        source: `file:///${Config.paths.mediaGif.replace(/^root:\//, `${Quickshell.shellDir}/`).replace(/\\/g, "/")}`
+        source: MediaHelpers.sourcePath(Config.paths.mediaGif, Quickshell.shellDir)
         asynchronous: true
         fillMode: AnimatedImage.PreserveAspectFit
     }
