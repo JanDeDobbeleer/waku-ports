@@ -100,25 +100,26 @@ function Invoke-Lint([hashtable]$byPort, $waku, [string]$qtBin) {
   foreach ($p in $byPort.Keys) {
     $files = @($byPort[$p])
     if (-not $files.Count) { continue }
-    $json = Join-Path $work "lint-$p.json"
-    $rsp = Join-Path $work "lint-$p.rsp"
+    $json = Join-Path $work "lint-$p-$PID.json"
+    $rsp = Join-Path $work "lint-$p-$PID.rsp"
     Remove-Item $json -ErrorAction SilentlyContinue
     $args_ = @('--bare')
     foreach ($i in (Get-ImportPaths $p $qtBin $waku.Types)) { $args_ += @('-I', $i) }
     $args_ += @('--compiler', 'warning', '--json', $json) + $files
     [IO.File]::WriteAllLines($rsp, [string[]]$args_)
     $proc = Start-Process -FilePath (Join-Path $qtBin 'qmllint.exe') -ArgumentList "`"@$rsp`"" -PassThru -NoNewWindow `
-      -RedirectStandardOutput (Join-Path $work "lint-$p.out.txt") -RedirectStandardError (Join-Path $work "lint-$p.err.txt")
+      -RedirectStandardOutput (Join-Path $work "lint-$p-$PID.out.txt") -RedirectStandardError (Join-Path $work "lint-$p-$PID.err.txt")
     $procs += [pscustomobject]@{ Port = $p; Proc = $proc; Json = $json; Count = $files.Count }
   }
   foreach ($x in $procs) {
     $x.Proc.WaitForExit()
     if (-not (Test-Path $x.Json)) {
-      Get-Content (Join-Path $work "lint-$($x.Port).err.txt") -ErrorAction SilentlyContinue | Select-Object -First 20 | ForEach-Object { Write-Host $_ }
+      Get-Content (Join-Path $work "lint-$($x.Port)-$PID.err.txt") -ErrorAction SilentlyContinue | Select-Object -First 20 | ForEach-Object { Write-Host $_ }
       Add-Result $x.Port 'lint' $false "qmllint exited $($x.Proc.ExitCode) without a report"
       continue
     }
     $report = Get-Content $x.Json -Raw | ConvertFrom-Json
+    Remove-Item (Join-Path $work "lint-$($x.Port)-$PID.*") -ErrorAction SilentlyContinue
     $n = 0
     foreach ($f in $report.files) {
       foreach ($w in $f.warnings) {
@@ -418,12 +419,23 @@ if ($File) {
     foreach ($p in $Port) { $byPort[$p] = Get-PortFiles $p }
     Invoke-Lint $byPort $waku $qtBin
   }
-  foreach ($p in $Port) {
-    if ('runtime' -in $Step) { Invoke-LoadCheck $p $waku }
-    # The runtime run starts from empty state, so first-run paths (setup wizards, default files) are
-  # checked. Perf measures a second start on the state that run left: the shell as users run it.
-  if ('runtime' -in $Step -or 'perf' -in $Step) { Invoke-ShellRun $p $waku ('runtime' -in $Step) $false }
-  if ('perf' -in $Step) { Invoke-ShellRun $p $waku $false $true $false }
+  # Shell runs share the work folder and the desktop (hotkeys, the taskbar zone), so concurrent checks
+  # (parallel agent sessions, hooks) take turns here. Lint runs need no turn.
+  $runs = [Threading.Mutex]::new($false, 'Local\waku-ports-check-runs')
+  if (('runtime' -in $Step -or 'perf' -in $Step) -and $Port) {
+    try { [void]$runs.WaitOne() } catch [Threading.AbandonedMutexException] { }
+  }
+  try {
+    foreach ($p in $Port) {
+      if ('runtime' -in $Step) { Invoke-LoadCheck $p $waku }
+      # The runtime run starts from empty state, so first-run paths (setup wizards, default files) are
+      # checked. Perf measures a second start on the state that run left: the shell as users run it.
+      if ('runtime' -in $Step -or 'perf' -in $Step) { Invoke-ShellRun $p $waku ('runtime' -in $Step) $false }
+      if ('perf' -in $Step) { Invoke-ShellRun $p $waku $false $true $false }
+    }
+  } finally {
+    try { $runs.ReleaseMutex() } catch [ApplicationException] { }
+    $runs.Dispose()
   }
 }
 
