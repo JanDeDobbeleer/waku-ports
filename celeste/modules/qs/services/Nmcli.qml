@@ -5,6 +5,7 @@ import Quickshell
 import Celeste.I18n
 import waku.services as S
 import qs.compat
+import "NmcliHelpers.js" as H
 
 // Celeste's Nmcli API over waku's Network service. Upstream wraps nmcli (1800 lines); waku gives
 // the active link, the Wi-Fi scan list and `connectTo`, so everything else is a neutral stub
@@ -27,49 +28,88 @@ Singleton {
     readonly final property bool scanning: S.Network.scanning
 
     final property list<AccessPoint> networks: []
-    readonly final property AccessPoint active: networks.find(n => n.active) ?? syntheticActive
+    readonly final property AccessPoint active: findActive() ?? syntheticActive
     final property list<string> savedConnections: []
     // The scan list marks `known` networks.
     final property list<string> savedConnectionSsids: []
     final property var savedConnectionSecurity: ({})
 
-    final property var pendingConnection: null
+    final property AccessPoint pendingConnection: null
     final property var wirelessDeviceDetails: null
     final property var ethernetDeviceDetails: null
     final property string ethernetDataUsage: ""
     final property string ethernetSpeed: ""
     final property list<EthernetDevice> ethernetDevices: []
-    readonly final property EthernetDevice activeEthernet: ethernetDevices.find(d => d.connected) ?? null
-    readonly final property bool hasAvailableEthernet: ethernetDevices.some(d => d.state !== "unavailable")
+    readonly final property EthernetDevice activeEthernet: findActiveEthernet()
+    readonly final property bool hasAvailableEthernet: anyEthernetAvailable()
 
-    readonly property alias connectionCheckTimer: connectionCheckTimer
-    readonly property alias immediateCheckTimer: immediateCheckTimer
+    readonly final property Timer connectionCheckTimer: connectionCheckTimerItem
+    readonly final property CheckTimer immediateCheckTimer: immediateCheckTimerItem
 
     // The link waku reports when the scan list has no entry for it yet.
     readonly final property AccessPoint syntheticActive: wifiLinked && S.Network.ssid ? synthetic : null
     readonly final property AccessPoint synthetic: AccessPoint {
-        lastIpcObject: ({
-                ssid: S.Network.ssid,
-                bssid: "",
-                strength: S.Network.signalPercent,
-                frequency: 0,
-                active: true,
-                security: ""
-            })
+        ssid: S.Network.ssid
+        bssid: ""
+        strength: S.Network.signalPercent
+        frequency: 0
+        active: true
+        security: ""
     }
 
     signal connectionFailed(string ssid)
 
+    function findActive(): AccessPoint {
+        for (let i = 0; i < networks.length; i++) {
+            if (networks[i].active)
+                return networks[i];
+        }
+        return null;
+    }
+
+    function inactiveCount(): int {
+        let count = 0;
+        for (let i = 0; i < networks.length; i++) {
+            if (!networks[i].active)
+                count++;
+        }
+        return count;
+    }
+
+    function topInactive(limit: int): var {
+        return H.topInactive(networks, limit);
+    }
+
+    function sortedEthernet(limit: int): var {
+        return H.sortedEthernet(ethernetDevices, limit);
+    }
+
+    function findActiveEthernet(): EthernetDevice {
+        for (let i = 0; i < ethernetDevices.length; i++) {
+            if (ethernetDevices[i].connected)
+                return ethernetDevices[i];
+        }
+        return null;
+    }
+
+    function anyEthernetAvailable(): bool {
+        for (let i = 0; i < ethernetDevices.length; i++) {
+            if (ethernetDevices[i].state !== "unavailable")
+                return true;
+        }
+        return false;
+    }
+
     function connectingSsid(): string {
-        return pendingConnection?.ssid ?? "";
+        return pendingConnection ? pendingConnection.ssid : "";
     }
 
     function isConnectedState(state: string): bool {
-        return state?.startsWith("connected") ?? false;
+        return state.startsWith("connected");
     }
 
     function isConnectingState(state: string): bool {
-        return state?.startsWith("connecting") ?? false;
+        return state.startsWith("connecting");
     }
 
     function securityLabel(keyMgmt: string): string {
@@ -90,18 +130,21 @@ Singleton {
     }
 
     function savedSecurityFor(ssid: string): string {
-        return savedConnectionSecurity[(ssid ?? "").toLowerCase().trim()] || "";
+        return H.savedSecurity(savedConnectionSecurity, ssid.toLowerCase().trim());
     }
 
     function hasSavedProfile(ssid: string): bool {
         if (!ssid)
             return false;
-        const key = ssid.toLowerCase().trim();
-        return savedConnectionSsids.some(s => s.toLowerCase().trim() === key);
+        return H.containsLower(savedConnectionSsids, ssid);
     }
 
-    function findNetwork(ssid: string): var {
-        return networks.find(n => n.ssid === ssid) ?? null;
+    function findNetwork(ssid: string): AccessPoint {
+        for (let i = 0; i < networks.length; i++) {
+            if (networks[i].ssid === ssid)
+                return networks[i];
+        }
+        return null;
     }
 
     function rescanWifi(): void {
@@ -110,36 +153,22 @@ Singleton {
 
     function refreshStatus(callback: var): void {
         S.Network.refresh();
-        if (callback)
-            callback(null);
+        H.invoke(callback, null);
     }
 
     function loadSavedConnections(callback: var): void {
-        if (callback)
-            callback(savedConnections);
+        H.invoke(callback, savedConnections);
     }
 
     function unsupported(callback: var): void {
-        if (callback)
-            callback({
-                success: false,
-                output: "",
-                error: "Not supported on Windows",
-                exitCode: 1
-            });
+        H.invoke(callback, H.unsupportedResult());
     }
 
     // waku gap: waku switches to a known profile only. An unknown secured network needs the
     // password dialog, and waku has nothing to hand the password to.
     function connectToNetwork(ssid: string, password: string, bssid: string, callback: var): void {
         const ok = S.Network.connectTo(ssid);
-        if (callback)
-            callback({
-                success: ok,
-                output: "",
-                error: ok ? "" : "Unable to connect",
-                exitCode: ok ? 0 : 1
-            });
+        H.invoke(callback, H.connectResult(ok));
         if (!ok)
             connectionFailed(ssid);
     }
@@ -150,11 +179,7 @@ Singleton {
 
     function connectToNetworkWithPasswordCheck(ssid: string, isSecure: bool, callback: var, bssid: string): void {
         if (isSecure && !hasSavedProfile(ssid)) {
-            if (callback)
-                callback({
-                    success: false,
-                    needsPassword: true
-                });
+            H.invoke(callback, H.needsPasswordResult());
             return;
         }
         connectToNetwork(ssid, "", bssid, callback);
@@ -178,8 +203,7 @@ Singleton {
     }
 
     function getAutoconnect(connectionName: string, callback: var): void {
-        if (callback)
-            callback(true);
+        H.invoke(callback, true);
     }
 
     function setAutoconnect(connectionName: string, enabled: bool, callback: var): void {
@@ -196,26 +220,19 @@ Singleton {
     }
 
     function getWifiStatus(callback: var): void {
-        if (callback)
-            callback(wifiEnabled);
+        H.invoke(callback, wifiEnabled);
     }
 
     function getNetworks(callback: var): void {
-        if (callback)
-            callback(networks);
+        H.invoke(callback, networks);
     }
 
     function getEthernetInterfaces(callback: var): void {
-        if (callback)
-            callback(ethernetDevices);
+        H.invoke(callback, ethernetDevices);
     }
 
     function getAllInterfaces(callback: var): void {
-        if (callback)
-            callback({
-                wireless: [],
-                ethernet: ethernetDevices
-            });
+        H.invoke(callback, H.interfacesResult(ethernetDevices));
     }
 
     function connectEthernet(connectionName: string, interfaceName: string, callback: var): void {
@@ -226,29 +243,14 @@ Singleton {
         unsupported(callback);
     }
 
-    function linkDetails(kind: string): var {
-        if (S.Network.kind !== kind)
-            return null;
-        return {
-            ipAddress: S.Network.ipAddress,
-            gateway: "",
-            dns: [],
-            subnet: "",
-            macAddress: "",
-            speed: ""
-        };
-    }
-
     function getWirelessDeviceDetails(interfaceName: string, callback: var): void {
-        wirelessDeviceDetails = linkDetails("wifi");
-        if (callback)
-            callback(wirelessDeviceDetails);
+        wirelessDeviceDetails = H.linkDetails(S.Network, "wifi");
+        H.invoke(callback, wirelessDeviceDetails);
     }
 
     function getEthernetDeviceDetails(interfaceName: string, callback: var): void {
-        ethernetDeviceDetails = linkDetails("ethernet");
-        if (callback)
-            callback(ethernetDeviceDetails);
+        ethernetDeviceDetails = H.linkDetails(S.Network, "ethernet");
+        H.invoke(callback, ethernetDeviceDetails);
     }
 
     function getEthernetSpeed(interfaceName: string): void {
@@ -257,13 +259,11 @@ Singleton {
 
     function getEthernetDataUsage(interfaceName: string, callback: var): void {
         ethernetDataUsage = "";
-        if (callback)
-            callback("");
+        H.invoke(callback, "");
     }
 
     function getIpv4Config(connectionName: string, callback: var): void {
-        if (callback)
-            callback(null);
+        H.invoke(callback, null);
     }
 
     function setIpv4Config(connectionName: string, config: var, callback: var): void {
@@ -275,53 +275,22 @@ Singleton {
     final property string networksSignature: ""
 
     function rebuild(): void {
-        const signature = JSON.stringify(S.Network.networks || []);
+        const signature = H.signature(S.Network.networks);
         if (signature === networksSignature)
             return;
         networksSignature = signature;
-        const old = [...networks];
-        const next = [];
-        const known = [];
-        // waku gap: no BSSID, so the SSID stands in for it and keeps rows distinct.
-        for (const n of S.Network.networks) {
-            if (n.known)
-                known.push(n.ssid);
-            next.push(accessPointComp.createObject(root, {
-                lastIpcObject: {
-                    ssid: n.ssid,
-                    bssid: n.ssid,
-                    strength: n.signal,
-                    frequency: 0,
-                    active: n.connected,
-                    security: n.secured ? "WPA2" : ""
-                }
-            }));
-        }
-        networks = next;
+        const old = H.copy(networks);
+        networks = H.buildAccessPoints(root, accessPointComp, S.Network.networks);
+        const known = H.knownSsids(S.Network.networks);
         savedConnectionSsids = known;
         savedConnections = known;
-        for (const o of old)
-            o.destroy();
+        H.destroyAll(old);
     }
 
     function rebuildEthernet(): void {
-        const old = [...ethernetDevices];
-        const up = S.Network.kind === "ethernet";
-        const next = [];
-        if (up)
-            next.push(ethernetComp.createObject(root, {
-                lastIpcObject: {
-                    interface: "Ethernet",
-                    type: "ethernet",
-                    state: "connected",
-                    connection: "Ethernet",
-                    connected: true,
-                    ipAddress: S.Network.ipAddress
-                }
-            }));
-        ethernetDevices = next;
-        for (const o of old)
-            o.destroy();
+        const old = H.copy(ethernetDevices);
+        ethernetDevices = S.Network.kind === "ethernet" ? H.buildEthernet(root, ethernetComp, S.Network.ipAddress) : [];
+        H.destroyAll(old);
     }
 
     Component.onCompleted: {
@@ -356,42 +325,14 @@ Singleton {
     }
 
     Timer {
-        id: connectionCheckTimer
+        id: connectionCheckTimerItem
 
         interval: 4000
     }
 
-    Timer {
-        id: immediateCheckTimer
-
-        final property int checkCount: 0
+    CheckTimer {
+        id: immediateCheckTimerItem
 
         interval: 500
-    }
-
-    component AccessPoint: QtObject {
-        required final property var lastIpcObject
-        readonly final property string ssid: lastIpcObject.ssid
-        readonly final property string bssid: lastIpcObject.bssid
-        readonly final property int strength: lastIpcObject.strength
-        readonly final property int frequency: lastIpcObject.frequency
-        readonly final property bool active: lastIpcObject.active
-        readonly final property string security: lastIpcObject.security
-        readonly final property bool isSecure: security.length > 0
-    }
-
-    component EthernetDevice: QtObject {
-        required final property var lastIpcObject
-        readonly final property string iface: lastIpcObject.interface
-        readonly final property string type: lastIpcObject.type
-        readonly final property string state: lastIpcObject.state
-        readonly final property string connection: lastIpcObject.connection
-        readonly final property bool connected: lastIpcObject.connected
-        readonly final property string ipAddress: lastIpcObject.ipAddress ?? ""
-        readonly final property string gateway: lastIpcObject.gateway ?? ""
-        readonly final property var dns: lastIpcObject.dns ?? []
-        readonly final property string subnet: lastIpcObject.subnet ?? ""
-        readonly final property string macAddress: lastIpcObject.macAddress ?? ""
-        readonly final property string speed: lastIpcObject.speed ?? ""
     }
 }

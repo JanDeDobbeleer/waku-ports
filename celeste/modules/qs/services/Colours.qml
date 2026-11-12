@@ -11,6 +11,7 @@ import waku.services as S
 import qs.services
 import qs.compat
 import qs.utils
+import "ColoursHelpers.js" as H
 
 // Celeste's colour service over waku's ColorScheme. Upstream reads a scheme.json written by the
 // `celeste scheme` CLI. Here the scheme is generated in process from the wallpaper
@@ -72,11 +73,11 @@ Singleton {
         return Qt.rgba(r, g, b, a);
     }
 
-    function layer(c: color, layer: var): color {
+    function layer(c: color, layer: int): color {
         if (!transparency.enabled)
             return c;
 
-        return layer === 0 ? Qt.alpha(c, transparency.base) : alterColour(c, transparency.layers, layer ?? 1);
+        return layer === 0 ? Qt.alpha(c, transparency.base) : alterColour(c, transparency.layers, layer);
     }
 
     function on(c: color): color {
@@ -87,18 +88,8 @@ Singleton {
 
     // Copies a name -> colour map (ColorScheme.colors, or the `colours` of a scheme.json with
     // hex strings) onto a palette, adding the `m3` prefix.
-    function applyColours(colours: var, target: var): void {
-        for (const [name, colour] of Object.entries(colours)) {
-            const propName = name.startsWith("term") ? name : `m3${name}`;
-            if (target.hasOwnProperty(propName))
-                target[propName] = colour;
-        }
-    }
-
     function applyScheme(scheme: var, isPreview: bool): void {
-        if (!scheme?.valid)
-            return;
-        applyColours(scheme.colors, isPreview ? preview : current);
+        H.applyScheme(scheme, isPreview ? preview : current);
     }
 
     function samePath(a: string, b: string): bool {
@@ -134,21 +125,7 @@ Singleton {
 
     // Loads a scheme.json as the `celeste scheme` CLI writes it.
     function load(data: string, isPreview: bool): void {
-        const colours = isPreview ? preview : current;
-        const scheme = JSON.parse(data);
-
-        if (!isPreview) {
-            root.scheme = scheme.name;
-            flavour = scheme.flavour;
-            currentLight = scheme.mode === "light";
-        } else {
-            previewLight = scheme.mode === "light";
-        }
-
-        const mapped = {};
-        for (const [name, colour] of Object.entries(scheme.colours))
-            mapped[name] = `#${colour}`;
-        applyColours(mapped, colours);
+        H.load(data, isPreview, root, isPreview ? preview : current);
     }
 
     // Sets the palette's mode and regenerates the palette for it. A preview palette left on screen
@@ -249,9 +226,9 @@ Singleton {
         function onFromImageFinished(path: string, scheme: var): void {
             if (root.scheme !== "dynamic")
                 return;
-            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent) && scheme.dark === !root.currentLight)
+            if (root.pendingCurrent && root.samePath(path, root.pendingCurrent) && H.isDark(scheme) === !root.currentLight)
                 root.applyScheme(scheme, false);
-            if (root.pendingPreview && root.samePath(path, root.pendingPreview) && scheme.dark === !root.previewLight) {
+            if (root.pendingPreview && root.samePath(path, root.pendingPreview) && H.isDark(scheme) === !root.previewLight) {
                 root.applyScheme(scheme, true);
                 root.showPreview = WallpaperService.showPreview;
             }
@@ -273,64 +250,64 @@ Singleton {
     }
 
     component M3TPalette: QtObject {
-        readonly final property color m3primary_paletteKeyColor: root.layer(root.palette.m3primary_paletteKeyColor)
-        readonly final property color m3secondary_paletteKeyColor: root.layer(root.palette.m3secondary_paletteKeyColor)
-        readonly final property color m3tertiary_paletteKeyColor: root.layer(root.palette.m3tertiary_paletteKeyColor)
-        readonly final property color m3neutral_paletteKeyColor: root.layer(root.palette.m3neutral_paletteKeyColor)
-        readonly final property color m3neutral_variant_paletteKeyColor: root.layer(root.palette.m3neutral_variant_paletteKeyColor)
+        readonly final property color m3primary_paletteKeyColor: root.layer(root.palette.m3primary_paletteKeyColor, 1)
+        readonly final property color m3secondary_paletteKeyColor: root.layer(root.palette.m3secondary_paletteKeyColor, 1)
+        readonly final property color m3tertiary_paletteKeyColor: root.layer(root.palette.m3tertiary_paletteKeyColor, 1)
+        readonly final property color m3neutral_paletteKeyColor: root.layer(root.palette.m3neutral_paletteKeyColor, 1)
+        readonly final property color m3neutral_variant_paletteKeyColor: root.layer(root.palette.m3neutral_variant_paletteKeyColor, 1)
         readonly final property color m3background: root.layer(root.palette.m3background, 0)
-        readonly final property color m3onBackground: root.layer(root.palette.m3onBackground)
+        readonly final property color m3onBackground: root.layer(root.palette.m3onBackground, 1)
         readonly final property color m3surface: root.layer(root.palette.m3surface, 0)
         readonly final property color m3surfaceDim: root.layer(root.palette.m3surfaceDim, 0)
         readonly final property color m3surfaceBright: root.layer(root.palette.m3surfaceBright, 0)
-        readonly final property color m3surfaceContainerLowest: root.layer(root.palette.m3surfaceContainerLowest)
-        readonly final property color m3surfaceContainerLow: root.layer(root.palette.m3surfaceContainerLow)
-        readonly final property color m3surfaceContainer: root.layer(root.palette.m3surfaceContainer)
-        readonly final property color m3surfaceContainerHigh: root.layer(root.palette.m3surfaceContainerHigh)
-        readonly final property color m3surfaceContainerHighest: root.layer(root.palette.m3surfaceContainerHighest)
-        readonly final property color m3onSurface: root.layer(root.palette.m3onSurface)
+        readonly final property color m3surfaceContainerLowest: root.layer(root.palette.m3surfaceContainerLowest, 1)
+        readonly final property color m3surfaceContainerLow: root.layer(root.palette.m3surfaceContainerLow, 1)
+        readonly final property color m3surfaceContainer: root.layer(root.palette.m3surfaceContainer, 1)
+        readonly final property color m3surfaceContainerHigh: root.layer(root.palette.m3surfaceContainerHigh, 1)
+        readonly final property color m3surfaceContainerHighest: root.layer(root.palette.m3surfaceContainerHighest, 1)
+        readonly final property color m3onSurface: root.layer(root.palette.m3onSurface, 1)
         readonly final property color m3surfaceVariant: root.layer(root.palette.m3surfaceVariant, 0)
-        readonly final property color m3onSurfaceVariant: root.layer(root.palette.m3onSurfaceVariant)
+        readonly final property color m3onSurfaceVariant: root.layer(root.palette.m3onSurfaceVariant, 1)
         readonly final property color m3inverseSurface: root.layer(root.palette.m3inverseSurface, 0)
-        readonly final property color m3inverseOnSurface: root.layer(root.palette.m3inverseOnSurface)
-        readonly final property color m3outline: root.layer(root.palette.m3outline)
-        readonly final property color m3outlineVariant: root.layer(root.palette.m3outlineVariant)
-        readonly final property color m3shadow: root.layer(root.palette.m3shadow)
-        readonly final property color m3scrim: root.layer(root.palette.m3scrim)
-        readonly final property color m3surfaceTint: root.layer(root.palette.m3surfaceTint)
-        readonly final property color m3primary: root.layer(root.palette.m3primary)
-        readonly final property color m3onPrimary: root.layer(root.palette.m3onPrimary)
-        readonly final property color m3primaryContainer: root.layer(root.palette.m3primaryContainer)
-        readonly final property color m3onPrimaryContainer: root.layer(root.palette.m3onPrimaryContainer)
-        readonly final property color m3inversePrimary: root.layer(root.palette.m3inversePrimary)
-        readonly final property color m3secondary: root.layer(root.palette.m3secondary)
-        readonly final property color m3onSecondary: root.layer(root.palette.m3onSecondary)
-        readonly final property color m3secondaryContainer: root.layer(root.palette.m3secondaryContainer)
-        readonly final property color m3onSecondaryContainer: root.layer(root.palette.m3onSecondaryContainer)
-        readonly final property color m3tertiary: root.layer(root.palette.m3tertiary)
-        readonly final property color m3onTertiary: root.layer(root.palette.m3onTertiary)
-        readonly final property color m3tertiaryContainer: root.layer(root.palette.m3tertiaryContainer)
-        readonly final property color m3onTertiaryContainer: root.layer(root.palette.m3onTertiaryContainer)
-        readonly final property color m3error: root.layer(root.palette.m3error)
-        readonly final property color m3onError: root.layer(root.palette.m3onError)
-        readonly final property color m3errorContainer: root.layer(root.palette.m3errorContainer)
-        readonly final property color m3onErrorContainer: root.layer(root.palette.m3onErrorContainer)
-        readonly final property color m3success: root.layer(root.palette.m3success)
-        readonly final property color m3onSuccess: root.layer(root.palette.m3onSuccess)
-        readonly final property color m3successContainer: root.layer(root.palette.m3successContainer)
-        readonly final property color m3onSuccessContainer: root.layer(root.palette.m3onSuccessContainer)
-        readonly final property color m3primaryFixed: root.layer(root.palette.m3primaryFixed)
-        readonly final property color m3primaryFixedDim: root.layer(root.palette.m3primaryFixedDim)
-        readonly final property color m3onPrimaryFixed: root.layer(root.palette.m3onPrimaryFixed)
-        readonly final property color m3onPrimaryFixedVariant: root.layer(root.palette.m3onPrimaryFixedVariant)
-        readonly final property color m3secondaryFixed: root.layer(root.palette.m3secondaryFixed)
-        readonly final property color m3secondaryFixedDim: root.layer(root.palette.m3secondaryFixedDim)
-        readonly final property color m3onSecondaryFixed: root.layer(root.palette.m3onSecondaryFixed)
-        readonly final property color m3onSecondaryFixedVariant: root.layer(root.palette.m3onSecondaryFixedVariant)
-        readonly final property color m3tertiaryFixed: root.layer(root.palette.m3tertiaryFixed)
-        readonly final property color m3tertiaryFixedDim: root.layer(root.palette.m3tertiaryFixedDim)
-        readonly final property color m3onTertiaryFixed: root.layer(root.palette.m3onTertiaryFixed)
-        readonly final property color m3onTertiaryFixedVariant: root.layer(root.palette.m3onTertiaryFixedVariant)
+        readonly final property color m3inverseOnSurface: root.layer(root.palette.m3inverseOnSurface, 1)
+        readonly final property color m3outline: root.layer(root.palette.m3outline, 1)
+        readonly final property color m3outlineVariant: root.layer(root.palette.m3outlineVariant, 1)
+        readonly final property color m3shadow: root.layer(root.palette.m3shadow, 1)
+        readonly final property color m3scrim: root.layer(root.palette.m3scrim, 1)
+        readonly final property color m3surfaceTint: root.layer(root.palette.m3surfaceTint, 1)
+        readonly final property color m3primary: root.layer(root.palette.m3primary, 1)
+        readonly final property color m3onPrimary: root.layer(root.palette.m3onPrimary, 1)
+        readonly final property color m3primaryContainer: root.layer(root.palette.m3primaryContainer, 1)
+        readonly final property color m3onPrimaryContainer: root.layer(root.palette.m3onPrimaryContainer, 1)
+        readonly final property color m3inversePrimary: root.layer(root.palette.m3inversePrimary, 1)
+        readonly final property color m3secondary: root.layer(root.palette.m3secondary, 1)
+        readonly final property color m3onSecondary: root.layer(root.palette.m3onSecondary, 1)
+        readonly final property color m3secondaryContainer: root.layer(root.palette.m3secondaryContainer, 1)
+        readonly final property color m3onSecondaryContainer: root.layer(root.palette.m3onSecondaryContainer, 1)
+        readonly final property color m3tertiary: root.layer(root.palette.m3tertiary, 1)
+        readonly final property color m3onTertiary: root.layer(root.palette.m3onTertiary, 1)
+        readonly final property color m3tertiaryContainer: root.layer(root.palette.m3tertiaryContainer, 1)
+        readonly final property color m3onTertiaryContainer: root.layer(root.palette.m3onTertiaryContainer, 1)
+        readonly final property color m3error: root.layer(root.palette.m3error, 1)
+        readonly final property color m3onError: root.layer(root.palette.m3onError, 1)
+        readonly final property color m3errorContainer: root.layer(root.palette.m3errorContainer, 1)
+        readonly final property color m3onErrorContainer: root.layer(root.palette.m3onErrorContainer, 1)
+        readonly final property color m3success: root.layer(root.palette.m3success, 1)
+        readonly final property color m3onSuccess: root.layer(root.palette.m3onSuccess, 1)
+        readonly final property color m3successContainer: root.layer(root.palette.m3successContainer, 1)
+        readonly final property color m3onSuccessContainer: root.layer(root.palette.m3onSuccessContainer, 1)
+        readonly final property color m3primaryFixed: root.layer(root.palette.m3primaryFixed, 1)
+        readonly final property color m3primaryFixedDim: root.layer(root.palette.m3primaryFixedDim, 1)
+        readonly final property color m3onPrimaryFixed: root.layer(root.palette.m3onPrimaryFixed, 1)
+        readonly final property color m3onPrimaryFixedVariant: root.layer(root.palette.m3onPrimaryFixedVariant, 1)
+        readonly final property color m3secondaryFixed: root.layer(root.palette.m3secondaryFixed, 1)
+        readonly final property color m3secondaryFixedDim: root.layer(root.palette.m3secondaryFixedDim, 1)
+        readonly final property color m3onSecondaryFixed: root.layer(root.palette.m3onSecondaryFixed, 1)
+        readonly final property color m3onSecondaryFixedVariant: root.layer(root.palette.m3onSecondaryFixedVariant, 1)
+        readonly final property color m3tertiaryFixed: root.layer(root.palette.m3tertiaryFixed, 1)
+        readonly final property color m3tertiaryFixedDim: root.layer(root.palette.m3tertiaryFixedDim, 1)
+        readonly final property color m3onTertiaryFixed: root.layer(root.palette.m3onTertiaryFixed, 1)
+        readonly final property color m3onTertiaryFixedVariant: root.layer(root.palette.m3onTertiaryFixedVariant, 1)
     }
 
     component M3Palette: QtObject {

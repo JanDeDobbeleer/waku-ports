@@ -20,3 +20,6 @@ singleton VPN 1.0 VPN.qml
 singleton WallpaperService 1.0 WallpaperService.qml
 singleton Weather 1.0 Weather.qml
 singleton UtilitiesActions 1.0 UtilitiesActions.qml
+AccessPoint 1.0 AccessPoint.qml
+EthernetDevice 1.0 EthernetDevice.qml
+CheckTimer 1.0 CheckTimer.qml

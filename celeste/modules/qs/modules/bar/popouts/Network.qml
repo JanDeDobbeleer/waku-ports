@@ -17,11 +17,18 @@ ColumnLayout {
 
     final property string connectingToSsid: ""
     final property string view: "wireless" // "wireless" or "ethernet"
-    final property var passwordNetwork: null
+    final property AccessPoint passwordNetwork: null
     final property bool showPasswordDialog: false
 
     spacing: Tokens.spacing.small
     width: Tokens.sizes.bar.networkWidth
+
+    // Password is required - show password dialog
+    function showPasswordFor(network: AccessPoint): void {
+        passwordNetwork = network;
+        showPasswordDialog = true;
+        popouts.currentName = "wirelesspassword";
+    }
 
     // Wireless section
     StyledText {
@@ -38,7 +45,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         label: Tr.trCtx("Enabled", "toggle label")
         checked: Nmcli.wifiEnabled
-        toggle.onToggled: Nmcli.enableWifi(checked)
+        toggle.onToggled: Nmcli.enableWifi(checked, null)
     }
 
     // The current link, shown at once: the scan list below fills only after the first scan.
@@ -90,7 +97,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         Layout.topMargin: visible ? Tokens.spacing.small : 0
         Layout.rightMargin: Tokens.padding.extraSmall
-        text: Tr.trN("%n network available", "%n networks available", Nmcli.networks.filter(n => !n.active).length)
+        text: Tr.trN("%n network available", "%n networks available", Nmcli.inactiveCount())
         color: Colours.palette.m3onSurfaceVariant
         font: Tokens.font.body.small
     }
@@ -100,13 +107,13 @@ ColumnLayout {
         model: ScriptModel {
             // The connected network is the "Connected to ..." line above, and the count above leaves
             // it out, so the list does too.
-            values: [...Nmcli.networks].filter(n => !n.active).sort((a, b) => b.strength - a.strength).slice(0, 8)
+            values: Nmcli.topInactive(8)
         }
 
         RowLayout {
             id: networkItem
 
-            required final property Nmcli.AccessPoint modelData
+            required final property AccessPoint modelData
             readonly final property bool isConnecting: root.connectingToSsid === modelData.ssid
             readonly final property bool loading: networkItem.isConnecting
 
@@ -176,12 +183,7 @@ ColumnLayout {
                             Nmcli.disconnectFromNetwork();
                         } else {
                             root.connectingToSsid = networkItem.modelData.ssid;
-                            NetworkConnection.handleConnect(networkItem.modelData, null, network => {
-                                // Password is required - show password dialog
-                                root.passwordNetwork = network;
-                                root.showPasswordDialog = true;
-                                root.popouts.currentName = "wirelesspassword";
-                            });
+                            NetworkConnection.handleConnect(networkItem.modelData, root.showPasswordFor);
 
                             // Clear connecting state if connection succeeds immediately (saved profile)
                             // This is handled by the onActiveChanged connection below
@@ -210,6 +212,8 @@ ColumnLayout {
     }
 
     StyledRect {
+        id: rescanBg
+
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
         Layout.topMargin: visible ? Tokens.spacing.small : 0
@@ -258,7 +262,7 @@ ColumnLayout {
             anchors.centerIn: parent
             strokeWidth: Tokens.padding.extraSmall / 2
             bgColour: "transparent"
-            implicitSize: parent.implicitHeight - Tokens.padding.large
+            implicitSize: rescanBg.implicitHeight - Tokens.padding.large
             running: Nmcli.scanning
         }
     }
@@ -286,17 +290,13 @@ ColumnLayout {
     Repeater {
         visible: root.view === "ethernet"
         model: ScriptModel {
-            values: [...Nmcli.ethernetDevices].sort((a, b) => {
-                if (a.connected !== b.connected)
-                    return b.connected - a.connected;
-                return (a.iface || "").localeCompare(b.iface || "");
-            }).slice(0, 8)
+            values: Nmcli.sortedEthernet(8)
         }
 
         RowLayout {
             id: ethernetItem
 
-            required final property var modelData
+            required final property EthernetDevice modelData
             readonly final property bool loading: false
 
             visible: root.view === "ethernet"
@@ -356,9 +356,9 @@ ColumnLayout {
 
                     onClicked: {
                         if (ethernetItem.modelData.connected && ethernetItem.modelData.connection) {
-                            Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
+                            Nmcli.disconnectEthernet(ethernetItem.modelData.connection, null);
                         } else {
-                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", () => {});
+                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", null);
                         }
                     }
                 }

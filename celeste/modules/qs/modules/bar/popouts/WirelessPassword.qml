@@ -14,7 +14,7 @@ ColumnLayout {
     id: root
 
     required final property PopoutState popouts
-    final property var network: null
+    final property AccessPoint network: null
     final property bool isClosing: false
 
     readonly final property bool shouldBeVisible: root.popouts.currentName === "wirelesspassword"
@@ -46,7 +46,7 @@ ColumnLayout {
                 passwordContainer.passwordBuffer = "";
                 // Delete the failed connection
                 if (root.network && root.network.ssid) {
-                    Nmcli.forgetNetwork(root.network.ssid);
+                    Nmcli.forgetNetwork(root.network.ssid, null);
                 }
             }
         }
@@ -531,7 +531,7 @@ ColumnLayout {
                                 passwordContainer.passwordBuffer = "";
                                 // Delete the failed connection
                                 if (root.network && root.network.ssid) {
-                                    Nmcli.forgetNetwork(root.network.ssid);
+                                    Nmcli.forgetNetwork(root.network.ssid, null);
                                 }
                             } else {
                                 // Connection failed immediately - show error
@@ -543,7 +543,7 @@ ColumnLayout {
                                 passwordContainer.passwordBuffer = "";
                                 // Delete the failed connection
                                 if (root.network && root.network.ssid) {
-                                    Nmcli.forgetNetwork(root.network.ssid);
+                                    Nmcli.forgetNetwork(root.network.ssid, null);
                                 }
                             }
                         });
@@ -615,7 +615,7 @@ ColumnLayout {
                 connectButton.text = Tr.tr("Connect");
                 passwordContainer.passwordBuffer = "";
                 // Delete the failed connection
-                Nmcli.forgetNetwork(ssid);
+                Nmcli.forgetNetwork(ssid, null);
             }
         }
 
