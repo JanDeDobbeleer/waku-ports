@@ -2,12 +2,13 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "InputMethodData.js" as Data
 
 Singleton {
   id: root
   property var state: ({})
 
-  function cycle(back) {
+  function cycle(back: var): bool {
     if (!watcher.running) return false
     watcher.write(back ? "cycle back\n" : "cycle\n")
     return true
@@ -20,9 +21,7 @@ Singleton {
     running: true
     stdinEnabled: true
     stdout: SplitParser {
-      onRead: data => {
-        try { root.state = JSON.parse(data) } catch (e) {}
-      }
+      onRead: function(data: string): void { Data.update(root, data) }
     }
     onExited: {
       root.state = ({})

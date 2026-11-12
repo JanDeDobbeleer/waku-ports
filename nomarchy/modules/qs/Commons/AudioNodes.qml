@@ -19,11 +19,11 @@ Singleton {
 
   // Whether the platform's hints hide a node, given the names of every node
   // now in the graph (for a "replaced" node).
-  function platformHides(name, nodeNames) {
+  function platformHides(name: var, nodeNames: var): bool {
     return Model.platformHidesNode(name, hints, nodeNames)
   }
 
-  function isShellLevelMeter(name) {
+  function isShellLevelMeter(name: var): bool {
     return Model.isShellLevelMeter(name)
   }
 

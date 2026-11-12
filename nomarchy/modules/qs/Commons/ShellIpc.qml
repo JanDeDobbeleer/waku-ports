@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Io
 import qs.compat
 
 // An IpcHandler the shell can also answer over its own socket (see
