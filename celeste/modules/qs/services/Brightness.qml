@@ -8,6 +8,7 @@ import waku.services as S
 import qs.components.misc
 import qs.services
 import qs.compat
+import "BrightnessHelpers.js" as BrightnessHelpers
 
 // Brightness over waku's ControlCenter service (DDC/CI and the laptop panel). ControlCenter has
 // one brightness value for the selected source, so every screen's `Monitor` shows that value.
@@ -18,47 +19,24 @@ Singleton {
     readonly final property bool available: S.ControlCenter.brightnessAvailable
     readonly final property list<Monitor> monitors: variants.instances
 
-    function getMonitorForScreen(screen: ShellScreen): var {
-        return monitors.find(m => m.modelData === screen);
+    function getMonitorForScreen(screen: ShellScreen): Monitor {
+        return BrightnessHelpers.getMonitorForScreen(screen, monitors);
     }
 
     function adjustForScreen(screen: ShellScreen, delta: real): void {
-        const monitor = getMonitorForScreen(screen);
-        monitor.setBrightness(monitor.brightness + delta);
+        BrightnessHelpers.adjustForScreen(screen, delta, monitors);
     }
 
-    function getMonitor(query: string): var {
-        if (query === "active")
-            return monitors.find(m => Hypr.monitorFor(m.modelData)?.focused) ?? monitors[0];
-
-        if (query.startsWith("model:")) {
-            const model = query.slice(6);
-            return monitors.find(m => m.modelData.model === model);
-        }
-
-        if (query.startsWith("serial:")) {
-            const serial = query.slice(7);
-            return monitors.find(m => m.modelData.serialNumber === serial);
-        }
-
-        if (query.startsWith("id:")) {
-            const id = parseInt(query.slice(3), 10);
-            return monitors.find(m => Hypr.monitorFor(m.modelData)?.id === id);
-        }
-
-        return monitors.find(m => m.modelData.name === query);
+    function getMonitor(query: string): Monitor {
+        return BrightnessHelpers.getMonitor(query, monitors, Hypr);
     }
 
     function increaseBrightness(): void {
-        const monitor = getMonitor("active");
-        if (monitor)
-            monitor.setBrightness(monitor.brightness + GlobalConfig.services.brightnessIncrement);
+        BrightnessHelpers.adjustActive(1, GlobalConfig.services.brightnessIncrement, monitors, Hypr);
     }
 
     function decreaseBrightness(): void {
-        const monitor = getMonitor("active");
-        if (monitor)
-            monitor.setBrightness(monitor.brightness - GlobalConfig.services.brightnessIncrement);
+        BrightnessHelpers.adjustActive(-1, GlobalConfig.services.brightnessIncrement, monitors, Hypr);
     }
 
     Variants {
@@ -97,38 +75,7 @@ Singleton {
 
         // Handles brightness value like brightnessctl: 0.1, +0.1, 0.1-, 10%, +10%, 10%-
         function setFor(query: string, value: string): string {
-            const monitor = root.getMonitor(query);
-            if (!monitor)
-                return "Invalid monitor: " + query;
-
-            let targetBrightness;
-            if (value.endsWith("%-")) {
-                const percent = parseFloat(value.slice(0, -2));
-                targetBrightness = monitor.brightness - (percent / 100);
-            } else if (value.startsWith("+") && value.endsWith("%")) {
-                const percent = parseFloat(value.slice(1, -1));
-                targetBrightness = monitor.brightness + (percent / 100);
-            } else if (value.endsWith("%")) {
-                const percent = parseFloat(value.slice(0, -1));
-                targetBrightness = percent / 100;
-            } else if (value.startsWith("+")) {
-                const increment = parseFloat(value.slice(1));
-                targetBrightness = monitor.brightness + increment;
-            } else if (value.endsWith("-")) {
-                const decrement = parseFloat(value.slice(0, -1));
-                targetBrightness = monitor.brightness - decrement;
-            } else if (value.includes("%") || value.includes("-") || value.includes("+")) {
-                return `Invalid brightness format: ${value}\nExpected: 0.1, +0.1, 0.1-, 10%, +10%, 10%-`;
-            } else {
-                targetBrightness = parseFloat(value);
-            }
-
-            if (isNaN(targetBrightness))
-                return `Failed to parse value: ${value}\nExpected: 0.1, +0.1, 0.1-, 10%, +10%, 10%-`;
-
-            monitor.setBrightness(targetBrightness);
-
-            return `Set monitor ${monitor.modelData.name} brightness to ${+monitor.brightness.toFixed(2)}`;
+            return BrightnessHelpers.setFor(root.getMonitor(query), query, value);
         }
 
         target: "brightness"
