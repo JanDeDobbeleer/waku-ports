@@ -8,6 +8,7 @@ import Celeste.I18n
 import waku.services as S
 import qs.services
 import qs.utils
+import "SchemesHelpers.js" as SchemesHelpers
 
 // The colour schemes the launcher offers. Upstream lists the schemes of the `celeste scheme`
 // CLI. Here "dynamic" follows the wallpaper (Colours does the work through ColorScheme.fromImage)
@@ -26,7 +27,7 @@ Searcher {
     }
 
     function selector(item: var): string {
-        return `${item.name} ${item.flavour}`;
+        return SchemesHelpers.selector(item);
     }
 
     function reload(): void {
@@ -34,44 +35,15 @@ Searcher {
     }
 
     function coloursOf(scheme: var): var {
-        const out = {};
-        for (const k of ["surface", "primary", "outline"])
-            out[k] = scheme?.colors?.[k] ?? "transparent";
-        return out;
+        return SchemesHelpers.coloursOf(scheme);
     }
 
     function build(): void {
-        const flat = [
-            {
-                name: "dynamic",
-                flavour: "wallpaper",
-                colours: {
-                    surface: Colours.current.m3surface,
-                    primary: Colours.current.m3primary,
-                    outline: Colours.current.m3outline
-                }
-            }
-        ];
-        for (const [flavour, seed] of Object.entries(seeds))
-            flat.push({
-                name: "material",
-                flavour,
-                seed,
-                colours: coloursOf(S.ColorScheme.fromColor(seed, Colours.flavour, !Colours.currentLight))
-            });
-        schemes.model = flat;
-    }
-
-    // Applies the current scheme and variant to Colours.
-    function apply(): void {
-        Colours.regenerate(false);
+        schemes.model = SchemesHelpers.build(seeds, Colours.current, S.ColorScheme, Colours.flavour, !Colours.currentLight);
     }
 
     function select(name: string, flavour: string): void {
-        Colours.scheme = name;
-        Colours.seed = name === "dynamic" ? "wallpaper" : flavour;
-        apply();
-        Toaster.toast(Tr.tr("Colour scheme changed"), `${name} ${flavour}`, "palette", Toast.Info, 2500);
+        SchemesHelpers.select(name, flavour, Colours, Toaster, Tr, Toast.Info);
     }
 
     list: schemes.instances
@@ -89,13 +61,12 @@ Searcher {
 
     component Scheme: QtObject {
         required final property var modelData
-        readonly final property string name: modelData?.name ?? ""
-        readonly final property string flavour: modelData?.flavour ?? ""
-        readonly final property var colours: modelData?.colours ?? ({})
+        readonly final property string name: SchemesHelpers.name(modelData)
+        readonly final property string flavour: SchemesHelpers.flavour(modelData)
+        readonly final property var colours: SchemesHelpers.colours(modelData)
 
         function onClicked(list: var): void {
-            list.screenState.launcher = false;
-            root.select(name, flavour);
+            SchemesHelpers.clicked(list, name, flavour, Colours, Toaster, Tr, Toast.Info);
         }
     }
 }

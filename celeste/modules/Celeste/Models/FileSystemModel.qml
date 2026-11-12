@@ -1,5 +1,6 @@
 import QtQuick
 import Qt.labs.folderlistmodel
+import "FileSystemModelHelpers.js" as FileSystemModelHelpers
 
 // Port of celeste's C++ FileSystemModel on top of Qt.labs.folderlistmodel. The model has one
 // role, `modelData`, which holds a FileSystemEntry; `entries` is the same list as an array.
@@ -50,16 +51,7 @@ ListModel {
     readonly final property bool wantFiles: (filter & FileSystemModel.Files) !== 0
     readonly final property bool wantDirs: (filter & FileSystemModel.Dirs) !== 0
     readonly final property bool anyFiles: wantImages || wantVideos || wantFiles
-    readonly final property var effectiveNameFilters: {
-        const out = [...(nameFilters ?? [])];
-        if (!wantFiles && (wantImages || wantVideos)) {
-            if (wantImages)
-                out.push(...imageSuffixes.map(s => "*." + s));
-            if (wantVideos)
-                out.push(...videoSuffixes.map(s => "*." + s));
-        }
-        return out.length > 0 ? out : ["*"];
-    }
+    readonly final property var effectiveNameFilters: FileSystemModelHelpers.effectiveNameFilters(nameFilters, wantFiles, wantImages, wantVideos, imageSuffixes, videoSuffixes)
 
     final property Component entryComponent: Component {
         FileSystemEntry {}
@@ -85,34 +77,7 @@ ListModel {
     }
 
     function rebuild(): void {
-        const old = entries;
-        const list = [];
-        clear();
-        const n = source.status === FolderListModel.Ready ? source.count : 0;
-        for (let i = 0; i < n; i++) {
-            const suffix = (source.get(i, "fileSuffix") ?? "").toLowerCase();
-            const isDir = source.get(i, "fileIsDir");
-            const name = source.get(i, "fileName");
-            const entry = entryComponent.createObject(root, {
-                path: source.get(i, "filePath"),
-                relativePath: name,
-                name: name,
-                baseName: source.get(i, "fileBaseName"),
-                parentDir: source.folder.toString().replace(/^file:\/\/\//, ""),
-                suffix: suffix,
-                size: source.get(i, "fileSize"),
-                isDir: isDir,
-                isImage: !isDir && imageSuffixes.includes(suffix),
-                mimeType: isDir ? "inode/directory" : (mimeBySuffix[suffix] ?? "application/octet-stream")
-            });
-            list.push(entry);
-            append({
-                modelData: entry
-            });
-        }
-        entries = list;
-        for (const e of old)
-            e.destroy();
+        FileSystemModelHelpers.rebuild(root, source, entryComponent, imageSuffixes, mimeBySuffix);
     }
 
     dynamicRoles: true
