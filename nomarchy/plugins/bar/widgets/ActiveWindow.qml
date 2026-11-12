@@ -15,11 +15,19 @@ BarWidget {
   readonly property int maxLabelWidth: Number(setting("maxWidth", 280))
 
   visible: title !== "" && !vertical
-  implicitWidth: visible ? Math.min(maxLabelWidth, labelText.implicitWidth) + Style.spacing.controlPaddingX * 2 : 0
+  implicitWidth: visible ? Math.min(maxLabelWidth, naturalLabel.implicitWidth) + Style.spacing.controlPaddingX * 2 : 0
   implicitHeight: barSize
 
   Behavior on implicitWidth {
     NumberAnimation { duration: Style.duration(180); easing.type: Easing.OutCubic }
+  }
+
+  Text {
+    id: naturalLabel
+    visible: false
+    text: root.title
+    textFormat: Text.PlainText
+    font: labelText.font
   }
 
   Item {
