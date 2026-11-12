@@ -23,7 +23,7 @@ Singleton {
   }
 
   // Add an inhibitor
-  function addInhibitor(id, reason = "Application request") {
+  function addInhibitor(id, reason = "Application request"): bool {
     if (activeInhibitors.includes(id)) {
       Logger.w("IdleInhibitor", "Inhibitor already active:", id);
       return false;
@@ -36,7 +36,7 @@ Singleton {
   }
 
   // Remove an inhibitor
-  function removeInhibitor(id) {
+  function removeInhibitor(id): bool {
     const index = activeInhibitors.indexOf(id);
     if (index === -1) {
       Logger.w("IdleInhibitor", "Inhibitor not found:", id);
@@ -135,7 +135,7 @@ Singleton {
   }
 
   // Manual toggle for user control
-  function manualToggle() {
+  function manualToggle(): bool {
     // clear any existing timeout
     timeout = null;
     if (activeInhibitors.includes("manual")) {

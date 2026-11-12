@@ -129,7 +129,7 @@ Singleton {
     return stage === "screenOff" || stage === "lock" || stage === "suspend";
   }
 
-  function _isStageEnabled(stage) {
+  function _isStageEnabled(stage): bool {
     const idle = Settings.data.idle;
     if (stage === "screenOff")
       return idle.screenOffTimeout > 0;

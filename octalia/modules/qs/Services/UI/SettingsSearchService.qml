@@ -36,7 +36,7 @@ Singleton {
                                    "SoundService": SoundService
                                  })
 
-  function isEntryVisible(entry) {
+  function isEntryVisible(entry): bool {
     if (!entry.visibleWhen || entry.visibleWhen.length === 0)
       return true;
     for (let i = 0; i < entry.visibleWhen.length; i++) {

@@ -134,7 +134,7 @@ Singleton {
     return Math.round((device.percentage || 0) * 100);
   }
 
-  function isCharging(device) {
+  function isCharging(device): bool {
     if (!device || isBluetoothDevice(device)) {
       // Tracking bluetooth devices can charge or not is a loop hole, none of my devices has it, even if it possible?!
       return false;  // Assuming not charging until someone/quickshell brings a way to do pretty unlikely.
@@ -164,7 +164,7 @@ Singleton {
     return (!isCharging(device) && !isPluggedIn(device)) && getPercentage(device) <= warningThreshold && getPercentage(device) > criticalThreshold;
   }
 
-  function isBluetoothDevice(device) {
+  function isBluetoothDevice(device): bool {
     if (!device) {
       return false;
     }

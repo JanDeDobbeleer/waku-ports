@@ -66,17 +66,17 @@ ColumnLayout {
         Connections {
           target: BrightnessService
           function onMonitorBrightnessChanged(monitor, newBrightness) {
-            if (monitor === brightnessMonitor && !localBrightnessChanging) {
-              localBrightness = newBrightness;
+            if (monitor === monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
+              monitorSettings.localBrightness = newBrightness;
             }
           }
         }
         Connections {
-          target: brightnessMonitor
+          target: monitorSettings.brightnessMonitor
           ignoreUnknownSignals: true
           function onBrightnessUpdated() {
-            if (brightnessMonitor && !localBrightnessChanging) {
-              localBrightness = brightnessMonitor.brightness || 0;
+            if (monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
+              monitorSettings.localBrightness = monitorSettings.brightnessMonitor.brightness || 0;
             }
           }
         }
@@ -85,8 +85,8 @@ ColumnLayout {
           interval: 120
           repeat: false
           onTriggered: {
-            if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable && Math.abs(localBrightness - brightnessMonitor.brightness) >= 0.005) {
-              brightnessMonitor.setBrightness(localBrightness);
+            if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable && Math.abs(monitorSettings.localBrightness - monitorSettings.brightnessMonitor.brightness) >= 0.005) {
+              monitorSettings.brightnessMonitor.setBrightness(monitorSettings.localBrightness);
             }
           }
         }
@@ -134,7 +134,7 @@ ColumnLayout {
           ColumnLayout {
             spacing: Style.marginS
             Layout.fillWidth: true
-            visible: brightnessMonitor !== undefined && brightnessMonitor !== null
+            visible: monitorSettings.brightnessMonitor !== undefined && monitorSettings.brightnessMonitor !== null
 
             RowLayout {
               Layout.fillWidth: true
@@ -150,23 +150,23 @@ ColumnLayout {
                 id: brightnessSlider
                 from: 0
                 to: 1
-                value: localBrightness
+                value: monitorSettings.localBrightness
                 stepSize: 0.01
-                enabled: brightnessMonitor ? brightnessMonitor.brightnessControlAvailable : false
+                enabled: monitorSettings.brightnessMonitor ? monitorSettings.brightnessMonitor.brightnessControlAvailable : false
                 onMoved: value => {
-                           if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
-                             localBrightness = value;
+                           if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable) {
+                             monitorSettings.localBrightness = value;
                              debounceTimer.restart();
                            }
                          }
                 onPressedChanged: (pressed, value) => {
-                                    localBrightnessChanging = pressed;
-                                    if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
+                                    monitorSettings.localBrightnessChanging = pressed;
+                                    if (monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.brightnessControlAvailable) {
                                       if (pressed) {
-                                        localBrightness = value;
+                                        monitorSettings.localBrightness = value;
                                         debounceTimer.restart();
                                       } else {
-                                        localBrightness = value;
+                                        monitorSettings.localBrightness = value;
                                         debounceTimer.restart();
                                       }
                                     }
@@ -175,27 +175,27 @@ ColumnLayout {
               }
 
               NText {
-                text: brightnessMonitor ? Math.round(localBrightness * 100) + "%" : "N/A"
+                text: monitorSettings.brightnessMonitor ? Math.round(monitorSettings.localBrightness * 100) + "%" : "N/A"
                 Layout.preferredWidth: 55
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignVCenter
-                opacity: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                opacity: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
               }
 
               Item {
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 NIcon {
-                  icon: brightnessMonitor && brightnessMonitor.method == "internal" ? "device-laptop" : "device-desktop"
+                  icon: monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.method == "internal" ? "device-laptop" : "device-desktop"
                   anchors.right: parent.right
                   anchors.verticalCenter: parent.verticalCenter
-                  opacity: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                  opacity: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
                 }
               }
             }
 
             NText {
-              visible: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable && !(brightnessMonitor.method === "internal" && brightnessMonitor.initInProgress)
+              visible: monitorSettings.brightnessMonitor && !monitorSettings.brightnessMonitor.brightnessControlAvailable && !(monitorSettings.brightnessMonitor.method === "internal" && monitorSettings.brightnessMonitor.initInProgress)
               text: I18n.tr("panels.display.monitors-brightness-unavailable-generic")
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
@@ -205,10 +205,10 @@ ColumnLayout {
 
             NComboBox {
               Layout.fillWidth: true
-              visible: brightnessMonitor && brightnessMonitor.method === "internal"
+              visible: monitorSettings.brightnessMonitor && monitorSettings.brightnessMonitor.method === "internal"
               label: I18n.tr("panels.display.monitors-backlight-device-label")
               description: I18n.tr("panels.display.monitors-backlight-device-description")
-              model: backlightDeviceOptions
+              model: monitorSettings.backlightDeviceOptions
               currentKey: BrightnessService.getMappedBacklightDevice(monitorSettings.modelData.name) || ""
               onSelected: key => BrightnessService.setMappedBacklightDevice(monitorSettings.modelData.name, key)
             }

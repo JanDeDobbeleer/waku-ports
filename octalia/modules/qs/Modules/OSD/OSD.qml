@@ -261,28 +261,28 @@ Variants {
       target: AudioService
 
       function onVolumeChanged() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onVolumeAtMaximum() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onVolumeAtMinimum() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onMutedChanged() {
         if (AudioService.consumeOutputOSDSuppression())
           return;
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onInputVolumeChanged() {
         if (root.suppressInputOSD)
           return;
         if (AudioService.hasInput)
-          showOSD(OSD.Type.InputVolume);
+          root.showOSD(OSD.Type.InputVolume);
       }
 
       function onInputMutedChanged() {
@@ -292,7 +292,7 @@ Variants {
           return;
         if (AudioService.consumeInputOSDSuppression())
           return;
-        showOSD(OSD.Type.InputVolume);
+        root.showOSD(OSD.Type.InputVolume);
       }
 
       // Refresh OSD when device changes to ensure correct volume is displayed
@@ -302,7 +302,7 @@ Variants {
         // If volume OSD is currently showing, refresh it to show new device's volume
         if (root.currentOSDType === OSD.Type.Volume) {
           Qt.callLater(() => {
-                         showOSD(OSD.Type.Volume);
+                         root.showOSD(OSD.Type.Volume);
                        });
         }
       }
@@ -311,7 +311,7 @@ Variants {
         // If input volume OSD is currently showing, refresh it to show new device's volume
         if (root.currentOSDType === OSD.Type.InputVolume) {
           Qt.callLater(() => {
-                         showOSD(OSD.Type.InputVolume);
+                         root.showOSD(OSD.Type.InputVolume);
                        });
         }
       }
@@ -321,7 +321,7 @@ Variants {
     Connections {
       target: BrightnessService
       function onMonitorsChanged() {
-        connectBrightnessMonitors();
+        root.connectBrightnessMonitors();
       }
     }
 
@@ -366,7 +366,7 @@ Variants {
       interval: 2000
       running: true
       onTriggered: {
-        connectBrightnessMonitors();
+        root.connectBrightnessMonitors();
         root.startupComplete = true;
       }
     }

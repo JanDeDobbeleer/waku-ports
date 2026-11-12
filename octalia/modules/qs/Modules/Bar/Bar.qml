@@ -224,17 +224,17 @@ Item {
         // State 2: Vertical inversion (outer curve on Y-axis)
         readonly property int topLeftCornerState: {
           // Floating bar: always simple rounded corners
-          if (barFloating)
+          if (root.barFloating)
             return 0;
           // Top bar: top corners against screen edge = no radius
-          if (barPosition === "top")
+          if (root.barPosition === "top")
             return -1;
           // Left bar: top-left against screen edge = no radius
-          if (barPosition === "left")
+          if (root.barPosition === "left")
             return -1;
           // Bottom/Right bar with outerCorners: inverted corner
-          if (Settings.data.bar.outerCorners && (barPosition === "bottom" || barPosition === "right")) {
-            return barIsVertical ? 1 : 2; // horizontal invert for vertical bars, vertical invert for horizontal
+          if (Settings.data.bar.outerCorners && (root.barPosition === "bottom" || root.barPosition === "right")) {
+            return root.barIsVertical ? 1 : 2; // horizontal invert for vertical bars, vertical invert for horizontal
           }
           // No outerCorners = square
           return -1;
@@ -242,17 +242,17 @@ Item {
 
         readonly property int topRightCornerState: {
           // Floating bar: always simple rounded corners
-          if (barFloating)
+          if (root.barFloating)
             return 0;
           // Top bar: top corners against screen edge = no radius
-          if (barPosition === "top")
+          if (root.barPosition === "top")
             return -1;
           // Right bar: top-right against screen edge = no radius
-          if (barPosition === "right")
+          if (root.barPosition === "right")
             return -1;
           // Bottom/Left bar with outerCorners: inverted corner
-          if (Settings.data.bar.outerCorners && (barPosition === "bottom" || barPosition === "left")) {
-            return barIsVertical ? 1 : 2;
+          if (Settings.data.bar.outerCorners && (root.barPosition === "bottom" || root.barPosition === "left")) {
+            return root.barIsVertical ? 1 : 2;
           }
           // No outerCorners = square
           return -1;
@@ -260,17 +260,17 @@ Item {
 
         readonly property int bottomLeftCornerState: {
           // Floating bar: always simple rounded corners
-          if (barFloating)
+          if (root.barFloating)
             return 0;
           // Bottom bar: bottom corners against screen edge = no radius
-          if (barPosition === "bottom")
+          if (root.barPosition === "bottom")
             return -1;
           // Left bar: bottom-left against screen edge = no radius
-          if (barPosition === "left")
+          if (root.barPosition === "left")
             return -1;
           // Top/Right bar with outerCorners: inverted corner
-          if (Settings.data.bar.outerCorners && (barPosition === "top" || barPosition === "right")) {
-            return barIsVertical ? 1 : 2;
+          if (Settings.data.bar.outerCorners && (root.barPosition === "top" || root.barPosition === "right")) {
+            return root.barIsVertical ? 1 : 2;
           }
           // No outerCorners = square
           return -1;
@@ -278,17 +278,17 @@ Item {
 
         readonly property int bottomRightCornerState: {
           // Floating bar: always simple rounded corners
-          if (barFloating)
+          if (root.barFloating)
             return 0;
           // Bottom bar: bottom corners against screen edge = no radius
-          if (barPosition === "bottom")
+          if (root.barPosition === "bottom")
             return -1;
           // Right bar: bottom-right against screen edge = no radius
-          if (barPosition === "right")
+          if (root.barPosition === "right")
             return -1;
           // Top/Left bar with outerCorners: inverted corner
-          if (Settings.data.bar.outerCorners && (barPosition === "top" || barPosition === "left")) {
-            return barIsVertical ? 1 : 2;
+          if (Settings.data.bar.outerCorners && (root.barPosition === "top" || root.barPosition === "left")) {
+            return root.barIsVertical ? 1 : 2;
           }
           // No outerCorners = square
           return -1;
@@ -296,7 +296,7 @@ Item {
 
         function isPointOverWidget(xPos, yPos) {
           var i, localPos, widget;
-          var widgets = BarService.getAllWidgetInstances(null, screen.name);
+          var widgets = BarService.getAllWidgetInstances(null, root.screen.name);
           for (i = 0; i < widgets.length; i++) {
             widget = widgets[i];
             if (!widget || !widget.visible || widget.widgetId === "Spacer") {
@@ -364,15 +364,15 @@ Item {
           if (action === "none")
             return;
           if (action === "controlCenter") {
-            controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
+            controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.screen);
             controlCenterPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : "ControlCenter");
             mouse.accepted = true;
           } else if (action === "settings") {
-            settingsPanel = PanelService.getPanel("settingsPanel", screen);
+            settingsPanel = PanelService.getPanel("settingsPanel", root.screen);
             settingsPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
             mouse.accepted = true;
           } else if (action === "launcherPanel") {
-            launcherPanel = PanelService.getPanel("launcherPanel", screen);
+            launcherPanel = PanelService.getPanel("launcherPanel", root.screen);
             launcherPanel?.toggle(null, followMouse ? mapToItem(null, mouse.x, mouse.y) : null);
             mouse.accepted = true;
           } else if (action === "command") {

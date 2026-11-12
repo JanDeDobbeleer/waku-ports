@@ -90,7 +90,7 @@ Singleton {
       setProfile(PowerProfile.Performance);
   }
 
-  function isDefault() {
+  function isDefault(): bool {
     if (!available)
       return true;
     return (profile === PowerProfile.Balanced);

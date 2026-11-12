@@ -108,7 +108,7 @@ Singleton {
 
   // Show a tray menu with proper handling for all compositors
   // Returns true if menu was shown successfully
-  function showTrayMenu(screen, trayItem, trayMenu, anchorItem, menuX, menuY, widgetSection, widgetIndex) {
+  function showTrayMenu(screen, trayItem, trayMenu, anchorItem, menuX, menuY, widgetSection, widgetIndex): bool {
     if (!trayItem || !trayMenu || !anchorItem)
       return false;
 
@@ -206,7 +206,7 @@ Singleton {
   }
 
   // Check if a panel exists
-  function hasPanel(name) {
+  function hasPanel(name): bool {
     return name in registeredPanels;
   }
 

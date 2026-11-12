@@ -118,7 +118,7 @@ QtObject {
     return keyStr + keyName;
   }
 
-  function checkKey(event, settingName, settings) {
+  function checkKey(event, settingName, settings): bool {
     var i;
     // Accept both simplified names ("remove") and full property names ("keyRemove")
     // so callers are less error-prone.

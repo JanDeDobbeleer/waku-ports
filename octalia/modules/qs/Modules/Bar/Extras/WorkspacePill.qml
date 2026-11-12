@@ -102,40 +102,40 @@ Item {
       sourceComponent: Component {
         NText {
           text: {
-            if (workspace.name && workspace.name.length > 0) {
-              if (labelMode === "name") {
-                return workspace.name.substring(0, characterCount);
+            if (pillContainer.workspace.name && pillContainer.workspace.name.length > 0) {
+              if (pillContainer.labelMode === "name") {
+                return pillContainer.workspace.name.substring(0, pillContainer.characterCount);
               }
-              if (labelMode === "index+name") {
+              if (pillContainer.labelMode === "index+name") {
                 // Vertical mode: compact format (no space, first char only)
                 // Horizontal mode: full format (space, more chars)
-                if (isVertical) {
-                  return workspace.idx.toString() + workspace.name.substring(0, 1);
+                if (pillContainer.isVertical) {
+                  return pillContainer.workspace.idx.toString() + pillContainer.workspace.name.substring(0, 1);
                 }
-                return workspace.idx.toString() + " " + workspace.name.substring(0, characterCount);
+                return pillContainer.workspace.idx.toString() + " " + pillContainer.workspace.name.substring(0, pillContainer.characterCount);
               }
             }
-            return workspace.idx.toString();
+            return pillContainer.workspace.idx.toString();
           }
           family: Settings.data.ui.fontFixed
           // Size based on the fixed dimension (cross-axis) of the visual pill
-          pointSize: (isVertical ? pillContainer.pillWidth : pillContainer.pillHeight) * textRatio
+          pointSize: (pillContainer.isVertical ? pillContainer.pillWidth : pillContainer.pillHeight) * pillContainer.textRatio
           applyUiScale: false
           font.capitalization: Font.AllUppercase
-          font.weight: fontWeight
+          font.weight: pillContainer.fontWeight
           horizontalAlignment: Text.AlignHCenter
           verticalAlignment: Text.AlignVCenter
           wrapMode: Text.Wrap
           color: {
             if (pillMouseArea.containsMouse)
               return Color.mOnHover;
-            if (workspace.isFocused)
-              return Color.resolveOnColorKey(focusedColor);
-            if (workspace.isUrgent)
+            if (pillContainer.workspace.isFocused)
+              return Color.resolveOnColorKey(pillContainer.focusedColor);
+            if (pillContainer.workspace.isUrgent)
               return Color.mOnError;
-            if (workspace.isOccupied)
-              return Color.resolveOnColorKey(occupiedColor);
-            return Color.resolveOnColorKey(emptyColor);
+            if (pillContainer.workspace.isOccupied)
+              return Color.resolveOnColorKey(pillContainer.occupiedColor);
+            return Color.resolveOnColorKey(pillContainer.emptyColor);
           }
 
           Behavior on color {

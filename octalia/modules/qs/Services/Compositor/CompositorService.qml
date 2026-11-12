@@ -386,7 +386,7 @@ Singleton {
     return "";
   }
 
-  function executeSessionAction(action, defaultCommand) {
+  function executeSessionAction(action, defaultCommand): bool {
     const customCommand = getCustomCommand(action);
     if (customCommand) {
       Logger.i("Compositor", `Executing custom command for action: ${action} Command: ${customCommand}`);

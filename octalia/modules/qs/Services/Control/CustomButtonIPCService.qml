@@ -18,7 +18,7 @@ Singleton {
   property var customButtonRegistry: ({})
 
   // Register a custom button instance
-  function registerButton(button) {
+  function registerButton(button): bool {
     if (!button || !button.ipcIdentifier) {
       Logger.w("CustomButtonIPCService", "Cannot register button without ipcIdentifier");
       return false;
@@ -30,7 +30,7 @@ Singleton {
   }
 
   // Unregister a custom button instance
-  function unregisterButton(button) {
+  function unregisterButton(button): bool {
     if (!button || !button.ipcIdentifier) {
       return false;
     }

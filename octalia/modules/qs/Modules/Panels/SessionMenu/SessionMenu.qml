@@ -480,7 +480,7 @@ SmartPanel {
     onTriggered: {
       root.timeRemaining -= countdownTimer.interval;
       if (root.timeRemaining <= 0) {
-        executeAction(root.pendingAction);
+        root.executeAction(root.pendingAction);
       }
     }
   }
@@ -491,8 +491,8 @@ SmartPanel {
     focus: true
 
     // For large buttons style, use full screen dimensions
-    readonly property var contentPreferredWidth: largeButtonsStyle ? (root.screen?.width || root.width || 0) : undefined
-    readonly property var contentPreferredHeight: largeButtonsStyle ? (root.screen?.height || root.height || 0) : undefined
+    readonly property var contentPreferredWidth: root.largeButtonsStyle ? (root.screen?.width || root.width || 0) : undefined
+    readonly property var contentPreferredHeight: root.largeButtonsStyle ? (root.screen?.height || root.height || 0) : undefined
 
     // Focus management
     Connections {
@@ -512,33 +512,33 @@ SmartPanel {
                       }
 
                       // Check global navigation keybinds
-                      if (checkKey(event, 'up')) {
-                        handleUp();
+                      if (root.checkKey(event, 'up')) {
+                        root.handleUp();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'down')) {
-                        handleDown();
+                      if (root.checkKey(event, 'down')) {
+                        root.handleDown();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'left')) {
-                        handleLeft();
+                      if (root.checkKey(event, 'left')) {
+                        root.handleLeft();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'right')) {
-                        handleRight();
+                      if (root.checkKey(event, 'right')) {
+                        root.handleRight();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'enter')) {
-                        handleEnter();
+                      if (root.checkKey(event, 'enter')) {
+                        root.handleEnter();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'escape')) {
-                        handleEscape();
+                      if (root.checkKey(event, 'escape')) {
+                        root.handleEscape();
                         event.accepted = true;
                         return;
                       }
@@ -579,7 +579,7 @@ SmartPanel {
     // Timer text for large buttons style, positioned absolutely with background
     Rectangle {
       id: timerTextContainer
-      visible: largeButtonsStyle && timerActive
+      visible: root.largeButtonsStyle && root.timerActive
       anchors.bottom: largeButtonsContainer.top
       anchors.horizontalCenter: largeButtonsContainer.horizontalCenter
       anchors.bottomMargin: Style.marginM
@@ -595,8 +595,8 @@ SmartPanel {
         id: timerText
         anchors.centerIn: parent
         text: I18n.tr("session-menu.action-in-seconds", {
-                        "action": root.actionMetadata[pendingAction] ? root.actionMetadata[pendingAction].title : "",
-                        "seconds": Math.ceil(timeRemaining / 1000)
+                        "action": root.actionMetadata[root.pendingAction] ? root.actionMetadata[root.pendingAction].title : "",
+                        "seconds": Math.ceil(root.timeRemaining / 1000)
                       })
         font.weight: Style.fontWeightBold
         pointSize: Style.fontSizeL
@@ -607,14 +607,14 @@ SmartPanel {
     // Large buttons style layout container
     ColumnLayout {
       id: largeButtonsContainer
-      visible: largeButtonsStyle
+      visible: root.largeButtonsStyle
       anchors.centerIn: parent
 
       // Large buttons style layout (grid)
       GridLayout {
         id: largeButtonsGrid
         Layout.alignment: Qt.AlignHCenter
-        columns: Settings.data.sessionMenu.largeButtonsLayout === "single-row" ? powerOptions.length : Math.min(3, Math.ceil(Math.sqrt(powerOptions.length)))
+        columns: Settings.data.sessionMenu.largeButtonsLayout === "single-row" ? root.powerOptions.length : Math.min(3, Math.ceil(Math.sqrt(root.powerOptions.length)))
         rowSpacing: Style.marginXL
         columnSpacing: Style.marginXL
         // Button edge: 200 scaled, shrunk so a single row of seven fits 90% of the screen width.
@@ -624,10 +624,10 @@ SmartPanel {
           return avail > 0 ? Math.min(wanted, avail / columns) : wanted;
         }
         width: columns * buttonSize + (columns - 1) * Style.marginXL
-        height: Math.ceil(powerOptions.length / columns) * buttonSize + (Math.ceil(powerOptions.length / columns) - 1) * Style.marginXL
+        height: Math.ceil(root.powerOptions.length / columns) * buttonSize + (Math.ceil(root.powerOptions.length / columns) - 1) * Style.marginXL
 
         Repeater {
-          model: powerOptions
+          model: root.powerOptions
           delegate: LargeButton {
             id: largePowerOption
             required property var modelData
@@ -637,14 +637,14 @@ SmartPanel {
             icon: largePowerOption.modelData.icon
             title: largePowerOption.modelData.title
             isShutdown: largePowerOption.modelData.isShutdown || false
-            isSelected: largePowerOption.index === selectedIndex
+            isSelected: largePowerOption.index === root.selectedIndex
             number: largePowerOption.index + 1
             buttonIndex: largePowerOption.index
             onClicked: {
-              selectedIndex = largePowerOption.index;
-              startTimer(largePowerOption.modelData.action);
+              root.selectedIndex = largePowerOption.index;
+              root.startTimer(largePowerOption.modelData.action);
             }
-            pending: timerActive && pendingAction === largePowerOption.modelData.action
+            pending: root.timerActive && root.pendingAction === largePowerOption.modelData.action
             keybind: largePowerOption.modelData.keybind || ""
           }
         }
@@ -653,7 +653,7 @@ SmartPanel {
 
     // Normal style layout
     NBox {
-      visible: !largeButtonsStyle
+      visible: !root.largeButtonsStyle
       anchors.fill: parent
       anchors.margins: Style.marginL
       color: Color.mSurfaceVariant
@@ -670,13 +670,13 @@ SmartPanel {
           Layout.preferredHeight: Style.baseWidgetSize * 0.6
 
           NText {
-            text: timerActive ? I18n.tr("session-menu.action-in-seconds", {
-                                          "action": root.actionMetadata[pendingAction] ? root.actionMetadata[pendingAction].title : "",
-                                          "seconds": Math.ceil(timeRemaining / 1000)
+            text: root.timerActive ? I18n.tr("session-menu.action-in-seconds", {
+                                          "action": root.actionMetadata[root.pendingAction] ? root.actionMetadata[root.pendingAction].title : "",
+                                          "seconds": Math.ceil(root.timeRemaining / 1000)
                                         }) : I18n.tr("session-menu.title")
             font.weight: Style.fontWeightBold
             pointSize: Style.fontSizeL
-            color: timerActive ? Color.mPrimary : Color.mOnSurface
+            color: root.timerActive ? Color.mPrimary : Color.mOnSurface
             Layout.alignment: Qt.AlignVCenter
             verticalAlignment: Text.AlignVCenter
           }
@@ -686,16 +686,16 @@ SmartPanel {
           }
 
           NIconButton {
-            icon: timerActive ? "stop" : "close"
+            icon: root.timerActive ? "stop" : "close"
             Layout.alignment: Qt.AlignVCenter
             baseSize: Style.baseWidgetSize * 0.7
-            colorBg: timerActive ? Qt.alpha(Color.mError, 0.08) : "transparent"
-            colorFg: timerActive ? Color.mError : Color.mOnSurface
+            colorBg: root.timerActive ? Qt.alpha(Color.mError, 0.08) : "transparent"
+            colorFg: root.timerActive ? Color.mError : Color.mOnSurface
             onClicked: {
-              if (timerActive) {
-                cancelTimer();
+              if (root.timerActive) {
+                root.cancelTimer();
               } else {
-                cancelTimer();
+                root.cancelTimer();
                 root.close();
               }
             }
@@ -713,7 +713,7 @@ SmartPanel {
           spacing: Style.marginS
 
           Repeater {
-            model: powerOptions
+            model: root.powerOptions
             delegate: PowerButton {
               id: powerOption
               required property var modelData
@@ -722,15 +722,15 @@ SmartPanel {
               icon: powerOption.modelData.icon
               title: powerOption.modelData.title
               isShutdown: powerOption.modelData.isShutdown || false
-              isSelected: powerOption.index === selectedIndex
+              isSelected: powerOption.index === root.selectedIndex
               number: powerOption.index + 1
               buttonIndex: powerOption.index
               action: powerOption.modelData.action
               onClicked: {
-                selectedIndex = powerOption.index;
-                startTimer(powerOption.modelData.action);
+                root.selectedIndex = powerOption.index;
+                root.startTimer(powerOption.modelData.action);
               }
-              pending: timerActive && pendingAction === powerOption.modelData.action
+              pending: root.timerActive && root.pendingAction === powerOption.modelData.action
               keybind: powerOption.modelData.keybind || ""
             }
           }
@@ -740,16 +740,16 @@ SmartPanel {
 
     // Background MouseArea for large buttons style - closes panel when clicking outside buttons
     MouseArea {
-      visible: largeButtonsStyle
+      visible: root.largeButtonsStyle
       anchors.fill: parent
       z: -1
       acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
       onClicked: mouse => {
                    // Only close if not clicking on a button
                    // The buttons are above this MouseArea, so clicks on them won't reach here
-                   if (timerActive) {
+                   if (root.timerActive) {
                      // Cancel countdown if active
-                     cancelTimer();
+                     root.cancelTimer();
                    } else {
                      root.close();
                    }
@@ -843,10 +843,10 @@ SmartPanel {
         // Countdown as plain text (left of keybind)
         NText {
           id: countdownText
-          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && timerActive && pendingAction === buttonRoot.action
+          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && root.timerActive && root.pendingAction === buttonRoot.action
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
-          text: Math.ceil(timeRemaining / 1000)
+          text: Math.ceil(root.timeRemaining / 1000)
           pointSize: Style.fontSizeS
           color: Color.mPrimary
           font.weight: Style.fontWeightBold
@@ -924,13 +924,13 @@ SmartPanel {
 
       onEntered: {
         if (!root.ignoreMouseHover) {
-          selectedIndex = buttonRoot.buttonIndex;
+          root.selectedIndex = buttonRoot.buttonIndex;
         }
       }
 
       onExited: {
-        if (!root.ignoreMouseHover && selectedIndex === buttonRoot.buttonIndex) {
-          selectedIndex = -1;
+        if (!root.ignoreMouseHover && root.selectedIndex === buttonRoot.buttonIndex) {
+          root.selectedIndex = -1;
         }
       }
 
@@ -1131,13 +1131,13 @@ SmartPanel {
 
       onEntered: {
         if (!root.ignoreMouseHover) {
-          selectedIndex = largeButtonRoot.buttonIndex;
+          root.selectedIndex = largeButtonRoot.buttonIndex;
         }
       }
 
       onExited: {
-        if (!root.ignoreMouseHover && selectedIndex === largeButtonRoot.buttonIndex) {
-          selectedIndex = -1;
+        if (!root.ignoreMouseHover && root.selectedIndex === largeButtonRoot.buttonIndex) {
+          root.selectedIndex = -1;
         }
       }
 

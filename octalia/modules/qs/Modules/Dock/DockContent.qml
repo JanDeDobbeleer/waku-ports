@@ -14,6 +14,7 @@ import qs.Widgets
 import qs.compat
 
 Item {
+  id: root
   required property var dockRoot
   required property int extraTop
   required property int extraBottom
@@ -25,22 +26,22 @@ Item {
   Rectangle {
     id: dockContainer
     // For vertical dock, swap width and height logic
-    width: dockRoot.isVertical ? Math.round(dockRoot.iconSize * 1.5) : Math.min(dockLayout.implicitWidth + Style.marginXL, dockRoot.maxWidth)
-    height: dockRoot.isVertical ? Math.min(dockLayout.implicitHeight + Style.marginXL, dockRoot.maxHeight) : Math.round(dockRoot.iconSize * 1.5)
-    color: Qt.alpha(Color.mSurface, (isAttachedMode ? 0 : Color.adaptiveOpacity(Settings.data.dock.backgroundOpacity)))
+    width: root.dockRoot.isVertical ? Math.round(root.dockRoot.iconSize * 1.5) : Math.min(dockLayout.implicitWidth + Style.marginXL, root.dockRoot.maxWidth)
+    height: root.dockRoot.isVertical ? Math.min(dockLayout.implicitHeight + Style.marginXL, root.dockRoot.maxHeight) : Math.round(root.dockRoot.iconSize * 1.5)
+    color: Qt.alpha(Color.mSurface, (root.isAttachedMode ? 0 : Color.adaptiveOpacity(Settings.data.dock.backgroundOpacity)))
 
     // Anchor based on padding to achieve centering shift
-    anchors.horizontalCenter: extraLeft > 0 || extraRight > 0 ? undefined : parent.horizontalCenter
-    anchors.right: extraLeft > 0 ? parent.right : undefined
-    anchors.left: extraRight > 0 ? parent.left : undefined
+    anchors.horizontalCenter: root.extraLeft > 0 || root.extraRight > 0 ? undefined : parent.horizontalCenter
+    anchors.right: root.extraLeft > 0 ? parent.right : undefined
+    anchors.left: root.extraRight > 0 ? parent.left : undefined
 
-    anchors.verticalCenter: extraTop > 0 || extraBottom > 0 ? undefined : parent.verticalCenter
-    anchors.bottom: extraTop > 0 ? parent.bottom : undefined
-    anchors.top: extraBottom > 0 ? parent.top : undefined
+    anchors.verticalCenter: root.extraTop > 0 || root.extraBottom > 0 ? undefined : parent.verticalCenter
+    anchors.bottom: root.extraTop > 0 ? parent.bottom : undefined
+    anchors.top: root.extraBottom > 0 ? parent.top : undefined
 
     radius: Style.radiusL
     border.width: Style.borderS
-    border.color: Qt.alpha(Color.mOutline, (isAttachedMode ? 0 : Color.adaptiveOpacity(Settings.data.dock.backgroundOpacity)))
+    border.color: Qt.alpha(Color.mOutline, (root.isAttachedMode ? 0 : Color.adaptiveOpacity(Settings.data.dock.backgroundOpacity)))
 
     MouseArea {
       id: dockMouseArea
@@ -48,53 +49,53 @@ Item {
       hoverEnabled: true
 
       onEntered: {
-        dockRoot.dockHovered = true;
-        if (dockRoot.autoHide) {
-          dockRoot.showTimer.stop();
-          dockRoot.hideTimer.stop();
-          dockRoot.unloadTimer.stop(); // Cancel unload if hovering
-          dockRoot.hidden = false; // Make sure dock is visible
+        root.dockRoot.dockHovered = true;
+        if (root.dockRoot.autoHide) {
+          root.dockRoot.showTimer.stop();
+          root.dockRoot.hideTimer.stop();
+          root.dockRoot.unloadTimer.stop(); // Cancel unload if hovering
+          root.dockRoot.hidden = false; // Make sure dock is visible
         }
       }
 
       onExited: {
-        dockRoot.dockHovered = false;
-        if (dockRoot.autoHide && !dockRoot.anyAppHovered && !dockRoot.peekHovered && !dockRoot.menuHovered && dockRoot.dragSourceIndex === -1) {
-          dockRoot.hideTimer.restart();
+        root.dockRoot.dockHovered = false;
+        if (root.dockRoot.autoHide && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
+          root.dockRoot.hideTimer.restart();
         }
       }
 
       onClicked: {
         // Close any open context menu when clicking on the dock background
-        dockRoot.closeAllContextMenus();
+        root.dockRoot.closeAllContextMenus();
       }
     }
 
     Flickable {
       id: dock
       // Use parent dimensions more directly to avoid clipping
-      width: dockRoot.isVertical ? parent.width : Math.min(dockLayout.implicitWidth, parent.width - Style.marginXL)
-      height: !dockRoot.isVertical ? parent.height : Math.min(dockLayout.implicitHeight, parent.height - Style.marginXL)
+      width: root.dockRoot.isVertical ? parent.width : Math.min(dockLayout.implicitWidth, parent.width - Style.marginXL)
+      height: !root.dockRoot.isVertical ? parent.height : Math.min(dockLayout.implicitHeight, parent.height - Style.marginXL)
       contentWidth: dockLayout.implicitWidth
       contentHeight: dockLayout.implicitHeight
       anchors.centerIn: parent
       clip: true
 
-      flickableDirection: dockRoot.isVertical ? Flickable.VerticalFlick : Flickable.HorizontalFlick
+      flickableDirection: root.dockRoot.isVertical ? Flickable.VerticalFlick : Flickable.HorizontalFlick
 
       // Keep interactive dependent on overflow
-      interactive: dockRoot.isVertical ? contentHeight > height : contentWidth > width
+      interactive: root.dockRoot.isVertical ? contentHeight > height : contentWidth > width
 
       // Centering margins
-      contentX: dockRoot.isVertical && contentWidth < width ? (contentWidth - width) / 2 : 0
-      contentY: !dockRoot.isVertical && contentHeight < height ? (contentHeight - height) / 2 : 0
+      contentX: root.dockRoot.isVertical && contentWidth < width ? (contentWidth - width) / 2 : 0
+      contentY: !root.dockRoot.isVertical && contentHeight < height ? (contentHeight - height) / 2 : 0
 
       WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
           var hDelta;
                    var delta = (event.angleDelta.y !== 0) ? event.angleDelta.y : event.angleDelta.x;
-                   if (dockRoot.isVertical) {
+                   if (root.dockRoot.isVertical) {
                      dock.contentY = Math.max(-dock.topMargin, Math.min(dock.contentHeight - dock.height + dock.bottomMargin, dock.contentY - delta));
                    } else {
                      // For horizontal dock, we want to scroll contentX with BOTH x and y wheels
@@ -106,11 +107,11 @@ Item {
       }
 
       ScrollBar.horizontal: ScrollBar {
-        visible: !dockRoot.isVertical && dock.interactive
+        visible: !root.dockRoot.isVertical && dock.interactive
         policy: ScrollBar.AsNeeded
       }
       ScrollBar.vertical: ScrollBar {
-        visible: dockRoot.isVertical && dock.interactive
+        visible: root.dockRoot.isVertical && dock.interactive
         policy: ScrollBar.AsNeeded
       }
 
@@ -177,8 +178,8 @@ Item {
       // Use GridLayout for flexible horizontal/vertical arrangement
       GridLayout {
         id: dockLayout
-        columns: dockRoot.isVertical ? 1 : -1
-        rows: dockRoot.isVertical ? -1 : 1
+        columns: root.dockRoot.isVertical ? 1 : -1
+        rows: root.dockRoot.isVertical ? -1 : 1
         rowSpacing: Style.marginS
         columnSpacing: Style.marginS
 
@@ -192,7 +193,7 @@ Item {
           Item {
             id: launcherButton
             anchors.fill: parent
-            readonly property string screenName: dockRoot.modelData ? dockRoot.modelData.name : (dockRoot.screen ? dockRoot.screen.name : "")
+            readonly property string screenName: root.dockRoot.modelData ? root.dockRoot.modelData.name : (root.dockRoot.screen ? root.dockRoot.screen.name : "")
             readonly property var launcherWidgetSettings: {
               const widgetsBySection = screenName ? Settings.getBarWidgetsForScreen(screenName) : Settings.data.bar.widgets;
               if (!widgetsBySection)
@@ -260,8 +261,8 @@ Item {
 
             Item {
               id: launcherIconContainer
-              width: dockRoot.iconSize
-              height: dockRoot.iconSize
+              width: root.dockRoot.iconSize
+              height: root.dockRoot.iconSize
               anchors.centerIn: parent
 
               scale: launcherMouseArea.containsMouse ? 1.15 : 1.0
@@ -276,14 +277,14 @@ Item {
               NIcon {
                 anchors.centerIn: parent
                 icon: launcherButton.launcherIcon
-                pointSize: dockRoot.iconSize * 0.7
+                pointSize: root.dockRoot.iconSize * 0.7
                 color: Color.resolveColorKey(launcherButton.launcherIconColorKey)
                 visible: !launcherButton.launcherUseDistroLogo
               }
 
               IconImage {
                 anchors.centerIn: parent
-                width: dockRoot.iconSize * 0.8
+                width: root.dockRoot.iconSize * 0.8
                 height: width
                 source: launcherButton.launcherUseDistroLogo ? HostService.osLogo : ""
                 visible: source !== ""
@@ -307,40 +308,40 @@ Item {
               acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
               onEntered: {
-                dockRoot.anyAppHovered = true;
-                if (dockRoot.autoHide) {
-                  dockRoot.showTimer.stop();
-                  dockRoot.hideTimer.stop();
-                  dockRoot.unloadTimer.stop();
-                  dockRoot.hidden = false;
+                root.dockRoot.anyAppHovered = true;
+                if (root.dockRoot.autoHide) {
+                  root.dockRoot.showTimer.stop();
+                  root.dockRoot.hideTimer.stop();
+                  root.dockRoot.unloadTimer.stop();
+                  root.dockRoot.hidden = false;
                 }
               }
 
               onExited: {
-                dockRoot.anyAppHovered = false;
-                if (dockRoot.autoHide && !dockRoot.dockHovered && !dockRoot.peekHovered && !dockRoot.menuHovered && dockRoot.dragSourceIndex === -1) {
-                  dockRoot.hideTimer.restart();
+                root.dockRoot.anyAppHovered = false;
+                if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
+                  root.dockRoot.hideTimer.restart();
                 }
               }
 
               onClicked: mouse => {
-                           const targetScreen = dockRoot.modelData || dockRoot.screen || null;
+                           const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
                            if (!targetScreen) {
                              return;
                            }
 
                            if (mouse.button === Qt.RightButton) {
-                             if (dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
-                               dockRoot.closeAllContextMenus();
+                             if (root.dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
+                               root.dockRoot.closeAllContextMenus();
                                return;
                              }
-                             dockRoot.closeAllContextMenus();
+                             root.dockRoot.closeAllContextMenus();
                              launcherContextMenu.show(launcherButton, null, targetScreen);
                              return;
                            }
 
                            if (mouse.button === Qt.LeftButton || mouse.button === Qt.MiddleButton) {
-                             dockRoot.closeAllContextMenus();
+                             root.dockRoot.closeAllContextMenus();
                              PanelService.toggleLauncher(targetScreen);
                            }
                          }
@@ -348,40 +349,40 @@ Item {
 
             DockMenu {
               id: launcherContextMenu
-              dockPosition: dockRoot.dockPosition
+              dockPosition: root.dockRoot.dockPosition
               menuMode: "launcher"
               launcherWidgetSection: launcherButton.launcherWidgetSection
               launcherWidgetIndex: launcherButton.launcherWidgetIndex
               launcherWidgetSettings: launcherButton.launcherWidgetSettings
 
               onHoveredChanged: {
-                if (dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
-                  dockRoot.menuHovered = hovered;
+                if (root.dockRoot.currentContextMenu === launcherContextMenu && launcherContextMenu.visible) {
+                  root.dockRoot.menuHovered = hovered;
                 } else {
-                  dockRoot.menuHovered = false;
+                  root.dockRoot.menuHovered = false;
                 }
               }
 
               Connections {
                 target: launcherContextMenu
                 function onRequestClose() {
-                  dockRoot.currentContextMenu = null;
-                  dockRoot.hideTimer.stop();
+                  root.dockRoot.currentContextMenu = null;
+                  root.dockRoot.hideTimer.stop();
                   launcherContextMenu.hide();
-                  dockRoot.menuHovered = false;
-                  dockRoot.anyAppHovered = false;
+                  root.dockRoot.menuHovered = false;
+                  root.dockRoot.anyAppHovered = false;
                 }
               }
 
               onVisibleChanged: {
                 if (visible) {
-                  dockRoot.currentContextMenu = launcherContextMenu;
-                } else if (dockRoot.currentContextMenu === launcherContextMenu) {
-                  dockRoot.currentContextMenu = null;
-                  dockRoot.hideTimer.stop();
-                  dockRoot.menuHovered = false;
-                  if (dockRoot.autoHide && !dockRoot.dockHovered && !dockRoot.anyAppHovered && !dockRoot.peekHovered && !dockRoot.menuHovered) {
-                    dockRoot.hideTimer.restart();
+                  root.dockRoot.currentContextMenu = launcherContextMenu;
+                } else if (root.dockRoot.currentContextMenu === launcherContextMenu) {
+                  root.dockRoot.currentContextMenu = null;
+                  root.dockRoot.hideTimer.stop();
+                  root.dockRoot.menuHovered = false;
+                  if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered) {
+                    root.dockRoot.hideTimer.restart();
                   }
                 }
               }
@@ -394,9 +395,9 @@ Item {
           active: Settings.data.dock.showLauncherIcon && Settings.data.dock.launcherPosition === "start"
           visible: active
           sourceComponent: launcherButtonComponent
-          readonly property real indicatorMargin: Math.max(3, Math.round(dockRoot.iconSize * 0.18))
-          Layout.preferredWidth: active ? (dockRoot.isVertical ? dockRoot.iconSize + indicatorMargin * 2 : dockRoot.iconSize) : 0
-          Layout.preferredHeight: active ? (dockRoot.isVertical ? dockRoot.iconSize : dockRoot.iconSize + indicatorMargin * 2) : 0
+          readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
+          Layout.preferredWidth: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize) : 0
+          Layout.preferredHeight: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2) : 0
           Layout.minimumWidth: active ? Layout.preferredWidth : 0
           Layout.minimumHeight: active ? Layout.preferredHeight : 0
           Layout.maximumWidth: active ? Layout.preferredWidth : 0
@@ -405,15 +406,15 @@ Item {
         }
 
         Repeater {
-          model: dockRoot.dockApps
+          model: root.dockRoot.dockApps
 
           delegate: Item {
             required property var modelData
             required property int index
             id: appButton
-            readonly property real indicatorMargin: Math.max(3, Math.round(dockRoot.iconSize * 0.18))
-            Layout.preferredWidth: dockRoot.isVertical ? dockRoot.iconSize + indicatorMargin * 2 : dockRoot.iconSize
-            Layout.preferredHeight: dockRoot.isVertical ? dockRoot.iconSize : dockRoot.iconSize + indicatorMargin * 2
+            readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
+            Layout.preferredWidth: root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize
+            Layout.preferredHeight: root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2
             Layout.alignment: Qt.AlignCenter
 
             property var toplevels: dock.getValidToplevels(appButton.modelData)
@@ -435,7 +436,7 @@ Item {
                 const toplevelTitle = primaryToplevel.title || "";
                 // If title is "Loading..." or empty, use desktop entry name
                 if (!toplevelTitle || toplevelTitle === "Loading..." || toplevelTitle.trim() === "") {
-                  return dockRoot.getAppNameFromDesktopEntry(appButton.modelData.appId) || appButton.modelData.appId;
+                  return root.dockRoot.getAppNameFromDesktopEntry(appButton.modelData.appId) || appButton.modelData.appId;
                 }
                 return toplevelTitle;
               }
@@ -456,19 +457,19 @@ Item {
               keys: ["dock-app"]
               onEntered: function (drag) {
                 if (drag.source && drag.source.objectName === "dockAppButton") {
-                  dockRoot.dragTargetIndex = appButton.modelIndex;
+                  root.dockRoot.dragTargetIndex = appButton.modelIndex;
                 }
               }
               onExited: function () {
-                if (dockRoot.dragTargetIndex === appButton.modelIndex) {
-                  dockRoot.dragTargetIndex = -1;
+                if (root.dockRoot.dragTargetIndex === appButton.modelIndex) {
+                  root.dockRoot.dragTargetIndex = -1;
                 }
               }
               onDropped: function (drop) {
-                dockRoot.dragSourceIndex = -1;
-                dockRoot.dragTargetIndex = -1;
+                root.dockRoot.dragSourceIndex = -1;
+                root.dockRoot.dragTargetIndex = -1;
                 if (drop.source && drop.source.objectName === "dockAppButton" && drop.source !== appButton) {
-                  dockRoot.reorderApps(drop.source.modelIndex, appButton.modelIndex);
+                  root.dockRoot.reorderApps(drop.source.modelIndex, appButton.modelIndex);
                 }
               }
             }
@@ -477,15 +478,15 @@ Item {
             Connections {
               target: appButton.modelData?.toplevel
               function onClosed() {
-                Qt.callLater(dockRoot.updateDockApps);
+                Qt.callLater(root.dockRoot.updateDockApps);
               }
             }
 
             // Draggable container for the icon
             Item {
               id: iconContainer
-              width: dockRoot.iconSize
-              height: dockRoot.iconSize
+              width: root.dockRoot.iconSize
+              height: root.dockRoot.iconSize
 
               // When dragging, remove anchors so MouseArea can position it
               anchors.centerIn: dragging ? undefined : parent
@@ -493,13 +494,13 @@ Item {
               property bool dragging: appMouseArea.drag.active
               onDraggingChanged: {
                 if (dragging) {
-                  dockRoot.dragSourceIndex = appButton.index;
+                  root.dockRoot.dragSourceIndex = appButton.index;
                 } else {
                   // Reset if not handled by drop (e.g. dropped outside)
                   Qt.callLater(() => {
-                                 if (!appMouseArea.drag.active && dockRoot.dragSourceIndex === appButton.index) {
-                                   dockRoot.dragSourceIndex = -1;
-                                   dockRoot.dragTargetIndex = -1;
+                                 if (!appMouseArea.drag.active && root.dockRoot.dragSourceIndex === appButton.index) {
+                                   root.dockRoot.dragSourceIndex = -1;
+                                   root.dockRoot.dragTargetIndex = -1;
                                  }
                                });
                 }
@@ -511,7 +512,7 @@ Item {
               Drag.hotSpot.y: height / 2
               Drag.keys: ["dock-app"]
 
-              z: (dockRoot.dragSourceIndex === appButton.index) ? 1000 : ((dragging ? 1000 : 0))
+              z: (root.dockRoot.dragSourceIndex === appButton.index) ? 1000 : ((dragging ? 1000 : 0))
               scale: dragging ? 1.1 : (appButton.hovered ? 1.15 : 1.0)
               Behavior on scale {
                 NumberAnimation {
@@ -522,21 +523,21 @@ Item {
               }
 
               // Visual shifting logic
-              readonly property bool isDragged: dockRoot.dragSourceIndex === appButton.index
+              readonly property bool isDragged: root.dockRoot.dragSourceIndex === appButton.index
               property real shiftOffset: 0
 
               Binding on shiftOffset {
                 value: {
-                  if (dockRoot.dragSourceIndex !== -1 && dockRoot.dragTargetIndex !== -1 && !iconContainer.isDragged) {
-                    if (dockRoot.dragSourceIndex < dockRoot.dragTargetIndex) {
+                  if (root.dockRoot.dragSourceIndex !== -1 && root.dockRoot.dragTargetIndex !== -1 && !iconContainer.isDragged) {
+                    if (root.dockRoot.dragSourceIndex < root.dockRoot.dragTargetIndex) {
                       // Dragging Forward: Items between source and target shift Backward
-                      if (appButton.index > dockRoot.dragSourceIndex && appButton.index <= dockRoot.dragTargetIndex) {
-                        return -1 * (dockRoot.isVertical ? dockRoot.iconSize + Style.marginS : dockRoot.iconSize + Style.marginS);
+                      if (appButton.index > root.dockRoot.dragSourceIndex && appButton.index <= root.dockRoot.dragTargetIndex) {
+                        return -1 * (root.dockRoot.isVertical ? root.dockRoot.iconSize + Style.marginS : root.dockRoot.iconSize + Style.marginS);
                       }
-                    } else if (dockRoot.dragSourceIndex > dockRoot.dragTargetIndex) {
+                    } else if (root.dockRoot.dragSourceIndex > root.dockRoot.dragTargetIndex) {
                       // Dragging Backward: Items between target and source shift Forward
-                      if (appButton.index >= dockRoot.dragTargetIndex && appButton.index < dockRoot.dragSourceIndex) {
-                        return (dockRoot.isVertical ? dockRoot.iconSize + Style.marginS : dockRoot.iconSize + Style.marginS);
+                      if (appButton.index >= root.dockRoot.dragTargetIndex && appButton.index < root.dockRoot.dragSourceIndex) {
+                        return (root.dockRoot.isVertical ? root.dockRoot.iconSize + Style.marginS : root.dockRoot.iconSize + Style.marginS);
                       }
                     }
                   }
@@ -545,8 +546,8 @@ Item {
               }
 
               transform: Translate {
-                x: !dockRoot.isVertical ? iconContainer.shiftOffset : 0
-                y: dockRoot.isVertical ? iconContainer.shiftOffset : 0
+                x: !root.dockRoot.isVertical ? iconContainer.shiftOffset : 0
+                y: root.dockRoot.isVertical ? iconContainer.shiftOffset : 0
 
                 Behavior on x {
                   NumberAnimation {
@@ -566,7 +567,7 @@ Item {
                 id: appIcon
                 anchors.fill: parent
                 source: {
-                  dockRoot.iconRevision; // Force re-evaluation when revision changes
+                  root.dockRoot.iconRevision; // Force re-evaluation when revision changes
                   return dock.getAppIcon(appButton.modelData);
                 }
                 visible: source.toString() !== ""
@@ -599,7 +600,7 @@ Item {
                 anchors.centerIn: parent
                 visible: !appIcon.visible
                 icon: "question-mark"
-                pointSize: dockRoot.iconSize * 0.7
+                pointSize: root.dockRoot.iconSize * 0.7
                 color: appButton.isActive ? Color.mPrimary : Color.mOnSurfaceVariant
                 opacity: appButton.isRunning ? 1.0 : 0.6
 
@@ -615,13 +616,13 @@ Item {
             // Context menu popup
             DockMenu {
               id: contextMenu
-              dockPosition: dockRoot.dockPosition // Pass dock position for menu placement
+              dockPosition: root.dockRoot.dockPosition // Pass dock position for menu placement
               onHoveredChanged: {
                 // Only update menuHovered if this menu is current and visible
-                if (dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
-                  dockRoot.menuHovered = hovered;
+                if (root.dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
+                  root.dockRoot.menuHovered = hovered;
                 } else {
-                  dockRoot.menuHovered = false;
+                  root.dockRoot.menuHovered = false;
                 }
               }
 
@@ -629,24 +630,24 @@ Item {
                 target: contextMenu
                 function onRequestClose() {
                   // Clear current menu immediately to prevent hover updates
-                  dockRoot.currentContextMenu = null;
-                  dockRoot.hideTimer.stop();
+                  root.dockRoot.currentContextMenu = null;
+                  root.dockRoot.hideTimer.stop();
                   contextMenu.hide();
-                  dockRoot.menuHovered = false;
-                  dockRoot.anyAppHovered = false;
+                  root.dockRoot.menuHovered = false;
+                  root.dockRoot.anyAppHovered = false;
                 }
               }
-              onAppClosed: dockRoot.updateDockApps // Force immediate dock update when app is closed
+              onAppClosed: root.dockRoot.updateDockApps // Force immediate dock update when app is closed
               onVisibleChanged: {
                 if (visible) {
-                  dockRoot.currentContextMenu = contextMenu;
-                } else if (dockRoot.currentContextMenu === contextMenu) {
-                  dockRoot.currentContextMenu = null;
-                  dockRoot.hideTimer.stop();
-                  dockRoot.menuHovered = false;
+                  root.dockRoot.currentContextMenu = contextMenu;
+                } else if (root.dockRoot.currentContextMenu === contextMenu) {
+                  root.dockRoot.currentContextMenu = null;
+                  root.dockRoot.hideTimer.stop();
+                  root.dockRoot.menuHovered = false;
                   // Restart hide timer after menu closes
-                  if (dockRoot.autoHide && !dockRoot.dockHovered && !dockRoot.anyAppHovered && !dockRoot.peekHovered && !dockRoot.menuHovered) {
-                    dockRoot.hideTimer.restart();
+                  if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.anyAppHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered) {
+                    root.dockRoot.hideTimer.restart();
                   }
                 }
               }
@@ -662,7 +663,7 @@ Item {
 
               // Only allow left-click dragging via axis control
               drag.target: iconContainer
-              drag.axis: (pressedButtons & Qt.LeftButton) ? (dockRoot.isVertical ? Drag.YAxis : Drag.XAxis) : Drag.None
+              drag.axis: (pressedButtons & Qt.LeftButton) ? (root.dockRoot.isVertical ? Drag.YAxis : Drag.XAxis) : Drag.None
 
               onPressed: {
                 var p1 = appButton.mapFromItem(dockContainer, 0, 0);
@@ -680,42 +681,42 @@ Item {
               }
 
               onEntered: {
-                dockRoot.anyAppHovered = true;
-                if (dockRoot.autoHide) {
-                  dockRoot.showTimer.stop();
-                  dockRoot.hideTimer.stop();
-                  dockRoot.unloadTimer.stop(); // Cancel unload if hovering app
-                  dockRoot.hidden = false; // Make sure dock is visible
+                root.dockRoot.anyAppHovered = true;
+                if (root.dockRoot.autoHide) {
+                  root.dockRoot.showTimer.stop();
+                  root.dockRoot.hideTimer.stop();
+                  root.dockRoot.unloadTimer.stop(); // Cancel unload if hovering app
+                  root.dockRoot.hidden = false; // Make sure dock is visible
                 }
               }
 
               onExited: {
-                dockRoot.anyAppHovered = false;
+                root.dockRoot.anyAppHovered = false;
                 // Clear menuHovered if no current menu or menu not visible
-                if (!dockRoot.currentContextMenu || !dockRoot.currentContextMenu.visible) {
-                  dockRoot.menuHovered = false;
+                if (!root.dockRoot.currentContextMenu || !root.dockRoot.currentContextMenu.visible) {
+                  root.dockRoot.menuHovered = false;
                 }
-                if (dockRoot.autoHide && !dockRoot.dockHovered && !dockRoot.peekHovered && !dockRoot.menuHovered && dockRoot.dragSourceIndex === -1) {
-                  dockRoot.hideTimer.restart();
+                if (root.dockRoot.autoHide && !root.dockRoot.dockHovered && !root.dockRoot.peekHovered && !root.dockRoot.menuHovered && root.dockRoot.dragSourceIndex === -1) {
+                  root.dockRoot.hideTimer.restart();
                 }
               }
 
               onClicked: mouse => {
                            if (mouse.button === Qt.RightButton) {
-                             const targetScreen = dockRoot.modelData || dockRoot.screen || null;
+                             const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
                              // If right-clicking on the same app with an open context menu, close it
-                             if (dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
-                               dockRoot.closeAllContextMenus();
+                             if (root.dockRoot.currentContextMenu === contextMenu && contextMenu.visible) {
+                               root.dockRoot.closeAllContextMenus();
                                return;
                              }
                              // Close any other existing context menu first
-                             dockRoot.closeAllContextMenus();
+                             root.dockRoot.closeAllContextMenus();
                              contextMenu.show(appButton, appButton.modelData, targetScreen);
                              return;
                            }
 
                            // Close any existing context menu for non-right-click actions
-                           dockRoot.closeAllContextMenus();
+                           root.dockRoot.closeAllContextMenus();
 
                            const runningToplevels = dock.getValidToplevels(appButton.modelData);
                            const primaryToplevel = dock.getPrimaryToplevel(appButton.modelData);
@@ -723,7 +724,7 @@ Item {
                            if (mouse.button === Qt.MiddleButton) {
                              if (primaryToplevel && primaryToplevel.close) {
                                primaryToplevel.close();
-                               Qt.callLater(dockRoot.updateDockApps);
+                               Qt.callLater(root.dockRoot.updateDockApps);
                              }
                            } else if (mouse.button === Qt.LeftButton) {
                              if (runningToplevels.length === 0) {
@@ -740,19 +741,19 @@ Item {
 
                              const clickAction = Settings.data.dock.groupClickAction || "cycle";
                              if (clickAction === "list") {
-                               const targetScreen = dockRoot.modelData || dockRoot.screen || null;
+                               const targetScreen = root.dockRoot.modelData || root.dockRoot.screen || null;
                                // Left-click list should always open the grouped window list view.
                                contextMenu.show(appButton, appButton.modelData, targetScreen, "list");
                              } else {
                                const appKey = appButton.modelData?.appId || "";
-                               const state = dockRoot.groupCycleIndices || {};
+                               const state = root.dockRoot.groupCycleIndices || {};
                                const nextIndex = (state[appKey] || 0) % runningToplevels.length;
                                const nextToplevel = runningToplevels[nextIndex];
                                if (nextToplevel && nextToplevel.activate) {
                                  nextToplevel.activate();
                                }
                                state[appKey] = (nextIndex + 1) % runningToplevels.length;
-                               dockRoot.groupCycleIndices = Object.assign({}, state);
+                               root.dockRoot.groupCycleIndices = Object.assign({}, state);
                              }
                            }
                          }
@@ -761,40 +762,40 @@ Item {
             // Active indicator - positioned at the edge of the delegate area
             Rectangle {
               visible: appButton.baseIndicatorVisible && !appButton.showGroupedIndicator
-              width: dockRoot.isVertical ? appButton.indicatorMargin * 0.6 : dockRoot.iconSize * 0.2
-              height: dockRoot.isVertical ? dockRoot.iconSize * 0.2 : appButton.indicatorMargin * 0.6
+              width: root.dockRoot.isVertical ? appButton.indicatorMargin * 0.6 : root.dockRoot.iconSize * 0.2
+              height: root.dockRoot.isVertical ? root.dockRoot.iconSize * 0.2 : appButton.indicatorMargin * 0.6
               color: Color.mPrimary
               radius: Style.radiusXS
 
               // Anchor to the edge facing the screen center
-              anchors.bottom: !dockRoot.isVertical && dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
-              anchors.top: !dockRoot.isVertical && dockRoot.dockPosition === "top" ? parent.top : undefined
-              anchors.left: dockRoot.isVertical && dockRoot.dockPosition === "left" ? parent.left : undefined
-              anchors.right: dockRoot.isVertical && dockRoot.dockPosition === "right" ? parent.right : undefined
+              anchors.bottom: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
+              anchors.top: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? parent.top : undefined
+              anchors.left: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? parent.left : undefined
+              anchors.right: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? parent.right : undefined
 
-              anchors.horizontalCenter: dockRoot.isVertical ? undefined : parent.horizontalCenter
-              anchors.verticalCenter: dockRoot.isVertical ? parent.verticalCenter : undefined
+              anchors.horizontalCenter: root.dockRoot.isVertical ? undefined : parent.horizontalCenter
+              anchors.verticalCenter: root.dockRoot.isVertical ? parent.verticalCenter : undefined
 
               // Offset slightly from the edge
-              anchors.bottomMargin: !dockRoot.isVertical && dockRoot.dockPosition === "bottom" ? 2 : 0
-              anchors.topMargin: !dockRoot.isVertical && dockRoot.dockPosition === "top" ? 2 : 0
-              anchors.leftMargin: dockRoot.isVertical && dockRoot.dockPosition === "left" ? 2 : 0
-              anchors.rightMargin: dockRoot.isVertical && dockRoot.dockPosition === "right" ? 2 : 0
+              anchors.bottomMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? 2 : 0
+              anchors.topMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? 2 : 0
+              anchors.leftMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? 2 : 0
+              anchors.rightMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? 2 : 0
             }
 
             Loader {
               id: groupedIndicatorLoader
               active: appButton.showGroupedIndicator
-              anchors.bottom: !dockRoot.isVertical && dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
-              anchors.top: !dockRoot.isVertical && dockRoot.dockPosition === "top" ? parent.top : undefined
-              anchors.left: dockRoot.isVertical && dockRoot.dockPosition === "left" ? parent.left : undefined
-              anchors.right: dockRoot.isVertical && dockRoot.dockPosition === "right" ? parent.right : undefined
-              anchors.horizontalCenter: dockRoot.isVertical ? undefined : parent.horizontalCenter
-              anchors.verticalCenter: dockRoot.isVertical ? parent.verticalCenter : undefined
-              anchors.bottomMargin: !dockRoot.isVertical && dockRoot.dockPosition === "bottom" ? 1 : 0
-              anchors.topMargin: !dockRoot.isVertical && dockRoot.dockPosition === "top" ? 1 : 0
-              anchors.leftMargin: dockRoot.isVertical && dockRoot.dockPosition === "left" ? 1 : 0
-              anchors.rightMargin: dockRoot.isVertical && dockRoot.dockPosition === "right" ? 1 : 0
+              anchors.bottom: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
+              anchors.top: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? parent.top : undefined
+              anchors.left: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? parent.left : undefined
+              anchors.right: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? parent.right : undefined
+              anchors.horizontalCenter: root.dockRoot.isVertical ? undefined : parent.horizontalCenter
+              anchors.verticalCenter: root.dockRoot.isVertical ? parent.verticalCenter : undefined
+              anchors.bottomMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "bottom" ? 1 : 0
+              anchors.topMargin: !root.dockRoot.isVertical && root.dockRoot.dockPosition === "top" ? 1 : 0
+              anchors.leftMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "left" ? 1 : 0
+              anchors.rightMargin: root.dockRoot.isVertical && root.dockRoot.dockPosition === "right" ? 1 : 0
 
               sourceComponent: Settings.data.dock.groupIndicatorStyle === "dots" ? groupDotsIndicatorComponent : groupNumberIndicatorComponent
             }
@@ -826,7 +827,7 @@ Item {
                 readonly property int totalCount: Math.max(0, appButton.groupedCount)
                 readonly property int focusedIndex: appButton.focusedWindowIndex >= 0 ? appButton.focusedWindowIndex : 0
                 readonly property int visibleCount: Math.min(totalCount, maxVisibleDots)
-                readonly property int dotSize: Math.max(2, Math.round(dockRoot.iconSize * 0.1))
+                readonly property int dotSize: Math.max(2, Math.round(root.dockRoot.iconSize * 0.1))
                 readonly property int dotSpacing: Math.max(1, Math.round(dotSize * 0.7))
                 readonly property int pitch: dotSize + dotSpacing
                 readonly property int windowStart: {
@@ -838,8 +839,8 @@ Item {
                 }
                 readonly property bool hasHiddenLeft: windowStart > 0
                 readonly property bool hasHiddenRight: (windowStart + visibleCount) < totalCount
-                width: dockRoot.isVertical ? dotSize : (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing)
-                height: dockRoot.isVertical ? (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing) : dotSize
+                width: root.dockRoot.isVertical ? dotSize : (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing)
+                height: root.dockRoot.isVertical ? (visibleCount * dotSize + Math.max(0, visibleCount - 1) * dotSpacing) : dotSize
 
                 Repeater {
                   model: parent.visibleCount
@@ -852,8 +853,8 @@ Item {
                     width: isOverflowHint && !isFocusedDot ? Math.max(2, Math.round(parent.dotSize * 0.72)) : parent.dotSize
                     height: width
                     radius: width / 2
-                    x: dockRoot.isVertical ? Math.round((parent.dotSize - width) / 2) : (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2))
-                    y: dockRoot.isVertical ? (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2)) : Math.round((parent.dotSize - width) / 2)
+                    x: root.dockRoot.isVertical ? Math.round((parent.dotSize - width) / 2) : (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2))
+                    y: root.dockRoot.isVertical ? (groupDot.index * parent.pitch + Math.round((parent.dotSize - width) / 2)) : Math.round((parent.dotSize - width) / 2)
                     color: isFocusedDot ? Color.mPrimary : Qt.alpha(Color.mOutline, 0.9)
                     opacity: isOverflowHint && !isFocusedDot ? 0.55 : 1.0
                   }
@@ -868,9 +869,9 @@ Item {
           active: Settings.data.dock.showLauncherIcon && Settings.data.dock.launcherPosition === "end"
           visible: active
           sourceComponent: launcherButtonComponent
-          readonly property real indicatorMargin: Math.max(3, Math.round(dockRoot.iconSize * 0.18))
-          Layout.preferredWidth: active ? (dockRoot.isVertical ? dockRoot.iconSize + indicatorMargin * 2 : dockRoot.iconSize) : 0
-          Layout.preferredHeight: active ? (dockRoot.isVertical ? dockRoot.iconSize : dockRoot.iconSize + indicatorMargin * 2) : 0
+          readonly property real indicatorMargin: Math.max(3, Math.round(root.dockRoot.iconSize * 0.18))
+          Layout.preferredWidth: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize + indicatorMargin * 2 : root.dockRoot.iconSize) : 0
+          Layout.preferredHeight: active ? (root.dockRoot.isVertical ? root.dockRoot.iconSize : root.dockRoot.iconSize + indicatorMargin * 2) : 0
           Layout.minimumWidth: active ? Layout.preferredWidth : 0
           Layout.minimumHeight: active ? Layout.preferredHeight : 0
           Layout.maximumWidth: active ? Layout.preferredWidth : 0

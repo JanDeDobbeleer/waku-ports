@@ -365,14 +365,14 @@ SmartPanel {
                 width: 24
                 height: 24
                 radius: width / 2
-                color: progressStep.index <= currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                border.color: progressStep.index === currentStep ? Color.mPrimary : "transparent"
-                border.width: progressStep.index === currentStep ? 2 : 0
+                color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                border.color: progressStep.index === panelContent.currentStep ? Color.mPrimary : "transparent"
+                border.width: progressStep.index === panelContent.currentStep ? 2 : 0
 
                 NIcon {
                   icon: progressStep.modelData.icon
                   pointSize: Style.fontSizeS
-                  color: progressStep.index <= currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                  color: progressStep.index <= panelContent.currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
                   anchors.centerIn: parent
                 }
 
@@ -386,8 +386,8 @@ SmartPanel {
               NText {
                 text: progressStep.modelData.label
                 pointSize: Style.fontSizeS
-                color: progressStep.index <= currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
-                font.weight: progressStep.index === currentStep ? Style.fontWeightBold : Style.fontWeightRegular
+                color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
+                font.weight: progressStep.index === panelContent.currentStep ? Style.fontWeightBold : Style.fontWeightRegular
 
                 Behavior on color {
                   ColorAnimation {
@@ -401,8 +401,8 @@ SmartPanel {
                 width: 40
                 height: 2
                 radius: 1
-                color: progressStep.index < currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                visible: progressStep.index < totalSteps - 1
+                color: progressStep.index < panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                visible: progressStep.index < panelContent.totalSteps - 1
 
                 Behavior on color {
                   ColorAnimation {

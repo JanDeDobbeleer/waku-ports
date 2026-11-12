@@ -74,7 +74,7 @@ Singleton {
   property string pendingVariant: ""
 
   // Check if a template is enabled in the activeTemplates array
-  function isTemplateEnabled(templateId) {
+  function isTemplateEnabled(templateId): bool {
     const activeTemplates = Settings.data.templates.activeTemplates;
     if (!activeTemplates)
       return false;

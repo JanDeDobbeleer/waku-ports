@@ -208,7 +208,7 @@ Singleton {
   }
 
   // Check if user is upgrading from a version before telemetry was introduced
-  function shouldShowTelemetryWizard() {
+  function shouldShowTelemetryWizard(): bool {
     if (!changelogStateLoaded)
       return false;
     if (Settings.isFreshInstall)

@@ -536,20 +536,20 @@ Item {
 
       visible: DesktopWidgetRegistry.editMode && !internal.isDragging
       // Position handles at corners of decoration rectangle (which extends by outlineMargin)
-      x: modelData.xMult === 0 ? -outlineMargin : (root.width + outlineMargin - cornerHandleSize)
-      y: modelData.yMult === 0 ? -outlineMargin : (root.height + outlineMargin - cornerHandleSize)
-      width: cornerHandleSize
-      height: cornerHandleSize
+      x: modelData.xMult === 0 ? -root.outlineMargin : (root.width + root.outlineMargin - root.cornerHandleSize)
+      y: modelData.yMult === 0 ? -root.outlineMargin : (root.height + root.outlineMargin - root.cornerHandleSize)
+      width: root.cornerHandleSize
+      height: root.cornerHandleSize
       z: 2000
 
       onPaint: {
         var ctx = getContext("2d");
         ctx.reset();
-        ctx.fillStyle = colorHandle;
+        ctx.fillStyle = root.colorHandle;
         ctx.beginPath();
-        ctx.moveTo(modelData.points[0][0] * cornerHandleSize, modelData.points[0][1] * cornerHandleSize);
-        ctx.lineTo(modelData.points[1][0] * cornerHandleSize, modelData.points[1][1] * cornerHandleSize);
-        ctx.lineTo(modelData.points[2][0] * cornerHandleSize, modelData.points[2][1] * cornerHandleSize);
+        ctx.moveTo(modelData.points[0][0] * root.cornerHandleSize, modelData.points[0][1] * root.cornerHandleSize);
+        ctx.lineTo(modelData.points[1][0] * root.cornerHandleSize, modelData.points[1][1] * root.cornerHandleSize);
+        ctx.lineTo(modelData.points[2][0] * root.cornerHandleSize, modelData.points[2][1] * root.cornerHandleSize);
         ctx.closePath();
         ctx.fill();
       }

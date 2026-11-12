@@ -21,7 +21,7 @@ SmartPanel {
     id: panelContent
     property real contentPreferredHeight: mainColumn.implicitHeight + Style.margin2L
 
-    property var brightnessWidgetInstance: BarService.lookupWidget("Brightness", screen ? screen.name : null)
+    property var brightnessWidgetInstance: BarService.lookupWidget("Brightness", root.screen ? root.screen.name : null)
     readonly property var brightnessWidgetSettings: brightnessWidgetInstance ? brightnessWidgetInstance.widgetSettings : null
     readonly property var brightnessWidgetMetadata: BarWidgetRegistry.widgetMetadata["Brightness"]
 
@@ -36,7 +36,7 @@ SmartPanel {
     Connections {
       target: BarService
       function onActiveWidgetsChanged() {
-        panelContent.brightnessWidgetInstance = BarService.lookupWidget("Brightness", screen ? screen.name : null);
+        panelContent.brightnessWidgetInstance = BarService.lookupWidget("Brightness", root.screen ? root.screen.name : null);
       }
     }
 
@@ -239,9 +239,9 @@ SmartPanel {
                   description: {
                     I18n.tr("system.monitor-description", {
                               "model": monitorControl.modelData.model,
-                              "width": monitorControl.modelData.width * compositorScale,
-                              "height": monitorControl.modelData.height * compositorScale,
-                              "scale": compositorScale
+                              "width": monitorControl.modelData.width * monitorControl.compositorScale,
+                              "height": monitorControl.modelData.height * monitorControl.compositorScale,
+                              "scale": monitorControl.compositorScale
                             });
                   }
                 }
@@ -251,7 +251,7 @@ SmartPanel {
                   Layout.fillWidth: true
                   spacing: Style.marginS
                   NIcon {
-                    icon: getIcon(brightnessMonitor ? brightnessMonitor.brightness : 0)
+                    icon: panelContent.getIcon(monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightness : 0)
                     pointSize: Style.fontSizeXL
                     color: Color.mOnSurface
                   }
@@ -260,21 +260,21 @@ SmartPanel {
                     id: brightnessSlider
                     from: 0
                     to: 1
-                    value: brightnessMonitor ? brightnessMonitor.brightness : 0.5
+                    value: monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightness : 0.5
                     stepSize: 0.01
-                    enabled: brightnessMonitor ? brightnessMonitor.brightnessControlAvailable : false
+                    enabled: monitorControl.brightnessMonitor ? monitorControl.brightnessMonitor.brightnessControlAvailable : false
                     onMoved: value => {
-                               if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
-                                 brightnessMonitor.setBrightness(value);
+                               if (monitorControl.brightnessMonitor && monitorControl.brightnessMonitor.brightnessControlAvailable) {
+                                 monitorControl.brightnessMonitor.setBrightness(value);
                                }
                              }
                     onPressedChanged: (pressed, value) => {
-                                        if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
-                                          brightnessMonitor.setBrightness(value);
+                                        if (monitorControl.brightnessMonitor && monitorControl.brightnessMonitor.brightnessControlAvailable) {
+                                          monitorControl.brightnessMonitor.setBrightness(value);
                                         }
                                       }
                     Layout.fillWidth: true
-                    text: brightnessMonitor ? Math.round(brightnessSlider.value * 100) + "%" : "N/A"
+                    text: monitorControl.brightnessMonitor ? Math.round(brightnessSlider.value * 100) + "%" : "N/A"
                   }
                 }
               }

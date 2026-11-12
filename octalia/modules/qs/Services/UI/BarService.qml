@@ -467,7 +467,7 @@ Singleton {
   }
 
   // Get pill direction for a widget instance
-  function getPillDirection(widgetInstance) {
+  function getPillDirection(widgetInstance): bool {
     try {
       if (widgetInstance.section === "left") {
         return false;

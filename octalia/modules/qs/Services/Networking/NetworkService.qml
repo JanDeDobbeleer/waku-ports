@@ -267,7 +267,7 @@ Singleton {
     return security && security !== "--" && security.trim() !== "";
   }
 
-  function isEnterprise(security) {
+  function isEnterprise(security): bool {
     if (!security) {
       return false;
     }

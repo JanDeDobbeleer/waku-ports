@@ -238,7 +238,7 @@ Singleton {
   }
 
   // Check if any templates are enabled
-  function hasEnabledTemplates() {
+  function hasEnabledTemplates(): bool {
     const activeTemplates = Settings.data.templates.activeTemplates;
     if (!activeTemplates || activeTemplates.length === 0) {
       return false;

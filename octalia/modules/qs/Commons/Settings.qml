@@ -888,7 +888,7 @@ Singleton {
   // -----------------------------------------------------
   // Compare current value with default value
   // Returns true if values differ, false if they match or default is not found
-  function isValueChanged(path, currentValue) {
+  function isValueChanged(path, currentValue): bool {
     var defaultValue = getDefaultValue(path);
     if (defaultValue === undefined) {
       return false; // Can't compare if default not found
@@ -922,7 +922,7 @@ Singleton {
   }
 
   // Helper to find index of a screen override entry
-  function _findScreenOverrideIndex(screenName) {
+  function _findScreenOverrideIndex(screenName): int {
     var i;
     var overrides = data.bar.screenOverrides;
     if (!screenName || !overrides || overrides.length === undefined) {
@@ -940,7 +940,7 @@ Singleton {
   // Check if a screen's overrides are enabled
   // Returns true if enabled flag is true or undefined (backward compat)
   // Returns false only if enabled is explicitly false
-  function isScreenOverrideEnabled(screenName) {
+  function isScreenOverrideEnabled(screenName): bool {
     var override = _findScreenOverride(screenName);
     if (!override) {
       return false;
@@ -994,7 +994,7 @@ Singleton {
 
   // -----------------------------------------------------
   // Check if a screen has any overrides, optionally for a specific property
-  function hasScreenOverride(screenName, property) {
+  function hasScreenOverride(screenName, property): bool {
     var override = _findScreenOverride(screenName);
     if (!override) {
       return false;
