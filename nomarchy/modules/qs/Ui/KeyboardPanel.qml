@@ -411,8 +411,8 @@ PanelWindow {
       if (!root.anchorWindow || !root.anchorWindow.contentItem || !root.bar || !root.bar.clickTargets) return null
       var p = barPoint(px, py)
       var targets = root.bar.clickTargets
-      for (var i = targets.length - 1; i >= 0; i--) {
-        var target = targets[i]
+      for (let i = targets.length - 1; i >= 0; i--) {
+        let target = targets[i]
         if (!target || !target.triggerPress || target.visible === false || target.opacity === 0 || !target.mapToItem) continue
         if (root.bar.targetBelongsToWindow && !root.bar.targetBelongsToWindow(target, root.anchorWindow)) continue
         if (Util.itemContainsPoint(target, root.anchorWindow.contentItem, p.x, p.y)) return target

@@ -195,7 +195,7 @@ Panel {
     var lat = parseFloat(String(root.locationState.latitude))
     var lon = parseFloat(String(root.locationState.longitude))
     if (isNaN(lat) || isNaN(lon)) {
-      var area = sourceReport && sourceReport.nearest_area && sourceReport.nearest_area[0] ? sourceReport.nearest_area[0] : root.areaInfo
+      let area = sourceReport && sourceReport.nearest_area && sourceReport.nearest_area[0] ? sourceReport.nearest_area[0] : root.areaInfo
       if (!area) return
       lat = parseFloat(String(area.latitude || ""))
       lon = parseFloat(String(area.longitude || ""))
@@ -378,7 +378,7 @@ Panel {
           return
         }
         try {
-          var parsed = JSON.parse(raw)
+          let parsed = JSON.parse(raw)
           root.report = parsed
           if (!root.hasConfiguredCoordinates)
             root.label = Model.provisionalCurrentIcon(parsed.current_condition && parsed.current_condition[0], root.label)
@@ -438,8 +438,8 @@ Panel {
           return
         }
         try {
-          var parsed = JSON.parse(raw)
-          var parsedCurrent = Model.openMeteoCurrentCondition(parsed)
+          let parsed = JSON.parse(raw)
+          let parsedCurrent = Model.openMeteoCurrentCondition(parsed)
           root.dailyForecastReport = parsed
           root.label = Model.currentIcon(parsedCurrent, root.label)
           root.dailyForecastRetries = 0

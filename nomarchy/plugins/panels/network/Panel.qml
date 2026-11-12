@@ -329,7 +329,7 @@ Panel {
       selectedIndex = wifiNetworks.length > 0 ? 0 : -1
       wifiActionFocused = false
       focusSection = hasCaptivePortal ? "portal" : (wifiNetworks.length > 0 ? "wifi" : "dns")
-      var idx = dnsProviders.indexOf(dnsProvider)
+      let idx = dnsProviders.indexOf(dnsProvider)
       dnsIndex = idx >= 0 ? idx : 0
       syncBandIndex()
       cursorActive = hasCaptivePortal
@@ -373,7 +373,7 @@ Panel {
       wifiActionFocused = false
       if (focusSection === "wifi") focusSection = "dns"
     } else if (passwordSsid !== "") {
-      var passwordIndex = wifiIndexForSsid(passwordSsid)
+      let passwordIndex = wifiIndexForSsid(passwordSsid)
       if (passwordIndex >= 0) {
         selectedIndex = passwordIndex
         focusSection = "wifi"
@@ -613,14 +613,14 @@ Panel {
     var iface = kind === "wifi" ? "Wi-Fi" : "Ethernet"
     var adapters = S.Network.adapters || []
     if (kind === "ethernet") {
-      for (var i = 0; i < adapters.length; i++) {
+      for (let i = 0; i < adapters.length; i++) {
         if (adapters[i].isUp && !/wi-?fi|wlan|wireless|loopback|virtual|vethernet|bluetooth/i.test(String(adapters[i].name))) { iface = String(adapters[i].name); break }
       }
     }
     lines.push("iface=" + iface, "type=" + kind, "ip=" + (S.Network.ipAddress || ""))
     lines.push("rx_bytes=" + Math.round(S.Network.rxBytesTotal || 0), "tx_bytes=" + Math.round(S.Network.txBytesTotal || 0))
     if (kind === "wifi") lines.push("ssid=" + (S.Network.ssid || ""), "signal=" + (S.Network.signalPercent || 0))
-    for (var key in probe) lines.push(key + "=" + probe[key])
+    for (let key in probe) lines.push(key + "=" + probe[key])
     return lines.join("\n")
   }
 
@@ -697,8 +697,8 @@ Panel {
   function findDevice(type) {
     var devices = networkDevices || []
     var fallback = null
-    for (var i = 0; i < devices.length; i++) {
-      var device = devices[i]
+    for (let i = 0; i < devices.length; i++) {
+      let device = devices[i]
       if (!device || device.type !== type) continue
       if (device.connected) return device
       if (!fallback) fallback = device
@@ -708,7 +708,7 @@ Panel {
 
   function findConnectedWifiNetwork() {
     var networks = wifiNetworkObjects || []
-    for (var i = 0; i < networks.length; i++) {
+    for (let i = 0; i < networks.length; i++) {
       if (networks[i] && networks[i].connected) return networks[i]
     }
     return null
@@ -718,11 +718,11 @@ Panel {
     var nets = []
     var networks = wifiNetworkObjects || []
 
-    for (var i = 0; i < networks.length; i++) {
-      var network = networks[i]
+    for (let i = 0; i < networks.length; i++) {
+      let network = networks[i]
       if (!network) continue
       checkActionCompletion(network)
-      var row = Model.wifiRow(network)
+      let row = Model.wifiRow(network)
       if (row) nets.push(row)
     }
     wifiNetworks = Model.sortWifiRows(nets)
@@ -790,7 +790,7 @@ Panel {
     if (!root.bar || !provider || actionProc.running) return
 
     if (provider === "Custom") {
-      var launcher = "nomarchy-launch-floating-terminal-with-presentation"
+      let launcher = "nomarchy-launch-floating-terminal-with-presentation"
       root.bar.run(launcher + " " + Util.shellQuote(root.dnsCommand(provider)))
       root.close()
       return
@@ -817,14 +817,14 @@ Panel {
 
   function networkForSsid(ssid) {
     var networks = wifiNetworkObjects || []
-    for (var i = 0; i < networks.length; i++) {
+    for (let i = 0; i < networks.length; i++) {
       if (networks[i] && networks[i].name === ssid) return networks[i]
     }
     return null
   }
 
   function wifiIndexForSsid(ssid) {
-    for (var i = 0; i < wifiNetworks.length; i++) {
+    for (let i = 0; i < wifiNetworks.length; i++) {
       if (wifiNetworks[i] && wifiNetworks[i].ssid === ssid) return i
     }
     return -1

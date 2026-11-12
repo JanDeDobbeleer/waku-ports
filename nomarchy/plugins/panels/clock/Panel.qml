@@ -161,8 +161,8 @@ Panel {
   // it would write this key straight back out from a stale copy.
   function persistSettings(values) {
     var entry = { id: root.moduleName }
-    for (var existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
-    for (var key in values) entry[key] = values[key]
+    for (let existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
+    for (let key in values) entry[key] = values[key]
 
     root.settings = entry
     if (root.hostWidget && "settings" in root.hostWidget) root.hostWidget.settings = entry

@@ -59,7 +59,7 @@ QtObject {
 
     function collect() {
         var out = []
-        for (var i = 0; i < builder.count; ++i) out.push(builder.objectAt(i))
+        for (let i = 0; i < builder.count; ++i) out.push(builder.objectAt(i))
         items = out
     }
 }

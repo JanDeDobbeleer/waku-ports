@@ -293,7 +293,7 @@ Item {
     id: stayAwakeStateWriter
     onExited: function() {
       if (root.hasPendingStayAwakePersist) {
-        var pending = root.pendingStayAwakePersist
+        let pending = root.pendingStayAwakePersist
         root.hasPendingStayAwakePersist = false
         root.persistStayAwake(pending)
         return

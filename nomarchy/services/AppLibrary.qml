@@ -122,8 +122,8 @@ Item {
   function loadConfiguredHides(rawText) {
     var next = ({})
     var lines = String(rawText || "").split(/\n/)
-    for (var i = 0; i < lines.length; i++) {
-      var id = root.normalizeDesktopId(lines[i])
+    for (let i = 0; i < lines.length; i++) {
+      let id = root.normalizeDesktopId(lines[i])
       if (id.length > 0) next[id] = true
     }
     root.configuredHiddenEntryIds = next
@@ -133,8 +133,8 @@ Item {
   function loadDesktopHiddenEntries(rawText) {
     var next = ({})
     var lines = String(rawText || "").split(/\n/)
-    for (var i = 0; i < lines.length; i++) {
-      var id = root.normalizeDesktopId(lines[i])
+    for (let i = 0; i < lines.length; i++) {
+      let id = root.normalizeDesktopId(lines[i])
       if (id.length > 0) next[id] = true
     }
     root.desktopHiddenEntryIds = next

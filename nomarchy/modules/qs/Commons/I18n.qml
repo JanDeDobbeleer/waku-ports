@@ -51,8 +51,8 @@ QtObject {
   readonly property var languageStrings: (root.rev, languageCatalogFile.path, parseCatalog(languageCatalogFile.text()))
   readonly property var strings: {
     var merged = ({})
-    for (var k in root.englishStrings) merged[k] = root.englishStrings[k]
-    for (var k2 in root.languageStrings) merged[k2] = root.languageStrings[k2]
+    for (let k in root.englishStrings) merged[k] = root.englishStrings[k]
+    for (let k2 in root.languageStrings) merged[k2] = root.languageStrings[k2]
     return merged
   }
 
@@ -84,7 +84,7 @@ QtObject {
 
   function parseCatalog(raw) {
     try {
-      var parsed = JSON.parse(raw || "{}")
+      let parsed = JSON.parse(raw || "{}")
       return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
     } catch (e) {
       return ({})

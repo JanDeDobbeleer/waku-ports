@@ -50,8 +50,8 @@ QtObject {
   readonly property var strings: {
     var merged = ({})
     var layers = [root.englishStrings, root.baseStrings, root.languageStrings]
-    for (var i = 0; i < layers.length; i++)
-      for (var key in layers[i])
+    for (let i = 0; i < layers.length; i++)
+      for (let key in layers[i])
         if (typeof layers[i][key] === "string" || (layers[i][key] && typeof layers[i][key] === "object")) merged[key] = layers[i][key]
     return merged
   }
@@ -67,8 +67,8 @@ QtObject {
   // The layer that carries the entry decides which language's rules apply.
   function tn(key, count, fallback) {
     var layers = [[root.languageStrings, root.language], [root.baseStrings, root.baseLanguage], [root.englishStrings, "en"]]
-    for (var i = 0; i < layers.length; i++) {
-      var value = Plural.pick(layers[i][0][key], layers[i][1], count)
+    for (let i = 0; i < layers.length; i++) {
+      let value = Plural.pick(layers[i][0][key], layers[i][1], count)
       if (typeof value === "string" && value.length > 0) return value
     }
     return fallback !== undefined ? fallback : key
@@ -76,7 +76,7 @@ QtObject {
 
   function parseCatalog(raw) {
     try {
-      var parsed = JSON.parse(raw || "{}")
+      let parsed = JSON.parse(raw || "{}")
       return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
     } catch (e) {
       return ({})

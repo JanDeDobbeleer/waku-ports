@@ -42,7 +42,7 @@ Item {
     var text = String(content || "")
     if (root.record && text === root.parsedText) return
     try {
-      var parsed = JSON.parse(text)
+      let parsed = JSON.parse(text)
       root.record = parsed && typeof parsed === "object" ? parsed : null
       root.parsedText = root.record ? text : ""
     } catch (e) {

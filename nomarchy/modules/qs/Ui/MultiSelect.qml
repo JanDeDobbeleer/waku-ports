@@ -78,7 +78,7 @@ Item {
   function arrayFrom(v) {
     if (!v || typeof v.length !== "number" || typeof v === "string") return []
     var out = []
-    for (var i = 0; i < v.length; i++) out.push(v[i])
+    for (let i = 0; i < v.length; i++) out.push(v[i])
     return out
   }
 
@@ -86,8 +86,8 @@ Item {
     var out = []
     var src = arrayFrom(arr)
     var seen = ({})
-    for (var i = 0; i < src.length; i++) {
-      var n = normalizeOption(src[i])
+    for (let i = 0; i < src.length; i++) {
+      let n = normalizeOption(src[i])
       if (!n.value) continue
       if (seen[n.value]) continue
       seen[n.value] = true
@@ -99,7 +99,7 @@ Item {
   function valueSet() {
     var set = ({})
     var arr = arrayFrom(values)
-    for (var i = 0; i < arr.length; i++) set[String(arr[i])] = true
+    for (let i = 0; i < arr.length; i++) set[String(arr[i])] = true
     return set
   }
 
@@ -123,9 +123,9 @@ Item {
     if (arr.length === 0) return ""
     var labels = []
     var byValue = ({})
-    for (var i = 0; i < resolvedOptions.length; i++)
+    for (let i = 0; i < resolvedOptions.length; i++)
       byValue[resolvedOptions[i].value] = resolvedOptions[i].label
-    for (var j = 0; j < arr.length; j++)
+    for (let j = 0; j < arr.length; j++)
       labels.push(byValue[String(arr[j])] || String(arr[j]))
     if (labels.length <= 3) return labels.join(", ")
     return Commons.I18n.tn("multiSelect.selectedCount", arr.length).arg(Commons.I18n.formatNumber(arr.length))
@@ -136,8 +136,8 @@ Item {
     var q = searchField.text.toLowerCase()
     if (!q) { filtered = resolvedOptions; return }
     var out = []
-    for (var i = 0; i < resolvedOptions.length; i++) {
-      var o = resolvedOptions[i]
+    for (let i = 0; i < resolvedOptions.length; i++) {
+      let o = resolvedOptions[i]
       if (o.label.toLowerCase().indexOf(q) !== -1
           || o.description.toLowerCase().indexOf(q) !== -1
           || o.value.toLowerCase().indexOf(q) !== -1) out.push(o)
@@ -160,7 +160,7 @@ Item {
     if (raw === "") return { options: [], error: "" }
     if (raw.charAt(0) === "[") {
       try {
-        var parsed = JSON.parse(raw)
+        let parsed = JSON.parse(raw)
         return { options: parsed, error: "" }
       } catch (e) {
         return { options: [], error: Commons.I18n.t("multiSelect.invalidJson") }
@@ -168,8 +168,8 @@ Item {
     }
     var out = []
     var lines = raw.split(/\r?\n/)
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim()
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim()
       if (line !== "") out.push(line)
     }
     return { options: out, error: "" }
@@ -229,8 +229,8 @@ Item {
           root.optionsError = result.error
           root.resolvedOptions = root.normalizeAll(root.options)
         } else {
-          var combined = root.arrayFrom(root.options)
-          for (var j = 0; j < result.options.length; j++) combined.push(result.options[j])
+          let combined = root.arrayFrom(root.options)
+          for (let j = 0; j < result.options.length; j++) combined.push(result.options[j])
           root.resolvedOptions = root.normalizeAll(combined)
         }
         root.recomputeFiltered()

@@ -51,7 +51,7 @@ PanelWindow {
   function expandScale(value) {
     // Either reading ranges the entire cluster upward. Keeping this latch on
     // the overlay ensures both dials always describe the same scale.
-    for (var i = 0; i < scaleStops.length; i++) {
+    for (let i = 0; i < scaleStops.length; i++) {
       if (value <= scaleStops[i] * 0.92) {
         if (scaleStops[i] > fullScale) fullScale = scaleStops[i]
         return

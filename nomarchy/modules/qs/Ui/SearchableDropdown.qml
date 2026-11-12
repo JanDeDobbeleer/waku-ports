@@ -65,7 +65,7 @@ Item {
     return (o && typeof o === "object" && o.description) ? String(o.description) : ""
   }
   function currentLabel() {
-    for (var i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
       if (optionValue(options[i]) === value) return optionLabel(options[i])
     }
     return value
@@ -76,9 +76,9 @@ Item {
     var q = searchField.text.toLowerCase()
     if (!q) { filtered = options; return }
     var out = []
-    for (var i = 0; i < options.length; i++) {
-      var lbl = optionLabel(options[i]).toLowerCase()
-      var desc = optionDescription(options[i]).toLowerCase()
+    for (let i = 0; i < options.length; i++) {
+      let lbl = optionLabel(options[i]).toLowerCase()
+      let desc = optionDescription(options[i]).toLowerCase()
       if (lbl.indexOf(q) !== -1 || desc.indexOf(q) !== -1) out.push(options[i])
     }
     filtered = out

@@ -76,10 +76,10 @@ Panel {
     var query = peerQuery.trim().toLowerCase()
     if (query === "") return tailscale.peers
     var result = []
-    for (var i = 0; i < tailscale.peers.length; i++) {
-      var p = tailscale.peers[i]
-      var ip = p.TailscaleIPs && p.TailscaleIPs.length > 0 ? String(p.TailscaleIPs[0]) : ""
-      var hay = (String(p.DisplayName || "") + " " + String(p.DNSName || "") + " " + ip).toLowerCase()
+    for (let i = 0; i < tailscale.peers.length; i++) {
+      let p = tailscale.peers[i]
+      let ip = p.TailscaleIPs && p.TailscaleIPs.length > 0 ? String(p.TailscaleIPs[0]) : ""
+      let hay = (String(p.DisplayName || "") + " " + String(p.DNSName || "") + " " + ip).toLowerCase()
       if (hay.indexOf(query) !== -1) result.push(p)
     }
     return result
@@ -120,7 +120,7 @@ Panel {
       if (kind === "name") tailscale.copyPeerName(peer)
       else if (kind === "dns") tailscale.copyPeerDnsName(peer)
       else if (kind === "ipv6") {
-        var ipv6 = peer.TailscaleIPv6 && peer.TailscaleIPv6.length > 0 ? String(peer.TailscaleIPv6[0] || "") : ""
+        let ipv6 = peer.TailscaleIPv6 && peer.TailscaleIPv6.length > 0 ? String(peer.TailscaleIPv6[0] || "") : ""
         tailscale.copyToClipboard(ipv6, String(peer.DisplayName || peer.HostName || "") + " IPv6")
       } else if (kind === "ip") tailscale.copyPeerIp(peer)
     }
@@ -166,8 +166,8 @@ Panel {
 
   function displayExitNodes() {
     var nodes = []
-    for (var i = 0; i < tailscale.tailnetExitNodes.length; i++) nodes.push(tailscale.tailnetExitNodes[i])
-    for (var j = 0; j < recentMullvadExitNodes.length; j++) nodes.push(recentMullvadExitNodes[j])
+    for (let i = 0; i < tailscale.tailnetExitNodes.length; i++) nodes.push(tailscale.tailnetExitNodes[i])
+    for (let j = 0; j < recentMullvadExitNodes.length; j++) nodes.push(recentMullvadExitNodes[j])
     if (tailscale.mullvadRegions.length > 0) nodes.push({ id: "mullvad:add", AddMullvad: true, DisplayName: Commons.I18n.t("tailscale.chooseMullvadRegion") })
     return nodes
   }
@@ -175,18 +175,18 @@ Panel {
   function recentMullvadNodes() {
     var nodes = []
     var seen = {}
-    for (var a = 0; a < tailscale.mullvadRegions.length && nodes.length < 5; a++) {
-      var active = tailscale.mullvadRegions[a]
-      var activeKey = mullvadRegionKey(active)
+    for (let a = 0; a < tailscale.mullvadRegions.length && nodes.length < 5; a++) {
+      let active = tailscale.mullvadRegions[a]
+      let activeKey = mullvadRegionKey(active)
       if (active.ExitNode === true && activeKey !== "" && !seen[activeKey]) {
         nodes.push(active)
         seen[activeKey] = true
       }
     }
-    for (var i = 0; i < recentMullvadRegions.length && nodes.length < 5; i++) {
-      var region = String(recentMullvadRegions[i] || "")
+    for (let i = 0; i < recentMullvadRegions.length && nodes.length < 5; i++) {
+      let region = String(recentMullvadRegions[i] || "")
       if (region === "" || seen[region]) continue
-      var node = mullvadRegionNode(region)
+      let node = mullvadRegionNode(region)
       if (node) {
         nodes.push(node)
         seen[region] = true
@@ -204,8 +204,8 @@ Panel {
   }
 
   function mullvadRegionNode(region) {
-    for (var i = 0; i < tailscale.mullvadRegions.length; i++) {
-      var node = tailscale.mullvadRegions[i]
+    for (let i = 0; i < tailscale.mullvadRegions.length; i++) {
+      let node = tailscale.mullvadRegions[i]
       if (mullvadRegionKey(node) === String(region || "")) return node
       if (String(node.Country || "") === String(region || "")) return node
     }
@@ -215,9 +215,9 @@ Panel {
   function filteredMullvadRegionNodes() {
     var query = String(mullvadQuery || "").trim().toLowerCase()
     var result = []
-    for (var i = 0; i < tailscale.mullvadRegions.length; i++) {
-      var node = tailscale.mullvadRegions[i]
-      var label = (String(node.City || "") + " " + String(node.Country || "")).toLowerCase()
+    for (let i = 0; i < tailscale.mullvadRegions.length; i++) {
+      let node = tailscale.mullvadRegions[i]
+      let label = (String(node.City || "") + " " + String(node.Country || "")).toLowerCase()
       if (query === "" || label.indexOf(query) !== -1) result.push(node)
     }
     return result
@@ -240,13 +240,13 @@ Panel {
     var name = String(region || "")
     if (name === "") return
     var next = [name]
-    for (var i = 0; i < recentMullvadRegions.length && next.length < 5; i++) {
-      var existing = String(recentMullvadRegions[i] || "")
+    for (let i = 0; i < recentMullvadRegions.length && next.length < 5; i++) {
+      let existing = String(recentMullvadRegions[i] || "")
       if (existing !== "" && existing !== name && next.indexOf(existing) === -1) next.push(existing)
     }
     if (!root.bar || !root.bar.shell || typeof root.bar.shell.updateEntryInline !== "function") return
     var entry = { id: root.moduleName }
-    for (var key in settings) if (key !== "id") entry[key] = settings[key]
+    for (let key in settings) if (key !== "id") entry[key] = settings[key]
     entry.recentMullvadRegions = next
     root.bar.shell.updateEntryInline(root.moduleName, entry)
   }
@@ -336,7 +336,7 @@ Panel {
     } else if (focusSection === "auth") {
       tailscale.authorizeTailscaleOperator()
     } else if (focusSection === "accounts") {
-      var account = selectedAccount()
+      let account = selectedAccount()
       if (account) tailscale.switchAccount(account.id)
     } else if (focusSection === "peers") {
       openSelectedPeerCopyMenu()

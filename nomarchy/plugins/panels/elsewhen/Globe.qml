@@ -87,7 +87,7 @@ Item {
   property string selectedKey: ""
   readonly property int selected: {
     if (selectedKey === "") return -1
-    for (var i = 0; i < allCities.length; i++)
+    for (let i = 0; i < allCities.length; i++)
       if (keyAt(i) === selectedKey) return i
     return -1
   }
@@ -160,14 +160,14 @@ Item {
   onHomeRowChanged: if (homePending) showHome()
 
   function indexOfCity(label, zone) {
-    for (var i = 0; i < allCities.length; i++)
+    for (let i = 0; i < allCities.length; i++)
       if (allCities[i][0] === label && allCities[i][1] === zone) return i
     return -1
   }
 
   function nameTaken(label) {
     var name = String(label).toLowerCase()
-    for (var i = 0; i < allCities.length; i++) if (String(allCities[i][0]).toLowerCase() === name) return true
+    for (let i = 0; i < allCities.length; i++) if (String(allCities[i][0]).toLowerCase() === name) return true
     return false
   }
 
@@ -181,7 +181,7 @@ Item {
     var i = indexOfCity(label, zone)
     if (i >= 0 && pinned && !Model.nearPlace({ lat: allCities[i][2], lon: allCities[i][3] }, place)) i = -1
     if (i < 0 && pinned && nameTaken(label)) {
-      var named = Model.regionalName(label, place.region)
+      let named = Model.regionalName(label, place.region)
       // With no region to tell them apart the name still finds the other
       // town, so the globe only flies to the coordinates picked.
       if (named === label) { flyTo(place.lat, place.lon); pendingJump = ""; return }
@@ -256,14 +256,14 @@ Item {
   // Labels count as part of their city and win over a neighbouring dot.
   function hitAt(px, py) {
     var pad = Style.space(3)
-    for (var i = 0; i < labels.length; i++) {
-      var b = labels[i].box
+    for (let i = 0; i < labels.length; i++) {
+      let b = labels[i].box
       if (px >= b.x - pad && px <= b.x + b.w + pad
        && py >= b.y - pad && py <= b.y + b.h + pad) return labels[i].index
     }
     var best = -1, bestD = Style.space(13)
-    for (var j = 0; j < plotted.length; j++) {
-      var d = Math.hypot(px - plotted[j].x, py - plotted[j].y)
+    for (let j = 0; j < plotted.length; j++) {
+      let d = Math.hypot(px - plotted[j].x, py - plotted[j].y)
       if (d < bestD) { bestD = d; best = plotted[j].index }
     }
     return best
@@ -274,10 +274,10 @@ Item {
   readonly property var plotted: {
     if (allCities.length === 0 || radius <= 0) return []
     var cand = []
-    for (var i = 0; i < allCities.length; i++) {
-      var p = Solar.project(allCities[i][2], allCities[i][3], spin, viewLat, radius)
+    for (let i = 0; i < allCities.length; i++) {
+      let p = Solar.project(allCities[i][2], allCities[i][3], spin, viewLat, radius)
       if (!p.visible) continue
-      var must = isHome(i) || isTracked(i) || i === selected
+      let must = isHome(i) || isTracked(i) || i === selected
       cand.push({ index: i, x: p.x, y: p.y, cosc: p.cosc,
                   rank: allCities[i][4], keep: must })
     }
@@ -293,8 +293,8 @@ Item {
   readonly property var labels: {
     if (reduced) return []
     var cand = []
-    for (var i = 0; i < plotted.length; i++) {
-      var p = plotted[i]
+    for (let i = 0; i < plotted.length; i++) {
+      let p = plotted[i]
       if (p.cosc < 0.12) continue                  // the rim; labels run off
       cand.push({ index: p.index, name: allCities[p.index][0], x: p.x, y: p.y,
                   rank: p.keep ? 0 : p.rank, cosc: p.cosc })
@@ -310,8 +310,8 @@ Item {
     onLoaded: {
       try {
         root.land = JSON.parse(text())
-        var coarse = []
-        for (var i = 0; i < root.land.length; i++)
+        let coarse = []
+        for (let i = 0; i < root.land.length; i++)
           coarse.push(Solar.decimateRing(root.land[i], 2, 8))
         root.landCoarse = coarse
         canvas.requestPaint()
@@ -336,8 +336,8 @@ Item {
     if (zoneProc.running) { probeQueued = true; return }
     var zones = [], seen = {}
     function add(id) { if (!seen[id]) { seen[id] = true; zones.push(id) } }
-    for (var i = 0; i < allCities.length; i++) add(allCities[i][1])
-    for (var j = 0; j < jumpMatches.length; j++) add(jumpMatches[j].value)
+    for (let i = 0; i < allCities.length; i++) add(allCities[i][1])
+    for (let j = 0; j < jumpMatches.length; j++) add(jumpMatches[j].value)
     zoneProc.command = Model.probeCommand(zones, false)
     zoneProc.running = true
   }
@@ -348,7 +348,7 @@ Item {
       onStreamFinished: {
         var probe = Model.parseProbe(text)
         var map = {}
-        for (var id in probe) map[id] = probe[id].offsetMinutes
+        for (let id in probe) map[id] = probe[id].offsetMinutes
         root.offsets = map
         canvas.requestPaint()
         Qt.callLater(function() {
@@ -408,12 +408,12 @@ Item {
 
     function paintLabels(ctx, ink) {
       ctx.fillStyle = ink
-      for (var i = 0; i < root.labels.length; i++) {
-        var L = root.labels[i]
-        var idx = L.index
-        var city = root.allCities[idx]
+      for (let i = 0; i < root.labels.length; i++) {
+        let L = root.labels[i]
+        let idx = L.index
+        let city = root.allCities[idx]
         if (city === undefined) continue
-        var strong = root.isHome(idx) || root.isTracked(idx)
+        let strong = root.isHome(idx) || root.isTracked(idx)
         ctx.font = (strong ? "bold " : "") + Style.font.caption
                    + "px \"" + root.fontFamily + "\""
         ctx.fillText(city[0], L.box.x, L.box.y + L.box.h / 2)
@@ -423,9 +423,9 @@ Item {
     // Points arrive as [lat, lon]; runs end exactly on the horizon.
     function strokePath(ctx, pts) {
       var segs = Solar.visibleSegments(pts, root.spin, root.viewLat, root.radius)
-      for (var i = 0; i < segs.length; i++) {
+      for (let i = 0; i < segs.length; i++) {
         ctx.moveTo(segs[i][0].x, segs[i][0].y)
-        for (var j = 1; j < segs[i].length; j++) ctx.lineTo(segs[i][j].x, segs[i][j].y)
+        for (let j = 1; j < segs[i].length; j++) ctx.lineTo(segs[i][j].x, segs[i][j].y)
       }
     }
 
@@ -470,11 +470,11 @@ Item {
       var landPolys = []
       ctx.beginPath()
       for (i = 0; i < rings.length; i++) {
-        var poly = Solar.clipRingToDisc(rings[i], root.spin, root.viewLat, root.radius)
+        let poly = Solar.clipRingToDisc(rings[i], root.spin, root.viewLat, root.radius)
         if (poly.length < 3) continue
         landPolys.push(poly)
         ctx.moveTo(poly[0].x, poly[0].y)
-        for (var q = 1; q < poly.length; q++) ctx.lineTo(poly[q].x, poly[q].y)
+        for (let q = 1; q < poly.length; q++) ctx.lineTo(poly[q].x, poly[q].y)
         ctx.closePath()
       }
       ctx.fillStyle = Model.mix(root.surfaceBase, fg, 0.92)
@@ -489,11 +489,11 @@ Item {
       ctx.stroke()
 
       // Cities: gold in daylight, dark at night, each edged in the opposite tone.
-      for (var pi = 0; pi < root.plotted.length; pi++) {
-        var p = root.plotted[pi]
+      for (let pi = 0; pi < root.plotted.length; pi++) {
+        let p = root.plotted[pi]
         i = p.index
-        var day = root.cityDaylight(i)
-        var isSel = (i === root.selected)
+        let day = root.cityDaylight(i)
+        let isSel = (i === root.selected)
         ctx.beginPath()
         ctx.arc(p.x, p.y, root.scaled(isSel ? 3.6 : 2.2), 0, Math.PI * 2)
         ctx.fillStyle = day ? root.daylightMarker : root.nightMarker
@@ -536,10 +536,10 @@ Item {
 
       ctx.save()
       ctx.beginPath()
-      for (var lp = 0; lp < landPolys.length; lp++) {
-        var poly2 = landPolys[lp]
+      for (let lp = 0; lp < landPolys.length; lp++) {
+        let poly2 = landPolys[lp]
         ctx.moveTo(poly2[0].x, poly2[0].y)
-        for (var r2 = 1; r2 < poly2.length; r2++) ctx.lineTo(poly2[r2].x, poly2[r2].y)
+        for (let r2 = 1; r2 < poly2.length; r2++) ctx.lineTo(poly2[r2].x, poly2[r2].y)
         ctx.closePath()
       }
       ctx.clip()

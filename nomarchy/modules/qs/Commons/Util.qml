@@ -11,7 +11,7 @@ QtObject {
   // Collapsed drawers keep their children laid out beyond the visible edge.
   function itemContainsPoint(target, source, x, y) {
     if (!target || !target.contains(target.mapFromItem(source, x, y))) return false
-    for (var item = target; item; item = item.parent) {
+    for (let item = target; item; item = item.parent) {
       if (!item.visible || item.opacity === 0 || !item.enabled) return false
       if (item.clip && !item.contains(item.mapFromItem(source, x, y))) return false
     }
@@ -161,7 +161,7 @@ QtObject {
   function normalizeLayoutEntry(entry) {
     if (typeof entry === "string") return { id: canonicalWidgetId(entry) }
     if (isPlainObject(entry) && entry.id) {
-      var copy = cloneJson(entry)
+      let copy = cloneJson(entry)
       copy.id = canonicalWidgetId(copy.id)
       return copy
     }
@@ -171,8 +171,8 @@ QtObject {
   function normalizeLayoutSection(list) {
     if (!Array.isArray(list)) return []
     var out = []
-    for (var i = 0; i < list.length; i++) {
-      var e = normalizeLayoutEntry(list[i])
+    for (let i = 0; i < list.length; i++) {
+      let e = normalizeLayoutEntry(list[i])
       if (e) out.push(e)
     }
     return out
@@ -186,7 +186,7 @@ QtObject {
   function normalizeLayout(layout) {
     var src = isPlainObject(layout) ? layout : {}
     var out = {}
-    for (var i = 0; i < barSections.length; i++)
+    for (let i = 0; i < barSections.length; i++)
       out[barSections[i]] = normalizeLayoutSection(src[barSections[i]])
     return out
   }

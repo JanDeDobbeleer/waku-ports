@@ -77,7 +77,7 @@ Item {
     root.filteredEmojis = out
 
     displayModel.clear()
-    for (var j = 0; j < out.length; j++) {
+    for (let j = 0; j < out.length; j++) {
       displayModel.append({ emoji: out[j].e, index: j })
     }
 

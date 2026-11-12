@@ -18,15 +18,15 @@ BarWidget {
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var nodeNames: {
     var names = []
-    for (var i = 0; i < nodes.length; i++)
+    for (let i = 0; i < nodes.length; i++)
       if (nodes[i] && nodes[i].name) names.push(String(nodes[i].name))
     return names
   }
 
   readonly property var activeStreams: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let node = nodes[i]
       if (!node || !node.isStream || node.isSink !== false || node.audio?.muted) continue
       // The shell's own level meters, and a platform's audio processing that
       // records all the time, are not an app using the microphone.

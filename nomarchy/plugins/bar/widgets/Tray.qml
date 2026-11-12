@@ -115,7 +115,7 @@ BarWidget {
     // live child opener references.
     var openers = submenuStack
     submenuStack = []
-    for (var i = openers.length - 1; i >= 0; i--) openers[i].opener.destroy()
+    for (let i = openers.length - 1; i >= 0; i--) openers[i].opener.destroy()
   }
 
   function enterSubmenu(entry, title) {
@@ -143,7 +143,7 @@ BarWidget {
 
   function openTrayMenu(item, anchorItem, mouse) {
     if (!item || !item.menu) {
-      var point = anchorItem.QsWindow.contentItem.mapFromItem(anchorItem, mouse.x, mouse.y)
+      let point = anchorItem.QsWindow.contentItem.mapFromItem(anchorItem, mouse.x, mouse.y)
       item.display(anchorItem.QsWindow.window, point.x, point.y)
       return
     }
@@ -194,8 +194,8 @@ BarWidget {
   function bucket(category) {
     var values = SystemTray.items.values
     var result = []
-    for (var i = 0; i < values.length; i++) {
-      var item = values[i]
+    for (let i = 0; i < values.length; i++) {
+      let item = values[i]
       if (item.status === Status.Passive) continue
       if (ownedByNomarchy(item)) continue
       if (category === "all") {
@@ -219,7 +219,7 @@ BarWidget {
     if (idx !== -1) p.splice(idx, 1)
     else {
       p.push(iid)
-      var hi = h.indexOf(iid)
+      let hi = h.indexOf(iid)
       if (hi !== -1) h.splice(hi, 1)
     }
     persistTrayState(p, h)
@@ -231,7 +231,7 @@ BarWidget {
     if (idx !== -1) h.splice(idx, 1)
     else {
       h.push(iid)
-      var pi = p.indexOf(iid)
+      let pi = p.indexOf(iid)
       if (pi !== -1) p.splice(pi, 1)
     }
     persistTrayState(p, h)

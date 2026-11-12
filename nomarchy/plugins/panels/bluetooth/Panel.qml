@@ -141,10 +141,10 @@ Panel {
   // the delegate and the cursor keep working in section-relative terms.
   readonly property var scrollRows: {
     var rows = []
-    for (var k = 0; k < knownDevices.length; k++)
+    for (let k = 0; k < knownDevices.length; k++)
       rows.push({ dev: Model.deviceRow(knownDevices[k]), section: "known", indexInSection: k })
     if (sectionVisible("discovered"))
-      for (var d = 0; d < discoveredDevices.length; d++)
+      for (let d = 0; d < discoveredDevices.length; d++)
         rows.push({ dev: Model.deviceRow(discoveredDevices[d]), section: "discovered", indexInSection: d })
     return rows
   }
@@ -153,7 +153,7 @@ Panel {
   // projection so those delegates never hold Device QObject wrappers either.
   readonly property var connectedRows: {
     var rows = []
-    for (var i = 0; i < connectedDevices.length; i++)
+    for (let i = 0; i < connectedDevices.length; i++)
       rows.push(Model.deviceRow(connectedDevices[i]))
     return rows
   }
@@ -166,7 +166,7 @@ Panel {
     if (!row || !row.dev) return null
     var addr = row.dev.address || ""
     var devs = devices || []
-    for (var i = 0; i < devs.length; i++) {
+    for (let i = 0; i < devs.length; i++) {
       if ((devs[i].address || "") === addr) return devs[i]
     }
     return null
@@ -176,7 +176,7 @@ Panel {
   // in the connected list (both of which live outside the scroll area).
   readonly property int scrollRowIndex: {
     if (focusSection !== "known" && focusSection !== "discovered") return -1
-    for (var i = 0; i < scrollRows.length; i++)
+    for (let i = 0; i < scrollRows.length; i++)
       if (scrollRows[i].section === focusSection && scrollRows[i].indexInSection === selectedIndex) return i
     return -1
   }
@@ -191,8 +191,8 @@ Panel {
 
   function audioSinks() {
     var sinks = []
-    for (var i = 0; i < pipewireNodes.length; i++) {
-      var node = pipewireNodes[i]
+    for (let i = 0; i < pipewireNodes.length; i++) {
+      let node = pipewireNodes[i]
       if (node && node.isSink && !node.isStream) sinks.push(node)
     }
     return sinks
@@ -200,7 +200,7 @@ Panel {
 
   function bluetoothAudioSink(device) {
     var sinks = audioSinks()
-    for (var i = 0; i < sinks.length; i++) {
+    for (let i = 0; i < sinks.length; i++) {
       if (Model.bluetoothSinkMatchesDevice(sinks[i], device)) return sinks[i]
     }
     return null
@@ -296,19 +296,19 @@ Panel {
     var next = cloneMap(pendingActions)
     var changed = false
 
-    for (var address in next) {
-      var action = next[address]
-      var found = null
+    for (let address in next) {
+      let action = next[address]
+      let found = null
 
-      for (var i = 0; i < devices.length; i++) {
-        var d = devices[i]
+      for (let i = 0; i < devices.length; i++) {
+        let d = devices[i]
         if (d && d.address === address) {
           found = d
           break
         }
       }
 
-      var finishedConnecting = action === "connecting" && found && found.connected
+      let finishedConnecting = action === "connecting" && found && found.connected
       if (finishedConnecting
           || (action === "forgetting" && (!found || (!found.paired && !found.bonded && !found.trusted)))) {
         if (finishedConnecting) scheduleAudioOutputSwitch(found)
@@ -382,14 +382,14 @@ Panel {
     }
 
     if (focusSection === "connected" || focusSection === "known") {
-      var dev = deviceAt(focusSection, selectedIndex)
+      let dev = deviceAt(focusSection, selectedIndex)
       if (!dev) return
       if (dev.connected) disconnectDevice(dev)
       else connectDevice(dev)
       return
     }
     if (focusSection === "discovered") {
-      var d = discoveredDevices[selectedIndex]
+      let d = discoveredDevices[selectedIndex]
       if (!d) return
       connectDevice(d)
     }
@@ -426,7 +426,7 @@ Panel {
   function openSibling() {
     if (!bar || typeof bar.moduleWidgets !== "function") return null
     var items = bar.moduleWidgets(moduleName)
-    for (var i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root && items[i].opened === true) return items[i]
     }
     return null
@@ -444,11 +444,11 @@ Panel {
     }
 
     var sections = ["connected", "known", "discovered"]
-    for (var s = 0; s < sections.length; s++) {
-      var section = sections[s]
+    for (let s = 0; s < sections.length; s++) {
+      let section = sections[s]
       if (!sectionVisible(section)) continue
-      var list = devicesForSection(section)
-      for (var i = 0; i < list.length; i++) {
+      let list = devicesForSection(section)
+      for (let i = 0; i < list.length; i++) {
         if (list[i] && list[i].address === focusedDeviceAddress) {
           focusSection = section
           selectedIndex = i
@@ -487,7 +487,7 @@ Panel {
     var count = sectionCount(focusSection)
     if (count === 0) {
       // Section emptied out — bounce to the previous visible one.
-      var sIdx = sections.indexOf(focusSection)
+      let sIdx = sections.indexOf(focusSection)
       focusSection = sIdx > 0 ? sections[sIdx - 1] : sections[0]
       selectedIndex = Math.max(0, sectionCount(focusSection) - 1)
       return
@@ -573,7 +573,7 @@ Panel {
   Component.onDestruction: {
     if (!owesDiscoveryStop) return
     var items = bar && typeof bar.moduleWidgets === "function" ? bar.moduleWidgets(moduleName) : []
-    for (var i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root) { items[i].owesDiscoveryStop = true; return }
     }
     if (adapter !== null && adapter.discovering) adapter.discovering = false

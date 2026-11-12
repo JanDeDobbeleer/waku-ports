@@ -108,8 +108,8 @@ Item {
   // The section a panel's widget sits in, the center's pieces counted as one,
   // as keyboard switching between panels counts them.
   function popoutSectionOf(owner) {
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (slot && slot.activeItem === owner) return BarModel.navigationRegions(slot.region).join(" ")
     }
     return ""
@@ -138,8 +138,8 @@ Item {
   readonly property bool traySectionPopoutOpen: {
     var owner = activePopout
     if (!owner) return false
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (slot && slot.activeItem === owner) return slot.region === "tray"
     }
     return false
@@ -291,8 +291,8 @@ Item {
 
   function pluginClickTargets(pluginId) {
     var out = []
-    for (var i = 0; i < root.clickTargets.length; i++) {
-      var target = root.clickTargets[i]
+    for (let i = 0; i < root.clickTargets.length; i++) {
+      let target = root.clickTargets[i]
       if (root.pluginOwnsBarObject(pluginId, target)) out.push(target)
     }
     return out
@@ -313,8 +313,8 @@ Item {
   function syncAllPluginBarApiObjects() {
     pluginBarApiSyncQueued = false
     var layoutSnapshot = JSON.stringify(root.layoutConfig || {})
-    for (var id in pluginBarApis) {
-      var api = pluginBarApis[id]
+    for (let id in pluginBarApis) {
+      let api = pluginBarApis[id]
       if (api) root.syncPluginBarApiObjects(api, layoutSnapshot)
     }
   }
@@ -394,15 +394,15 @@ Item {
     root.bindPluginBarApi(api)
 
     var next = ({})
-    for (var id in pluginBarApis) next[id] = pluginBarApis[id]
+    for (let id in pluginBarApis) next[id] = pluginBarApis[id]
     next[key] = api
     pluginBarApis = next
     return api
   }
 
   function pluginBarApiUsed(pluginId) {
-    for (var i = 0; i < widgetHosts.length; i++) {
-      var host = widgetHosts[i]
+    for (let i = 0; i < widgetHosts.length; i++) {
+      let host = widgetHosts[i]
       if (host && host.pluginApiId === pluginId) return true
     }
     return false
@@ -410,8 +410,8 @@ Item {
 
   function releasePluginObjects(pluginId) {
     var owned = Array.from(pluginObjectOwners.values())
-    for (var i = 0; i < owned.length; i++) {
-      var record = owned[i]
+    for (let i = 0; i < owned.length; i++) {
+      let record = owned[i]
       if (!record || record.pluginId !== pluginId) continue
       if (record.clickTarget) root.unregisterClickTarget(record.target)
       if (record.popout && root.activePopout === record.target) root.releasePopout(record.target)
@@ -421,8 +421,8 @@ Item {
 
   function prunePluginBarApis() {
     var next = ({})
-    for (var id in pluginBarApis) {
-      var api = pluginBarApis[id]
+    for (let id in pluginBarApis) {
+      let api = pluginBarApis[id]
       if (root.pluginBarApiUsed(id)) {
         next[id] = api
         continue
@@ -445,7 +445,7 @@ Item {
   onWidgetHostsChanged: Qt.callLater(prunePluginBarApis)
 
   Component.onDestruction: {
-    for (var id in pluginBarApis) {
+    for (let id in pluginBarApis) {
       root.releasePluginObjects(id)
       if (pluginBarApis[id] && typeof pluginBarApis[id].destroy === "function")
         pluginBarApis[id].destroy()
@@ -498,8 +498,8 @@ Item {
   // The center box drawn on a bar surface. Each surface declares one in the
   // middle of the bar and one beside the right section, and draws one of them.
   function centerBoxFor(window) {
-    for (var i = 0; i < centerBoxes.length; i++) {
-      var box = centerBoxes[i]
+    for (let i = 0; i < centerBoxes.length; i++) {
+      let box = centerBoxes[i]
       if (box && box.active && root.sameWindow(box.window, window)) return box
     }
     return null
@@ -513,7 +513,7 @@ Item {
   function centerBoxDropRect(box) {
     if (!box) return null
     try {
-      var point = box.mapToItem(null, 0, 0)
+      let point = box.mapToItem(null, 0, 0)
       return BarModel.centerDropZone({ x: point.x, y: point.y, width: box.width, height: box.height }, box.crossSize, root.vertical)
     } catch (e) {
       return null
@@ -522,10 +522,10 @@ Item {
 
   function debugBarGeometry() {
     var out = []
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (!slot || !slot.activeItem) continue
-      var point = { x: slot.x, y: slot.y }
+      let point = { x: slot.x, y: slot.y }
       try {
         point = slot.mapToItem(null, 0, 0)
       } catch (e) {
@@ -772,7 +772,7 @@ Item {
   readonly property var screenBarSizes: {
     var sizes = ({})
     var screens = Quickshell.screens
-    for (var i = 0; i < screens.length; i++) sizes[screens[i].name] = root.thicknessFor(screens[i])
+    for (let i = 0; i < screens.length; i++) sizes[screens[i].name] = root.thicknessFor(screens[i])
     return sizes
   }
 
@@ -836,15 +836,15 @@ Item {
   function panelNavigationSlots(region, window) {
     var regions = BarModel.navigationRegions(region)
     var slots = []
-    for (var r = 0; r < regions.length; r++) {
-      var entries = layoutEntries(regions[r])
-      for (var i = 0; i < entries.length; i++) {
-        var id = entryId(entries[i])
-        for (var j = 0; j < moduleSlots.length; j++) {
-          var slot = moduleSlots[j]
+    for (let r = 0; r < regions.length; r++) {
+      let entries = layoutEntries(regions[r])
+      for (let i = 0; i < entries.length; i++) {
+        let id = entryId(entries[i])
+        for (let j = 0; j < moduleSlots.length; j++) {
+          let slot = moduleSlots[j]
           if (!slot || slot.region !== regions[r] || slot.moduleName !== id) continue
           if (window && !sameWindow(slotWindow(slot), window)) continue
-          var item = slot.activeItem
+          let item = slot.activeItem
           if (!item || item.visible !== true || slot.visible !== true || slot.width <= 0 || slot.height <= 0) continue
           if (typeof item.open !== "function" || typeof item.close !== "function" || item.opened === undefined) continue
           slots.push(slot)
@@ -874,8 +874,8 @@ Item {
     if (!owner) return false
 
     var currentSlot = null
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (slot && slot.activeItem === owner) {
         currentSlot = slot
         break
@@ -887,7 +887,7 @@ Item {
     if (slots.length < 2) return false
 
     var currentIndex = -1
-    for (var j = 0; j < slots.length; j++) {
+    for (let j = 0; j < slots.length; j++) {
       if (slots[j] === currentSlot) {
         currentIndex = j
         break
@@ -909,8 +909,8 @@ Item {
     var id = String(pluginId || "")
     var items = []
     if (!id) return items
-    for (var i = 0; i < widgetHosts.length; i++) {
-      var host = widgetHosts[i]
+    for (let i = 0; i < widgetHosts.length; i++) {
+      let host = widgetHosts[i]
       if (!host || !host.activeItem || host.moduleName !== id) continue
       items.push(host.activeItem)
     }
@@ -939,11 +939,11 @@ Item {
     var id = String(pluginId || "")
     if (!id) return null
     var candidates = []
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (!slot || !slot.activeItem) continue
       if (slot.moduleName !== id) continue
-      var item = slot.activeItem
+      let item = slot.activeItem
       if (typeof item.open !== "function" || typeof item.close !== "function" || item.opened === undefined) continue
       candidates.push({ slot: slot, screenName: slotScreenName(slot), opened: item.opened === true })
     }
@@ -1061,14 +1061,14 @@ Item {
     // away, it still answers at the point it left, which the section's layout
     // keeps placing.
     var candidates = []
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (!slot || !slot.visible || slot.widgetWidth <= 0 || slot.widgetHeight <= 0) continue
       if (sourceWindow && !root.sameWindow(root.slotWindow(slot), sourceWindow)) continue
       if (slot.region === "tray" && !intoTraySection) continue
       if (intoTraySection && slot.hostsTraySection) traySlot = slot
 
-      var slotPoint = { x: slot.x, y: slot.y }
+      let slotPoint = { x: slot.x, y: slot.y }
       try {
         slotPoint = slot.mapToItem(null, 0, 0)
       } catch (e) {
@@ -1102,12 +1102,12 @@ Item {
     var shown = slot ? slot.traySectionNow() : null
     if (!shown || !window || !window.contentItem) return null
     try {
-      var area = slot.widgetRoom
-      var origin = area.mapToItem(null, shown.x, shown.y)
-      var section = { x: origin.x, y: origin.y, width: shown.width, height: shown.height }
-      var corner = area.mapToItem(null, 0, 0)
-      var tray = { x: corner.x, y: corner.y, width: area.width, height: area.height }
-      var reach = thicknessFor(window.screen)
+      let area = slot.widgetRoom
+      let origin = area.mapToItem(null, shown.x, shown.y)
+      let section = { x: origin.x, y: origin.y, width: shown.width, height: shown.height }
+      let corner = area.mapToItem(null, 0, 0)
+      let tray = { x: corner.x, y: corner.y, width: area.width, height: area.height }
+      let reach = thicknessFor(window.screen)
       return BarModel.sectionDropZone(section, reach, vertical, tray)
     } catch (e) {
       return null
@@ -1187,8 +1187,8 @@ Item {
   // The keys of the widgets a bar surface draws, as they are now.
   function drawnKeys(window) {
     var drawn = {}
-    for (var i = 0; i < moduleSlots.length; i++) {
-      var slot = moduleSlots[i]
+    for (let i = 0; i < moduleSlots.length; i++) {
+      let slot = moduleSlots[i]
       if (slot && slot.visible && slot.widgetWidth > 0 && slot.widgetHeight > 0 && sameWindow(slotWindow(slot), window)) drawn[slot.widgetKey] = true
     }
     return drawn
@@ -1221,8 +1221,8 @@ Item {
     if (!barDragSource || !barDragPlaces || !window || !sameWindow(barDragWindow, window)) return []
     var places = []
     var held = barDragPlaces.split(",")
-    for (var i = 0; i < held.length; i++) {
-      var split = held[i].lastIndexOf(":")
+    for (let i = 0; i < held.length; i++) {
+      let split = held[i].lastIndexOf(":")
       if (held[i] !== barDragHome && held[i].slice(0, split) === region) places.push(Number(held[i].slice(split + 1)))
     }
     return places
@@ -1242,8 +1242,8 @@ Item {
     if (!sourceSlot) return null
     if (!room || room.home) return sourceSlot.widgetRoom
     var sourceWindow = slotWindow(sourceSlot) || barDragWindow
-    for (var i = 0; i < dragSpacers.length; i++) {
-      var spacer = dragSpacers[i]
+    for (let i = 0; i < dragSpacers.length; i++) {
+      let spacer = dragSpacers[i]
       if (spacer && spacer.region === room.region && spacer.place === room.index && sameWindow(spacer.window, sourceWindow)) return spacer
     }
     return null
@@ -1450,8 +1450,8 @@ Item {
   }
 
   function moduleClickTargetAt(slot, localX, localY) {
-    for (var i = clickTargets.length - 1; i >= 0; i--) {
-      var target = clickTargets[i]
+    for (let i = clickTargets.length - 1; i >= 0; i--) {
+      let target = clickTargets[i]
       if (!moduleTargetClickable(target)) continue
 
       if (Util.itemContainsPoint(target, slot, localX, localY)) {
@@ -2488,7 +2488,7 @@ Item {
       if (!(mouse.buttons & Qt.LeftButton)) return
 
       if (!dragging) {
-        var distance = Math.abs(mouse.x - pressedX) + Math.abs(mouse.y - pressedY)
+        let distance = Math.abs(mouse.x - pressedX) + Math.abs(mouse.y - pressedY)
         if (distance < dragThreshold) return
         startDrag(mouse.x, mouse.y)
         return
@@ -3090,14 +3090,14 @@ Item {
         // A drag let go of from elsewhere (onLayoutWidgetsChanged) stays let
         // go of until the button comes up.
         if (dragging && root.barDragSource === slot) {
-          var scenePoint = slot.mapToItem(null, mouse.x, mouse.y)
-          var screenPoint = root.barDragScreenPoint(scenePoint)
+          let scenePoint = slot.mapToItem(null, mouse.x, mouse.y)
+          let screenPoint = root.barDragScreenPoint(scenePoint)
           root.barDragSceneX = scenePoint.x
           root.barDragSceneY = scenePoint.y
           root.barDragScreenX = screenPoint.x
           root.barDragScreenY = screenPoint.y
 
-          var drop = root.moduleDropAtScene(scenePoint, slot)
+          let drop = root.moduleDropAtScene(scenePoint, slot)
           root.barDragTarget = drop
           root.moveDragRoom(drop)
           root.setBarDragRemoveArmed(!drop && root.moduleRemoveDistance(screenPoint) >= root.barDragRemoveDistance)

@@ -34,7 +34,7 @@ Item {
     // advanceWidth does not register the font as a dependency.
     var _ = metrics.font.family + metrics.font.pixelSize
     var widths = []
-    for (var i = 0; i < glyphs.length; i++) widths.push(metrics.advanceWidth(glyphs[i]))
+    for (let i = 0; i < glyphs.length; i++) widths.push(metrics.advanceWidth(glyphs[i]))
     return Arc.layout(widths, rise, false)
   }
 

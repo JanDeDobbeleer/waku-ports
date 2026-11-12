@@ -25,8 +25,8 @@ BarWidget {
   readonly property var monitor: {
     var monitors = S.Workspaces.monitors || []
     var want = root.screenName.toLowerCase()
-    for (var i = 0; i < monitors.length; i++) {
-      var name = String(monitors[i].name).toLowerCase()
+    for (let i = 0; i < monitors.length; i++) {
+      let name = String(monitors[i].name).toLowerCase()
       if (want === name || want.endsWith("\\" + name)) return monitors[i]
     }
     return monitors.length > 0 ? monitors[0] : null
@@ -36,7 +36,7 @@ BarWidget {
   readonly property var slots: {
     var list = root.monitor ? (root.monitor.workspaces || []) : []
     var out = []
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       out.push({
         number: i + 1,
         active: !!(list[i].active || list[i].focused),
@@ -44,7 +44,7 @@ BarWidget {
         exists: true
       })
     }
-    for (var n = out.length + 1; n <= root.minimumSlots; n++)
+    for (let n = out.length + 1; n <= root.minimumSlots; n++)
       out.push({ number: n, active: false, occupied: false, exists: false })
     return out
   }
@@ -61,7 +61,7 @@ BarWidget {
     root.wheelAccumulator = wheel.remainder
     if (wheel.steps === 0) return
     var current = -1
-    for (var i = 0; i < root.slots.length; i++) if (root.slots[i].active) current = i
+    for (let i = 0; i < root.slots.length; i++) if (root.slots[i].active) current = i
     if (current === -1) return
     var target = Util.clamp(current - wheel.steps, 0, root.slots.length - 1)
     if (target !== current && root.slots[target].exists) root.focusWorkspace(root.slots[target].number)

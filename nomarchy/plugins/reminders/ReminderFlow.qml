@@ -67,7 +67,7 @@ Item {
     var selection = root.filterText
 
     if (root.step === "minutes") {
-      var nextMinutes = ReminderFlowModel.validMinutes(selection)
+      let nextMinutes = ReminderFlowModel.validMinutes(selection)
 
       if (!selection.trim()) {
         root.dismiss()
@@ -87,7 +87,7 @@ Item {
     }
 
     if (root.step === "message") {
-      var args = [root.nomarchyPath + "/bin/nomarchy-reminder"].concat(ReminderFlowModel.reminderArgs(root.minutes, selection))
+      let args = [root.nomarchyPath + "/bin/nomarchy-reminder"].concat(ReminderFlowModel.reminderArgs(root.minutes, selection))
       root.dismiss()
       Quickshell.execDetached(args)
     }

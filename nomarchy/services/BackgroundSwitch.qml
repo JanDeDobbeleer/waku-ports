@@ -169,7 +169,7 @@ Item {
     if (busy) return
     if (reloadPending && !playProc.running && !reloadLock.running) reloadLock.running = true
     var kept = []
-    for (var path of ownedCovers) {
+    for (let path of ownedCovers) {
       if (path === intro.themeBackground) kept.push(path)
       else Quickshell.execDetached(["rm", "-f", path])
     }

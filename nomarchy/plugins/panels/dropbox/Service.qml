@@ -134,7 +134,7 @@ Item {
 
   function fileUri(path) {
     var parts = String(path || "").split("/")
-    for (var i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i])
+    for (let i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i])
     return "file://" + parts.join("/")
   }
 

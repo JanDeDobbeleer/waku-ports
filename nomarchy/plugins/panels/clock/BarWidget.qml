@@ -46,7 +46,7 @@ BarWidget {
     if (next === "" || next === current) return
 
     var entry = { id: root.moduleName }
-    for (var key in root.settings) if (key !== "id") entry[key] = root.settings[key]
+    for (let key in root.settings) if (key !== "id") entry[key] = root.settings[key]
     entry[vertical ? "verticalFormat" : "format"] = next
 
     // Applied locally first so the label changes on the click itself; the

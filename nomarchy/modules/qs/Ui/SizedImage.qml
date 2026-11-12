@@ -92,9 +92,9 @@ Item {
           // failed for another reason, such as art that only appeared later,
           // so load it bounded again. Only once per URL, so a disagreement
           // about rounding can't flip back and forth.
-          var boundWidth = Math.ceil(root.width * root.reach * Screen.devicePixelRatio)
-          var boundHeight = Math.ceil(root.height * root.reach * Screen.devicePixelRatio)
-          var across = Math.min(boundWidth / implicitWidth, boundHeight / implicitHeight) * Math.min(implicitWidth, implicitHeight)
+          let boundWidth = Math.ceil(root.width * root.reach * Screen.devicePixelRatio)
+          let boundHeight = Math.ceil(root.height * root.reach * Screen.devicePixelRatio)
+          let across = Math.min(boundWidth / implicitWidth, boundHeight / implicitHeight) * Math.min(implicitWidth, implicitHeight)
           if (across >= 1) {
             root.recheckedUrl = loaded
             root.thinUrl = ""

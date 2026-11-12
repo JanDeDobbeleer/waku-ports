@@ -135,8 +135,8 @@ Item {
     var rows = ClipboardHistory.displayRows(root.history, root.filterText, 50, Commons.I18n.t, Commons.I18n.tn, Commons.I18n.formatNumber)
 
     displayModel.clear()
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i]
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i]
       displayModel.append({
         entryType: row.entryType,
         fullText: row.fullText,

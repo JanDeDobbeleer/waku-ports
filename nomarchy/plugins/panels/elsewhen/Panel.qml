@@ -102,8 +102,8 @@ Panel {
   readonly property var searchZoneIds: {
     var out = []
     var matches = (citySearch ? citySearch.matches : []).concat(hereSearch ? hereSearch.matches : [])
-    for (var i = 0; i < matches.length; i++) {
-      var id = matches[i].value
+    for (let i = 0; i < matches.length; i++) {
+      let id = matches[i].value
       if (out.indexOf(id) < 0) out.push(id)
     }
     return out
@@ -234,8 +234,8 @@ Panel {
     rowPitch = pitch
     var gap = pitch - (cityRows && cityRows.itemAt(index) ? cityRows.itemAt(index).height : 0)
     var pitches = []
-    for (var i = 0; i < zones.length; i++) {
-      var item = cityRows ? cityRows.itemAt(i) : null
+    for (let i = 0; i < zones.length; i++) {
+      let item = cityRows ? cityRows.itemAt(i) : null
       pitches.push(item ? item.height + gap : pitch)
     }
     rowPitches = pitches
@@ -336,8 +336,8 @@ Panel {
 
   function globeRows(list, rank) {
     var out = []
-    for (var i = 0; i < list.length; i++) {
-      var f = placeOf(list[i])
+    for (let i = 0; i < list.length; i++) {
+      let f = placeOf(list[i])
       if (f) out.push([list[i].label, list[i].id, f.lat, f.lon, rank])
     }
     return out
@@ -471,8 +471,8 @@ Panel {
   // An undefined value removes its key.
   function persistSettings(values) {
     var entry = { id: root.moduleName }
-    for (var existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
-    for (var key in values) {
+    for (let existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
+    for (let key in values) {
       if (values[key] === undefined) delete entry[key]
       else entry[key] = values[key]
     }
@@ -499,7 +499,7 @@ Panel {
   function startAdding() { if (citySearch) citySearch.start() }
 
   function addSessionCity(label, id, place) {
-    for (var i = 0; i < sessionCities.length; i++)
+    for (let i = 0; i < sessionCities.length; i++)
       if (sessionCities[i].label === label && sessionCities[i].id === id) return
     var city = Model.addZone([], id, label, place)[0]
     if (!city) return
@@ -511,7 +511,7 @@ Panel {
   // here, so a city already chosen is the one the list starts with.
   function seedFirstRun() {
     var offs = ({})
-    for (var id in probe) offs[id] = probe[id].offsetMinutes
+    for (let id in probe) offs[id] = probe[id].offsetMinutes
 
     var seeded = localZone === "" || !hereZone ? []
       : Model.seedZones({ label: hereZone.label, id: localZone }, offs, 4)
@@ -751,9 +751,9 @@ Panel {
     stdout: StdioCollector {
       onStreamFinished: {
         var merged = {}
-        for (var known in root.searchProbe) merged[known] = root.searchProbe[known]
+        for (let known in root.searchProbe) merged[known] = root.searchProbe[known]
         var fresh = Model.parseProbe(text)
-        for (var id in fresh) merged[id] = fresh[id]
+        for (let id in fresh) merged[id] = fresh[id]
         root.searchProbe = merged
         Qt.callLater(function() {
           if (!root.searchProbeQueued) return
@@ -964,7 +964,7 @@ Panel {
     // The people in a city, by its name: "Emir, @sarahdev"; "" clears them.
     function who(city: string, people: string): string {
       var name = String(city).trim().toLowerCase()
-      for (var i = 0; i < root.zones.length; i++) {
+      for (let i = 0; i < root.zones.length; i++) {
         if (root.zones[i].label.toLowerCase() !== name) continue
         root.setZones(Model.setPeopleAt(root.zones, i, Model.parsePeople(people)))
         return JSON.stringify(root.zones[i].people || [])

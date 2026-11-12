@@ -95,7 +95,7 @@ ShellRoot {
     var userText = shell.userConfigText
     if (userText.trim()) {
       try {
-        var parsed = JSON.parse(userText)
+        let parsed = JSON.parse(userText)
         if (Util.isPlainObject(parsed) && parsed.version === 1) user = parsed
         else if (Util.isPlainObject(parsed)) console.warn("shell.json missing version: 1, using defaults")
       } catch (e) {
@@ -114,7 +114,7 @@ ShellRoot {
       return
     }
     try {
-      var parsed = JSON.parse(text)
+      let parsed = JSON.parse(text)
       if (Util.isPlainObject(parsed) && parsed.version === 1) defaultsConfig = parsed
       else defaultsConfig = builtinShellConfig
     } catch (e) {
@@ -205,7 +205,7 @@ ShellRoot {
   readonly property string selectedBarId: {
     var config = shell.barConfig
     if (Util.isPlainObject(config)) {
-      var configured = Util.canonicalWidgetId(String(config.id || ""))
+      let configured = Util.canonicalWidgetId(String(config.id || ""))
       if (configured) return configured
     }
     return shell.defaultBarId
@@ -370,8 +370,8 @@ ShellRoot {
   function publicBarWidgetSnapshot() {
     var source = shell.barWidgetRegistry.widgets || {}
     var snapshot = {}
-    for (var id in source) {
-      var entry = source[id]
+    for (let id in source) {
+      let entry = source[id]
       if (!entry) continue
       snapshot[id] = {
         component: entry.component,
@@ -434,7 +434,7 @@ ShellRoot {
     if (!target || shell.isAuthenticationService(target, id)) return false
     if (shell.barEntryConfigured(id)) return true
     var uiKinds = ["bar-widget", "panel", "overlay", "menu"]
-    for (var i = 0; i < uiKinds.length; i++)
+    for (let i = 0; i < uiKinds.length; i++)
       if (shell.manifestHasKind(target, uiKinds[i])) return true
     return false
   }
@@ -463,7 +463,7 @@ ShellRoot {
     })
     if (!api) return null
     var next = ({})
-    for (var id in _pluginAppLibraryApis) next[id] = _pluginAppLibraryApis[id]
+    for (let id in _pluginAppLibraryApis) next[id] = _pluginAppLibraryApis[id]
     next[cacheKey] = api
     _pluginAppLibraryApis = next
     return api
@@ -475,8 +475,8 @@ ShellRoot {
   function detachedBarSizes(sizes) {
     var copy = ({})
     if (!Util.isPlainObject(sizes)) return copy
-    for (var name in sizes) {
-      var size = Number(sizes[name])
+    for (let name in sizes) {
+      let size = Number(sizes[name])
       if (size > 0) copy[name] = size
     }
     return copy
@@ -492,7 +492,7 @@ ShellRoot {
     api.fontFamily = Qt.binding(function() { return shell.bar ? String(shell.bar.fontFamily || "") : "" })
     api.position = Qt.binding(function() { return shell.bar ? String(shell.bar.position || "top") : "top" })
     var next = ({})
-    for (var id in _pluginBarStateApis) next[id] = _pluginBarStateApis[id]
+    for (let id in _pluginBarStateApis) next[id] = _pluginBarStateApis[id]
     next[cacheKey] = api
     _pluginBarStateApis = next
     return api
@@ -570,7 +570,7 @@ ShellRoot {
       return target && Array.isArray(target.peers) ? target.peers : []
     })
     var next = ({})
-    for (var existing in _pluginFirstPartyServiceApis) next[existing] = _pluginFirstPartyServiceApis[existing]
+    for (let existing in _pluginFirstPartyServiceApis) next[existing] = _pluginFirstPartyServiceApis[existing]
     next[proxyKey] = api
     _pluginFirstPartyServiceApis = next
     return api
@@ -586,9 +586,9 @@ ShellRoot {
 
   function cacheWithoutKey(cache, key, destroyValue) {
     var next = ({})
-    for (var existing in cache) {
+    for (let existing in cache) {
       if (existing === key) {
-        var value = cache[existing]
+        let value = cache[existing]
         if (destroyValue && value && typeof value.destroy === "function") value.destroy()
       } else {
         next[existing] = cache[existing]
@@ -599,9 +599,9 @@ ShellRoot {
 
   function cacheWithoutPrefix(cache, prefix) {
     var next = ({})
-    for (var existing in cache) {
+    for (let existing in cache) {
       if (existing.indexOf(prefix) === 0) {
-        var value = cache[existing]
+        let value = cache[existing]
         if (value && typeof value.destroy === "function") value.destroy()
       } else {
         next[existing] = cache[existing]
@@ -644,9 +644,9 @@ ShellRoot {
     // property, even though the resulting proxy is otherwise acyclic.
     var firstPartyServices = ({})
     if (barCapabilities) {
-      var serviceIds = ["nomarchy.idle", "nomarchy.media", "nomarchy.nightlight", "nomarchy.notifications", "nomarchy.remote-session"]
-      for (var i = 0; i < serviceIds.length; i++) {
-        var serviceId = serviceIds[i]
+      let serviceIds = ["nomarchy.idle", "nomarchy.media", "nomarchy.nightlight", "nomarchy.notifications", "nomarchy.remote-session"]
+      for (let i = 0; i < serviceIds.length; i++) {
+        let serviceId = serviceIds[i]
         firstPartyServices[serviceId] = shell.pluginFirstPartyServiceFor(cacheKey, key, serviceId)
       }
     }
@@ -704,11 +704,11 @@ ShellRoot {
     if (!api) return null
 
     var next = ({})
-    for (var id in _pluginShellApis) next[id] = _pluginShellApis[id]
+    for (let id in _pluginShellApis) next[id] = _pluginShellApis[id]
     next[cacheKey] = api
     _pluginShellApis = next
     var descriptorNext = ({})
-    for (var descriptorKey in _pluginShellApiDescriptors)
+    for (let descriptorKey in _pluginShellApiDescriptors)
       descriptorNext[descriptorKey] = _pluginShellApiDescriptors[descriptorKey]
     descriptorNext[cacheKey] = {
       pluginId: key,
@@ -776,7 +776,7 @@ ShellRoot {
     })
     if (!api) return null
     var next = ({})
-    for (var id in _pluginBarEntryShellApis) next[id] = _pluginBarEntryShellApis[id]
+    for (let id in _pluginBarEntryShellApis) next[id] = _pluginBarEntryShellApis[id]
     next[cacheKey] = api
     _pluginBarEntryShellApis = next
     return api
@@ -807,7 +807,7 @@ ShellRoot {
     if (!api) return null
 
     var next = ({})
-    for (var id in _pluginRegistryApis) next[id] = _pluginRegistryApis[id]
+    for (let id in _pluginRegistryApis) next[id] = _pluginRegistryApis[id]
     next[key] = api
     _pluginRegistryApis = next
     return api
@@ -826,7 +826,7 @@ ShellRoot {
     if (!api) return null
 
     var next = ({})
-    for (var id in _pluginBarWidgetRegistryApis) next[id] = _pluginBarWidgetRegistryApis[id]
+    for (let id in _pluginBarWidgetRegistryApis) next[id] = _pluginBarWidgetRegistryApis[id]
     next[key] = api
     _pluginBarWidgetRegistryApis = next
     return api
@@ -841,63 +841,63 @@ ShellRoot {
   function prunePluginApis() {
     var plugins = shell.pluginRegistry.installedPlugins
     var shellKeys = Object.keys(_pluginShellApis)
-    for (var si = 0; si < shellKeys.length; si++) {
-      var shellKey = shellKeys[si]
-      var shellApi = _pluginShellApis[shellKey]
-      var descriptor = _pluginShellApiDescriptors[shellKey]
-      var manifest = descriptor ? plugins[descriptor.pluginId] : null
-      var barCapabilities = descriptor && descriptor.allowOwnService
+    for (let si = 0; si < shellKeys.length; si++) {
+      let shellKey = shellKeys[si]
+      let shellApi = _pluginShellApis[shellKey]
+      let descriptor = _pluginShellApiDescriptors[shellKey]
+      let manifest = descriptor ? plugins[descriptor.pluginId] : null
+      let barCapabilities = descriptor && descriptor.allowOwnService
         && shell.pluginHasBarCapabilities(manifest)
-      var expectedProfile = descriptor
+      let expectedProfile = descriptor
         ? shell.pluginShellCapabilityProfile(manifest, descriptor.allowOwnService, barCapabilities) : ""
-      var active = descriptor && manifest && shell.pluginRegistry.isEnabled(descriptor.pluginId)
+      let active = descriptor && manifest && shell.pluginRegistry.isEnabled(descriptor.pluginId)
       if (!active || descriptor.profile !== expectedProfile)
         shell.revokePluginShellApi(shellKey)
     }
 
     var registryNext = ({})
-    for (var registryKey in _pluginRegistryApis) {
-      var registryApi = _pluginRegistryApis[registryKey]
+    for (let registryKey in _pluginRegistryApis) {
+      let registryApi = _pluginRegistryApis[registryKey]
       if (shell.pluginApiActive(registryApi, plugins)) registryNext[registryKey] = registryApi
       else if (registryApi && typeof registryApi.destroy === "function") registryApi.destroy()
     }
     _pluginRegistryApis = registryNext
 
     var widgetNext = ({})
-    for (var widgetKey in _pluginBarWidgetRegistryApis) {
-      var widgetApi = _pluginBarWidgetRegistryApis[widgetKey]
+    for (let widgetKey in _pluginBarWidgetRegistryApis) {
+      let widgetApi = _pluginBarWidgetRegistryApis[widgetKey]
       if (plugins[widgetKey] && shell.pluginRegistry.isEnabled(widgetKey)) widgetNext[widgetKey] = widgetApi
       else if (widgetApi && typeof widgetApi.destroy === "function") widgetApi.destroy()
     }
     _pluginBarWidgetRegistryApis = widgetNext
 
     var appNext = ({})
-    for (var appKey in _pluginAppLibraryApis) {
-      var appApi = _pluginAppLibraryApis[appKey]
+    for (let appKey in _pluginAppLibraryApis) {
+      let appApi = _pluginAppLibraryApis[appKey]
       if (shell.pluginApiActive(appApi, plugins)) appNext[appKey] = appApi
       else if (appApi && typeof appApi.destroy === "function") appApi.destroy()
     }
     _pluginAppLibraryApis = appNext
 
     var barStateNext = ({})
-    for (var barStateKey in _pluginBarStateApis) {
-      var barStateApi = _pluginBarStateApis[barStateKey]
+    for (let barStateKey in _pluginBarStateApis) {
+      let barStateApi = _pluginBarStateApis[barStateKey]
       if (shell.pluginApiActive(barStateApi, plugins)) barStateNext[barStateKey] = barStateApi
       else if (barStateApi && typeof barStateApi.destroy === "function") barStateApi.destroy()
     }
     _pluginBarStateApis = barStateNext
 
     var serviceNext = ({})
-    for (var serviceKey in _pluginFirstPartyServiceApis) {
-      var serviceApi = _pluginFirstPartyServiceApis[serviceKey]
+    for (let serviceKey in _pluginFirstPartyServiceApis) {
+      let serviceApi = _pluginFirstPartyServiceApis[serviceKey]
       if (shell.pluginApiActive(serviceApi, plugins)) serviceNext[serviceKey] = serviceApi
       else if (serviceApi && typeof serviceApi.destroy === "function") serviceApi.destroy()
     }
     _pluginFirstPartyServiceApis = serviceNext
 
     var entryNext = ({})
-    for (var entryKey in _pluginBarEntryShellApis) {
-      var entryApi = _pluginBarEntryShellApis[entryKey]
+    for (let entryKey in _pluginBarEntryShellApis) {
+      let entryApi = _pluginBarEntryShellApis[entryKey]
       if (entryApi && shell.barEntryConfigured(entryApi.pluginId)) entryNext[entryKey] = entryApi
       else if (entryApi && typeof entryApi.destroy === "function") entryApi.destroy()
     }
@@ -907,25 +907,25 @@ ShellRoot {
   function syncPluginApis() {
     shell.prunePluginApis()
     var plugins = shell.pluginRegistry.installedPlugins
-    for (var id in _pluginRegistryApis) {
-      var registryApi = _pluginRegistryApis[id]
-      var manifest = plugins[id]
+    for (let id in _pluginRegistryApis) {
+      let registryApi = _pluginRegistryApis[id]
+      let manifest = plugins[id]
       registryApi.manifest = shell.publicPluginManifest(manifest)
       registryApi.enabled = !!manifest && shell.pluginRegistry.isEnabled(id)
     }
-    for (var widgetId in _pluginBarWidgetRegistryApis) {
-      var widgetApi = _pluginBarWidgetRegistryApis[widgetId]
+    for (let widgetId in _pluginBarWidgetRegistryApis) {
+      let widgetApi = _pluginBarWidgetRegistryApis[widgetId]
       widgetApi.widgets = shell.publicBarWidgetSnapshot()
       widgetApi.revision = shell.barWidgetRegistry.revision
     }
-    for (var shellKey in _pluginShellApis) {
-      var shellApi = _pluginShellApis[shellKey]
-      var descriptor = _pluginShellApiDescriptors[shellKey]
-      var shellManifest = descriptor ? plugins[descriptor.pluginId] : null
+    for (let shellKey in _pluginShellApis) {
+      let shellApi = _pluginShellApis[shellKey]
+      let descriptor = _pluginShellApiDescriptors[shellKey]
+      let shellManifest = descriptor ? plugins[descriptor.pluginId] : null
       shellApi.barConfig = shell.publicBarConfig()
       shellApi.idleConfig = shell.publicIdleConfigFor(shellManifest)
     }
-    for (var entryKey in _pluginBarEntryShellApis)
+    for (let entryKey in _pluginBarEntryShellApis)
       _pluginBarEntryShellApis[entryKey].barConfig = shell.publicBarConfig()
   }
 
@@ -986,8 +986,8 @@ ShellRoot {
         // or QObject parent back to the host shell.
         AuthServiceStore.put(key, inst)
       } else {
-        var snext = ({})
-        for (var sk in _services) snext[sk] = _services[sk]
+        let snext = ({})
+        for (let sk in _services) snext[sk] = _services[sk]
         snext[key] = inst
         _services = snext
       }
@@ -1003,26 +1003,26 @@ ShellRoot {
   function _syncServices() {
     if (!pluginRegistry || !pluginRegistry.installedPlugins) return
     var plugins = pluginRegistry.installedPlugins
-    for (var id in plugins) {
-      var m = plugins[id]
+    for (let id in plugins) {
+      let m = plugins[id]
       if (!m) continue
       if (!Array.isArray(m.kinds) || m.kinds.indexOf("service") === -1) continue
       if (!m.entryPoints || !m.entryPoints.service) continue
       if (!pluginRegistry.isEnabled(id)) continue
-      var authenticationService = shell.isAuthenticationService(m, id)
+      let authenticationService = shell.isAuthenticationService(m, id)
       if (_services[id]) {
         if (authenticationService) {
           // A service that gains a trusted authentication capability must move
           // out of the host's public service map before it is recreated.
-          var published = _services[id]
+          let published = _services[id]
           if (published && typeof published.destroy === "function") published.destroy()
-          var withoutPublished = ({})
-          for (var publishedId in _services)
+          let withoutPublished = ({})
+          for (let publishedId in _services)
             if (publishedId !== id) withoutPublished[publishedId] = _services[publishedId]
           _services = withoutPublished
         } else {
           // A kept instance outlives the rescan; hand it the fresh manifest.
-          var kept = _services[id]
+          let kept = _services[id]
           if (kept && "shell" in kept) kept.shell = shell.pluginShellFor(m)
           if (kept && "manifest" in kept) kept.manifest = shell.publicPluginManifest(m)
           continue
@@ -1041,26 +1041,26 @@ ShellRoot {
     }
     // Drop services for plugins that have been disabled or removed, or that
     // no longer declare a service entry point.
-    for (var existingId in _services) {
-      var stillThere = plugins[existingId]
-      var stillService = stillThere && Array.isArray(stillThere.kinds)
+    for (let existingId in _services) {
+      let stillThere = plugins[existingId]
+      let stillService = stillThere && Array.isArray(stillThere.kinds)
         && stillThere.kinds.indexOf("service") !== -1
         && stillThere.entryPoints && stillThere.entryPoints.service
-      var stillEnabled = stillThere && pluginRegistry.isEnabled(existingId)
+      let stillEnabled = stillThere && pluginRegistry.isEnabled(existingId)
       if (stillService && stillEnabled) continue
-      var inst = _services[existingId]
+      let inst = _services[existingId]
       if (inst && typeof inst.destroy === "function") inst.destroy()
-      var next = ({})
-      for (var k in _services) if (k !== existingId) next[k] = _services[k]
+      let next = ({})
+      for (let k in _services) if (k !== existingId) next[k] = _services[k]
       _services = next
     }
     // Authentication services are retained outside the root object graph, so
     // reconcile their disable/remove lifecycle separately from _services.
     var authenticationIds = AuthServiceStore.ids()
-    for (var ai = 0; ai < authenticationIds.length; ai++) {
-      var authenticationId = authenticationIds[ai]
-      var authenticationManifest = plugins[authenticationId]
-      var stillAuthenticationService = authenticationManifest
+    for (let ai = 0; ai < authenticationIds.length; ai++) {
+      let authenticationId = authenticationIds[ai]
+      let authenticationManifest = plugins[authenticationId]
+      let stillAuthenticationService = authenticationManifest
         && Array.isArray(authenticationManifest.kinds)
         && authenticationManifest.kinds.indexOf("service") !== -1
         && authenticationManifest.entryPoints
@@ -1082,18 +1082,18 @@ ShellRoot {
   // still holds the lock, which surfaces the crashed-lockscreen fallback.
   function unloadPluginServices() {
     var next = ({})
-    for (var existingId in _services) {
+    for (let existingId in _services) {
       if (serviceKeepLoaded(existingId)) {
         next[existingId] = _services[existingId]
         continue
       }
-      var inst = _services[existingId]
+      let inst = _services[existingId]
       if (inst && typeof inst.destroy === "function") inst.destroy()
     }
     _services = next
     var authenticationIds = AuthServiceStore.ids()
-    for (var ai = 0; ai < authenticationIds.length; ai++) {
-      var authenticationId = authenticationIds[ai]
+    for (let ai = 0; ai < authenticationIds.length; ai++) {
+      let authenticationId = authenticationIds[ai]
       if (!serviceKeepLoaded(authenticationId))
         AuthServiceStore.destroy(authenticationId)
     }
@@ -1115,7 +1115,7 @@ ShellRoot {
   Connections {
     target: shell.appLibrary
     function onAppsChanged() {
-      for (var id in shell._pluginAppLibraryApis)
+      for (let id in shell._pluginAppLibraryApis)
         shell._pluginAppLibraryApis[id].appsChanged()
     }
   }
@@ -1135,12 +1135,12 @@ ShellRoot {
     var sections = Util.barSections
     var foundInLayout = false
     var dirty = false
-    for (var s = 0; s < sections.length; s++) {
-      var arr = copy.bar.layout[sections[s]] || []
-      for (var i = 0; i < arr.length; i++) {
+    for (let s = 0; s < sections.length; s++) {
+      let arr = copy.bar.layout[sections[s]] || []
+      for (let i = 0; i < arr.length; i++) {
         if (arr[i] && Util.canonicalWidgetId(arr[i].id) === stripped) {
-          var next = { id: stripped }
-          for (var k in settings) if (k !== "id") next[k] = settings[k]
+          let next = { id: stripped }
+          for (let k in settings) if (k !== "id") next[k] = settings[k]
           if (JSON.stringify(arr[i]) !== JSON.stringify(next)) {
             arr[i] = next
             dirty = true
@@ -1150,10 +1150,10 @@ ShellRoot {
       }
     }
     if (!foundInLayout) {
-      for (var j = 0; j < copy.plugins.length; j++) {
+      for (let j = 0; j < copy.plugins.length; j++) {
         if (copy.plugins[j] && copy.plugins[j].id === stripped) {
-          var pnext = { id: stripped }
-          for (var pk in settings) if (pk !== "id") pnext[pk] = settings[pk]
+          let pnext = { id: stripped }
+          for (let pk in settings) if (pk !== "id") pnext[pk] = settings[pk]
           if (JSON.stringify(copy.plugins[j]) !== JSON.stringify(pnext)) {
             copy.plugins[j] = pnext
             dirty = true
@@ -1193,7 +1193,7 @@ ShellRoot {
     // Plugins that are also panel/overlay/menu kinds are owned by the
     // panel loader (e.g. nomarchy.menu); let that path handle them.
     var loaderKinds = ["panel", "overlay", "menu"]
-    for (var i = 0; i < loaderKinds.length; i++) {
+    for (let i = 0; i < loaderKinds.length; i++) {
       if (m.kinds.indexOf(loaderKinds[i]) !== -1) return false
     }
     return true
@@ -1214,21 +1214,24 @@ ShellRoot {
       console.warn("summon: plugin not enabled, not summoning:", id)
       return false
     }
+    // The theme and background picker is a modal overlay; other UI opening dismisses it.
+    if (id !== "nomarchy.image-picker" && shell.isPluginOpen("nomarchy.image-picker"))
+      shell.hide("nomarchy.image-picker")
     // Bar widgets take no payload; payloadJson is dropped on this path.
     if (shell.isBarWidgetPanelPlugin(id)) {
-      var summoned = shell.bar && typeof shell.bar.summonBarWidget === "function"
+      let summoned = shell.bar && typeof shell.bar.summonBarWidget === "function"
         && shell.bar.summonBarWidget(id)
       if (!summoned) console.warn("summon: no live bar widget for:", id)
       return summoned === true
     }
     var next = ({})
-    for (var k in openPanelIds) next[k] = openPanelIds[k]
+    for (let k in openPanelIds) next[k] = openPanelIds[k]
     next[id] = true
     openPanelIds = next
 
     // Stash payload so the Loader.onLoaded handler can hand it to open().
     var pending = ({})
-    for (var p in pendingPayloads) pending[p] = pendingPayloads[p].slice()
+    for (let p in pendingPayloads) pending[p] = pendingPayloads[p].slice()
     var queue = pending[id] || []
     queue.push(payloadJson || "")
     pending[id] = queue
@@ -1243,7 +1246,7 @@ ShellRoot {
     var id = shell.pluginRegistry.resolveEnabledId(pluginId)
     if (!id) return false
     if (shell.isBarWidgetPanelPlugin(id)) {
-      var hidden = shell.bar && typeof shell.bar.hideBarWidget === "function"
+      let hidden = shell.bar && typeof shell.bar.hideBarWidget === "function"
         && shell.bar.hideBarWidget(id)
       if (!hidden) console.warn("hide: no live bar widget for:", id)
       return hidden === true
@@ -1251,7 +1254,7 @@ ShellRoot {
     invokeIfLoaded(id, "close", null)
     if (!openPanelIds[id]) return true
     var next = ({})
-    for (var k in openPanelIds) if (k !== id) next[k] = openPanelIds[k]
+    for (let k in openPanelIds) if (k !== id) next[k] = openPanelIds[k]
     openPanelIds = next
     return true
   }
@@ -1279,7 +1282,7 @@ ShellRoot {
 
   function registerPanelLoader(pluginId, loader) {
     var next = ({})
-    for (var k in panelLoaders) next[k] = panelLoaders[k]
+    for (let k in panelLoaders) next[k] = panelLoaders[k]
     next[pluginId] = loader
     panelLoaders = next
     deliverIfLoaded(pluginId)
@@ -1288,12 +1291,12 @@ ShellRoot {
   function unregisterPanelLoader(pluginId) {
     if (!panelLoaders[pluginId]) return
     var next = ({})
-    for (var k in panelLoaders) if (k !== pluginId) next[k] = panelLoaders[k]
+    for (let k in panelLoaders) if (k !== pluginId) next[k] = panelLoaders[k]
     panelLoaders = next
   }
 
   function unloadPanels() {
-    for (var id in panelLoaders) hide(id)
+    for (let id in panelLoaders) hide(id)
     panelEntryModel.clear()
     panelLoaders = ({})
     pendingPayloads = ({})
@@ -1306,14 +1309,14 @@ ShellRoot {
     var queue = pendingPayloads[pluginId]
     if (!Array.isArray(queue) || queue.length === 0) return
     if (typeof loader.item.open === "function") {
-      for (var i = 0; i < queue.length; i++) {
+      for (let i = 0; i < queue.length; i++) {
         try { loader.item.open(queue[i]) } catch (e) {
           console.warn("plugin " + pluginId + " open() threw:", e)
         }
       }
     }
     var next = ({})
-    for (var k in pendingPayloads) if (k !== pluginId) next[k] = pendingPayloads[k].slice()
+    for (let k in pendingPayloads) if (k !== pluginId) next[k] = pendingPayloads[k].slice()
     pendingPayloads = next
   }
 
@@ -1332,7 +1335,7 @@ ShellRoot {
     if (!loader || !loader.item) return "unknown"
     if (typeof loader.item[method] !== "function") return "unknown"
     try {
-      var result = loader.item[method](arg)
+      let result = loader.item[method](arg)
       return result === undefined || result === null ? "ok" : String(result)
     } catch (e) {
       console.warn("plugin " + id + " " + method + "() threw:", e)
@@ -1356,17 +1359,17 @@ ShellRoot {
     var wanted = ({})
     var order = []
     var entries = computePanelEntries()
-    for (var i = 0; i < entries.length; i++) {
-      var entry = entries[i]
+    for (let i = 0; i < entries.length; i++) {
+      let entry = entries[i]
       entry.sourceUrl = String(shell.pluginRegistry.entryPointUrl(entry.manifest, entry.kind) || "")
       wanted[entry.id] = entry
       order.push(entry.id)
     }
 
     // Keep an entry whose plugin still loads the same way; drop the rest.
-    for (var j = panelEntryModel.count - 1; j >= 0; j--) {
-      var row = panelEntryModel.get(j)
-      var next = wanted[row.pluginId]
+    for (let j = panelEntryModel.count - 1; j >= 0; j--) {
+      let row = panelEntryModel.get(j)
+      let next = wanted[row.pluginId]
       if (next && next.kind === row.entryKind && next.keepLoaded === row.keepLoaded && next.sourceUrl === row.sourceUrl) {
         delete wanted[row.pluginId]
       } else {
@@ -1374,8 +1377,8 @@ ShellRoot {
       }
     }
 
-    for (var k = 0; k < order.length; k++) {
-      var added = wanted[order[k]]
+    for (let k = 0; k < order.length; k++) {
+      let added = wanted[order[k]]
       if (!added) continue
       panelEntryModel.append({ pluginId: added.id, entryKind: added.kind, keepLoaded: added.keepLoaded, sourceUrl: added.sourceUrl })
     }
@@ -1385,15 +1388,15 @@ ShellRoot {
     var out = []
     var plugins = shell.pluginRegistry.installedPlugins
     var panelKinds = ["panel", "overlay", "menu"]
-    for (var id in plugins) {
-      var m = plugins[id]
+    for (let id in plugins) {
+      let m = plugins[id]
       if (!m || !Array.isArray(m.kinds)) continue
-      var matched = false
-      for (var i = 0; i < panelKinds.length; i++)
+      let matched = false
+      for (let i = 0; i < panelKinds.length; i++)
         if (m.kinds.indexOf(panelKinds[i]) !== -1) { matched = true; break }
       if (!matched) continue
       if (!shell.pluginRegistry.isEnabled(id)) continue
-      var kind = m.kinds.indexOf("panel") !== -1 ? "panel"
+      let kind = m.kinds.indexOf("panel") !== -1 ? "panel"
         : (m.kinds.indexOf("overlay") !== -1 ? "overlay" : "menu")
       out.push({ id: id, manifest: m, kind: kind, keepLoaded: m.keepLoaded === true })
     }
@@ -1440,7 +1443,7 @@ ShellRoot {
             // Loader.errorString() reflects the source-load failure even when
             // sourceComponent is null. Surface both so the user sees something
             // actionable instead of a panel that silently refuses to open.
-            var detail = errorString && errorString() ? errorString() : ""
+            let detail = errorString && errorString() ? errorString() : ""
             if (!detail && sourceComponent) detail = sourceComponent.errorString()
             console.warn("panel plugin " + panelEntry.pluginId + " failed to load:", detail)
             shell.hide(panelEntry.pluginId)
@@ -1468,22 +1471,22 @@ ShellRoot {
     var plugins = shell.pluginRegistry.installedPlugins
     var seen = ({})
 
-    for (var pluginId in plugins) {
-      var manifest = plugins[pluginId]
+    for (let pluginId in plugins) {
+      let manifest = plugins[pluginId]
       if (!manifest || !manifest.kinds || manifest.kinds.indexOf("bar-widget") === -1) continue
       if (!shell.pluginRegistry.isEnabled(pluginId)) continue
 
-      var registryKey = String(manifest.id)
+      let registryKey = String(manifest.id)
       seen[registryKey] = true
 
       // Already loaded with matching source — leave it alone.
-      var existing = pluginWidgetComponents[registryKey]
-      var url = shell.pluginRegistry.entryPointUrl(manifest, "barWidget")
+      let existing = pluginWidgetComponents[registryKey]
+      let url = shell.pluginRegistry.entryPointUrl(manifest, "barWidget")
       if (!url) {
         console.warn("Plugin " + manifest.id + " has no barWidget entry point")
         continue
       }
-      var meta = manifest.barWidget || {}
+      let meta = manifest.barWidget || {}
       meta = {
         displayName: meta.displayName || manifest.name,
         description: meta.description || manifest.description,
@@ -1518,20 +1521,20 @@ ShellRoot {
 
     // Drop registrations for plugins that are no longer present or enabled.
     var allIds = shell.barWidgetRegistry.availableIds()
-    for (var i = 0; i < allIds.length; i++) {
-      var id = allIds[i]
+    for (let i = 0; i < allIds.length; i++) {
+      let id = allIds[i]
       if (!pluginWidgetComponents[id]) continue
       if (!seen[id]) {
         shell.barWidgetRegistry.unregister(id)
-        var next = ({})
-        for (var k in pluginWidgetComponents) if (k !== id) next[k] = pluginWidgetComponents[k]
+        let next = ({})
+        for (let k in pluginWidgetComponents) if (k !== id) next[k] = pluginWidgetComponents[k]
         pluginWidgetComponents = next
       }
     }
   }
 
   function unloadPluginWidgets() {
-    for (var id in pluginWidgetComponents) shell.barWidgetRegistry.unregister(id)
+    for (let id in pluginWidgetComponents) shell.barWidgetRegistry.unregister(id)
     pluginWidgetComponents = ({})
   }
 
@@ -1579,7 +1582,7 @@ ShellRoot {
 
   function setPluginWidgetComponent(registryKey, entry) {
     var next = ({})
-    for (var k in pluginWidgetComponents) if (k !== registryKey) next[k] = pluginWidgetComponents[k]
+    for (let k in pluginWidgetComponents) if (k !== registryKey) next[k] = pluginWidgetComponents[k]
     if (entry) next[registryKey] = entry
     pluginWidgetComponents = next
   }
@@ -1620,8 +1623,8 @@ ShellRoot {
   function parseShortcuts(raw) {
     var entries = []
     var lines = String(raw || "").split("\n")
-    for (var i = 0; i < lines.length; i++) {
-      var match = /^([A-Za-z]+)\s+(\S+)\s*$/.exec(lines[i])
+    for (let i = 0; i < lines.length; i++) {
+      let match = /^([A-Za-z]+)\s+(\S+)\s*$/.exec(lines[i])
       if (match && ["menu", "panel", "audio", "brightness", "ipc"].indexOf(match[1]) !== -1)
         entries.push({ kind: match[1], target: match[2], name: match[1] + "." + match[2] })
     }
@@ -1636,17 +1639,17 @@ ShellRoot {
       shell.toggle("nomarchy.menu", JSON.stringify({ menu: entry.target }))
     } else if (entry.kind === "ipc") {
       // "media.next" runs the media service's own IPC handler for next.
-      var dot = entry.target.indexOf(".")
-      var target = entry.target.slice(0, dot)
-      var method = entry.target.slice(dot + 1)
-      var service = shell.serviceFor(shell.ipcShortcutServices[target] || "")
+      let dot = entry.target.indexOf(".")
+      let target = entry.target.slice(0, dot)
+      let method = entry.target.slice(dot + 1)
+      let service = shell.serviceFor(shell.ipcShortcutServices[target] || "")
       if (!service || !service.runShortcut(method))
         Util.execArgv(["nomarchy-shell", target, method])
     } else if (entry.kind === "brightness") {
       if (!shell.brightnessKeys.handle(entry.target))
         Util.execArgv(["nomarchy-brightness-display", entry.target === "raise" ? "+5%" : "5%-"])
     } else if (entry.kind === "audio") {
-      var media = shell.serviceFor("nomarchy.media")
+      let media = shell.serviceFor("nomarchy.media")
       if (!media || !media.handleVolumeKey(entry.target))
         Util.execArgv(["nomarchy-audio-output-volume", entry.target])
     } else {
@@ -1877,7 +1880,7 @@ ShellRoot {
 
     function enablePlugin(id: string, placementJson: string): string {
       try {
-        var placement = JSON.parse(placementJson || "{}")
+        let placement = JSON.parse(placementJson || "{}")
         if (shell.pluginRegistry.setEnabled(id, true, placement)) return "ok"
         return shell.pluginRegistry.lastEnableError || "unknown"
       } catch (e) {
@@ -1889,7 +1892,7 @@ ShellRoot {
     // that cannot know whether it ran before leaves a placed widget alone.
     function putBarWidget(id: string, placementJson: string): string {
       try {
-        var error = shell.pluginRegistry.putBarWidget(id, JSON.parse(placementJson || "{}"))
+        let error = shell.pluginRegistry.putBarWidget(id, JSON.parse(placementJson || "{}"))
         return error ? error : "ok"
       } catch (e) {
         return "invalid placement: " + e
@@ -1898,7 +1901,7 @@ ShellRoot {
 
     function moveBarWidget(id: string, placementJson: string): string {
       try {
-        var error = shell.pluginRegistry.moveBarWidget(id, JSON.parse(placementJson || "{}"))
+        let error = shell.pluginRegistry.moveBarWidget(id, JSON.parse(placementJson || "{}"))
         return error ? error : "ok"
       } catch (e) {
         return "invalid placement: " + e
@@ -1907,9 +1910,9 @@ ShellRoot {
 
     function setBarWidget(id: string, key: string, valueJson: string, selectorJson: string): string {
       try {
-        var value = JSON.parse(valueJson)
-        var selector = JSON.parse(selectorJson || "{}")
-        var error = shell.pluginRegistry.setBarWidget(id, key, value, selector)
+        let value = JSON.parse(valueJson)
+        let selector = JSON.parse(selectorJson || "{}")
+        let error = shell.pluginRegistry.setBarWidget(id, key, value, selector)
         return error ? error : "ok"
       } catch (e) {
         return "invalid widget setting: " + e
@@ -1919,13 +1922,13 @@ ShellRoot {
     function listPlugins(): string {
       var out = []
       var plugins = shell.pluginRegistry.installedPlugins
-      for (var id in plugins) {
-        var kinds = plugins[id].kinds || []
-        var isBarOption = Array.isArray(kinds) && kinds.indexOf("bar") !== -1
-        var isBarWidget = Array.isArray(kinds) && kinds.indexOf("bar-widget") !== -1
-        var active = isBarOption && shell.isActiveBarOption(id)
-        var metadata = plugins[id].nomarchy
-        var clonedFrom = Util.isPlainObject(metadata) ? String(metadata.clonedFrom || "") : ""
+      for (let id in plugins) {
+        let kinds = plugins[id].kinds || []
+        let isBarOption = Array.isArray(kinds) && kinds.indexOf("bar") !== -1
+        let isBarWidget = Array.isArray(kinds) && kinds.indexOf("bar-widget") !== -1
+        let active = isBarOption && shell.isActiveBarOption(id)
+        let metadata = plugins[id].nomarchy
+        let clonedFrom = Util.isPlainObject(metadata) ? String(metadata.clonedFrom || "") : ""
         out.push({
           id: id,
           name: plugins[id].name,

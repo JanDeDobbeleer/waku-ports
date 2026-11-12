@@ -48,24 +48,24 @@ Item {
     var bounds = Qt.rect(0, 0, 0, 0)
     if (!item || !item.visible || item.opacity <= 0) return bounds
     if (textItem) {
-      var ink = textMetrics.tightBoundingRect
-      var spareWidth = item.width - item.leftPadding - item.rightPadding - item.contentWidth
-      var textX = item.leftPadding
+      let ink = textMetrics.tightBoundingRect
+      let spareWidth = item.width - item.leftPadding - item.rightPadding - item.contentWidth
+      let textX = item.leftPadding
       if (item.effectiveHorizontalAlignment === Text.AlignHCenter) textX += spareWidth / 2
       else if (item.effectiveHorizontalAlignment === Text.AlignRight) textX += spareWidth
       bounds = Qt.rect(textX + ink.x, item.baselineOffset + ink.y, ink.width, ink.height)
     } else if (imageItem) {
-      var w = item.paintedWidth
-      var h = item.paintedHeight
-      var x = item.horizontalAlignment === Image.AlignLeft ? 0
+      let w = item.paintedWidth
+      let h = item.paintedHeight
+      let x = item.horizontalAlignment === Image.AlignLeft ? 0
         : (item.horizontalAlignment === Image.AlignRight ? item.width - w : (item.width - w) / 2)
-      var y = item.verticalAlignment === Image.AlignTop ? 0
+      let y = item.verticalAlignment === Image.AlignTop ? 0
         : (item.verticalAlignment === Image.AlignBottom ? item.height - h : (item.height - h) / 2)
       if (item.fillMode === Image.PreserveAspectFit) {
         bounds = Qt.rect(x, y, w, h)
       } else if (item.fillMode === Image.Pad) {
-        var left = Math.max(0, x)
-        var top = Math.max(0, y)
+        let left = Math.max(0, x)
+        let top = Math.max(0, y)
         bounds = Qt.rect(left, top, Math.max(0, Math.min(item.width, x + w) - left),
           Math.max(0, Math.min(item.height, y + h) - top))
       } else {
@@ -76,13 +76,13 @@ Item {
     } else if (boxItem) {
       bounds = Qt.rect(0, 0, item.width, item.height)
     }
-    for (var i = 0; i < childrenBounds.count; i++) {
-      var child = childrenBounds.itemAt(i)
+    for (let i = 0; i < childrenBounds.count; i++) {
+      let child = childrenBounds.itemAt(i)
       if (child) bounds = unionBounds(bounds, child.mappedBounds)
     }
     if (item.clip && bounds.width > 0 && bounds.height > 0) {
-      var left = Math.max(0, bounds.x)
-      var top = Math.max(0, bounds.y)
+      let left = Math.max(0, bounds.x)
+      let top = Math.max(0, bounds.y)
       bounds = Qt.rect(left, top,
         Math.max(0, Math.min(item.width, bounds.x + bounds.width) - left),
         Math.max(0, Math.min(item.height, bounds.y + bounds.height) - top))

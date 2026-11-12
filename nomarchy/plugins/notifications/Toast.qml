@@ -108,7 +108,7 @@ Item {
   readonly property var foundCodes: {
     var all = String(row.codes || row.code || "").split(" ")
     var out = []
-    for (var i = 0; i < all.length; i++) if (all[i]) out.push(all[i])
+    for (let i = 0; i < all.length; i++) if (all[i]) out.push(all[i])
     return out
   }
 
@@ -118,7 +118,7 @@ Item {
   // Every button, in Delivery.deeds' order, with the code labels translated.
   readonly property var allDeeds: {
     var out = Delivery.deeds(row, actions)
-    for (var i = 0; i < out.length; i++)
+    for (let i = 0; i < out.length; i++)
       if (out[i].kind === "code")
         out[i].label = foundCodes.length > 1 ? I18n.t("notifications.copyThisCode").arg(out[i].value)
                                              : I18n.t("notifications.copyCode")
@@ -282,8 +282,8 @@ Item {
         // Best first: the sender's picture, then the icon theme, then a
         // desktop entry's icon (Icons.candidates has the names). A file that will not load gives way to the next.
         function firstOf(names, look) {
-          for (var i = 0; i < names.length; i++) {
-            var found = look(names[i])
+          for (let i = 0; i < names.length; i++) {
+            let found = look(names[i])
             if (found) return found
           }
           return ""

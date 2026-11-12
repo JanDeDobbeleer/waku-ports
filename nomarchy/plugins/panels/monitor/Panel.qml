@@ -69,13 +69,13 @@ Panel {
   // in brightnessLevels, so a slider moving doesn't rebuild the picker.
   readonly property var segments: {
     var list = []
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
+    for (let i = 0; i < displays.length; i++) {
+      let display = displays[i]
       if (!display || !display.name || !display.enabled || !(display.width > 0)) continue
       // Matched here, on the plain arrays: once they're handed through a QML
       // property they're no longer ones Array.isArray accepts.
-      var scales = Model.availableScales(scalePresets, display.width, display.height)
-      var resolutions = Model.resolutionOptions(display.availableModes, display.width, display.height)
+      let scales = Model.availableScales(scalePresets, display.width, display.height)
+      let resolutions = Model.resolutionOptions(display.availableModes, display.width, display.height)
       list.push({
         name: display.name,
         title: Model.displayTitle(display, Commons.I18n.t("monitor.builtInDisplay")),
@@ -97,7 +97,7 @@ Panel {
   // The shown display: the one picked, else the focused one, else the first.
   readonly property var current: {
     var fallback = null
-    for (var i = 0; i < segments.length; i++) {
+    for (let i = 0; i < segments.length; i++) {
       if (segments[i].name === selectedName) return segments[i]
       if (segments[i].focused && !fallback) fallback = segments[i]
     }
@@ -117,17 +117,17 @@ Panel {
   readonly property var layoutDisplays: {
     if (pendingMirror !== "on") return displays
     var internal = ""
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
+    for (let i = 0; i < displays.length; i++) {
+      let display = displays[i]
       if (display && display.enabled && /^(eDP|LVDS|DSI)-/.test(display.name)) { internal = display.name; break }
     }
     if (!internal) return displays
     var list = []
-    for (var j = 0; j < displays.length; j++) {
-      var entry = displays[j]
+    for (let j = 0; j < displays.length; j++) {
+      let entry = displays[j]
       if (entry && entry.enabled && !/^(eDP|LVDS|DSI)-/.test(entry.name)) {
-        var copy = {}
-        for (var key in entry) copy[key] = entry[key]
+        let copy = {}
+        for (let key in entry) copy[key] = entry[key]
         copy.mirrorOf = internal
         entry = copy
       }
@@ -138,8 +138,8 @@ Panel {
 
   readonly property var layoutRects: {
     var list = []
-    for (var i = 0; i < layoutDisplays.length; i++) {
-      var display = layoutDisplays[i]
+    for (let i = 0; i < layoutDisplays.length; i++) {
+      let display = layoutDisplays[i]
       if (!display || !display.enabled || !(display.width > 0)) continue
       if (display.mirrorOf && display.mirrorOf !== "none") continue
       list.push(Model.logicalRect(display))
@@ -158,8 +158,8 @@ Panel {
 
   readonly property var mirroredBy: {
     var map = {}
-    for (var i = 0; i < layoutDisplays.length; i++) {
-      var display = layoutDisplays[i]
+    for (let i = 0; i < layoutDisplays.length; i++) {
+      let display = layoutDisplays[i]
       if (!display || !display.enabled || !display.mirrorOf || display.mirrorOf === "none") continue
       if (!map[display.mirrorOf]) map[display.mirrorOf] = []
       map[display.mirrorOf].push(display.name)
@@ -169,8 +169,8 @@ Panel {
 
   // Some display is showing another's picture, or is about to.
   readonly property bool mirroredNow: {
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
+    for (let i = 0; i < displays.length; i++) {
+      let display = displays[i]
       if (display && display.enabled && display.mirrorOf && display.mirrorOf !== "none") return true
     }
     return false
@@ -267,7 +267,7 @@ Panel {
   function landingSection() {
     var sections = visibleSections
     var preferred = ["brightness", "scale"]
-    for (var i = 0; i < preferred.length; i++)
+    for (let i = 0; i < preferred.length; i++)
       if (sections.indexOf(preferred[i]) >= 0) return preferred[i]
     return sections.length > 0 ? sections[0] : ""
   }
@@ -290,7 +290,7 @@ Panel {
     } else if (focusSection === "textsize") {
       adjustTextSize(delta)
     } else if (focusSection === "displays") {
-      var next = Math.max(0, Math.min(segments.length - 1, currentIndex + delta))
+      let next = Math.max(0, Math.min(segments.length - 1, currentIndex + delta))
       selectDisplay(segments[next].name)
       selectedIndex = next
     } else if (focusSection === "scale" || focusSection === "resolution" || focusSection === "refresh" || focusSection === "mirror") {
@@ -388,7 +388,7 @@ Panel {
   // Show a level right away, before the set behind it lands.
   function showBrightness(name, percent) {
     var levels = {}
-    for (var key in brightnessLevels) levels[key] = brightnessLevels[key]
+    for (let key in brightnessLevels) levels[key] = brightnessLevels[key]
     levels[name] = percent
     root.brightnessLevels = levels
     if (name === root.focusedMonitor) root.brightnessPercent = percent
@@ -450,8 +450,8 @@ Panel {
   function updateDisplays(displaysJson) {
     var parsed = Model.parseDisplays(displaysJson)
     var levels = {}
-    for (var i = 0; i < parsed.displays.length; i++) {
-      var display = parsed.displays[i]
+    for (let i = 0; i < parsed.displays.length; i++) {
+      let display = parsed.displays[i]
       if (display && display.enabled && typeof display.brightness === "number")
         levels[display.name] = display.brightness
     }
@@ -550,7 +550,7 @@ Panel {
   property real rotateMenuX: 0
   property real rotateMenuY: 0
   readonly property int rotateMenuTransform: {
-    for (var i = 0; i < displays.length; i++)
+    for (let i = 0; i < displays.length; i++)
       if (displays[i] && displays[i].name === rotateMenuName) return Number(displays[i].transform) || 0
     return 0
   }
@@ -608,7 +608,7 @@ Panel {
 
   function layoutCommand(rects) {
     var args = ["nomarchy-hyprland-monitor-layout"]
-    for (var i = 0; i < rects.length; i++)
+    for (let i = 0; i < rects.length; i++)
       args.push(rects[i].name + "=" + rects[i].x + "x" + rects[i].y)
     return args
   }
@@ -619,8 +619,8 @@ Panel {
   function nearestTextStop(px) {
     var best = 0
     var bestDist = 1e9
-    for (var i = 0; i < textSizeStops.length; i++) {
-      var d = Math.abs(textSizeStops[i] - px)
+    for (let i = 0; i < textSizeStops.length; i++) {
+      let d = Math.abs(textSizeStops[i] - px)
       if (d < bestDist) { bestDist = d; best = i }
     }
     return best
@@ -1553,7 +1553,7 @@ Panel {
       var bottom = -Infinity
       b.x = Infinity
       b.y = Infinity
-      for (var i = 0; i < rects.length; i++) {
+      for (let i = 0; i < rects.length; i++) {
         b.x = Math.min(b.x, rects[i].x)
         b.y = Math.min(b.y, rects[i].y)
         right = Math.max(right, rects[i].x + rects[i].w)
@@ -1571,7 +1571,7 @@ Panel {
     readonly property real stackStep: Style.space(6)
     readonly property int stackDepth: {
       var depth = 0
-      for (var i = 0; i < root.shownRects.length; i++)
+      for (let i = 0; i < root.shownRects.length; i++)
         depth = Math.max(depth, (root.mirroredBy[root.shownRects[i].name] || []).length)
       return depth
     }

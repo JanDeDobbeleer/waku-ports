@@ -28,8 +28,8 @@ QtObject {
   }
 
   function valueOr(section, keys) {
-    for (var i = 0; i < keys.length; i++) {
-      var v = value(section, keys[i])
+    for (let i = 0; i < keys.length; i++) {
+      let v = value(section, keys[i])
       if (String(v).length > 0) return v
     }
     return ""
@@ -40,7 +40,7 @@ QtObject {
     var seen = {}
     while (s.match(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/) && !seen[s]) {
       seen[s] = true
-      var next = Commons.Color.shellValues[s]
+      let next = Commons.Color.shellValues[s]
       if (next === undefined || next === null || String(next).length === 0) break
       s = String(next).replace(/^\s+|\s+$/g, "")
     }
@@ -84,7 +84,7 @@ QtObject {
     var parts = s.split(/\s+/)
     var colors = []
     var angle = 0
-    for (var i = 0; i < parts.length; i++) {
+    for (let i = 0; i < parts.length; i++) {
       if (parts[i].match(/^-?\d+(?:\.\d+)?deg$/)) angle = Number(parts[i].replace(/deg$/, ""))
       else colors.push(cssColor(parts[i], opacity))
     }
@@ -131,7 +131,7 @@ QtObject {
     // border-gradient experiment. New configs put solid colors and gradients in
     // the same border token.
     if (!gradient.enabled && String(legacyGradientRaw || "").replace(/^\s+|\s+$/g, "").length > 0) {
-      var legacy = resolvedGradient(legacyGradientRaw, color, opacity)
+      let legacy = resolvedGradient(legacyGradientRaw, color, opacity)
       if (legacy.enabled) gradient = legacy
     }
 

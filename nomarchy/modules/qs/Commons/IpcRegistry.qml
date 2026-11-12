@@ -26,7 +26,7 @@ Singleton {
 
   function functionNames(object) {
     var names = []
-    for (var key in object) {
+    for (let key in object) {
       if (typeof object[key] === "function") names.push(key)
     }
     return names
@@ -57,16 +57,16 @@ Singleton {
   // re-check.
   function leads(handler, revision) {
     if (!handler.target || handlers.indexOf(handler) === -1) return false
-    for (var i = 0; i < handlers.length; i++) {
-      var other = handlers[i]
+    for (let i = 0; i < handlers.length; i++) {
+      let other = handlers[i]
       if (other && other.target === handler.target) return other === handler
     }
     return false
   }
 
   function handlerFor(target) {
-    for (var i = 0; i < handlers.length; i++) {
-      var handler = handlers[i]
+    for (let i = 0; i < handlers.length; i++) {
+      let handler = handlers[i]
       if (handler && handler.enabled && handler.target === target) return handler
     }
     return null

@@ -42,7 +42,7 @@ QtObject {
 
   function firstColorToken(value) {
     var parts = String(value || "").replace(/^\s+|\s+$/g, "").split(/\s+/)
-    for (var i = 0; i < parts.length; i++) {
+    for (let i = 0; i < parts.length; i++) {
       if (!parts[i].match(/^-?\d+(?:\.\d+)?deg$/)) return parts[i]
     }
     return value
@@ -146,8 +146,8 @@ QtObject {
     var color4Value = ""
     var color7Value = ""
     var color8Value = ""
-    for (var i = 0; i < lines.length; i++) {
-      var match = lines[i].match(/^\s*([A-Za-z0-9_-]+)\s*=\s*["']?(#[0-9A-Fa-f]{6})/)
+    for (let i = 0; i < lines.length; i++) {
+      let match = lines[i].match(/^\s*([A-Za-z0-9_-]+)\s*=\s*["']?(#[0-9A-Fa-f]{6})/)
       if (!match) continue
       if (match[1] === "foreground") { foreground = match[2]; loadedForeground = true }
       else if (match[1] === "background") { background = match[2]; loadedBackground = true }
@@ -183,18 +183,18 @@ QtObject {
     var parsed = {}
     var text = String(raw || "")
     if (text) {
-      var lines = text.split("\n")
-      var section = ""
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].replace(/^\s+|\s+$/g, "")
+      let lines = text.split("\n")
+      let section = ""
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].replace(/^\s+|\s+$/g, "")
         if (!line || line.charAt(0) === "#") continue
-        var sectionMatch = line.match(/^\[([A-Za-z0-9_-]+)\]\s*(#.*)?$/)
+        let sectionMatch = line.match(/^\[([A-Za-z0-9_-]+)\]\s*(#.*)?$/)
         if (sectionMatch) { section = sectionMatch[1]; continue }
-        var stringKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*["']([^"']+)["']\s*(#.*)?$/)
-        var numKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(-?\d+(?:\.\d+)?)\s*(#.*)?$/)
-        var widthKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(-?\d+(?:\.\d+)?(?:\s+-?\d+(?:\.\d+)?){1,3})\s*(#.*)?$/)
-        var bareKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*([A-Za-z][A-Za-z0-9_-]*)\s*(#.*)?$/)
-        var kv = stringKv || numKv || widthKv || bareKv
+        let stringKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*["']([^"']+)["']\s*(#.*)?$/)
+        let numKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(-?\d+(?:\.\d+)?)\s*(#.*)?$/)
+        let widthKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(-?\d+(?:\.\d+)?(?:\s+-?\d+(?:\.\d+)?){1,3})\s*(#.*)?$/)
+        let bareKv = line.match(/^([A-Za-z0-9_-]+)\s*=\s*([A-Za-z][A-Za-z0-9_-]*)\s*(#.*)?$/)
+        let kv = stringKv || numKv || widthKv || bareKv
         if (!kv || !section) continue
         parsed[section + "." + kv[1]] = kv[2]
       }
@@ -207,8 +207,8 @@ QtObject {
   // survives theme switches (which replace only themeShellValues).
   function mergeShell() {
     var merged = {}
-    for (var tk in themeShellValues) merged[tk] = themeShellValues[tk]
-    for (var uk in userShellValues) merged[uk] = userShellValues[uk]
+    for (let tk in themeShellValues) merged[tk] = themeShellValues[tk]
+    for (let uk in userShellValues) merged[uk] = userShellValues[uk]
     shellValues = merged
     Style.applyShellValues(merged)
   }

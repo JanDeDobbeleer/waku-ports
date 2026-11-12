@@ -26,7 +26,7 @@ Panel {
   // stay out of every list (AudioNodes.platformHides). Most machines have none.
   readonly property var nodeNames: {
     var names = []
-    for (var i = 0; i < nodes.length; i++)
+    for (let i = 0; i < nodes.length; i++)
       if (nodes[i] && nodes[i].name) names.push(String(nodes[i].name))
     return names
   }
@@ -37,8 +37,8 @@ Panel {
 
   readonly property var candidateSinks: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (!n || !n.isSink || n.isStream || platformHides(n)) continue
       list.push(n)
     }
@@ -47,11 +47,11 @@ Panel {
 
   readonly property var candidateSources: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (!n || n.isSink || n.isStream) continue
       if (!isAudioSource(n) && !Model.isUntypedSource(n, sourceAvailability)) continue
-      var name = n.name || ""
+      let name = n.name || ""
       if (name === "quickshell" || platformHides(n)) continue
       list.push(n)
     }
@@ -60,8 +60,8 @@ Panel {
 
   readonly property var candidateStreams: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (!n || !n.isStream || !isPlaybackStream(n)) continue
       // A tuning's output is a playback stream too, but it is the processing
       // itself rather than an application, so it does not belong in the list.
@@ -96,7 +96,7 @@ Panel {
 
   readonly property var rawAudioSinks: {
     var list = []
-    for (var i = 0; i < candidateSinks.length; i++)
+    for (let i = 0; i < candidateSinks.length; i++)
       if (sinkAvailable(candidateSinks[i])) list.push(candidateSinks[i])
     if (sink && list.indexOf(sink) < 0) list.unshift(sink)
     return list
@@ -113,7 +113,7 @@ Panel {
 
   readonly property var audioStreams: {
     var list = []
-    for (var i = 0; i < candidateStreams.length; i++)
+    for (let i = 0; i < candidateStreams.length; i++)
       if (candidateStreams[i].audio) list.push(candidateStreams[i])
     return list
   }
@@ -147,8 +147,8 @@ Panel {
   readonly property var volumeSink: {
     if (volumeSinkName === "" || !sink) return sink
     if (volumeSinkName === String(sink.name)) return sink
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (n && n.isSink && !n.isStream && String(n.name) === volumeSinkName && n.audio)
         return n
     }
@@ -302,7 +302,7 @@ Panel {
       // Escape upward.
       if (sIdx > 0) {
         focusSection = sections[sIdx - 1]
-        var prevMax = sectionCount(focusSection) - 1
+        let prevMax = sectionCount(focusSection) - 1
         selectedIndex = prevMax >= 0 ? prevMax : (sectionHasSlider(focusSection) ? -1 : 0)
       } else {
         focusSection = "header"
@@ -343,7 +343,7 @@ Panel {
       return
     }
     if (focusSection === "streams" && selectedIndex >= 0 && selectedIndex < displayAudioStreams.length) {
-      var s = nodeFor(displayAudioStreams[selectedIndex])
+      let s = nodeFor(displayAudioStreams[selectedIndex])
       if (s && s.audio) s.audio.volume = Math.max(0, Math.min(1.5, s.audio.volume + delta))
     }
   }
@@ -353,18 +353,18 @@ Panel {
     if (focusSection === "header") { toggleAllMuted(); return }
     if (focusSection === "output") {
       if (selectedIndex === -1) { toggleOutputMute(); return }
-      var sink = nodeFor(displayAudioSinks[selectedIndex])
+      let sink = nodeFor(displayAudioSinks[selectedIndex])
       if (sink) setDefaultSink(sink)
       return
     }
     if (focusSection === "input") {
       if (selectedIndex === -1) { toggleInputMute(); return }
-      var src = nodeFor(displayAudioSources[selectedIndex])
+      let src = nodeFor(displayAudioSources[selectedIndex])
       if (src) setDefaultSource(src)
       return
     }
     if (focusSection === "streams" && selectedIndex >= 0) {
-      var st = nodeFor(displayAudioStreams[selectedIndex])
+      let st = nodeFor(displayAudioStreams[selectedIndex])
       if (st && st.audio) st.audio.muted = !st.audio.muted
     }
   }
@@ -395,8 +395,8 @@ Panel {
   // that never held the node cannot dangle.
   function nodeFor(row) {
     if (!row) return null
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (n && n.id === row.id && String(n.name || "") === row.name) return n
     }
     return null
@@ -756,7 +756,7 @@ Panel {
           if (!root.cursorActive) return
           if (root.focusSection === "streams" && root.selectedIndex >= 0
               && root.selectedIndex < root.displayAudioStreams.length) {
-            var s = root.nodeFor(root.displayAudioStreams[root.selectedIndex])
+            let s = root.nodeFor(root.displayAudioStreams[root.selectedIndex])
             if (s && s.audio) s.audio.muted = !s.audio.muted
           } else if (root.focusSection === "input") {
             root.toggleInputMute()

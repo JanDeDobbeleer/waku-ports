@@ -31,7 +31,7 @@ Item {
     var requested = ""
     if (payloadJson) {
       try {
-        var parsed = JSON.parse(String(payloadJson))
+        let parsed = JSON.parse(String(payloadJson))
         if (parsed && typeof parsed.section === "string") requested = parsed.section
       } catch (e) { /* ignore */ }
     }
@@ -209,7 +209,7 @@ Item {
 
   function activateCursor() {
     if (focusSection === "button-group") {
-      var opts = ["top", "right", "bottom", "left"]
+      let opts = ["top", "right", "bottom", "left"]
       if (selectedIndex >= 0 && selectedIndex < opts.length)
         root.choiceDemoValue = opts[selectedIndex]
       return
@@ -312,7 +312,7 @@ Item {
           scrollArea.ScrollBar.vertical.position = 0
           event.accepted = true
         } else if (event.key === Qt.Key_End) {
-          var sb = scrollArea.ScrollBar.vertical
+          let sb = scrollArea.ScrollBar.vertical
           if (sb) sb.position = Math.max(0, 1 - sb.size)
           event.accepted = true
         }

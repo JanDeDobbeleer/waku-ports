@@ -73,7 +73,7 @@ Item {
 
   function open(payloadJson) {
     try {
-      var p = JSON.parse(payloadJson || "{}")
+      let p = JSON.parse(payloadJson || "{}")
       show(p.icon || "", p.message || "", p.value === undefined ? "" : String(p.value), p.max === undefined ? "100" : String(p.max), p.progressText || "", p.duration === undefined ? "1200" : String(p.duration))
     } catch (e) {}
   }

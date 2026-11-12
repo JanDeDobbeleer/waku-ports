@@ -179,7 +179,7 @@ Panel {
         return
       }
 
-      var idx = profiles.indexOf(activeProfile)
+      let idx = profiles.indexOf(activeProfile)
       profileIndex = idx >= 0 ? idx : 0
       cursorActive = false
     }

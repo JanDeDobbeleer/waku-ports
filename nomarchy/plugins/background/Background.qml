@@ -49,7 +49,7 @@ Item {
   readonly property bool ready: {
     if (isVideo(displayedBackground)) return true
     if (backgrounds.instances.length === 0) return false
-    for (var panel of backgrounds.instances) {
+    for (let panel of backgrounds.instances) {
       if (!panel.backgroundReady) return false
     }
     return true
@@ -183,7 +183,7 @@ Item {
       panel.maskReady = true
       return
     }
-    for (var other of backgrounds.instances) {
+    for (let other of backgrounds.instances) {
       if (!other.incomingReady()) {
         revealGraceTimer.start()
         return
@@ -196,7 +196,7 @@ Item {
     if (!incomingBackground || revealStartedVersion === backgroundVersion) return
     revealGraceTimer.stop()
     revealStartedVersion = backgroundVersion
-    for (var panel of backgrounds.instances) {
+    for (let panel of backgrounds.instances) {
       if (panel.incomingReady()) panel.maskReady = true
     }
     applyPendingTheme()
@@ -244,7 +244,7 @@ Item {
   function pruneNativeSizes() {
     var kept = {}
     var paths = [displayedBackground, incomingBackground, oldBackground, preparedBackground]
-    for (var i = 0; i < paths.length; i++) {
+    for (let i = 0; i < paths.length; i++) {
       if (paths[i] && nativeSizes[paths[i]] !== undefined) kept[paths[i]] = nativeSizes[paths[i]]
     }
     nativeSizes = kept

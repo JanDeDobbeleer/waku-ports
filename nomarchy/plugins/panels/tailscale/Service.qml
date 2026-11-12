@@ -396,7 +396,7 @@ Item {
   function exitNodeTarget(peer) {
     if (!peer) return ""
     if (peer.Mullvad === true) {
-      var mullvadIps = filterIPv4(peer.TailscaleIPs || [])
+      let mullvadIps = filterIPv4(peer.TailscaleIPs || [])
       if (mullvadIps.length > 0) return mullvadIps[0]
     }
     return peerAddress(peer)

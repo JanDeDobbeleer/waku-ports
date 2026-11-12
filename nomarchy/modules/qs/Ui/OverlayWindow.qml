@@ -18,7 +18,7 @@ PanelWindow {
   property var targetScreen: null
   readonly property var targetMonitor: {
     var monitors = Hyprland.monitors.values
-    for (var i = 0; i < monitors.length; i++) {
+    for (let i = 0; i < monitors.length; i++) {
       if (targetScreen && monitors[i].name === targetScreen.name) return monitors[i]
     }
     // Windows port: Quickshell.Hyprland has no monitors, so the screen stands in for one.
@@ -60,7 +60,7 @@ PanelWindow {
   function focusedScreen() {
     var monitor = Hyprland.focusedMonitor
     var name = monitor ? String(monitor.name || "") : ""
-    for (var i = 0; i < Quickshell.screens.length; i++) {
+    for (let i = 0; i < Quickshell.screens.length; i++) {
       if (Quickshell.screens[i].name === name) return Quickshell.screens[i]
     }
     return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null

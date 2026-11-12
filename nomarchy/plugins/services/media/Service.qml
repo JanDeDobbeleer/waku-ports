@@ -19,8 +19,8 @@ Item {
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var playbackStreams: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i]
+    for (let i = 0; i < nodes.length; i++) {
+      let n = nodes[i]
       if (n && n.isStream && isPlaybackStream(n) && n.audio) list.push(n)
     }
     return list
@@ -89,8 +89,8 @@ Item {
 
   function playerForKey(key) {
     if (!key) return null
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
       if (playerKey(p) === key) return p
     }
     return null
@@ -107,9 +107,9 @@ Item {
     var alive = {}
     var serial = playSerial
 
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
-      var key = playerKey(p)
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
+      let key = playerKey(p)
       if (!key) continue
 
       alive[key] = true
@@ -131,8 +131,8 @@ Item {
 
   function orderedSourcePlayers() {
     var list = []
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
       if (hasMetadata(p)) list.push(p)
     }
 
@@ -140,7 +140,7 @@ Item {
       if (!!a.isPlaying !== !!b.isPlaying) return a.isPlaying ? -1 : 1
       if (isProxyPlayer(a) !== isProxyPlayer(b)) return isProxyPlayer(a) ? 1 : -1
       if (a.isPlaying && b.isPlaying) {
-        var orderDelta = playerOrder(a, 1000) - playerOrder(b, 1000)
+        let orderDelta = playerOrder(a, 1000) - playerOrder(b, 1000)
         if (orderDelta !== 0) return orderDelta
       }
       return labelFor(a).localeCompare(labelFor(b))
@@ -151,8 +151,8 @@ Item {
 
   function orderedCycleSourcePlayers() {
     var list = []
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
       if (canCycleSource(p)) list.push(p)
     }
 
@@ -170,15 +170,15 @@ Item {
     var playingProxy = null
     var proxyOrder = 0
 
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
       if (!p) continue
 
-      var proxyPlayer = isProxyPlayer(p)
+      let proxyPlayer = isProxyPlayer(p)
       if (p.isPlaying) {
         if (requirePlaybackStream && !playerHasPlaybackStream(p)) continue
 
-        var order = playerOrder(p, i + 1000)
+        let order = playerOrder(p, i + 1000)
         if (!proxyPlayer && (!oldest || order < oldestOrder)) {
           oldest = p
           oldestOrder = order
@@ -194,8 +194,8 @@ Item {
 
   function selectActivePlayer() {
     var preferred = null
-    for (var i = 0; i < players.length; i++) {
-      var p = players[i]
+    for (let i = 0; i < players.length; i++) {
+      let p = players[i]
       if (p && preferredPlayerKey && playerKey(p) === preferredPlayerKey && hasMetadata(p)) preferred = p
     }
 
@@ -291,7 +291,7 @@ Item {
 
     var activeKey = playerKey(activePlayer)
     var index = 0
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       if (playerKey(list[i]) === activeKey) {
         index = i
         break
@@ -308,8 +308,8 @@ Item {
     preferredPlayerKey = nextKey
 
     if (transferPlayback && currentWasPlaying && next && nextKey !== currentKey) {
-      var nextWasPlaying = next.isPlaying
-      var nextStarted = nextWasPlaying || playPlayer(next)
+      let nextWasPlaying = next.isPlaying
+      let nextStarted = nextWasPlaying || playPlayer(next)
       if (nextStarted) pausePlayer(current)
     }
 
@@ -325,14 +325,14 @@ Item {
     if (targeted) return targeted
 
     if (action === "pause" || action === "playPause") {
-      var oldest = oldestPlayingPlayer(true) || oldestPlayingPlayer(false)
+      let oldest = oldestPlayingPlayer(true) || oldestPlayingPlayer(false)
       if (oldest) return oldest
     }
 
     if (canHandleAction(activePlayer, action)) return activePlayer
 
     var list = sourcePlayers
-    for (var i = 0; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       if (canHandleAction(list[i], action)) return list[i]
     }
 
@@ -452,7 +452,7 @@ Item {
     if (action === "mute-toggle") {
       // Some keyboards bounce the mute key; the script ignores a second
       // toggle within 250ms too.
-      var now = Date.now()
+      let now = Date.now()
       if (now - lastMuteToggle < 250) return true
       lastMuteToggle = now
       audio.muted = step.muted

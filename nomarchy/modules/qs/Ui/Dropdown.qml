@@ -58,7 +58,7 @@ Item {
     return (o && typeof o === "object") ? String(o.label) : String(o)
   }
   function currentLabel() {
-    for (var i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
       if (optionValue(options[i]) === value) return optionLabel(options[i])
     }
     return value
@@ -199,7 +199,7 @@ Item {
           currentIndex: -1
 
           function indexOfValue(v) {
-            for (var i = 0; i < root.options.length; i++)
+            for (let i = 0; i < root.options.length; i++)
               if (root.optionValue(root.options[i]) === v) return i
             return -1
           }

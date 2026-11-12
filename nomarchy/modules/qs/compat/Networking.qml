@@ -48,7 +48,7 @@ Singleton {
     readonly property var list: {
         var out = []
         if (S.Network.wifiAvailable) out.push(root.wifi)
-        for (var i = 0; i < wired.count; ++i) out.push(wired.objectAt(i))
+        for (let i = 0; i < wired.count; ++i) out.push(wired.objectAt(i))
         return out
     }
     function collect() {}

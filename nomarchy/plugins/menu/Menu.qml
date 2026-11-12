@@ -52,8 +52,8 @@ Item {
   // PORTDBG: first n display rows, for tools\menu-state.ps1
   function debugRows(n) {
     var out = []
-    for (var i = 0; i < Math.min(Number(n) || 5, displayModel.count); i++) {
-      var r = displayModel.get(i)
+    for (let i = 0; i < Math.min(Number(n) || 5, displayModel.count); i++) {
+      let r = displayModel.get(i)
       out.push(String(r.label || r.name || "") + (r.appId ? " [" + r.appId + "]" : "") + (r.appIcon ? " icon=" + r.appIcon : ""))
     }
     return out.join(" | ")
@@ -234,8 +234,8 @@ Item {
     var total = 0
     var previousSection = ""
 
-    for (var i = 0; i < displayModel.count; i++) {
-      var row = displayModel.get(i)
+    for (let i = 0; i < displayModel.count; i++) {
+      let row = displayModel.get(i)
       if (i > 0) total += root.rowSpacing
       if (row.section === "drilldown" && previousSection !== "drilldown") total += root.dividerHeight
       total += root.rowHeightForDetail(row.detail)
@@ -255,7 +255,7 @@ Item {
 
     var totals = []
     var total = 0
-    for (var i = 0; i < displayModel.count; i++) {
+    for (let i = 0; i < displayModel.count; i++) {
       if (i > 0) total += root.rowSpacing
       total += root.rowHeightForDetail(displayModel.get(i).detail)
       totals.push(total)
@@ -291,7 +291,7 @@ Item {
 
   function parseCatalog(raw) {
     try {
-      var parsed = JSON.parse(raw || "{}")
+      let parsed = JSON.parse(raw || "{}")
       return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
     } catch (e) {
       return ({})
@@ -389,12 +389,12 @@ Item {
 
     var rows = root.appLibrary.sortedEntries("")
     var appRows = []
-    for (var j = 0; j < rows.length; j++) {
-      var entry = rows[j].entry
-      var appId = String(entry.id || "")
+    for (let j = 0; j < rows.length; j++) {
+      let entry = rows[j].entry
+      let appId = String(entry.id || "")
       if (!appId) continue
-      var subtext = root.appLibrary.entrySubtext(entry)
-      var aliases = subtext ? [subtext] : []
+      let subtext = root.appLibrary.entrySubtext(entry)
+      let aliases = subtext ? [subtext] : []
       try {
         if (entry.keywords && typeof entry.keywords.join === "function") aliases = aliases.concat(entry.keywords)
       } catch (e) { }
@@ -452,19 +452,19 @@ Item {
     var lines = String(rows || "").split("\n")
     var providerRows = []
     var takenIds = ({})
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i].trim()
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim()
       if (!line) continue
-      var parts = line.split("\t")
-      var rawLabel = parts[0] || ""
-      var label = spec.labelFor ? spec.labelFor(rawLabel) : rawLabel
-      var value = parts[1] || parts[0] || ""
-      var current = parts[2] || ""
+      let parts = line.split("\t")
+      let rawLabel = parts[0] || ""
+      let label = spec.labelFor ? spec.labelFor(rawLabel) : rawLabel
+      let value = parts[1] || parts[0] || ""
+      let current = parts[2] || ""
       if (!label) continue
       // Distinct values can slugify alike — Fira Code and Fira-Code both give
       // fira-code — and a repeated id is dropped, which would silently lose a
       // row from the list. Nudge it until it is the row's own.
-      var rowId = menuId + "." + root.slugify(value)
+      let rowId = menuId + "." + root.slugify(value)
       while (takenIds[rowId]) rowId += "-"
       takenIds[rowId] = true
 
@@ -497,8 +497,8 @@ Item {
     if (providerProc.running) return
 
     while (root.providerQueue.length > 0) {
-      var id = root.providerQueue.shift()
-      var entry = root.item(id)
+      let id = root.providerQueue.shift()
+      let entry = root.item(id)
       if (!entry || !entry.provider || root.providersLoaded[id]) continue
 
       root.startProviderForMenu(id)
@@ -536,8 +536,8 @@ Item {
   function loadProvidersForSearch() {
     var active = root.item(root.activeMenu) ? root.activeMenu : "root"
 
-    for (var i = 0; i < root.itemOrder.length; i++) {
-      var entry = root.item(root.itemOrder[i])
+    for (let i = 0; i < root.itemOrder.length; i++) {
+      let entry = root.item(root.itemOrder[i])
       if (!entry || !entry.provider || root.providersLoaded[entry.id]) continue
       if (active !== "root" && entry.id !== active && !root.isDescendantOf(entry.id, active)) continue
 
@@ -633,7 +633,7 @@ Item {
 
     var step = direction < 0 ? -1 : 1
     var index = ((from % count) + count) % count
-    for (var i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       if (root.rowSelectable(index)) return index
       index = (index + step + count) % count
     }
@@ -668,15 +668,15 @@ Item {
       })
     }
     var query = root.filterText.trim().toLowerCase()
-    for (var i = 0; i < root.dmenuOptions.length; i++) {
+    for (let i = 0; i < root.dmenuOptions.length; i++) {
       // An option is "<label>", "<glyph>\t<label>", or
       // "<glyph>\t<label>\t<subtext>". The glyph never comes back with the
       // selection; the subtext renders under the label, filters alongside it,
       // and returns with the selection as a stable key for same-named rows.
-      var parts = String(root.dmenuOptions[i] || "").split("\t")
-      var icon = parts.length > 1 ? parts.shift() : ""
-      var label = parts.shift() || ""
-      var detail = parts.join("\t")
+      let parts = String(root.dmenuOptions[i] || "").split("\t")
+      let icon = parts.length > 1 ? parts.shift() : ""
+      let label = parts.shift() || ""
+      let detail = parts.join("\t")
       if (query && label.toLowerCase().indexOf(query) < 0
           && detail.toLowerCase().indexOf(query) < 0) continue
       displayModel.append({
@@ -711,12 +711,12 @@ Item {
   }
 
   function updateDmenuChecks() {
-    for (var i = 0; i < displayModel.count; i++) {
-      var row = displayModel.get(i)
+    for (let i = 0; i < displayModel.count; i++) {
+      let row = displayModel.get(i)
       if (row.itemId === "dmenu.apply") {
         displayModel.setProperty(i, "detail", Commons.I18n.tn("menu.selectedCount", root.dmenuSelected.length).arg(Commons.I18n.formatNumber(root.dmenuSelected.length)))
       } else if (row.kind === "dmenu") {
-        var value = MenuModel.dmenuValue(root.dmenuOptions[Number(row.itemId.substring(6))])
+        let value = MenuModel.dmenuValue(root.dmenuOptions[Number(row.itemId.substring(6))])
         displayModel.setProperty(i, "icon", root.dmenuSelected.indexOf(value) !== -1 ? "✓" : "○")
       }
     }
@@ -739,22 +739,22 @@ Item {
     root.searchDivider = false
 
     if (query) {
-      var currentRows = []
-      var drilldownRows = []
+      let currentRows = []
+      let drilldownRows = []
 
-      for (var i = 0; i < root.itemOrder.length; i++) {
-        var entry = root.item(root.itemOrder[i])
+      for (let i = 0; i < root.itemOrder.length; i++) {
+        let entry = root.item(root.itemOrder[i])
         if (!entry || entry.id === "root") continue
         if (!root.isDescendantOf(entry.id, active)) continue
         if (!root.matchesQuery(entry, query)) continue
 
-        var detail = root.parentPathFor(entry.id)
-        var row = root.displayRow(entry, detail, root.searchScore(entry, query))
+        let detail = root.parentPathFor(entry.id)
+        let row = root.displayRow(entry, detail, root.searchScore(entry, query))
         if (entry.parent === active) currentRows.push(row)
         else drilldownRows.push(row)
       }
 
-      var searchSort = function(a, b) {
+      let searchSort = function(a, b) {
         if (a.score !== b.score) return a.score - b.score
         return a.path.localeCompare(b.path)
       }
@@ -763,12 +763,12 @@ Item {
       drilldownRows.sort(searchSort)
       root.searchDivider = currentRows.length > 0 && drilldownRows.length > 0
       if (root.searchDivider) {
-        for (var d = 0; d < drilldownRows.length; d++) drilldownRows[d].section = "drilldown"
+        for (let d = 0; d < drilldownRows.length; d++) drilldownRows[d].section = "drilldown"
       }
       rows = currentRows.concat(drilldownRows)
     } else {
-      for (var j = 0; j < root.itemOrder.length; j++) {
-        var child = root.item(root.itemOrder[j])
+      for (let j = 0; j < root.itemOrder.length; j++) {
+        let child = root.item(root.itemOrder[j])
         if (!child || child.parent !== active) continue
         if (!root.isVisible(child)) continue
         rows.push(root.displayRow(child, child.description, child.order))
@@ -791,7 +791,7 @@ Item {
       }
     }
 
-    for (var k = 0; k < rows.length; k++) displayModel.append(rows[k])
+    for (let k = 0; k < rows.length; k++) displayModel.append(rows[k])
     layoutSerial += 1
 
     root.settleCursor()
@@ -813,12 +813,12 @@ Item {
 
     var reach = root.rowPeek + root.rowSpacing
     if (root.selectedIndex < displayModel.count - 1) {
-      var maxY = Math.max(resultList.originY, resultList.originY + resultList.contentHeight - resultList.height)
-      var overhang = item.y + item.height + reach - (resultList.contentY + resultList.height)
+      let maxY = Math.max(resultList.originY, resultList.originY + resultList.contentHeight - resultList.height)
+      let overhang = item.y + item.height + reach - (resultList.contentY + resultList.height)
       if (overhang > 0) resultList.contentY = Math.min(resultList.contentY + overhang, maxY)
     }
     if (root.selectedIndex > 0) {
-      var underhang = resultList.contentY - (item.y - reach)
+      let underhang = resultList.contentY - (item.y - reach)
       if (underhang > 0) resultList.contentY = Math.max(resultList.contentY - underhang, resultList.originY)
     }
   }
@@ -865,7 +865,7 @@ Item {
     if (root.activeMenu === "root") return false
 
     if (root.navStack.length > 0) {
-      var previous = root.navStack[root.navStack.length - 1]
+      let previous = root.navStack[root.navStack.length - 1]
       root.navStack = root.navStack.slice(0, root.navStack.length - 1)
       root.setActiveMenu(previous, false)
       return true
@@ -884,13 +884,13 @@ Item {
         return
       }
       if (index < 0 || index >= displayModel.count) return
-      var picked = displayModel.get(index)
+      let picked = displayModel.get(index)
       if (root.dmenuMultiple) {
         if (picked.itemId === "dmenu.apply") {
           root.applyDmenuSelection(JSON.stringify(MenuModel.dmenuSelections(root.dmenuOptions, root.dmenuSelected)))
         } else {
-          var value = MenuModel.dmenuValue(root.dmenuOptions[Number(picked.itemId.substring(6))])
-          var selected = MenuModel.toggleDmenuSelection(selectionProc.requestedSelection(), value)
+          let value = MenuModel.dmenuValue(root.dmenuOptions[Number(picked.itemId.substring(6))])
+          let selected = MenuModel.toggleDmenuSelection(selectionProc.requestedSelection(), value)
           if (root.dmenuOnChange.length > 0) {
             selectionProc.enqueue(selected)
           } else {
@@ -910,8 +910,8 @@ Item {
     if (row.kind === "menu" || row.kind === "link") {
       root.setActiveMenu(row.target || row.itemId, true, fromPointer)
     } else if (row.kind === "app") {
-      var appId = row.appId
-      var label = row.label
+      let appId = row.appId
+      let label = row.label
       applySerial = requestSerial
       opened = false
       filterText = ""
@@ -1091,7 +1091,7 @@ Item {
     property string collected: ""
 
     function requestedSelection() {
-      for (var i = queue.length - 1; i >= 0; i--) {
+      for (let i = queue.length - 1; i >= 0; i--) {
         if (queue[i].key === root.dmenuChangeKey) return queue[i].selected
       }
       if (running && changeKey === root.dmenuChangeKey) return selected
@@ -1126,7 +1126,7 @@ Item {
     onExited: function(exitCode) {
       if (changeKey === root.dmenuChangeKey && root.dmenuActive && root.dmenuOnChange.length > 0) {
         if (exitCode === 0) {
-          var applied = selected
+          let applied = selected
           if (collected.trim()) {
             try { applied = JSON.parse(collected) } catch (error) { applied = root.dmenuSelected }
           }
@@ -1265,17 +1265,17 @@ Item {
       var nextChecked = ({})
       var nextDisabled = ({})
       var lines = guardProc.collected.split("\n")
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim()
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim()
         if (!line) continue
-        var colon = line.lastIndexOf(":")
+        let colon = line.lastIndexOf(":")
         if (colon < 0) continue
-        var value = line.substring(colon + 1) === "1"
-        var rest = line.substring(0, colon)
-        var tagAt = rest.lastIndexOf(":")
+        let value = line.substring(colon + 1) === "1"
+        let rest = line.substring(0, colon)
+        let tagAt = rest.lastIndexOf(":")
         if (tagAt < 0) continue
-        var id = rest.substring(0, tagAt)
-        var tag = rest.substring(tagAt + 1)
+        let id = rest.substring(0, tagAt)
+        let tag = rest.substring(tagAt + 1)
         if (tag === "w") nextWhen[id] = value
         else if (tag === "c") nextChecked[id] = value
         else if (tag === "d") nextDisabled[id] = value

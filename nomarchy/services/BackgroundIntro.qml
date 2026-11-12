@@ -66,7 +66,7 @@ Item {
   function revealStartup() {
     if (!startupPending || startupFade.running || !startupMediaReady || !desktopReady) return
     if (!startupCovers.instances.length) return
-    for (var panel of startupCovers.instances)
+    for (let panel of startupCovers.instances)
       if (panel.readyFrames < 2) return
     startupFade.start()
   }
@@ -142,7 +142,7 @@ Item {
   function themeCoverStatus(token) {
     if (token !== themeToken) return "superseded"
     if (!themeBackground) return "ready"
-    for (var panel of covers.instances) {
+    for (let panel of covers.instances) {
       if (panel.coverFailed) return "error"
       if (!panel.coverReady) return "loading"
     }
@@ -252,7 +252,7 @@ Item {
     onExited: function(exitCode) {
       if (exitCode !== 0 || token !== root.themeToken || (!token && !root.cover)) return
       try {
-        var status = JSON.parse(frameStatusOut.text)
+        let status = JSON.parse(frameStatusOut.text)
         if (status.kind === "video" && status.ready && !status.has_transition && status.time_pos > 0)
           root.revealTheme()
       } catch (e) {}

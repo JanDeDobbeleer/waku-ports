@@ -44,7 +44,7 @@ Panel {
       Util.execArgv(["nomarchy-agent", "--local-model", model.recipe])
       root.close()
     } else if (action === "toggle") {
-      var running = model.unit === "active" || model.unit === "activating"
+      let running = model.unit === "active" || model.unit === "activating"
       // Greyed out means not startable by any route: click, Return or Enter.
       if (!running && localStartBlocked(model)) return
       // The panel has no terminal: a start that fails records its reason,
@@ -89,7 +89,7 @@ Panel {
     if (target.localModel) {
       Util.execArgv(["nomarchy-agent-local", "remove", target.localModel.recipe])
     } else if (bar && bar.shell) {
-      var next = JSON.parse(JSON.stringify(settings || {}))
+      let next = JSON.parse(JSON.stringify(settings || {}))
       if (!next.providers) next.providers = {}
       next.providers[target.providerId] = Object.assign({}, next.providers[target.providerId] || {}, { enabled: false })
       bar.shell.updateEntryInline(moduleName, next)
@@ -107,10 +107,10 @@ Panel {
   // a picked account is what moves new sessions to it.
   readonly property var accountEntries: {
     var out = []
-    for (var i = 0; i < providers.length; i++) {
-      var list = providerAccounts(providers[i])
+    for (let i = 0; i < providers.length; i++) {
+      let list = providerAccounts(providers[i])
       if (list.length < 2) continue
-      for (var j = 0; j < list.length; j++) out.push({ provider: providers[i], account: list[j] })
+      for (let j = 0; j < list.length; j++) out.push({ provider: providers[i], account: list[j] })
     }
     return out
   }
@@ -129,33 +129,34 @@ Panel {
     if (addButtonShown) hero.push({ kind: "add", index: 0 })
     if (hero.length > 0) rows.push(hero)
     if (picking) {
-      var choices = []
-      for (var k = 0; k < addProviders.length; k++) choices.push({ kind: "choice", index: k })
+      let choices = []
+      for (let k = 0; k < addProviders.length; k++) choices.push({ kind: "choice", index: k })
       rows.push(choices)
     } else if (addStage === "local") {
-      for (var r = 0; r < localAddRecipes.length; r++) rows.push([{ kind: "localAdd", index: r }])
+      for (let r = 0; r < localAddRecipes.length; r++) rows.push([{ kind: "localAdd", index: r }])
     } else if (addStage === "") {
       // Accounts count in the same order as accountEntries. Only what can be
       // done is a stop: one that isn't active offers Autoswitch beside Use, a
       // lapsed sign-in comes first, and the active account with nothing to
       // fix is skipped.
-      var entry = 0
-      for (var p = 0; p < providers.length; p++) {
+      let entry = 0
+      let p
+      for (p = 0; p < providers.length; p++) {
         if (providers[p].localModel) {
-          var actions = localActions(providers[p].localModel)
+          let actions = localActions(providers[p].localModel)
           rows.push(actions.length > 0 ? actions.map(function(action) { return { kind: action === "toggle" ? "modelToggle" : "modelLaunch", index: p } }) : [{ kind: "modelHeader", index: p }])
           continue
         }
         // Every agent's line is a stop, so Ctrl+Up/Down can move it: its
         // terminal button when it has a harness of its own, else its mark.
         rows.push([{ kind: lineStop(p), index: p }])
-        var accounts = providerAccounts(providers[p])
+        let accounts = providerAccounts(providers[p])
         if (accounts.length < 2) {
           if (needsSignIn(providers[p])) rows.push([{ kind: "providerSignin", index: p }])
           continue
         }
-        for (var a = 0; a < accounts.length; a++, entry++) {
-          var row = []
+        for (let a = 0; a < accounts.length; a++, entry++) {
+          let row = []
           if (needsSignIn(accounts[a])) row.push({ kind: "signin", index: entry })
           if (!accounts[a].active) {
             row.push({ kind: "autoswitch", index: entry })
@@ -165,8 +166,8 @@ Panel {
         }
       }
       if (!blankSlate) {
-        var tiles = []
-        for (var j = 0; j < starterPrompts.length; j++) tiles.push({ kind: "starter", index: j })
+        let tiles = []
+        for (let j = 0; j < starterPrompts.length; j++) tiles.push({ kind: "starter", index: j })
         rows.push(tiles)
       }
     }
@@ -185,8 +186,8 @@ Panel {
   }
 
   function pointAt(kind, index) {
-    for (var r = 0; r < keyRows.length; r++) {
-      for (var c = 0; c < keyRows[r].length; c++) {
+    for (let r = 0; r < keyRows.length; r++) {
+      for (let c = 0; c < keyRows[r].length; c++) {
         if (keyRows[r][c].kind === kind && keyRows[r][c].index === (index || 0)) {
           keyRow = r
           keyColumn = c
@@ -205,7 +206,7 @@ Panel {
     var provider = providers[p]
     if (!provider) return "provider"
     if (provider.localModel) {
-      var actions = localActions(provider.localModel)
+      let actions = localActions(provider.localModel)
       if (actions.indexOf("launch") >= 0) return "modelLaunch"
       return actions.indexOf("toggle") >= 0 ? "modelToggle" : "modelHeader"
     }
@@ -224,10 +225,10 @@ Panel {
       keyRow = clamp(keyRow + dy, 0, keyRows.length - 1)
       // Arriving on an account lands on Use; left reaches Autoswitch. Arriving
       // on an agent's line lands on its rightmost button: terminal, or play.
-      var row = keyRows[keyRow]
-      var use = -1
-      for (var c = 0; c < row.length; c++) if (row[c].kind === "account") use = c
-      var line = ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(row[0].kind) >= 0
+      let row = keyRows[keyRow]
+      let use = -1
+      for (let c = 0; c < row.length; c++) if (row[c].kind === "account") use = c
+      let line = ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(row[0].kind) >= 0
       keyColumn = use >= 0 ? use : line ? row.length - 1 : Math.min(keyColumn, row.length - 1)
     } else if (dx !== 0) {
       keyColumn = clamp(Math.min(keyColumn, keyRows[keyRow].length - 1) + dx, 0, keyRows[keyRow].length - 1)
@@ -270,7 +271,7 @@ Panel {
   function beginProviderDrag(index, y) {
     if (dragIndex >= 0 || !providerSections) return
     var pitches = []
-    for (var i = 0; i < providerSections.count; i++)
+    for (let i = 0; i < providerSections.count; i++)
       pitches.push(providerSections.itemAt(i).height + column.spacing)
     rowPitches = pitches
     // Keep the same model object so grabbing does not rebuild the delegates.
@@ -353,8 +354,8 @@ Panel {
   // The bar icon lights up when any account new sessions use is nearly out,
   // or a prepaid balance is down to its last 10%.
   readonly property bool alarming: {
-    for (var i = 0; i < providers.length; i++) {
-      var window = bindingWindow(providers[i])
+    for (let i = 0; i < providers.length; i++) {
+      let window = bindingWindow(providers[i])
       if (window && window.percent >= 0.9) return true
       if (balanceAlarming(providers[i].balance)) return true
     }
@@ -434,7 +435,7 @@ Panel {
   property bool addPrivate: false
 
   function addProviderName(id) {
-    for (var i = 0; i < addProviders.length; i++)
+    for (let i = 0; i < addProviders.length; i++)
       if (addProviders[i].providerId === id) return addProviders[i].providerName
     return id
   }
@@ -604,7 +605,7 @@ Panel {
   // Only the agents `nomarchy-agent-account-add` signs in get the link; any
   // other agent's sign-in trouble stays text, with its own help to follow.
   function supportsSignIn(p) {
-    for (var i = 0; i < addProviders.length; i++)
+    for (let i = 0; i < addProviders.length; i++)
       if (p && addProviders[i].providerId === p.providerId) return true
     return false
   }
@@ -755,9 +756,9 @@ Panel {
     if (!p) return []
     var out = []
     var list = p.limits || []
-    for (var i = 0; i < list.length; i++) {
-      var entry = list[i] || {}
-      var percent = Number(entry.percent)
+    for (let i = 0; i < list.length; i++) {
+      let entry = list[i] || {}
+      let percent = Number(entry.percent)
       if (percent >= 0) out.push(limitWindow(entry.label, percent, entry.resetsAt, entry.title))
     }
     return out
@@ -776,16 +777,16 @@ Panel {
     var windows = limitWindows(p)
     var out = []
     var byTitle = {}
-    for (var i = 0; i < windows.length; i++) {
+    for (let i = 0; i < windows.length; i++) {
       if (scopedPart(windows[i].title)) continue
       windows[i].scoped = []
       out.push(windows[i])
       byTitle[windows[i].title] = windows[i]
     }
-    for (var j = 0; j < windows.length; j++) {
-      var part = scopedPart(windows[j].title)
+    for (let j = 0; j < windows.length; j++) {
+      let part = scopedPart(windows[j].title)
       if (!part) continue
-      var base = byTitle[part.window]
+      let base = byTitle[part.window]
       if (base) {
         base.scoped.push({ title: part.model, percent: windows[j].percent, resetAt: windows[j].resetAt })
       } else {
@@ -801,7 +802,7 @@ Panel {
   function bindingWindow(p) {
     var windows = limitWindows(p)
     var best = null
-    for (var i = 0; i < windows.length; i++) {
+    for (let i = 0; i < windows.length; i++) {
       if (!best || windows[i].percent > best.percent) best = windows[i]
     }
     return best
@@ -938,11 +939,11 @@ Panel {
     var byDay = {}
     var byModel = {}
     var providers = usage.enabledProviders
-    for (var i = 0; i < providers.length; i++) {
-      var p = providers[i]
-      var days = p.recentDays || []
-      for (var d = 0; d < days.length; d++) {
-        var tokens = Number(days[d].messageCount || 0)
+    for (let i = 0; i < providers.length; i++) {
+      let p = providers[i]
+      let days = p.recentDays || []
+      for (let d = 0; d < days.length; d++) {
+        let tokens = Number(days[d].messageCount || 0)
         week += tokens
         byDay[days[d].date] = (byDay[days[d].date] || 0) + tokens
       }
@@ -951,12 +952,12 @@ Panel {
         prompts += Number(p.todayPrompts || 0)
         sessions += Number(p.todaySessions || 0)
       }
-      var models = p.modelUsage || {}
-      for (var id in models) {
-        var bucket = models[id] || {}
-        var total = Number(bucket.inputTokens || 0) + Number(bucket.outputTokens || 0)
+      let models = p.modelUsage || {}
+      for (let id in models) {
+        let bucket = models[id] || {}
+        let total = Number(bucket.inputTokens || 0) + Number(bucket.outputTokens || 0)
           + Number(bucket.cacheReadInputTokens || 0) + Number(bucket.cacheCreationInputTokens || 0)
-        var name = usage.friendlyModelName(id)
+        let name = usage.friendlyModelName(id)
         byModel[name] = (byModel[name] || 0) + total
       }
     }
@@ -965,10 +966,10 @@ Panel {
     if (week > 0) phrases.push(Commons.I18n.tn("agents.tokensThisWeek", week).arg(usage.formatTokenCount(week)))
     if (today > 0) phrases.push(Commons.I18n.tn("agents.tokensToday", today).arg(usage.formatTokenCount(today)))
     var topModel = ""
-    for (var model in byModel) if (topModel === "" || byModel[model] > byModel[topModel]) topModel = model
+    for (let model in byModel) if (topModel === "" || byModel[model] > byModel[topModel]) topModel = model
     if (topModel !== "" && byModel[topModel] > 0) phrases.push(Commons.I18n.t("agents.mostlyModel").arg(topModel))
     var busiest = ""
-    for (var date in byDay) if (busiest === "" || byDay[date] > byDay[busiest]) busiest = date
+    for (let date in byDay) if (busiest === "" || byDay[date] > byDay[busiest]) busiest = date
     if (busiest !== "" && byDay[busiest] > 0) phrases.push(Commons.I18n.t("agents.busiestDay").arg(dayName(busiest)))
     if (prompts > 0) phrases.push(Commons.I18n.tn("agents.promptsToday", prompts).arg(Commons.I18n.formatNumber(prompts)))
     if (sessions > 0) phrases.push(Commons.I18n.tn("agents.sessionsToday", sessions).arg(Commons.I18n.formatNumber(sessions)))
@@ -1007,8 +1008,8 @@ Panel {
   function footerText() {
     if (usage.syncStatusText !== "") return usage.syncStatusText
     var providers = usage.enabledProviders
-    for (var i = 0; i < providers.length; i++) {
-      var count = Number(providers[i].syncDeviceCount || 0)
+    for (let i = 0; i < providers.length; i++) {
+      let count = Number(providers[i].syncDeviceCount || 0)
       if (providers[i].syncEnabled && count > 0)
         return Commons.I18n.tn("agents.merged", count).arg(Commons.I18n.formatNumber(count))
     }
@@ -1045,7 +1046,7 @@ Panel {
   // Always in the bar: on a machine with no agent yet, the panel is where you
   // set one up.
   readonly property bool anySignedIn: {
-    for (var id in addChecks)
+    for (let id in addChecks)
       if (addChecks[id] !== "first") return true
     return false
   }
@@ -2497,8 +2498,8 @@ Panel {
       text: {
         var lines = []
         if (compact.window) {
-          var windowName = root.windowDisplayTitle(compact.window.title)
-          var used = Commons.I18n.formatNumber(Math.round(compact.window.percent * 100))
+          let windowName = root.windowDisplayTitle(compact.window.title)
+          let used = Commons.I18n.formatNumber(Math.round(compact.window.percent * 100))
           lines.push(compact.resetMs > 0
             ? Commons.I18n.t("agents.windowUsedResets").arg(windowName).arg(used).arg(root.formatDuration(compact.resetMs))
             : Commons.I18n.t("agents.windowUsed").arg(windowName).arg(used))
@@ -2507,7 +2508,7 @@ Panel {
           lines.push(compact.fetchedAt > 0 && root.nowMs - compact.fetchedAt > 60000
             ? Commons.I18n.t("agents.lastUpdatedAgo").arg(root.formatDuration(root.nowMs - compact.fetchedAt))
             : compact.fetchedAt > 0 ? Commons.I18n.t("agents.lastUpdatedJustNow") : Commons.I18n.t("agents.lastUpdatedUnknown"))
-        for (var i = 0; i < compact.scoped.length; i++)
+        for (let i = 0; i < compact.scoped.length; i++)
           lines.push(root.scopedAllowanceText(compact.scoped[i], compact.window ? compact.window.title : ""))
         return lines.join("\n")
       }

@@ -97,7 +97,7 @@ QtObject {
     var s = String(value || "").replace(/^\s+|\s+$/g, "")
     var shortHex = s.match(/^#([0-9A-Fa-f]{3})$/)
     if (shortHex) {
-      var sh = shortHex[1]
+      let sh = shortHex[1]
       return Qt.rgba(
         parseInt(sh.charAt(0) + sh.charAt(0), 16) / 255,
         parseInt(sh.charAt(1) + sh.charAt(1), 16) / 255,
@@ -375,8 +375,8 @@ QtObject {
 
   function applyRoundingJson(raw) {
     try {
-      var json = JSON.parse(raw || "{}")
-      var n = Number(json.int)
+      let json = JSON.parse(raw || "{}")
+      let n = Number(json.int)
       if (isFinite(n) && n >= 0) cornerRadius = n
     } catch (e) {
       // hyprctl missing / Hyprland not running — leave the previous value.
@@ -385,10 +385,10 @@ QtObject {
 
   function applyGapsOutJson(raw) {
     try {
-      var json = JSON.parse(raw || "{}")
-      var css = String(json.css || "")
-      var parts = css.match(/-?\d+(?:\.\d+)?/g) || []
-      var n = parts.length > 0 ? Number(parts[0]) : Number(json.int)
+      let json = JSON.parse(raw || "{}")
+      let css = String(json.css || "")
+      let parts = css.match(/-?\d+(?:\.\d+)?/g) || []
+      let n = parts.length > 0 ? Number(parts[0]) : Number(json.int)
       if (isFinite(n) && n >= 0) gapsOut = Math.max(0, Math.round(n / 2))
     } catch (e) {
       // hyprctl missing / Hyprland not running — leave the previous value.
@@ -408,14 +408,14 @@ QtObject {
     var nextSpacingScaleWithFont = true
     var nextBarScaleWithFont = true
     var v = values || {}
-    for (var fullKey in v) {
-      var dot = fullKey.indexOf(".")
+    for (let fullKey in v) {
+      let dot = fullKey.indexOf(".")
       if (dot < 0) continue
-      var section = fullKey.substr(0, dot)
-      var key = fullKey.substr(dot + 1)
-      var raw = v[fullKey]
+      let section = fullKey.substr(0, dot)
+      let key = fullKey.substr(dot + 1)
+      let raw = v[fullKey]
       if (section === "font") {
-        var ival = parseInt(raw, 10)
+        let ival = parseInt(raw, 10)
         if (!isFinite(ival)) continue
         if (key === "base-size") nextBase = ival
         else fontOut[key] = ival
@@ -425,14 +425,14 @@ QtObject {
         } else if (key === "size-horizontal" || key === "size-vertical" || key === "notch-height"
           || key === "icon-slot" || key === "icon-canvas" || key === "icon-font"
           || key === "icon-size" || key === "status-slot") {
-          var b = parseInt(raw, 10)
+          let b = parseInt(raw, 10)
           if (isFinite(b)) barOut[key] = b
         }
       } else if (section === "spacing") {
         if (key === "scale-with-font") {
           nextSpacingScaleWithFont = boolToken(raw, nextSpacingScaleWithFont)
         } else {
-          var fval = parseFloat(raw)
+          let fval = parseFloat(raw)
           if (!isFinite(fval)) continue
           if (key === "scale") nextSpacingScale = fval
           else spacingOut[key] = fval

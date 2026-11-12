@@ -37,7 +37,7 @@ BarWidget {
   function entryId(entry) {
     if (typeof entry === "string") return entry
     if (Util.isPlainObject(entry)) {
-      var id = entry["id"]
+      let id = entry["id"]
       if (id !== undefined && id !== null && String(id) !== "") return String(id)
     }
     return ""
@@ -46,7 +46,7 @@ BarWidget {
   function entrySettings(entry) {
     if (!Util.isPlainObject(entry)) return {}
     var copy = {}
-    for (var key in entry) {
+    for (let key in entry) {
       if (key === "id") continue
       copy[key] = entry[key]
     }
@@ -59,15 +59,15 @@ BarWidget {
     else if (settings.indicators && typeof settings.indicators.length === "number" && settings.indicators.length > 0) source = settings.indicators
 
     var result = []
-    for (var i = 0; i < source.length; i++) {
-      var item = source[i]
+    for (let i = 0; i < source.length; i++) {
+      let item = source[i]
       if (typeof item !== "string" && item !== null && typeof item === "object") {
         try {
           item = JSON.parse(JSON.stringify(item))
         } catch (error) {
         }
       }
-      var id = entryId(item)
+      let id = entryId(item)
       if (id !== "") result.push(item)
     }
     return result
@@ -89,15 +89,15 @@ BarWidget {
   }
 
   function hasIndicatorId(id) {
-    for (var i = 0; i < indicatorEntries.length; i++) {
+    for (let i = 0; i < indicatorEntries.length; i++) {
       if (entryId(indicatorEntries[i]) === id) return true
     }
     return false
   }
 
   function entryForId(id) {
-    for (var i = 0; i < indicatorEntries.length; i++) {
-      var entry = indicatorEntries[i]
+    for (let i = 0; i < indicatorEntries.length; i++) {
+      let entry = indicatorEntries[i]
       if (entryId(entry) === id) return entry
     }
 
@@ -105,7 +105,7 @@ BarWidget {
   }
 
   function activeModelIndex(id) {
-    for (var i = 0; i < activeIndicatorModel.count; i++) {
+    for (let i = 0; i < activeIndicatorModel.count; i++) {
       if (activeIndicatorModel.get(i).activeId === id) return i
     }
     return -1
@@ -113,7 +113,7 @@ BarWidget {
 
   function copyActiveStates() {
     var states = {}
-    for (var id in indicatorActiveStates) {
+    for (let id in indicatorActiveStates) {
       if (indicatorActiveStates[id] === true) states[id] = true
     }
     return states
@@ -122,8 +122,8 @@ BarWidget {
   function orderedActiveIds(states, preferredOrder) {
     var ids = []
 
-    for (var i = 0; i < preferredOrder.length; i++) {
-      var id = preferredOrder[i]
+    for (let i = 0; i < preferredOrder.length; i++) {
+      let id = preferredOrder[i]
       if (ids.indexOf(id) === -1 && hasIndicatorId(id) && states[id] === true) ids.push(id)
     }
 
@@ -131,14 +131,14 @@ BarWidget {
   }
 
   function syncActiveIndicatorModel() {
-    for (var i = activeIndicatorModel.count - 1; i >= 0; i--) {
+    for (let i = activeIndicatorModel.count - 1; i >= 0; i--) {
       if (activeIndicatorIds.indexOf(activeIndicatorModel.get(i).activeId) === -1)
         activeIndicatorModel.remove(i)
     }
 
-    for (var j = 0; j < activeIndicatorIds.length; j++) {
-      var id = activeIndicatorIds[j]
-      var index = activeModelIndex(id)
+    for (let j = 0; j < activeIndicatorIds.length; j++) {
+      let id = activeIndicatorIds[j]
+      let index = activeModelIndex(id)
       if (index === -1) activeIndicatorModel.insert(j, { activeId: id })
       else if (index !== j) activeIndicatorModel.move(index, j, 1)
     }
@@ -176,11 +176,11 @@ BarWidget {
       inactiveIndicatorJson = json
       inactiveIndicatorModel.clear()
       inactiveIndicatorsMirrored = false
-      for (var i = 0; i < indicatorEntries.length; i++)
+      for (let i = 0; i < indicatorEntries.length; i++)
         inactiveIndicatorModel.append({ entryJson: JSON.stringify(indicatorEntries[i]) })
     }
     if (inactiveIndicatorsMirrored === fixedAtStart) return
-    for (var j = 1; j < inactiveIndicatorModel.count; j++) inactiveIndicatorModel.move(j, 0, 1)
+    for (let j = 1; j < inactiveIndicatorModel.count; j++) inactiveIndicatorModel.move(j, 0, 1)
     inactiveIndicatorsMirrored = fixedAtStart
   }
 

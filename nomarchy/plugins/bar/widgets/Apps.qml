@@ -34,27 +34,27 @@ BarWidget {
   function rebuild() {
     var byExe = {}
     var order = []
-    for (var i = 0; i < rows.count; i++) {
-      var o = rows.objectAt(i)
+    for (let i = 0; i < rows.count; i++) {
+      let o = rows.objectAt(i)
       if (!o || o.key.indexOf("w:") !== 0) continue
-      var exe = o.exe
+      let exe = o.exe
       if (!byExe[exe]) {
         byExe[exe] = { key: exe, exe: exe, iconUrl: o.iconUrl, windows: [] }
         order.push(exe)
       }
-      var g = byExe[exe]
+      let g = byExe[exe]
       if (!g.iconUrl) g.iconUrl = o.iconUrl
       g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized })
     }
     var kept = []
     var seen = {}
-    for (var k = 0; k < root.known.length; k++) {
+    for (let k = 0; k < root.known.length; k++) {
       if (byExe[root.known[k]]) { kept.push(root.known[k]); seen[root.known[k]] = true }
     }
-    for (var n = 0; n < order.length; n++) if (!seen[order[n]]) kept.push(order[n])
+    for (let n = 0; n < order.length; n++) if (!seen[order[n]]) kept.push(order[n])
     root.known = kept
     var out = []
-    for (var m = 0; m < kept.length; m++) out.push(byExe[kept[m]])
+    for (let m = 0; m < kept.length; m++) out.push(byExe[kept[m]])
     root.groups = out
   }
 
@@ -65,7 +65,7 @@ BarWidget {
     if (!g || g.windows.length === 0) return
     var target = g.windows[last ? g.windows.length - 1 : 0]
     var focusedAt = -1
-    for (var i = 0; i < g.windows.length; i++) if (g.windows[i].active) focusedAt = i
+    for (let i = 0; i < g.windows.length; i++) if (g.windows[i].active) focusedAt = i
     if (focusedAt >= 0 && g.windows.length === 1) return
     if (focusedAt >= 0 && !last) target = g.windows[(focusedAt + 1) % g.windows.length]
     taskbar.activate(target.index)
@@ -93,7 +93,7 @@ BarWidget {
   // The group as it is now: the preview follows windows opening, closing and changing title.
   readonly property var previewGroup: {
     if (!hoverGroup) return null
-    for (var i = 0; i < groups.length; i++) if (groups[i].key === hoverGroup.key) return groups[i]
+    for (let i = 0; i < groups.length; i++) if (groups[i].key === hoverGroup.key) return groups[i]
     return null
   }
 
