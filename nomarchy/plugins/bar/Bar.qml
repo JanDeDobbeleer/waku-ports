@@ -777,11 +777,11 @@ Item {
     return sizes
   }
 
-  function barSizeFor(screenName) {
+  function barSizeFor(screenName: var): real {
     return BarModel.barSizeFor(root.screenBarSizes, screenName, root.barSize)
   }
 
-  function normalizePosition(value) {
+  function normalizePosition(value: var): string {
     return BarModel.normalizePosition(value)
   }
 
@@ -865,7 +865,7 @@ Item {
   // Counting any bar surface is enough: every monitor lays its bar out from the
   // one layout, and summoning the id routes through pickPanelSlot, which opens
   // the focused monitor's copy whichever surface was counted.
-  function panelWidgetIdAt(region, index) {
+  function panelWidgetIdAt(region: var, index: var): string {
     var slots = panelNavigationSlots(String(region || ""), null)
     var slot = slots[Math.round(Number(index)) - 1]
     return slot ? String(slot.moduleName || "") : ""
@@ -926,7 +926,7 @@ Item {
   // The output Hyprland has focused, which is where a keyboard-summoned panel
   // belongs. Empty until Hyprland reports one, which leaves panel routing on
   // its per-monitor fallback rather than guessing at an output.
-  function focusedScreenName() {
+  function focusedScreenName(): string {
     var monitor = Hyprland.focusedMonitor
     return monitor ? String(monitor.name || "") : ""
   }
@@ -985,15 +985,15 @@ Item {
     return BarModel.moduleString(entry, key, fallback)
   }
 
-  function canonicalWidgetId(name) {
+  function canonicalWidgetId(name: var): string {
     return Util.canonicalWidgetId(name)
   }
 
-  function expandPath(path) {
+  function expandPath(path: var): string {
     return BarModel.expandPath(path, home)
   }
 
-  function customModuleSafeName(name) {
+  function customModuleSafeName(name: var): bool {
     return BarModel.customModuleSafeName(name)
   }
 

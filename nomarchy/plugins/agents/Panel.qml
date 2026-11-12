@@ -78,8 +78,8 @@ Panel {
   property var deleteTarget: null
   function deleteSelected() {
     var target = keyTarget
-    if (!target || ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(target.kind) < 0) return
-    deleteTarget = providers[target.index]
+    if (!target || ["provider", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(keyTargetKind) < 0) return
+    deleteTarget = providers[keyTargetIndex]
   }
 
   function confirmDelete() {
@@ -114,8 +114,8 @@ Panel {
     }
     return out
   }
-  readonly property var pickedEntry: keyTarget && ["account", "autoswitch", "signin"].indexOf(keyTarget.kind) >= 0
-    ? accountEntries[keyTarget.index] || null
+  readonly property var pickedEntry: keyTarget && ["account", "autoswitch", "signin"].indexOf(keyTargetKind) >= 0
+    ? accountEntries[keyTargetIndex] || null
     : null
 
   // The keyboard walks everything on the page that does something, in
@@ -181,11 +181,14 @@ Panel {
     return row[Math.min(keyColumn, row.length - 1)]
   }
 
-  function hasKey(kind, index) {
-    return !!keyTarget && keyTarget.kind === kind && keyTarget.index === (index || 0)
+  final readonly property string keyTargetKind: keyTarget ? keyTarget.kind : ""
+  final readonly property int keyTargetIndex: keyTarget ? keyTarget.index : -1
+
+  function hasKey(kind: var, index: var): bool {
+    return !!keyTarget && keyTargetKind === kind && keyTargetIndex === (index || 0)
   }
 
-  function pointAt(kind, index) {
+  function pointAt(kind: var, index: var): void {
     for (let r = 0; r < keyRows.length; r++) {
       for (let c = 0; c < keyRows[r].length; c++) {
         if (keyRows[r][c].kind === kind && keyRows[r][c].index === (index || 0)) {
@@ -213,7 +216,7 @@ Panel {
     return harnessFor(provider) !== "" ? "providerLaunch" : "provider"
   }
 
-  function moveKey(dx, dy) {
+  function moveKey(dx: int, dy: int): void {
     if (keyRows.length === 0) return
     if (!cursorActive) {
       keyRow = clamp(keyRow, 0, keyRows.length - 1)
@@ -239,15 +242,15 @@ Panel {
   function providerIndexOfKey(): int {
     var target = keyTarget
     if (!target) return -1
-    if (["provider", "providerSignin", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(target.kind) >= 0) return target.index
-    if (["account", "autoswitch", "signin"].indexOf(target.kind) < 0) return -1
-    var entry = accountEntries[target.index]
+    if (["provider", "providerSignin", "providerLaunch", "modelToggle", "modelLaunch", "modelHeader"].indexOf(keyTargetKind) >= 0) return keyTargetIndex
+    if (["account", "autoswitch", "signin"].indexOf(keyTargetKind) < 0) return -1
+    var entry = accountEntries[keyTargetIndex]
     return entry ? providers.indexOf(entry.provider) : -1
   }
 
   // Ctrl+Up/Down carries the agent the cursor is in up or down the page, and
   // the cursor along with it.
-  function reorderProvider(dy) {
+  function reorderProvider(dy: int): void {
     if (dragIndex >= 0) return
     var from = providerIndexOfKey()
     if (from < 0) return
@@ -268,7 +271,7 @@ Panel {
   property bool settling: false
   property bool renaming: false
 
-  function beginProviderDrag(index, y) {
+  function beginProviderDrag(index: int, y: real): void {
     if (dragIndex >= 0 || !providerSections) return
     var pitches = []
     for (let i = 0; i < providerSections.count; i++)
@@ -283,7 +286,7 @@ Panel {
     dragIndex = index
   }
 
-  function dragProviderOver(y) {
+  function dragProviderOver(y: real): void {
     if (dragIndex < 0 || settling) return
     dragOffset = y - dragPressY
     dragTarget = Reorder.dragTargetFor(dragIndex, dragOffset, rowPitches[dragIndex],
@@ -311,7 +314,7 @@ Panel {
     if (moved) Qt.callLater(function() { pointAt(lineStop(to), to) })
   }
 
-  function settleProviderDrag(cancel) {
+  function settleProviderDrag(cancel: bool): void {
     if (dragIndex < 0) return
     dropAnimation.stop()
     settling = true
@@ -362,7 +365,7 @@ Panel {
     return false
   }
 
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
+  function clamp(v: real, lo: real, hi: real): real { return Math.max(lo, Math.min(hi, v)) }
   function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
 
   // A provider's accounts, when it has any. The list arrives as a sequence
@@ -447,7 +450,7 @@ Panel {
     if (!checkProcess.running) checkProcess.running = true
   }
 
-  function chooseAddProvider(id) {
+  function chooseAddProvider(id: var): void {
     if (id === "local") {
       if (localAddRecipes.length > 0) addStage = "local"
       return
@@ -459,7 +462,7 @@ Panel {
     else startAdd("")
   }
 
-  function startAdd(label) {
+  function startAdd(label: var): void {
     addPrivate = (addChecks[addProvider] || "") === "additional"
     addStatus = Commons.I18n.t("agents.starting")
     addCode = ""
@@ -484,7 +487,7 @@ Panel {
   // flashing the choices again while the record is written.
   onBlankSlateChanged: if (!blankSlate && addStage === "done") addStage = ""
 
-  function submitPaste(code) {
+  function submitPaste(code: var): void {
     if (!addProcess.running || code.trim() === "") return
     addProcess.write(code.trim() + "\n")
     addStatus = Commons.I18n.t("agents.checkingCode")
@@ -493,7 +496,7 @@ Panel {
   // The add command's own lines are tagged; everything else is the CLI
   // talking, and only two things in it matter here: a code to confirm in the
   // browser (Grok), and an invitation to paste one back (Claude).
-  function handleAddLine(line) {
+  function handleAddLine(line: var): void {
     var text = String(line).replace(/\u001b\[[0-9;]*m/g, "")
     var tagged = text.match(/^@@nomarchy (status|done|error) (.*)$/)
     if (tagged) {
@@ -533,7 +536,7 @@ Panel {
     { glyph: "󰣆", label: Commons.I18n.t("agents.app"), prompt: "Make me a new app for my Nomarchy desktop. Ask me what it should do, then build it following the nomarchy-app skill and install it so it shows up in the app launcher." }
   ]
 
-  function startPrompt(prompt) {
+  function startPrompt(prompt: var): void {
     root.close()
     Util.execArgv(["nomarchy-agent-prompt", prompt])
   }
@@ -572,15 +575,15 @@ Panel {
   function activateSelection() {
     var target = keyTarget
     if (!target) refreshNow()
-    else if (target.kind === "add") addStage !== "" ? cancelAdd() : addAccount()
-    else if (target.kind === "choice") chooseAddProvider(addProviders[target.index].providerId)
-    else if (target.kind === "localAdd") setUpLocal(localAddRecipes[target.index])
-    else if (target.kind === "modelToggle" || target.kind === "modelLaunch") runLocalAction(providers[target.index].localModel, target.kind === "modelToggle" ? "toggle" : "launch")
-    else if (target.kind === "providerLaunch") launchHarness(providers[target.index])
-    else if (target.kind === "starter") startPrompt(starterPrompts[target.index].prompt)
-    else if (target.kind === "providerSignin") signInAgain(providers[target.index], null)
-    else if (target.kind === "signin") signInAgain(pickedEntry.provider, pickedEntry.account)
-    else if (target.kind === "autoswitch") setSwitchMode(pickedEntry.provider, autoSwitchFor(pickedEntry.provider) ? "manual" : "auto")
+    else if (keyTargetKind === "add") addStage !== "" ? cancelAdd() : addAccount()
+    else if (keyTargetKind === "choice") chooseAddProvider(addProviders[keyTargetIndex].providerId)
+    else if (keyTargetKind === "localAdd") setUpLocal(localAddRecipes[keyTargetIndex])
+    else if (keyTargetKind === "modelToggle" || keyTargetKind === "modelLaunch") runLocalAction(providers[keyTargetIndex].localModel, keyTargetKind === "modelToggle" ? "toggle" : "launch")
+    else if (keyTargetKind === "providerLaunch") launchHarness(providers[keyTargetIndex])
+    else if (keyTargetKind === "starter") startPrompt(starterPrompts[keyTargetIndex].prompt)
+    else if (keyTargetKind === "providerSignin") signInAgain(providers[keyTargetIndex], null)
+    else if (keyTargetKind === "signin") signInAgain(pickedEntry.provider, pickedEntry.account)
+    else if (keyTargetKind === "autoswitch") setSwitchMode(pickedEntry.provider, autoSwitchFor(pickedEntry.provider) ? "manual" : "auto")
     else if (pickedEntry && !pickedEntry.account.active) useAccount(pickedEntry.provider, pickedEntry.account)
   }
 
@@ -660,7 +663,7 @@ Panel {
     return freeResetsText(count)
   }
 
-  function freeResetsText(count) {
+  function freeResetsText(count: real): string {
     return Commons.I18n.tn("agents.freeResets", count).arg(Commons.I18n.formatNumber(count))
   }
 
@@ -998,14 +1001,14 @@ Panel {
     function onStringsChanged() { Qt.callLater(root.showPhrase) }
   }
 
-  function dayName(date) {
+  function dayName(date: var): string {
     var parsed = new Date(String(date || "") + "T00:00:00")
     if (isNaN(parsed.getTime())) return String(date || "")
     return Qt.locale(Commons.I18n.formatLocale).dayName([7, 1, 2, 3, 4, 5, 6][parsed.getDay()])
   }
 
   // Only speaks up when the numbers cover more than this machine.
-  function footerText() {
+  function footerText(): string {
     if (usage.syncStatusText !== "") return usage.syncStatusText
     var providers = usage.enabledProviders
     for (let i = 0; i < providers.length; i++) {
@@ -1019,7 +1022,7 @@ Panel {
   // Agents that ship a white mark carry an `assets/<id>-light.svg` twin for
   // light surfaces; marks that work on both (Claude's brand-orange) ship one
   // file. The luminance check decides which candidate to try first.
-  function colorChannelLuminance(value) {
+  function colorChannelLuminance(value: var): real {
     var channel = Number(value)
     if (!isFinite(channel)) return 0
     return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4)
@@ -1337,8 +1340,8 @@ Panel {
 
                 HeroButton {
                   visible: root.addButtonShown
-                  hasCursor: root.hasKey("add")
-                  onHovered: root.pointAt("add")
+                  hasCursor: root.hasKey("add", 0)
+                  onHovered: root.pointAt("add", 0)
                   readonly property bool adding: root.addStage !== ""
                   glyph: adding ? "󰅖" : "󰐕"
                   tooltip: adding ? Commons.I18n.t("agents.backToLimits") : Commons.I18n.t("agents.addAnother")
@@ -2264,7 +2267,7 @@ Panel {
     readonly property bool isActive: account.active === true
     readonly property bool autoOn: root.autoSwitchFor(owner)
     // Which of the row's links the keyboard is on, when it's on this row.
-    readonly property string pickedKind: picked && root.keyTarget ? root.keyTarget.kind : ""
+    readonly property string pickedKind: picked && root.keyTarget ? root.keyTargetKind : ""
     readonly property string label: renamedTo !== "" ? renamedTo : String(account.label || account.id || "")
 
     onAccountChanged: renamedTo = ""

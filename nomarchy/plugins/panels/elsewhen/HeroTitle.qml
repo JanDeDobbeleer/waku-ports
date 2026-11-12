@@ -27,7 +27,7 @@ Column {
   property real markerLat: 0
   property real markerLon: 0
 
-  readonly property Item icon: heroIcon
+  final readonly property Item icon: heroIcon
   readonly property bool iconHovered: heroMouse.containsMouse
   readonly property real spin: heroIcon.spin
 

@@ -40,7 +40,7 @@ Item {
     root.cancel()
   }
 
-  function refresh() {
+  function refresh(): string {
     defaultMenuFile.reload()
     userMenuFile.reload()
     languageFile.reload()
@@ -48,10 +48,10 @@ Item {
     return "ok"
   }
 
-  function ping() { return "ok" }
+  function ping(): string { return "ok" }
 
   // PORTDBG: first n display rows, for tools\menu-state.ps1
-  function debugRows(n) {
+  function debugRows(n: var): string {
     var out = []
     for (let i = 0; i < Math.min(Number(n) || 5, displayModel.count); i++) {
       let r = displayModel.get(i)
@@ -61,7 +61,7 @@ Item {
   }
 
   // PORTDBG: state dump for `wakuc call shell call nomarchy.menu debugState x`
-  function debugState() {
+  function debugState(): string {
     return JSON.stringify({ opened: root.opened, rowsLoaded: root.rowsLoaded, activeMenu: root.activeMenu,
       items: Object.keys(root.items || {}).length, rows: displayModel.count, scrim: String(root.scrim),
       panelShown: panel.shown, panelVisible: panel.visible, panelW: panel.width, panelH: panel.height,
@@ -193,7 +193,7 @@ Item {
 
   // Menu rows only surface their detail while a search is narrowing them;
   // dmenu rows carry caller-supplied subtext that must always be visible.
-  function rowHeightForDetail(detail) {
+  function rowHeightForDetail(detail: var): int {
     return (root.filterText || root.dmenuActive) && detail ? root.detailRowHeight : root.baseRowHeight
   }
 
@@ -201,7 +201,7 @@ Item {
   // past the frozen top edge once a search has pinned the card in place.
   // Uses panel.cardTop rather than effectiveCardTop: the centered top is
   // derived from the card height, which this value feeds.
-  function availableRowsHeight() {
+  function availableRowsHeight(): real {
     var top = panel.cardTop >= 0 ? panel.cardTop : Style.gapsOut
     var available = panel.height - top - Style.gapsOut - root.contentMargin * 2 - root.headerHeight - root.contentSpacing
     // The starting menu sets the ceiling along with the offset: drilling into
@@ -228,7 +228,7 @@ Item {
     return totals[full - 1] + root.rowSpacing + peek
   }
 
-  function rowListHeight(_serial, _count, _filter, _divider) {
+  function rowListHeight(_serial: int, _count: int, _filter: string, _divider: bool): real {
     if (displayModel.count === 0) return root.baseRowHeight
 
     var totals = []
@@ -247,7 +247,7 @@ Item {
     return foldedListHeight(totals, availableRowsHeight())
   }
 
-  function dmenuRowListHeight(_serial, _count, _filter) {
+  function dmenuRowListHeight(_serial: int, _count: int, _filter: string): real {
     if (root.mode === "input") return 0
     if (displayModel.count === 0) return root.baseRowHeight
 
@@ -274,7 +274,7 @@ Item {
   // the on-disk authoring format stays untouched.
   // ------------------------------------------------------------------
 
-  function stripJsonc(raw) {
+  function stripJsonc(raw: var): string {
     return MenuModel.stripJsonc(raw)
   }
 
@@ -378,7 +378,7 @@ Item {
     }
   })
 
-  function slugify(value) {
+  function slugify(value: var): string {
     return MenuModel.slugify(value)
   }
 
@@ -546,23 +546,23 @@ Item {
     }
   }
 
-  function depthFor(id) {
+  function depthFor(id: var): int {
     return MenuModel.depthFor(root.items, id)
   }
 
-  function pathFor(id) {
+  function pathFor(id: var): string {
     return MenuModel.pathFor(root.items, id)
   }
 
-  function parentPathFor(id) {
+  function parentPathFor(id: var): string {
     return MenuModel.parentPathFor(root.items, id)
   }
 
-  function isDescendantOf(id, ancestorId) {
+  function isDescendantOf(id: var, ancestorId: var): bool {
     return MenuModel.isDescendantOf(root.items, id, ancestorId)
   }
 
-  function childCount(id) {
+  function childCount(id: var): int {
     return MenuModel.childCount(root.items, root.itemOrder, id)
   }
 
@@ -579,7 +579,7 @@ Item {
     return MenuModel.labelFor(entry, root.checkedResults, root.disabledResults)
   }
 
-  function searchableToken(value) {
+  function searchableToken(value: var): string {
     return MenuModel.searchableToken(value)
   }
 
@@ -591,11 +591,11 @@ Item {
     return MenuModel.nameSearchText(entry)
   }
 
-  function termInSearchWords(term, text) {
+  function termInSearchWords(term: var, text: var): bool {
     return MenuModel.termInSearchWords(term, text)
   }
 
-  function descriptionTextMatches(query, text) {
+  function descriptionTextMatches(query: var, text: var): bool {
     return MenuModel.descriptionTextMatches(query, text)
   }
 
@@ -620,7 +620,7 @@ Item {
     return MenuModel.displayRow(root.items, root.itemOrder, root.checkedResults, root.disabledResults, entry, detail, score, section)
   }
 
-  function rowSelectable(index) {
+  function rowSelectable(index: int): bool {
     if (index < 0 || index >= displayModel.count) return false
     return !displayModel.get(index).disabled
   }
@@ -628,7 +628,7 @@ Item {
   // First selectable row at or past `from`, continuing in the direction of
   // travel and wrapping. -1 when every row is disabled, which leaves the menu
   // with no cursor at all rather than one parked on a row Enter won't run.
-  function nextSelectable(from, direction) {
+  function nextSelectable(from: int, direction: int): int {
     var count = displayModel.count
     if (count === 0) return -1
 

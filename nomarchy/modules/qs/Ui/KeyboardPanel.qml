@@ -200,21 +200,21 @@ PanelWindow {
     : 0
   readonly property real verticalContentInset: padding * 2 + Border.top(borderSpec) + Border.bottom(borderSpec)
 
-  function fittedContentWidth(width, cap) {
+  function fittedContentWidth(width, cap): real {
     var desired = Math.max(1, Number(width) || 1)
     var maxWidth = root.availableCardWidth > 0 ? root.availableCardWidth : desired
     if (cap !== undefined && Number(cap) > 0) maxWidth = Math.min(maxWidth, Number(cap))
     return Math.round(Math.min(desired, maxWidth))
   }
 
-  function fittedContentHeight(implicitHeight, cap) {
+  function fittedContentHeight(implicitHeight, cap): real {
     var desired = Math.max(root.verticalContentInset, (Number(implicitHeight) || 0) + root.verticalContentInset)
     var maxHeight = root.availableCardHeight > 0 ? root.availableCardHeight : desired
     if (cap !== undefined && Number(cap) > 0) maxHeight = Math.min(maxHeight, Number(cap))
     return Math.round(Math.min(desired, maxHeight))
   }
 
-  function cappedContentHeight(height) {
+  function cappedContentHeight(height: var): real {
     var desired = Math.max(root.padding * 2, Number(height) || root.padding * 2)
     var maxHeight = root.availableCardHeight > 0 ? root.availableCardHeight : desired
     return Math.round(Math.min(desired, maxHeight))

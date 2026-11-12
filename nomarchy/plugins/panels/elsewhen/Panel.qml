@@ -136,7 +136,7 @@ Panel {
   property int zoomDuration: 800
   property int zoomEasing: Easing.OutQuart
 
-  function setGlobeMode(on, slow) {
+  function setGlobeMode(on: bool, slow: var): void {
     if (on) {
       addSelected = false
       // Both live in the list, which the globe is about to knock away.
@@ -161,7 +161,7 @@ Panel {
   // zone's own city goes back to being the default.
   // The tapped city brings what is known of where it is - a tracked or jumped-to
   // town's own coordinates and region - so here is never geocoded by name again.
-  function claimHome(label, zone) {
+  function claimHome(label: var, zone: var): void {
     var stored = Model.homeCityAfterTap(label, zone, hereZone && hereZone.chosen ? hereZone.label : "", localZone)
     if (stored === null) return
     if (stored === "") { setHere({ label: Model.labelForZoneId(localZone), id: localZone }); return }
@@ -197,11 +197,11 @@ Panel {
     refreshFacts()
   }
 
-  function notify(title) { Util.execArgv(["nomarchy-notification-send", title]) }
+  function notify(title: var): void { Util.execArgv(["nomarchy-notification-send", title]) }
 
   function startChoosingHere() { if (hereSearch && localZone !== "" && !globeMode) hereSearch.start() }
 
-  function focusFromGlobe(label, zone) {
+  function focusFromGlobe(label: var, zone: var): void {
     var i = Model.indexOfZone(zones, label, zone)
     if (i >= 0) focusOn(i)
   }
@@ -227,7 +227,7 @@ Panel {
   property var rowPitches: []
   property int dragTarget: -1
 
-  function beginRowDrag(index, pitch) {
+  function beginRowDrag(index: int, pitch: real): void {
     dropAnimation.stop()
     dragIndex = index
     dragTarget = index
@@ -241,7 +241,7 @@ Panel {
     rowPitches = pitches
   }
 
-  function moveRowDrag(offset) {
+  function moveRowDrag(offset: real): void {
     dragOffset = offset
     dragTarget = Model.dragTargetFor(dragIndex, dragOffset, rowPitch, dragTarget, zones.length, rowPitches)
   }
@@ -288,7 +288,7 @@ Panel {
 
   // Held until Escape or close: a key press has no release to time from. Unlike a
   // drag, which stays within the strip's day, the keys can run on into other days.
-  function shiftHour(step) {
+  function shiftHour(step: int): void {
     scrubHold.stop()
     scrubMinutes = Math.round(scrubMinutes) + step * 60
   }
@@ -494,7 +494,7 @@ Panel {
   // the geocoder brings its coordinates, so the row never has to look itself up.
   function addCity(id, label, place) { setZones(Model.addZone(zones, id, label || "", place)) }
   function removeCity(id) { setZones(Model.removeZone(zones, id)) }
-  function removeCityAt(index) { setZones(Model.removeZoneAt(zones, index)) }
+  function removeCityAt(index: int): void { setZones(Model.removeZoneAt(zones, index)) }
 
   function startAdding() { if (citySearch) citySearch.start() }
 
@@ -543,13 +543,13 @@ Panel {
     peopleProc.running = true
   }
 
-  function startPeopleEdit(index) {
+  function startPeopleEdit(index: int): void {
     if (citySearch) citySearch.stop()
     if (hereSearch) hereSearch.stop()
     peopleEditIndex = index
   }
 
-  function finishPeopleEdit(index, text) {
+  function finishPeopleEdit(index: int, text: var): void {
     peopleEditIndex = -1
     setZones(Model.setPeopleAt(zones, index, Model.parsePeople(text)))
     takeKeyboardBack()
@@ -1080,7 +1080,7 @@ Panel {
         onHeightChanged: clamp()
         onContentHeightChanged: clamp()
 
-        function scrollTo(y) {
+        function scrollTo(y: real): void {
           scrollAnim.stop()
           scrollAnim.from = contentY
           scrollAnim.to = y
