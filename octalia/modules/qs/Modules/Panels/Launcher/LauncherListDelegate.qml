@@ -39,47 +39,47 @@ NBox {
   ColumnLayout {
     id: contentLayout
     anchors.fill: parent
-    anchors.margins: launcher.isCompactDensity ? Style.marginXS : Style.marginM
-    spacing: launcher.isCompactDensity ? Style.marginXS : Style.marginM
+    anchors.margins: entry.launcher.isCompactDensity ? Style.marginXS : Style.marginM
+    spacing: entry.launcher.isCompactDensity ? Style.marginXS : Style.marginM
 
     // Top row - Main entry content with action buttons
     RowLayout {
       Layout.fillWidth: true
-      spacing: launcher.isCompactDensity ? Style.marginS : Style.marginM
+      spacing: entry.launcher.isCompactDensity ? Style.marginS : Style.marginM
 
       // Icon badge or Image preview or Emoji
       Item {
-        visible: !modelData.hideIcon
-        Layout.preferredWidth: modelData.hideIcon ? 0 : launcher.badgeSize
-        Layout.preferredHeight: modelData.hideIcon ? 0 : launcher.badgeSize
+        visible: !entry.modelData.hideIcon
+        Layout.preferredWidth: entry.modelData.hideIcon ? 0 : entry.launcher.badgeSize
+        Layout.preferredHeight: entry.modelData.hideIcon ? 0 : entry.launcher.badgeSize
 
         // Icon background
         Rectangle {
           anchors.fill: parent
           radius: Style.radiusXS
           color: Color.mSurface
-          visible: Settings.data.appLauncher.showIconBackground && !modelData.isImage
+          visible: Settings.data.appLauncher.showIconBackground && !entry.modelData.isImage
         }
 
         // Image preview - uses provider's getImageUrl if available
         NImageRounded {
           id: imagePreview
           anchors.fill: parent
-          visible: !!modelData.isImage && !modelData.displayString
+          visible: !!entry.modelData.isImage && !entry.modelData.displayString
           radius: Style.radiusXS
           borderColor: Color.mOnSurface
           borderWidth: Style.borderM
           imageFillMode: Image.PreserveAspectCrop
 
           // Use provider's image revision for reactive updates
-          readonly property int _rev: modelData.provider && modelData.provider.imageRevision ? modelData.provider.imageRevision : 0
+          readonly property int _rev: entry.modelData.provider && entry.modelData.provider.imageRevision ? entry.modelData.provider.imageRevision : 0
 
           // Get image URL from provider
           imagePath: {
             _rev;
-            var provider = modelData.provider;
+            var provider = entry.modelData.provider;
             if (provider && provider.getImageUrl) {
-              return provider.getImageUrl(modelData);
+              return provider.getImageUrl(entry.modelData);
             }
             return "";
           }
@@ -109,8 +109,8 @@ NBox {
         Rectangle {
           anchors.fill: parent
           radius: Style.radiusXS
-          color: modelData.colorHex || "transparent"
-          visible: !!modelData.colorHex
+          color: entry.modelData.colorHex || "transparent"
+          visible: !!entry.modelData.colorHex
           border.color: Color.mOnSurface
           border.width: Style.borderM
         }
@@ -120,7 +120,7 @@ NBox {
           anchors.fill: parent
           anchors.margins: Style.marginXS
 
-          visible: (!modelData.isImage && !modelData.displayString && !modelData.colorHex) || (!!modelData.isImage && imagePreview.status === Image.Error)
+          visible: (!entry.modelData.isImage && !entry.modelData.displayString && !entry.modelData.colorHex) || (!!entry.modelData.isImage && imagePreview.status === Image.Error)
           active: visible
 
           sourceComponent: Component {
@@ -155,16 +155,16 @@ NBox {
         NText {
           id: stringDisplay
           anchors.centerIn: parent
-          visible: !!modelData.displayString || (!imagePreview.visible && !iconLoader.visible)
-          text: modelData.displayString ? modelData.displayString : (modelData.name ? modelData.name.charAt(0).toUpperCase() : "?")
-          pointSize: modelData.displayString ? (modelData.displayStringSize || Style.fontSizeXXXL) : Style.fontSizeXXL
+          visible: !!entry.modelData.displayString || (!imagePreview.visible && !iconLoader.visible)
+          text: entry.modelData.displayString ? entry.modelData.displayString : (entry.modelData.name ? entry.modelData.name.charAt(0).toUpperCase() : "?")
+          pointSize: entry.modelData.displayString ? (entry.modelData.displayStringSize || Style.fontSizeXXXL) : Style.fontSizeXXL
           font.weight: Style.fontWeightBold
-          color: modelData.displayString ? Color.mOnSurface : Color.mOnPrimary
+          color: entry.modelData.displayString ? Color.mOnSurface : Color.mOnPrimary
         }
 
         // Image type indicator overlay
         Rectangle {
-          visible: !!modelData.isImage && imagePreview.visible
+          visible: !!entry.modelData.isImage && imagePreview.visible
           anchors.bottom: parent.bottom
           anchors.right: parent.right
           anchors.margins: 2
@@ -176,9 +176,9 @@ NBox {
             id: formatLabel
             anchors.centerIn: parent
             text: {
-              if (!modelData.isImage)
+              if (!entry.modelData.isImage)
                 return "";
-              const desc = modelData.description || "";
+              const desc = entry.modelData.description || "";
               const parts = desc.split(" \u2022 ");
               return parts[0] || "IMG";
             }
@@ -189,7 +189,7 @@ NBox {
 
         // Badge icon overlay (generic indicator for any provider)
         Rectangle {
-          visible: !!modelData.badgeIcon
+          visible: !!entry.modelData.badgeIcon
           anchors.bottom: parent.bottom
           anchors.right: parent.right
           anchors.margins: 2
@@ -199,7 +199,7 @@ NBox {
           radius: Style.radiusXXS
           NIcon {
             anchors.centerIn: parent
-            icon: modelData.badgeIcon || ""
+            icon: entry.modelData.badgeIcon || ""
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
           }
@@ -212,7 +212,7 @@ NBox {
         spacing: 0
 
         NText {
-          text: modelData.name || "Unknown"
+          text: entry.modelData.name || "Unknown"
           pointSize: Style.fontSizeL
           font.weight: Style.fontWeightBold
           color: entry.isSelected ? Color.mOnHover : Color.mOnSurface
@@ -224,13 +224,13 @@ NBox {
         }
 
         NText {
-          text: modelData.description || ""
+          text: entry.modelData.description || ""
           pointSize: Style.fontSizeS
           color: entry.isSelected ? Color.mOnHover : Color.mOnSurfaceVariant
           elide: Text.ElideRight
           maximumLineCount: 1
           Layout.fillWidth: true
-          visible: text !== "" && !launcher.isCompactDensity
+          visible: text !== "" && !entry.launcher.isCompactDensity
         }
       }
 
@@ -243,9 +243,9 @@ NBox {
         property var itemActions: {
           if (!entry.isSelected)
             return [];
-          var provider = modelData.provider || launcher.currentProvider;
+          var provider = entry.modelData.provider || entry.launcher.currentProvider;
           if (provider && provider.getItemActions) {
-            return provider.getItemActions(modelData);
+            return provider.getItemActions(entry.modelData);
           }
           return [];
         }
@@ -277,14 +277,14 @@ NBox {
     cursorShape: Qt.PointingHandCursor
     enabled: !Settings.data.appLauncher.ignoreMouseInput
     onEntered: {
-      if (!launcher.ignoreMouseHover) {
-        launcher.selectedIndex = entry.index;
+      if (!entry.launcher.ignoreMouseHover) {
+        entry.launcher.selectedIndex = entry.index;
       }
     }
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   launcher.selectedIndex = entry.index;
-                   launcher.activate();
+                   entry.launcher.selectedIndex = entry.index;
+                   entry.launcher.activate();
                    mouse.accepted = true;
                  }
                }

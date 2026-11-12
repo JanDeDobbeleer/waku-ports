@@ -75,6 +75,6 @@ DraggableDesktopWidget {
     id: contentLoader
     anchors.centerIn: parent
     z: 2
-    sourceComponent: clockStyle === "minimal" ? minimalClockComponent : nclockComponent
+    sourceComponent: root.clockStyle === "minimal" ? minimalClockComponent : nclockComponent
   }
 }

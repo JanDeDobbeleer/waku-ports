@@ -66,17 +66,17 @@ ColumnLayout {
                   root.valueHideMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.hideMode
+    defaultValue: root.widgetMetadata.hideMode
   }
 
   NColorChoice {
     label: I18n.tr("common.select-color")
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
+                  root.valueTextColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.textColor
+    defaultValue: root.widgetMetadata.textColor
   }
 
   NToggle {
@@ -88,7 +88,7 @@ ColumnLayout {
                  root.valueShowText = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showText
+    defaultValue: root.widgetMetadata.showText
   }
 
   NToggle {
@@ -100,7 +100,7 @@ ColumnLayout {
                  root.valueShowIcon = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showIcon
+    defaultValue: root.widgetMetadata.showIcon
   }
 
   NToggle {
@@ -113,7 +113,7 @@ ColumnLayout {
                  saveSettings();
                }
     visible: root.valueShowIcon
-    defaultValue: widgetMetadata.colorizeIcons
+    defaultValue: root.widgetMetadata.colorizeIcons
   }
 
   NTextInput {
@@ -121,22 +121,22 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.max-width-label")
     description: I18n.tr("bar.media-mini.max-width-description")
-    placeholderText: widgetMetadata.maxWidth
-    text: valueMaxWidth
+    placeholderText: root.widgetMetadata.maxWidth
+    text: root.valueMaxWidth
     onTextChanged: saveSettings()
-    defaultValue: String(widgetMetadata.maxWidth)
+    defaultValue: String(root.widgetMetadata.maxWidth)
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.media-mini.use-fixed-width-label")
     description: I18n.tr("bar.media-mini.use-fixed-width-description")
-    checked: valueUseFixedWidth
+    checked: root.valueUseFixedWidth
     onToggled: checked => {
-                 valueUseFixedWidth = checked;
+                 root.valueUseFixedWidth = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.useFixedWidth
+    defaultValue: root.widgetMetadata.useFixedWidth
   }
 
   NComboBox {
@@ -156,10 +156,10 @@ ColumnLayout {
         "name": I18n.tr("options.scrolling-modes.never")
       }
     ]
-    currentKey: valueScrollingMode
-    defaultValue: widgetMetadata.scrollingMode
+    currentKey: root.valueScrollingMode
+    defaultValue: root.widgetMetadata.scrollingMode
     onSelected: key => {
-                  valueScrollingMode = key;
+                  root.valueScrollingMode = key;
                   saveSettings();
                 }
     minimumWidth: 200

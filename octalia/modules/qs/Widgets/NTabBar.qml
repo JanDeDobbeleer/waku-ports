@@ -75,7 +75,7 @@ Rectangle {
   RowLayout {
     id: tabRow
     anchors.fill: parent
-    anchors.margins: margins
+    anchors.margins: root.margins
     spacing: root.spacing
 
     onChildrenChanged: {

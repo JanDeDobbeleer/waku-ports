@@ -34,56 +34,56 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.notification-history.show-unread-badge-label")
     description: I18n.tr("bar.notification-history.show-unread-badge-description")
-    checked: valueShowUnreadBadge
+    checked: root.valueShowUnreadBadge
     onToggled: checked => {
-                 valueShowUnreadBadge = checked;
+                 root.valueShowUnreadBadge = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showUnreadBadge
+    defaultValue: root.widgetMetadata.showUnreadBadge
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
+                  root.valueIconColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: root.widgetMetadata.iconColor
   }
 
   NColorChoice {
     label: I18n.tr("bar.notification-history.unread-badge-color-label")
     description: I18n.tr("bar.notification-history.unread-badge-color-description")
-    currentKey: valueUnreadBadgeColor
+    currentKey: root.valueUnreadBadgeColor
     onSelected: key => {
-                  valueUnreadBadgeColor = key;
+                  root.valueUnreadBadgeColor = key;
                   saveSettings();
                 }
-    visible: valueShowUnreadBadge
-    defaultValue: widgetMetadata.unreadBadgeColor
+    visible: root.valueShowUnreadBadge
+    defaultValue: root.widgetMetadata.unreadBadgeColor
   }
 
   NToggle {
     label: I18n.tr("bar.notification-history.hide-widget-when-zero-label")
     description: I18n.tr("bar.notification-history.hide-widget-when-zero-description")
-    checked: valueHideWhenZero
+    checked: root.valueHideWhenZero
     onToggled: checked => {
-                 valueHideWhenZero = checked;
+                 root.valueHideWhenZero = checked;
                  saveSettings();
                }
-    enabled: !valueHideWhenZeroUnread
-    defaultValue: widgetMetadata.hideWhenZero
+    enabled: !root.valueHideWhenZeroUnread
+    defaultValue: root.widgetMetadata.hideWhenZero
   }
 
   NToggle {
     label: I18n.tr("bar.notification-history.hide-widget-when-zero-unread-label")
     description: I18n.tr("bar.notification-history.hide-widget-when-zero-unread-description")
-    checked: valueHideWhenZeroUnread
+    checked: root.valueHideWhenZeroUnread
     onToggled: checked => {
-                 valueHideWhenZeroUnread = checked;
+                 root.valueHideWhenZeroUnread = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenZeroUnread
+    defaultValue: root.widgetMetadata.hideWhenZeroUnread
   }
 }

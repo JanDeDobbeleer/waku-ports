@@ -73,7 +73,7 @@ Item {
       // Horizontal
       Loader {
         id: horizontalLoader
-        active: !isBarVertical
+        active: !root.isBarVertical
         anchors.centerIn: parent
         sourceComponent: ColumnLayout {
           anchors.centerIn: parent
@@ -114,7 +114,7 @@ Item {
       // Vertical
       Loader {
         id: verticalLoader
-        active: isBarVertical
+        active: root.isBarVertical
         anchors.centerIn: parent // Now this works without layout conflicts
         sourceComponent: ColumnLayout {
           anchors.centerIn: parent
@@ -164,7 +164,7 @@ Item {
                    if (action === "open-calendar") {
                      PanelService.getPanel("clockPanel", screen)?.toggle(root);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -177,9 +177,9 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen);
                  } else {
-                   PanelService.getPanel("clockPanel", screen)?.toggle(this);
+                   PanelService.getPanel("clockPanel", root.screen)?.toggle(this);
                  }
                }
   }

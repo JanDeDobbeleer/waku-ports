@@ -154,7 +154,7 @@ SmartPanel {
         StackLayout {
           id: stepStack
           anchors.fill: parent
-          currentIndex: currentStep
+          currentIndex: panelContent.currentStep
 
           // Step 0: Welcome - Beautiful centered design
           Item {
@@ -437,21 +437,21 @@ SmartPanel {
           NButton {
             text: "← " + I18n.tr("common.back")
             outlined: true
-            visible: currentStep > 0 && !root.telemetryOnlyMode
+            visible: panelContent.currentStep > 0 && !root.telemetryOnlyMode
             Layout.preferredHeight: 44
             onClicked: {
-              if (currentStep > 0) {
-                currentStep--;
+              if (panelContent.currentStep > 0) {
+                panelContent.currentStep--;
               }
             }
           }
 
           NButton {
-            text: root.telemetryOnlyMode ? I18n.tr("setup.telemetry-wizard-done") : (currentStep === totalSteps - 1 ? I18n.tr("setup.all-done") : I18n.tr("common.continue") + " →")
+            text: root.telemetryOnlyMode ? I18n.tr("setup.telemetry-wizard-done") : (panelContent.currentStep === panelContent.totalSteps - 1 ? I18n.tr("setup.all-done") : I18n.tr("common.continue") + " →")
             Layout.preferredHeight: 44
             onClicked: {
-              if (currentStep < totalSteps - 1) {
-                currentStep++;
+              if (panelContent.currentStep < panelContent.totalSteps - 1) {
+                panelContent.currentStep++;
               } else {
                 panelContent.completeSetup();
               }

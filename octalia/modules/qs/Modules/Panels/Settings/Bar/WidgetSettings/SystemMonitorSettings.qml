@@ -66,59 +66,59 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.compact-mode-label")
     description: I18n.tr("bar.system-monitor.compact-mode-description")
-    checked: valueCompactMode
+    checked: root.valueCompactMode
     onToggled: checked => {
-                 valueCompactMode = checked;
+                 root.valueCompactMode = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.compactMode
+    defaultValue: root.widgetMetadata.compactMode
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
+                  root.valueIconColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: root.widgetMetadata.iconColor
   }
 
   NColorChoice {
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
+                  root.valueTextColor = key;
                   saveSettings();
                 }
-    visible: !valueCompactMode
-    defaultValue: widgetMetadata.textColor
+    visible: !root.valueCompactMode
+    defaultValue: root.widgetMetadata.textColor
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.use-monospace-font-label")
     description: I18n.tr("bar.system-monitor.use-monospace-font-description")
-    checked: valueUseMonospaceFont
+    checked: root.valueUseMonospaceFont
     onToggled: checked => {
-                 valueUseMonospaceFont = checked;
+                 root.valueUseMonospaceFont = checked;
                  saveSettings();
                }
-    visible: !valueCompactMode
-    defaultValue: widgetMetadata.useMonospaceFont
+    visible: !root.valueCompactMode
+    defaultValue: root.widgetMetadata.useMonospaceFont
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.use-padding-label")
-    description: isVerticalBar ? I18n.tr("bar.system-monitor.use-padding-description-disabled-vertical") : !valueUseMonospaceFont ? I18n.tr("bar.system-monitor.use-padding-description-disabled-monospace-font") : I18n.tr("bar.system-monitor.use-padding-description")
-    checked: valueUsePadding && !isVerticalBar && valueUseMonospaceFont
+    description: root.isVerticalBar ? I18n.tr("bar.system-monitor.use-padding-description-disabled-vertical") : !root.valueUseMonospaceFont ? I18n.tr("bar.system-monitor.use-padding-description-disabled-monospace-font") : I18n.tr("bar.system-monitor.use-padding-description")
+    checked: root.valueUsePadding && !root.isVerticalBar && root.valueUseMonospaceFont
     onToggled: checked => {
-                 valueUsePadding = checked;
+                 root.valueUsePadding = checked;
                  saveSettings();
                }
-    visible: !valueCompactMode
-    enabled: !isVerticalBar && valueUseMonospaceFont
-    defaultValue: widgetMetadata.usePadding
+    visible: !root.valueCompactMode
+    enabled: !root.isVerticalBar && root.valueUseMonospaceFont
+    defaultValue: root.widgetMetadata.usePadding
   }
 
   NDivider {
@@ -130,12 +130,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.cpu-usage-label")
     description: I18n.tr("bar.system-monitor.cpu-usage-description")
-    checked: valueShowCpuUsage
+    checked: root.valueShowCpuUsage
     onToggled: checked => {
-                 valueShowCpuUsage = checked;
+                 root.valueShowCpuUsage = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showCpuUsage
+    defaultValue: root.widgetMetadata.showCpuUsage
   }
 
   NToggle {
@@ -143,12 +143,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.cpu-cores-label")
     description: I18n.tr("bar.system-monitor.cpu-cores-description")
-    checked: valueShowCpuCores
+    checked: root.valueShowCpuCores
     onToggled: checked => {
-                 valueShowCpuCores = checked;
+                 root.valueShowCpuCores = checked;
                  saveSettings();
                }
-    visible: valueCompactMode
+    visible: root.valueCompactMode
   }
 
   NToggle {
@@ -156,12 +156,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.cpu-frequency-label")
     description: I18n.tr("bar.system-monitor.cpu-frequency-description")
-    checked: valueShowCpuFreq
+    checked: root.valueShowCpuFreq
     onToggled: checked => {
-                 valueShowCpuFreq = checked;
+                 root.valueShowCpuFreq = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showCpuFreq
+    defaultValue: root.widgetMetadata.showCpuFreq
   }
 
   NToggle {
@@ -169,12 +169,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.cpu-temperature-label")
     description: I18n.tr("bar.system-monitor.cpu-temperature-description")
-    checked: valueShowCpuTemp
+    checked: root.valueShowCpuTemp
     onToggled: checked => {
-                 valueShowCpuTemp = checked;
+                 root.valueShowCpuTemp = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showCpuTemp
+    defaultValue: root.widgetMetadata.showCpuTemp
   }
 
   NToggle {
@@ -182,13 +182,13 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.system-monitor.gpu-section-label")
     description: I18n.tr("bar.system-monitor.gpu-temperature-description")
-    checked: valueShowGpuTemp
+    checked: root.valueShowGpuTemp
     onToggled: checked => {
-                 valueShowGpuTemp = checked;
+                 root.valueShowGpuTemp = checked;
                  saveSettings();
                }
     visible: SystemStatService.gpuAvailable
-    defaultValue: widgetMetadata.showGpuTemp
+    defaultValue: root.widgetMetadata.showGpuTemp
   }
 
   NToggle {
@@ -196,12 +196,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.memory-usage-label")
     description: I18n.tr("bar.system-monitor.memory-usage-description")
-    checked: valueShowMemoryUsage
+    checked: root.valueShowMemoryUsage
     onToggled: checked => {
-                 valueShowMemoryUsage = checked;
+                 root.valueShowMemoryUsage = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showMemoryUsage
+    defaultValue: root.widgetMetadata.showMemoryUsage
   }
 
   NToggle {
@@ -209,13 +209,13 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.memory-percentage-label")
     description: I18n.tr("bar.system-monitor.memory-percentage-description")
-    checked: valueShowMemoryAsPercent
+    checked: root.valueShowMemoryAsPercent
     onToggled: checked => {
-                 valueShowMemoryAsPercent = checked;
+                 root.valueShowMemoryAsPercent = checked;
                  saveSettings();
                }
-    visible: valueShowMemoryUsage
-    defaultValue: widgetMetadata.showMemoryAsPercent
+    visible: root.valueShowMemoryUsage
+    defaultValue: root.widgetMetadata.showMemoryAsPercent
   }
 
   NToggle {
@@ -223,12 +223,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.swap-usage-label")
     description: I18n.tr("bar.system-monitor.swap-usage-description")
-    checked: valueShowSwapUsage
+    checked: root.valueShowSwapUsage
     onToggled: checked => {
-                 valueShowSwapUsage = checked;
+                 root.valueShowSwapUsage = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showSwapUsage
+    defaultValue: root.widgetMetadata.showSwapUsage
   }
 
   NToggle {
@@ -236,12 +236,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.network-traffic-label")
     description: I18n.tr("bar.system-monitor.network-traffic-description")
-    checked: valueShowNetworkStats
+    checked: root.valueShowNetworkStats
     onToggled: checked => {
-                 valueShowNetworkStats = checked;
+                 root.valueShowNetworkStats = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showNetworkStats
+    defaultValue: root.widgetMetadata.showNetworkStats
   }
 
   NDivider {
@@ -253,12 +253,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.storage-usage-label")
     description: I18n.tr("bar.system-monitor.storage-usage-description")
-    checked: valueShowDiskUsage
+    checked: root.valueShowDiskUsage
     onToggled: checked => {
-                 valueShowDiskUsage = checked;
+                 root.valueShowDiskUsage = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showDiskUsage
+    defaultValue: root.widgetMetadata.showDiskUsage
   }
 
   NToggle {
@@ -266,12 +266,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.storage-as-percentage-label")
     description: I18n.tr("bar.system-monitor.storage-as-percentage-description")
-    checked: valueShowDiskUsageAsPercent
+    checked: root.valueShowDiskUsageAsPercent
     onToggled: checked => {
-                 valueShowDiskUsageAsPercent = checked;
+                 root.valueShowDiskUsageAsPercent = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showDiskUsageAsPercent
+    defaultValue: root.widgetMetadata.showDiskUsageAsPercent
   }
 
   NToggle {
@@ -279,12 +279,12 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.system-monitor.storage-available-label")
     description: I18n.tr("bar.system-monitor.storage-available-description")
-    checked: valueShowDiskAvailable
+    checked: root.valueShowDiskAvailable
     onToggled: checked => {
-                 valueShowDiskAvailable = checked;
+                 root.valueShowDiskAvailable = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showDiskAvailable
+    defaultValue: root.widgetMetadata.showDiskAvailable
   }
 
   NComboBox {
@@ -299,11 +299,11 @@ ColumnLayout {
                                   name: path
                                 }));
     }
-    currentKey: valueDiskPath
+    currentKey: root.valueDiskPath
     onSelected: key => {
-                  valueDiskPath = key;
+                  root.valueDiskPath = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.diskPath
+    defaultValue: root.widgetMetadata.diskPath
   }
 }

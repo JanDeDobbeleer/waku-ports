@@ -87,18 +87,18 @@ ColumnLayout {
     // Image with rounded corners
     NImageRounded {
       anchors.fill: parent
-      visible: previewCachedPath !== ""
-      imagePath: previewCachedPath
+      visible: root.previewCachedPath !== ""
+      imagePath: root.previewCachedPath
       radius: Style.radiusL
-      borderColor: previewCachedPath !== "" ? Color.mPrimary : Color.mOutline
-      borderWidth: previewCachedPath !== "" ? 2 : 1
+      borderColor: root.previewCachedPath !== "" ? Color.mPrimary : Color.mOutline
+      borderWidth: root.previewCachedPath !== "" ? 2 : 1
       imageFillMode: Image.PreserveAspectCrop
     }
 
     ColumnLayout {
       anchors.centerIn: parent
       spacing: Style.marginL
-      visible: selectedWallpaper === ""
+      visible: root.selectedWallpaper === ""
 
       Rectangle {
         Layout.alignment: Qt.AlignHCenter
@@ -135,7 +135,7 @@ ColumnLayout {
   Item {
     Layout.fillWidth: true
     Layout.preferredHeight: 92
-    visible: filteredWallpapers.length > 0
+    visible: root.filteredWallpapers.length > 0
 
     NScrollView {
       id: galleryScroll
@@ -172,7 +172,7 @@ ColumnLayout {
         height: parent.height
 
         Repeater {
-          model: filteredWallpapers
+          model: root.filteredWallpapers
           delegate: Item {
             id: thumbDelegate
             readonly property int baseWidth: 120
@@ -282,7 +282,7 @@ ColumnLayout {
     color: Color.mSurfaceVariant
     radius: Style.radiusM
     opacity: 0.4
-    visible: filteredWallpapers.length === 0
+    visible: root.filteredWallpapers.length === 0
 
     RowLayout {
       anchors.fill: parent
@@ -299,14 +299,14 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Style.marginXS
         NText {
-          text: filteredWallpapers.length === 0 && selectedDirectory !== "" ? I18n.tr("setup.wallpaper.none-in-dir") : I18n.tr("setup.wallpaper.no-dir")
+          text: root.filteredWallpapers.length === 0 && root.selectedDirectory !== "" ? I18n.tr("setup.wallpaper.none-in-dir") : I18n.tr("setup.wallpaper.no-dir")
           pointSize: Style.fontSizeM
           font.weight: Style.fontWeightBold
           color: Color.mOnSurfaceVariant
         }
         NText {
-          text: selectedDirectory !== "" ? I18n.tr("setup.wallpaper.no-valid", {
-                                                     "dir": selectedDirectory
+          text: root.selectedDirectory !== "" ? I18n.tr("setup.wallpaper.no-valid", {
+                                                     "dir": root.selectedDirectory
                                                    }) : I18n.tr("setup.wallpaper.choose-dir")
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
@@ -327,11 +327,11 @@ ColumnLayout {
       id: wallpaperPathInput
       label: I18n.tr("setup.wallpaper.dir-label")
       description: I18n.tr("setup.wallpaper.dir-description")
-      text: selectedDirectory
+      text: root.selectedDirectory
       buttonIcon: "folder-open"
       Layout.fillWidth: true
       onInputTextChanged: text => {
-                            selectedDirectory = text;
+                            root.selectedDirectory = text;
                             directoryChanged(text);
                           }
       onButtonClicked: directoryPicker.open()
@@ -427,10 +427,10 @@ ColumnLayout {
     id: directoryPicker
     selectionMode: "folders"
     title: I18n.tr("setup.wallpaper.dir-select-title")
-    initialPath: selectedDirectory || Settings.defaultWallpapersDirectory
+    initialPath: root.selectedDirectory || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
                   if (paths.length > 0) {
-                    selectedDirectory = paths[0];
+                    root.selectedDirectory = paths[0];
                     directoryChanged(paths[0]);
                   }
                 }
@@ -453,10 +453,10 @@ ColumnLayout {
             images.push(line);
           }
         }
-        wallpapersList = images;
+        root.wallpapersList = images;
         updateFilteredWallpapers();
-        if (wallpapersList.length > 0 && selectedWallpaper === "") {
-          selectedWallpaper = wallpapersList[0];
+        if (root.wallpapersList.length > 0 && root.selectedWallpaper === "") {
+          root.selectedWallpaper = root.wallpapersList[0];
         }
       }
     }

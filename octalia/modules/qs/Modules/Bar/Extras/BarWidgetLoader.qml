@@ -103,7 +103,7 @@ Item {
       if (!item)
         return;
 
-      Logger.d("BarWidgetLoader", "Loading widget", widgetId, "on screen:", widgetScreen.name);
+      Logger.d("BarWidgetLoader", "Loading widget", root.widgetId, "on screen:", root.widgetScreen.name);
 
       // Extend widget to fill full bar dimension for extended click areas
       // For horizontal bars: widget fills bar height (content width preserved)
@@ -119,9 +119,9 @@ Item {
       }
 
       // Apply remaining widget properties (screen is already set as initial prop)
-      for (prop in widgetProps) {
+      for (prop in root.widgetProps) {
         if (item.hasOwnProperty(prop)) {
-          item[prop] = widgetProps[prop];
+          item[prop] = root.widgetProps[prop];
         }
       }
 
@@ -129,11 +129,11 @@ Item {
       root._unregister();
 
       // Register and store the key for reliable unregistration
-      BarService.registerWidget(widgetScreen.name, section, widgetId, sectionIndex, item);
-      root._regScreen = widgetScreen.name;
-      root._regSection = section;
-      root._regWidgetId = widgetId;
-      root._regIndex = sectionIndex;
+      BarService.registerWidget(root.widgetScreen.name, root.section, root.widgetId, root.sectionIndex, item);
+      root._regScreen = root.widgetScreen.name;
+      root._regSection = root.section;
+      root._regWidgetId = root.widgetId;
+      root._regIndex = root.sectionIndex;
 
       // Call custom onLoaded if it exists
       if (item.hasOwnProperty("onLoaded")) {

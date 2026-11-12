@@ -191,13 +191,13 @@ Singleton {
       Logger.d("BarService", "Display mode changed to:", Settings.data.bar.displayMode);
 
       // Only affect screens without displayMode overrides
-      for (let screenName in screenAutoHideState) {
+      for (let screenName in root.screenAutoHideState) {
         if (!Settings.hasScreenOverride(screenName, "displayMode")) {
           displayMode = Settings.getBarDisplayModeForScreen(screenName);
           if (displayMode === "auto_hide") {
             setScreenHidden(screenName, true);
           } else {
-            if (screenAutoHideState[screenName].hidden) {
+            if (root.screenAutoHideState[screenName].hidden) {
               setScreenHidden(screenName, false);
             }
           }
@@ -210,14 +210,14 @@ Singleton {
       Logger.d("BarService", "Screen overrides changed, re-evaluating auto-hide states");
 
       // Re-evaluate auto-hide state for all screens
-      for (let screenName in screenAutoHideState) {
+      for (let screenName in root.screenAutoHideState) {
         displayMode = Settings.getBarDisplayModeForScreen(screenName);
         if (displayMode === "auto_hide") {
-          if (!screenAutoHideState[screenName].hidden) {
+          if (!root.screenAutoHideState[screenName].hidden) {
             setScreenHidden(screenName, true);
           }
         } else {
-          if (screenAutoHideState[screenName].hidden) {
+          if (root.screenAutoHideState[screenName].hidden) {
             setScreenHidden(screenName, false);
           }
         }

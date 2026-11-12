@@ -40,7 +40,7 @@ ColumnLayout {
       text: root.label
       pointSize: root.labelSize
       font.weight: Style.fontWeightSemiBold
-      color: labelColor
+      color: root.labelColor
       wrapMode: Text.WordWrap
 
       // Settings indicator dot positioned right after the text content

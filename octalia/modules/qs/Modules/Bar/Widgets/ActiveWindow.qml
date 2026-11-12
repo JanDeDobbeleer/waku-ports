@@ -190,7 +190,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -198,10 +198,10 @@ Item {
   Rectangle {
     id: windowActiveRect
     visible: root.visible
-    x: isVerticalBar ? Style.pixelAlignCenter(parent.width, width) : 0
-    y: isVerticalBar ? 0 : Style.pixelAlignCenter(parent.height, height)
-    width: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : verticalSize) : ((!hasFocusedWindow) && (hideMode === "hidden") ? 0 : dynamicWidth)
-    height: isVerticalBar ? ((!hasFocusedWindow) && hideMode === "hidden" ? 0 : verticalSize) : capsuleHeight
+    x: root.isVerticalBar ? Style.pixelAlignCenter(parent.width, width) : 0
+    y: root.isVerticalBar ? 0 : Style.pixelAlignCenter(parent.height, height)
+    width: root.isVerticalBar ? ((!root.hasFocusedWindow) && root.hideMode === "hidden" ? 0 : root.verticalSize) : ((!root.hasFocusedWindow) && (root.hideMode === "hidden") ? 0 : root.dynamicWidth)
+    height: root.isVerticalBar ? ((!root.hasFocusedWindow) && root.hideMode === "hidden" ? 0 : root.verticalSize) : root.capsuleHeight
     radius: Style.radiusM
     color: Style.capsuleColor
     border.color: Style.capsuleBorderColor
@@ -218,23 +218,23 @@ Item {
     Item {
       id: mainContainer
       anchors.fill: parent
-      anchors.leftMargin: isVerticalBar ? 0 : Style.marginS
-      anchors.rightMargin: isVerticalBar ? 0 : Style.marginS
+      anchors.leftMargin: root.isVerticalBar ? 0 : Style.marginS
+      anchors.rightMargin: root.isVerticalBar ? 0 : Style.marginS
 
       // Horizontal layout for top/bottom bars
       RowLayout {
         id: rowLayout
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.marginS
-        visible: !isVerticalBar
+        visible: !root.isVerticalBar
         z: 1
 
         // Window icon
         Item {
-          Layout.preferredWidth: iconSize
-          Layout.preferredHeight: iconSize
+          Layout.preferredWidth: root.iconSize
+          Layout.preferredHeight: root.iconSize
           Layout.alignment: Qt.AlignVCenter
-          visible: showIcon
+          visible: root.showIcon
 
           IconImage {
             id: windowIcon
@@ -245,7 +245,7 @@ Item {
             visible: source !== ""
 
             // Apply dock shader to active window icon (always themed)
-            layer.enabled: widgetSettings.colorizeIcons !== false
+            layer.enabled: root.widgetSettings.colorizeIcons !== false
             layer.effect: ShaderEffect {
               property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
               property real colorizeMode: 0.0 // Dock mode (grayscale)
@@ -257,23 +257,23 @@ Item {
 
         NScrollText {
           id: titleContainer
-          text: windowTitle
+          text: root.windowTitle
           Layout.alignment: Qt.AlignVCenter
           Layout.preferredHeight: root.capsuleHeight
-          fadeRoundLeftCorners: !showIcon
-          visible: showText
+          fadeRoundLeftCorners: !root.showIcon
+          visible: root.showText
 
           maxWidth: {
             // Calculate available width based on other elements
-            var iconWidth = (showIcon && windowIcon.visible ? (iconSize + Style.marginS) : 0);
+            var iconWidth = (root.showIcon && windowIcon.visible ? (root.iconSize + Style.marginS) : 0);
             var totalMargins = Style.margin2XXS;
             var availableWidth = mainContainer.width - iconWidth - totalMargins;
             return Math.max(20, availableWidth);
           }
           scrollMode: {
-            if (scrollingMode === "always")
+            if (root.scrollingMode === "always")
               return NScrollText.ScrollMode.Always;
-            if (scrollingMode === "hover")
+            if (root.scrollingMode === "hover")
               return NScrollText.ScrollMode.Hover;
             return NScrollText.ScrollMode.Never;
           }
@@ -298,7 +298,7 @@ Item {
         height: parent.height - Style.margin2M
         x: Style.pixelAlignCenter(parent.width, width)
         y: Style.pixelAlignCenter(parent.height, height)
-        visible: isVerticalBar
+        visible: root.isVerticalBar
         z: 1
 
         // Window icon
@@ -308,7 +308,7 @@ Item {
           height: width
           x: Style.pixelAlignCenter(parent.width, width)
           y: Style.pixelAlignCenter(parent.height, height)
-          visible: windowTitle !== ""
+          visible: root.windowTitle !== ""
 
           IconImage {
             id: windowIconVertical
@@ -319,7 +319,7 @@ Item {
             visible: source !== ""
 
             // Apply dock shader to active window icon (always themed)
-            layer.enabled: widgetSettings.colorizeIcons !== false
+            layer.enabled: root.widgetSettings.colorizeIcons !== false
             layer.effect: ShaderEffect {
               property color targetColor: Color.mOnSurface
               property real colorizeMode: 0.0 // Dock mode (grayscale)
@@ -340,17 +340,17 @@ Item {
     anchors.fill: parent
 
     // Extend click area to screen edge if widget is at the start/end
-    anchors.leftMargin: (!isVerticalBar && section === "left" && sectionWidgetIndex === 0) ? -Style.marginS : 0
-    anchors.rightMargin: (!isVerticalBar && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginS : 0
-    anchors.topMargin: (isVerticalBar && section === "left" && sectionWidgetIndex === 0) ? -Style.marginM : 0
-    anchors.bottomMargin: (isVerticalBar && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginM : 0
+    anchors.leftMargin: (!root.isVerticalBar && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginS : 0
+    anchors.rightMargin: (!root.isVerticalBar && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginS : 0
+    anchors.topMargin: (root.isVerticalBar && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginM : 0
+    anchors.bottomMargin: (root.isVerticalBar && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginM : 0
 
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, root, screen);
+                   PanelService.showContextMenu(contextMenu, root, root.screen);
                  }
                }
   }

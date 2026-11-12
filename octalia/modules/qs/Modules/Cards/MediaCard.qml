@@ -44,7 +44,7 @@ NBox {
     target: WallpaperService
     function onWallpaperChanged(screenName, path) {
       if (screenName === screen.name) {
-        wallpaper = path;
+        root.wallpaper = path;
         updateCachedWallpaper();
       }
     }

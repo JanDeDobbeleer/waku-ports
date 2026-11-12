@@ -69,14 +69,14 @@ ShellRoot {
   Connections {
     target: I18n ? I18n : null
     function onTranslationsLoaded() {
-      i18nLoaded = true;
+      shellRoot.i18nLoaded = true;
     }
   }
 
   Connections {
     target: Settings ? Settings : null
     function onSettingsLoaded() {
-      settingsLoaded = true;
+      shellRoot.settingsLoaded = true;
     }
   }
 
@@ -84,13 +84,13 @@ ShellRoot {
     target: ShellState ? ShellState : null
     function onIsLoadedChanged() {
       if (ShellState.isLoaded) {
-        shellStateLoaded = true;
+        shellRoot.shellStateLoaded = true;
       }
     }
   }
 
   Loader {
-    active: i18nLoaded && settingsLoaded && shellStateLoaded
+    active: shellRoot.i18nLoaded && shellRoot.settingsLoaded && shellRoot.shellStateLoaded
 
     sourceComponent: Item {
       Component.onCompleted: {

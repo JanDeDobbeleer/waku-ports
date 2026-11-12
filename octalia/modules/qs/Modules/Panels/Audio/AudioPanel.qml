@@ -283,19 +283,19 @@ SmartPanel {
                     Layout.fillWidth: true
                     from: 0
                     to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-                    value: localOutputVolume
+                    value: panelContent.localOutputVolume
                     stepSize: 0.01
                     heightRatio: 0.5
                     onMoved: function (value) {
-                      localOutputVolume = value;
+                      panelContent.localOutputVolume = value;
                     }
                     onPressedChanged: function (pressed) {
-                      localOutputVolumeChanging = pressed;
+                      panelContent.localOutputVolumeChanging = pressed;
                     }
                   }
 
                   NText {
-                    text: Math.round((panelContent.outputVolumeGuard ? localOutputVolume : AudioService.volume) * 100) + "%"
+                    text: Math.round((panelContent.outputVolumeGuard ? panelContent.localOutputVolume : AudioService.volume) * 100) + "%"
                     pointSize: Style.fontSizeM
                     family: Settings.data.ui.fontFixed
                     color: Color.mOnSurface
@@ -358,19 +358,19 @@ SmartPanel {
                     Layout.fillWidth: true
                     from: 0
                     to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-                    value: localInputVolume
+                    value: panelContent.localInputVolume
                     stepSize: 0.01
                     heightRatio: 0.5
                     onMoved: function (value) {
-                      localInputVolume = value;
+                      panelContent.localInputVolume = value;
                     }
                     onPressedChanged: function (pressed) {
-                      localInputVolumeChanging = pressed;
+                      panelContent.localInputVolumeChanging = pressed;
                     }
                   }
 
                   NText {
-                    text: Math.round((panelContent.inputVolumeGuard ? localInputVolume : AudioService.inputVolume) * 100) + "%"
+                    text: Math.round((panelContent.inputVolumeGuard ? panelContent.localInputVolume : AudioService.inputVolume) * 100) + "%"
                     pointSize: Style.fontSizeM
                     family: Settings.data.ui.fontFixed
                     color: Color.mOnSurface
@@ -410,7 +410,7 @@ SmartPanel {
 
                 // Track individual node to ensure properties are bound
                 PwObjectTracker {
-                  objects: modelData ? [modelData] : []
+                  objects: appBox.modelData ? [appBox.modelData] : []
                 }
 
                 property PwNodeAudio nodeAudio: (modelData && modelData.audio) ? modelData.audio : null

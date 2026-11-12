@@ -74,7 +74,7 @@ ColumnLayout {
                   root.valueHideMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.hideMode
+    defaultValue: root.widgetMetadata.hideMode
   }
 
   NToggle {
@@ -86,7 +86,7 @@ ColumnLayout {
                  root.valueOnlySameOutput = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.onlySameOutput
+    defaultValue: root.widgetMetadata.onlySameOutput
   }
 
   NToggle {
@@ -98,7 +98,7 @@ ColumnLayout {
                  root.valueOnlyActiveWorkspaces = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.onlyActiveWorkspaces
+    defaultValue: root.widgetMetadata.onlyActiveWorkspaces
   }
 
   NToggle {
@@ -110,7 +110,7 @@ ColumnLayout {
                  root.valueColorizeIcons = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.colorizeIcons
+    defaultValue: root.widgetMetadata.colorizeIcons
   }
 
   NToggle {
@@ -122,7 +122,7 @@ ColumnLayout {
                  root.valueShowPinnedApps = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showPinnedApps
+    defaultValue: root.widgetMetadata.showPinnedApps
   }
 
   NValueSlider {
@@ -134,7 +134,7 @@ ColumnLayout {
     stepSize: 0.01
     showReset: true
     value: root.valueIconScale
-    defaultValue: widgetMetadata.iconScale
+    defaultValue: root.widgetMetadata.iconScale
     onMoved: value => {
                root.valueIconScale = value;
                saveSettings();
@@ -145,31 +145,31 @@ ColumnLayout {
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.show-title-label")
-    description: isVerticalBar ? I18n.tr("bar.taskbar.show-title-description-disabled") : I18n.tr("bar.taskbar.show-title-description")
+    description: root.isVerticalBar ? I18n.tr("bar.taskbar.show-title-description-disabled") : I18n.tr("bar.taskbar.show-title-description")
     checked: root.valueShowTitle
     onToggled: checked => {
                  root.valueShowTitle = checked;
                  saveSettings();
                }
-    enabled: !isVerticalBar
-    defaultValue: widgetMetadata.showTitle
+    enabled: !root.isVerticalBar
+    defaultValue: root.widgetMetadata.showTitle
   }
 
   NTextInput {
     id: titleWidthInput
-    visible: root.valueShowTitle && !isVerticalBar
+    visible: root.valueShowTitle && !root.isVerticalBar
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.title-width-label")
     description: I18n.tr("bar.taskbar.title-width-description")
-    text: widgetData.titleWidth || widgetMetadata.titleWidth
+    text: root.widgetData.titleWidth || root.widgetMetadata.titleWidth
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     onTextChanged: saveSettings()
-    defaultValue: String(widgetMetadata.titleWidth)
+    defaultValue: String(root.widgetMetadata.titleWidth)
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: !isVerticalBar && root.valueShowTitle
+    visible: !root.isVerticalBar && root.valueShowTitle
     label: I18n.tr("bar.taskbar.smart-width-label")
     description: I18n.tr("bar.taskbar.smart-width-description")
     checked: root.valueSmartWidth
@@ -177,11 +177,11 @@ ColumnLayout {
                  root.valueSmartWidth = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.smartWidth
+    defaultValue: root.widgetMetadata.smartWidth
   }
 
   NValueSlider {
-    visible: root.valueSmartWidth && !isVerticalBar
+    visible: root.valueSmartWidth && !root.isVerticalBar
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.max-width-label")
     description: I18n.tr("bar.taskbar.max-width-description")
@@ -190,7 +190,7 @@ ColumnLayout {
     stepSize: 5
     showReset: true
     value: root.valueMaxTaskbarWidth
-    defaultValue: widgetMetadata.maxTaskbarWidth
+    defaultValue: root.widgetMetadata.maxTaskbarWidth
     onMoved: value => {
                root.valueMaxTaskbarWidth = Math.round(value);
                saveSettings();

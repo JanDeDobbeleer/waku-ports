@@ -72,7 +72,7 @@ Item {
                    } else if (action === "wifi-settings") {
                      SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 0, screen);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -86,8 +86,8 @@ Item {
     icon: NetworkService.getIcon()
     text: NetworkService.getStatusText(false)
     autoHide: false
-    forceOpen: !isBarVertical && root.displayMode === "alwaysShow"
-    forceClose: isBarVertical || root.displayMode === "alwaysHide" || text === ""
+    forceOpen: !root.isBarVertical && root.displayMode === "alwaysShow"
+    forceClose: root.isBarVertical || root.displayMode === "alwaysHide" || text === ""
     onClicked: {
       var panel = PanelService.getPanel("networkPanel", screen);
       panel?.toggle(this);

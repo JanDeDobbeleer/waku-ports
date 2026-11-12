@@ -47,8 +47,8 @@ Singleton {
   Connections {
     target: PanelService
     function onPopupMenuWindowRegistered(screen) {
-      if (popupScheduled) {
-        if (!viewChangelogTargetScreen || viewChangelogTargetScreen.name === screen.name) {
+      if (root.popupScheduled) {
+        if (!root.viewChangelogTargetScreen || root.viewChangelogTargetScreen.name === screen.name) {
           openWhenReady();
         }
       }

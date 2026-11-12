@@ -13,8 +13,8 @@ RadioButton {
   indicator: Rectangle {
     id: outerCircle
 
-    implicitWidth: Style.baseWidgetSize * 0.625 * pointSize / Style.fontSizeM
-    implicitHeight: Style.baseWidgetSize * 0.625 * pointSize / Style.fontSizeM
+    implicitWidth: Style.baseWidgetSize * 0.625 * root.pointSize / Style.fontSizeM
+    implicitHeight: Style.baseWidgetSize * 0.625 * root.pointSize / Style.fontSizeM
     radius: Math.min(Style.iRadiusL, width / 2)
     color: "transparent"
     border.color: root.checked ? Color.mPrimary : Color.mOnSurface

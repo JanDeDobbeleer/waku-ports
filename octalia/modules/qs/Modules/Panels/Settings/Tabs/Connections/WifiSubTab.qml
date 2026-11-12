@@ -114,7 +114,7 @@ Item {
     }
 
     Item {
-      visible: !showOnlyLists
+      visible: !root.showOnlyLists
       Layout.fillWidth: true
     }
 
@@ -124,16 +124,16 @@ Item {
       visible: root.connectedNetworks.length > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: connectedCol.implicitHeight + Style.margin2M
-      border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: connectedCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
+        anchors.leftMargin: root.showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: root.showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -155,16 +155,16 @@ Item {
       visible: root.savedNetworks.length > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: savedCol.implicitHeight + Style.margin2M
-      border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: savedCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
+        anchors.leftMargin: root.showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: root.showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -186,16 +186,16 @@ Item {
       visible: root.availableNetworks.length > 0 && NetworkService.wifiEnabled
       Layout.fillWidth: true
       Layout.preferredHeight: availableCol.implicitHeight + Style.margin2M
-      border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: availableCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
+        anchors.leftMargin: root.showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: root.showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         RowLayout {

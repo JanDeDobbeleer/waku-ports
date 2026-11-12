@@ -144,7 +144,7 @@ ColumnLayout {
             Layout.preferredHeight: Style.baseWidgetSize * 0.7
             Layout.alignment: Qt.AlignVCenter
             radius: Style.radiusXS
-            color: modelData.enabled ? Color.mPrimary : Color.mSurface
+            color: delegateItem.modelData.enabled ? Color.mPrimary : Color.mSurface
             border.color: Color.mOutline
             border.width: Style.borderS
 
@@ -155,7 +155,7 @@ ColumnLayout {
             }
 
             NIcon {
-              visible: modelData.enabled
+              visible: delegateItem.modelData.enabled
               anchors.centerIn: parent
               anchors.horizontalCenterOffset: -1
               icon: "check"
@@ -167,8 +167,8 @@ ColumnLayout {
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
               onClicked: {
-                root.updateEntry(index, {
-                                   "enabled": !modelData.enabled
+                root.updateEntry(delegateItem.index, {
+                                   "enabled": !delegateItem.modelData.enabled
                                  });
               }
             }
@@ -177,7 +177,7 @@ ColumnLayout {
           // Label
           NText {
             Layout.fillWidth: true
-            text: modelData.text
+            text: delegateItem.modelData.text
             color: Color.mOnSurface
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -187,11 +187,11 @@ ColumnLayout {
           NIconButtonHot {
             visible: Settings.data.sessionMenu.enableCountdown
             icon: "clock"
-            hot: modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true
+            hot: delegateItem.modelData.countdownEnabled !== undefined ? delegateItem.modelData.countdownEnabled : true
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
             onClicked: root.updateEntry(delegateItem.index, {
-                                          "countdownEnabled": !(modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true)
+                                          "countdownEnabled": !(delegateItem.modelData.countdownEnabled !== undefined ? delegateItem.modelData.countdownEnabled : true)
                                         })
           }
 

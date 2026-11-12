@@ -50,7 +50,7 @@ Singleton {
     onTriggered: {
       if (settingsFileView.path !== undefined) {
         Logger.d("Settings", "Reloading settings after external change detection");
-        reloadSettings = true;
+        root.reloadSettings = true;
         settingsFileView.reload();
       }
     }
@@ -105,7 +105,7 @@ Singleton {
 
   FileView {
     id: settingsFileView
-    path: directoriesCreated ? settingsFile : undefined
+    path: root.directoriesCreated ? root.settingsFile : undefined
     printErrors: false
     watchChanges: true
     onAdapterUpdated: saveTimer.start()
@@ -120,7 +120,7 @@ Singleton {
     }
     onLoaded: function () {
       var rawJson;
-      if (!isLoaded) {
+      if (!root.isLoaded) {
         Logger.i("Settings", "Settings loaded");
 
         // Load raw JSON for migrations (adapter doesn't expose removed properties)
@@ -135,7 +135,7 @@ Singleton {
         runVersionedMigrations(rawJson);
 
         // Finally, update our local settings version
-        adapter.settingsVersion = settingsVersion;
+        adapter.settingsVersion = root.settingsVersion;
 
         // Emit the signal
         root.isLoaded = true;
@@ -148,8 +148,8 @@ Singleton {
       }
     }
     onLoadFailed: function (error) {
-      if (reloadSettings) {
-        reloadSettings = false;
+      if (root.reloadSettings) {
+        root.reloadSettings = false;
         return;
       }
       if (error.toString().includes("No such file") || error === 2) {
@@ -167,7 +167,7 @@ Singleton {
   // settings.json may be replaced atomically (e.g., symlink/store-path swap).
   FileView {
     id: settingsDirWatcher
-    path: directoriesCreated ? configDir : undefined
+    path: root.directoriesCreated ? root.configDir : undefined
     printErrors: false
     watchChanges: true
     onFileChanged: scheduleExternalReload()

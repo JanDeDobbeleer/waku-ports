@@ -166,11 +166,11 @@ Item {
 
         NDivider {
           Layout.fillWidth: true
-          visible: BluetoothService.enabled && isDiscoverable
+          visible: BluetoothService.enabled && root.isDiscoverable
         }
 
         NText {
-          visible: BluetoothService.enabled && isDiscoverable
+          visible: BluetoothService.enabled && root.isDiscoverable
           Layout.fillWidth: true
           text: I18n.tr("panels.connections.bluetooth-discoverable", {
                           hostName: HostService.hostName
@@ -184,7 +184,7 @@ Item {
     }
 
     Item {
-      visible: !showOnlyLists
+      visible: !root.showOnlyLists
       Layout.fillWidth: true
     }
 
@@ -194,16 +194,16 @@ Item {
       visible: root.connectedDevices.length > 0 && BluetoothService.enabled
       Layout.fillWidth: true
       Layout.preferredHeight: connectedDevicesCol.implicitHeight + Style.margin2M
-      border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: connectedDevicesCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
+        anchors.leftMargin: root.showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: root.showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -225,16 +225,16 @@ Item {
       visible: root.pairedDevices.length > 0 && BluetoothService.enabled
       Layout.fillWidth: true
       Layout.preferredHeight: pairedDevicesCol.implicitHeight + Style.margin2M
-      border.color: showOnlyLists ? Style.boxBorderColor : "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      border.color: root.showOnlyLists ? Style.boxBorderColor : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: pairedDevicesCol
         anchors.fill: parent
         anchors.topMargin: Style.marginM
         anchors.bottomMargin: Style.marginM
-        anchors.leftMargin: showOnlyLists ? Style.marginL : 0
-        anchors.rightMargin: showOnlyLists ? Style.marginL : 0
+        anchors.leftMargin: root.showOnlyLists ? Style.marginL : 0
+        anchors.rightMargin: root.showOnlyLists ? Style.marginL : 0
         spacing: Style.marginM
 
         NLabel {
@@ -257,7 +257,7 @@ Item {
       Layout.fillWidth: true
       Layout.preferredHeight: availableDevicesCol.implicitHeight + Style.margin2M
       border.color: "transparent"
-      color: showOnlyLists ? Color.mSurfaceVariant : "transparent"
+      color: root.showOnlyLists ? Color.mSurfaceVariant : "transparent"
 
       ColumnLayout {
         id: availableDevicesCol
@@ -296,7 +296,7 @@ Item {
     }
 
     Item {
-      visible: !showOnlyLists
+      visible: !root.showOnlyLists
       Layout.fillWidth: true
     }
 
@@ -453,7 +453,7 @@ Item {
             spacing: Style.marginS
 
             NBusyIndicator {
-              visible: isBusy
+              visible: device.isBusy
               running: visible && root.effectivelyVisible
               color: device.getContentColors()[1]
               size: Style.baseWidgetSize * 0.5
@@ -474,7 +474,7 @@ Item {
             }
 
             NIconButton {
-              visible: !root.showOnlyLists && (modelData.paired || modelData.trusted) && !modelData.connected && !isBusy && !modelData.blocked
+              visible: !root.showOnlyLists && (modelData.paired || modelData.trusted) && !modelData.connected && !device.isBusy && !modelData.blocked
               icon: "trash"
               baseSize: Style.baseWidgetSize * 0.75
               colorBg: Color.mPrimary
@@ -487,7 +487,7 @@ Item {
             NButton {
               id: button
               visible: modelData.state !== BluetoothDeviceState.Connecting && modelData.state !== BluetoothDeviceState.Disconnecting
-              enabled: (canConnect || canDisconnect || (root.showOnlyLists ? false : canPair)) && !isBusy
+              enabled: (device.canConnect || device.canDisconnect || (root.showOnlyLists ? false : device.canPair)) && !device.isBusy
               fontSize: Style.fontSizeS
               backgroundColor: modelData.connected ? Color.mSurfaceVariant : Color.mPrimary
               textColor: modelData.connected ? Color.mOnSurface : Color.mOnPrimary

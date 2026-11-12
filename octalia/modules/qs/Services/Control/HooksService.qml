@@ -77,14 +77,14 @@ Singleton {
     target: PanelService.lockScreen
     function onActiveChanged() {
       // Detect lock: was unlocked, now locked
-      if (!wasLocked && PanelService.lockScreen.active) {
+      if (!root.wasLocked && PanelService.lockScreen.active) {
         executeLockHook();
       }
       // Detect unlock: was locked, now not locked
-      if (wasLocked && !PanelService.lockScreen.active) {
+      if (root.wasLocked && !PanelService.lockScreen.active) {
         executeUnlockHook();
       }
-      wasLocked = PanelService.lockScreen.active;
+      root.wasLocked = PanelService.lockScreen.active;
     }
   }
 
@@ -97,14 +97,14 @@ Singleton {
       const isEnabled = PowerProfileService.octaliaPerformanceMode;
 
       // Detect enabled: was disabled, now enabled
-      if (!wasPerformanceModeEnabled && isEnabled) {
+      if (!root.wasPerformanceModeEnabled && isEnabled) {
         executePerformanceModeEnabledHook();
       }
       // Detect disabled: was enabled, now disabled
-      if (wasPerformanceModeEnabled && !isEnabled) {
+      if (root.wasPerformanceModeEnabled && !isEnabled) {
         executePerformanceModeDisabledHook();
       }
-      wasPerformanceModeEnabled = isEnabled;
+      root.wasPerformanceModeEnabled = isEnabled;
     }
   }
 
@@ -258,9 +258,9 @@ Singleton {
         Logger.w("HooksService", `Power hook failed with exit code ${exitCode}`);
       }
 
-      if (pendingPowerCallback !== null) {
-        const callback = pendingPowerCallback;
-        pendingPowerCallback = null;
+      if (root.pendingPowerCallback !== null) {
+        const callback = root.pendingPowerCallback;
+        root.pendingPowerCallback = null;
         callback();
       }
     }

@@ -164,10 +164,10 @@ Popup {
         allowEmpty: true
         maxKeybinds: 1
         requireModifierForNormalKeys: false
-        currentKeybinds: keybindInputText ? [keybindInputText] : []
+        currentKeybinds: root.keybindInputText ? [root.keybindInputText] : []
         settingsPath: "sessionMenu.powerOptions[" + root.entryIndex + "].keybind"
         onKeybindsChanged: newKeybinds => {
-                             keybindInputText = newKeybinds.length > 0 ? newKeybinds[0] : "";
+                             root.keybindInputText = newKeybinds.length > 0 ? newKeybinds[0] : "";
                              root.save();
                            }
       }

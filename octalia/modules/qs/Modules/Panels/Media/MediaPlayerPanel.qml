@@ -232,7 +232,7 @@ SmartPanel {
           anchors.fill: parent
           z: 0
           active: !!(root.needsSpectrum && !root.showAlbumArt)
-          sourceComponent: visualizerSource
+          sourceComponent: playerContent.visualizerSource
         }
 
         GridLayout {
@@ -293,7 +293,7 @@ SmartPanel {
               anchors.margins: Style.marginS
               z: 2
               active: !!(root.needsSpectrum && root.showAlbumArt)
-              sourceComponent: visualizerSource
+              sourceComponent: playerContent.visualizerSource
             }
           }
 

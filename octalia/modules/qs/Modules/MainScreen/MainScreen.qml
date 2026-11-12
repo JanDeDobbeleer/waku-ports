@@ -84,7 +84,7 @@ PanelWindow {
   Behavior on color {
     enabled: !PanelService.closedImmediately
     ColorAnimation {
-      duration: isPanelClosing ? Style.animationFaster : Style.animationNormal
+      duration: root.isPanelClosing ? Style.animationFaster : Style.animationNormal
       easing.type: Easing.OutQuad
     }
   }

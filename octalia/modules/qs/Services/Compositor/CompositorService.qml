@@ -76,12 +76,12 @@ Singleton {
     id: backendLoader
     onLoaded: {
       if (item) {
-        if (isScroll) {
+        if (root.isScroll) {
           item.msgCommand = "scrollmsg";
         }
         root.backend = item;
         setupBackendConnections();
-        backend.initialize();
+        root.backend.initialize();
       }
     }
   }

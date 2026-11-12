@@ -51,9 +51,9 @@ Item {
     target: AudioService
     function onVolumeChanged() {
       // Logger.i("Bar:Volume", "onVolumeChanged")
-      if (!firstVolumeReceived) {
+      if (!root.firstVolumeReceived) {
         // Ignore the first volume change
-        firstVolumeReceived = true;
+        root.firstVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -61,8 +61,8 @@ Item {
     }
 
     function onMutedChanged() {
-      if (!firstVolumeReceived) {
-        firstVolumeReceived = true;
+      if (!root.firstVolumeReceived) {
+        root.firstVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -70,8 +70,8 @@ Item {
     }
 
     function onVolumeAtMaximum() {
-      if (!firstVolumeReceived) {
-        firstVolumeReceived = true;
+      if (!root.firstVolumeReceived) {
+        root.firstVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -79,8 +79,8 @@ Item {
     }
 
     function onVolumeAtMinimum() {
-      if (!firstVolumeReceived) {
-        firstVolumeReceived = true;
+      if (!root.firstVolumeReceived) {
+        root.firstVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -125,9 +125,9 @@ Item {
                    if (action === "toggle-mute") {
                      AudioService.setOutputMuted(!AudioService.muted);
                    } else if (action === "custom-command") {
-                     Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+                     Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -147,19 +147,19 @@ Item {
       return Math.round(displayVolume * 100);
     }
     suffix: "%"
-    forceOpen: displayMode === "alwaysShow"
-    forceClose: displayMode === "alwaysHide"
+    forceOpen: root.displayMode === "alwaysShow"
+    forceClose: root.displayMode === "alwaysHide"
 
     onWheel: function (delta) {
       if (root.reverseScroll)
         delta *= -1;
 
-      wheelAccumulator += delta;
-      if (wheelAccumulator >= 120) {
-        wheelAccumulator = 0;
+      root.wheelAccumulator += delta;
+      if (root.wheelAccumulator >= 120) {
+        root.wheelAccumulator = 0;
         AudioService.increaseVolume();
-      } else if (wheelAccumulator <= -120) {
-        wheelAccumulator = 0;
+      } else if (root.wheelAccumulator <= -120) {
+        root.wheelAccumulator = 0;
         AudioService.decreaseVolume();
       }
     }
@@ -170,7 +170,7 @@ Item {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }
     onMiddleClicked: {
-      Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+      Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
     }
   }
 }

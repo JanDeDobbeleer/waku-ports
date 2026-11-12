@@ -49,7 +49,7 @@ ColumnLayout {
                   root.valueDeviceNativePath = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.deviceNativePath
+    defaultValue: root.widgetMetadata.deviceNativePath
   }
 
   NComboBox {
@@ -84,29 +84,29 @@ ColumnLayout {
                   root.valueDisplayMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.displayMode
+    defaultValue: root.widgetMetadata.displayMode
   }
 
   NToggle {
     label: I18n.tr("bar.battery.hide-if-not-detected-label")
     description: I18n.tr("bar.battery.hide-if-not-detected-description")
-    checked: valueHideIfNotDetected
+    checked: root.valueHideIfNotDetected
     onToggled: checked => {
-                 valueHideIfNotDetected = checked;
+                 root.valueHideIfNotDetected = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.hideIfNotDetected
+    defaultValue: root.widgetMetadata.hideIfNotDetected
   }
 
   NToggle {
     label: I18n.tr("bar.battery.hide-if-idle-label")
     description: I18n.tr("bar.battery.hide-if-idle-description")
-    checked: valueHideIfIdle
+    checked: root.valueHideIfIdle
     onToggled: checked => {
-                 valueHideIfIdle = checked;
+                 root.valueHideIfIdle = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.hideIfIdle
+    defaultValue: root.widgetMetadata.hideIfIdle
   }
 
   NDivider {
@@ -116,22 +116,22 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.battery.show-power-profile-label")
     description: I18n.tr("bar.battery.show-power-profile-description")
-    checked: valueShowPowerProfiles
+    checked: root.valueShowPowerProfiles
     onToggled: checked => {
-                 valueShowPowerProfiles = checked;
+                 root.valueShowPowerProfiles = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showPowerProfiles
+    defaultValue: root.widgetMetadata.showPowerProfiles
   }
 
   NToggle {
     label: I18n.tr("bar.battery.show-octalia-performance-label")
     description: I18n.tr("bar.battery.show-octalia-performance-description")
-    checked: valueShowOctaliaPerformance
+    checked: root.valueShowOctaliaPerformance
     onToggled: checked => {
-                 valueShowOctaliaPerformance = checked;
+                 root.valueShowOctaliaPerformance = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showOctaliaPerformance
+    defaultValue: root.widgetMetadata.showOctaliaPerformance
   }
 }

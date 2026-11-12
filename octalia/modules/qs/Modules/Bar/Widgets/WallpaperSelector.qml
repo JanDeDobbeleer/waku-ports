@@ -63,7 +63,7 @@ NIconButton {
                    if (action === "random-wallpaper") {
                      WallpaperService.setRandomWallpaper();
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }

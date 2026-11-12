@@ -139,7 +139,7 @@ RowLayout {
     implicitWidth: Layout.minimumWidth
     model: root.activeModel
     textRole: "name"
-    currentIndex: findIndexInActiveModel(currentKey)
+    currentIndex: findIndexInActiveModel(root.currentKey)
     onActivated: {
       if (combo.currentIndex >= 0 && root.activeModel && combo.currentIndex < root.activeModel.count) {
         root.selected(root.activeModel.get(combo.currentIndex).key);
@@ -293,7 +293,7 @@ RowLayout {
                 NText {
                   text: name
                   pointSize: Style.fontSizeM
-                  color: highlighted ? Color.mOnHover : Color.mOnSurface
+                  color: delegateRoot.highlighted ? Color.mOnHover : Color.mOnSurface
                   verticalAlignment: Text.AlignVCenter
                   elide: Text.ElideRight
                   Layout.fillWidth: true
@@ -350,7 +350,7 @@ RowLayout {
               }
               background: Rectangle {
                 anchors.fill: parent
-                color: highlighted ? Color.mHover : "transparent"
+                color: delegateRoot.highlighted ? Color.mHover : "transparent"
                 radius: Style.iRadiusS
               }
             }

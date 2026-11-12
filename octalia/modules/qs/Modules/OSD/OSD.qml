@@ -277,14 +277,14 @@ Variants {
       }
 
       function onInputVolumeChanged() {
-        if (suppressInputOSD)
+        if (root.suppressInputOSD)
           return;
         if (AudioService.hasInput)
           showOSD(OSD.Type.InputVolume);
       }
 
       function onInputMutedChanged() {
-        if (suppressInputOSD)
+        if (root.suppressInputOSD)
           return;
         if (!AudioService.hasInput)
           return;
@@ -295,7 +295,7 @@ Variants {
 
       // Refresh OSD when device changes to ensure correct volume is displayed
       function onSinkChanged() {
-        suppressInputOSD = true;
+        root.suppressInputOSD = true;
         inputSuppressionTimer.restart();
         // If volume OSD is currently showing, refresh it to show new device's volume
         if (root.currentOSDType === OSD.Type.Volume) {

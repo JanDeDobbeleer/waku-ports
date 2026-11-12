@@ -46,7 +46,7 @@ Item {
   Loader {
     id: pillLoader
     anchors.fill: parent
-    sourceComponent: isVerticalBar ? verticalPillComponent : horizontalPillComponent
+    sourceComponent: root.isVerticalBar ? verticalPillComponent : horizontalPillComponent
 
     Component {
       id: verticalPillComponent

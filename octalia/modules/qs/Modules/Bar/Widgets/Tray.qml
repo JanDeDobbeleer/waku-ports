@@ -27,7 +27,7 @@ Item {
   Connections {
     target: PanelService
     function onPopupMenuWindowRegistered(registeredScreen) {
-      if (registeredScreen === screen) {
+      if (registeredScreen === root.screen) {
         root.popupMenuUpdateTrigger++;
       }
     }
@@ -302,8 +302,8 @@ Item {
   // Visual capsule centered in parent
   Rectangle {
     id: visualCapsule
-    width: capsuleWidth
-    height: capsuleContentHeight
+    width: root.capsuleWidth
+    height: root.capsuleContentHeight
     x: Style.pixelAlignCenter(parent.width, width)
     y: Style.pixelAlignCenter(parent.height, height)
     radius: Style.radiusM
@@ -328,7 +328,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -336,7 +336,7 @@ Item {
   Flow {
     id: trayFlow
     spacing: 0
-    flow: isVertical ? Flow.TopToBottom : Flow.LeftToRight
+    flow: root.isVertical ? Flow.TopToBottom : Flow.LeftToRight
 
     // Position centered in capsule
     anchors.centerIn: visualCapsule
@@ -344,10 +344,10 @@ Item {
     // Drawer opener (before items if opposite direction)
     NIconButton {
       id: chevronIconBefore
-      visible: root.drawerEnabled && dropdownItems.length > 0 && BarService.getPillDirection(root)
-      width: isVertical ? barHeight : capsuleHeight
-      height: isVertical ? capsuleHeight : barHeight
-      baseSize: capsuleHeight
+      visible: root.drawerEnabled && root.dropdownItems.length > 0 && BarService.getPillDirection(root)
+      width: root.isVertical ? root.barHeight : root.capsuleHeight
+      height: root.isVertical ? root.capsuleHeight : root.barHeight
+      baseSize: root.capsuleHeight
       applyUiScale: false
       customRadius: Style.radiusL
       colorBg: "transparent"
@@ -355,7 +355,7 @@ Item {
       colorBorder: "transparent"
       colorBorderHover: "transparent"
       icon: {
-        switch (barPosition) {
+        switch (root.barPosition) {
         case "bottom":
           return "caret-up";
         case "left":
@@ -368,7 +368,7 @@ Item {
         }
       }
       onClicked: toggleDrawer(this)
-      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, screen)
+      onRightClicked: PanelService.showContextMenu(chevronContextMenu, this, root.screen)
     }
 
     // Pinned items
@@ -404,7 +404,7 @@ Item {
           backer.fillMode: Image.PreserveAspectFit
 
           source: {
-            let icon = modelData?.icon || "";
+            let icon = trayDelegate.modelData?.icon || "";
             if (!icon) {
               return "";
             }

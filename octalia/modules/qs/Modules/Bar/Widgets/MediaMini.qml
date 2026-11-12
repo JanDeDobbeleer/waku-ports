@@ -163,21 +163,21 @@ Item {
     model: {
       var i, isCurrent;
       var items = [];
-      if (hasPlayer && MediaService.canPlay) {
+      if (root.hasPlayer && MediaService.canPlay) {
         items.push({
                      "label": MediaService.isPlaying ? I18n.tr("common.pause") : I18n.tr("common.play"),
                      "action": "play-pause",
                      "icon": MediaService.isPlaying ? "media-pause" : "media-play"
                    });
       }
-      if (hasPlayer && MediaService.canGoPrevious) {
+      if (root.hasPlayer && MediaService.canGoPrevious) {
         items.push({
                      "label": I18n.tr("common.previous"),
                      "action": "previous",
                      "icon": "media-prev"
                    });
       }
-      if (hasPlayer && MediaService.canGoNext) {
+      if (root.hasPlayer && MediaService.canGoNext) {
         items.push({
                      "label": I18n.tr("common.next"),
                      "action": "next",
@@ -225,7 +225,7 @@ Item {
                        MediaService.switchToPlayer(idx);
                      }
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -235,8 +235,8 @@ Item {
     id: container
     x: Style.pixelAlignCenter(parent.width, width)
     y: Style.pixelAlignCenter(parent.height, height)
-    width: Style.toOdd(isVertical ? (isHidden ? 0 : verticalSize) : (isHidden ? 0 : contentWidth))
-    height: Style.toOdd(isVertical ? (isHidden ? 0 : verticalSize) : capsuleHeight)
+    width: Style.toOdd(root.isVertical ? (root.isHidden ? 0 : root.verticalSize) : (root.isHidden ? 0 : root.contentWidth))
+    height: Style.toOdd(root.isVertical ? (root.isHidden ? 0 : root.verticalSize) : root.capsuleHeight)
     radius: Style.radiusM
     color: Style.capsuleColor
     border.color: Style.capsuleBorderColor
@@ -257,8 +257,8 @@ Item {
 
     Item {
       anchors.fill: parent
-      anchors.leftMargin: isVertical ? 0 : Style.marginS
-      anchors.rightMargin: isVertical ? 0 : Style.marginS
+      anchors.leftMargin: root.isVertical ? 0 : Style.marginS
+      anchors.rightMargin: root.isVertical ? 0 : Style.marginS
 
       // Visualizer
       Loader {
@@ -266,16 +266,16 @@ Item {
         y: Style.pixelAlignCenter(parent.height, height)
         width: Style.toOdd(parent.width)
         height: Style.toOdd(parent.height)
-        active: showVisualizer
+        active: root.showVisualizer
         z: 0
         sourceComponent: {
-          if (!showVisualizer)
+          if (!root.showVisualizer)
             return null;
-          if (visualizerType === "linear")
+          if (root.visualizerType === "linear")
             return linearSpectrum;
-          if (visualizerType === "mirrored")
+          if (root.visualizerType === "mirrored")
             return mirroredSpectrum;
-          if (visualizerType === "wave")
+          if (root.visualizerType === "wave")
             return waveSpectrum;
           return null;
         }
@@ -286,28 +286,28 @@ Item {
         anchors.fill: parent
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.marginS
-        visible: !isVertical
+        visible: !root.isVertical
         z: 1
 
         // Album art / Progress ring
         Item {
-          visible: hasPlayer && (showAlbumArt || showProgressRing)
-          Layout.preferredWidth: visible ? artSize : 0
-          Layout.preferredHeight: visible ? artSize : 0
+          visible: root.hasPlayer && (root.showAlbumArt || root.showProgressRing)
+          Layout.preferredWidth: visible ? root.artSize : 0
+          Layout.preferredHeight: visible ? root.artSize : 0
           Layout.alignment: Qt.AlignVCenter
 
           ProgressRing {
             id: progressRing
             anchors.fill: parent
-            visible: showProgressRing
+            visible: root.showProgressRing
             progress: MediaService.trackLength > 0 ? MediaService.currentPosition / MediaService.trackLength : 0
             lineWidth: root.progressWidth
           }
 
           NImageRounded {
-            visible: showAlbumArt && hasPlayer
+            visible: root.showAlbumArt && root.hasPlayer
             anchors.fill: parent
-            anchors.margins: showProgressRing ? root.progressWidth * 2 : 0
+            anchors.margins: root.showProgressRing ? root.progressWidth * 2 : 0
             radius: width / 2
             imagePath: MediaService.trackArtUrl
             borderWidth: 0
@@ -320,19 +320,19 @@ Item {
           id: titleContainer
           Layout.fillWidth: true
           Layout.alignment: Qt.AlignVCenter
-          Layout.preferredHeight: capsuleHeight
-          fadeRoundLeftCorners: !(showAlbumArt || showProgressRing)
+          Layout.preferredHeight: root.capsuleHeight
+          fadeRoundLeftCorners: !(root.showAlbumArt || root.showProgressRing)
 
-          text: title
+          text: root.title
 
           scrollMode: {
-            if (scrollingMode === "always")
+            if (root.scrollingMode === "always")
               return NScrollText.ScrollMode.Always;
-            if (scrollingMode === "hover")
+            if (root.scrollingMode === "hover")
               return NScrollText.ScrollMode.Hover;
             return NScrollText.ScrollMode.Never;
           }
-          cursorShape: hasPlayer ? Qt.PointingHandCursor : Qt.ArrowCursor
+          cursorShape: root.hasPlayer ? Qt.PointingHandCursor : Qt.ArrowCursor
           maxWidth: root.maxWidth - root.mainContentWidth
           forcedHover: mainMouseArea.containsMouse
           fadeExtent: 0.1
@@ -349,8 +349,8 @@ Item {
       // Vertical layout
       Item {
         id: verticalLayout
-        visible: isVertical
-        width: Style.toOdd(verticalSize)
+        visible: root.isVertical
+        width: Style.toOdd(root.verticalSize)
         height: Style.toOdd(width)
         x: Style.pixelAlignCenter(parent.width, width)
         y: Style.pixelAlignCenter(parent.height, height)
@@ -358,15 +358,15 @@ Item {
 
         ProgressRing {
           anchors.fill: parent
-          visible: showProgressRing
+          visible: root.showProgressRing
           progress: MediaService.trackLength > 0 ? MediaService.currentPosition / MediaService.trackLength : 0
           lineWidth: root.progressWidth
         }
 
         NImageRounded {
-          visible: showAlbumArt && hasPlayer
+          visible: root.showAlbumArt && root.hasPlayer
           anchors.fill: parent
-          anchors.margins: showProgressRing ? root.progressWidth * 2 : 0
+          anchors.margins: root.showProgressRing ? root.progressWidth * 2 : 0
           radius: width / 2
           imagePath: MediaService.trackArtUrl
           borderWidth: 0
@@ -384,10 +384,10 @@ Item {
     anchors.fill: parent
 
     // Extend click area to screen edge if widget is at the start/end
-    anchors.leftMargin: (!isVertical && section === "left" && sectionWidgetIndex === 0) ? -Style.marginS : 0
-    anchors.rightMargin: (!isVertical && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginS : 0
-    anchors.topMargin: (isVertical && section === "left" && sectionWidgetIndex === 0) ? -Style.marginM : 0
-    anchors.bottomMargin: (isVertical && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginM : 0
+    anchors.leftMargin: (!root.isVertical && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginS : 0
+    anchors.rightMargin: (!root.isVertical && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginS : 0
+    anchors.topMargin: (root.isVertical && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginM : 0
+    anchors.bottomMargin: (root.isVertical && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginM : 0
 
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
@@ -395,14 +395,14 @@ Item {
 
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   PanelService.getPanel("mediaPlayerPanel", screen)?.toggle(container);
+                   PanelService.getPanel("mediaPlayerPanel", root.screen)?.toggle(container);
                  } else if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, container, screen);
-                 } else if (mouse.button === Qt.MiddleButton && hasPlayer) {
+                   PanelService.showContextMenu(contextMenu, container, root.screen);
+                 } else if (mouse.button === Qt.MiddleButton && root.hasPlayer) {
                    MediaService.playPause();
-                 } else if (mouse.button === Qt.ForwardButton && hasPlayer) {
+                 } else if (mouse.button === Qt.ForwardButton && root.hasPlayer) {
                    MediaService.next();
-                 } else if (mouse.button === Qt.BackButton && hasPlayer) {
+                 } else if (mouse.button === Qt.BackButton && root.hasPlayer) {
                    MediaService.previous();
                  }
                }

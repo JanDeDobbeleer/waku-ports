@@ -43,34 +43,34 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-caps-lock-label")
       description: I18n.tr("bar.lock-keys.show-caps-lock-description")
-      checked: valueShowCapsLock
+      checked: root.valueShowCapsLock
       onToggled: checked => {
-                   valueShowCapsLock = checked;
+                   root.valueShowCapsLock = checked;
                    saveSettings();
                  }
-      defaultValue: widgetMetadata.showCapsLock
+      defaultValue: root.widgetMetadata.showCapsLock
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: capsIcon
+      icon: root.capsIcon
       pointSize: Style.fontSizeXL
-      visible: capsIcon !== ""
+      visible: root.capsIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: capsPicker.open()
-      enabled: valueShowCapsLock
+      enabled: root.valueShowCapsLock
     }
   }
 
   NIconPicker {
     id: capsPicker
-    initialIcon: capsIcon
+    initialIcon: root.capsIcon
     query: "letter-c"
     onIconSelected: function (iconName) {
-      capsIcon = iconName;
+      root.capsIcon = iconName;
       saveSettings();
     }
   }
@@ -81,34 +81,34 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-num-lock-label")
       description: I18n.tr("bar.lock-keys.show-num-lock-description")
-      checked: valueShowNumLock
+      checked: root.valueShowNumLock
       onToggled: checked => {
-                   valueShowNumLock = checked;
+                   root.valueShowNumLock = checked;
                    saveSettings();
                  }
-      defaultValue: widgetMetadata.showNumLock
+      defaultValue: root.widgetMetadata.showNumLock
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: numIcon
+      icon: root.numIcon
       pointSize: Style.fontSizeXL
-      visible: numIcon !== ""
+      visible: root.numIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: numPicker.open()
-      enabled: valueShowNumLock
+      enabled: root.valueShowNumLock
     }
   }
 
   NIconPicker {
     id: numPicker
-    initialIcon: numIcon
+    initialIcon: root.numIcon
     query: "letter-n"
     onIconSelected: function (iconName) {
-      numIcon = iconName;
+      root.numIcon = iconName;
       saveSettings();
     }
   }
@@ -119,34 +119,34 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-scroll-lock-label")
       description: I18n.tr("bar.lock-keys.show-scroll-lock-description")
-      checked: valueShowScrollLock
+      checked: root.valueShowScrollLock
       onToggled: checked => {
-                   valueShowScrollLock = checked;
+                   root.valueShowScrollLock = checked;
                    saveSettings();
                  }
-      defaultValue: widgetMetadata.showScrollLock
+      defaultValue: root.widgetMetadata.showScrollLock
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: scrollIcon
+      icon: root.scrollIcon
       pointSize: Style.fontSizeXL
-      visible: scrollIcon !== ""
+      visible: root.scrollIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: scrollPicker.open()
-      enabled: valueShowScrollLock
+      enabled: root.valueShowScrollLock
     }
   }
 
   NIconPicker {
     id: scrollPicker
-    initialIcon: scrollIcon
+    initialIcon: root.scrollIcon
     query: "letter-s"
     onIconSelected: function (iconName) {
-      scrollIcon = iconName;
+      root.scrollIcon = iconName;
       saveSettings();
     }
   }
@@ -159,11 +159,11 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.lock-keys.hide-when-off-label")
     description: I18n.tr("bar.lock-keys.hide-when-off-description")
-    checked: valueHideWhenOff
+    checked: root.valueHideWhenOff
     onToggled: checked => {
-                 valueHideWhenOff = checked;
+                 root.valueHideWhenOff = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenOff
+    defaultValue: root.widgetMetadata.hideWhenOff
   }
 }

@@ -103,11 +103,11 @@ Item {
       id: visualizerLoader
       anchors.fill: parent
       anchors.margins: Style.marginS
-      active: shouldShow
+      active: root.shouldShow
       asynchronous: true
 
       sourceComponent: {
-        switch (currentVisualizerType) {
+        switch (root.currentVisualizerType) {
         case "linear":
           return linearComponent;
         case "mirrored":
@@ -145,11 +145,11 @@ Item {
 
                    if (action === "cycle-visualizer") {
                      const types = ["linear", "mirrored", "wave"];
-                     const currentIndex = types.indexOf(currentVisualizerType);
+                     const currentIndex = types.indexOf(root.currentVisualizerType);
                      const nextIndex = (currentIndex + 1) % types.length;
                      Settings.data.audio.visualizerType = types[nextIndex];
                    } else if (action === "widget-settings" && screen) {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -164,12 +164,12 @@ Item {
 
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   if (screen) {
-                     PanelService.showContextMenu(contextMenu, root, screen);
+                   if (root.screen) {
+                     PanelService.showContextMenu(contextMenu, root, root.screen);
                    }
                  } else {
                    const types = ["linear", "mirrored", "wave"];
-                   const currentIndex = types.indexOf(currentVisualizerType);
+                   const currentIndex = types.indexOf(root.currentVisualizerType);
                    const nextIndex = (currentIndex + 1) % types.length;
                    Settings.data.audio.visualizerType = types[nextIndex];
                  }

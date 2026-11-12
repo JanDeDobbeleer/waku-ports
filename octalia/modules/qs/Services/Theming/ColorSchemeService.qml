@@ -224,7 +224,7 @@ Singleton {
           }
         }
         writeColorsToDisk(variant);
-        lastPredefinedSchemeData = data;
+        root.lastPredefinedSchemeData = data;
         Logger.i("ColorScheme", "Applying color scheme:", getBasename(path));
 
         // Generate templates for predefined color schemes
@@ -254,7 +254,7 @@ Singleton {
   // Writer to colors.json using a JsonAdapter for safety
   FileView {
     id: colorsWriter
-    path: colorsJsonFilePath
+    path: root.colorsJsonFilePath
     printErrors: false
     onSaved:
 

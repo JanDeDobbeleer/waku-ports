@@ -80,9 +80,9 @@ ColumnLayout {
         "name": I18n.tr("options.workspace-labels.index-and-name")
       }
     ]
-    currentKey: widgetData.labelMode || widgetMetadata.labelMode
+    currentKey: root.widgetData.labelMode || root.widgetMetadata.labelMode
     onSelected: key => {
-                  valueLabelMode = key;
+                  root.valueLabelMode = key;
                   saveSettings();
                 }
     minimumWidth: 200
@@ -93,12 +93,12 @@ ColumnLayout {
     description: I18n.tr("bar.workspace.character-count-description")
     from: 1
     to: 10
-    value: valueCharacterCount
+    value: root.valueCharacterCount
     onValueChanged: {
-      valueCharacterCount = value;
+      root.valueCharacterCount = value;
       saveSettings();
     }
-    visible: valueLabelMode === "name"
+    visible: root.valueLabelMode === "name"
   }
 
   NValueSlider {
@@ -107,15 +107,15 @@ ColumnLayout {
     from: 0.4
     to: 1.0
     stepSize: 0.01
-    value: valuePillSize
-    defaultValue: widgetMetadata.pillSize
+    value: root.valuePillSize
+    defaultValue: root.widgetMetadata.pillSize
     showReset: true
     onMoved: value => {
-               valuePillSize = value;
+               root.valuePillSize = value;
                saveSettings();
              }
-    text: Math.round(valuePillSize * 100) + "%"
-    visible: !valueShowApplications
+    text: Math.round(root.valuePillSize * 100) + "%"
+    visible: !root.valueShowApplications
   }
 
   NComboBox {
@@ -140,9 +140,9 @@ ColumnLayout {
         "name": I18n.tr("common.font-weight-bold")
       },
     ]
-    currentKey: widgetData.fontWeight || widgetMetadata.fontWeight
+    currentKey: root.widgetData.fontWeight || root.widgetMetadata.fontWeight
     onSelected: key => {
-                  valueFontWeight = key;
+                  root.valueFontWeight = key;
                   saveSettings();
                 }
     minimumWidth: 200
@@ -151,9 +151,9 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.hide-unoccupied-label")
     description: I18n.tr("bar.workspace.hide-unoccupied-description")
-    checked: valueHideUnoccupied
+    checked: root.valueHideUnoccupied
     onToggled: checked => {
-                 valueHideUnoccupied = checked;
+                 root.valueHideUnoccupied = checked;
                  saveSettings();
                }
   }
@@ -161,9 +161,9 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.show-labels-only-when-occupied-label")
     description: I18n.tr("bar.workspace.show-labels-only-when-occupied-description")
-    checked: valueShowLabelsOnlyWhenOccupied
+    checked: root.valueShowLabelsOnlyWhenOccupied
     onToggled: checked => {
-                 valueShowLabelsOnlyWhenOccupied = checked;
+                 root.valueShowLabelsOnlyWhenOccupied = checked;
                  saveSettings();
                }
   }
@@ -171,9 +171,9 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.follow-focused-screen-label")
     description: I18n.tr("bar.workspace.follow-focused-screen-description")
-    checked: valueFollowFocusedScreen
+    checked: root.valueFollowFocusedScreen
     onToggled: checked => {
-                 valueFollowFocusedScreen = checked;
+                 root.valueFollowFocusedScreen = checked;
                  saveSettings();
                }
   }
@@ -181,9 +181,9 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.enable-scrollwheel-label")
     description: I18n.tr("bar.workspace.enable-scrollwheel-description")
-    checked: valueEnableScrollWheel
+    checked: root.valueEnableScrollWheel
     onToggled: checked => {
-                 valueEnableScrollWheel = checked;
+                 root.valueEnableScrollWheel = checked;
                  saveSettings();
                }
   }
@@ -195,9 +195,9 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.show-applications-label")
     description: I18n.tr("bar.workspace.show-applications-description")
-    checked: valueShowApplications
+    checked: root.valueShowApplications
     onToggled: checked => {
-                 valueShowApplications = checked;
+                 root.valueShowApplications = checked;
                  saveSettings();
                }
   }
@@ -205,34 +205,34 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.show-applications-hover-label")
     description: I18n.tr("bar.workspace.show-applications-hover-description")
-    checked: valueShowApplicationsHover
+    checked: root.valueShowApplicationsHover
     onToggled: checked => {
-                 valueShowApplicationsHover = checked;
+                 root.valueShowApplicationsHover = checked;
                  saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.show-badge-label")
     description: I18n.tr("bar.workspace.show-badge-description")
-    checked: valueShowBadge
+    checked: root.valueShowBadge
     onToggled: checked => {
-                 valueShowBadge = checked;
+                 root.valueShowBadge = checked;
                  saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NToggle {
     label: I18n.tr("bar.tray.colorize-icons-label")
     description: I18n.tr("bar.active-window.colorize-icons-description")
-    checked: valueColorizeIcons
+    checked: root.valueColorizeIcons
     onToggled: checked => {
-                 valueColorizeIcons = checked;
+                 root.valueColorizeIcons = checked;
                  saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -242,14 +242,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueUnfocusedIconsOpacity
-    defaultValue: widgetMetadata.unfocusedIconsOpacity
+    value: root.valueUnfocusedIconsOpacity
+    defaultValue: root.widgetMetadata.unfocusedIconsOpacity
     onMoved: value => {
-               valueUnfocusedIconsOpacity = value;
+               root.valueUnfocusedIconsOpacity = value;
                saveSettings();
              }
-    text: Math.floor(valueUnfocusedIconsOpacity * 100) + "%"
-    visible: valueShowApplications
+    text: Math.floor(root.valueUnfocusedIconsOpacity * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -259,14 +259,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueGroupedBorderOpacity
-    defaultValue: widgetMetadata.groupedBorderOpacity
+    value: root.valueGroupedBorderOpacity
+    defaultValue: root.widgetMetadata.groupedBorderOpacity
     onMoved: value => {
-               valueGroupedBorderOpacity = value;
+               root.valueGroupedBorderOpacity = value;
                saveSettings();
              }
-    text: Math.floor(valueGroupedBorderOpacity * 100) + "%"
-    visible: valueShowApplications
+    text: Math.floor(root.valueGroupedBorderOpacity * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -276,14 +276,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueIconScale
-    defaultValue: widgetMetadata.iconScale
+    value: root.valueIconScale
+    defaultValue: root.widgetMetadata.iconScale
     onMoved: value => {
-               valueIconScale = value;
+               root.valueIconScale = value;
                saveSettings();
              }
-    text: Math.round(valueIconScale * 100) + "%"
-    visible: valueShowApplications
+    text: Math.round(root.valueIconScale * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NDivider {
@@ -293,9 +293,9 @@ ColumnLayout {
   NColorChoice {
     label: I18n.tr("bar.workspace.focused-color-label")
     description: I18n.tr("bar.workspace.focused-color-description")
-    currentKey: valueFocusedColor
+    currentKey: root.valueFocusedColor
     onSelected: key => {
-                  valueFocusedColor = key;
+                  root.valueFocusedColor = key;
                   saveSettings();
                 }
   }
@@ -303,9 +303,9 @@ ColumnLayout {
   NColorChoice {
     label: I18n.tr("bar.workspace.occupied-color-label")
     description: I18n.tr("bar.workspace.occupied-color-description")
-    currentKey: valueOccupiedColor
+    currentKey: root.valueOccupiedColor
     onSelected: key => {
-                  valueOccupiedColor = key;
+                  root.valueOccupiedColor = key;
                   saveSettings();
                 }
   }
@@ -313,9 +313,9 @@ ColumnLayout {
   NColorChoice {
     label: I18n.tr("bar.workspace.empty-color-label")
     description: I18n.tr("bar.workspace.empty-color-description")
-    currentKey: valueEmptyColor
+    currentKey: root.valueEmptyColor
     onSelected: key => {
-                  valueEmptyColor = key;
+                  root.valueEmptyColor = key;
                   saveSettings();
                 }
   }

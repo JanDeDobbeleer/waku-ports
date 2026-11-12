@@ -83,7 +83,7 @@ NIconButton {
                      panel.requestedTab = SettingsPanel.Tab.Launcher;
                      panel.toggle();
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -100,16 +100,16 @@ NIconButton {
     width: root.buttonSize * 0.8
     height: width
     source: {
-      if (useDistroLogo)
+      if (root.useDistroLogo)
         return HostService.osLogo;
-      if (customIconPath !== "")
-        return customIconPath.startsWith("file://") ? customIconPath : "file:///" + customIconPath.replace(/[\\]/g, "/");
+      if (root.customIconPath !== "")
+        return root.customIconPath.startsWith("file://") ? root.customIconPath : "file:///" + root.customIconPath.replace(/[\\]/g, "/");
       return "";
     }
     visible: source !== ""
     smooth: true
     asynchronous: true
-    layer.enabled: (enableColorization) && (useDistroLogo || customIconPath !== "")
+    layer.enabled: (root.enableColorization) && (root.useDistroLogo || root.customIconPath !== "")
     layer.effect: ShaderEffect {
       property color targetColor: !hovering ? iconColor : Color.mOnHover
       property real colorizeMode: 2.0

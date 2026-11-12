@@ -41,7 +41,7 @@ Item {
   states: [
     State {
       name: "active"
-      when: workspace.isActive
+      when: pillContainer.workspace.isActive
       PropertyChanges {
         target: pillContainer
         width: isVertical ? barHeight : getWorkspaceWidth(workspace, true)
@@ -57,7 +57,7 @@ Item {
       from: "inactive"
       to: "active"
       NumberAnimation {
-        properties: isVertical ? "height,pillHeight" : "width,pillWidth"
+        properties: pillContainer.isVertical ? "height,pillHeight" : "width,pillWidth"
         duration: Style.animationNormal
         easing.type: Easing.OutBack
       }
@@ -66,7 +66,7 @@ Item {
       from: "active"
       to: "inactive"
       NumberAnimation {
-        properties: isVertical ? "height,pillHeight" : "width,pillWidth"
+        properties: pillContainer.isVertical ? "height,pillHeight" : "width,pillWidth"
         duration: Style.animationNormal
         easing.type: Easing.OutBack
       }
@@ -85,17 +85,17 @@ Item {
     color: {
       if (pillMouseArea.containsMouse)
         return Color.mHover;
-      if (workspace.isFocused)
-        return Color.resolveColorKey(focusedColor);
-      if (workspace.isUrgent)
+      if (pillContainer.workspace.isFocused)
+        return Color.resolveColorKey(pillContainer.focusedColor);
+      if (pillContainer.workspace.isUrgent)
         return Color.mError;
-      if (workspace.isOccupied)
-        return Color.resolveColorKey(occupiedColor);
-      return Qt.alpha(Color.resolveColorKey(emptyColor), 0.3);
+      if (pillContainer.workspace.isOccupied)
+        return Color.resolveColorKey(pillContainer.occupiedColor);
+      return Qt.alpha(Color.resolveColorKey(pillContainer.emptyColor), 0.3);
     }
 
     Loader {
-      active: (labelMode !== "none") && (!showLabelsOnlyWhenOccupied || workspace.isOccupied || workspace.isFocused)
+      active: (pillContainer.labelMode !== "none") && (!pillContainer.showLabelsOnlyWhenOccupied || pillContainer.workspace.isOccupied || pillContainer.workspace.isFocused)
       anchors.fill: parent
       sourceComponent: Component {
         NText {
@@ -207,7 +207,7 @@ Item {
     cursorShape: Qt.PointingHandCursor
     hoverEnabled: true
     onClicked: {
-      CompositorService.switchToWorkspace(workspace);
+      CompositorService.switchToWorkspace(pillContainer.workspace);
     }
   }
 
@@ -215,14 +215,14 @@ Item {
   Rectangle {
     id: pillBurst
     anchors.centerIn: pill
-    width: pillContainer.pillWidth + 18 * masterProgress * scale
-    height: pillContainer.pillHeight + 18 * masterProgress * scale
+    width: pillContainer.pillWidth + 18 * pillContainer.masterProgress * scale
+    height: pillContainer.pillHeight + 18 * pillContainer.masterProgress * scale
     radius: width / 2
     color: "transparent"
-    border.color: effectColor
-    border.width: Math.max(1, Math.round((2 + 6 * (1.0 - masterProgress))))
-    opacity: effectsActive && workspace.isFocused ? (1.0 - masterProgress) * 0.7 : 0
-    visible: effectsActive && workspace.isFocused
+    border.color: pillContainer.effectColor
+    border.width: Math.max(1, Math.round((2 + 6 * (1.0 - pillContainer.masterProgress))))
+    opacity: pillContainer.effectsActive && pillContainer.workspace.isFocused ? (1.0 - pillContainer.masterProgress) * 0.7 : 0
+    visible: pillContainer.effectsActive && pillContainer.workspace.isFocused
     z: 1
   }
 }

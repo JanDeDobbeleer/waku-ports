@@ -507,7 +507,7 @@ Singleton {
   // Resolve VSCode extension paths dynamically
   Process {
     id: codeResolverProcess
-    command: ["python3", vscodeHelperScript, "~/.vscode/extensions"]
+    command: ["python3", root.vscodeHelperScript, "~/.vscode/extensions"]
     running: true
     property var paths: []
     stdout: SplitParser {
@@ -524,7 +524,7 @@ Singleton {
 
   Process {
     id: codiumResolverProcess
-    command: ["python3", vscodeHelperScript, "~/.vscode-oss/extensions"]
+    command: ["python3", root.vscodeHelperScript, "~/.vscode-oss/extensions"]
     running: true
     property var paths: []
     stdout: SplitParser {

@@ -51,7 +51,7 @@ Popup {
   contentItem: ColumnLayout {
     id: content
     anchors.fill: parent
-    anchors.margins: dialogPadding
+    anchors.margins: root.dialogPadding
     spacing: Style.marginM
 
     // Title

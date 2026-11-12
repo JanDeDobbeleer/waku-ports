@@ -39,15 +39,15 @@ NBox {
       var vol;
       if (AudioService.sink) {
         const newSinkName = AudioService.sink.name;
-        if (newSinkName !== lastSinkName) {
-          lastSinkName = newSinkName;
+        if (newSinkName !== root.lastSinkName) {
+          root.lastSinkName = newSinkName;
           // Immediately set local volume to current device's volume
           vol = AudioService.volume;
-          localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+          root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSinkName = "";
-        localOutputVolume = 0;
+        root.lastSinkName = "";
+        root.localOutputVolume = 0;
       }
     }
   }
@@ -58,15 +58,15 @@ NBox {
       var vol;
       if (AudioService.source) {
         const newSourceName = AudioService.source.name;
-        if (newSourceName !== lastSourceName) {
-          lastSourceName = newSourceName;
+        if (newSourceName !== root.lastSourceName) {
+          root.lastSourceName = newSourceName;
           // Immediately set local volume to current device's volume
           vol = AudioService.inputVolume;
-          localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+          root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSourceName = "";
-        localInputVolume = 0;
+        root.lastSourceName = "";
+        root.localInputVolume = 0;
       }
     }
   }
@@ -79,15 +79,15 @@ NBox {
     repeat: true
     onTriggered: {
       // Only sync if sink hasn't changed
-      if (AudioService.sink && AudioService.sink.name === lastSinkName) {
-        if (Math.abs(localOutputVolume - AudioService.volume) >= 0.01) {
-          AudioService.setVolume(localOutputVolume);
+      if (AudioService.sink && AudioService.sink.name === root.lastSinkName) {
+        if (Math.abs(root.localOutputVolume - AudioService.volume) >= 0.01) {
+          AudioService.setVolume(root.localOutputVolume);
         }
       }
       // Only sync if source hasn't changed
-      if (AudioService.source && AudioService.source.name === lastSourceName) {
-        if (Math.abs(localInputVolume - AudioService.inputVolume) >= 0.01) {
-          AudioService.setInputVolume(localInputVolume);
+      if (AudioService.source && AudioService.source.name === root.lastSourceName) {
+        if (Math.abs(root.localInputVolume - AudioService.inputVolume) >= 0.01) {
+          AudioService.setInputVolume(root.localInputVolume);
         }
       }
     }
@@ -97,9 +97,9 @@ NBox {
     target: AudioService
     function onVolumeChanged() {
       var vol;
-      if (!outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === lastSinkName) {
+      if (!root.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === root.lastSinkName) {
         vol = AudioService.volume;
-        localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+        root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -108,9 +108,9 @@ NBox {
     target: AudioService
     function onInputVolumeChanged() {
       var vol;
-      if (!inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === lastSourceName) {
+      if (!root.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === root.lastSourceName) {
         vol = AudioService.inputVolume;
-        localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+        root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -119,9 +119,9 @@ NBox {
     target: outputVolumeSlider
     function onSliderActiveChanged() {
       var vol;
-      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === lastSinkName) {
+      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === root.lastSinkName) {
         vol = AudioService.volume;
-        localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+        root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -130,9 +130,9 @@ NBox {
     target: inputVolumeSlider
     function onSliderActiveChanged() {
       var vol;
-      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === lastSourceName) {
+      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === root.lastSourceName) {
         vol = AudioService.inputVolume;
-        localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+        root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -181,11 +181,11 @@ NBox {
         Layout.fillWidth: true
         from: 0
         to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-        value: localOutputVolume
+        value: root.localOutputVolume
         stepSize: 0.01
         heightRatio: 0.5
-        onMoved: localOutputVolume = value
-        onPressedChanged: localOutputVolumeChanging = pressed
+        onMoved: root.localOutputVolume = value
+        onPressedChanged: root.localOutputVolumeChanging = pressed
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {
@@ -200,8 +200,8 @@ NBox {
                        const step = Settings.data.audio.volumeStep / 100.0; // Convert percentage to 0-1 range
                        const increment = delta > 0 ? step : -step;
                        const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
-                       const newValue = Math.max(0, Math.min(maxVolume, localOutputVolume + increment));
-                       localOutputVolume = newValue;
+                       const newValue = Math.max(0, Math.min(maxVolume, root.localOutputVolume + increment));
+                       root.localOutputVolume = newValue;
                      }
                    }
         }
@@ -247,11 +247,11 @@ NBox {
         Layout.fillWidth: true
         from: 0
         to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-        value: localInputVolume
+        value: root.localInputVolume
         stepSize: 0.01
         heightRatio: 0.5
-        onMoved: localInputVolume = value
-        onPressedChanged: localInputVolumeChanging = pressed
+        onMoved: root.localInputVolume = value
+        onPressedChanged: root.localInputVolumeChanging = pressed
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {
@@ -266,8 +266,8 @@ NBox {
                        const step = Settings.data.audio.volumeStep / 100.0; // Convert percentage to 0-1 range
                        const increment = delta > 0 ? step : -step;
                        const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
-                       const newValue = Math.max(0, Math.min(maxVolume, localInputVolume + increment));
-                       localInputVolume = newValue;
+                       const newValue = Math.max(0, Math.min(maxVolume, root.localInputVolume + increment));
+                       root.localInputVolume = newValue;
                      }
                    }
         }

@@ -57,7 +57,7 @@ SmartPanel {
 
           NText {
             text: I18n.tr("changelog.panel.title", {
-                            "version": currentVersion || UpdateService.currentVersion
+                            "version": panelContent.currentVersion || UpdateService.currentVersion
                           })
             pointSize: Style.fontSizeXL
             font.weight: Style.fontWeightBold
@@ -66,7 +66,7 @@ SmartPanel {
           }
 
           NText {
-            text: subtitleText
+            text: panelContent.subtitleText
             color: Color.mOnSurface
             opacity: Style.opacityMedium
             wrapMode: Text.WordWrap
@@ -100,7 +100,7 @@ SmartPanel {
           spacing: Style.marginS
 
           NText {
-            text: hasPreviousVersion ? previousVersion : I18n.tr("changelog.panel.version-new-user")
+            text: panelContent.hasPreviousVersion ? panelContent.previousVersion : I18n.tr("changelog.panel.version-new-user")
             font.weight: Style.fontWeightSemiBold
             color: Color.mPrimary
           }
@@ -111,7 +111,7 @@ SmartPanel {
           }
 
           NText {
-            text: currentVersion || UpdateService.currentVersion
+            text: panelContent.currentVersion || UpdateService.currentVersion
             font.weight: Style.fontWeightSemiBold
             color: Color.mPrimary
           }
@@ -143,8 +143,8 @@ SmartPanel {
 
           NText {
             Layout.fillWidth: true
-            visible: releaseContent.length > 0
-            text: panelContent.colorizeHeaders(releaseContent)
+            visible: panelContent.releaseContent.length > 0
+            text: panelContent.colorizeHeaders(panelContent.releaseContent)
             wrapMode: Text.WordWrap
             elide: Text.ElideNone
             textFormat: Text.MarkdownText
@@ -152,7 +152,7 @@ SmartPanel {
           }
 
           NText {
-            visible: releaseContent.length === 0
+            visible: panelContent.releaseContent.length === 0
             text: I18n.tr("changelog.panel.empty")
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap

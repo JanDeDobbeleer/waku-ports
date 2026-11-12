@@ -96,7 +96,7 @@ NBox {
     clip: true
 
     RowLayout {
-      visible: weatherReady
+      visible: root.weatherReady
       Layout.fillWidth: true
       spacing: Style.marginS
 
@@ -117,7 +117,7 @@ NBox {
           NIcon {
             visible: !LocationService.taliaWeatherMascotActive
             anchors.centerIn: parent
-            icon: weatherReady ? LocationService.weatherSymbolFromCode(LocationService.data.weather.current_weather.weathercode) : ""
+            icon: root.weatherReady ? LocationService.weatherSymbolFromCode(LocationService.data.weather.current_weather.weathercode) : ""
             pointSize: Style.fontSizeXXXL * 1.75
             color: Color.mPrimary
           }
@@ -148,14 +148,14 @@ NBox {
             }
             pointSize: Style.fontSizeL
             font.weight: Style.fontWeightBold
-            visible: showLocation && !Settings.data.location.hideWeatherCityName
+            visible: root.showLocation && !Settings.data.location.hideWeatherCityName
           }
 
           RowLayout {
             NText {
               text: {
                 var suffix;
-                if (!weatherReady)
+                if (!root.weatherReady)
                   return "";
                 var temp = LocationService.data.weather.current_weather.temperature;
                 var suffix = "C";
@@ -166,15 +166,15 @@ NBox {
                 temp = Math.round(temp);
                 return `${temp}°${suffix}`;
               }
-              pointSize: showLocation ? Style.fontSizeXL : Style.fontSizeXL * 1.6
+              pointSize: root.showLocation ? Style.fontSizeXL : Style.fontSizeXL * 1.6
               font.weight: Style.fontWeightBold
             }
 
             NText {
-              text: weatherReady ? `(${LocationService.data.weather.timezone_abbreviation})` : ""
+              text: root.weatherReady ? `(${LocationService.data.weather.timezone_abbreviation})` : ""
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
-              visible: LocationService.data.weather && showLocation && !Settings.data.location.hideWeatherTimezone
+              visible: LocationService.data.weather && root.showLocation && !Settings.data.location.hideWeatherTimezone
             }
           }
         }
@@ -182,18 +182,18 @@ NBox {
     }
 
     NDivider {
-      visible: weatherReady
+      visible: root.weatherReady
       Layout.fillWidth: true
     }
 
     RowLayout {
-      visible: weatherReady
+      visible: root.weatherReady
       Layout.fillWidth: true
       Layout.alignment: Qt.AlignVCenter
       spacing: Style.marginM
 
       Repeater {
-        model: weatherReady ? Math.min(root.forecastDays, LocationService.data.weather.daily.time.length) : 0
+        model: root.weatherReady ? Math.min(root.forecastDays, LocationService.data.weather.daily.time.length) : 0
         delegate: ColumnLayout {
           Layout.fillWidth: true
           spacing: Style.marginXS
@@ -258,7 +258,7 @@ NBox {
     }
 
     ColumnLayout {
-      visible: !weatherReady
+      visible: !root.weatherReady
       Layout.alignment: Qt.AlignCenter
       spacing: Style.marginS
 

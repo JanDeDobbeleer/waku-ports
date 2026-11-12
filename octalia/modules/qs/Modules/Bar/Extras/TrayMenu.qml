@@ -278,7 +278,7 @@ PopupWindow {
           NDivider {
             anchors.centerIn: parent
             width: parent.width - Style.margin2M
-            visible: modelData?.isSeparator ?? false
+            visible: entry.modelData?.isSeparator ?? false
           }
 
           Rectangle {
@@ -286,7 +286,7 @@ PopupWindow {
             anchors.fill: parent
             color: mouseArea.containsMouse ? Color.mHover : "transparent"
             radius: Style.radiusS
-            visible: !(modelData?.isSeparator ?? false)
+            visible: !(entry.modelData?.isSeparator ?? false)
 
             RowLayout {
               anchors.fill: parent
@@ -296,16 +296,16 @@ PopupWindow {
 
               // Indicator Container
               Item {
-                visible: (modelData?.buttonType ?? QsMenuButtonType.None) !== QsMenuButtonType.None
+                visible: (entry.modelData?.buttonType ?? QsMenuButtonType.None) !== QsMenuButtonType.None
 
                 implicitWidth: Math.round(Style.baseWidgetSize * 0.5)
                 implicitHeight: Math.round(Style.baseWidgetSize * 0.5)
                 Layout.alignment: Qt.AlignVCenter
 
                 // Helper properties
-                readonly property int type: modelData?.buttonType ?? QsMenuButtonType.None
+                readonly property int type: entry.modelData?.buttonType ?? QsMenuButtonType.None
                 readonly property bool isRadio: type === QsMenuButtonType.RadioButton
-                readonly property bool isChecked: modelData?.checkState === Qt.Checked || (modelData?.checked ?? false)
+                readonly property bool isChecked: entry.modelData?.checkState === Qt.Checked || (entry.modelData?.checked ?? false)
 
                 // Color Logic
                 readonly property color activeColor: mouseArea.containsMouse ? Color.mOnHover : Color.mPrimary
@@ -376,8 +376,8 @@ PopupWindow {
               NText {
                 id: text
                 Layout.fillWidth: true
-                color: (modelData?.enabled ?? true) ? (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface) : Color.mOnSurfaceVariant
-                text: modelData?.text !== "" ? modelData?.text.replace(/[\n\r]+/g, ' ') : "..."
+                color: (entry.modelData?.enabled ?? true) ? (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface) : Color.mOnSurfaceVariant
+                text: entry.modelData?.text !== "" ? entry.modelData?.text.replace(/[\n\r]+/g, ' ') : "..."
                 pointSize: Style.fontSizeS
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
@@ -386,17 +386,17 @@ PopupWindow {
               Image {
                 Layout.preferredWidth: Style.marginL
                 Layout.preferredHeight: Style.marginL
-                source: modelData?.icon ?? ""
-                visible: (modelData?.icon ?? "") !== ""
+                source: entry.modelData?.icon ?? ""
+                visible: (entry.modelData?.icon ?? "") !== ""
                 fillMode: Image.PreserveAspectFit
               }
 
               NIcon {
-                icon: modelData?.hasChildren ? "menu" : ""
+                icon: entry.modelData?.hasChildren ? "menu" : ""
                 pointSize: Style.fontSizeS
                 applyUiScale: false
                 verticalAlignment: Text.AlignVCenter
-                visible: modelData?.hasChildren ?? false
+                visible: entry.modelData?.hasChildren ?? false
                 color: (mouseArea.containsMouse ? Color.mOnTertiary : Color.mOnSurface)
               }
             }
@@ -405,13 +405,13 @@ PopupWindow {
               id: mouseArea
               anchors.fill: parent
               hoverEnabled: true
-              enabled: (modelData?.enabled ?? true) && !(modelData?.isSeparator ?? false) && root.visible
+              enabled: (entry.modelData?.enabled ?? true) && !(entry.modelData?.isSeparator ?? false) && root.visible
               acceptedButtons: Qt.LeftButton | Qt.RightButton
 
               onClicked: mouse => {
                 var i;
-                           if (modelData && !modelData.isSeparator) {
-                             if (modelData.hasChildren) {
+                           if (entry.modelData && !entry.modelData.isSeparator) {
+                             if (entry.modelData.hasChildren) {
                                // Click on items with children toggles submenu
                                if (entry.subMenu) {
                                  // Close existing submenu
@@ -444,7 +444,7 @@ PopupWindow {
 
                                  // Open new submenu
                                  entry.subMenu = Qt.createComponent("TrayMenu.qml").createObject(root, {
-                                                                                                   "menu": modelData,
+                                                                                                   "menu": entry.modelData,
                                                                                                    "isSubMenu": true,
                                                                                                    "screen": root.screen
                                                                                                  });
@@ -463,7 +463,7 @@ PopupWindow {
                                }
                              } else {
                                // Click on regular items triggers them
-                               modelData.triggered();
+                               entry.modelData.triggered();
                                root.hideMenu();
 
                                // Close the drawer if it's open
@@ -491,12 +491,12 @@ PopupWindow {
       // PIN / UNPIN
       Rectangle {
         visible: {
-          if (widgetSection === "" || widgetIndex < 0)
+          if (root.widgetSection === "" || root.widgetIndex < 0)
             return false;
-          var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[widgetSection];
-          if (!widgets || widgetIndex >= widgets.length)
+          var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[root.widgetSection];
+          if (!widgets || root.widgetIndex >= widgets.length)
             return false;
-          var widgetSettings = widgets[widgetIndex];
+          var widgetSettings = widgets[root.widgetIndex];
           if (!widgetSettings)
             return false;
           return widgetSettings.drawerEnabled ?? false;

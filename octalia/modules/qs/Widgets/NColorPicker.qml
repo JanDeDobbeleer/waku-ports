@@ -27,7 +27,7 @@ Rectangle {
     cursorShape: Qt.PointingHandCursor
     onClicked: {
       var dialog = Qt.createComponent("NColorPickerDialog.qml").createObject(root, {
-                                                                               "selectedColor": selectedColor,
+                                                                               "selectedColor": root.selectedColor,
                                                                                "parent": Overlay.overlay,
                                                                                "screen": root.screen
                                                                              });

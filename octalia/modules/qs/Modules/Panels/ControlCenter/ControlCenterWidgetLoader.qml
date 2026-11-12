@@ -27,7 +27,7 @@ Item {
 
     Component.onCompleted: {
       sourceComponent = Qt.binding(function () {
-        return ControlCenterWidgetRegistry.getWidget(widgetId);
+        return ControlCenterWidgetRegistry.getWidget(root.widgetId);
       });
     }
 
@@ -37,15 +37,15 @@ Item {
         return;
 
       // Apply properties to loaded widget
-      for (prop in widgetProps) {
+      for (prop in root.widgetProps) {
         if (item.hasOwnProperty(prop)) {
-          item[prop] = widgetProps[prop];
+          item[prop] = root.widgetProps[prop];
         }
       }
 
       // Set screen property
       if (item.hasOwnProperty("screen")) {
-        item.screen = widgetScreen;
+        item.screen = root.widgetScreen;
       }
 
       // Call custom onLoaded if it exists
@@ -56,7 +56,7 @@ Item {
 
     Component.onDestruction: {
       // Explicitly clear references
-      widgetProps = null;
+      root.widgetProps = null;
     }
   }
 
@@ -78,8 +78,8 @@ Item {
     property int attempts: 0
     onTriggered: {
       attempts += 1;
-      if (ControlCenterWidgetRegistry.hasWidget(widgetId)) {
-        loader.sourceComponent = ControlCenterWidgetRegistry.getWidget(widgetId);
+      if (ControlCenterWidgetRegistry.hasWidget(root.widgetId)) {
+        loader.sourceComponent = ControlCenterWidgetRegistry.getWidget(root.widgetId);
         stop();
         attempts = 0;
         return;
@@ -87,7 +87,7 @@ Item {
       if (attempts >= 20) { // ~3s max
         stop();
         attempts = 0;
-        Logger.w("ControlCenterWidgetLoader", "Giving up waiting for widget:", widgetId);
+        Logger.w("ControlCenterWidgetLoader", "Giving up waiting for widget:", root.widgetId);
       }
     }
   }

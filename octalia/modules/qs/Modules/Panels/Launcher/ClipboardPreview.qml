@@ -60,12 +60,12 @@ Item {
   Connections {
     target: previewPanel
     function onCurrentItemChanged() {
-      fullContent = "";
-      imageDataUrl = "";
-      loadingFullContent = false;
-      isImageContent = currentItem && currentItem.isImage;
+      previewPanel.fullContent = "";
+      previewPanel.imageDataUrl = "";
+      previewPanel.loadingFullContent = false;
+      previewPanel.isImageContent = previewPanel.currentItem && previewPanel.currentItem.isImage;
 
-      if (currentItem && currentItem.clipboardId) {
+      if (previewPanel.currentItem && previewPanel.currentItem.clipboardId) {
         loadContent();
       }
     }
@@ -86,16 +86,16 @@ Item {
   Timer {
     id: imageUpdateTimer
     interval: 200
-    running: currentItem && currentItem.isImage && imageDataUrl === ""
-    repeat: currentItem && currentItem.isImage && imageDataUrl === ""
+    running: previewPanel.currentItem && previewPanel.currentItem.isImage && previewPanel.imageDataUrl === ""
+    repeat: previewPanel.currentItem && previewPanel.currentItem.isImage && previewPanel.imageDataUrl === ""
 
     onTriggered: {
-      if (currentItem && currentItem.clipboardId) {
-        const newData = ClipboardService.getImageData(currentItem.clipboardId) || "";
-        if (newData !== imageDataUrl) {
-          imageDataUrl = newData;
+      if (previewPanel.currentItem && previewPanel.currentItem.clipboardId) {
+        const newData = ClipboardService.getImageData(previewPanel.currentItem.clipboardId) || "";
+        if (newData !== previewPanel.imageDataUrl) {
+          previewPanel.imageDataUrl = newData;
           if (newData) {
-            loadingFullContent = false;
+            previewPanel.loadingFullContent = false;
           }
         }
       }
@@ -109,8 +109,8 @@ Item {
 
     BusyIndicator {
       anchors.centerIn: parent
-      running: loadingFullContent
-      visible: loadingFullContent
+      running: previewPanel.loadingFullContent
+      visible: previewPanel.loadingFullContent
       width: Style.baseWidgetSize
       height: width
     }
@@ -120,14 +120,14 @@ Item {
       anchors.fill: parent
       anchors.margins: Style.marginS
       spacing: Style.marginS
-      visible: isImageContent && !loadingFullContent && imageDataUrl !== ""
+      visible: previewPanel.isImageContent && !previewPanel.loadingFullContent && previewPanel.imageDataUrl !== ""
 
       NImageRounded {
         id: previewImage
         Layout.fillWidth: true
         Layout.fillHeight: true
         radius: Style.marginS
-        imagePath: imageDataUrl
+        imagePath: previewPanel.imageDataUrl
         imageFillMode: Image.PreserveAspectFit
       }
 
@@ -139,11 +139,11 @@ Item {
       NText {
         Layout.fillWidth: true
         text: {
-          const meta = ClipboardService.parseImageMeta(currentItem?.preview);
+          const meta = ClipboardService.parseImageMeta(previewPanel.currentItem?.preview);
           if (meta)
             return `${meta.fmt} • ${meta.w}×${meta.h} • ${meta.size}`;
           // Fallback to basic info
-          const format = (currentItem?.mime || "image").split("/")[1]?.toUpperCase() || "Image";
+          const format = (previewPanel.currentItem?.mime || "image").split("/")[1]?.toUpperCase() || "Image";
           return `${format} • ${previewImage.implicitWidth}×${previewImage.implicitHeight}`;
         }
         pointSize: Style.fontSizeS
@@ -156,7 +156,7 @@ Item {
       anchors.fill: parent
       anchors.margins: Style.marginS
       spacing: Style.marginS
-      visible: !isImageContent && !loadingFullContent
+      visible: !previewPanel.isImageContent && !previewPanel.loadingFullContent
 
       NScrollView {
         id: clipboardScrollView
@@ -165,7 +165,7 @@ Item {
         horizontalPolicy: Settings.data.appLauncher.clipboardWrapText ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
 
         NText {
-          text: fullContent
+          text: previewPanel.fullContent
           width: Settings.data.appLauncher.clipboardWrapText ? clipboardScrollView.availableWidth : implicitWidth
           wrapMode: Settings.data.appLauncher.clipboardWrapText ? Text.Wrap : Text.NoWrap
           textFormat: Text.PlainText
@@ -182,11 +182,11 @@ Item {
 
       NText {
         Layout.fillWidth: true
-        visible: fullContent.length > 0
+        visible: previewPanel.fullContent.length > 0
         text: {
-          const chars = fullContent.length;
-          const words = fullContent.split(/\s+/).filter(w => w.length > 0).length;
-          const lines = fullContent.split('\n').length;
+          const chars = previewPanel.fullContent.length;
+          const words = previewPanel.fullContent.split(/\s+/).filter(w => w.length > 0).length;
+          const lines = previewPanel.fullContent.split('\n').length;
           return `${chars} chars, ${words} words, ${lines} lines`;
         }
         pointSize: Style.fontSizeS

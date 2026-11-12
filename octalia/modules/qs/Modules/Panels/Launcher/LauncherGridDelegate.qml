@@ -42,9 +42,9 @@ Item {
 
     ColumnLayout {
       anchors.fill: parent
-      anchors.margins: launcher.isCompactDensity ? Style.marginXS : Style.marginS
-      anchors.bottomMargin: launcher.isCompactDensity ? Style.marginXS : Style.marginS
-      spacing: launcher.isCompactDensity ? 0 : Style.marginXXS
+      anchors.margins: gridEntryContainer.launcher.isCompactDensity ? Style.marginXS : Style.marginS
+      anchors.bottomMargin: gridEntryContainer.launcher.isCompactDensity ? Style.marginXS : Style.marginS
+      spacing: gridEntryContainer.launcher.isCompactDensity ? 0 : Style.marginXXS
 
       // Icon badge or Image preview or Emoji
       Item {
@@ -58,25 +58,25 @@ Item {
           anchors.fill: parent
           radius: Style.radiusM
           color: Color.mSurface
-          visible: Settings.data.appLauncher.showIconBackground && !modelData.isImage
+          visible: Settings.data.appLauncher.showIconBackground && !gridEntryContainer.modelData.isImage
         }
 
         // Image preview - uses provider's getImageUrl if available
         NImageRounded {
           id: gridImagePreview
           anchors.fill: parent
-          visible: !!modelData.isImage && !modelData.displayString
+          visible: !!gridEntryContainer.modelData.isImage && !gridEntryContainer.modelData.displayString
           radius: Style.radiusM
 
           // Use provider's image revision for reactive updates
-          readonly property int _rev: modelData.provider && modelData.provider.imageRevision ? modelData.provider.imageRevision : 0
+          readonly property int _rev: gridEntryContainer.modelData.provider && gridEntryContainer.modelData.provider.imageRevision ? gridEntryContainer.modelData.provider.imageRevision : 0
 
           // Get image URL from provider
           imagePath: {
             _rev;
-            var provider = modelData.provider;
+            var provider = gridEntryContainer.modelData.provider;
             if (provider && provider.getImageUrl) {
-              return provider.getImageUrl(modelData);
+              return provider.getImageUrl(gridEntryContainer.modelData);
             }
             return "";
           }
@@ -107,10 +107,10 @@ Item {
           anchors.fill: parent
           anchors.margins: Style.marginXS
 
-          visible: (!modelData.isImage && !modelData.displayString) || (!!modelData.isImage && gridImagePreview.status === Image.Error)
+          visible: (!gridEntryContainer.modelData.isImage && !gridEntryContainer.modelData.displayString) || (!!gridEntryContainer.modelData.isImage && gridImagePreview.status === Image.Error)
           active: visible
 
-          sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && modelData.isTablerIcon ? gridTablerIconComponent : gridSystemIconComponent
+          sourceComponent: Settings.data.appLauncher.iconMode === "tabler" && gridEntryContainer.modelData.isTablerIcon ? gridTablerIconComponent : gridSystemIconComponent
 
           Component {
             id: gridTablerIconComponent
@@ -137,15 +137,15 @@ Item {
         NText {
           id: gridStringDisplay
           anchors.centerIn: parent
-          visible: !!modelData.displayString || (!gridImagePreview.visible && !gridIconLoader.visible)
-          text: modelData.displayString ? modelData.displayString : (modelData.name ? modelData.name.charAt(0).toUpperCase() : "?")
+          visible: !!gridEntryContainer.modelData.displayString || (!gridImagePreview.visible && !gridIconLoader.visible)
+          text: gridEntryContainer.modelData.displayString ? gridEntryContainer.modelData.displayString : (gridEntryContainer.modelData.name ? gridEntryContainer.modelData.name.charAt(0).toUpperCase() : "?")
           pointSize: {
-            if (modelData.displayString) {
+            if (gridEntryContainer.modelData.displayString) {
               // Use custom size if provided, otherwise default scaling
-              if (modelData.displayStringSize) {
-                return modelData.displayStringSize * Style.uiScaleRatio;
+              if (gridEntryContainer.modelData.displayStringSize) {
+                return gridEntryContainer.modelData.displayStringSize * Style.uiScaleRatio;
               }
-              if (launcher.providerHasDisplayString) {
+              if (gridEntryContainer.launcher.providerHasDisplayString) {
                 // Scale with cell width but cap at reasonable maximum
                 const cellBasedSize = gridEntry.width * 0.4;
                 const maxSize = Style.fontSizeXXXL * Style.uiScaleRatio;
@@ -160,12 +160,12 @@ Item {
             return Math.min(Math.max(cellBasedSize, baseSize), maxSize);
           }
           font.weight: Style.fontWeightBold
-          color: modelData.displayString ? Color.mOnSurface : Color.mOnPrimary
+          color: gridEntryContainer.modelData.displayString ? Color.mOnSurface : Color.mOnPrimary
         }
 
         // Badge icon overlay (generic indicator for any provider)
         Rectangle {
-          visible: !!modelData.badgeIcon
+          visible: !!gridEntryContainer.modelData.badgeIcon
           anchors.bottom: parent.bottom
           anchors.right: parent.right
           anchors.margins: 2
@@ -175,7 +175,7 @@ Item {
           radius: Style.radiusXXS
           NIcon {
             anchors.centerIn: parent
-            icon: modelData.badgeIcon || ""
+            icon: gridEntryContainer.modelData.badgeIcon || ""
             pointSize: Style.fontSizeS
             color: Color.mOnSurfaceVariant
           }
@@ -184,10 +184,10 @@ Item {
 
       // Text content (hidden when hideLabel is true)
       NText {
-        visible: !modelData.hideLabel
-        text: modelData.name || "Unknown"
+        visible: !gridEntryContainer.modelData.hideLabel
+        text: gridEntryContainer.modelData.name || "Unknown"
         pointSize: {
-          if (launcher.providerHasDisplayString && modelData.displayString) {
+          if (gridEntryContainer.launcher.providerHasDisplayString && gridEntryContainer.modelData.displayString) {
             return Style.fontSizeS * Style.uiScaleRatio;
           }
           // Scale font size relative to cell width for low res, but cap at maximum
@@ -201,8 +201,8 @@ Item {
         elide: Text.ElideRight
         Layout.fillWidth: true
         Layout.maximumWidth: gridEntry.width - 8
-        Layout.leftMargin: (launcher.providerHasDisplayString && modelData.displayString) ? Style.marginS : 0
-        Layout.rightMargin: (launcher.providerHasDisplayString && modelData.displayString) ? Style.marginS : 0
+        Layout.leftMargin: (gridEntryContainer.launcher.providerHasDisplayString && gridEntryContainer.modelData.displayString) ? Style.marginS : 0
+        Layout.rightMargin: (gridEntryContainer.launcher.providerHasDisplayString && gridEntryContainer.modelData.displayString) ? Style.marginS : 0
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.NoWrap
         maximumLineCount: 1
@@ -221,9 +221,9 @@ Item {
       property var gridItemActions: {
         if (!gridEntryContainer.isSelected)
           return [];
-        var provider = modelData.provider || launcher.currentProvider;
+        var provider = gridEntryContainer.modelData.provider || gridEntryContainer.launcher.currentProvider;
         if (provider && provider.getItemActions) {
-          return provider.getItemActions(modelData);
+          return provider.getItemActions(gridEntryContainer.modelData);
         }
         return [];
       }
@@ -255,14 +255,14 @@ Item {
     enabled: !Settings.data.appLauncher.ignoreMouseInput
 
     onEntered: {
-      if (!launcher.ignoreMouseHover) {
-        launcher.selectedIndex = gridEntryContainer.index;
+      if (!gridEntryContainer.launcher.ignoreMouseHover) {
+        gridEntryContainer.launcher.selectedIndex = gridEntryContainer.index;
       }
     }
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   launcher.selectedIndex = gridEntryContainer.index;
-                   launcher.activate();
+                   gridEntryContainer.launcher.selectedIndex = gridEntryContainer.index;
+                   gridEntryContainer.launcher.activate();
                    mouse.accepted = true;
                  }
                }

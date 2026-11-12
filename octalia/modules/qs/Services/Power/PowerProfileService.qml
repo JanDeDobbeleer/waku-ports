@@ -97,9 +97,9 @@ Singleton {
   }
 
   Connections {
-    target: powerProfiles
+    target: root.powerProfiles
     function onProfileChanged() {
-      root.profile = powerProfiles.profile;
+      root.profile = root.powerProfiles.profile;
       // Only show toast if we have a valid profile name (not "Unknown")
       const profileName = root.getName();
       if (profileName !== "Unknown") {

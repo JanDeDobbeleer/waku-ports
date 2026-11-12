@@ -30,7 +30,7 @@ ColumnLayout {
   }
 
   NComboBox {
-    visible: valueShowIcon // Hide display mode setting when icon is disabled
+    visible: root.valueShowIcon // Hide display mode setting when icon is disabled
     label: I18n.tr("common.display-mode")
     description: I18n.tr("bar.volume.display-mode-description")
     minimumWidth: 200
@@ -48,41 +48,41 @@ ColumnLayout {
         "name": I18n.tr("display-modes.always-hide")
       }
     ]
-    currentKey: valueDisplayMode
+    currentKey: root.valueDisplayMode
     onSelected: key => {
-                  valueDisplayMode = key;
+                  root.valueDisplayMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.displayMode
+    defaultValue: root.widgetMetadata.displayMode
   }
 
   NToggle {
     label: I18n.tr("bar.custom-button.show-icon-label")
     description: I18n.tr("bar.keyboard-layout.show-icon-description")
-    checked: valueShowIcon
+    checked: root.valueShowIcon
     onToggled: checked => {
-                 valueShowIcon = checked;
+                 root.valueShowIcon = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showIcon
+    defaultValue: root.widgetMetadata.showIcon
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
+                  root.valueIconColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: root.widgetMetadata.iconColor
   }
 
   NColorChoice {
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
+                  root.valueTextColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.textColor
+    defaultValue: root.widgetMetadata.textColor
   }
 }

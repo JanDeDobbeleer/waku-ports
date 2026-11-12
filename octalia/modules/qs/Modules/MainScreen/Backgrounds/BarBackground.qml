@@ -126,7 +126,7 @@ ShapePath {
   property real opacityFactor: (bar && bar.isHidden) ? 0 : 1
 
   Behavior on opacityFactor {
-    enabled: bar && bar.autoHide
+    enabled: root.bar && root.bar.autoHide
     NumberAnimation {
       duration: Style.animationFast
       easing.type: Easing.OutQuad

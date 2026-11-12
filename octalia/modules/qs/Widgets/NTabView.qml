@@ -147,11 +147,11 @@ Item {
     duration: root.transitionTime
     easing.type: Easing.OutCubic
     onFinished: {
-      if (target && target !== contentItems[currentIndex]) {
+      if (target && target !== root.contentItems[root.currentIndex]) {
         target.visible = false;
         target.opacity = 1.0;
       }
-      animating = false;
+      root.animating = false;
     }
   }
 

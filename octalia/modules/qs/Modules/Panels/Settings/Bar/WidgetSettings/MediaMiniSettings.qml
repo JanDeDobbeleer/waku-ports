@@ -81,29 +81,29 @@ ColumnLayout {
                   root.valueHideMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.hideMode
+    defaultValue: root.widgetMetadata.hideMode
   }
 
   NToggle {
     label: I18n.tr("bar.media-mini.show-album-art-label")
     description: I18n.tr("bar.media-mini.show-album-art-description")
-    checked: valueShowAlbumArt
+    checked: root.valueShowAlbumArt
     onToggled: checked => {
-                 valueShowAlbumArt = checked;
+                 root.valueShowAlbumArt = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showAlbumArt
+    defaultValue: root.widgetMetadata.showAlbumArt
   }
 
   NToggle {
     label: I18n.tr("bar.media-mini.show-artist-first-label")
     description: I18n.tr("bar.media-mini.show-artist-first-description")
-    checked: valueShowArtistFirst
+    checked: root.valueShowArtistFirst
     onToggled: checked => {
-                 valueShowArtistFirst = checked;
+                 root.valueShowArtistFirst = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showArtistFirst
+    defaultValue: root.widgetMetadata.showArtistFirst
   }
 
   NTextInput {
@@ -111,41 +111,41 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.taskbar.max-width-label")
     description: I18n.tr("bar.media-mini.max-width-description")
-    placeholderText: widgetMetadata.maxWidth
-    text: valueMaxWidth
+    placeholderText: root.widgetMetadata.maxWidth
+    text: root.valueMaxWidth
     onTextChanged: saveSettings()
-    defaultValue: String(widgetMetadata.maxWidth)
+    defaultValue: String(root.widgetMetadata.maxWidth)
   }
 
   NToggle {
     label: I18n.tr("bar.media-mini.use-fixed-width-label")
     description: I18n.tr("bar.media-mini.use-fixed-width-description")
-    checked: valueUseFixedWidth
+    checked: root.valueUseFixedWidth
     onToggled: checked => {
-                 valueUseFixedWidth = checked;
+                 root.valueUseFixedWidth = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.useFixedWidth
+    defaultValue: root.widgetMetadata.useFixedWidth
   }
 
   NToggle {
     label: I18n.tr("bar.media-mini.show-progress-ring-label")
     description: I18n.tr("bar.media-mini.show-progress-ring-description")
-    checked: valueShowProgressRing
+    checked: root.valueShowProgressRing
     onToggled: checked => {
-                 valueShowProgressRing = checked;
+                 root.valueShowProgressRing = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showProgressRing
+    defaultValue: root.widgetMetadata.showProgressRing
   }
 
   NColorChoice {
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
+                  root.valueTextColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.textColor
+    defaultValue: root.widgetMetadata.textColor
   }
 
   NComboBox {
@@ -165,13 +165,13 @@ ColumnLayout {
         "name": I18n.tr("options.scrolling-modes.never")
       }
     ]
-    currentKey: valueScrollingMode
+    currentKey: root.valueScrollingMode
     onSelected: key => {
-                  valueScrollingMode = key;
+                  root.valueScrollingMode = key;
                   saveSettings();
                 }
     minimumWidth: 200
-    defaultValue: widgetMetadata.scrollingMode
+    defaultValue: root.widgetMetadata.scrollingMode
   }
 
   NDivider {
@@ -188,22 +188,22 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.media-mini.show-album-art-label")
     description: I18n.tr("bar.media-mini.show-album-art-description")
-    checked: valuePanelShowAlbumArt
+    checked: root.valuePanelShowAlbumArt
     onToggled: checked => {
-                 valuePanelShowAlbumArt = checked;
+                 root.valuePanelShowAlbumArt = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.panelShowAlbumArt
+    defaultValue: root.widgetMetadata.panelShowAlbumArt
   }
 
   NToggle {
     label: I18n.tr("bar.media-mini.compact-mode-label")
     description: I18n.tr("bar.media-mini.compact-mode-description")
-    checked: valueCompactMode
+    checked: root.valueCompactMode
     onToggled: checked => {
-                 valueCompactMode = checked;
+                 root.valueCompactMode = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.compactMode
+    defaultValue: root.widgetMetadata.compactMode
   }
 }

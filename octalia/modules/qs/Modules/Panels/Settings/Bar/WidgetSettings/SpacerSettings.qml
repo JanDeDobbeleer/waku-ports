@@ -25,9 +25,9 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.width")
     description: I18n.tr("bar.spacer.width-description")
-    text: widgetData.width || widgetMetadata.width
+    text: root.widgetData.width || root.widgetMetadata.width
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     onTextChanged: saveSettings()
-    defaultValue: String(widgetMetadata.width)
+    defaultValue: String(root.widgetMetadata.width)
   }
 }

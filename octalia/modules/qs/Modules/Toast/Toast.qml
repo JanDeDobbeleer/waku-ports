@@ -65,8 +65,8 @@ Item {
 
   HoverHandler {
     onHoveredChanged: {
-      isHovered = hovered;
-      if (isHovered) {
+      root.isHovered = hovered;
+      if (root.isHovered) {
         resumeTimer.stop();
         if (progressAnimation.running && !progressAnimation.paused) {
           progressAnimation.pause();
@@ -82,7 +82,7 @@ Item {
     interval: 50
     repeat: false
     onTriggered: {
-      if (!isHovered && progressAnimation.paused) {
+      if (!root.isHovered && progressAnimation.paused) {
         progressAnimation.resume();
       }
     }
@@ -92,7 +92,7 @@ Item {
   Rectangle {
     id: background
     anchors.fill: parent
-    anchors.margins: shadowPadding
+    anchors.margins: root.shadowPadding
     radius: Style.radiusL
     color: Qt.alpha(Color.mSurface, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0)
 
@@ -281,25 +281,25 @@ Item {
   RowLayout {
     id: contentLayout
     anchors.fill: background
-    anchors.topMargin: isCompact ? Style.marginS : Style.marginM
-    anchors.bottomMargin: isCompact ? Style.marginS : Style.marginM
-    anchors.leftMargin: isCompact ? Style.marginM : Style.margin2M
-    anchors.rightMargin: isCompact ? Style.marginM : Style.margin2M
-    spacing: isCompact ? Style.marginM : Style.marginL
+    anchors.topMargin: root.isCompact ? Style.marginS : Style.marginM
+    anchors.bottomMargin: root.isCompact ? Style.marginS : Style.marginM
+    anchors.leftMargin: root.isCompact ? Style.marginM : Style.margin2M
+    anchors.rightMargin: root.isCompact ? Style.marginM : Style.margin2M
+    spacing: root.isCompact ? Style.marginM : Style.marginL
 
     // Icon
     NIcon {
       icon: if (root.icon !== "") {
               return root.icon;
-            } else if (type === "warning") {
+            } else if (root.type === "warning") {
               return "toast-warning";
-            } else if (type === "error") {
+            } else if (root.type === "error") {
               return "toast-error";
             } else {
               return "toast-notice";
             }
       color: {
-        switch (type) {
+        switch (root.type) {
         case "warning":
           return Color.mPrimary;
         case "error":
@@ -308,7 +308,7 @@ Item {
           return Color.mOnSurface;
         }
       }
-      pointSize: isCompact ? Style.fontSizeXL : Style.fontSizeXXL * 1.5
+      pointSize: root.isCompact ? Style.fontSizeXL : Style.fontSizeXXL * 1.5
       Layout.alignment: Qt.AlignVCenter
     }
 
@@ -322,7 +322,7 @@ Item {
         Layout.fillWidth: true
         text: root.title
         color: Color.mOnSurface
-        pointSize: isCompact ? Style.fontSizeM : Style.fontSizeL
+        pointSize: root.isCompact ? Style.fontSizeM : Style.fontSizeL
         font.weight: Style.fontWeightBold
         wrapMode: Text.WordWrap
         visible: text.length > 0
@@ -332,10 +332,10 @@ Item {
         Layout.fillWidth: true
         text: root.description
         color: Color.mOnSurface
-        pointSize: isCompact ? Style.fontSizeS : Style.fontSizeM
+        pointSize: root.isCompact ? Style.fontSizeS : Style.fontSizeM
         wrapMode: Text.WordWrap
-        maximumLineCount: isCompact ? 2 : 20
-        elide: isCompact ? Text.ElideRight : Text.ElideNone
+        maximumLineCount: root.isCompact ? 2 : 20
+        elide: root.isCompact ? Text.ElideRight : Text.ElideNone
         visible: text.length > 0
       }
 

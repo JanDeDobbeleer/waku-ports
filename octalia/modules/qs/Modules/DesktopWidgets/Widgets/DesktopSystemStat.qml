@@ -206,14 +206,14 @@ DraggableDesktopWidget {
   // Side layout: icon + legend on left, graph on right
   RowLayout {
     anchors.fill: parent
-    anchors.margins: Math.round(Style.marginM * widgetScale)
-    spacing: Math.round(Style.marginL * widgetScale)
+    anchors.margins: Math.round(Style.marginM * root.widgetScale)
+    spacing: Math.round(Style.marginL * root.widgetScale)
     visible: root.layout === "side"
 
     ColumnLayout {
       Layout.alignment: Qt.AlignVCenter
       Layout.fillHeight: true
-      Layout.preferredWidth: Math.round(64 * widgetScale)
+      Layout.preferredWidth: Math.round(64 * root.widgetScale)
       spacing: Style.marginXS * root.widgetScale
 
       Repeater {
@@ -256,8 +256,8 @@ DraggableDesktopWidget {
   // Bottom layout: full-width graph, horizontal legend at bottom
   ColumnLayout {
     anchors.fill: parent
-    anchors.margins: Math.round(Style.marginM * widgetScale)
-    spacing: Math.round(Style.marginS * widgetScale)
+    anchors.margins: Math.round(Style.marginM * root.widgetScale)
+    spacing: Math.round(Style.marginS * root.widgetScale)
     visible: root.layout === "bottom"
 
     Loader {
@@ -270,7 +270,7 @@ DraggableDesktopWidget {
     RowLayout {
       Layout.fillWidth: true
       Layout.alignment: Qt.AlignHCenter
-      spacing: Math.round(Style.marginM * widgetScale)
+      spacing: Math.round(Style.marginM * root.widgetScale)
 
       Repeater {
         model: root.legendItems

@@ -76,10 +76,10 @@ ColumnLayout {
     id: monitorFolderPicker
     selectionMode: "folders"
     title: I18n.tr("panels.wallpaper.settings-select-monitor-folder")
-    initialPath: WallpaperService.getMonitorDirectory(specificFolderMonitorName) || Settings.defaultWallpapersDirectory
+    initialPath: WallpaperService.getMonitorDirectory(root.specificFolderMonitorName) || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
                   if (paths.length > 0) {
-                    WallpaperService.setMonitorDirectory(specificFolderMonitorName, paths[0]);
+                    WallpaperService.setMonitorDirectory(root.specificFolderMonitorName, paths[0]);
                   }
                 }
   }

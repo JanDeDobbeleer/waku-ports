@@ -76,8 +76,8 @@ Item {
     id: conflictTimer
     interval: 2000
     onTriggered: {
-      hasConflict = false;
-      recordingIndex = -1;
+      root.hasConflict = false;
+      root.recordingIndex = -1;
     }
   }
 
@@ -233,7 +233,7 @@ Item {
                           const hasModifier = (event.modifiers & Qt.ControlModifier) || (event.modifiers & Qt.AltModifier);
 
                           if (root.requireModifierForNormalKeys && !hasModifier && !isSpecialKey) {
-                            hasConflict = true;
+                            root.hasConflict = true;
                             ToastService.showWarning(I18n.tr("panels.general.keybinds-modifier-title"), I18n.tr("panels.general.keybinds-modifier-description"));
                             conflictTimer.restart();
                             return;

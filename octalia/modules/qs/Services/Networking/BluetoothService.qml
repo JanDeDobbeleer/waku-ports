@@ -80,15 +80,15 @@ Singleton {
 
   // Track adapter state changes
   Connections {
-    target: adapter
+    target: root.adapter
     function onStateChanged() {
-      if (!adapter || adapter.state === BluetoothAdapter.Enabling || adapter.state === BluetoothAdapter.Disabling) {
+      if (!root.adapter || root.adapter.state === BluetoothAdapter.Enabling || root.adapter.state === BluetoothAdapter.Disabling) {
         return;
       }
       checkAirplaneMode();
     }
     function onEnabledChanged() {
-      if (adapter?.enabled && Settings.data.network.bluetoothAutoConnect) {
+      if (root.adapter?.enabled && Settings.data.network.bluetoothAutoConnect) {
         autoConnectTimer.restart();
       }
     }
@@ -108,7 +108,7 @@ Singleton {
   Connections {
     target: Settings.data.network
     function onBluetoothAutoConnectChanged() {
-      if (Settings.data.network.bluetoothAutoConnect && adapter?.enabled) {
+      if (Settings.data.network.bluetoothAutoConnect && root.adapter?.enabled) {
         autoConnectTimer.restart();
       } else {
         autoConnectTimer.stop();

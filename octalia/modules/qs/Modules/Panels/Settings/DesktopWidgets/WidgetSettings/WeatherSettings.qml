@@ -26,24 +26,24 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.weather-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
+                 root.valueShowBackground = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: root.widgetMetadata.showBackground
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.clock-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
+                 root.valueRoundedCorners = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: root.widgetMetadata.roundedCorners
   }
 }

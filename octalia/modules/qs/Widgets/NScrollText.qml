@@ -199,21 +199,21 @@ Item {
     id: fadeMask
     width: root.width
     height: root.height
-    topLeftRadius: fadeRoundLeftCorners ? fadeCornerRadius : 0
-    bottomLeftRadius: fadeRoundLeftCorners ? fadeCornerRadius : 0
-    topRightRadius: fadeCornerRadius
-    bottomRightRadius: fadeCornerRadius
+    topLeftRadius: root.fadeRoundLeftCorners ? root.fadeCornerRadius : 0
+    bottomLeftRadius: root.fadeRoundLeftCorners ? root.fadeCornerRadius : 0
+    topRightRadius: root.fadeCornerRadius
+    bottomRightRadius: root.fadeCornerRadius
     gradient: Gradient {
       GradientStop {
         position: 0.0
         color: "transparent"
       }
       GradientStop {
-        position: fadeExtent
+        position: root.fadeExtent
         color: "white"
       }
       GradientStop {
-        position: 1 - fadeExtent
+        position: 1 - root.fadeExtent
         color: "white"
       }
       GradientStop {

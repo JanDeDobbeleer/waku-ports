@@ -75,13 +75,13 @@ DraggableDesktopWidget {
   // Completely disabled during scaling to avoid expensive canvas redraws
   Loader {
     anchors.fill: parent
-    anchors.leftMargin: Math.round(Style.marginXS * widgetScale)
-    anchors.rightMargin: Math.round(Style.marginXS * widgetScale)
-    anchors.topMargin: Math.round(Style.marginXS * widgetScale)
+    anchors.leftMargin: Math.round(Style.marginXS * root.widgetScale)
+    anchors.rightMargin: Math.round(Style.marginXS * root.widgetScale)
+    anchors.topMargin: Math.round(Style.marginXS * root.widgetScale)
     anchors.bottomMargin: 0
     z: 0
     clip: true
-    active: needsSpectrum
+    active: root.needsSpectrum
     layer.enabled: true
     layer.smooth: true
     layer.effect: MultiEffect {
@@ -185,32 +185,32 @@ DraggableDesktopWidget {
         }
       }
     ]
-    anchors.margins: Math.round(Style.marginM * widgetScale)
-    spacing: Math.round(Style.marginS * widgetScale)
+    anchors.margins: Math.round(Style.marginM * root.widgetScale)
+    spacing: Math.round(Style.marginS * root.widgetScale)
     z: 2
 
     Item {
       visible: root.showAlbumArt
-      Layout.preferredWidth: Math.round(48 * widgetScale)
-      Layout.preferredHeight: Math.round(48 * widgetScale)
+      Layout.preferredWidth: Math.round(48 * root.widgetScale)
+      Layout.preferredHeight: Math.round(48 * root.widgetScale)
       Layout.alignment: Qt.AlignVCenter
 
       NImageRounded {
-        visible: hasPlayer
+        visible: root.hasPlayer
         anchors.fill: parent
-        radius: Math.round(Style.radiusM * widgetScale)
+        radius: Math.round(Style.radiusM * root.widgetScale)
         imagePath: MediaService.trackArtUrl
         imageFillMode: Image.PreserveAspectCrop
-        fallbackIcon: isPlaying ? "media-pause" : "media-play"
-        fallbackIconSize: Math.round(20 * widgetScale)
+        fallbackIcon: root.isPlaying ? "media-pause" : "media-play"
+        fallbackIconSize: Math.round(20 * root.widgetScale)
         borderWidth: 0
       }
 
       NIcon {
-        visible: !hasPlayer
+        visible: !root.hasPlayer
         anchors.centerIn: parent
         icon: "disc"
-        pointSize: Math.round(24 * widgetScale)
+        pointSize: Math.round(24 * root.widgetScale)
         color: Color.mOnSurfaceVariant
       }
     }
@@ -223,8 +223,8 @@ DraggableDesktopWidget {
 
       NText {
         Layout.fillWidth: true
-        text: hasPlayer ? (MediaService.trackTitle || "Unknown Track") : "No media playing"
-        pointSize: Math.round(Style.fontSizeS * widgetScale)
+        text: root.hasPlayer ? (MediaService.trackTitle || "Unknown Track") : "No media playing"
+        pointSize: Math.round(Style.fontSizeS * root.widgetScale)
         font.weight: Style.fontWeightSemiBold
         color: Color.mOnSurface
         elide: Text.ElideRight
@@ -232,10 +232,10 @@ DraggableDesktopWidget {
       }
 
       NText {
-        visible: hasPlayer && MediaService.trackArtist
+        visible: root.hasPlayer && MediaService.trackArtist
         Layout.fillWidth: true
         text: MediaService.trackArtist || ""
-        pointSize: Math.round(Style.fontSizeXS * widgetScale)
+        pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
         font.weight: Style.fontWeightRegular
         color: Color.mSecondary
         elide: Text.ElideRight
@@ -245,25 +245,25 @@ DraggableDesktopWidget {
 
     RowLayout {
       id: controlsRow
-      spacing: Math.round(Style.marginXS * widgetScale)
+      spacing: Math.round(Style.marginXS * root.widgetScale)
       z: 10
       visible: root.showButtons
       Layout.alignment: root.showAlbumArt ? Qt.AlignVCenter : Qt.AlignCenter
 
       NIconButton {
-        opacity: showPrev ? 1 : 0
+        opacity: root.showPrev ? 1 : 0
         Behavior on opacity {
           NumberAnimation {
             duration: Style.animationSlow
             easing.type: Easing.InOutQuad
           }
         }
-        baseSize: Math.round(32 * widgetScale)
+        baseSize: Math.round(32 * root.widgetScale)
         icon: "media-prev"
-        enabled: hasPlayer && MediaService.canGoPrevious
+        enabled: root.hasPlayer && MediaService.canGoPrevious
         colorBg: Color.mSurfaceVariant
         colorFg: enabled ? Color.mPrimary : Color.mOnSurfaceVariant
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled)
             MediaService.previous();
@@ -271,14 +271,14 @@ DraggableDesktopWidget {
       }
 
       NIconButton {
-        baseSize: Math.round(36 * widgetScale)
-        icon: isPlaying ? "media-pause" : "media-play"
-        enabled: hasPlayer && (MediaService.canPlay || MediaService.canPause)
+        baseSize: Math.round(36 * root.widgetScale)
+        icon: root.isPlaying ? "media-pause" : "media-play"
+        enabled: root.hasPlayer && (MediaService.canPlay || MediaService.canPause)
         colorBg: Color.mPrimary
         colorFg: Color.mOnPrimary
         colorBgHover: Qt.lighter(Color.mPrimary, 1.1)
         colorFgHover: Color.mOnPrimary
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled) {
             MediaService.playPause();
@@ -287,19 +287,19 @@ DraggableDesktopWidget {
       }
 
       NIconButton {
-        opacity: showNext ? 1 : 0
+        opacity: root.showNext ? 1 : 0
         Behavior on opacity {
           NumberAnimation {
             duration: Style.animationSlow
             easing.type: Easing.InOutQuad
           }
         }
-        baseSize: Math.round(32 * widgetScale)
+        baseSize: Math.round(32 * root.widgetScale)
         icon: "media-next"
-        enabled: hasPlayer && MediaService.canGoNext
+        enabled: root.hasPlayer && MediaService.canGoNext
         colorBg: Color.mSurfaceVariant
         colorFg: enabled ? Color.mPrimary : Color.mOnSurfaceVariant
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled)
             MediaService.next();

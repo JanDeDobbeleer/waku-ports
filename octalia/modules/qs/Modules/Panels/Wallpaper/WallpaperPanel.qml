@@ -380,8 +380,8 @@ SmartPanel {
             id: screenTabBar
             visible: panelContent.headerScreensStripAvailable
             Layout.fillWidth: true
-            currentIndex: currentScreenIndex
-            onCurrentIndexChanged: currentScreenIndex = currentIndex
+            currentIndex: panelContent.currentScreenIndex
+            onCurrentIndexChanged: panelContent.currentScreenIndex = currentIndex
             spacing: Style.marginM
             distributeEvenly: true
 
@@ -471,7 +471,7 @@ SmartPanel {
                                       wallhavenView.gridView.forceActiveFocus();
                                     }
                                   } else {
-                                    let currentView = screenRepeater.itemAt(currentScreenIndex);
+                                    let currentView = screenRepeater.itemAt(panelContent.currentScreenIndex);
                                     if (currentView && currentView.gridView) {
                                       currentView.gridView.forceActiveFocus();
                                     }
@@ -644,7 +644,7 @@ SmartPanel {
           // Local wallpapers
           StackLayout {
             id: screenStack
-            currentIndex: currentScreenIndex
+            currentIndex: panelContent.currentScreenIndex
 
             Repeater {
               id: screenRepeater
@@ -830,33 +830,33 @@ SmartPanel {
     Connections {
       target: WallpaperService
       function onWallpaperChanged(screenName, path) {
-        if (targetScreen !== null && screenName === targetScreen.name) {
-          currentWallpaper = WallpaperService.getWallpaperPathForSlot(targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
+        if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
+          wallpaperScreenView.currentWallpaper = WallpaperService.getWallpaperPathForSlot(wallpaperScreenView.targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
         }
       }
       function onWallpaperSelectionAppearanceChanged() {
-        if (targetScreen !== null) {
-          currentWallpaper = WallpaperService.getWallpaperPathForSlot(targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
+        if (wallpaperScreenView.targetScreen !== null) {
+          wallpaperScreenView.currentWallpaper = WallpaperService.getWallpaperPathForSlot(wallpaperScreenView.targetScreen.name, WallpaperService.wallpaperSelectionAppearance);
           updateFiltered(false);
         }
       }
       function onWallpaperDirectoryChanged(screenName, directory) {
-        if (targetScreen !== null && screenName === targetScreen.name) {
+        if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
           // Reset browse path when root directory changes
-          if (isBrowseMode) {
-            WallpaperService.navigateToRoot(targetScreen.name);
+          if (wallpaperScreenView.isBrowseMode) {
+            WallpaperService.navigateToRoot(wallpaperScreenView.targetScreen.name);
           }
           refreshWallpaperScreenData();
         }
       }
       function onWallpaperListChanged(screenName, count) {
-        if (targetScreen !== null && screenName === targetScreen.name) {
+        if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
           refreshWallpaperScreenData();
         }
       }
       function onBrowsePathChanged(screenName, path) {
-        if (targetScreen !== null && screenName === targetScreen.name) {
-          currentBrowsePath = path;
+        if (wallpaperScreenView.targetScreen !== null && screenName === wallpaperScreenView.targetScreen.name) {
+          wallpaperScreenView.currentBrowsePath = path;
           refreshWallpaperScreenData();
         }
       }
@@ -943,20 +943,20 @@ SmartPanel {
         // Left side: navigation (back, home, path)
         NIconButton {
           icon: "arrow-left"
-          enabled: isBrowseMode && currentBrowsePath !== WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
-          onClicked: WallpaperService.navigateUp(targetScreen?.name ?? "")
+          enabled: wallpaperScreenView.isBrowseMode && wallpaperScreenView.currentBrowsePath !== WallpaperService.getMonitorDirectory(wallpaperScreenView.targetScreen?.name ?? "")
+          onClicked: WallpaperService.navigateUp(wallpaperScreenView.targetScreen?.name ?? "")
           baseSize: Style.baseWidgetSize * 0.8
         }
 
         NIconButton {
           icon: "home"
-          enabled: isBrowseMode && currentBrowsePath !== WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
-          onClicked: WallpaperService.navigateToRoot(targetScreen?.name ?? "")
+          enabled: wallpaperScreenView.isBrowseMode && wallpaperScreenView.currentBrowsePath !== WallpaperService.getMonitorDirectory(wallpaperScreenView.targetScreen?.name ?? "")
+          onClicked: WallpaperService.navigateToRoot(wallpaperScreenView.targetScreen?.name ?? "")
           baseSize: Style.baseWidgetSize * 0.8
         }
 
         NScrollText {
-          text: isBrowseMode ? currentBrowsePath : WallpaperService.getMonitorDirectory(targetScreen?.name ?? "")
+          text: wallpaperScreenView.isBrowseMode ? wallpaperScreenView.currentBrowsePath : WallpaperService.getMonitorDirectory(wallpaperScreenView.targetScreen?.name ?? "")
           Layout.fillWidth: true
           scrollMode: NScrollText.ScrollMode.Hover
           fadeCornerRadius: Style.radiusM
@@ -1030,7 +1030,7 @@ SmartPanel {
           icon: "refresh"
           baseSize: Style.baseWidgetSize * 0.8
           onClicked: {
-            if (isBrowseMode) {
+            if (wallpaperScreenView.isBrowseMode) {
               refreshWallpaperScreenData();
             } else {
               WallpaperService.refreshWallpapersList();
@@ -1077,8 +1077,8 @@ SmartPanel {
 
         onKeyPressed: event => {
                         if (Keybinds.checkKey(event, 'enter', Settings)) {
-                          if (currentIndex >= 0 && currentIndex < filteredItems.length) {
-                            selectItem(filteredItems[currentIndex]);
+                          if (currentIndex >= 0 && currentIndex < wallpaperScreenView.filteredItems.length) {
+                            selectItem(wallpaperScreenView.filteredItems[currentIndex]);
                           }
                           event.accepted = true;
                         }
@@ -1434,13 +1434,13 @@ SmartPanel {
             Layout.alignment: Qt.AlignHCenter
           }
           NText {
-            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.no-match") : (isBrowseMode ? I18n.tr("wallpaper.browse.empty-directory") : I18n.tr("wallpaper.no-wallpaper"))
+            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.no-match") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.empty-directory") : I18n.tr("wallpaper.no-wallpaper"))
             color: Color.mOnSurface
             font.weight: Style.fontWeightBold
             Layout.alignment: Qt.AlignHCenter
           }
           NText {
-            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.try-different-search") : (isBrowseMode ? I18n.tr("wallpaper.browse.go-up-hint") : I18n.tr("wallpaper.configure-directory"))
+            text: (panelContent.filterText && panelContent.filterText.length > 0) ? I18n.tr("wallpaper.try-different-search") : (wallpaperScreenView.isBrowseMode ? I18n.tr("wallpaper.browse.go-up-hint") : I18n.tr("wallpaper.configure-directory"))
             color: Color.mOnSurfaceVariant
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
@@ -1537,14 +1537,14 @@ SmartPanel {
 
           anchors.fill: parent
 
-          visible: !loading && errorMessage === "" && (wallpapers && wallpapers.length > 0)
+          visible: !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === "" && (wallhavenViewRoot.wallpapers && wallhavenViewRoot.wallpapers.length > 0)
           interactive: true
           keyNavigationEnabled: true
           keyNavigationWraps: false
           highlightFollowsCurrentItem: false
           currentIndex: -1
 
-          model: wallpapers || []
+          model: wallhavenViewRoot.wallpapers || []
 
           onModelChanged: {
             // Reset selection and scroll position when model changes
@@ -1575,8 +1575,8 @@ SmartPanel {
 
           onKeyPressed: event => {
                           if (Keybinds.checkKey(event, 'enter', Settings)) {
-                            if (currentIndex >= 0 && currentIndex < wallpapers.length) {
-                              let wallpaper = wallpapers[currentIndex];
+                            if (currentIndex >= 0 && currentIndex < wallhavenViewRoot.wallpapers.length) {
+                              let wallpaper = wallhavenViewRoot.wallpapers[currentIndex];
                               wallhavenDownloadAndApply(wallpaper);
                             }
                             event.accepted = true;
@@ -1700,7 +1700,7 @@ SmartPanel {
           radius: Style.radiusM
           border.color: Color.mOutline
           border.width: Style.borderS
-          visible: loading || (typeof WallhavenService !== "undefined" && WallhavenService.fetching)
+          visible: wallhavenViewRoot.loading || (typeof WallhavenService !== "undefined" && WallhavenService.fetching)
           z: 10
 
           ColumnLayout {
@@ -1738,7 +1738,7 @@ SmartPanel {
           radius: Style.radiusM
           border.color: Color.mOutline
           border.width: Style.borderS
-          visible: errorMessage !== "" && !loading
+          visible: wallhavenViewRoot.errorMessage !== "" && !wallhavenViewRoot.loading
           z: 10
 
           ColumnLayout {
@@ -1758,7 +1758,7 @@ SmartPanel {
             }
 
             NText {
-              text: errorMessage
+              text: wallhavenViewRoot.errorMessage
               color: Color.mOnSurface
               wrapMode: Text.WordWrap
               Layout.alignment: Qt.AlignHCenter
@@ -1779,7 +1779,7 @@ SmartPanel {
           radius: Style.radiusM
           border.color: Color.mOutline
           border.width: Style.borderS
-          visible: (!wallpapers || wallpapers.length === 0) && !loading && errorMessage === ""
+          visible: (!wallhavenViewRoot.wallpapers || wallhavenViewRoot.wallpapers.length === 0) && !wallhavenViewRoot.loading && wallhavenViewRoot.errorMessage === ""
           z: 10
 
           ColumnLayout {
@@ -1817,7 +1817,7 @@ SmartPanel {
       // Pagination
       RowLayout {
         Layout.fillWidth: true
-        visible: errorMessage === "" && typeof WallhavenService !== "undefined"
+        visible: wallhavenViewRoot.errorMessage === "" && typeof WallhavenService !== "undefined"
         spacing: Style.marginS
 
         Item {
@@ -1826,7 +1826,7 @@ SmartPanel {
 
         NIconButton {
           icon: "chevron-left"
-          enabled: !loading && WallhavenService.currentPage > 1 && !WallhavenService.fetching
+          enabled: !wallhavenViewRoot.loading && WallhavenService.currentPage > 1 && !WallhavenService.fetching
           onClicked: WallhavenService.previousPage()
         }
 
@@ -1847,7 +1847,7 @@ SmartPanel {
             minimumInputWidth: 50 * Style.uiScaleRatio
             horizontalAlignment: Text.AlignHCenter
             inputMethodHints: Qt.ImhDigitsOnly
-            enabled: !loading && !WallhavenService.fetching
+            enabled: !wallhavenViewRoot.loading && !WallhavenService.fetching
             showClearButton: false
 
             Connections {

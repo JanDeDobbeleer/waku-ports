@@ -31,6 +31,6 @@ ColumnLayout {
                   root.valueIconColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: root.widgetMetadata.iconColor
   }
 }

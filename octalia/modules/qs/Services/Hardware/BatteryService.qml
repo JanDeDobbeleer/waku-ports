@@ -346,7 +346,7 @@ Singleton {
   }
 
   Instantiator {
-    model: deviceModel
+    model: root.deviceModel
     delegate: Connections {
       required property var modelData
       property var device: findDevice(modelData.key)

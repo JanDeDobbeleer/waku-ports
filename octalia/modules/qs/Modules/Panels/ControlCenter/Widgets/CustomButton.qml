@@ -31,27 +31,27 @@ Item {
     target: root
 
     function _updatePropertiesFromSettings() {
-      if (!widgetSettings) {
+      if (!root.widgetSettings) {
         return;
       }
 
-      onClickedCommand = widgetSettings.onClicked || "";
-      onRightClickedCommand = widgetSettings.onRightClicked || "";
-      onMiddleClickedCommand = widgetSettings.onMiddleClicked || "";
-      stateChecksJson = widgetSettings.stateChecksJson || "[]"; // Populate from widgetSettings
+      root.onClickedCommand = root.widgetSettings.onClicked || "";
+      root.onRightClickedCommand = root.widgetSettings.onRightClicked || "";
+      root.onMiddleClickedCommand = root.widgetSettings.onMiddleClicked || "";
+      root.stateChecksJson = root.widgetSettings.stateChecksJson || "[]"; // Populate from widgetSettings
       try {
-        _parsedStateChecks = JSON.parse(stateChecksJson);
+        root._parsedStateChecks = JSON.parse(root.stateChecksJson);
       } catch (e) {
         Logger.e("CustomButton", "Failed to parse stateChecksJson:", e.message);
-        _parsedStateChecks = [];
+        root._parsedStateChecks = [];
       }
-      enableOnStateLogic = widgetSettings.enableOnStateLogic || false;
+      root.enableOnStateLogic = root.widgetSettings.enableOnStateLogic || false;
 
       updateState();
     }
 
     function onWidgetSettingsChanged() {
-      if (widgetSettings) {
+      if (root.widgetSettings) {
         _updatePropertiesFromSettings();
       }
     }
@@ -60,17 +60,17 @@ Item {
   Process {
     id: stateCheckProcessExecutor
     running: false
-    command: _currentStateCheckIndex !== -1 && _parsedStateChecks.length > _currentStateCheckIndex ? ["cmd", "/c", _parsedStateChecks[_currentStateCheckIndex].command] : []
+    command: root._currentStateCheckIndex !== -1 && root._parsedStateChecks.length > root._currentStateCheckIndex ? ["cmd", "/c", root._parsedStateChecks[root._currentStateCheckIndex].command] : []
     onExited: function (exitCode, stdout, stderr) {
-      var currentCheckItem = _parsedStateChecks[_currentStateCheckIndex];
+      var currentCheckItem = root._parsedStateChecks[root._currentStateCheckIndex];
       var currentCommand = currentCheckItem.command;
       if (exitCode === 0) {
         // Command succeeded, this is the active state
-        _isHot = true;
-        _activeStateIcon = currentCheckItem.icon || widgetSettings.icon || "heart";
+        root._isHot = true;
+        root._activeStateIcon = currentCheckItem.icon || root.widgetSettings.icon || "heart";
       } else {
         // Command failed, try next one
-        _currentStateCheckIndex++;
+        root._currentStateCheckIndex++;
         _checkNextState();
       }
     }
@@ -82,12 +82,12 @@ Item {
     running: false
     repeat: false
     onTriggered: {
-      if (enableOnStateLogic && _parsedStateChecks.length > 0) {
-        _currentStateCheckIndex = 0;
+      if (root.enableOnStateLogic && root._parsedStateChecks.length > 0) {
+        root._currentStateCheckIndex = 0;
         _checkNextState();
       } else {
-        _isHot = false;
-        _activeStateIcon = widgetSettings.icon || "heart";
+        root._isHot = false;
+        root._activeStateIcon = root.widgetSettings.icon || "heart";
       }
     }
   }
@@ -120,23 +120,23 @@ Item {
 
   NIconButtonHot {
     id: button
-    icon: _activeStateIcon
-    hot: _isHot
+    icon: root._activeStateIcon
+    hot: root._isHot
     onClicked: {
-      if (onClickedCommand) {
-        Quickshell.execDetached(["cmd", "/c", onClickedCommand]);
+      if (root.onClickedCommand) {
+        Quickshell.execDetached(["cmd", "/c", root.onClickedCommand]);
         updateState();
       }
     }
     onRightClicked: {
-      if (onRightClickedCommand) {
-        Quickshell.execDetached(["cmd", "/c", onRightClickedCommand]);
+      if (root.onRightClickedCommand) {
+        Quickshell.execDetached(["cmd", "/c", root.onRightClickedCommand]);
         updateState();
       }
     }
     onMiddleClicked: {
-      if (onMiddleClickedCommand) {
-        Quickshell.execDetached(["cmd", "/c", onMiddleClickedCommand]);
+      if (root.onMiddleClickedCommand) {
+        Quickshell.execDetached(["cmd", "/c", root.onMiddleClickedCommand]);
         updateState();
       }
     }

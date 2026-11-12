@@ -37,24 +37,24 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.custom-button.enable-colorization-label")
     description: I18n.tr("bar.control-center.enable-colorization-description")
-    checked: valueEnableColorization
+    checked: root.valueEnableColorization
     onToggled: checked => {
-                 valueEnableColorization = checked;
+                 root.valueEnableColorization = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.enableColorization
+    defaultValue: root.widgetMetadata.enableColorization
   }
 
   NColorChoice {
-    visible: valueEnableColorization
+    visible: root.valueEnableColorization
     label: I18n.tr("common.select-icon-color")
     description: I18n.tr("bar.control-center.color-selection-description")
-    currentKey: valueColorizeSystemIcon
+    currentKey: root.valueColorizeSystemIcon
     onSelected: function (key) {
-      valueColorizeSystemIcon = key;
+      root.valueColorizeSystemIcon = key;
       saveSettings();
     }
-    defaultValue: widgetMetadata.colorizeSystemIcon
+    defaultValue: root.widgetMetadata.colorizeSystemIcon
   }
 
   RowLayout {
@@ -70,28 +70,28 @@ ColumnLayout {
       Layout.preferredHeight: Style.fontSizeXL * 2
       Layout.alignment: Qt.AlignVCenter
       radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
-      imagePath: valueCustomIconPath
-      visible: valueCustomIconPath !== "" && !valueUseDistroLogo
+      imagePath: root.valueCustomIconPath
+      visible: root.valueCustomIconPath !== "" && !root.valueUseDistroLogo
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: valueIcon
+      icon: root.valueIcon
       pointSize: Style.fontSizeXXL * 1.5
-      visible: valueIcon !== "" && valueCustomIconPath === "" && !valueUseDistroLogo
+      visible: root.valueIcon !== "" && root.valueCustomIconPath === "" && !root.valueUseDistroLogo
     }
   }
 
   RowLayout {
     spacing: Style.marginM
     NButton {
-      enabled: !valueUseDistroLogo
+      enabled: !root.valueUseDistroLogo
       text: I18n.tr("bar.control-center.browse-library")
       onClicked: iconPicker.open()
     }
 
     NButton {
-      enabled: !valueUseDistroLogo
+      enabled: !root.valueUseDistroLogo
       text: I18n.tr("bar.control-center.browse-file")
       onClicked: imagePicker.openFilePicker()
     }
@@ -99,10 +99,10 @@ ColumnLayout {
 
   NIconPicker {
     id: iconPicker
-    initialIcon: valueIcon
+    initialIcon: root.valueIcon
     onIconSelected: iconName => {
-                      valueIcon = iconName;
-                      valueCustomIconPath = "";
+                      root.valueIcon = iconName;
+                      root.valueCustomIconPath = "";
                       saveSettings();
                     }
   }
@@ -115,7 +115,7 @@ ColumnLayout {
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
     onAccepted: paths => {
                   if (paths.length > 0) {
-                    valueCustomIconPath = paths[0]; // Use first selected file
+                    root.valueCustomIconPath = paths[0]; // Use first selected file
                     saveSettings();
                   }
                 }

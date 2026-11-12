@@ -130,26 +130,26 @@ Variants {
         }
 
         // Horizontal positioning
-        anchors.horizontalCenter: (panelPosition === "center" || panelPosition.endsWith("_center")) ? parent.horizontalCenter : undefined
-        anchors.left: panelPosition.endsWith("_left") ? parent.left : undefined
-        anchors.right: panelPosition.endsWith("_right") ? parent.right : undefined
+        anchors.horizontalCenter: (launcherWindow.panelPosition === "center" || launcherWindow.panelPosition.endsWith("_center")) ? parent.horizontalCenter : undefined
+        anchors.left: launcherWindow.panelPosition.endsWith("_left") ? parent.left : undefined
+        anchors.right: launcherWindow.panelPosition.endsWith("_right") ? parent.right : undefined
 
         // Vertical positioning
-        anchors.verticalCenter: (panelPosition === "center" || panelPosition.startsWith("center_")) ? parent.verticalCenter : undefined
-        anchors.top: panelPosition.startsWith("top_") ? parent.top : undefined
-        anchors.bottom: panelPosition.startsWith("bottom_") ? parent.bottom : undefined
+        anchors.verticalCenter: (launcherWindow.panelPosition === "center" || launcherWindow.panelPosition.startsWith("center_")) ? parent.verticalCenter : undefined
+        anchors.top: launcherWindow.panelPosition.startsWith("top_") ? parent.top : undefined
+        anchors.bottom: launcherWindow.panelPosition.startsWith("bottom_") ? parent.bottom : undefined
 
         // Margins - only add bar clearance on the bar's edge
-        anchors.leftMargin: barPosition === "left" ? barThickness : 0
-        anchors.rightMargin: barPosition === "right" ? barThickness : 0
-        anchors.topMargin: barPosition === "top" ? barThickness : 0
-        anchors.bottomMargin: barPosition === "bottom" ? barThickness : 0
+        anchors.leftMargin: launcherWindow.barPosition === "left" ? launcherWindow.barThickness : 0
+        anchors.rightMargin: launcherWindow.barPosition === "right" ? launcherWindow.barThickness : 0
+        anchors.topMargin: launcherWindow.barPosition === "top" ? launcherWindow.barThickness : 0
+        anchors.bottomMargin: launcherWindow.barPosition === "bottom" ? launcherWindow.barThickness : 0
 
         // Edge detection - based on position setting and bar location
-        readonly property bool touchingLeft: panelPosition.endsWith("_left") && barPosition !== "left"
-        readonly property bool touchingRight: panelPosition.endsWith("_right") && barPosition !== "right"
-        readonly property bool touchingTop: panelPosition.startsWith("top_") && barPosition !== "top"
-        readonly property bool touchingBottom: panelPosition.startsWith("bottom_") && barPosition !== "bottom"
+        readonly property bool touchingLeft: launcherWindow.panelPosition.endsWith("_left") && launcherWindow.barPosition !== "left"
+        readonly property bool touchingRight: launcherWindow.panelPosition.endsWith("_right") && launcherWindow.barPosition !== "right"
+        readonly property bool touchingTop: launcherWindow.panelPosition.startsWith("top_") && launcherWindow.barPosition !== "top"
+        readonly property bool touchingBottom: launcherWindow.panelPosition.startsWith("bottom_") && launcherWindow.barPosition !== "bottom"
 
         // Corner states based on edge touching
         // State 0: Normal rounded, State 1: Horizontal inversion, State 2: Vertical inversion
@@ -330,7 +330,7 @@ Variants {
         height: Math.round(400 * Style.uiScaleRatio)
         forceOpaque: true
         x: {
-          if (panelPosition.endsWith("_right"))
+          if (launcherWindow.panelPosition.endsWith("_right"))
             return launcherPanel.x - launcherWindow.previewPanelWidth - Style.marginM;
           return launcherPanel.x + launcherPanel.width + Style.marginM;
         }

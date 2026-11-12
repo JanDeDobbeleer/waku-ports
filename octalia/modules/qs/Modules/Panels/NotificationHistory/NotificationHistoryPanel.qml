@@ -655,7 +655,7 @@ SmartPanel {
                       id: removeTimer
                       interval: notificationDelegate.removeAnimationDuration
                       repeat: false
-                      onTriggered: NotificationService.removeFromHistory(notificationId)
+                      onTriggered: NotificationService.removeFromHistory(notificationDelegate.notificationId)
                     }
 
                     Behavior on swipeOffset {
@@ -985,10 +985,10 @@ SmartPanel {
                               onClicked: {
                                 notificationDelegate.pendingLink = "";
                                 historyInteractionArea.cursorShape = Qt.ArrowCursor;
-                                if (scrollView.expandedId === notificationId) {
+                                if (scrollView.expandedId === notificationDelegate.notificationId) {
                                   scrollView.expandedId = "";
                                 } else {
-                                  scrollView.expandedId = notificationId;
+                                  scrollView.expandedId = notificationDelegate.notificationId;
                                 }
                               }
                             }
@@ -999,7 +999,7 @@ SmartPanel {
                               baseSize: notificationDelegate.actionButtonSize
 
                               onClicked: {
-                                NotificationService.removeFromHistory(notificationId);
+                                NotificationService.removeFromHistory(notificationDelegate.notificationId);
                               }
                             }
                           }

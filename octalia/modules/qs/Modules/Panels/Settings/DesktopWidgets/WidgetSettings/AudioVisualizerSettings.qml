@@ -37,19 +37,19 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.width")
     description: I18n.tr("bar.audio-visualizer.width-description")
-    text: String(valueWidth)
+    text: String(root.valueWidth)
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     inputMethodHints: Qt.ImhDigitsOnly
     onEditingFinished: {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
-        valueWidth = parsed;
+        root.valueWidth = parsed;
         saveSettings();
       } else {
-        text = String(valueWidth);
+        text = String(root.valueWidth);
       }
     }
-    defaultValue: String(widgetMetadata.width)
+    defaultValue: String(root.widgetMetadata.width)
   }
 
   NTextInput {
@@ -57,19 +57,19 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.height")
     description: I18n.tr("bar.audio-visualizer.height-description")
-    text: String(valueHeight)
+    text: String(root.valueHeight)
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     inputMethodHints: Qt.ImhDigitsOnly
     onEditingFinished: {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
-        valueHeight = parsed;
+        root.valueHeight = parsed;
         saveSettings();
       } else {
-        text = String(valueHeight);
+        text = String(root.valueHeight);
       }
     }
-    defaultValue: String(widgetMetadata.height)
+    defaultValue: String(root.widgetMetadata.height)
   }
 
   NComboBox {
@@ -90,36 +90,36 @@ ColumnLayout {
         "name": I18n.tr("options.visualizer-types.wave")
       }
     ]
-    currentKey: valueVisualizerType
+    currentKey: root.valueVisualizerType
     onSelected: key => {
-                  valueVisualizerType = key;
+                  root.valueVisualizerType = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.visualizerType
+    defaultValue: root.widgetMetadata.visualizerType
   }
 
   NColorChoice {
     Layout.fillWidth: true
     label: I18n.tr("bar.audio-visualizer.color-name-label")
     description: I18n.tr("bar.audio-visualizer.color-name-description")
-    currentKey: valueColorName
+    currentKey: root.valueColorName
     onSelected: key => {
-                  valueColorName = key;
+                  root.valueColorName = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.colorName
+    defaultValue: root.widgetMetadata.colorName
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.audio-visualizer.hide-when-idle-label")
     description: I18n.tr("bar.audio-visualizer.hide-when-idle-description")
-    checked: valueHideWhenIdle
+    checked: root.valueHideWhenIdle
     onToggled: checked => {
-                 valueHideWhenIdle = checked;
+                 root.valueHideWhenIdle = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenIdle
+    defaultValue: root.widgetMetadata.hideWhenIdle
   }
 
   NDivider {
@@ -130,24 +130,24 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
+                 root.valueShowBackground = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: root.widgetMetadata.showBackground
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.media-player-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
+                 root.valueRoundedCorners = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: root.widgetMetadata.roundedCorners
   }
 }

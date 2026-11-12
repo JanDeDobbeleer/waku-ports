@@ -94,7 +94,7 @@ NIconButton {
                    } else if (action === "clear-history") {
                      NotificationService.clearHistory();
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -114,7 +114,7 @@ NIconButton {
     anchors.horizontalCenterOffset: parent.baseSize / 4
     anchors.verticalCenterOffset: -parent.baseSize / 4
     z: 2
-    active: showUnreadBadge
+    active: root.showUnreadBadge
     sourceComponent: Rectangle {
       id: badge
       height: 7

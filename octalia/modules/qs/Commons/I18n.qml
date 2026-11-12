@@ -133,7 +133,7 @@ Singleton {
     target: Settings.data.general
     function onLanguageChanged() {
       var userLang = Settings.data.general.language;
-      if (userLang !== "" && userLang !== root.langCode && availableLanguages.includes(userLang)) {
+      if (userLang !== "" && userLang !== root.langCode && root.availableLanguages.includes(userLang)) {
         Logger.i("I18n", `Applying user language preference: "${userLang}"`);
         setLanguage(userLang);
       } else if (userLang === "" && root.systemDetectedLangCode !== "" && root.systemDetectedLangCode !== root.langCode) {

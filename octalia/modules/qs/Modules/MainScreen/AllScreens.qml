@@ -41,7 +41,7 @@ Variants {
       active: parent.shouldBeActive
       asynchronous: false
 
-      property ShellScreen loaderScreen: modelData
+      property ShellScreen loaderScreen: windowItem.modelData
 
       onLoaded: {
         // Signal that window is loaded so exclusion zone can be created
@@ -61,12 +61,12 @@ Variants {
           return false;
         if (!BarService.effectivelyVisible)
           return false;
-        if (Settings.getBarDisplayModeForScreen(modelData?.name) !== "auto_hide")
+        if (Settings.getBarDisplayModeForScreen(windowItem.modelData?.name) !== "auto_hide")
           return false;
 
         // Check if bar is configured for this screen
         var monitors = Settings.data.bar.monitors || [];
-        return monitors.length === 0 || monitors.includes(modelData?.name);
+        return monitors.length === 0 || monitors.includes(windowItem.modelData?.name);
       }
       asynchronous: false
 
@@ -75,7 +75,7 @@ Variants {
       }
 
       onLoaded: {
-        Logger.d("AllScreens", "BarTriggerZone created for", modelData?.name);
+        Logger.d("AllScreens", "BarTriggerZone created for", windowItem.modelData?.name);
       }
     }
 
@@ -124,7 +124,7 @@ Variants {
 
         // Check if bar is configured for this screen
         var monitors = Settings.data.bar.monitors || [];
-        return monitors.length === 0 || monitors.includes(modelData?.name);
+        return monitors.length === 0 || monitors.includes(windowItem.modelData?.name);
       }
       asynchronous: false
 
@@ -133,7 +133,7 @@ Variants {
       }
 
       onLoaded: {
-        Logger.d("AllScreens", "PopupMenuWindow created for", modelData?.name);
+        Logger.d("AllScreens", "PopupMenuWindow created for", windowItem.modelData?.name);
       }
     }
   }

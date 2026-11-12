@@ -756,9 +756,9 @@ Item {
 
             // Active indicator - positioned at the edge of the delegate area
             Rectangle {
-              visible: baseIndicatorVisible && !showGroupedIndicator
-              width: dockRoot.isVertical ? indicatorMargin * 0.6 : dockRoot.iconSize * 0.2
-              height: dockRoot.isVertical ? dockRoot.iconSize * 0.2 : indicatorMargin * 0.6
+              visible: appButton.baseIndicatorVisible && !appButton.showGroupedIndicator
+              width: dockRoot.isVertical ? appButton.indicatorMargin * 0.6 : dockRoot.iconSize * 0.2
+              height: dockRoot.isVertical ? dockRoot.iconSize * 0.2 : appButton.indicatorMargin * 0.6
               color: Color.mPrimary
               radius: Style.radiusXS
 
@@ -780,7 +780,7 @@ Item {
 
             Loader {
               id: groupedIndicatorLoader
-              active: showGroupedIndicator
+              active: appButton.showGroupedIndicator
               anchors.bottom: !dockRoot.isVertical && dockRoot.dockPosition === "bottom" ? parent.bottom : undefined
               anchors.top: !dockRoot.isVertical && dockRoot.dockPosition === "top" ? parent.top : undefined
               anchors.left: dockRoot.isVertical && dockRoot.dockPosition === "left" ? parent.left : undefined

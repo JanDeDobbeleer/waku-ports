@@ -30,7 +30,7 @@ Singleton {
     onTriggered: {
       if (customColorsFile.path !== undefined) {
         Logger.d("Color", "Reloading colors from disk");
-        reloadColors = true;
+        root.reloadColors = true;
         customColorsFile.reload();
       }
     }
@@ -449,8 +449,8 @@ Singleton {
       }
     }
     onLoadFailed: function (error) {
-      if (reloadColors) {
-        reloadColors = false;
+      if (root.reloadColors) {
+        root.reloadColors = false;
         return;
       }
 

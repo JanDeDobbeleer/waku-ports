@@ -50,9 +50,9 @@ Item {
     target: AudioService.source?.audio ? AudioService.source?.audio : null
     function onVolumeChanged() {
       // Logger.i("Bar:Microphone", "onInputVolumeChanged")
-      if (!firstInputVolumeReceived) {
+      if (!root.firstInputVolumeReceived) {
         // Ignore the first volume change
-        firstInputVolumeReceived = true;
+        root.firstInputVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -65,9 +65,9 @@ Item {
     target: AudioService.source?.audio ? AudioService.source?.audio : null
     function onMutedChanged() {
       // Logger.i("Bar:Microphone", "onInputMutedChanged")
-      if (!firstInputVolumeReceived) {
+      if (!root.firstInputVolumeReceived) {
         // Ignore the first mute change
-        firstInputVolumeReceived = true;
+        root.firstInputVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -112,9 +112,9 @@ Item {
                    if (action === "toggle-mute") {
                      AudioService.setInputMuted(!AudioService.inputMuted);
                    } else if (action === "custom-command") {
-                     Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+                     Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -134,16 +134,16 @@ Item {
       return Math.round(displayVolume * 100);
     }
     suffix: "%"
-    forceOpen: displayMode === "alwaysShow"
-    forceClose: displayMode === "alwaysHide"
+    forceOpen: root.displayMode === "alwaysShow"
+    forceClose: root.displayMode === "alwaysHide"
 
     onWheel: function (delta) {
-      wheelAccumulator += delta;
-      if (wheelAccumulator >= 120) {
-        wheelAccumulator = 0;
+      root.wheelAccumulator += delta;
+      if (root.wheelAccumulator >= 120) {
+        root.wheelAccumulator = 0;
         AudioService.setInputVolume(AudioService.inputVolume + AudioService.stepVolume);
-      } else if (wheelAccumulator <= -120) {
-        wheelAccumulator = 0;
+      } else if (root.wheelAccumulator <= -120) {
+        root.wheelAccumulator = 0;
         AudioService.setInputVolume(AudioService.inputVolume - AudioService.stepVolume);
       }
     }
@@ -154,7 +154,7 @@ Item {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }
     onMiddleClicked: {
-      Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+      Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
     }
   }
 }

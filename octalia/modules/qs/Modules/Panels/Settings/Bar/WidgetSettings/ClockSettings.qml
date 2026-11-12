@@ -70,39 +70,39 @@ ColumnLayout {
   }
 
   NColorChoice {
-    currentKey: valueClockColor
+    currentKey: root.valueClockColor
     onSelected: key => {
-                  valueClockColor = key;
+                  root.valueClockColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.clockColor
+    defaultValue: root.widgetMetadata.clockColor
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.clock.use-custom-font-label")
     description: I18n.tr("bar.clock.use-custom-font-description")
-    checked: valueUseCustomFont
+    checked: root.valueUseCustomFont
     onToggled: checked => {
-                 valueUseCustomFont = checked;
+                 root.valueUseCustomFont = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.useCustomFont
+    defaultValue: root.widgetMetadata.useCustomFont
   }
 
   NSearchableComboBox {
     Layout.fillWidth: true
-    visible: valueUseCustomFont
+    visible: root.valueUseCustomFont
     label: I18n.tr("bar.clock.custom-font-label")
     description: I18n.tr("bar.clock.custom-font-description")
     model: FontService.availableFonts
-    currentKey: valueCustomFont
+    currentKey: root.valueCustomFont
     placeholder: I18n.tr("bar.clock.custom-font-placeholder")
     searchPlaceholder: I18n.tr("bar.clock.custom-font-search-placeholder")
     popupHeight: 420
     minimumWidth: 300
     onSelected: function (key) {
-      valueCustomFont = key;
+      root.valueCustomFont = key;
       saveSettings();
     }
     defaultValue: Settings.data.ui.fontDefault
@@ -137,9 +137,9 @@ ColumnLayout {
         label: I18n.tr("bar.clock.horizontal-bar-label")
         description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm ddd, MMM dd"
-        text: valueFormatHorizontal
+        text: root.valueFormatHorizontal
         onTextChanged: {
-          valueFormatHorizontal = text;
+          root.valueFormatHorizontal = text;
           saveSettings();
         }
         Component.onCompleted: {
@@ -151,7 +151,7 @@ ColumnLayout {
             });
           }
         }
-        defaultValue: widgetMetadata.formatHorizontal
+        defaultValue: root.widgetMetadata.formatHorizontal
       }
 
       Item {
@@ -165,9 +165,9 @@ ColumnLayout {
         description: I18n.tr("bar.clock.vertical-bar-description")
         // Tokens are Qt format tokens and must not be localized
         placeholderText: "HH mm dd MM"
-        text: valueFormatVertical
+        text: root.valueFormatVertical
         onTextChanged: {
-          valueFormatVertical = text;
+          root.valueFormatVertical = text;
           saveSettings();
         }
         Component.onCompleted: {
@@ -179,7 +179,7 @@ ColumnLayout {
             });
           }
         }
-        defaultValue: widgetMetadata.formatVertical
+        defaultValue: root.widgetMetadata.formatVertical
       }
     }
 
@@ -220,7 +220,7 @@ ColumnLayout {
             // Horizontal
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormatHorizontal.trim()).split("\\n")
+              model: I18n.locale.toString(root.now, root.valueFormatHorizontal.trim()).split("\\n")
               delegate: NText {
                 visible: text !== ""
                 text: modelData
@@ -251,7 +251,7 @@ ColumnLayout {
 
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormatVertical.trim()).split(" ")
+              model: I18n.locale.toString(root.now, root.valueFormatVertical.trim()).split(" ")
               delegate: NText {
                 visible: text !== ""
                 text: modelData

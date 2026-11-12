@@ -84,13 +84,13 @@ Item {
 
   // Connection used to open the pill when brightness changes
   Connections {
-    target: brightnessMonitor
+    target: root.brightnessMonitor
     ignoreUnknownSignals: true
     function onBrightnessUpdated() {
       // Ignore if this is the first time we receive an update.
       // Most likely service just kicked off.
-      if (!firstBrightnessReceived) {
-        firstBrightnessReceived = true;
+      if (!root.firstBrightnessReceived) {
+        root.firstBrightnessReceived = true;
         return;
       }
 
@@ -133,7 +133,7 @@ Item {
                      settingsPanel.requestedTab = SettingsPanel.Tab.Display;
                      settingsPanel.open();
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -148,17 +148,17 @@ Item {
     icon: getIcon()
     autoHide: false // Important to be false so we can hover as long as we want
     text: {
-      var monitor = brightnessMonitor;
+      var monitor = root.brightnessMonitor;
       if (!monitor || !monitor.brightnessControlAvailable || isNaN(monitor.brightness))
         return "";
       return Math.round(monitor.brightness * 100);
     }
     suffix: text.length > 0 ? "%" : "-"
-    forceOpen: displayMode === "alwaysShow"
-    forceClose: displayMode === "alwaysHide"
+    forceOpen: root.displayMode === "alwaysShow"
+    forceClose: root.displayMode === "alwaysHide"
 
     onWheel: function (angle) {
-      var monitor = brightnessMonitor;
+      var monitor = root.brightnessMonitor;
       if (!monitor || !monitor.brightnessControlAvailable)
         return;
 

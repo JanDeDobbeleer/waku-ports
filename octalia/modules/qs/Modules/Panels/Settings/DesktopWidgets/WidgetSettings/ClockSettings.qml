@@ -73,7 +73,7 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-style-label")
     description: I18n.tr("panels.desktop-widgets.clock-style-description")
-    currentKey: valueClockStyle
+    currentKey: root.valueClockStyle
     minimumWidth: 260 * Style.uiScaleRatio
     model: [
       {
@@ -94,61 +94,61 @@ ColumnLayout {
       }
     ]
     onSelected: key => {
-                  valueClockStyle = key;
+                  root.valueClockStyle = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.clockStyle
+    defaultValue: root.widgetMetadata.clockStyle
   }
 
   NColorChoice {
     label: I18n.tr("common.select-color")
     description: I18n.tr("common.select-color-description")
-    currentKey: valueClockColor
+    currentKey: root.valueClockColor
     onSelected: key => {
-                  valueClockColor = key;
+                  root.valueClockColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.clockColor
+    defaultValue: root.widgetMetadata.clockColor
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.clock.use-custom-font-label")
     description: I18n.tr("bar.clock.use-custom-font-description")
-    checked: valueUseCustomFont
+    checked: root.valueUseCustomFont
     onToggled: checked => {
-                 valueUseCustomFont = checked;
+                 root.valueUseCustomFont = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.useCustomFont
+    defaultValue: root.widgetMetadata.useCustomFont
   }
 
   NSearchableComboBox {
     Layout.fillWidth: true
-    visible: valueUseCustomFont
+    visible: root.valueUseCustomFont
     label: I18n.tr("bar.clock.custom-font-label")
     description: I18n.tr("bar.clock.custom-font-description")
     model: FontService.availableFonts
-    currentKey: valueCustomFont
+    currentKey: root.valueCustomFont
     placeholder: I18n.tr("bar.clock.custom-font-placeholder")
     searchPlaceholder: I18n.tr("bar.clock.custom-font-search-placeholder")
     popupHeight: 420
     minimumWidth: 300
     onSelected: function (key) {
-      valueCustomFont = key;
+      root.valueCustomFont = key;
       saveSettings();
     }
-    enabled: valueClockStyle === "minimal"
+    enabled: root.valueClockStyle === "minimal"
     defaultValue: Settings.data.ui.fontDefault
   }
 
   NDivider {
     Layout.fillWidth: true
-    visible: isMinimalMode
+    visible: root.isMinimalMode
   }
 
   NHeader {
-    visible: isMinimalMode
+    visible: root.isMinimalMode
     label: I18n.tr("bar.clock.clock-display-label")
     description: I18n.tr("bar.clock.clock-display-description")
   }
@@ -156,7 +156,7 @@ ColumnLayout {
   // Format editor - only visible in minimal mode
   RowLayout {
     id: main
-    visible: isMinimalMode
+    visible: root.isMinimalMode
     spacing: Style.marginL
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
@@ -173,9 +173,9 @@ ColumnLayout {
         label: I18n.tr("panels.desktop-widgets.clock-format-label")
         description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm\\nd MMMM yyyy"
-        text: valueFormat
+        text: root.valueFormat
         onTextChanged: {
-          valueFormat = text;
+          root.valueFormat = text;
           settingsChanged(saveSettings());
         }
         Component.onCompleted: {
@@ -187,7 +187,7 @@ ColumnLayout {
             });
           }
         }
-        defaultValue: widgetMetadata.format
+        defaultValue: root.widgetMetadata.format
       }
     }
 
@@ -225,7 +225,7 @@ ColumnLayout {
 
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormat.trim()).split("\\n")
+              model: I18n.locale.toString(root.now, root.valueFormat.trim()).split("\\n")
               delegate: NText {
                 visible: text !== ""
                 text: modelData
@@ -252,13 +252,13 @@ ColumnLayout {
   NDivider {
     Layout.topMargin: Style.marginM
     Layout.bottomMargin: Style.marginM
-    visible: isMinimalMode
+    visible: root.isMinimalMode
   }
 
   NDateTimeTokens {
     Layout.fillWidth: true
     height: 200
-    visible: isMinimalMode
+    visible: root.isMinimalMode
     onTokenClicked: token => root.insertToken(token)
   }
 
@@ -270,24 +270,24 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.clock-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
+                 root.valueShowBackground = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: root.widgetMetadata.showBackground
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.clock-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
+                 root.valueRoundedCorners = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: root.widgetMetadata.roundedCorners
   }
 }

@@ -42,8 +42,8 @@ ColumnLayout {
     target: ColorSchemeService
     function onSchemesChanged() {
       Logger.i("SetupAppearanceStep", `Color schemes changed: ${ColorSchemeService.schemes.length}`);
-      schemeColorsCache = {};
-      cacheVersion++;
+      root.schemeColorsCache = {};
+      root.cacheVersion++;
     }
   }
 

@@ -51,24 +51,24 @@ DraggableDesktopWidget {
   RowLayout {
     id: contentLayout
     anchors.fill: parent
-    anchors.margins: Math.round(Style.marginM * widgetScale)
-    spacing: Math.round(Style.marginM * widgetScale)
+    anchors.margins: Math.round(Style.marginM * root.widgetScale)
+    spacing: Math.round(Style.marginM * root.widgetScale)
     z: 2
 
     Item {
-      Layout.preferredWidth: Math.round(64 * widgetScale)
-      Layout.preferredHeight: Math.round(64 * widgetScale)
+      Layout.preferredWidth: Math.round(64 * root.widgetScale)
+      Layout.preferredHeight: Math.round(64 * root.widgetScale)
       Layout.alignment: Qt.AlignVCenter
 
       NIcon {
-        visible: !LocationService.taliaWeatherMascotActive || !weatherReady
+        visible: !LocationService.taliaWeatherMascotActive || !root.weatherReady
         anchors.centerIn: parent
-        icon: weatherReady ? LocationService.weatherSymbolFromCode(currentWeatherCode) : (LocationService.locationConfigured ? "weather-cloud-off" : "map-pin-off")
-        pointSize: Math.round(Style.fontSizeXXXL * 2 * widgetScale)
-        color: weatherReady ? Color.mPrimary : Color.mOnSurfaceVariant
+        icon: root.weatherReady ? LocationService.weatherSymbolFromCode(root.currentWeatherCode) : (LocationService.locationConfigured ? "weather-cloud-off" : "map-pin-off")
+        pointSize: Math.round(Style.fontSizeXXXL * 2 * root.widgetScale)
+        color: root.weatherReady ? Color.mPrimary : Color.mOnSurfaceVariant
       }
       Loader {
-        active: LocationService.taliaWeatherMascotActive && weatherReady
+        active: LocationService.taliaWeatherMascotActive && root.weatherReady
         anchors.fill: parent
         asynchronous: true
         sourceComponent: Component {
@@ -85,21 +85,21 @@ DraggableDesktopWidget {
     }
 
     NText {
-      text: weatherReady ? `${currentTemp}°${tempUnit}` : "--"
-      pointSize: Math.round(Style.fontSizeXXXL * widgetScale)
+      text: root.weatherReady ? `${root.currentTemp}°${root.tempUnit}` : "--"
+      pointSize: Math.round(Style.fontSizeXXXL * root.widgetScale)
       font.weight: Style.fontWeightBold
       color: Color.mOnSurface
     }
 
     ColumnLayout {
       Layout.fillWidth: true
-      spacing: Math.round(Style.marginXXS * widgetScale)
+      spacing: Math.round(Style.marginXXS * root.widgetScale)
       Layout.alignment: Qt.AlignVCenter
 
       NText {
         Layout.fillWidth: true
-        text: locationName || I18n.tr("common.weather-no-location")
-        pointSize: Math.round(Style.fontSizeS * widgetScale)
+        text: root.locationName || I18n.tr("common.weather-no-location")
+        pointSize: Math.round(Style.fontSizeS * root.widgetScale)
         font.weight: Style.fontWeightRegular
         color: Color.mOnSurfaceVariant
         elide: Text.ElideRight
@@ -108,35 +108,35 @@ DraggableDesktopWidget {
       }
 
       RowLayout {
-        spacing: Math.round(Style.marginXS * widgetScale)
-        visible: weatherReady && todayMax > 0 && todayMin > 0
+        spacing: Math.round(Style.marginXS * root.widgetScale)
+        visible: root.weatherReady && root.todayMax > 0 && root.todayMin > 0
 
         NText {
           text: "H:"
-          pointSize: Math.round(Style.fontSizeXS * widgetScale)
+          pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
           color: Color.mOnSurfaceVariant
         }
         NText {
-          text: `${todayMax}°`
-          pointSize: Math.round(Style.fontSizeXS * widgetScale)
+          text: `${root.todayMax}°`
+          pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
           color: Color.mOnSurface
         }
 
         NText {
           text: "•"
-          pointSize: Math.round(Style.fontSizeXXS * widgetScale)
+          pointSize: Math.round(Style.fontSizeXXS * root.widgetScale)
           color: Color.mOnSurfaceVariant
           opacity: 0.5
         }
 
         NText {
           text: "L:"
-          pointSize: Math.round(Style.fontSizeXS * widgetScale)
+          pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
           color: Color.mOnSurfaceVariant
         }
         NText {
-          text: `${todayMin}°`
-          pointSize: Math.round(Style.fontSizeXS * widgetScale)
+          text: `${root.todayMin}°`
+          pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
           color: Color.mOnSurfaceVariant
         }
       }

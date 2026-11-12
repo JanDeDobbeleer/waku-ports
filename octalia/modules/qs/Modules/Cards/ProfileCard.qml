@@ -45,7 +45,7 @@ NBox {
         Layout.fillWidth: true
         Layout.minimumWidth: 0
         text: I18n.tr("system.uptime", {
-                        "uptime": uptimeText
+                        "uptime": root.uptimeText
                       })
         pointSize: Style.fontSizeS
         color: Color.mOnSurfaceVariant
@@ -106,7 +106,7 @@ NBox {
     stdout: StdioCollector {
       onStreamFinished: {
         var uptimeSeconds = parseFloat(this.text.trim().split(' ')[0]);
-        uptimeText = Time.formatVagueHumanReadableDuration(uptimeSeconds);
+        root.uptimeText = Time.formatVagueHumanReadableDuration(uptimeSeconds);
         uptimeProcess.running = false;
       }
     }

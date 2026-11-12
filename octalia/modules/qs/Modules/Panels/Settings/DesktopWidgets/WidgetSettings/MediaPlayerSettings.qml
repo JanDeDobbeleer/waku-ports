@@ -36,48 +36,48 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
+                 root.valueShowBackground = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: root.widgetMetadata.showBackground
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.media-player-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
+                 root.valueRoundedCorners = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: root.widgetMetadata.roundedCorners
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.media-player-show-album-art-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-album-art-description")
-    checked: valueShowAlbumArt
+    checked: root.valueShowAlbumArt
     onToggled: checked => {
-                 valueShowAlbumArt = checked;
+                 root.valueShowAlbumArt = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showAlbumArt
+    defaultValue: root.widgetMetadata.showAlbumArt
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.media-player-show-buttons-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-buttons-description")
-    checked: valueShowButtons
+    checked: root.valueShowButtons
     onToggled: checked => {
-                 valueShowButtons = checked;
+                 root.valueShowButtons = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.showButtons
+    defaultValue: root.widgetMetadata.showButtons
   }
 
   NComboBox {
@@ -98,11 +98,11 @@ ColumnLayout {
         "name": I18n.tr("hide-modes.visible")
       }
     ]
-    currentKey: valueHideMode
+    currentKey: root.valueHideMode
     onSelected: key => {
-                  valueHideMode = key;
+                  root.valueHideMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.hideMode
+    defaultValue: root.widgetMetadata.hideMode
   }
 }

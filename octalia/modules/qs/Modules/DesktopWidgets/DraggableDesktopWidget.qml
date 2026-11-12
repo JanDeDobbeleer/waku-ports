@@ -288,7 +288,7 @@ Item {
   Rectangle {
     id: decorationRect
     anchors.fill: parent
-    anchors.margins: -outlineMargin
+    anchors.margins: -root.outlineMargin
     color: DesktopWidgetRegistry.editMode ? Qt.rgba(Color.mPrimary.r, Color.mPrimary.g, Color.mPrimary.b, 0.1) : "transparent"
     border.color: (DesktopWidgetRegistry.editMode || internal.isDragging) ? (internal.isDragging ? Color.mOutline : Color.mPrimary) : "transparent"
     border.width: DesktopWidgetRegistry.editMode ? 3 : 0
@@ -434,7 +434,7 @@ Item {
 
     onReleased: mouse => {
       var roundedX, roundedY;
-                  if (internal.isDragging && internal.operationType === "drag" && widgetIndex >= 0 && screen && screen.name) {
+                  if (internal.isDragging && internal.operationType === "drag" && root.widgetIndex >= 0 && root.screen && root.screen.name) {
                     roundedX = Math.round(internal.dragOffsetX);
                     roundedY = Math.round(internal.dragOffsetY);
                     root.updateWidgetData({

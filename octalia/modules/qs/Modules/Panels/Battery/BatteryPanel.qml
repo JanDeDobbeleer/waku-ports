@@ -88,8 +88,8 @@ SmartPanel {
 
           NIcon {
             pointSize: Style.fontSizeXXL
-            color: (BatteryService.isCharging(primaryDevice) || BatteryService.isPluggedIn(primaryDevice)) ? Color.mPrimary : (BatteryService.isCriticalBattery(primaryDevice) || BatteryService.isLowBattery(primaryDevice)) ? Color.mError : Color.mOnSurface
-            icon: BatteryService.getIcon(BatteryService.getPercentage(primaryDevice), BatteryService.isCharging(primaryDevice), BatteryService.isPluggedIn(primaryDevice), BatteryService.isDeviceReady(primaryDevice))
+            color: (BatteryService.isCharging(panelContent.primaryDevice) || BatteryService.isPluggedIn(panelContent.primaryDevice)) ? Color.mPrimary : (BatteryService.isCriticalBattery(panelContent.primaryDevice) || BatteryService.isLowBattery(panelContent.primaryDevice)) ? Color.mError : Color.mOnSurface
+            icon: BatteryService.getIcon(BatteryService.getPercentage(panelContent.primaryDevice), BatteryService.isCharging(panelContent.primaryDevice), BatteryService.isPluggedIn(panelContent.primaryDevice), BatteryService.isDeviceReady(panelContent.primaryDevice))
           }
 
           ColumnLayout {
@@ -279,7 +279,7 @@ SmartPanel {
       NBox {
         Layout.fillWidth: true
         height: controlsLayout.implicitHeight + Style.margin2L
-        visible: showPowerProfiles || showOctaliaPerformance
+        visible: panelContent.showPowerProfiles || panelContent.showOctaliaPerformance
 
         ColumnLayout {
           id: controlsLayout
@@ -288,7 +288,7 @@ SmartPanel {
           spacing: Style.marginM
 
           ColumnLayout {
-            visible: powerProfileAvailable && showPowerProfiles
+            visible: panelContent.powerProfileAvailable && panelContent.showPowerProfiles
 
             RowLayout {
               Layout.fillWidth: true
@@ -302,7 +302,7 @@ SmartPanel {
               }
 
               NText {
-                text: PowerProfileService.getName(profileIndex)
+                text: PowerProfileService.getName(panelContent.profileIndex)
                 color: Color.mOnSurfaceVariant
               }
             }
@@ -314,15 +314,15 @@ SmartPanel {
               stepSize: 1
               snapAlways: true
               heightRatio: 0.5
-              value: profileIndex
-              enabled: profilesAvailable
+              value: panelContent.profileIndex
+              enabled: panelContent.profilesAvailable
               onPressedChanged: (pressed, v) => {
                                   if (!pressed) {
                                     setProfileByIndex(v);
                                   }
                                 }
               onMoved: v => {
-                         profileIndex = v;
+                         panelContent.profileIndex = v;
                        }
             }
 
@@ -353,13 +353,13 @@ SmartPanel {
 
           NDivider {
             Layout.fillWidth: true
-            visible: showPowerProfiles && PowerProfileService.available && showOctaliaPerformance
+            visible: panelContent.showPowerProfiles && PowerProfileService.available && panelContent.showOctaliaPerformance
           }
 
           RowLayout {
             Layout.fillWidth: true
             spacing: Style.marginS
-            visible: showOctaliaPerformance
+            visible: panelContent.showOctaliaPerformance
 
             NText {
               text: I18n.tr("toast.octalia-performance.label")

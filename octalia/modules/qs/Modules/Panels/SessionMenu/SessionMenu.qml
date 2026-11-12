@@ -476,9 +476,9 @@ SmartPanel {
     interval: 100
     repeat: true
     onTriggered: {
-      timeRemaining -= interval;
-      if (timeRemaining <= 0) {
-        executeAction(pendingAction);
+      root.timeRemaining -= countdownTimer.interval;
+      if (root.timeRemaining <= 0) {
+        executeAction(root.pendingAction);
       }
     }
   }
@@ -972,8 +972,8 @@ SmartPanel {
     transform: Scale {
       origin.x: largeButtonRoot.width / 2
       origin.y: largeButtonRoot.height / 2
-      xScale: hoverScale
-      yScale: hoverScale
+      xScale: largeButtonRoot.hoverScale
+      yScale: largeButtonRoot.hoverScale
     }
 
     Behavior on color {

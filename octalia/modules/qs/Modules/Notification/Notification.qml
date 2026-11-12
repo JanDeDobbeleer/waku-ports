@@ -43,9 +43,9 @@ Variants {
     }
 
     Connections {
-      target: notificationModel
+      target: root.notificationModel
       function onCountChanged() {
-        if (notificationModel.count > 0) {
+        if (root.notificationModel.count > 0) {
           if (!root.shouldBeActive) {
             Qt.callLater(root.activate);
           }
@@ -301,9 +301,9 @@ Variants {
               onTriggered: {
                 if (card.isRemoving)
                   return;
-                slideOffset = 0;
-                scaleValue = 1.0;
-                opacityValue = 1.0;
+                card.slideOffset = 0;
+                card.scaleValue = 1.0;
+                card.opacityValue = 1.0;
               }
             }
 
@@ -362,7 +362,7 @@ Variants {
               interval: Style.animationSlow
               repeat: false
               onTriggered: {
-                NotificationService.dismissPopup(notificationId);
+                NotificationService.dismissPopup(card.notificationId);
               }
             }
 
@@ -427,10 +427,10 @@ Variants {
 
               HoverHandler {
                 onHoveredChanged: {
-                  isHovered = hovered;
-                  if (isHovered) {
+                  card.isHovered = hovered;
+                  if (card.isHovered) {
                     resumeTimer.stop();
-                    NotificationService.pauseTimeout(notificationId);
+                    NotificationService.pauseTimeout(card.notificationId);
                   } else {
                     resumeTimer.start();
                   }
@@ -442,8 +442,8 @@ Variants {
                 interval: 50
                 repeat: false
                 onTriggered: {
-                  if (!isHovered) {
-                    NotificationService.resumeTimeout(notificationId);
+                  if (!card.isHovered) {
+                    NotificationService.resumeTimeout(card.notificationId);
                   }
                 }
               }
@@ -494,7 +494,7 @@ Variants {
                               if (mouse.button === Qt.RightButton) {
                                 card.animateOut();
                                 if (Settings.data.notifications.clearDismissed) {
-                                  NotificationService.removeFromHistory(notificationId);
+                                  NotificationService.removeFromHistory(card.notificationId);
                                 }
                                 return;
                               }
@@ -508,7 +508,7 @@ Variants {
                                 if (dismissDistance >= threshold) {
                                   card.dismissBySwipe();
                                   if (Settings.data.notifications.clearDismissed) {
-                                    NotificationService.removeFromHistory(notificationId);
+                                    NotificationService.removeFromHistory(card.notificationId);
                                   }
                                 } else {
                                   card.swipeOffset = 0;
@@ -526,7 +526,7 @@ Variants {
                               var hasDefault = actions.some(function (a) {
                                 return a.identifier === "default";
                               });
-                              if (hasDefault && NotificationService.invokeActionAndSuppressClose(notificationId, "default")) {
+                              if (hasDefault && NotificationService.invokeActionAndSuppressClose(card.notificationId, "default")) {
                                 card.animateOut();
                               } else {
                                 // Without a default action, or if invoking it fails,
@@ -698,7 +698,7 @@ Variants {
                       Layout.topMargin: Style.marginM
                       flow: Flow.LeftToRight
 
-                      property string parentNotificationId: notificationId
+                      property string parentNotificationId: card.notificationId
                       property var parsedActions: {
                         try {
                           return model.actionsJson ? JSON.parse(model.actionsJson) : [];

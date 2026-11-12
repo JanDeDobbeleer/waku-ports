@@ -822,16 +822,16 @@ Item {
     }
 
     // Edge detection - detect if panel is touching screen edges
-    readonly property bool touchingLeftEdge: allowAttach && panelBackground.x <= (isFramed ? frameThickness + 1 : 1)
-    readonly property bool touchingRightEdge: allowAttach && (panelBackground.x + panelBackground.width) >= (root.width - (isFramed ? frameThickness + 1 : 1))
-    readonly property bool touchingTopEdge: allowAttach && panelBackground.y <= (isFramed ? frameThickness + 1 : 1)
-    readonly property bool touchingBottomEdge: allowAttach && (panelBackground.y + panelBackground.height) >= (root.height - (isFramed ? frameThickness + 1 : 1))
+    readonly property bool touchingLeftEdge: allowAttach && panelBackground.x <= (root.isFramed ? root.frameThickness + 1 : 1)
+    readonly property bool touchingRightEdge: allowAttach && (panelBackground.x + panelBackground.width) >= (root.width - (root.isFramed ? root.frameThickness + 1 : 1))
+    readonly property bool touchingTopEdge: allowAttach && panelBackground.y <= (root.isFramed ? root.frameThickness + 1 : 1)
+    readonly property bool touchingBottomEdge: allowAttach && (panelBackground.y + panelBackground.height) >= (root.height - (root.isFramed ? root.frameThickness + 1 : 1))
 
     // Bar edge detection - detect if panel is touching bar edges (for cases where centered panels snap to bar due to height constraints)
-    readonly property bool touchingTopBar: allowAttachToBar && root.barPosition === "top" && !root.barIsVertical && Math.abs(panelBackground.y - ((isFramed ? 0 : root.barMarginV) + root.barHeight)) <= 1
-    readonly property bool touchingBottomBar: allowAttachToBar && root.barPosition === "bottom" && !root.barIsVertical && Math.abs((panelBackground.y + panelBackground.height) - (root.height - (isFramed ? 0 : root.barMarginV) - root.barHeight)) <= 1
-    readonly property bool touchingLeftBar: allowAttachToBar && root.barPosition === "left" && root.barIsVertical && Math.abs(panelBackground.x - ((isFramed ? 0 : root.barMarginH) + root.barHeight)) <= 1
-    readonly property bool touchingRightBar: allowAttachToBar && root.barPosition === "right" && root.barIsVertical && Math.abs((panelBackground.x + panelBackground.width) - (root.width - (isFramed ? 0 : root.barMarginH) - root.barHeight)) <= 1
+    readonly property bool touchingTopBar: allowAttachToBar && root.barPosition === "top" && !root.barIsVertical && Math.abs(panelBackground.y - ((root.isFramed ? 0 : root.barMarginV) + root.barHeight)) <= 1
+    readonly property bool touchingBottomBar: allowAttachToBar && root.barPosition === "bottom" && !root.barIsVertical && Math.abs((panelBackground.y + panelBackground.height) - (root.height - (root.isFramed ? 0 : root.barMarginV) - root.barHeight)) <= 1
+    readonly property bool touchingLeftBar: allowAttachToBar && root.barPosition === "left" && root.barIsVertical && Math.abs(panelBackground.x - ((root.isFramed ? 0 : root.barMarginH) + root.barHeight)) <= 1
+    readonly property bool touchingRightBar: allowAttachToBar && root.barPosition === "right" && root.barIsVertical && Math.abs((panelBackground.x + panelBackground.width) - (root.width - (root.isFramed ? 0 : root.barMarginH) - root.barHeight)) <= 1
 
     // Expose panelBackground for geometry placeholder
     property alias geometryPlaceholder: panelBackground
@@ -859,31 +859,31 @@ Item {
       readonly property bool willTouchTopBar: {
         if (!panelContent.allowAttachToBar || root.barPosition !== "top" || root.barIsVertical)
           return false;
-        var targetTopBarY = (isFramed ? 0 : root.barMarginV) + root.barHeight;
+        var targetTopBarY = (root.isFramed ? 0 : root.barMarginV) + root.barHeight;
         return Math.abs(panelBackground.targetY - targetTopBarY) <= 1;
       }
       readonly property bool willTouchBottomBar: {
         if (!panelContent.allowAttachToBar || root.barPosition !== "bottom" || root.barIsVertical)
           return false;
-        var targetBottomBarY = root.height - (isFramed ? 0 : root.barMarginV) - root.barHeight - panelBackground.targetHeight;
+        var targetBottomBarY = root.height - (root.isFramed ? 0 : root.barMarginV) - root.barHeight - panelBackground.targetHeight;
         return Math.abs(panelBackground.targetY - targetBottomBarY) <= 1;
       }
       readonly property bool willTouchLeftBar: {
         if (!panelContent.allowAttachToBar || root.barPosition !== "left" || !root.barIsVertical)
           return false;
-        var targetLeftBarX = (isFramed ? 0 : root.barMarginH) + root.barHeight;
+        var targetLeftBarX = (root.isFramed ? 0 : root.barMarginH) + root.barHeight;
         return Math.abs(panelBackground.targetX - targetLeftBarX) <= 1;
       }
       readonly property bool willTouchRightBar: {
         if (!panelContent.allowAttachToBar || root.barPosition !== "right" || !root.barIsVertical)
           return false;
-        var targetRightBarX = root.width - (isFramed ? 0 : root.barMarginH) - root.barHeight - panelBackground.targetWidth;
+        var targetRightBarX = root.width - (root.isFramed ? 0 : root.barMarginH) - root.barHeight - panelBackground.targetWidth;
         return Math.abs(panelBackground.targetX - targetRightBarX) <= 1;
       }
-      readonly property bool willTouchTopEdge: panelContent.allowAttach && panelBackground.targetY <= (isFramed ? frameThickness + 1 : 1)
-      readonly property bool willTouchBottomEdge: panelContent.allowAttach && (panelBackground.targetY + panelBackground.targetHeight) >= (root.height - (isFramed ? frameThickness + 1 : 1))
-      readonly property bool willTouchLeftEdge: panelContent.allowAttach && panelBackground.targetX <= (isFramed ? frameThickness + 1 : 1)
-      readonly property bool willTouchRightEdge: panelContent.allowAttach && (panelBackground.targetX + panelBackground.targetWidth) >= (root.width - (isFramed ? frameThickness + 1 : 1))
+      readonly property bool willTouchTopEdge: panelContent.allowAttach && panelBackground.targetY <= (root.isFramed ? root.frameThickness + 1 : 1)
+      readonly property bool willTouchBottomEdge: panelContent.allowAttach && (panelBackground.targetY + panelBackground.targetHeight) >= (root.height - (root.isFramed ? root.frameThickness + 1 : 1))
+      readonly property bool willTouchLeftEdge: panelContent.allowAttach && panelBackground.targetX <= (root.isFramed ? root.frameThickness + 1 : 1)
+      readonly property bool willTouchRightEdge: panelContent.allowAttach && (panelBackground.targetX + panelBackground.targetWidth) >= (root.width - (root.isFramed ? root.frameThickness + 1 : 1))
 
       readonly property bool isActuallyAttachedToAnyEdge: {
         return willTouchTopBar || willTouchBottomBar || willTouchLeftBar || willTouchRightBar || willTouchTopEdge || willTouchBottomEdge || willTouchLeftEdge || willTouchRightEdge;
@@ -1058,18 +1058,18 @@ Item {
 
       // Current animated width/height (referenced by x/y for right/bottom positioning)
       readonly property real currentWidth: {
-        if (isClosing && opacityFadeComplete && shouldAnimateWidth)
+        if (root.isClosing && root.opacityFadeComplete && shouldAnimateWidth)
           return 0;
-        if (isClosing || isPanelVisible)
+        if (root.isClosing || root.isPanelVisible)
           return targetWidth;
         // If not animating width, start at target (no visual change)
         // If animating width, start at 0 (will animate to target)
         return shouldAnimateWidth ? 0 : targetWidth;
       }
       readonly property real currentHeight: {
-        if (isClosing && opacityFadeComplete && shouldAnimateHeight)
+        if (root.isClosing && root.opacityFadeComplete && shouldAnimateHeight)
           return 0;
-        if (isClosing || isPanelVisible)
+        if (root.isClosing || root.isPanelVisible)
           return targetHeight;
         // If not animating height, start at target (no visual change)
         // If animating height, start at 0 (will animate to target)
@@ -1320,7 +1320,7 @@ Item {
     // Panel top content: Text, icons, etc...
     Loader {
       id: contentLoader
-      active: isPanelOpen
+      active: root.isPanelOpen
       x: panelBackground.x
       y: panelBackground.y
       width: panelBackground.width

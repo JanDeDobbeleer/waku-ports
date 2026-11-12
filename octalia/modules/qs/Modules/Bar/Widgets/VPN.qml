@@ -82,7 +82,7 @@ Item {
                      return;
                    }
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                      return;
                    }
                    if (action.startsWith("connect:")) {
@@ -124,8 +124,8 @@ Item {
       return "";
     }
     autoHide: false
-    forceOpen: !isBarVertical && root.displayMode === "alwaysShow"
-    forceClose: isBarVertical || root.displayMode === "alwaysHide" || !pill.text
+    forceOpen: !root.isBarVertical && root.displayMode === "alwaysShow"
+    forceClose: root.isBarVertical || root.displayMode === "alwaysHide" || !pill.text
     onRightClicked: {
       PanelService.showContextMenu(contextMenu, pill, screen);
     }

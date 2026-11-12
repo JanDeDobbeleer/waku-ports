@@ -77,7 +77,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -131,7 +131,7 @@ Item {
     cursorShape: Qt.PointingHandCursor
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, nBattery, screen);
+                   PanelService.showContextMenu(contextMenu, nBattery, root.screen);
                  } else {
                    toggleBatteryPanel();
                  }

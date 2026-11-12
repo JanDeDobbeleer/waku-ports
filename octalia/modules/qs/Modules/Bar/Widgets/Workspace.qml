@@ -133,11 +133,11 @@ Item {
 
   HoverHandler {
     id: workspaceHoverHandler
-    enabled: showApplications && showApplicationsHover
+    enabled: root.showApplications && root.showApplicationsHover
     onHoveredChanged: {
       if (hovered) {
         hoverEval.stop();
-        isHovered = true;
+        root.isHovered = true;
       } else {
         hoverEval.restart();
       }
@@ -149,7 +149,7 @@ Item {
     interval: 150
     repeat: false
     onTriggered: {
-      isHovered = workspaceHoverHandler.hovered || contextMenu.visible;
+      root.isHovered = workspaceHoverHandler.hovered || contextMenu.visible;
     }
   }
 
@@ -304,13 +304,13 @@ Item {
       scheduleRefresh();
     }
     function onWindowListChanged() {
-      if (appVisible || showLabelsOnlyWhenOccupied) {
+      if (root.appVisible || root.showLabelsOnlyWhenOccupied) {
         root.windowRevision++;
         scheduleRefresh();
       }
     }
     function onActiveWindowChanged() {
-      if (appVisible) {
+      if (root.appVisible) {
         root.windowRevision++;
         scheduleRefresh();
       }
@@ -515,12 +515,12 @@ Item {
 
                    if (action === "focus" && selectedWindow) {
                      CompositorService.focusWindow(selectedWindow);
-                   } else if (action === "pin" && selectedAppId) {
-                     root.toggleAppPin(selectedAppId);
+                   } else if (action === "pin" && root.selectedAppId) {
+                     root.toggleAppPin(root.selectedAppId);
                    } else if (action === "close" && selectedWindow) {
                      CompositorService.closeWindow(selectedWindow);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    } else if (action.startsWith("desktop-action-") && item && item.desktopAction) {
                      if (item.desktopAction.command && item.desktopAction.command.length > 0) {
                        Quickshell.execDetached(item.desktopAction.command);
@@ -528,30 +528,30 @@ Item {
                        item.desktopAction.execute();
                      }
                    }
-                   selectedWindowId = "";
-                   selectedAppId = "";
+                   root.selectedWindowId = "";
+                   root.selectedAppId = "";
                  }
   }
 
   Rectangle {
     id: workspaceBackground
-    visible: !appVisible
-    width: isVertical ? capsuleHeight : parent.width
-    height: isVertical ? parent.height : capsuleHeight
+    visible: !root.appVisible
+    width: root.isVertical ? root.capsuleHeight : parent.width
+    height: root.isVertical ? parent.height : root.capsuleHeight
     radius: Style.radiusM
     color: Style.capsuleColor
     border.color: Style.capsuleBorderColor
     border.width: Style.capsuleBorderWidth
 
-    x: isVertical ? Style.pixelAlignCenter(parent.width, width) : 0
-    y: isVertical ? 0 : Style.pixelAlignCenter(parent.height, height)
+    x: root.isVertical ? Style.pixelAlignCenter(parent.width, width) : 0
+    y: root.isVertical ? 0 : Style.pixelAlignCenter(parent.height, height)
 
     MouseArea {
       anchors.fill: parent
       acceptedButtons: Qt.RightButton
       onClicked: mouse => {
                    if (mouse.button === Qt.RightButton) {
-                     PanelService.showContextMenu(contextMenu, workspaceBackground, screen);
+                     PanelService.showContextMenu(contextMenu, workspaceBackground, root.screen);
                    }
                  }
     }
@@ -604,10 +604,10 @@ Item {
   // Horizontal layout for top/bottom bars
   Row {
     id: pillRow
-    spacing: spacingBetweenPills
-    x: horizontalPadding
+    spacing: root.spacingBetweenPills
+    x: root.horizontalPadding
     y: 0
-    visible: !isVertical && !appVisible
+    visible: !root.isVertical && !root.appVisible
     scale: visible ? 1.0 : 0.8
     Behavior on scale {
       NumberAnimation {
@@ -619,7 +619,7 @@ Item {
 
     Repeater {
       id: workspaceRepeaterHorizontal
-      model: localWorkspaces
+      model: root.localWorkspaces
       delegate: WorkspacePill {
         required property var model
         workspace: model
@@ -647,10 +647,10 @@ Item {
   // Vertical layout for left/right bars
   Column {
     id: pillColumn
-    spacing: spacingBetweenPills
+    spacing: root.spacingBetweenPills
     x: 0
-    y: horizontalPadding
-    visible: isVertical && !appVisible
+    y: root.horizontalPadding
+    visible: root.isVertical && !root.appVisible
     scale: visible ? 1.0 : 0.8
     Behavior on scale {
       NumberAnimation {
@@ -662,7 +662,7 @@ Item {
 
     Repeater {
       id: workspaceRepeaterVertical
-      model: localWorkspaces
+      model: root.localWorkspaces
       delegate: WorkspacePill {
         required property var model
         workspace: model
@@ -972,7 +972,7 @@ Item {
 
   Flow {
     id: groupedGrid
-    visible: appVisible
+    visible: root.appVisible
     scale: visible ? 1.0 : 0.8
     Behavior on scale {
       NumberAnimation {
@@ -982,14 +982,14 @@ Item {
       }
     }
 
-    x: root.isVertical ? Style.pixelAlignCenter(parent.width, width) : Math.round(horizontalPadding * root.hasLabel)
-    y: root.isVertical ? Math.round(horizontalPadding * 0.4 * root.hasLabel) : Style.pixelAlignCenter(parent.height, height)
+    x: root.isVertical ? Style.pixelAlignCenter(parent.width, width) : Math.round(root.horizontalPadding * root.hasLabel)
+    y: root.isVertical ? Math.round(root.horizontalPadding * 0.4 * root.hasLabel) : Style.pixelAlignCenter(parent.height, height)
 
     spacing: Style.marginS
     flow: root.isVertical ? Flow.TopToBottom : Flow.LeftToRight
 
     Repeater {
-      model: appVisible ? localWorkspaces : null
+      model: root.appVisible ? root.localWorkspaces : null
       delegate: groupedWorkspaceDelegate
     }
   }

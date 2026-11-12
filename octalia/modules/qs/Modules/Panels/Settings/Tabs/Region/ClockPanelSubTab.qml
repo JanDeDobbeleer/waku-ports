@@ -121,13 +121,13 @@ ColumnLayout {
       function onWeatherEnabledChanged() {
         var i;
         // Auto-disable weather card when weather is disabled
-        var newModel = cardsModel.slice();
+        var newModel = root.cardsModel.slice();
         for (i = 0; i < newModel.length; i++) {
           if (newModel[i].id === "weather-card") {
             newModel[i] = Object.assign({}, newModel[i], {
                                           "enabled": Settings.data.location.weatherEnabled
                                         });
-            cardsModel = newModel;
+            root.cardsModel = newModel;
             saveCards();
             break;
           }
@@ -137,21 +137,21 @@ ColumnLayout {
 
     NReorderCheckboxes {
       Layout.fillWidth: true
-      model: cardsModel
+      model: root.cardsModel
       disabledIds: Settings.data.location.weatherEnabled ? [] : ["weather-card"]
       onItemToggled: function (index, enabled) {
-        var newModel = cardsModel.slice();
+        var newModel = root.cardsModel.slice();
         newModel[index] = Object.assign({}, newModel[index], {
                                           "enabled": enabled
                                         });
-        cardsModel = newModel;
+        root.cardsModel = newModel;
         saveCards();
       }
       onItemsReordered: function (fromIndex, toIndex) {
-        var newModel = cardsModel.slice();
+        var newModel = root.cardsModel.slice();
         var item = newModel.splice(fromIndex, 1)[0];
         newModel.splice(toIndex, 0, item);
-        cardsModel = newModel;
+        root.cardsModel = newModel;
         saveCards();
       }
     }

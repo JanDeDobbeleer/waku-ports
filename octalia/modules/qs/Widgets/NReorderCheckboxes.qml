@@ -91,7 +91,7 @@ Item {
 
           width: parent.width
           spacing: Style.marginS
-          opacity: isDisabled ? 0.5 : 1.0
+          opacity: delegateItem.isDisabled ? 0.5 : 1.0
 
           // Drag handle
           Rectangle {

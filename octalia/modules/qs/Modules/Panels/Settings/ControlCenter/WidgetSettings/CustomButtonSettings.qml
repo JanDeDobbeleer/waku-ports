@@ -19,13 +19,13 @@ ColumnLayout {
   QtObject {
     id: _settings
 
-    property string icon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
-    property string onClicked: widgetData.onClicked !== undefined ? widgetData.onClicked : widgetMetadata.onClicked
-    property string onRightClicked: widgetData.onRightClicked !== undefined ? widgetData.onRightClicked : widgetMetadata.onRightClicked
-    property string onMiddleClicked: widgetData.onMiddleClicked !== undefined ? widgetData.onMiddleClicked : widgetMetadata.onMiddleClicked
+    property string icon: root.widgetData.icon !== undefined ? root.widgetData.icon : root.widgetMetadata.icon
+    property string onClicked: root.widgetData.onClicked !== undefined ? root.widgetData.onClicked : root.widgetMetadata.onClicked
+    property string onRightClicked: root.widgetData.onRightClicked !== undefined ? root.widgetData.onRightClicked : root.widgetMetadata.onRightClicked
+    property string onMiddleClicked: root.widgetData.onMiddleClicked !== undefined ? root.widgetData.onMiddleClicked : root.widgetMetadata.onMiddleClicked
     property ListModel _stateChecksListModel: ListModel {}
     property string stateChecksJson: "[]"
-    property bool enableOnStateLogic: widgetData.enableOnStateLogic !== undefined ? widgetData.enableOnStateLogic : widgetMetadata.enableOnStateLogic
+    property bool enableOnStateLogic: root.widgetData.enableOnStateLogic !== undefined ? root.widgetData.enableOnStateLogic : root.widgetMetadata.enableOnStateLogic
 
     function populateStateChecks() {
       var i, initialChecks, item;
@@ -51,7 +51,7 @@ ColumnLayout {
 
     Component.onCompleted: {
       root.rootSettings = _settings;
-      stateChecksJson = (widgetData && widgetData.stateChecksJson !== undefined) ? widgetData.stateChecksJson : (widgetMetadata && widgetMetadata.stateChecksJson ? widgetMetadata.stateChecksJson : "[]");
+      stateChecksJson = (root.widgetData && root.widgetData.stateChecksJson !== undefined) ? root.widgetData.stateChecksJson : (root.widgetMetadata && root.widgetMetadata.stateChecksJson ? root.widgetMetadata.stateChecksJson : "[]");
       Qt.callLater(populateStateChecks);
     }
 
@@ -64,7 +64,7 @@ ColumnLayout {
       _settings.stateChecksJson = JSON.stringify(savedStateChecksArray);
 
       return {
-        "id": widgetData.id,
+        "id": root.widgetData.id,
         "icon": _settings.icon,
         "onClicked": _settings.onClicked,
         "onRightClicked": _settings.onRightClicked,
@@ -110,9 +110,9 @@ ColumnLayout {
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: _settings.icon || (widgetMetadata && widgetMetadata.icon ? widgetMetadata.icon : "")
+      icon: _settings.icon || (root.widgetMetadata && root.widgetMetadata.icon ? root.widgetMetadata.icon : "")
       pointSize: Style?.fontSizeXL ?? 24
-      visible: (_settings.icon || (widgetMetadata && widgetMetadata.icon ? widgetMetadata.icon : "")) !== ""
+      visible: (_settings.icon || (root.widgetMetadata && root.widgetMetadata.icon ? root.widgetMetadata.icon : "")) !== ""
     }
 
     NButton {
@@ -140,7 +140,7 @@ ColumnLayout {
       _settings.onClicked = text;
       saveSettings();
     }
-    defaultValue: widgetMetadata.onClicked
+    defaultValue: root.widgetMetadata.onClicked
   }
 
   NTextInput {
@@ -153,7 +153,7 @@ ColumnLayout {
       _settings.onRightClicked = text;
       saveSettings();
     }
-    defaultValue: widgetMetadata.onRightClicked
+    defaultValue: root.widgetMetadata.onRightClicked
   }
 
   NTextInput {
@@ -166,7 +166,7 @@ ColumnLayout {
       _settings.onMiddleClicked = text;
       saveSettings();
     }
-    defaultValue: widgetMetadata.onMiddleClicked
+    defaultValue: root.widgetMetadata.onMiddleClicked
   }
 
   NDivider {}
@@ -181,7 +181,7 @@ ColumnLayout {
                  _settings.enableOnStateLogic = checked;
                  saveSettings();
                }
-    defaultValue: widgetMetadata.enableOnStateLogic
+    defaultValue: root.widgetMetadata.enableOnStateLogic
   }
 
   ColumnLayout {

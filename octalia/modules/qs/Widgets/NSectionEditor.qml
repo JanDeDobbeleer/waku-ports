@@ -287,7 +287,7 @@ NBox {
         }
 
         NText {
-          text: sectionName
+          text: root.sectionName
           pointSize: Style.fontSizeL
           font.weight: Style.fontWeightBold
           color: Color.mOnSurface
@@ -296,8 +296,8 @@ NBox {
         }
 
         NText {
-          visible: sectionSubtitle !== ""
-          text: sectionSubtitle
+          visible: root.sectionSubtitle !== ""
+          text: root.sectionSubtitle
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
           elide: Text.ElideRight
@@ -308,7 +308,7 @@ NBox {
       // Widget count indicator (when max is set)
       NText {
         visible: root.maxWidgets >= 0
-        text: root.maxWidgets === 0 ? "(LOCKED)" : "(" + widgetModel.length + "/" + root.maxWidgets + ")"
+        text: root.maxWidgets === 0 ? "(LOCKED)" : "(" + root.widgetModel.length + "/" + root.maxWidgets + ")"
         pointSize: Style.fontSizeS
         color: root.isAtMaxCapacity ? Color.mError : Color.mOnSurfaceVariant
         Layout.alignment: Qt.AlignVCenter
@@ -321,7 +321,7 @@ NBox {
 
       NSearchableComboBox {
         id: comboBox
-        model: availableWidgets ?? null
+        model: root.availableWidgets ?? null
         label: ""
         description: ""
         placeholder: I18n.tr("bar.section-editor.placeholder")
@@ -335,7 +335,7 @@ NBox {
 
         // Re-filter when the model count changes (when widgets are loaded)
         Connections {
-          target: availableWidgets ?? null
+          target: root.availableWidgets ?? null
           ignoreUnknownSignals: true
           function onCountChanged() {
             // Trigger a re-filter by clearing and re-setting the search text
@@ -357,7 +357,7 @@ NBox {
         Layout.leftMargin: Style.marginS
         onClicked: {
           if (comboBox.currentKey !== "" && !root.isAtMaxCapacity) {
-            addWidget(comboBox.currentKey, sectionId);
+            addWidget(comboBox.currentKey, root.sectionId);
             comboBox.currentKey = "";
           }
         }
@@ -369,19 +369,19 @@ NBox {
       id: gridContainer
       Layout.fillWidth: true
       Layout.preferredHeight: {
-        if (widgetModel.length === 0) {
+        if (root.widgetModel.length === 0) {
           return 65 * Style.uiScaleRatio;
         }
         // Use actual width, fallback to a reasonable default if not yet available
         var containerWidth = width > 0 ? width : (parent ? parent.width : 400);
-        var rows = Math.ceil(widgetModel.length / root.gridColumns);
+        var rows = Math.ceil(root.widgetModel.length / root.gridColumns);
         // Calculate height: (rows * item height) + (row spacing between items) + grid margins
         var gridTopMargin = Style.marginS;
         var gridBottomMargin = Style.marginS;
         var calculatedHeight = gridTopMargin + (rows * root.widgetItemHeight) + ((rows - 1) * Style.marginS) + gridBottomMargin;
         return calculatedHeight;
       }
-      Layout.minimumHeight: widgetModel.length === 0 ? (65 * Style.uiScaleRatio) : (Style.margin2S + root.widgetItemHeight)
+      Layout.minimumHeight: root.widgetModel.length === 0 ? (65 * Style.uiScaleRatio) : (Style.margin2S + root.widgetItemHeight)
       clip: !flowDragArea.dragStarted
 
       Rectangle {
@@ -410,7 +410,7 @@ NBox {
 
         Repeater {
           id: widgetRepeater
-          model: widgetModel
+          model: root.widgetModel
 
           delegate: Rectangle {
             id: widgetItem
@@ -531,10 +531,10 @@ NBox {
 
               NText {
                 text: {
-                  return modelData.id;
+                  return widgetItem.modelData.id;
                 }
                 pointSize: Style.fontSizeXS
-                color: root.getWidgetColor(modelData)[1]
+                color: root.getWidgetColor(widgetItem.modelData)[1]
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -546,21 +546,21 @@ NBox {
 
               // CPU intensive indicator icon
               NIcon {
-                visible: root.widgetRegistry && root.widgetRegistry.isCpuIntensive(modelData.id)
+                visible: root.widgetRegistry && root.widgetRegistry.isCpuIntensive(widgetItem.modelData.id)
                 icon: "cpu-intensive"
                 pointSize: Style.fontSizeXXS
-                color: root.getWidgetColor(modelData)[1]
+                color: root.getWidgetColor(widgetItem.modelData)[1]
                 Layout.preferredWidth: visible ? Style.baseWidgetSize * 0.5 : 0
                 Layout.preferredHeight: Style.baseWidgetSize * 0.5
               }
 
               RowLayout {
                 spacing: 0
-                Layout.preferredWidth: buttonsCount * buttonsWidth * Style.uiScaleRatio
+                Layout.preferredWidth: widgetItem.buttonsCount * widgetItem.buttonsWidth * Style.uiScaleRatio
                 Layout.preferredHeight: parent.height
 
                 Loader {
-                  active: root.widgetHasSettings(modelData.id) && root.enabled
+                  active: root.widgetHasSettings(widgetItem.modelData.id) && root.enabled
                   sourceComponent: NIconButton {
                     icon: "settings"
                     baseSize: miniButtonSize
@@ -690,7 +690,7 @@ NBox {
           let minDistance = Infinity;
 
           // Check position relative to each widget
-          for (i = 0; i < widgetModel.length; i++) {
+          for (i = 0; i < root.widgetModel.length; i++) {
             if (i === draggedIndex)
               continue;
             const widget = widgetRepeater.itemAt(i);
@@ -719,7 +719,7 @@ NBox {
           }
 
           // Check if we should insert at position 0 (very beginning)
-          if (widgetModel.length > 0 && draggedIndex !== 0) {
+          if (root.widgetModel.length > 0 && draggedIndex !== 0) {
             const firstWidget = widgetRepeater.itemAt(0);
             if (firstWidget) {
               const mapped = mapWidgetCoords(firstWidget);
@@ -792,7 +792,7 @@ NBox {
                      isOverButtonArea = false;
 
                      // Find which widget was clicked
-                     for (i = 0; i < widgetModel.length; i++) {
+                     for (i = 0; i < root.widgetModel.length; i++) {
                        const widget = widgetRepeater.itemAt(i);
                        if (widget && widget.widgetIndex !== undefined) {
                          if (mouse.x >= widget.x && mouse.x <= widget.x + widget.width && mouse.y >= widget.y && mouse.y <= widget.y + widget.height) {
@@ -864,7 +864,7 @@ NBox {
           var globalPos, targetSectionId;
                       if (root.draggable && dragStarted && dropTargetIndex !== -1 && dropTargetIndex !== draggedIndex) {
                         // Perform the reorder
-                        reorderWidget(sectionId, draggedIndex, dropTargetIndex);
+                        reorderWidget(root.sectionId, draggedIndex, dropTargetIndex);
                       } else if (dragStarted && draggedIndex !== -1) {
                         globalPos = flowDragArea.mapToGlobal(mouse.x, mouse.y);
                         targetSectionId = root.findSectionAtGlobalPosition(globalPos.x, globalPos.y);

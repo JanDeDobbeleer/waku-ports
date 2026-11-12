@@ -47,31 +47,31 @@ ColumnLayout {
         "name": I18n.tr("display-modes.always-hide")
       }
     ]
-    currentKey: valueDisplayMode
+    currentKey: root.valueDisplayMode
     onSelected: key => {
-                  valueDisplayMode = key;
+                  root.valueDisplayMode = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.displayMode
+    defaultValue: root.widgetMetadata.displayMode
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
+                  root.valueIconColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: root.widgetMetadata.iconColor
   }
 
   NColorChoice {
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
+                  root.valueTextColor = key;
                   saveSettings();
                 }
-    defaultValue: widgetMetadata.textColor
+    defaultValue: root.widgetMetadata.textColor
   }
 
   // Middle click command
@@ -79,11 +79,11 @@ ColumnLayout {
     label: I18n.tr("bar.custom-button.middle-click-label")
     description: I18n.tr("panels.audio.on-middle-clicked-description")
     placeholderText: I18n.tr("panels.audio.external-mixer-placeholder")
-    text: valueMiddleClickCommand
+    text: root.valueMiddleClickCommand
     onTextChanged: {
-      valueMiddleClickCommand = text;
+      root.valueMiddleClickCommand = text;
       saveSettings();
     }
-    defaultValue: widgetMetadata.middleClickCommand
+    defaultValue: root.widgetMetadata.middleClickCommand
   }
 }

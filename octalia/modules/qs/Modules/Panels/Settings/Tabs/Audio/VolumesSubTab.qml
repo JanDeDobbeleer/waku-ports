@@ -14,17 +14,17 @@ ColumnLayout {
   Connections {
     target: AudioService
     function onSinkChanged() {
-      localVolume = AudioService.volume;
+      root.localVolume = AudioService.volume;
     }
     function onVolumeChanged() {
-      localVolume = AudioService.volume;
+      root.localVolume = AudioService.volume;
     }
   }
 
   Connections {
     target: AudioService.sink?.audio ? AudioService.sink?.audio : null
     function onVolumeChanged() {
-      localVolume = AudioService.volume;
+      root.localVolume = AudioService.volume;
     }
   }
 
@@ -39,10 +39,10 @@ ColumnLayout {
       description: I18n.tr("panels.audio.volumes-output-volume-description")
       from: 0
       to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-      value: localVolume
+      value: root.localVolume
       stepSize: 0.01
       text: Math.round(AudioService.volume * 100) + "%"
-      onMoved: value => localVolume = value
+      onMoved: value => root.localVolume = value
     }
 
     Timer {
@@ -50,8 +50,8 @@ ColumnLayout {
       running: true
       repeat: true
       onTriggered: {
-        if (!AudioService.isSwitchingSink && Math.abs(localVolume - AudioService.volume) >= 0.01) {
-          AudioService.setVolume(localVolume);
+        if (!AudioService.isSwitchingSink && Math.abs(root.localVolume - AudioService.volume) >= 0.01) {
+          AudioService.setVolume(root.localVolume);
         }
       }
     }

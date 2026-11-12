@@ -260,7 +260,7 @@ PopupWindow {
             anchors.fill: parent
             color: mouseArea.containsMouse ? Color.mHover : "transparent"
             radius: Style.radiusS
-            opacity: modelData.enabled !== false ? 1.0 : 0.5
+            opacity: menuItem.modelData.enabled !== false ? 1.0 : 0.5
 
             Behavior on color {
               ColorAnimation {
@@ -275,8 +275,8 @@ PopupWindow {
               spacing: Style.marginS
 
               NIcon {
-                visible: modelData.icon !== undefined
-                icon: modelData.icon || ""
+                visible: menuItem.modelData.icon !== undefined
+                icon: menuItem.modelData.icon || ""
                 pointSize: Style.fontSizeS
                 applyUiScale: false
                 color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
@@ -290,7 +290,7 @@ PopupWindow {
               }
 
               NText {
-                text: modelData.label || modelData.text || ""
+                text: menuItem.modelData.label || menuItem.modelData.text || ""
                 pointSize: Style.fontSizeS
                 color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
                 verticalAlignment: Text.AlignVCenter
@@ -308,7 +308,7 @@ PopupWindow {
               id: mouseArea
               anchors.fill: parent
               hoverEnabled: true
-              enabled: (modelData.enabled !== false) && root.visible
+              enabled: (menuItem.modelData.enabled !== false) && root.visible
               cursorShape: Qt.PointingHandCursor
 
               onClicked: {

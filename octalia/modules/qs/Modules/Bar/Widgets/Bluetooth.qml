@@ -72,7 +72,7 @@ Item {
                    } else if (action === "bluetooth-settings") {
                      SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, screen);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -99,8 +99,8 @@ Item {
       return "";
     }
     autoHide: false
-    forceOpen: !isBarVertical && root.displayMode === "alwaysShow"
-    forceClose: isBarVertical || root.displayMode === "alwaysHide" || text === ""
+    forceOpen: !root.isBarVertical && root.displayMode === "alwaysShow"
+    forceClose: root.isBarVertical || root.displayMode === "alwaysHide" || text === ""
     onClicked: {
       var p = PanelService.getPanel("bluetoothPanel", screen);
       if (p)
