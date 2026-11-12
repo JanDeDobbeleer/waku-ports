@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import waku
 import waku.services as S
@@ -58,6 +59,30 @@ PanelWindow {
     function open(args) {
         Quickshell.execDetached(args);
         close();
+    }
+
+    // Drives the menu from wakuc call startmenu <fn>: tools\smoke.txt opens each view with it.
+    IpcHandler {
+        target: "startmenu"
+
+        function show(view: string, page: int): string {
+            menu.visible = true;
+            menu.view = view === "all" ? "all" : "pages";
+            menu.page = Math.max(0, Math.min(menu.pageCount - 1, page));
+            return menu.view + " " + menu.page;
+        }
+        function query(text: string): string {
+            menu.visible = true;
+            search.text = text;
+            return results.first ? "found" : "none";
+        }
+        function power(): void {
+            menu.visible = true;
+            powerMenu.visible = !powerMenu.visible;
+        }
+        function close(): void {
+            menu.close();
+        }
     }
 
     onVisibleChanged: {
