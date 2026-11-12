@@ -6,6 +6,7 @@ import Celeste.Config
 import qs.components
 import qs.utils
 import qs.modules.bar.popouts as BarPopouts
+import "BarWrapperHelpers.js" as BarWrapperHelpers
 
 Item {
     id: root
@@ -27,35 +28,35 @@ Item {
     // Port: no `as Bar` casts here. On waku the cast of a Loader item to a type of the same module came
     // back null, so the hover path (Interactions -> checkPopout) did nothing. The item is called untyped.
     function closeTray(): void {
-        content.item?.closeTray();
+        BarWrapperHelpers.closeTray(content.item);
     }
 
     function checkPopout(y: real): void {
-        content.item?.checkPopout(y);
+        BarWrapperHelpers.checkPopout(content.item, y);
     }
 
     function debugEntries(): string {
-        return content.item ? content.item.debugEntries() : "no content";
+        return BarWrapperHelpers.debugEntries(content.item);
     }
 
     function openPopoutNamed(name: string): bool {
-        return content.item ? content.item.openPopoutNamed(name) : false;
+        return BarWrapperHelpers.openPopoutNamed(content.item, name);
     }
 
     function entryItem(id: string): var {
-        return content.item ? content.item.entryItem(id) : null;
+        return BarWrapperHelpers.entryItem(content.item, id);
     }
 
     function emptyAt(x: real, y: real): bool {
-        return content.item ? content.item.emptyAt(x, y) : false;
+        return BarWrapperHelpers.emptyAt(content.item, x, y);
     }
 
     function clickClock(): string {
-        return content.item ? content.item.clickClock() : "no content";
+        return BarWrapperHelpers.clickClock(content.item);
     }
 
     function handleWheel(y: real, angleDelta: point): void {
-        content.item?.handleWheel(y, angleDelta);
+        BarWrapperHelpers.handleWheel(content.item, y, angleDelta);
     }
 
     clip: true
