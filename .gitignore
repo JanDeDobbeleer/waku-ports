@@ -3,3 +3,5 @@
 live.err.txt
 live.out.txt
 bin/
+# waku release downloaded by tools/fetch-waku.ps1
+.cache/

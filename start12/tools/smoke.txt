@@ -1,0 +1,12 @@
+# Commands tools\check.ps1 runs against the shell during the runtime step (see check.ps1 for the
+# syntax). They open every view of the Start menu, so the code behind each one runs and logs.
+surface toggle startmenu
+call startmenu show pages 1
+sleep 1
+call startmenu show all 0
+call startmenu query notepad
+call startmenu query zzzz-no-app => none
+call startmenu power
+call startmenu close
+surface toggle startmenu
+surface toggle startmenu

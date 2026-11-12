@@ -1,0 +1,67 @@
+# Commands tools\check.ps1 runs against the shell during the runtime step (see check.ps1 for the
+# syntax). They open every panel, launcher mode and settings tab, so the code behind each one runs
+# and logs. Only UI: nothing here changes the machine (no Wi-Fi, Bluetooth, power, lock or media).
+call controlCenter toggle
+call controlCenter toggle
+call calendar toggle
+call calendar toggle
+call systemMonitor toggle
+call systemMonitor toggle
+call battery togglePanel
+call battery togglePanel
+call bluetooth togglePanel
+call bluetooth togglePanel
+call network togglePanel
+call network togglePanel
+call volume openPanel
+call volume closePanel
+call notifications toggleHistory
+call notifications toggleHistory
+call sessionMenu toggle
+call sessionMenu toggle
+call wallpaper toggle
+call wallpaper toggle
+call launcher toggle
+call launcher toggle
+call launcher clipboard
+call launcher toggle
+call launcher command
+call launcher toggle
+call launcher emoji
+call launcher toggle
+call launcher windows
+call launcher toggle
+call launcher settings
+call launcher toggle
+call toast send {"title":"smoke","body":"check.ps1"}
+call toast dismiss
+call settings openTab general
+call settings openTab userinterface
+call settings openTab colorscheme
+call settings openTab bar
+call settings openTab dock
+call settings openTab controlcenter
+call settings openTab desktopwidgets
+call settings openTab launcher
+call settings openTab notifications
+call settings openTab osd
+call settings openTab sessionmenu
+call settings openTab lockscreen
+call settings openTab idle
+call settings openTab wallpaper
+call settings openTab display
+call settings openTab audio
+call settings openTab connections/0
+call settings openTab connections/1
+call settings openTab location
+call settings openTab system
+call settings openTab hooks
+call settings openTab about
+call settings toggle
+call darkMode toggle
+sleep 2
+call darkMode toggle
+sleep 2
+call bar peek
+call desktopWidgets edit
+call desktopWidgets edit

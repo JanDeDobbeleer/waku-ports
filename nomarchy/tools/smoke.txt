@@ -1,0 +1,39 @@
+# Commands tools\check.ps1 runs against the shell during the runtime step (see check.ps1 for the
+# syntax). They switch on the off-by-default plugins that work on Windows and open every menu and
+# panel, so the code behind each one runs and logs. Only UI: nothing here changes the machine. The
+# plugins the README lists as dropped (they run Linux commands) stay off, as do idle, night light
+# and remote session.
+call shell setPluginEnabled nomarchy.active-window true => ok
+call shell setPluginEnabled nomarchy.media true => ok
+call shell setPluginEnabled nomarchy.microphone true => ok
+call shell setPluginEnabled nomarchy.spacer true => ok
+sleep 3
+call shell call nomarchy.menu open {"menu":"root"}
+call shell call nomarchy.menu open {"menu":"apps"}
+call shell call nomarchy.menu open {"menu":"appearance"}
+call shell call nomarchy.menu open {"menu":"appearance.theme"}
+sleep 1
+call shell call nomarchy.menu open {"menu":"trigger"}
+call shell call nomarchy.menu open {"menu":"setup"}
+call shell call nomarchy.menu open {"menu":"system"}
+call shell hide nomarchy.menu
+call nomarchy.audio open
+call nomarchy.audio close
+call nomarchy.bluetooth open
+call nomarchy.bluetooth close
+call nomarchy.network open
+call nomarchy.network close
+call nomarchy.power open
+call nomarchy.power close
+call nomarchy.clock open
+call nomarchy.clock close
+call nomarchy.weather open
+call nomarchy.weather close
+call shell toggle nomarchy.dev-gallery {}
+call shell toggle nomarchy.dev-gallery {}
+call osd show {"kind":"volume","value":0.5}
+call osd close
+call notifications showHistory
+call notifications dismissAll
+call shell toggleBarTransparency
+call shell toggleBarTransparency
