@@ -5,6 +5,7 @@ import Quickshell.Services.Notifications
 import Celeste.Config
 import Celeste.I18n
 import qs.services
+import "NotifDataHelpers.js" as NotifDataHelpers
 
 QtObject {
     id: notif
@@ -102,17 +103,17 @@ QtObject {
         ageMins = m;
 
         if (m < 1) {
-            timeStrTimer.interval = 5000;
+            NotifDataHelpers.setInterval(timeStrTimer, 5000);
         } else {
             const h = Math.floor(m / 60);
             const d = Math.floor(h / 24);
 
             if (d > 0)
-                timeStrTimer.interval = 3600000;
+                NotifDataHelpers.setInterval(timeStrTimer, 3600000);
             else if (h > 0)
-                timeStrTimer.interval = 300000;
+                NotifDataHelpers.setInterval(timeStrTimer, 300000);
             else
-                timeStrTimer.interval = m < 10 ? 30000 : 60000;
+                NotifDataHelpers.setInterval(timeStrTimer, m < 10 ? 30000 : 60000);
         }
     }
 
@@ -127,12 +128,7 @@ QtObject {
     }
 
     function close(): void {
-        closed = true;
-        if (locks.size === 0 && Notifs.list.includes(this)) {
-            Notifs.list = Notifs.list.filter(n => n !== this);
-            notification?.dismiss();
-            destroy();
-        }
+        NotifDataHelpers.close(notif, locks, Notifs, notification);
     }
 
     Component.onCompleted: {
@@ -151,10 +147,6 @@ QtObject {
         resident = notification.resident;
         hasActionIcons = notification.hasActionIcons;
 
-        actions = (notification.actions as Array).map(a => ({
-                    identifier: a.identifier,
-                    text: a.text,
-                    invoke: () => a.invoke()
-                }));
+        actions = NotifDataHelpers.actions(notification.actions);
     }
 }

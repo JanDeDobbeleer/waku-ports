@@ -7,6 +7,7 @@ import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledSliderHelpers.js" as StyledSliderHelpers
 
 Slider {
     id: root
@@ -27,7 +28,7 @@ Slider {
 
     signal interaction(v: real)
 
-    Component.onCompleted: filledWidth = Qt.binding(() => (width - handleItem.implicitWidth - handleItem.anchors.leftMargin) * pos)
+    Component.onCompleted: filledWidth = StyledSliderHelpers.widthBinding(Qt, root, handleItem)
 
     implicitWidth: Tokens.px(200)
     implicitHeight: Tokens.px(12)
@@ -73,11 +74,7 @@ Slider {
             anchors.leftMargin: Tokens.spacing.extraSmall
 
             implicitWidth: Tokens.px(4)
-            implicitHeight: {
-                const t = CUtils.clamp((parent.height - 12) / 16, 0, 1);
-                const lerp = (a, b) => a + (b - a) * t;
-                return parent.height * (mouse.pressed ? lerp(3.5, 1.5) : lerp(3, 1.2));
-            }
+            implicitHeight: StyledSliderHelpers.handleHeight(parent.height, mouse.pressed, CUtils)
 
             radius: Tokens.rounding.full
             color: root.fgColour
