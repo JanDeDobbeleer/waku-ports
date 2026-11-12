@@ -8,6 +8,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "OsdContentHelpers.js" as OsdContentHelpers
 
 Item {
     id: root
@@ -33,11 +34,11 @@ Item {
 
         // Speaker volume
         CustomMouseArea {
-            function onWheel(event: WheelEvent) {
+            onWheel: event => {
                 if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
+                    Audio.incrementVolume(0);
                 else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
+                    Audio.decrementVolume(0);
             }
 
             implicitWidth: Tokens.sizes.osd.sliderWidth
@@ -58,11 +59,11 @@ Item {
             shouldBeActive: Config.osd.enableMicrophone && (!Config.osd.enableBrightness || !root.screenState.session)
 
             sourceComponent: CustomMouseArea {
-                function onWheel(event: WheelEvent) {
+                onWheel: event => {
                     if (event.angleDelta.y > 0)
-                        Audio.incrementSourceVolume();
+                        Audio.incrementSourceVolume(0);
                     else if (event.angleDelta.y < 0)
-                        Audio.decrementSourceVolume();
+                        Audio.decrementSourceVolume(0);
                 }
 
                 implicitWidth: Tokens.sizes.osd.sliderWidth
@@ -84,15 +85,7 @@ Item {
             shouldBeActive: Config.osd.enableBrightness
 
             sourceComponent: CustomMouseArea {
-                function onWheel(event: WheelEvent) {
-                    const monitor = root.monitor;
-                    if (!monitor)
-                        return;
-                    if (event.angleDelta.y > 0)
-                        monitor.setBrightness(monitor.brightness + GlobalConfig.services.brightnessIncrement);
-                    else if (event.angleDelta.y < 0)
-                        monitor.setBrightness(monitor.brightness - GlobalConfig.services.brightnessIncrement);
-                }
+                onWheel: event => OsdContentHelpers.adjustBrightness(root.monitor, event.angleDelta.y, GlobalConfig.services.brightnessIncrement)
 
                 implicitWidth: Tokens.sizes.osd.sliderWidth
                 implicitHeight: Tokens.sizes.osd.sliderHeight
@@ -102,7 +95,7 @@ Item {
 
                     icon: `brightness_${(Math.round(value * 6) + 1)}`
                     value: root.brightness
-                    onMoved: root.monitor?.setBrightness(value)
+                    onMoved: OsdContentHelpers.setBrightness(root.monitor, value)
                 }
             }
         }

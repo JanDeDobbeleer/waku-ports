@@ -5,6 +5,7 @@ import Quickshell
 import Celeste.Config
 import qs.components
 import qs.modules.launcher.services
+import "LauncherWrapperHelpers.js" as LauncherWrapperHelpers
 
 Item {
     id: root
@@ -16,17 +17,17 @@ Item {
     readonly final property bool shouldBeActive: screenState.launcher && Config.launcher.enabled
 
     readonly final property real maxHeight: {
-        let max = screen.height - Config.border.thickness * 2 + Tokens.padding.extraLarge;
-        if (screenState.dashboard)
-            max -= panels.dashboard.nonAnimHeight;
-        return max;
+        return LauncherWrapperHelpers.maxHeight(screen.height, Config.border.thickness, Tokens.padding.extraLarge, screenState.dashboard, panels);
     }
 
     final property real offsetScale: shouldBeActive ? 0 : 1
 
+    function contentHeight(): real { return content.implicitHeight; }
+    function preloadApps(): void { LauncherWrapperHelpers.preload(Apps); }
+
     onShouldBeActiveChanged: {
         if (shouldBeActive)
-            implicitHeight = Qt.binding(() => content.implicitHeight);
+            implicitHeight = Qt.binding(root.contentHeight);
         else
             implicitHeight = implicitHeight; // Break binding during close anim
     }
@@ -37,7 +38,7 @@ Item {
     implicitWidth: content.implicitWidth || 630 // Hard coded fallback for first open
     opacity: 1 - offsetScale
 
-    Component.onCompleted: Qt.callLater(() => Apps) // Load apps on init
+    Component.onCompleted: Qt.callLater(root.preloadApps) // Load apps on init
 
     Behavior on offsetScale {
         Anim {}
