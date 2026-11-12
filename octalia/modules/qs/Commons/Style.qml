@@ -158,22 +158,22 @@ Singleton {
   readonly property color boxBorderColor: Settings.data.ui.boxBorderEnabled ? Color.mOutline : "transparent"
 
   // Pixel-perfect utility for centering content without subpixel positioning
-  function pixelAlignCenter(containerSize, contentSize) {
+  function pixelAlignCenter(containerSize: real, contentSize: real): real {
     return Math.round((containerSize - contentSize) / 2);
   }
 
   // Ensures a number is always odd (rounds down to nearest odd)
-  function toOdd(n) {
+  function toOdd(n: real): real {
     return Math.floor(n / 2) * 2 + 1;
   }
 
   // Ensures a number is always even (rounds down to nearest even)
-  function toEven(n) {
+  function toEven(n: real): real {
     return Math.floor(n / 2) * 2;
   }
 
   // Get bar height for a specific density and orientation
-  function getBarHeightForDensity(density, isVertical) {
+  function getBarHeightForDensity(density: string, isVertical: bool): real {
     let h;
     switch (density) {
     case "mini":
@@ -196,7 +196,7 @@ Singleton {
   }
 
   // Get capsule height for a specific density and bar height
-  function getCapsuleHeightForDensity(density, barHeight) {
+  function getCapsuleHeightForDensity(density: string, barHeight: real): real {
     let h;
     switch (density) {
     case "mini":
@@ -219,26 +219,26 @@ Singleton {
   }
 
   // Get bar font size for a specific bar height, capsule height, and orientation
-  function getBarFontSizeForDensity(barHeight, capsuleHeight, isVertical) {
+  function getBarFontSizeForDensity(barHeight: real, capsuleHeight: real, isVertical: bool): real {
     const baseFontSize = Math.max(1, (barHeight / capsuleHeight) * Style.fontSizeXXS);
     return isVertical ? baseFontSize * 0.9 * Settings.data.bar.fontScale : baseFontSize * Settings.data.bar.fontScale;
   }
 
   // Convenience functions for per-screen bar sizing
-  function getBarHeightForScreen(screenName) {
+  function getBarHeightForScreen(screenName: var): real {
     var density = Settings.getBarDensityForScreen(screenName);
     var position = Settings.getBarPositionForScreen(screenName);
     var isVertical = position === "left" || position === "right";
     return getBarHeightForDensity(density, isVertical);
   }
 
-  function getCapsuleHeightForScreen(screenName) {
+  function getCapsuleHeightForScreen(screenName: var): real {
     var barHeight = getBarHeightForScreen(screenName);
     var density = Settings.getBarDensityForScreen(screenName);
     return getCapsuleHeightForDensity(density, barHeight);
   }
 
-  function getBarFontSizeForScreen(screenName) {
+  function getBarFontSizeForScreen(screenName: var): real {
     var barHeight = getBarHeightForScreen(screenName);
     var capsuleHeight = getCapsuleHeightForScreen(screenName);
     var position = Settings.getBarPositionForScreen(screenName);
