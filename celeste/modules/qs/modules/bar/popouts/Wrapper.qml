@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import Celeste.Config
 import qs.components
 import qs.services
+import "WrapperHelpers.js" as WrapperHelpers
 
 Item {
     id: root
@@ -16,8 +17,8 @@ Item {
 
     readonly property alias content: contentItem
 
-    readonly final property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? contentItem.implicitWidth
-    readonly final property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? contentItem.implicitHeight
+    readonly final property real nonAnimWidth: WrapperHelpers.activeWidth(children, contentItem.implicitWidth)
+    readonly final property real nonAnimHeight: WrapperHelpers.activeHeight(children, contentItem.implicitHeight)
     // Port: the submenu depth of the open tray menu. The port has no tray menu popout, so it is 0.
     readonly final property int currentDepth: 0
     readonly final property Item current: (contentItem.item as Content)?.current ?? null
@@ -65,13 +66,8 @@ Item {
     focus: hasCurrent
     Keys.onEscapePressed: {
         // Forward escape to password popout if active, otherwise close
-        if (currentName === "wirelesspassword" && contentItem.item) {
-            const passwordPopout = (contentItem.item as Content)?.children.find(c => c.name === "wirelesspassword");
-            if (passwordPopout && passwordPopout.item) {
-                passwordPopout.item.closeDialog();
-                return;
-            }
-        }
+        if (WrapperHelpers.closePassword(currentName, contentItem.item))
+            return;
         close();
     }
 
