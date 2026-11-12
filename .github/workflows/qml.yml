@@ -43,11 +43,14 @@ jobs:
           $pin = Get-Content tools/waku.json -Raw | ConvertFrom-Json
           "qt=$($pin.qt)" >> $env:GITHUB_OUTPUT
 
+      # aqtinstall 3.3.0 cannot install Qt 6.11+ (the repository layout changed). Use the commit
+      # waku pins in .github/requirements-ci.txt until a release ships miurahr/aqtinstall#1000.
       - name: Install Qt
         uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
         with:
           version: ${{ steps.pin.outputs.qt }}
           arch: win64_msvc2022_64
+          aqtsource: git+https://github.com/miurahr/aqtinstall@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
           cache: true
 
       - name: Cache waku
