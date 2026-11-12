@@ -16,9 +16,9 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Item panelFlick: panel.loadedContent ? panel.loadedContent.panelFlick : null
-  readonly property Item hero: panel.loadedContent ? panel.loadedContent.hero : null
-  readonly property Item fileColumn: panel.loadedContent ? panel.loadedContent.fileColumn : null
+  readonly property Flickable panelFlick: panel.loadedContent ? (panel.loadedContent as LazyContent).panelFlick : null
+  readonly property PanelHero hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
+  readonly property Column fileColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).fileColumn : null
 
   property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
   property string focusSection: "login"
@@ -26,7 +26,7 @@ Panel {
   property bool cursorActive: false
   property int phraseIndex: 0
 
-  readonly property var activePhrases: [
+  readonly property list<string> activePhrases: [
     Commons.I18n.t("dropbox.phrase1"),
     Commons.I18n.t("dropbox.phrase2"),
     Commons.I18n.t("dropbox.phrase3"),
@@ -207,11 +207,13 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias panelFlick: panelFlick
-      property alias hero: hero
-      property alias fileColumn: fileColumn
+      final property alias panelFlick: panelFlick
+      final property alias hero: hero
+      final property alias fileColumn: fileColumn
       implicitHeight: column.implicitHeight
       anchors.fill: parent
       onMoveRequested: function(dx, dy) {

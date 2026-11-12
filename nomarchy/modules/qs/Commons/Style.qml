@@ -59,11 +59,11 @@ QtObject {
     return n === null ? fallback : n
   }
 
-  function styleAlpha(key, fallback) {
+  function styleAlpha(key: var, fallback: var): var {
     return Util.clampAlpha(styleNum(key, fallback))
   }
 
-  function styleString(key, fallback) {
+  function styleString(key: var, fallback: var): var {
     var v = styleOverrides[key]
     if (typeof v !== "string") return fallback
     v = v.replace(/^\s+|\s+$/g, "")
@@ -94,7 +94,7 @@ QtObject {
   readonly property real selectedBorderAlpha: styleAlpha("selected-border-alpha", 1.0)
   readonly property real focusBorderAlpha:    styleAlpha("focus-border-alpha", hoverBorderAlpha)
 
-  function colorFromHex(value, fallback) {
+  function colorFromHex(value: var, fallback: var): var {
     var s = String(value || "").replace(/^\s+|\s+$/g, "")
     var shortHex = s.match(/^#([0-9A-Fa-f]{3})$/)
     if (shortHex) {
@@ -115,7 +115,7 @@ QtObject {
       hex[2] ? parseInt(hex[2], 16) / 255 : 1)
   }
 
-  function resolveStateColor(token, foreground, accent, urgent, fallback) {
+  function resolveStateColor(token: var, foreground: var, accent: var, urgent: var, fallback: var): var {
     var fb = fallback || foreground || Commons.Color.foreground
     var s = String(token || "").replace(/^\s+|\s+$/g, "")
     var role = s.toLowerCase()
@@ -170,19 +170,19 @@ QtObject {
   // every form control surface (TextField, NumberField, Dropdown, Toggle,
   // etc.). Saves callers from re-writing the three-line ternary ladder for
   // fill / border / border-width on every Rectangle background.
-  function controlFill(focused, hot, foreground, accent) {
+  function controlFill(focused: var, hot: var, foreground: var, accent: var): var {
     if (focused) return focusFillFor(foreground, accent)
     if (hot) return hoverFillFor(foreground, accent)
     return normalFillFor(foreground, accent)
   }
 
-  function controlBorder(focused, hot, foreground, accent) {
+  function controlBorder(focused: var, hot: var, foreground: var, accent: var): var {
     if (focused) return focusBorderFor(foreground, accent)
     if (hot) return hoverBorderFor(foreground, accent)
     return normalBorderFor(foreground, accent)
   }
 
-  function controlBorderWidth(focused, hot) {
+  function controlBorderWidth(focused: var, hot: var): int {
     if (focused) return focusBorderWidth
     if (hot) return hoverBorderWidth
     return normalBorderWidth
@@ -362,7 +362,7 @@ QtObject {
   // for Style.duration(ms), which is then 0, so nothing is drawn in between.
   property bool reduceMotion: false
 
-  function duration(ms) {
+  function duration(ms: var): var {
     return reduceMotion ? 0 : ms
   }
 
@@ -371,13 +371,13 @@ QtObject {
   readonly property var easeOut: [0.23, 1.0, 0.32, 1.0, 1.0, 1.0]
 
   function refresh() {
-    hyprctlProc.running = true
-    gapsOutProc.running = true
-    animationsProc.running = true
+    hyprctlProcImpl.running = true
+    gapsOutProcImpl.running = true
+    animationsProcImpl.running = true
   }
 
   function scheduleRefresh() {
-    refreshTimer.restart()
+    refreshTimerImpl.restart()
   }
 
   function applyRoundingJson(raw) {
@@ -466,7 +466,7 @@ QtObject {
   }
 
   property Process hyprctlProc: Process {
-    id: hyprctlProc
+    id: hyprctlProcImpl
     command: ["cmd.exe", "/c", "rem"]
     stdout: StdioCollector {
       waitForEnd: true
@@ -475,7 +475,7 @@ QtObject {
   }
 
   property Process animationsProc: Process {
-    id: animationsProc
+    id: animationsProcImpl
     command: ["cmd.exe", "/c", "rem"]
     stdout: StdioCollector {
       waitForEnd: true
@@ -499,7 +499,7 @@ QtObject {
   }
 
   property Process gapsOutProc: Process {
-    id: gapsOutProc
+    id: gapsOutProcImpl
     command: ["cmd.exe", "/c", "rem"]
     stdout: StdioCollector {
       waitForEnd: true
@@ -511,11 +511,11 @@ QtObject {
   // set <name>` rewrites ~/.config/fontconfig/fonts.conf and restarts the
   // shell, but rerun on file change anyway so manual edits propagate too.
   function resolveFontFamily() {
-    fcMatchProc.running = true
+    fcMatchProcImpl.running = true
   }
 
   property Process fcMatchProc: Process {
-    id: fcMatchProc
+    id: fcMatchProcImpl
     command: ["cmd.exe", "/c", "rem"]
     stdout: StdioCollector {
       waitForEnd: true
@@ -540,7 +540,7 @@ QtObject {
   // so racing it with an immediate hyprctl gives the old value. 200ms is
   // generous enough for Hyprland to settle without being user-visible.
   property Timer refreshTimer: Timer {
-    id: refreshTimer
+    id: refreshTimerImpl
     interval: 200
     repeat: false
     onTriggered: root.refresh()
@@ -553,9 +553,9 @@ QtObject {
     path: (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/toggles/hypr/window-no-gaps.lua"
     watchChanges: true
     printErrors: false
-    onFileChanged: refreshTimer.restart()
-    onLoaded: refreshTimer.restart()
-    onLoadFailed: refreshTimer.restart()
+    onFileChanged: refreshTimerImpl.restart()
+    onLoaded: refreshTimerImpl.restart()
+    onLoadFailed: refreshTimerImpl.restart()
   }
 
   Component.onCompleted: {

@@ -19,15 +19,15 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Item scroller: panel.loadedContent ? panel.loadedContent.scroller : null
-  readonly property Item scrollContent: panel.loadedContent ? panel.loadedContent.scrollContent : null
-  readonly property Item hero: panel.loadedContent ? panel.loadedContent.hero : null
-  readonly property Item stage: panel.loadedContent ? panel.loadedContent.stage : null
-  readonly property Item listWrap: panel.loadedContent ? panel.loadedContent.listWrap : null
-  readonly property Item cityRows: panel.loadedContent ? panel.loadedContent.cityRows : null
-  readonly property Item citySearch: panel.loadedContent ? panel.loadedContent.citySearch : null
-  readonly property Item hereSearch: panel.loadedContent ? panel.loadedContent.hereSearch : null
-  readonly property Item globeLoader: panel.loadedContent ? panel.loadedContent.globeLoader : null
+  readonly property Flickable scroller: panel.loadedContent ? (panel.loadedContent as LazyContent).scroller : null
+  readonly property Column scrollContent: panel.loadedContent ? (panel.loadedContent as LazyContent).scrollContent : null
+  readonly property HeroTitle hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
+  readonly property Item stage: panel.loadedContent ? (panel.loadedContent as LazyContent).stage : null
+  readonly property Column listWrap: panel.loadedContent ? (panel.loadedContent as LazyContent).listWrap : null
+  readonly property Repeater cityRows: panel.loadedContent ? (panel.loadedContent as LazyContent).cityRows : null
+  readonly property CitySearch citySearch: panel.loadedContent ? (panel.loadedContent as LazyContent).citySearch : null
+  readonly property CitySearch hereSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).hereSearch : null
+  readonly property Loader globeLoader: panel.loadedContent ? (panel.loadedContent as LazyContent).globeLoader : null
 
 
   // ---- settings
@@ -151,7 +151,7 @@ Panel {
 
   // The globe opens on the list's focus, when its coordinates are known.
   function showFocusOnGlobe() {
-    var g = globeLoader ? globeLoader.item : null
+    var g = globeLoader ? globeLoader.item as Globe : null
     if (!g) return
     if (focusIndex >= 0 && focusKnown) g.goTo(focusZone.label, focusZone.id)
     else g.showHome()
@@ -1003,18 +1003,20 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(340))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(680))
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias scroller: scroller
-      property alias scrollContent: scrollContent
-      property alias hero: hero
-      property alias stage: stage
-      property alias listWrap: listWrap
-      property alias cityRows: cityRows
-      property alias citySearch: citySearch
-      property alias hereSearch: hereSearch
-      property alias globeLoader: globeLoader
-      implicitHeight: scrollContent.implicitHeight
+      final property alias scroller: scroller
+      final property alias scrollContent: scrollContentItem
+      final property alias hero: hero
+      final property alias stage: stage
+      final property alias listWrap: listWrap
+      final property alias cityRows: cityRows
+      final property alias citySearch: citySearch
+      final property alias hereSearch: hereSearch
+      final property alias globeLoader: globeLoaderItem
+      implicitHeight: scrollContentItem.implicitHeight
       anchors.fill: parent
       blocked: root.adding || root.choosingHere || root.peopleEditIndex >= 0
       // Escape unwinds one layer: search (its own field), a shifted time, globe, then panel.
@@ -1051,7 +1053,7 @@ Panel {
         else if (key === "t" && (modifiers & Qt.AltModifier)) root.toggleUnits()
         else if (key === "t") root.toggleHour24()
         else if (root.globeMode && (key === "+" || key === "j")) {
-          if (globeLoader.item) globeLoader.item.startJump()
+          if (globeLoaderItem.globe) globeLoaderItem.globe.startJump()
         } else if (!root.globeMode && (key === "+" || key === "a")) {
           root.startAdding()
         } else if (!root.globeMode && key === "w") {
@@ -1069,7 +1071,7 @@ Panel {
         clip: true
         interactive: false
         contentWidth: width
-        contentHeight: scrollContent.implicitHeight
+        contentHeight: scrollContentItem.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
 
         readonly property real maxScroll: Math.max(0, contentHeight - height)
@@ -1109,7 +1111,7 @@ Panel {
         }
 
         Column {
-          id: scrollContent
+          id: scrollContentItem
           width: scroller.width - Style.space(12)
           spacing: Style.spacing.panelGap
 
@@ -1236,68 +1238,69 @@ Panel {
             // Loaded early on hover and kept for the whole flight, so reading
             // its data never lands mid-animation.
             Loader {
-              id: globeLoader
+              id: globeLoaderItem
               active: root.globeEnabled && (root.globeMode || root.zoom > 0 || hero.iconHovered)
               visible: root.zoom > 0
               opacity: root.bigGlobeOpacity
               width: parent.width
               height: root.globeStageHeight
               source: "Globe.qml"
+              readonly property Globe globe: item as Globe
 
               // The disc's center, above the globe's footer and jump bar.
               readonly property real discCX: width / 2
-              readonly property real discCY: item ? (height - item.footerHeight - item.jumpHeight) / 2 : height / 2
-              readonly property real discR: item && item.radius > 0 ? item.radius : 1
+              readonly property real discCY: globe ? (height - globe.footerHeight - globe.jumpHeight) / 2 : height / 2
+              readonly property real discR: globe && globe.radius > 0 ? globe.radius : 1
               readonly property real startScale: root.heroDiscRadius / discR
               readonly property real zoomScale: startScale + (1 - startScale) * root.zoom
 
               // Scaled about the disc, then carried from the little globe.
               transform: [
                 Scale {
-                  origin.x: globeLoader.discCX
-                  origin.y: globeLoader.discCY
-                  xScale: globeLoader.zoomScale
-                  yScale: globeLoader.zoomScale
+                  origin.x: globeLoaderItem.discCX
+                  origin.y: globeLoaderItem.discCY
+                  xScale: globeLoaderItem.zoomScale
+                  yScale: globeLoaderItem.zoomScale
                 },
                 Translate {
-                  x: (root.heroCenterX - globeLoader.discCX) * (1 - root.zoom)
-                  y: (root.heroCenterY - globeLoader.discCY) * (1 - root.zoom)
+                  x: (root.heroCenterX - globeLoaderItem.discCX) * (1 - root.zoom)
+                  y: (root.heroCenterY - globeLoaderItem.discCY) * (1 - root.zoom)
                 }
               ]
 
               onLoaded: {
-                item.foreground = Qt.binding(function() { return root.foreground })
-                item.dim = Qt.binding(function() { return root.dim })
-                item.fainter = Qt.binding(function() { return root.fainter })
-                item.daylightMarker = Qt.binding(function() { return root.daylightMarker })
-                item.moonPhase = Qt.binding(function() { return root.moonPhase })
-                item.fontFamily = Qt.binding(function() { return root.fontFamily })
-                item.hour24 = Qt.binding(function() { return root.hour24 })
-                item.words = Qt.binding(function() { return root.words })
-                item.trackedNames = Qt.binding(function() { return root.trackedNames })
-                item.trackedCities = Qt.binding(function() { return root.trackedCities })
-                item.sessionCities = Qt.binding(function() { return root.sessionPlaces })
-                item.homeRow = Qt.binding(function() {
+                globe.foreground = Qt.binding(function() { return root.foreground })
+                globe.dim = Qt.binding(function() { return root.dim })
+                globe.fainter = Qt.binding(function() { return root.fainter })
+                globe.daylightMarker = Qt.binding(function() { return root.daylightMarker })
+                globe.moonPhase = Qt.binding(function() { return root.moonPhase })
+                globe.fontFamily = Qt.binding(function() { return root.fontFamily })
+                globe.hour24 = Qt.binding(function() { return root.hour24 })
+                globe.words = Qt.binding(function() { return root.words })
+                globe.trackedNames = Qt.binding(function() { return root.trackedNames })
+                globe.trackedCities = Qt.binding(function() { return root.trackedCities })
+                globe.sessionCities = Qt.binding(function() { return root.sessionPlaces })
+                globe.homeRow = Qt.binding(function() {
                   var home = root.homePlace
                   return home ? [root.homeCity, root.localZone, home.lat, home.lon, 0] : []
                 })
-                item.offsetMode = Qt.binding(function() { return root.offsetMode })
-                item.homeOffsetMinutes = Qt.binding(function() { return root.localOffsetMinutes })
-                item.smoothMotion = Qt.binding(function() { return root.smoothMotion })
-                item.transitioning = Qt.binding(function() { return !root.zoomIdle })
-                item.zoomLevel = Qt.binding(function() { return root.zoom })
+                globe.offsetMode = Qt.binding(function() { return root.offsetMode })
+                globe.homeOffsetMinutes = Qt.binding(function() { return root.localOffsetMinutes })
+                globe.smoothMotion = Qt.binding(function() { return root.smoothMotion })
+                globe.transitioning = Qt.binding(function() { return !root.zoomIdle })
+                globe.zoomLevel = Qt.binding(function() { return root.zoom })
                 // The footer and jump bar arrive once the globe has landed.
-                item.chromeOpacity = Qt.binding(function() { return Util.clamp((root.zoom - 0.74) / 0.26, 0, 1) })
-                item.jumpOptions = Qt.binding(function() { return root.allZoneOptions })
-                item.placesFor = function(text) { return root.placesFor(text) }
-                item.placesPending = function(text) { return root.placesPending(text) }
-                item.placeSearchRequested.connect(function(text) { root.requestPlaces(text) })
-                item.offsetModeToggleRequested.connect(function() { root.toggleOffsetMode() })
-                item.jumpRequested.connect(function(label, zone, place) { root.addSessionCity(label, zone, place) })
-                item.exitRequested.connect(function() { root.setGlobeMode(false, false) })
-                item.jumpDismissed.connect(function() { Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() }) })
-                item.citySelected.connect(function(label, zone) { root.focusFromGlobe(label, zone) })
-                item.cityTapped.connect(function(label, zone) { root.claimHome(label, zone) })
+                globe.chromeOpacity = Qt.binding(function() { return Util.clamp((root.zoom - 0.74) / 0.26, 0, 1) })
+                globe.jumpOptions = Qt.binding(function() { return root.allZoneOptions })
+                globe.placesFor = function(text) { return root.placesFor(text) }
+                globe.placesPending = function(text) { return root.placesPending(text) }
+                globe.placeSearchRequested.connect(function(text) { root.requestPlaces(text) })
+                globe.offsetModeToggleRequested.connect(function() { root.toggleOffsetMode() })
+                globe.jumpRequested.connect(function(label, zone, place) { root.addSessionCity(label, zone, place) })
+                globe.exitRequested.connect(function() { root.setGlobeMode(false, false) })
+                globe.jumpDismissed.connect(function() { Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() }) })
+                globe.citySelected.connect(function(label, zone) { root.focusFromGlobe(label, zone) })
+                globe.cityTapped.connect(function(label, zone) { root.claimHome(label, zone) })
                 // A cold start can finish loading after the mode switched on.
                 if (root.globeMode) root.showFocusOnGlobe()
               }

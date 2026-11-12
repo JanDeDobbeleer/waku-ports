@@ -229,22 +229,22 @@ Item {
     return JSON.parse(JSON.stringify(root.layoutConfig || {}))
   }
 
-  function bindPluginBarApi(api) {
+  function bindPluginBarApi(api: PluginBarApi): void {
     if (!api) return
-    api.foreground = Qt.binding(function() { return root.foreground })
-    api.barForeground = Qt.binding(function() { return root.barForeground })
-    api.background = Qt.binding(function() { return root.background })
-    api.urgent = Qt.binding(function() { return root.urgent })
-    api.fontFamily = Qt.binding(function() { return root.fontFamily })
-    api.position = Qt.binding(function() { return root.position })
-    api.vertical = Qt.binding(function() { return root.vertical })
-    api.barSize = Qt.binding(function() { return root.barSize })
-    api.transparent = Qt.binding(function() { return root.transparent })
-    api.foregroundAnimationEnabled = Qt.binding(function() { return root.foregroundAnimationEnabled })
-    api.centerSectionRevealHeld = Qt.binding(function() { return root.centerSectionRevealHeld })
-    api._centerHoverRevealSuppressed = Qt.binding(function() { return root.centerHoverRevealSuppressed })
-    api.traySectionDragActive = Qt.binding(function() { return root.traySectionDragActive })
-    api.traySectionPopoutOpen = Qt.binding(function() { return root.traySectionPopoutOpen })
+    api.foreground = Qt.binding(function(): color { return root.foreground })
+    api.barForeground = Qt.binding(function(): color { return root.barForeground })
+    api.background = Qt.binding(function(): color { return root.background })
+    api.urgent = Qt.binding(function(): color { return root.urgent })
+    api.fontFamily = Qt.binding(function(): string { return root.fontFamily })
+    api.position = Qt.binding(function(): string { return root.position })
+    api.vertical = Qt.binding(function(): bool { return root.vertical })
+    api.barSize = Qt.binding(function(): int { return root.barSize })
+    api.transparent = Qt.binding(function(): bool { return root.transparent })
+    api.foregroundAnimationEnabled = Qt.binding(function(): bool { return root.foregroundAnimationEnabled })
+    api.centerSectionRevealHeld = Qt.binding(function(): bool { return root.centerSectionRevealHeld })
+    api._centerHoverRevealSuppressed = Qt.binding(function(): bool { return root.centerHoverRevealSuppressed })
+    api.traySectionDragActive = Qt.binding(function(): bool { return root.traySectionDragActive })
+    api.traySectionPopoutOpen = Qt.binding(function(): bool { return root.traySectionPopoutOpen })
     root.syncPluginBarApiObjects(api)
   }
 

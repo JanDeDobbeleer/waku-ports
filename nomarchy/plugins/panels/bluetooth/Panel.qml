@@ -23,7 +23,7 @@ Panel {
   // the audio output switch. Cleared when the engine reports an error.
   property var pendingActions: ({})
 
-  readonly property var adapter: Bluetooth.defaultAdapter
+  readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
 
   // True while this instance owes BlueZ a StopDiscovery: set when it starts
   // discovery (or opens onto a session already running) and cleared once
@@ -64,7 +64,7 @@ Panel {
   }
 
   property int phraseIndex: 0
-  readonly property var activePhrases: [
+  readonly property list<string> activePhrases: [
     Commons.I18n.t("bluetooth.phrase1"),
     Commons.I18n.t("bluetooth.phrase2"),
     Commons.I18n.t("bluetooth.phrase3"),

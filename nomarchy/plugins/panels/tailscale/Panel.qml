@@ -15,14 +15,14 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Item panelFlick: panel.loadedContent ? panel.loadedContent.panelFlick : null
-  readonly property Item hero: panel.loadedContent ? panel.loadedContent.hero : null
-  readonly property Item exitNodeColumn: panel.loadedContent ? panel.loadedContent.exitNodeColumn : null
-  readonly property Item mullvadSearch: panel.loadedContent ? panel.loadedContent.mullvadSearch : null
-  readonly property Item mullvadRegionColumn: panel.loadedContent ? panel.loadedContent.mullvadRegionColumn : null
-  readonly property Item peerSearch: panel.loadedContent ? panel.loadedContent.peerSearch : null
-  readonly property Item peerList: panel.loadedContent ? panel.loadedContent.peerList : null
-  readonly property var sharedCopyPopup: panel.loadedContent ? panel.loadedContent.sharedCopyPopup : null
+  readonly property Flickable panelFlick: panel.loadedContent ? (panel.loadedContent as LazyContent).panelFlick : null
+  readonly property PanelHero hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
+  readonly property Column exitNodeColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).exitNodeColumn : null
+  readonly property TextField mullvadSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).mullvadSearch : null
+  readonly property Column mullvadRegionColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).mullvadRegionColumn : null
+  readonly property TextField peerSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).peerSearch : null
+  readonly property ListView peerList: panel.loadedContent ? (panel.loadedContent as LazyContent).peerList : null
+  readonly property Popup sharedCopyPopup: panel.loadedContent ? (panel.loadedContent as LazyContent).sharedCopyPopup : null
 
   property string focusSection: "header"
   property int headerIndex: 0
@@ -522,16 +522,18 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(560))
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias panelFlick: panelFlick
-      property alias hero: hero
-      property alias exitNodeColumn: exitNodeColumn
-      property alias mullvadSearch: mullvadSearch
-      property alias mullvadRegionColumn: mullvadRegionColumn
-      property alias peerSearch: peerSearch
-      property alias peerList: peerList
-      property alias sharedCopyPopup: sharedCopyPopup
+      final property alias panelFlick: panelFlick
+      final property alias hero: hero
+      final property alias exitNodeColumn: exitNodeColumn
+      final property alias mullvadSearch: mullvadSearch
+      final property alias mullvadRegionColumn: mullvadRegionColumn
+      final property alias peerSearch: peerSearchField
+      final property alias peerList: peerList
+      final property alias sharedCopyPopup: sharedCopyPopup
       implicitHeight: column.implicitHeight
       anchors.fill: parent
       blocked: root.copyMenuOpen
@@ -548,7 +550,7 @@ Panel {
         else if (t === "n" || t === "N") tailscale.copyPeerName(root.selectedPeer())
         else if (t === "d" || t === "D") tailscale.copyPeerDnsName(root.selectedPeer())
         else if (t === "s" || t === "S") root.sendPeerFile(root.selectedPeer())
-        else if (t === "/" && peerSearch.visible) peerSearch.forceActiveFocus()
+        else if (t === "/" && peerSearchField.visible) peerSearchField.forceActiveFocus()
       }
 
       Flickable {
@@ -811,7 +813,7 @@ Panel {
             }
 
             TextField {
-              id: peerSearch
+              id: peerSearchField
               visible: tailscale.peers.length > 8
               width: parent.width
               foreground: root.foreground
@@ -845,7 +847,7 @@ Panel {
                   return
                 }
                 if (event.key === Qt.Key_Escape) {
-                  if (peerSearch.text !== "") peerSearch.text = ""
+                  if (peerSearchField.text !== "") peerSearchField.text = ""
                   else keyCatcher.forceActiveFocus()
                   event.accepted = true
                 }

@@ -70,9 +70,9 @@ Panel {
   readonly property string connectionPhrase: connectionPhrases[connectionPhraseIndex % connectionPhrases.length]
   readonly property bool networkManagerAvailable: Networking.backend === NetworkBackendType.NetworkManager
   readonly property var networkDevices: Networking.devices ? Networking.devices.values : []
-  readonly property var wifiDevice: findDevice(DeviceType.Wifi)
+  readonly property WifiDeviceItem wifiDevice: findDevice(DeviceType.Wifi) as WifiDeviceItem
   readonly property var wifiNetworkObjects: wifiDevice && wifiDevice.networks ? wifiDevice.networks.values : []
-  readonly property var connectedWifiNetwork: findConnectedWifiNetwork()
+  readonly property WifiNetworkItem connectedWifiNetwork: findConnectedWifiNetwork() as WifiNetworkItem
   property var wifiNetworks: []
   property bool scanning: false
   property bool wifiStationAvailable: false
@@ -443,7 +443,7 @@ Panel {
   // Bar pill state, derived from the native NetworkManager service so the
   // icon reflects connection changes without polling. Wired is preferred
   // when both are up, matching the default-route device.
-  readonly property var wiredDevice: findDevice(DeviceType.Wired)
+  readonly property WiredDeviceItem wiredDevice: findDevice(DeviceType.Wired) as WiredDeviceItem
   readonly property string kind: {
     if (wiredDevice && wiredDevice.connected) return "ethernet"
     if (connectedWifiNetwork) return "wifi"

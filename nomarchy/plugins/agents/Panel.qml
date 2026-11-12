@@ -15,10 +15,10 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Flickable panelFlick: panel.loadedContent ? panel.loadedContent.panelFlick : null
-  readonly property PanelHero hero: panel.loadedContent ? panel.loadedContent.hero : null
-  readonly property Column column: panel.loadedContent ? panel.loadedContent.column : null
-  readonly property Repeater providerSections: panel.loadedContent ? panel.loadedContent.providerSections : null
+  readonly property Flickable panelFlick: panel.loadedContent ? (panel.loadedContent as LazyContent).panelFlick : null
+  readonly property PanelHero hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
+  readonly property Column column: panel.loadedContent ? (panel.loadedContent as LazyContent).column : null
+  readonly property Repeater providerSections: panel.loadedContent ? (panel.loadedContent as LazyContent).providerSections : null
 
   readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   readonly property color urgent: bar ? BarValues.urgent(bar) : Commons.Color.urgent
@@ -1222,12 +1222,14 @@ Panel {
     contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(860))
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias panelFlick: panelFlick
-      property alias hero: hero
-      property alias column: column
-      property alias providerSections: providerSections
+      final property alias panelFlick: panelFlickItem
+      final property alias hero: hero
+      final property alias column: agentColumn
+      final property alias providerSections: providerSections
       ConfirmDialog {
         id: deleteConfirm
         anchors.fill: parent
@@ -1253,7 +1255,7 @@ Panel {
         onCanceled: root.deleteTarget = null
         onConfirmed: root.confirmDelete()
       }
-      implicitHeight: column.implicitHeight
+      implicitHeight: agentColumn.implicitHeight
       anchors.fill: parent
       reorderable: root.addStage === "" && !root.renaming
       onReorderRequested: function(dy) { root.reorderProvider(dy) }
@@ -1262,8 +1264,8 @@ Panel {
         // Naming and signing in have their own fields; there the arrows scroll.
         if (root.addStage === "" || root.addStage === "local" || root.picking) root.moveKey(dx, dy)
         else if (dy !== 0)
-          panelFlick.contentY = root.clamp(panelFlick.contentY + dy * Style.space(56), 0,
-                                           Math.max(0, panelFlick.contentHeight - panelFlick.height))
+          panelFlickItem.contentY = root.clamp(panelFlickItem.contentY + dy * Style.space(56), 0,
+                                               Math.max(0, panelFlickItem.contentHeight - panelFlickItem.height))
       }
       onDeleteRequested: root.deleteSelected()
       blocked: root.renaming || root.deleteTarget !== null
@@ -1281,7 +1283,7 @@ Panel {
       }
 
       Flickable {
-        id: panelFlick
+        id: panelFlickItem
         // Reaches a little into the panel's padding on the left, with the
         // content shifted back, so the box around a lit agent mark isn't
         // clipped where it overhangs the content's edge.
@@ -1289,7 +1291,7 @@ Panel {
         anchors.fill: parent
         anchors.leftMargin: -overhang
         contentWidth: width
-        contentHeight: column.implicitHeight
+        contentHeight: agentColumn.implicitHeight
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.VerticalFlick
@@ -1300,13 +1302,13 @@ Panel {
         }
 
         Column {
-          id: column
+          id: agentColumn
           // The overhang sits on the start side, which is the right when
           // mirrored; there the scroll bar takes the left instead.
-          x: LayoutMirroring.enabled ? (panelFlick.interactive ? panelScroll.width + Style.space(6) : 0) : panelFlick.overhang
+          x: LayoutMirroring.enabled ? (panelFlickItem.interactive ? panelScroll.width + Style.space(6) : 0) : panelFlickItem.overhang
           // When the panel scrolls, the bar gets its own strip rather than
           // sitting on top of the right-aligned numbers.
-          width: panelFlick.width - panelFlick.overhang - (panelFlick.interactive ? panelScroll.width + Style.space(6) : 0)
+          width: panelFlickItem.width - panelFlickItem.overhang - (panelFlickItem.interactive ? panelScroll.width + Style.space(6) : 0)
           spacing: Style.space(16)
 
           // ---------- Hero: agents · rotating summary · add ----------
@@ -1348,7 +1350,7 @@ Panel {
 
           AddView {
             visible: root.addStage !== "" || root.blankSlate
-            width: column.width
+            width: agentColumn.width
           }
 
           Repeater {
@@ -1358,7 +1360,7 @@ Panel {
             ProviderSection {
               required property var modelData
               required property int index
-              width: column.width
+              width: agentColumn.width
               provider: modelData
               providerIndex: index
             }
