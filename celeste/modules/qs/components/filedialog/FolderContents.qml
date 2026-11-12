@@ -141,7 +141,14 @@ Item {
             }
         }
     }
-// waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.    StyledScrollBar {        flickable: view        anchors.top: view.top        anchors.bottom: view.bottom        anchors.right: view.right    }
+
+    // waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+    StyledScrollBar {
+        flickable: view
+        anchors.top: view.top
+        anchors.bottom: view.bottom
+        anchors.right: view.right
+    }
 
     CurrentItem {
         anchors.right: parent.right

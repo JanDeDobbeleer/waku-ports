@@ -58,6 +58,12 @@ Item {
 
     function updateMatrices(): void {
         rawDeformMatrix = Qt.matrix4x4(m00, m01, 0, 0, m01, m11, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        updateCentredMatrix();
+    }
+
+    // Only the centred matrix depends on the size. A resize must not reassign rawDeformMatrix: a
+    // panel's size can bind to it, and the reassignment would loop back into that binding.
+    function updateCentredMatrix(): void {
         const cx = width / 2, cy = height / 2;
         deformMatrix = Qt.matrix4x4(m00, m01, 0, cx - (m00 * cx + m01 * cy), m01, m11, 0, cy - (m01 * cx + m11 * cy), 0, 0, 1, 0, 0, 0, 0, 1);
     }
@@ -127,11 +133,11 @@ Item {
     onYChanged: moving = true
     onWidthChanged: {
         moving = true;
-        updateMatrices();
+        updateCentredMatrix();
     }
     onHeightChanged: {
         moving = true;
-        updateMatrices();
+        updateCentredMatrix();
     }
 
     FrameAnimation {

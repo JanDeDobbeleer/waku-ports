@@ -137,10 +137,6 @@ Item {
             contentWidth: width
             contentHeight: notifList.implicitHeight
 
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: view
-            }
-
             NotifDockList {
                 id: notifList
 
@@ -148,6 +144,14 @@ Item {
                 screenState: root.screenState
                 container: view
             }
+        }
+
+        // waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+        StyledScrollBar {
+            flickable: view
+            anchors.top: view.top
+            anchors.bottom: view.bottom
+            anchors.right: view.right
         }
     }
 
