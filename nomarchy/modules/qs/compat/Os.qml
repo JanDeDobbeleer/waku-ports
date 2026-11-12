@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import QtQuick
 
 // What Octalia does with `mkdir -p`, `rm`, `wl-copy` and `xdg-open`, on Windows. Paths may use
 // either slash; cmd.exe needs backslashes.

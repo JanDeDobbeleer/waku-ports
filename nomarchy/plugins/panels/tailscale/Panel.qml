@@ -21,7 +21,7 @@ Panel {
   readonly property TextField mullvadSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).mullvadSearch : null
   readonly property Column mullvadRegionColumn: panel.loadedContent ? (panel.loadedContent as LazyContent).mullvadRegionColumn : null
   readonly property TextField peerSearch: panel.loadedContent ? (panel.loadedContent as LazyContent).peerSearch : null
-  readonly property ListView peerList: panel.loadedContent ? (panel.loadedContent as LazyContent).peerList : null
+  readonly property RememberingListView peerList: panel.loadedContent ? (panel.loadedContent as LazyContent).peerList : null
   readonly property Popup sharedCopyPopup: panel.loadedContent ? (panel.loadedContent as LazyContent).sharedCopyPopup : null
 
   property string focusSection: "header"
@@ -891,7 +891,7 @@ Panel {
 
             // Virtualized: only the visible slice of the tailnet exists as
             // delegates, and rows are pooled instead of destroyed on refresh.
-            ListView {
+            RememberingListView {
               id: peerList
               visible: root.showPeers
               width: parent.width
@@ -903,16 +903,6 @@ Panel {
               boundsBehavior: Flickable.StopAtBounds
               flickableDirection: Flickable.VerticalFlick
               interactive: contentHeight > height
-              // Qt resets contentY whenever a JS-array model is reassigned,
-              // and any poll where a peer changed publishes a new array — so
-              // without this a background refresh scrolls the list to the top
-              // under the user's finger. Remember the position the user (or
-              // keyboard cursor) chose and put it back; filter changes and
-              // panel opens reset it explicitly instead.
-              property real rememberedY: 0
-              function rememberPosition() { rememberedY = contentY }
-              onContentYChanged: if (moving || dragging) rememberedY = contentY
-              onModelChanged: contentY = Math.max(0, Math.min(rememberedY, Math.max(0, contentHeight - height)))
               ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AsNeeded
                 onPressedChanged: if (!pressed) peerList.rememberPosition()

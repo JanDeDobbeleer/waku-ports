@@ -333,7 +333,7 @@ Panel {
   // Keep the keyboard-focused row inside the viewport when the panel grows
   // taller than its allotted height. Mirrors audio's ensureCursorVisible helper.
   function ensureCursorVisible(item) {
-    var scrollArea = panel.loadedContent ? panel.loadedContent.scrollArea : null
+    var scrollArea = PanelContent.scrollArea(panel.loadedContent)
     if (!item || !scrollArea) return
     var flick = scrollArea.contentItem
     if (!flick || flick.contentY === undefined) return
@@ -571,7 +571,7 @@ Panel {
   function openRotateMenuForShown() {
     var content = panel.loadedContent
     if (!current || !content) return
-    var map = content.layoutMap
+    var map = PanelContent.layoutMap(content)
     // A lone display has no map, so the menu opens near the top instead.
     if (map && map.visible) openRotateMenu(current.name, map, map.width / 2, map.height / 2)
     else openRotateMenu(current.name, content, content.width / 2, Style.space(60))

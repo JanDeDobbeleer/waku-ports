@@ -156,8 +156,26 @@ function syncWindow(model, items) {
   }
 }
 
+function allPreviewsSettled(cards) {
+  for (let i = 0; i < cards.count; i++) {
+    let item = cards.itemAt(i)
+    if (!item || !item.previewSettled) return false
+  }
+  return true
+}
+
+function selectedPreviewReady(cards) {
+  for (let i = 0; i < cards.count; i++) {
+    let item = cards.itemAt(i)
+    if (item && item.selected && item.previewReady) return true
+  }
+  return false
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    allPreviewsSettled: allPreviewsSettled,
+    selectedPreviewReady: selectedPreviewReady,
     nameForPath: nameForPath,
     labelForPath: labelForPath,
     parseThemeNames: parseThemeNames,

@@ -5,6 +5,7 @@ BarIconButton 1.0 BarIconButton.qml
 BarIconContent 1.0 BarIconContent.qml
 BarWidget 1.0 BarWidget.qml
 BarValues 1.0 BarValues.js
+PanelContent 1.0 PanelContent.js
 BackgroundMedia 1.0 BackgroundMedia.qml
 BorderOverlay 1.0 BorderOverlay.qml
 BorderSurface 1.0 BorderSurface.qml

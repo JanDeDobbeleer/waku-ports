@@ -108,7 +108,7 @@ Item {
 
   // The section a panel's widget sits in, the center's pieces counted as one,
   // as keyboard switching between panels counts them.
-  function popoutSectionOf(owner) {
+  function popoutSectionOf(owner: var): string {
     for (let i = 0; i < moduleSlots.length; i++) {
       let slot = moduleSlots[i]
       if (slot && slot.activeItem === owner) return BarModel.navigationRegions(slot.region).join(" ")
@@ -277,7 +277,7 @@ Item {
     return true
   }
 
-  function unmarkPluginObject(pluginId, target, role) {
+  function unmarkPluginObject(pluginId: var, target: var, role: var): void {
     var key = String(pluginId || "")
     var record = root.pluginObjectRecord(target)
     if (!record || record.pluginId !== key) return
@@ -285,7 +285,7 @@ Item {
     if (!record.clickTarget && !record.popout) pluginObjectOwners.delete(target)
   }
 
-  function pluginOwnsBarObject(pluginId, target) {
+  function pluginOwnsBarObject(pluginId: var, target: var): bool {
     var record = target ? root.pluginObjectRecord(target) : null
     return !!record && record.pluginId === String(pluginId || "")
   }
@@ -320,12 +320,12 @@ Item {
     }
   }
 
-  function registerPluginClickTarget(pluginId, target) {
+  function registerPluginClickTarget(pluginId: var, target: var): void {
     if (!root.markPluginObject(pluginId, target, "clickTarget")) return
     root.registerClickTarget(target)
   }
 
-  function unregisterPluginClickTarget(pluginId, target) {
+  function unregisterPluginClickTarget(pluginId: var, target: var): void {
     if (!root.pluginOwnsBarObject(pluginId, target)) return
     root.unregisterClickTarget(target)
     root.unmarkPluginObject(pluginId, target, "clickTarget")
@@ -334,13 +334,13 @@ Item {
   // A plugin may read api.activePopout right after asking for its popout, so
   // its own api is brought up to date inline; everyone else waits for the
   // coalesced resync.
-  function requestPluginPopout(pluginId, owner) {
+  function requestPluginPopout(pluginId: var, owner: var): void {
     if (!root.markPluginObject(pluginId, owner, "popout")) return
     root.requestPopout(owner)
     root.syncPluginBarApiObjects(pluginBarApis[String(pluginId || "")])
   }
 
-  function releasePluginPopout(pluginId, owner) {
+  function releasePluginPopout(pluginId: var, owner: var): void {
     if (!root.pluginOwnsBarObject(pluginId, owner)) return
     root.releasePopout(owner)
     root.unmarkPluginObject(pluginId, owner, "popout")
@@ -409,7 +409,7 @@ Item {
     return false
   }
 
-  function releasePluginObjects(pluginId) {
+  function releasePluginObjects(pluginId: var): void {
     var owned = Array.from(pluginObjectOwners.values())
     for (let i = 0; i < owned.length; i++) {
       let record = owned[i]
@@ -454,45 +454,45 @@ Item {
     pluginBarApis = ({})
   }
 
-  function registerClickTarget(target) {
+  function registerClickTarget(target: var): void {
     if (!target || clickTargets.indexOf(target) !== -1) return
     var next = clickTargets.slice()
     next.push(target)
     clickTargets = next
   }
 
-  function unregisterClickTarget(target) {
+  function unregisterClickTarget(target: var): void {
     var next = clickTargets.filter(function(item) { return item !== target })
     clickTargets = next
   }
 
-  function registerModuleSlot(slot) {
+  function registerModuleSlot(slot: var): void {
     if (!slot || moduleSlots.indexOf(slot) !== -1) return
     var next = moduleSlots.slice()
     next.push(slot)
     moduleSlots = next
   }
 
-  function unregisterModuleSlot(slot) {
+  function unregisterModuleSlot(slot: var): void {
     var next = moduleSlots.filter(function(item) { return item !== slot })
     moduleSlots = next
   }
 
-  function registerWidgetHost(host) {
+  function registerWidgetHost(host: var): void {
     if (!host || widgetHosts.indexOf(host) !== -1) return
     widgetHosts = widgetHosts.concat([host])
   }
 
-  function unregisterWidgetHost(host) {
+  function unregisterWidgetHost(host: var): void {
     widgetHosts = widgetHosts.filter(function(item) { return item !== host })
   }
 
-  function registerCenterBox(box) {
+  function registerCenterBox(box: var): void {
     if (!box || centerBoxes.indexOf(box) !== -1) return
     centerBoxes = centerBoxes.concat([box])
   }
 
-  function unregisterCenterBox(box) {
+  function unregisterCenterBox(box: var): void {
     centerBoxes = centerBoxes.filter(function(item) { return item !== box })
   }
 
@@ -700,7 +700,7 @@ Item {
     }, Qt.size(grabWidth, grabHeight))
   }
 
-  function requestPopout(owner) {
+  function requestPopout(owner: var): void {
     if (activePopout === owner) return
     if (activePopout) {
       if ("closeForPopoutSwitch" in activePopout) activePopout.closeForPopoutSwitch()
@@ -709,7 +709,7 @@ Item {
     activePopout = owner
   }
 
-  function releasePopout(owner) {
+  function releasePopout(owner: var): void {
     if (activePopout === owner) activePopout = null
   }
 
@@ -927,7 +927,7 @@ Item {
   // belongs. Empty until Hyprland reports one, which leaves panel routing on
   // its per-monitor fallback rather than guessing at an output.
   function focusedScreenName(): string {
-    var monitor = Hyprland.focusedMonitor
+    var monitor = Hyprland.focusedMonitor as HyprlandMonitor
     return monitor ? String(monitor.name || "") : ""
   }
 
@@ -1015,7 +1015,7 @@ Item {
   // stretch of bar up to that edge, held still while the peek is open
   // (BarModel.nextPeekEdge), can hold it without opening and closing it in a
   // loop.
-  function setBarHovered(hovered) {
+  function setBarHovered(hovered: var): void {
     barHoverCount = Math.max(0, barHoverCount + (hovered ? 1 : -1))
     if (barHoverCount > 0) {
       centerSectionRevealTimer.stop()
@@ -1025,7 +1025,7 @@ Item {
     }
   }
 
-  function setCenterHoverRevealSuppressed(value) {
+  function setCenterHoverRevealSuppressed(value: var): void {
     centerHoverRevealSuppressed = !!value
   }
 
@@ -1036,7 +1036,7 @@ Item {
     onTriggered: if (!root.barHovered) root.centerSectionRevealHeld = false
   }
 
-  function run(command) {
+  function run(command: var): void {
     if (!command) return
 
     Util.execDetached(command)
@@ -1372,7 +1372,7 @@ Item {
 
   // Arming closes the dragged widget's room, and disarming opens it again
   // where a drop would land, as a move of the room does (moveDragRoom).
-  function setBarDragRemoveArmed(armed) {
+  function setBarDragRemoveArmed(armed: bool): void {
     if (barDragRemoveArmed === armed) return
     barDragRemoveArmed = armed
     fadeDragRoom(0)
@@ -1482,7 +1482,7 @@ Item {
     return "#" + hexChannel(c.r) + hexChannel(c.g) + hexChannel(c.b)
   }
 
-  function setRequestedTransparency(value) {
+  function setRequestedTransparency(value: var): void {
     var nextTransparent = value === true
     requestedTransparent = nextTransparent
     if (!nextTransparent) {

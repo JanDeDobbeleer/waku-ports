@@ -104,11 +104,7 @@ Item {
   // decode and layer upload finishes.
   function allPreviewsSettled(): bool {
     if (!opened || !imagesLoaded || layoutSettled || imageArray.length === 0 || imageCards.count === 0) return false
-    for (let i = 0; i < imageCards.count; i++) {
-      let item = imageCards.itemAt(i)
-      if (!item || !item.previewSettled) return false
-    }
-    return true
+    return ImagePickerModel.allPreviewsSettled(imageCards)
   }
 
   function settleReveal() {
@@ -366,10 +362,7 @@ Item {
   }
 
   function enableNeighborsWhenReady() {
-    for (let i = 0; i < imageCards.count; i++) {
-      let item = imageCards.itemAt(i)
-      if (item && item.selected && item.previewReady) neighborImagesEnabled = true
-    }
+    if (ImagePickerModel.selectedPreviewReady(imageCards)) neighborImagesEnabled = true
   }
 
   ListModel { id: visibleImages }
@@ -737,8 +730,7 @@ Item {
     var names = []
     for (let i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(imageArray[i].filePath))
     return JSON.stringify({ opened: opened, themeMode: themeMode, wallpaperMode: wallpaperMode, count: imageArray.length,
-      selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("
-").length, wallDir: wallpaperDir() })
+      selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("\n").length, wallDir: wallpaperDir() })
   }
 
   function close() {

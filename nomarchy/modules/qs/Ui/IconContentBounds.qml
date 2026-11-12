@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Shapes
+import "IconContentBoundsValues.js" as BoundsValues
 
 Item {
   id: root
@@ -81,7 +82,7 @@ Item {
     }
     for (let i = 0; i < childrenBounds.count; i++) {
       let child = childrenBounds.itemAt(i)
-      if (child) bounds = unionBounds(bounds, child.mappedBounds)
+      if (child) bounds = unionBounds(bounds, BoundsValues.mappedBounds(child))
     }
     if (item.clip && bounds.width > 0 && bounds.height > 0) {
       let left = Math.max(0, bounds.x)
@@ -133,11 +134,12 @@ Item {
     delegate: Loader {
       id: childLoader
       required property var modelData
-      readonly property rect mappedBounds: item ? item.mappedBounds : Qt.rect(0, 0, 0, 0)
+      readonly property rect mappedBounds: item ? BoundsValues.mappedBounds(item) : Qt.rect(0, 0, 0, 0)
       source: Qt.resolvedUrl("IconContentBounds.qml")
       onLoaded: {
-        item.sourceItem = Qt.binding(function() { return childLoader.modelData })
-        item.boundsParent = Qt.binding(function() { return root.sourceItem })
+        BoundsValues.configure(item,
+          Qt.binding(function() { return childLoader.modelData }),
+          Qt.binding(function() { return root.sourceItem }))
       }
     }
   }

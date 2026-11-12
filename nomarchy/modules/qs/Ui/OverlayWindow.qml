@@ -83,7 +83,7 @@ PanelWindow {
   }
 
   function focusedScreen() {
-    var monitor = Hyprland.focusedMonitor
+    var monitor = Hyprland.focusedMonitor as HyprlandMonitor
     var name = monitor ? String(monitor.name || "") : ""
     for (let i = 0; i < Quickshell.screens.length; i++) {
       if (Quickshell.screens[i].name === name) return Quickshell.screens[i]

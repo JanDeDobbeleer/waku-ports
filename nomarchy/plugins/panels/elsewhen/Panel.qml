@@ -19,7 +19,7 @@ Panel {
 
   // Items inside the panel's lazily built content, null until it first
   // opens. Code inside the content reaches its own ids directly.
-  readonly property Flickable scroller: panel.loadedContent ? (panel.loadedContent as LazyContent).scroller : null
+  readonly property AnimatedFlickable scroller: panel.loadedContent ? (panel.loadedContent as LazyContent).scroller : null
   readonly property Column scrollContent: panel.loadedContent ? (panel.loadedContent as LazyContent).scrollContent : null
   readonly property HeroTitle hero: panel.loadedContent ? (panel.loadedContent as LazyContent).hero : null
   readonly property Item stage: panel.loadedContent ? (panel.loadedContent as LazyContent).stage : null
@@ -1064,7 +1064,7 @@ Panel {
       }
 
       // Clipped to the card and scrolled by the wheel only: the rows own drags.
-      Flickable {
+      AnimatedFlickable {
         id: scroller
         anchors.fill: parent
         anchors.rightMargin: -Style.space(12)
@@ -1074,32 +1074,9 @@ Panel {
         contentHeight: scrollContentItem.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
 
-        readonly property real maxScroll: Math.max(0, contentHeight - height)
-
-        function clamp() { contentY = Util.clamp(contentY, 0, maxScroll) }
-        onHeightChanged: clamp()
-        onContentHeightChanged: clamp()
-
-        function scrollTo(y: real): void {
-          scrollAnim.stop()
-          scrollAnim.from = contentY
-          scrollAnim.to = y
-          scrollAnim.start()
-        }
-        function scrollToTop() { scrollTo(0) }
-
         // Follows maxScroll: the results arrive over several frames after the
         // search opens, so a one-shot scroll lands short.
         onMaxScrollChanged: if (root.adding) scrollTo(maxScroll)
-
-        // Not a Behavior: the wheel writes contentY too and must track directly.
-        NumberAnimation {
-          id: scrollAnim
-          target: scroller
-          property: "contentY"
-          duration: Style.duration(160)
-          easing.type: Easing.OutCubic
-        }
 
         WheelHandler {
           acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad

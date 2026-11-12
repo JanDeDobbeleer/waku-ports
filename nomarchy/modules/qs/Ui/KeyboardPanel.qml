@@ -184,7 +184,7 @@ PanelWindow {
   // from vertical centering of the widget row), which is why `cardOrigin`
   // below uses `barThickness` for the perpendicular axis instead of this y.
   readonly property point anchorScreenPos: {
-    anchorWatcher.transform  // reactive dependency
+    const transform = anchorWatcher.transform
     if (!anchorItem || !anchorWindow) return Qt.point(0, 0)
     return anchorItem.mapToItem(anchorWindow.contentItem, 0, 0)
   }
