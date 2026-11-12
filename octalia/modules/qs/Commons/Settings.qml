@@ -33,7 +33,8 @@ Singleton {
   readonly property string cacheDir: ensureTrailingSlash(Quickshell.env("OCTALIA_CACHE_DIR") || (Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache") + "/" + shellName + "/")
 
   readonly property string settingsFile: Quickshell.env("OCTALIA_SETTINGS_FILE") || (configDir + "settings.json")
-  readonly property string defaultAvatar: Quickshell.env("HOME") + "/.face"
+  // ~/.face is a Linux convention; on Windows there is no default avatar, so the profile icon shows.
+  readonly property string defaultAvatar: ""
   readonly property string defaultVideosDirectory: Quickshell.env("HOME") + "/Videos"
   readonly property string defaultWallpapersDirectory: Quickshell.env("HOME") + "/.config/wallpapers"
 

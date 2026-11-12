@@ -11,11 +11,11 @@ NBox {
 
   property real localOutputVolume: 0
   property bool localOutputVolumeChanging: false
-  property int lastSinkId: -1
+  property string lastSinkName: ""
 
   property real localInputVolume: 0
   property bool localInputVolumeChanging: false
-  property int lastSourceId: -1
+  property string lastSourceName: ""
 
   readonly property bool outputVolumeGuard: outputVolumeSlider.sliderActive || localOutputVolumeChanging
   readonly property bool inputVolumeGuard: inputVolumeSlider.sliderActive || localInputVolumeChanging
@@ -26,10 +26,10 @@ NBox {
     var inputVol = AudioService.inputVolume;
     localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
     if (AudioService.sink) {
-      lastSinkId = AudioService.sink.id ?? -1;
+      lastSinkName = AudioService.sink.name;
     }
     if (AudioService.source) {
-      lastSourceId = AudioService.source.id ?? -1;
+      lastSourceName = AudioService.source.name;
     }
   }
 
@@ -38,15 +38,15 @@ NBox {
     target: AudioService
     function onSinkChanged() {
       if (AudioService.sink) {
-        const newSinkId = AudioService.sink.id ?? -1;
-        if (newSinkId !== lastSinkId) {
-          lastSinkId = newSinkId;
+        const newSinkName = AudioService.sink.name;
+        if (newSinkName !== lastSinkName) {
+          lastSinkName = newSinkName;
           // Immediately set local volume to current device's volume
           var vol = AudioService.volume;
           localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSinkId = -1;
+        lastSinkName = "";
         localOutputVolume = 0;
       }
     }
@@ -56,15 +56,15 @@ NBox {
     target: AudioService
     function onSourceChanged() {
       if (AudioService.source) {
-        const newSourceId = AudioService.source.id ?? -1;
-        if (newSourceId !== lastSourceId) {
-          lastSourceId = newSourceId;
+        const newSourceName = AudioService.source.name;
+        if (newSourceName !== lastSourceName) {
+          lastSourceName = newSourceName;
           // Immediately set local volume to current device's volume
           var vol = AudioService.inputVolume;
           localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSourceId = -1;
+        lastSourceName = "";
         localInputVolume = 0;
       }
     }
@@ -78,13 +78,13 @@ NBox {
     repeat: true
     onTriggered: {
       // Only sync if sink hasn't changed
-      if (AudioService.sink && AudioService.sink.id === lastSinkId) {
+      if (AudioService.sink && AudioService.sink.name === lastSinkName) {
         if (Math.abs(localOutputVolume - AudioService.volume) >= 0.01) {
           AudioService.setVolume(localOutputVolume);
         }
       }
       // Only sync if source hasn't changed
-      if (AudioService.source && AudioService.source.id === lastSourceId) {
+      if (AudioService.source && AudioService.source.name === lastSourceName) {
         if (Math.abs(localInputVolume - AudioService.inputVolume) >= 0.01) {
           AudioService.setInputVolume(localInputVolume);
         }
@@ -95,7 +95,7 @@ NBox {
   Connections {
     target: AudioService
     function onVolumeChanged() {
-      if (!outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.id === lastSinkId) {
+      if (!outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === lastSinkName) {
         var vol = AudioService.volume;
         localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -105,7 +105,7 @@ NBox {
   Connections {
     target: AudioService
     function onInputVolumeChanged() {
-      if (!inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.id === lastSourceId) {
+      if (!inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === lastSourceName) {
         var vol = AudioService.inputVolume;
         localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -115,7 +115,7 @@ NBox {
   Connections {
     target: outputVolumeSlider
     function onSliderActiveChanged() {
-      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.id === lastSinkId) {
+      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === lastSinkName) {
         var vol = AudioService.volume;
         localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
@@ -125,7 +125,7 @@ NBox {
   Connections {
     target: inputVolumeSlider
     function onSliderActiveChanged() {
-      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.id === lastSourceId) {
+      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === lastSourceName) {
         var vol = AudioService.inputVolume;
         localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }

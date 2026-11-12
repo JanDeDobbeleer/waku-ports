@@ -21,11 +21,11 @@ SmartPanel {
     // Volume state (lazy-loaded with panelContent)
     property real localOutputVolume: AudioService.volume || 0
     property bool localOutputVolumeChanging: false
-    property int lastSinkId: -1
+    property string lastSinkName: ""
 
     property real localInputVolume: AudioService.inputVolume || 0
     property bool localInputVolumeChanging: false
-    property int lastSourceId: -1
+    property string lastSourceName: ""
 
     readonly property bool outputVolumeGuard: outputVolumeSlider.sliderActive || localOutputVolumeChanging
     readonly property bool inputVolumeGuard: inputVolumeSlider.sliderActive || localInputVolumeChanging
@@ -39,10 +39,10 @@ SmartPanel {
       var inputVol = AudioService.inputVolume;
       localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
       if (AudioService.sink) {
-        lastSinkId = AudioService.sink.id;
+        lastSinkName = AudioService.sink.name;
       }
       if (AudioService.source) {
-        lastSourceId = AudioService.source.id;
+        lastSourceName = AudioService.source.name;
       }
     }
 
@@ -51,15 +51,15 @@ SmartPanel {
       target: AudioService
       function onSinkChanged() {
         if (AudioService.sink) {
-          const newSinkId = AudioService.sink.id;
-          if (newSinkId !== panelContent.lastSinkId) {
-            panelContent.lastSinkId = newSinkId;
+          const newSinkName = AudioService.sink.name;
+          if (newSinkName !== panelContent.lastSinkName) {
+            panelContent.lastSinkName = newSinkName;
             // Immediately set local volume to current device's volume
             var vol = AudioService.volume;
             panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
           }
         } else {
-          panelContent.lastSinkId = -1;
+          panelContent.lastSinkName = "";
           panelContent.localOutputVolume = 0;
         }
       }
@@ -69,15 +69,15 @@ SmartPanel {
       target: AudioService
       function onSourceChanged() {
         if (AudioService.source) {
-          const newSourceId = AudioService.source.id;
-          if (newSourceId !== panelContent.lastSourceId) {
-            panelContent.lastSourceId = newSourceId;
+          const newSourceName = AudioService.source.name;
+          if (newSourceName !== panelContent.lastSourceName) {
+            panelContent.lastSourceName = newSourceName;
             // Immediately set local volume to current device's volume
             var vol = AudioService.inputVolume;
             panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
           }
         } else {
-          panelContent.lastSourceId = -1;
+          panelContent.lastSourceName = "";
           panelContent.localInputVolume = 0;
         }
       }
@@ -87,7 +87,7 @@ SmartPanel {
     Connections {
       target: AudioService
       function onVolumeChanged() {
-        if (!panelContent.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
+        if (!panelContent.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
           var vol = AudioService.volume;
           panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -97,7 +97,7 @@ SmartPanel {
     Connections {
       target: AudioService
       function onInputVolumeChanged() {
-        if (!panelContent.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
+        if (!panelContent.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
           var vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -107,7 +107,7 @@ SmartPanel {
     Connections {
       target: outputVolumeSlider
       function onSliderActiveChanged() {
-        if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
+        if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
           var vol = AudioService.volume;
           panelContent.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -117,7 +117,7 @@ SmartPanel {
     Connections {
       target: inputVolumeSlider
       function onSliderActiveChanged() {
-        if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
+        if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
           var vol = AudioService.inputVolume;
           panelContent.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
@@ -132,13 +132,13 @@ SmartPanel {
       repeat: true
       onTriggered: {
         // Only sync if sink hasn't changed
-        if (AudioService.sink && AudioService.sink.id === panelContent.lastSinkId) {
+        if (AudioService.sink && AudioService.sink.name === panelContent.lastSinkName) {
           if (Math.abs(panelContent.localOutputVolume - AudioService.volume) >= 0.01) {
             AudioService.setVolume(panelContent.localOutputVolume);
           }
         }
         // Only sync if source hasn't changed
-        if (AudioService.source && AudioService.source.id === panelContent.lastSourceId) {
+        if (AudioService.source && AudioService.source.name === panelContent.lastSourceName) {
           if (Math.abs(panelContent.localInputVolume - AudioService.inputVolume) >= 0.01) {
             AudioService.setInputVolume(panelContent.localInputVolume);
           }

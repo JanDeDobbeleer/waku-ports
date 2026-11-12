@@ -338,9 +338,6 @@ Singleton {
   function init() {
     Logger.i("Wallpaper", "Service started");
 
-    // No animation: the new wallpaper is set at once.
-    S.Wallpapers.configureEngine(false, "");
-
     translateModels();
     Qt.callLater(root._dedupeWallpaperFavoritesByPath);
 
@@ -1295,7 +1292,8 @@ Singleton {
       return f.replace(/^\*\./, "").replace(/\./g, "\\.");
     });
     var matchRegex = "^\\.(" + exts.join("|") + ")$";
-    var script = "Get-ChildItem -LiteralPath " + psQuote(directory) + (recursive ? " -Recurse" : "") + " -File | Where-Object { $_.Extension -match " + psQuote(matchRegex) + " } | ForEach-Object { ('{0}|{1}' -f [DateTimeOffset]::new($_.LastWriteTimeUtc).ToUnixTimeSeconds(), $_.FullName.Replace([char]92, [char]47)) }";
+    // A missing folder lists nothing, the same as an empty one.
+    var script = "if (Test-Path -LiteralPath " + psQuote(directory) + " -PathType Container) { Get-ChildItem -LiteralPath " + psQuote(directory) + (recursive ? " -Recurse" : "") + " -File | Where-Object { $_.Extension -match " + psQuote(matchRegex) + " } | ForEach-Object { ('{0}|{1}' -f [DateTimeOffset]::new($_.LastWriteTimeUtc).ToUnixTimeSeconds(), $_.FullName.Replace([char]92, [char]47)) } }";
     var findArgs = psArgs(script);
 
     // Create Process component inline

@@ -184,7 +184,7 @@ Singleton {
     }
 
     if (adapter.latitude === "" || adapter.longitude === "") {
-      Logger.w("Location", "Cannot fetch weather without coordinates");
+      Logger.d("Location", "Cannot fetch weather without coordinates");
       return;
     }
     const needsWeatherUpdate = (adapter.weatherLastFetch === "") || (adapter.weather === null) || (Time.timestamp >= adapter.weatherLastFetch + weatherUpdateFrequency);

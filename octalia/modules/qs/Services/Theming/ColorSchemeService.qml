@@ -175,8 +175,14 @@ Singleton {
     var files = [];
     const sources = [[bundledSchemes, schemesDirectory], [downloadedSchemes, downloadedSchemesDirectory]];
     for (const [model, dir] of sources) {
+      // A folder that does not exist yet (Os.mkdirp is asynchronous) lists some other directory, so
+      // keep only the entries that really sit in this one.
+      const prefix = dir.toLowerCase() + "/";
       for (let k = 0; k < model.count; k++) {
         const name = model.get(k, "fileName");
+        const path = String(model.get(k, "filePath")).replace(/\\/g, "/");
+        if (path.toLowerCase() !== prefix + name.toLowerCase())
+          continue;
         files.push(dir + "/" + name + "/" + name + ".json");
       }
     }

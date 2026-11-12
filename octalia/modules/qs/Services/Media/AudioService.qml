@@ -775,9 +775,8 @@ Singleton {
     onTriggered: root._applyAppOverrides()
   }
 
-  Component.onCompleted: {
-    wpctlAvailabilityProcess.running = true;
-  }
+  // Windows port: there is no wpctl (PipeWire) and no sh, so wpctlAvailable stays false and the
+  // availability probe never runs.
 
   Connections {
     target: root

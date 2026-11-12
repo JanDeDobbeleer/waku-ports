@@ -1,6 +1,6 @@
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
+import qs.compat
 
 QtObject {
   id: root
@@ -18,7 +18,7 @@ QtObject {
 
     try {
       // Ensure dir exists then remove the file
-      Quickshell.execDetached(["sh", "-c", `mkdir -p "${Settings.cacheDir}" && rm -f -- "${usagePath}"`]);
+      Os.rm(usagePath, false);
       logger.i("Settings", "Cleared legacy emoji usage file at: " + usagePath);
     } catch (e) {
       logger.w("Settings", "Failed to clear emoji usage cache: " + e);
