@@ -14,10 +14,10 @@ Validates the ports. Three steps, each fails on any finding:
   .\tools\check.ps1 -Port celeste -Step lint          one port, one step
   .\tools\check.ps1 -File celeste\shell.qml,a\b.qml   lint just these files (used by the hooks)
 
-The engine and the QML type metadata come from the waku release pinned in tools\waku.json
+The engine and the QML type metadata come from the latest waku release
 (downloaded by tools\fetch-waku.ps1 into .cache\). Override them with WAKU_CHECK_EXE (waku.exe)
 and WAKU_QML_TYPES (a folder with Quickshell\ and waku\). Qt's qmllint comes from QT_BIN, else
-C:\Qt\<qt>\msvc2022_*\bin.
+C:\Qt\<qt>\msvc2022_*\bin, with <qt> from tools\waku.json.
 #>
 [CmdletBinding()]
 param(

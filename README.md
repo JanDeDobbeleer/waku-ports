@@ -115,10 +115,10 @@ one in before using `-Dev`. The tool scripts under `<port>\tools\` take the engi
 .\tools\check.ps1 -File celeste\shell.qml          # lint just these files
 ```
 
-The engine and its QML type metadata come from the waku release pinned in `tools\waku.json`.
-`tools\fetch-waku.ps1` downloads them into `.cache\`. `WAKU_CHECK_EXE` and `WAKU_QML_TYPES` point the
-check at a local engine build instead. `qmllint` comes from Qt (the version in `tools\waku.json`) under
-`C:\Qt`, or from `QT_BIN`.
+The engine and its QML type metadata come from the latest waku release, so the checks always match
+the engine users run. `tools\fetch-waku.ps1` downloads them into `.cache\`. `WAKU_CHECK_EXE` and
+`WAKU_QML_TYPES` point the check at a local engine build instead. `qmllint` comes from Qt under `C:\Qt`
+(the version waku builds with, set in `tools\waku.json`), or from `QT_BIN`.
 
 Fix findings in the code. Do not add `qmllint disable` comments. Values qmlsc cannot type (JSON, `var`
 objects, `try`/`catch`, `for...of`) belong in a `.pragma library` JavaScript helper next to the QML that

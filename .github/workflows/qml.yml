@@ -42,6 +42,7 @@ jobs:
         run: |
           $pin = Get-Content tools/waku.json -Raw | ConvertFrom-Json
           "qt=$($pin.qt)" >> $env:GITHUB_OUTPUT
+          "waku=$(./tools/fetch-waku.ps1 -Resolve)" >> $env:GITHUB_OUTPUT
 
       # aqtinstall 3.3.0 cannot install Qt 6.11+ (the repository layout changed). Use the commit
       # waku pins in .github/requirements-ci.txt until a release ships miurahr/aqtinstall#1000.
@@ -57,11 +58,11 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/waku
-          key: waku-${{ hashFiles('tools/waku.json') }}
+          key: waku-${{ steps.pin.outputs.waku }}-x64
 
       - name: Fetch waku
         shell: pwsh
-        run: ./tools/fetch-waku.ps1 -Arch x64
+        run: ./tools/fetch-waku.ps1 -Version ${{ steps.pin.outputs.waku }} -Arch x64
 
       - name: Check ${{ matrix.port }}
         shell: pwsh
