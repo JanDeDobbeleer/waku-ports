@@ -30,7 +30,8 @@ StyledWindow {
     readonly final property HyprMonitor monitor: Hypr.monitorFor(screen)
     readonly final property bool hasSpecialWorkspace: (monitor?.specialName.length ?? 0) > 0
     readonly final property bool hasFullscreenOnNormalWs: Hypr.hasFullscreen(monitor?.activeWorkspace ?? null)
-    readonly final property bool hasFullscreen: hasSpecialWorkspace ? Hypr.specialFullscreen(monitor) : hasFullscreenOnNormalWs
+    readonly final property bool hasFullscreen: root.screenFullscreen || (hasSpecialWorkspace ? Hypr.specialFullscreen(monitor) : hasFullscreenOnNormalWs)
+    readonly final property bool barRevealed: hasFullscreen && (barItem.isHovered || panelsItem.popouts.isDetached)
 
     // Port: the panels that close when the user presses Escape, clicks outside them, switches to
     // another window, or toggles them again. Upstream gets the click and focus part from
@@ -91,6 +92,7 @@ StyledWindow {
     }
 
     onHasFullscreenChanged: {
+        barItem.isHovered = false;
         screenState.launcher = false;
         screenState.session = false;
         screenState.dashboard = false;
@@ -104,7 +106,7 @@ StyledWindow {
 
     // Port: a panel that closes on a click elsewhere takes input over the whole window, so the
     // click lands here (Interactions) instead of on the window below.
-    mask: hasFullscreen ? emptyRegion : lightDismissOpen ? dismissRegion : regions
+    mask: lightDismissOpen ? dismissRegion : hasFullscreen ? emptyRegion : regions
 
     anchors.top: true
     anchors.bottom: true
@@ -132,6 +134,20 @@ StyledWindow {
         y: panelsItem.notifications.y + root.borderThickness
         width: panelsItem.notifications.width
         height: panelsItem.notifications.height
+
+        Region {
+            x: 0
+            y: 0
+            width: root.barRevealed ? barItem.contentWidth : 2
+            height: root.height
+        }
+
+        Region {
+            x: barItem.implicitWidth + panelsItem.popoutsWrapper.x
+            y: panelsItem.popoutsWrapper.y + root.borderThickness
+            width: root.barRevealed ? panelsItem.popoutsWrapper.width * (1 - panelsItem.popoutsWrapper.offsetScale) : 0
+            height: panelsItem.popoutsWrapper.height
+        }
 
         Region {
             // Port: x reads w_, not width (waku's Region has one change signal for its geometry).
@@ -404,7 +420,7 @@ StyledWindow {
             screenState: root.screenState
             popouts: panelsItem.popouts
 
-            fullscreen: root.hasFullscreen
+            fullscreen: root.hasFullscreen && !root.barRevealed
         }
     }
 

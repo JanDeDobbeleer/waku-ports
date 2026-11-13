@@ -20,6 +20,7 @@ Item {
   id: barWindow
 
   required property ShellScreen screen
+  required property bool screenFullscreen
 
   // Bar rectangle inside MainScreen's window (same geometry the background is drawn with)
   required property Item placeholder
@@ -50,13 +51,20 @@ Item {
   readonly property real barHeight: Style.getBarHeightForScreen(barWindow.screen?.name)
 
   // Auto-hide properties
-  readonly property bool autoHide: Settings.getBarDisplayModeForScreen(barWindow.screen?.name) === "auto_hide"
+  readonly property bool autoHide: screenFullscreen || Settings.getBarDisplayModeForScreen(barWindow.screen?.name) === "auto_hide"
   readonly property int barHideDelay: Settings.data.bar.autoHideDelay || 500
   readonly property int showDelay: Settings.data.bar.autoShowDelay || 100
   property bool isHidden: autoHide
 
   // Hover tracking
   property bool barHovered: false
+
+  onScreenFullscreenChanged: {
+    if (screenFullscreen && !barHovered && !panelOpen && !BarService.popupOpen) {
+      isHidden = true;
+      BarService.setScreenHidden(screen?.name, true);
+    }
+  }
 
   // Check if any panel is open on this screen
   readonly property bool panelOpen: PanelService.openedPanel !== null
@@ -78,7 +86,7 @@ Item {
     interval: barWindow.showDelay
     onTriggered: {
       // Only show if still hovered (via trigger zone or bar itself)
-      if (barWindow.autoHide && BarService.isBarHovered(barWindow.screen?.name)) {
+      if (barWindow.autoHide && (barWindow.barHovered || BarService.isBarHovered(barWindow.screen?.name))) {
         BarService.setScreenHidden(barWindow.screen?.name, false);
       }
     }
@@ -139,6 +147,7 @@ Item {
       hideTimer.stop();
       showTimer.stop();
       barWindow.isHidden = false;
+      BarService.setScreenHidden(barWindow.screen?.name, false);
     }
     // When auto-hide is enabled, don't immediately hide - wait for mouse to leave
   }
