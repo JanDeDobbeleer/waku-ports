@@ -21,6 +21,13 @@ Shells for [waku](https://github.com/JanDeDobbeleer/waku), the Windows shell eng
 
 Each port has its own README, `tools\`, and licence.
 
+Fullscreen and maximized windows temporarily hide the bar on their monitor and release its
+reserved space. Move the pointer to the bar's screen edge to reveal it; moving away hides it
+again. Restoring the window or returning it to tiling with Alt+F restores normal bar behaviour.
+Start12 and Nomarchy use waku's docked-panel handling. Celeste and Octalia keep their full-screen
+overlay windows and bind only their bars to `PanelWindow.screenFullscreen`, leaving notifications
+and other panels available. This requires an engine build with that property.
+
 ## Start one
 
     .\start.ps1 -Port nomarchy             # stops any running waku, then starts the port

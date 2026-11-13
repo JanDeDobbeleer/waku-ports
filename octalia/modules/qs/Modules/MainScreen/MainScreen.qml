@@ -126,7 +126,7 @@ PanelWindow {
     readonly property real barThickness: Style.barHeight
     readonly property real frameThickness: Settings.data.bar.frameThickness ?? 12
     readonly property string barPos: Settings.data.bar.position || "top"
-    readonly property bool showBar: root.barShouldShow
+    readonly property bool showBar: root.barShouldShow && (!root.screenFullscreen || !barContent.isHidden)
 
     // Cover entire window (everything is masked/click-through)
     x: 0
@@ -134,6 +134,11 @@ PanelWindow {
     width: root.width
     height: root.height
     intersection: Intersection.Xor
+
+    Region {
+      item: fullscreenTrigger
+      intersection: Intersection.Subtract
+    }
 
     // Mode: Simple or Floating
     Region {
@@ -358,17 +363,8 @@ PanelWindow {
       readonly property real barHeight: Style.getBarHeightForScreen(screen?.name)
 
       // Auto-hide properties (read by AllBackgrounds for background fade)
-      readonly property bool autoHide: Settings.getBarDisplayModeForScreen(screen?.name) === "auto_hide"
-      property bool isHidden: autoHide
-
-      Connections {
-        target: BarService
-        function onBarAutoHideStateChanged(screenName: string, hidden: bool): void {
-          if (screenName === barPlaceholder.screen?.name) {
-            barPlaceholder.isHidden = hidden;
-          }
-        }
-      }
+      readonly property bool autoHide: barContent.autoHide
+      readonly property bool isHidden: barContent.isHidden
 
       // Expose bar dimensions directly on this Item for BarBackground
       // Use screen dimensions directly
@@ -461,12 +457,32 @@ PanelWindow {
     BarContent {
       id: barContent
       screen: root.screen
+      screenFullscreen: !!root.screenFullscreen
       placeholder: barPlaceholder
       z: 100
     }
 
     // Screen Corners
-    ScreenCorners {}
+    ScreenCorners {
+      visible: !root.screenFullscreen || !barContent.isHidden
+    }
+
+    Item {
+      id: fullscreenTrigger
+
+      readonly property string position: Settings.getBarPositionForScreen(root.screen?.name)
+      readonly property bool vertical: position === "left" || position === "right"
+      readonly property bool active: !!root.screenFullscreen && root.barShouldShow
+      x: position === "right" ? root.width - 2 : 0
+      y: position === "bottom" ? root.height - 2 : 0
+      width: active ? (vertical ? 2 : root.width) : 0
+      height: active ? (vertical ? root.height : 2) : 0
+      z: 110
+
+      HoverHandler {
+        onHoveredChanged: BarService.setScreenHovered(root.screen?.name, hovered)
+      }
+    }
 
     // Blur behind the bar and open panels
     // Helper object holding computed properties for blur regions

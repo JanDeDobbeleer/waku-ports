@@ -94,15 +94,21 @@ CustomMouseArea {
     }
 
     function onWheel(event: WheelEvent): void {
-        if (fullscreen)
+        if (fullscreen && !bar.isHovered)
             return;
         if (event.x < barWidth) {
             barWheel(event.y, event.angleDelta);
         }
     }
 
+    function hoverFullscreenBar(x: real, y: real): bool {
+        const onBar = bar.isHovered && (x < bar.contentWidth || (popouts.hasCurrent && inLeftPanel(panels.popoutsWrapper, x, y)));
+        bar.isHovered = x < 2 || onBar;
+        return bar.isHovered;
+    }
+
     anchors.fill: parent
-    acceptedButtons: fullscreen ? Qt.NoButton : Qt.AllButtons
+    acceptedButtons: fullscreen && !bar.isHovered && !lightDismiss ? Qt.NoButton : Qt.AllButtons
     hoverEnabled: true
 
     onPressed: event => {
@@ -134,7 +140,7 @@ CustomMouseArea {
                 barTrayCloseRequested();
             }
 
-            if (Config.bar.showOnHover)
+            if (fullscreen || Config.bar.showOnHover)
                 bar.isHovered = false;
 
             if (Config.sidebar.showOnHover && !sidebarShortcutActive)
@@ -152,8 +158,10 @@ CustomMouseArea {
         const dragY = y - dragStart.y;
 
         if (fullscreen) {
-            root.panels.osd.hovered = inRightPanel(panels.osdWrapper, x, y);
-            return;
+            if (!hoverFullscreenBar(x, y)) {
+                root.panels.osd.hovered = inRightPanel(panels.osdWrapper, x, y);
+                return;
+            }
         }
 
         // Show bar in non-exclusive mode on hover
