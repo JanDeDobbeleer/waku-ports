@@ -1,5 +1,4 @@
 import QtQuick
-import waku.services as S
 
 // A wired adapter, as {name, type, connected}.
 QtObject {

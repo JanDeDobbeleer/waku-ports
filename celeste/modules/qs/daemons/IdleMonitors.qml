@@ -7,7 +7,7 @@ import Celeste.State
 import Quickshell.Services.UPower
 import waku.services as S
 import qs.services
-import qs.utils
+import "IdleMonitorsHelpers.js" as IdleMonitorsHelpers
 
 // Idle timeouts over DesktopState.idleSeconds (upstream uses Wayland's IdleMonitor). `lock` is the
 // lock screen, which is not ported yet: while it is null, "lock" actions are ignored. Other string
@@ -16,51 +16,32 @@ import qs.utils
 Scope {
     id: root
 
-    property var lock: null
-    readonly property bool hasPlayer: Players.list.some(p => p.isPlaying)
-    readonly property bool isCharging: !UPower.onBattery
-    readonly property bool enabled: {
+    final property var lock: null
+    readonly final property bool hasPlayer: IdleMonitorsHelpers.anyPlaying(Players.list)
+    readonly final property bool isCharging: !UPower.onBattery
+    readonly final property bool enabled: {
         if (GlobalConfig.general.idle.inhibitWhenAudio && hasPlayer)
             return false;
         if (GlobalConfig.general.idle.inhibitWhenCharging && isCharging)
             return false;
         return !RuntimeState.inhibitIdle;
     }
-    readonly property int idleSeconds: S.DesktopState.idleSeconds
+    readonly final property int idleSeconds: S.DesktopState.idleSeconds
 
-    function handleIdleAction(action: var): void {
-        if (!action)
-            return;
 
-        if (action === "lock") {
-            if (lock)
-                lock.lock.locked = true;
-        } else if (action === "unlock") {
-            if (lock)
-                lock.lock.locked = false;
-        }
-    }
 
     Variants {
-        model: GlobalConfig.general.idle.timeouts.values
+        model: IdleMonitorsHelpers.timeouts(GlobalConfig.general.idle.timeouts)
 
         QtObject {
             id: monitor
 
-            required property var modelData
+            required final property var modelData
 
-            readonly property bool monitored: {
-                if (!root.enabled || !(modelData.enabled ?? true))
-                    return false;
-                if (modelData.inhibitWhenAudio && root.hasPlayer)
-                    return false;
-                if (modelData.inhibitWhenCharging && root.isCharging)
-                    return false;
-                return true;
-            }
-            readonly property bool isIdle: monitored && root.idleSeconds >= modelData.timeout
+            readonly final property bool monitored: IdleMonitorsHelpers.monitored(modelData, root.enabled, root.hasPlayer, root.isCharging)
+            readonly final property bool isIdle: monitored && IdleMonitorsHelpers.reachedTimeout(modelData, root.idleSeconds)
 
-            onIsIdleChanged: root.handleIdleAction(isIdle ? modelData.idleAction : modelData.returnAction)
+            onIsIdleChanged: IdleMonitorsHelpers.handleAction(root.lock, IdleMonitorsHelpers.action(modelData, isIdle))
         }
     }
 }

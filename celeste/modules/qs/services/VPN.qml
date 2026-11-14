@@ -5,6 +5,7 @@ import Quickshell
 import Celeste.Config
 import waku.services as S
 import qs.compat
+import "VPNHelpers.js" as VPNHelpers
 
 // Stub of upstream's VPN service (WireGuard, WARP, NetBird and Tailscale adapters that shell out to
 // their CLIs). waku knows only whether a VPN link is up (`Network.vpnActive`, `vpnName`), so
@@ -14,8 +15,8 @@ Singleton {
     id: root
 
     // waku gap: read only. waku cannot connect or disconnect a VPN.
-    readonly property bool connected: S.Network.vpnActive
-    readonly property var status: ({
+    readonly final property bool connected: S.Network.vpnActive
+    readonly final property var status: ({
             connected: connected,
             state: connected ? "connected" : "disconnected",
             reason: "",
@@ -23,27 +24,27 @@ Singleton {
             server: S.Network.vpnName
         })
 
-    property bool connectPending: false
-    property bool disconnectPending: false
-    readonly property bool connecting: connectPending
-    readonly property bool disconnecting: disconnectPending
+    final property bool connectPending: false
+    final property bool disconnectPending: false
+    readonly final property bool connecting: connectPending
+    readonly final property bool disconnecting: disconnectPending
 
-    readonly property string selectedProvider: GlobalConfig.utilities.vpn.selectedProvider
-    property double connectedSince: 0
-    property string bytesIn: ""
-    property string bytesOut: ""
-    property int pingMs: -1
-    property string serverLocation: ""
+    readonly final property string selectedProvider: GlobalConfig.utilities.vpn.selectedProvider
+    final property double connectedSince: 0
+    final property string bytesIn: ""
+    final property string bytesOut: ""
+    final property int pingMs: -1
+    final property string serverLocation: ""
 
-    readonly property var providers: GlobalConfig.utilities.vpn.provider.values
-    readonly property var selected: providers.find(p => p.id === selectedProvider) ?? null
-    readonly property var active: selected ?? ({
+    readonly final property var providers: VPNHelpers.providers(GlobalConfig)
+    readonly final property var selected: VPNHelpers.selectedProvider(providers, selectedProvider)
+    readonly final property var active: selected ?? ({
             name: S.Network.vpnName,
             interface: ""
         })
-    readonly property string providerName: S.Network.vpnName
-    readonly property string interfaceName: ""
-    readonly property var currentConfig: active
+    readonly final property string providerName: S.Network.vpnName
+    readonly final property string interfaceName: ""
+    readonly final property var currentConfig: active
 
     function connect(): void {
     }

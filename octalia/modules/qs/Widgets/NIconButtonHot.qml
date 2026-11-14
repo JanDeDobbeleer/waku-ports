@@ -1,7 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Effects
-import QtQuick.Layouts
 import qs.Commons
 
 Rectangle {
@@ -71,13 +68,13 @@ Rectangle {
     pointSize: Math.max(1, Math.round(root.width * 0.48))
     applyUiScale: root.applyUiScale
     color: {
-      if (root.enabled && root.hovering || pressed) {
-        return colorFgHover;
+      if (root.enabled && root.hovering || root.pressed) {
+        return root.colorFgHover;
       }
-      if (hot) {
-        return colorFgHot;
+      if (root.hot) {
+        return root.colorFgHot;
       }
-      return colorFg;
+      return root.colorFg;
     }
     // Center horizontally
     x: (root.width - width) / 2
@@ -102,12 +99,12 @@ Rectangle {
     hoverEnabled: true
 
     onEntered: {
-      hovering = root.enabled ? true : false;
+      root.hovering = root.enabled ? true : false;
       root.entered();
     }
 
     onExited: {
-      hovering = false;
+      root.hovering = false;
       root.exited();
     }
 
@@ -121,7 +118,7 @@ Rectangle {
       root.scale = 1.0;
       root.pressed = false;
 
-      if (!root.enabled && !allowClickWhenDisabled) {
+      if (!root.enabled && !root.allowClickWhenDisabled) {
         return;
       }
 

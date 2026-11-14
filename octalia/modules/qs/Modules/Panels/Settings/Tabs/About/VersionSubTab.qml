@@ -1,5 +1,6 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -10,6 +11,7 @@ import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "VersionSubTab.js" as VersionSubTabData
 
 ColumnLayout {
   id: root
@@ -50,22 +52,11 @@ ColumnLayout {
 
   spacing: Style.marginL
 
-  function getMonitorsText(separator) {
-    const sep = separator || "\n";
-    const screens = Quickshell.screens || [];
-    const scales = CompositorService.displayScales || {};
-    let lines = [];
-    for (let i = 0; i < screens.length; i++) {
-      const screen = screens[i];
-      const name = screen.name || "Unknown";
-      const scaleData = scales[name];
-      const scaleValue = (typeof scaleData === "object" && scaleData !== null) ? (scaleData.scale || 1.0) : (scaleData || 1.0);
-      lines.push(name + ": " + screen.width + "x" + screen.height + " @ " + scaleValue + "x");
-    }
-    return lines.join(sep);
+  function getMonitorsText(separator: string): string {
+    return VersionSubTabData.getMonitorsText(separator, Quickshell.screens, CompositorService.displayScales);
   }
 
-  function copyInfoToClipboard() {
+  function copyInfoToClipboard(): void {
     let info = "Octalia Shell: " + root.currentVersion;
     if (root.isGitVersion && root.commitInfo) {
       info += " (" + root.commitInfo + ")";
@@ -86,8 +77,8 @@ ColumnLayout {
     info += "OS: " + HostService.osPretty + "\n";
     info += "Host: " + (HostService.hostName || "N/A") + "\n";
     const monitors = getMonitorsText("\n").split("\n");
-    for (const mon of monitors) {
-      info += "Monitor: " + mon + "\n";
+    for (let i = 0; i < monitors.length; i++) {
+      info += "Monitor: " + monitors[i] + "\n";
     }
     info += "\nSettings\n";
     info += "========\n";
@@ -95,7 +86,7 @@ ColumnLayout {
     info += "Default Font: " + (Settings.data.ui.fontDefault || "default") + " @ " + Settings.data.ui.fontDefaultScale + "x\n";
     info += "Fixed Font: " + (Settings.data.ui.fontFixed || "default") + " @ " + Settings.data.ui.fontFixedScale + "x\n";
     Os.copy(info);
-    ToastService.showNotice(I18n.tr("panels.about.title"), I18n.tr("panels.about.info-copied"));
+    ToastService.showNotice(I18n.tr("panels.about.title"), I18n.tr("panels.about.info-copied"), undefined);
   }
 
   Component.onCompleted: {
@@ -105,7 +96,7 @@ ColumnLayout {
       fetchGitCommit();
   }
 
-  function fetchGitCommit() {
+  function fetchGitCommit(): void {
     var shellDir = Quickshell.shellDir || "";
     Logger.d("VersionSubTab", "fetchGitCommit - shellDir:", shellDir);
     if (!shellDir) {
@@ -123,18 +114,9 @@ ColumnLayout {
     running: false
 
     onExited: function (exitCode) {
-      Logger.d("VersionSubTab", "gitProcess - Process exited with code:", exitCode);
-      if (exitCode === 0) {
-        var gitOutput = stdout.text.trim();
-        Logger.d("VersionSubTab", "gitProcess - gitOutput:", gitOutput);
-        if (gitOutput) {
-          root.commitInfo = gitOutput;
-          Logger.d("VersionSubTab", "gitProcess - Set commitInfo to:", root.commitInfo);
-        }
-      } else {
-        Logger.d("VersionSubTab", "gitProcess - Git command failed. Exit code:", exitCode);
-      }
+      VersionSubTabData.handleGitExit(exitCode, stdout, root);
     }
+
 
     stdout: StdioCollector {}
     stderr: StdioCollector {}
@@ -146,9 +128,10 @@ ColumnLayout {
 
     // Octalia logo
     Image {
+      id: logoImage
       source: ShellUrl.dir + "/Assets/octalia.svg"
-      width: 96 * Style.uiScaleRatio
-      height: width
+      Layout.preferredWidth: 96 * Style.uiScaleRatio
+      Layout.preferredHeight: width
       fillMode: Image.PreserveAspectFit
       sourceSize.width: width
       sourceSize.height: height
@@ -169,24 +152,24 @@ ColumnLayout {
       Timer {
         id: debugTapTimer
         interval: 5000
-        onTriggered: parent.debugTapCount = 0
+        onTriggered: logoImage.debugTapCount = 0
       }
 
       MouseArea {
         anchors.fill: parent
         onClicked: {
-          if (parent.debugTapCount === 0) {
+          if (logoImage.debugTapCount === 0) {
             debugTapTimer.restart();
           }
-          parent.debugTapCount++;
-          if (parent.debugTapCount >= 8) {
-            parent.debugTapCount = 0;
+          logoImage.debugTapCount++;
+          if (logoImage.debugTapCount >= 8) {
+            logoImage.debugTapCount = 0;
             debugTapTimer.stop();
             Settings.isDebug = !Settings.isDebug;
             if (Settings.isDebug) {
-              ToastService.showNotice("Debug", I18n.tr("panels.about.debug-enabled"));
+              ToastService.showNotice("Debug", I18n.tr("panels.about.debug-enabled"), undefined);
             } else {
-              ToastService.showNotice("Debug", I18n.tr("panels.about.debug-disabled"));
+              ToastService.showNotice("Debug", I18n.tr("panels.about.debug-disabled"), undefined);
             }
           }
         }
@@ -373,7 +356,7 @@ ColumnLayout {
       outlined: true
       Layout.alignment: Qt.AlignHCenter
       onClicked: {
-        var screen = PanelService.openedPanel?.screen || SettingsPanelService.settingsWindow?.screen || PanelService.findScreenForPanels();
+        var screen = VersionSubTabData.getChangelogScreen(PanelService.openedPanel, SettingsPanelService.settingsWindow, PanelService);
         SettingsPanelService.close(screen);
         UpdateService.viewChangelog(screen);
       }
@@ -396,7 +379,7 @@ ColumnLayout {
       Layout.alignment: Qt.AlignHCenter
       onClicked: {
         Os.open("https://buymeacoffee.com/noctalia");
-        ToastService.showNotice(I18n.tr("panels.about.support"), I18n.tr("toast.donation-opened"));
+        ToastService.showNotice(I18n.tr("panels.about.support"), I18n.tr("toast.donation-opened"), undefined);
       }
     }
   }
@@ -458,6 +441,7 @@ ColumnLayout {
       model: Quickshell.screens.length * 2
 
       NText {
+        required property int index
         readonly property int screenIndex: Math.floor(index / 2)
         readonly property bool isLabel: index % 2 === 0
         readonly property var screen: Quickshell.screens[screenIndex]
@@ -465,11 +449,7 @@ ColumnLayout {
         text: {
           if (isLabel)
             return I18n.tr("panels.about.system-monitor");
-          const name = screen?.name || "Unknown";
-          const scales = CompositorService.displayScales || {};
-          const scaleData = scales[name];
-          const scaleValue = (typeof scaleData === "object" && scaleData !== null) ? (scaleData.scale || 1.0) : (scaleData || 1.0);
-          return name + ": " + (screen?.width || 0) + "x" + (screen?.height || 0) + " @ " + scaleValue + "x";
+          return VersionSubTabData.monitorText(screen, CompositorService.displayScales || {});
         }
         color: isLabel ? Color.mOnSurfaceVariant : Color.mOnSurface
         pointSize: sysInfo.textSize

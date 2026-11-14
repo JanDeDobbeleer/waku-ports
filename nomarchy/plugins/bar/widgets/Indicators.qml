@@ -1,21 +1,21 @@
+pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
-import Quickshell.Io
-import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
+import "IndicatorModel.js" as IndicatorModel
 
 BarWidget {
   id: root
   moduleName: "nomarchy.indicators"
 
-  readonly property var defaultIndicatorEntries: [ "PasswordlessSudo", "ScreenRecording", "RemoteSession", "Reminder", "NightLight", "Dnd", "StayAwake" ]
-  readonly property var indicatorEntries: indicatorEntriesFromSettings(settings)
-  property var activeIndicatorIds: []
+  readonly property list<var> defaultIndicatorEntries: [ "PasswordlessSudo", "ScreenRecording", "RemoteSession", "Reminder", "NightLight", "Dnd", "StayAwake" ]
+  readonly property list<var> indicatorEntries: indicatorEntriesFromSettings(settings)
+  property list<var> activeIndicatorIds: []
   property var indicatorActiveStates: ({})
   property bool indicatorAreaHovered: false
   property bool indicatorItemHovered: false
   readonly property bool alwaysShowIndicators: setting("alwaysShow", false) === true
-  readonly property bool revealInactiveIndicators: alwaysShowIndicators || indicatorAreaHovered || indicatorItemHovered || (bar && bar.centerSectionRevealHeld === true && bar.centerHoverRevealSuppressed !== true)
+  readonly property bool revealInactiveIndicators: alwaysShowIndicators || indicatorAreaHovered || indicatorItemHovered || (bar && BarValues.centerSectionRevealHeld(bar) === true && BarValues.centerHoverRevealSuppressed(bar) !== true)
   // The active block sits against the widget's fixed edge, and everything that
   // grows the widget (revealed inactive icons, newly active ones) goes on its
   // far side, so the icons already showing keep their click targets. A
@@ -34,52 +34,19 @@ BarWidget {
   property string inactiveIndicatorJson: ""
   property bool inactiveIndicatorsMirrored: false
 
-  function entryId(entry) {
-    if (typeof entry === "string") return entry
-    if (Util.isPlainObject(entry)) {
-      var id = entry["id"]
-      if (id !== undefined && id !== null && String(id) !== "") return String(id)
-    }
-    return ""
+  function entryId(entry: var): string { return IndicatorModel.entryId(entry) }
+  function entrySettings(entry: var): var { return IndicatorModel.entrySettings(entry) }
+  function indicatorEntriesFromSettings(settings: var): var {
+    return IndicatorModel.entries(settings, defaultIndicatorEntries)
   }
 
-  function entrySettings(entry) {
-    if (!Util.isPlainObject(entry)) return {}
-    var copy = {}
-    for (var key in entry) {
-      if (key === "id") continue
-      copy[key] = entry[key]
-    }
-    return copy
-  }
-
-  function indicatorEntriesFromSettings(settings) {
-    var source = defaultIndicatorEntries
-    if (settings.items && typeof settings.items.length === "number" && settings.items.length > 0) source = settings.items
-    else if (settings.indicators && typeof settings.indicators.length === "number" && settings.indicators.length > 0) source = settings.indicators
-
-    var result = []
-    for (var i = 0; i < source.length; i++) {
-      var item = source[i]
-      if (typeof item !== "string" && item !== null && typeof item === "object") {
-        try {
-          item = JSON.parse(JSON.stringify(item))
-        } catch (error) {
-        }
-      }
-      var id = entryId(item)
-      if (id !== "") result.push(item)
-    }
-    return result
-  }
-
-  function setIndicatorAreaHovered(hovered) {
+  function setIndicatorAreaHovered(hovered: var): var {
     indicatorAreaHovered = hovered
     if (hovered) indicatorHideTimer.stop()
     else indicatorHideTimer.restart()
   }
 
-  function setIndicatorItemHovered(hovered) {
+  function setIndicatorItemHovered(hovered: var): var {
     if (hovered) {
       indicatorItemHovered = true
       indicatorHideTimer.stop()
@@ -88,69 +55,52 @@ BarWidget {
     }
   }
 
-  function hasIndicatorId(id) {
-    for (var i = 0; i < indicatorEntries.length; i++) {
+  function hasIndicatorId(id: var): var {
+    for (let i = 0; i < indicatorEntries.length; i++) {
       if (entryId(indicatorEntries[i]) === id) return true
     }
     return false
   }
 
-  function entryForId(id) {
-    for (var i = 0; i < indicatorEntries.length; i++) {
-      var entry = indicatorEntries[i]
+  function entryForId(id: var): var {
+    for (let i = 0; i < indicatorEntries.length; i++) {
+      let entry = indicatorEntries[i]
       if (entryId(entry) === id) return entry
     }
 
     return { id: id }
   }
 
-  function activeModelIndex(id) {
-    for (var i = 0; i < activeIndicatorModel.count; i++) {
+  function activeModelIndex(id: var): var {
+    for (let i = 0; i < activeIndicatorModel.count; i++) {
       if (activeIndicatorModel.get(i).activeId === id) return i
     }
     return -1
   }
 
-  function copyActiveStates() {
-    var states = {}
-    for (var id in indicatorActiveStates) {
-      if (indicatorActiveStates[id] === true) states[id] = true
-    }
-    return states
+  function orderedActiveIds(states: var, preferredOrder: var): var {
+    return IndicatorModel.orderedActiveIds(states, preferredOrder, indicatorEntries)
   }
 
-  function orderedActiveIds(states, preferredOrder) {
-    var ids = []
-
-    for (var i = 0; i < preferredOrder.length; i++) {
-      var id = preferredOrder[i]
-      if (ids.indexOf(id) === -1 && hasIndicatorId(id) && states[id] === true) ids.push(id)
-    }
-
-    return ids
-  }
-
-  function syncActiveIndicatorModel() {
-    for (var i = activeIndicatorModel.count - 1; i >= 0; i--) {
+  function syncActiveIndicatorModel(): var {
+    for (let i = activeIndicatorModel.count - 1; i >= 0; i--) {
       if (activeIndicatorIds.indexOf(activeIndicatorModel.get(i).activeId) === -1)
         activeIndicatorModel.remove(i)
     }
 
-    for (var j = 0; j < activeIndicatorIds.length; j++) {
-      var id = activeIndicatorIds[j]
-      var index = activeModelIndex(id)
+    for (let j = 0; j < activeIndicatorIds.length; j++) {
+      let id = activeIndicatorIds[j]
+      let index = activeModelIndex(id)
       if (index === -1) activeIndicatorModel.insert(j, { activeId: id })
       else if (index !== j) activeIndicatorModel.move(index, j, 1)
     }
   }
 
-  function setIndicatorActive(entry, active) {
+  function setIndicatorActive(entry: var, active: var): var {
     var id = entryId(entry)
     if (id === "") return
 
-    var states = copyActiveStates()
-    if (active) states[id] = true
-    else delete states[id]
+    var states = IndicatorModel.updatedActiveStates(indicatorActiveStates, id, active)
 
     indicatorActiveStates = states
 
@@ -165,26 +115,26 @@ BarWidget {
     syncActiveIndicatorModel()
   }
 
-  function syncActiveIndicatorOrder() {
+  function syncActiveIndicatorOrder(): var {
     activeIndicatorIds = orderedActiveIds(indicatorActiveStates, activeIndicatorIds)
     syncActiveIndicatorModel()
   }
 
-  function syncInactiveIndicatorModel() {
-    var json = JSON.stringify(indicatorEntries)
+  function syncInactiveIndicatorModel(): var {
+    var json = JSON.stringify(Array.from(indicatorEntries))
     if (json !== inactiveIndicatorJson) {
       inactiveIndicatorJson = json
       inactiveIndicatorModel.clear()
       inactiveIndicatorsMirrored = false
-      for (var i = 0; i < indicatorEntries.length; i++)
+      for (let i = 0; i < indicatorEntries.length; i++)
         inactiveIndicatorModel.append({ entryJson: JSON.stringify(indicatorEntries[i]) })
     }
     if (inactiveIndicatorsMirrored === fixedAtStart) return
-    for (var j = 1; j < inactiveIndicatorModel.count; j++) inactiveIndicatorModel.move(j, 0, 1)
+    for (let j = 1; j < inactiveIndicatorModel.count; j++) inactiveIndicatorModel.move(j, 0, 1)
     inactiveIndicatorsMirrored = fixedAtStart
   }
 
-  function refresh() { root.refreshRequested() }
+  function refresh(): var { root.refreshRequested() }
 
   onIndicatorEntriesChanged: {
     syncActiveIndicatorOrder()
@@ -196,10 +146,11 @@ BarWidget {
   // below); its wrapper keeps the stock sizing expressions, so the root's
   // implicit size still follows the blocks synchronously rather than waiting
   // on a positioner's polish.
-  implicitWidth: orientationLoader.item ? orientationLoader.item.implicitWidth : 0
-  implicitHeight: orientationLoader.item ? orientationLoader.item.implicitHeight : 0
+  readonly property Item orientationItem: orientationLoader.item as Item
+  implicitWidth: IndicatorModel.itemImplicitWidth(orientationItem)
+  implicitHeight: IndicatorModel.itemImplicitHeight(orientationItem)
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.indicators"
 
     function refresh(): void {
@@ -342,8 +293,9 @@ BarWidget {
     property bool horizontal: true
     property bool reportActiveState: false
 
-    implicitWidth: blockLoader.item ? blockLoader.item.implicitWidth : 0
-    implicitHeight: blockLoader.item ? blockLoader.item.implicitHeight : 0
+    readonly property Item blockItem: blockLoader.item as Item
+    implicitWidth: IndicatorModel.itemImplicitWidth(blockItem)
+    implicitHeight: IndicatorModel.itemImplicitHeight(blockItem)
     width: implicitWidth
     height: implicitHeight
 
@@ -404,8 +356,9 @@ BarWidget {
     property bool horizontal: true
     property bool reportActiveState: false
 
-    implicitWidth: blockLoader.item ? blockLoader.item.implicitWidth : 0
-    implicitHeight: blockLoader.item ? blockLoader.item.implicitHeight : 0
+    readonly property Item blockItem: blockLoader.item as Item
+    implicitWidth: IndicatorModel.itemImplicitWidth(blockItem)
+    implicitHeight: IndicatorModel.itemImplicitHeight(blockItem)
     width: implicitWidth
     height: implicitHeight
 
@@ -469,8 +422,9 @@ BarWidget {
     readonly property var indicatorSettings: root.entrySettings(entry)
     readonly property var barRef: root.bar
 
-    implicitWidth: indicatorSource.item && indicatorSource.item.visible ? indicatorSource.item.implicitWidth : 0
-    implicitHeight: indicatorSource.item && indicatorSource.item.visible ? indicatorSource.item.implicitHeight : 0
+    readonly property Item indicatorItem: indicatorSource.item as Item
+    implicitWidth: indicatorItem && indicatorItem.visible ? IndicatorModel.itemImplicitWidth(indicatorItem) : 0
+    implicitHeight: indicatorItem && indicatorItem.visible ? IndicatorModel.itemImplicitHeight(indicatorItem) : 0
     width: implicitWidth
     height: implicitHeight
     onEntryChanged: {
@@ -502,30 +456,23 @@ BarWidget {
     Connections {
       target: indicatorSource.item
       ignoreUnknownSignals: true
-      function onActiveChanged() { indicatorSlot.syncActiveState() }
+      function onActiveChanged(): var { indicatorSlot.syncActiveState() }
     }
 
-    function injectProps() {
-      var target = indicatorSource.item
-      if (!target) return
-      if ("bar" in target) target.bar = root.bar
-      if ("moduleName" in target) target.moduleName = indicatorId
-      if ("settings" in target) target.settings = indicatorSettings
-      if ("indicatorBlock" in target) target.indicatorBlock = indicatorBlock
-      if ("indicatorHost" in target) target.indicatorHost = root
-      if ("activeOverride" in target) target.activeOverride = indicatorBlock === "active" ? true : null
+    function injectProps(): void {
+      IndicatorModel.injectProps(indicatorSource.item, root.bar, indicatorId, indicatorSettings, indicatorBlock, root)
     }
 
-    function syncActiveState() {
-      if (!reportActiveState || !indicatorsModule || !indicatorsModule.setIndicatorActive) return
+    function syncActiveState(): var {
+      if (!reportActiveState || !IndicatorModel.hasActiveSetter(indicatorsModule)) return
 
-      var active = !!indicatorSource.item && indicatorSource.item.active === true
+      var active = IndicatorModel.isActive(indicatorSource.item)
       if (indicatorBlock === "active") {
         if (active) activeStateObserved = true
         else if (!activeStateObserved) return
       }
 
-      indicatorsModule.setIndicatorActive(entry, active)
+      IndicatorModel.setIndicatorActive(indicatorsModule, entry, active)
     }
   }
 }

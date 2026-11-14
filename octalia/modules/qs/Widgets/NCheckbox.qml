@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 
@@ -74,11 +73,11 @@ RowLayout {
       cursorShape: Qt.PointingHandCursor
       hoverEnabled: true
       onEntered: {
-        hovering = true;
+        root.hovering = true;
         root.entered();
       }
       onExited: {
-        hovering = false;
+        root.hovering = false;
         root.exited();
       }
       onClicked: root.toggled(!root.checked)

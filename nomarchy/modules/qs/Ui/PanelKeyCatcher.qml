@@ -66,16 +66,16 @@ Item {
       return
     }
     if (reorderable && (event.modifiers & Qt.ControlModifier)) {
-      var up = event.key === Qt.Key_Up || event.key === Qt.Key_K
-      var down = event.key === Qt.Key_Down || event.key === Qt.Key_J
+      let up = event.key === Qt.Key_Up || event.key === Qt.Key_K
+      let down = event.key === Qt.Key_Down || event.key === Qt.Key_J
       if (up || down) {
         reorderRequested(down ? 1 : -1); event.accepted = true; return
       }
     }
     if (reorderableSideways && (event.modifiers & Qt.ControlModifier)) {
       // In a mirrored (right-to-left) panel, Left moves forward along a row.
-      var forward = event.key === (LayoutMirroring.enabled ? Qt.Key_Left : Qt.Key_Right) || event.key === (LayoutMirroring.enabled ? Qt.Key_H : Qt.Key_L)
-      var back = event.key === (LayoutMirroring.enabled ? Qt.Key_Right : Qt.Key_Left) || event.key === (LayoutMirroring.enabled ? Qt.Key_L : Qt.Key_H)
+      let forward = event.key === (LayoutMirroring.enabled ? Qt.Key_Left : Qt.Key_Right) || event.key === (LayoutMirroring.enabled ? Qt.Key_H : Qt.Key_L)
+      let back = event.key === (LayoutMirroring.enabled ? Qt.Key_Right : Qt.Key_Left) || event.key === (LayoutMirroring.enabled ? Qt.Key_L : Qt.Key_H)
       if (forward || back) {
         reorderSidewaysRequested(forward ? 1 : -1); event.accepted = true; return
       }

@@ -1,7 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Services.Networking
 import qs.Services.UI
@@ -21,8 +21,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -32,9 +33,9 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: widgetSettings.displayMode !== undefined ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string displayMode: BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   implicitWidth: pill.width
   implicitHeight: pill.height
@@ -45,10 +46,10 @@ Item {
     model: {
       const items = [];
       const active = VPNService.activeConnections;
-      for (let i = 0; i < active.length; ++i) {
+      for (let i = 0; i < BarWidgetHelpers.readProperty(active, "length"); ++i) {
         const conn = active[i];
         items.push({
-                     "label": I18n.tr("actions.disconnect-vpn", {
+                     "label": I18n.trArgs("actions.disconnect-vpn", {
                                         "name": conn.name
                                       }),
                      "action": "disconnect:" + conn.uuid,
@@ -56,10 +57,10 @@ Item {
                    });
       }
       const inactive = VPNService.inactiveConnections;
-      for (let i = 0; i < inactive.length; ++i) {
+      for (let i = 0; i < BarWidgetHelpers.readProperty(inactive, "length"); ++i) {
         const conn = inactive[i];
         items.push({
-                     "label": I18n.tr("actions.connect-vpn", {
+                     "label": I18n.trArgs("actions.connect-vpn", {
                                         "name": conn.name
                                       }),
                      "action": "connect:" + conn.uuid,
@@ -82,7 +83,7 @@ Item {
                      return;
                    }
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                      return;
                    }
                    if (action.startsWith("connect:")) {
@@ -106,7 +107,7 @@ Item {
     customTextColor: Color.resolveColorKeyOptional(root.textColorKey)
     icon: VPNService.hasActiveConnection ? "shield-lock" : "shield"
     text: {
-      if (VPNService.activeConnections.length > 0) {
+      if (BarWidgetHelpers.readProperty(VPNService.activeConnections, "length") > 0) {
         return VPNService.activeConnections[0].name;
       }
       if (VPNService.connectingUuid) {
@@ -118,16 +119,16 @@ Item {
       return "";
     }
     suffix: {
-      if (VPNService.activeConnections.length > 1) {
-        return ` + ${VPNService.activeConnections.length - 1}`;
+      if (BarWidgetHelpers.readProperty(VPNService.activeConnections, "length") > 1) {
+        return ` + ${BarWidgetHelpers.readProperty(VPNService.activeConnections, "length") - 1}`;
       }
       return "";
     }
     autoHide: false
-    forceOpen: !isBarVertical && root.displayMode === "alwaysShow"
-    forceClose: isBarVertical || root.displayMode === "alwaysHide" || !pill.text
+    forceOpen: !root.isBarVertical && root.displayMode === "alwaysShow"
+    forceClose: root.isBarVertical || root.displayMode === "alwaysHide" || !pill.text
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
   }
 }

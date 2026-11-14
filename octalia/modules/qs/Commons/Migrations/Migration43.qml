@@ -1,29 +1,10 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 
 QtObject {
   id: root
 
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Migration43", "Migrating recursiveSearch to viewMode");
-
-    const wallpaper = rawJson?.wallpaper;
-    if (!wallpaper) {
-      logger.d("Migration43", "No wallpaper section found, skipping migration");
-      return true;
-    }
-
-    // Check if already migrated (has viewMode)
-    if (wallpaper.viewMode !== undefined) {
-      logger.d("Migration43", "Already has viewMode, skipping migration");
-      return true;
-    }
-
-    // Migrate recursiveSearch to viewMode
-    const oldValue = wallpaper.recursiveSearch ?? false;
-    const newValue = oldValue ? "recursive" : "single";
-    adapter.wallpaper.viewMode = newValue;
-    logger.i("Migration43", "Migrated recursiveSearch=" + oldValue + " to viewMode=" + newValue);
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate43(adapter, logger, rawJson);
   }
 }

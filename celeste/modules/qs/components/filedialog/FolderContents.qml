@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Celeste.Config
 import Celeste.I18n
 import Celeste.Models
@@ -12,13 +11,14 @@ import qs.components.controls
 import qs.components.effects
 import qs.components.filedialog
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 import qs.utils
 
 Item {
     id: root
 
-    required property var dialog
-    readonly property FileEntry currentItem: view.currentItem as FileEntry
+    required final property var dialog
+    readonly final property FileEntry currentItem: view.currentItem as FileEntry
 
     StyledRect {
         anchors.fill: parent
@@ -57,13 +57,13 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: "scan_delete"
                 color: Colours.palette.m3outline
-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.Medium).build()
+                fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2, weight: Font.Medium })
             }
 
             StyledText {
                 text: Tr.tr("This folder is empty")
                 color: Colours.palette.m3outline
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.styled("body", "large", { weight: Font.Medium })
             }
         }
 
@@ -89,20 +89,15 @@ Item {
         Keys.onEscapePressed: currentIndex = -1
 
         Keys.onReturnPressed: {
-            if (root.dialog.selectionValid)
-                root.dialog.accepted((currentItem as FileEntry).modelData.path);
+            FileDialogHelpers.acceptSelection(root.dialog, (currentItem as FileEntry).modelData);
         }
         Keys.onEnterPressed: {
-            if (root.dialog.selectionValid)
-                root.dialog.accepted((currentItem as FileEntry).modelData.path);
+            FileDialogHelpers.acceptSelection(root.dialog, (currentItem as FileEntry).modelData);
         }
 
         model: FileSystemModel {
             path: {
-                if (root.dialog.cwd[0] === "Home")
-                    return Paths.home + `/${root.dialog.cwd.slice(1).join("/")}`;
-                else
-                    return root.dialog.cwd.join("/");
+                return FileDialogHelpers.modelPath(root.dialog, Paths.home);
             }
             onPathChanged: view.currentIndex = -1
         }
@@ -141,7 +136,14 @@ Item {
             }
         }
     }
-// waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.    StyledScrollBar {        flickable: view        anchors.top: view.top        anchors.bottom: view.bottom        anchors.right: view.right    }
+
+    // waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+    StyledScrollBar {
+        flickable: view
+        anchors.top: view.top
+        anchors.bottom: view.bottom
+        anchors.right: view.right
+    }
 
     CurrentItem {
         anchors.right: parent.right
@@ -154,10 +156,10 @@ Item {
     component FileEntry: StyledRect {
         id: item
 
-        required property int index
-        required property FileSystemEntry modelData
+        required final property int index
+        required final property FileSystemEntry modelData
 
-        readonly property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
+        readonly final property real nonAnimHeight: icon.implicitHeight + name.anchors.topMargin + name.implicitHeight + Tokens.padding.medium * 2
 
         implicitWidth: Sizes.itemWidth
         implicitHeight: nonAnimHeight
@@ -170,10 +172,7 @@ Item {
         StateLayer {
             onClicked: view.currentIndex = item.index
             onDoubleClicked: {
-                if (item.modelData.isDir)
-                    root.dialog.cwd.push(item.modelData.name);
-                else if (root.dialog.selectionValid)
-                    root.dialog.accepted(item.modelData.path);
+                FileDialogHelpers.openItem(root.dialog, item.modelData);
             }
         }
 
@@ -202,27 +201,10 @@ Item {
         MaterialIcon {
             anchors.centerIn: icon
             visible: !item.modelData.isImage
-            text: {
-                const file = item.modelData;
-                if (!file.isDir)
-                    return "draft";
-                if (root.dialog.cwd.length === 1) {
-                    const special = {
-                        "Desktop": "desktop_windows",
-                        "Documents": "folder_open",
-                        "Downloads": "download",
-                        "Music": "library_music",
-                        "Pictures": "photo_library",
-                        "Videos": "video_library"
-                    };
-                    if (special[file.name])
-                        return special[file.name];
-                }
-                return "folder";
-            }
+            text: FileDialogHelpers.iconText(root.dialog, item.modelData)
             color: Colours.palette.m3primary
             fill: 1
-            fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.6).build()
+            fontStyle: Tokens.styled("icon", "extraLarge", { scale: 1.6 })
         }
 
         StyledText {

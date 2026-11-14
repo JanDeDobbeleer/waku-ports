@@ -1,12 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Effects
+import "DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.Panels.Settings
 import qs.Services.Compositor
-import qs.Services.Octalia
 import qs.Services.Power
 import qs.Services.UI
 import qs.Widgets
@@ -25,21 +26,14 @@ Variants {
     // Reactive property for widgets on this specific screen
     // Returns a fresh array whenever Settings changes
     property var screenWidgets: {
-      if (!modelData || !modelData.name) {
+      if (!modelData || !modelData.name)
         return [];
-      }
-      var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-      for (var i = 0; i < monitorWidgets.length; i++) {
-        if (monitorWidgets[i].name === modelData.name) {
-          return monitorWidgets[i].widgets || [];
-        }
-      }
-      return [];
+      return DesktopWidgetHelpers.widgetsForScreen(Settings.data.desktopWidgets.monitorWidgets || [], modelData.name);
     }
 
     // Only create PanelWindow if enabled AND (screen has widgets OR in edit mode)
     // During compositor overview, show widgets only when overviewEnabled is true.
-    active: modelData && Settings.data.desktopWidgets.enabled && (screenWidgets.length > 0 || DesktopWidgetRegistry.editMode) && (!CompositorService.overviewActive || Settings.data.desktopWidgets.overviewEnabled) && (!PowerProfileService.octaliaPerformanceMode || !Settings.data.octaliaPerformance.disableDesktopWidgets) && !PanelService.lockScreen?.active
+    active: modelData && Settings.data.desktopWidgets.enabled && (DesktopWidgetHelpers.field(screenWidgets, "length") > 0 || DesktopWidgetRegistry.editMode) && (!CompositorService.overviewActive || Settings.data.desktopWidgets.overviewEnabled) && (!PowerProfileService.octaliaPerformanceMode || !Settings.data.octaliaPerformance.disableDesktopWidgets) && !DesktopWidgetHelpers.optionalField(PanelService.lockScreen, "active")
 
     sourceComponent: PanelWindow {
       id: window
@@ -76,7 +70,8 @@ Variants {
       }
 
       // Add a new widget to the current screen
-      function addWidgetToCurrentScreen(widgetId) {
+      function addWidgetToCurrentScreen(widgetId: string): void {
+        var i, widgets;
         var monitorName = window.screen.name;
         var newWidget = {
           "id": widgetId
@@ -84,11 +79,7 @@ Variants {
 
         // Load default metadata if available
         var metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
-        if (metadata) {
-          Object.keys(metadata).forEach(function (key) {
-            newWidget[key] = metadata[key];
-          });
-        }
+        DesktopWidgetHelpers.copyWidgetMetadata(newWidget, metadata);
 
         // Place at screen center
         newWidget.x = (window.screen.width / 2) - 100;
@@ -100,9 +91,9 @@ Variants {
         var newMonitorWidgets = monitorWidgets.slice();
         var found = false;
 
-        for (var i = 0; i < newMonitorWidgets.length; i++) {
+        for (i = 0; i < newMonitorWidgets.length; i++) {
           if (newMonitorWidgets[i].name === monitorName) {
-            var widgets = (newMonitorWidgets[i].widgets || []).slice();
+            widgets = (newMonitorWidgets[i].widgets || []).slice();
             widgets.push(newWidget);
             newMonitorWidgets[i] = {
               "name": monitorName,
@@ -145,6 +136,7 @@ Variants {
             // Grid size calculated based on screen resolution - matches DraggableDesktopWidget
             // Ensures grid lines pass through the screen center on both axes
             readonly property int gridSize: {
+              var candidate, distance, divisor, offset, remainderX, remainderY;
               if (!window.screen)
                 return 30; // Fallback
               var baseSize = Math.round(window.screen.width * 0.015);
@@ -160,14 +152,14 @@ Variants {
               var bestDistance = Infinity;
 
               // Try values around baseSize to find one that divides evenly into both centers
-              for (var offset = -10; offset <= 10; offset++) {
-                var candidate = baseSize + offset;
+              for (offset = -10; offset <= 10; offset++) {
+                candidate = baseSize + offset;
                 if (candidate < 20 || candidate > 60)
                   continue;
 
                 // Check if this size divides evenly into both center coordinates
-                var remainderX = centerX % candidate;
-                var remainderY = centerY % candidate;
+                remainderX = centerX % candidate;
+                remainderY = centerY % candidate;
 
                 // If both remainders are 0, this is perfect - center is on grid lines
                 if (remainderX === 0 && remainderY === 0) {
@@ -175,7 +167,7 @@ Variants {
                 }
 
                 // Otherwise, find the closest to perfect alignment
-                var distance = Math.abs(remainderX) + Math.abs(remainderY);
+                distance = Math.abs(remainderX) + Math.abs(remainderY);
                 if (distance < bestDistance) {
                   bestDistance = distance;
                   bestSize = candidate;
@@ -185,23 +177,14 @@ Variants {
               // If we found a perfect match, it would have returned already
               // Otherwise, try to find a divisor of both centerX and centerY
               // that's close to our best size
-              var gcd = function (a, b) {
-                while (b !== 0) {
-                  var temp = b;
-                  b = a % b;
-                  a = temp;
-                }
-                return a;
-              };
-
               // Find common divisors of centerX and centerY
-              var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
+              var centerGcd = DesktopWidgetHelpers.gcd(Math.round(centerX), Math.round(centerY));
               if (centerGcd > 0) {
                 // Find a divisor of centerGcd that's close to bestSize
-                for (var divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
+                for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
                   if (centerGcd % divisor !== 0)
                     continue;
-                  var candidate = centerGcd / divisor;
+                  candidate = centerGcd / divisor;
                   if (candidate >= 20 && candidate <= 60) {
                     if (Math.abs(candidate - baseSize) < Math.abs(bestSize - baseSize)) {
                       bestSize = candidate;
@@ -270,7 +253,7 @@ Variants {
 
           delegate: Loader {
             id: widgetLoader
-            active: modelData.id in root.registeredWidgets
+            active: DesktopWidgetHelpers.field(widgetLoader.modelData, "id") in root.registeredWidgets
 
             required property var modelData
             required property int index
@@ -288,15 +271,15 @@ Variants {
             }
 
             function _loadWidget() {
-              var widgetId = modelData.id;
+              var widgetId = DesktopWidgetHelpers.field(widgetLoader.modelData, "id");
               var comp = root.registeredWidgets[widgetId];
               if (!comp)
                 return;
 
               var props = {
                 "screen": window.screen,
-                "widgetData": modelData,
-                "widgetIndex": index
+                "widgetData": widgetLoader.modelData,
+                "widgetIndex": widgetLoader.index
               };
 
               // Use explicit URL (inline Component.url
@@ -307,13 +290,15 @@ Variants {
             }
 
             onLoaded: {
+              var newRegions;
               if (item) {
-                item.parent = widgetsContainer;
+                const widgetItem = item as Item;
+                widgetItem.parent = widgetsContainer;
 
                 // Create mask region so this widget receives mouse input
                 _maskRegion = maskRegionComponent.createObject(window);
-                _maskRegion.item = item;
-                var newRegions = window._maskRegions.slice();
+                DesktopWidgetHelpers.writeField(_maskRegion, "item", widgetItem);
+                newRegions = window._maskRegions.slice();
                 newRegions.push(_maskRegion);
                 window._maskRegions = newRegions;
               }
@@ -321,12 +306,11 @@ Variants {
 
             // Clean up mask region when widget unloads
             onItemChanged: {
+              var region;
               if (!item && _maskRegion) {
-                var region = _maskRegion;
+                region = _maskRegion;
                 _maskRegion = null;
-                window._maskRegions = window._maskRegions.filter(function (r) {
-                  return r !== region;
-                });
+                window._maskRegions = DesktopWidgetHelpers.withoutRegion(window._maskRegions, region);
                 region.destroy();
               }
             }
@@ -405,13 +389,14 @@ Variants {
                        }
 
             onPositionChanged: mouse => {
+              var currentPos, deltaX, deltaY, newX, newY;
                                  if (panelInternal.isDragging && pressed) {
-                                   var currentPos = mapToItem(widgetsContainer, mouse.x, mouse.y);
-                                   var deltaX = currentPos.x - pressPos.x;
-                                   var deltaY = currentPos.y - pressPos.y;
+                                   currentPos = mapToItem(widgetsContainer, mouse.x, mouse.y);
+                                   deltaX = currentPos.x - pressPos.x;
+                                   deltaY = currentPos.y - pressPos.y;
 
-                                   var newX = panelInternal.baseX + deltaX;
-                                   var newY = panelInternal.baseY + deltaY;
+                                   newX = panelInternal.baseX + deltaX;
+                                   newY = panelInternal.baseY + deltaY;
 
                                    // Boundary clamping
                                    newX = Math.max(0, Math.min(newX, widgetsContainer.width - editModeControlsPanel.width));
@@ -451,21 +436,23 @@ Variants {
                 id: addWidgetButton
                 icon: "layout-grid-add"
                 onClicked: {
+                  var id;
+                  var globalPos, items, widgets;
                   var popupMenuWindow = PanelService.getPopupMenuWindow(window.screen);
                   if (popupMenuWindow) {
                     // Build menu items from registry
-                    var items = [];
-                    var widgets = DesktopWidgetRegistry.widgets;
-                    for (var id in widgets) {
+                    items = [];
+                    widgets = DesktopWidgetRegistry.widgets;
+                    for (id in widgets) {
                       items.push({
                                    action: id,
                                    text: DesktopWidgetRegistry.getWidgetDisplayName(id),
                                    icon: "layout-grid-add"
                                  });
                     }
-                    var globalPos = addWidgetButton.mapToItem(null, 0, addWidgetButton.height + Style.marginS);
-                    popupMenuWindow.showDynamicContextMenu(items, globalPos.x, globalPos.y, function (widgetId) {
-                      addWidgetToCurrentScreen(widgetId);
+                    globalPos = addWidgetButton.mapToItem(null, 0, addWidgetButton.height + Style.marginS);
+                    popupMenuWindow.showDynamicContextMenu(items, globalPos.x, globalPos.y, function (widgetId: string): bool {
+                      window.addWidgetToCurrentScreen(widgetId);
                       return false;
                     });
                   }

@@ -1,24 +1,22 @@
 import QtQuick
+import "ServiceRefHelpers.js" as ServiceRefHelpers
 
 // Port of celeste's ServiceRef: holds a reference on a stat service while this object lives.
 // The services start polling on the first reference and stop on the last.
 QtObject {
     id: root
 
-    property var service
-    property var _held: null
+    final property var service
+    final property var _held: null
 
     onServiceChanged: {
-        if (_held && _held.unref)
-            _held.unref();
+        ServiceRefHelpers.release(_held);
         _held = service ?? null;
-        if (_held && _held.ref)
-            _held.ref();
+        ServiceRefHelpers.acquire(_held);
     }
 
     Component.onDestruction: {
-        if (_held && _held.unref)
-            _held.unref();
+        ServiceRefHelpers.release(_held);
         _held = null;
     }
 }

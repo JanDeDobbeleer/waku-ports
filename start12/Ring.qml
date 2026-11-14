@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 // A ring gauge: `value` is 0..1, `centerText` and `unit` sit inside, `caption` under it.

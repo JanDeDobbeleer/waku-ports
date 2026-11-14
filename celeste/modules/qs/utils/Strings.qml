@@ -5,7 +5,7 @@ import Celeste.I18n
 import qs.compat
 
 Singleton {
-    property var _regexCache: ({})
+    final property var _regexCache: ({})
 
     function percent(value: int): string {
         // TRANSLATORS: %1 = a number
@@ -18,7 +18,8 @@ Singleton {
 
     function testRegexList(filterList: list<string>, target: string): bool {
         const regexChecker = /^\^.*\$$/;
-        for (const filter of filterList) {
+        for (let i = 0; i < filterList.length; i++) {
+            const filter = filterList[i];
             if (regexChecker.test(filter)) {
                 let re = _regexCache[filter];
                 if (!re) {

@@ -10,30 +10,30 @@ import qs.services
 Item {
     id: root
 
-    property real value
-    property int startAngle: -90
-    property int sweepAngle: 360
-    property int strokeWidth: Tokens.padding.small
-    property int padding: 0
-    property int spacing: Tokens.spacing.small
-    property color fgColour: Colours.palette.m3primary
-    property color bgColour: Colours.palette.m3secondaryContainer
+    final property real value
+    final property int startAngle: -90
+    final property int sweepAngle: 360
+    final property int strokeWidth: Tokens.padding.small
+    final property int padding: 0
+    final property int spacing: Tokens.spacing.small
+    final property color fgColour: Colours.palette.m3primary
+    final property color bgColour: Colours.palette.m3secondaryContainer
     property alias hasEndIndicator: dot.active
 
-    property bool wavy: false
+    final property bool wavy: false
     property alias waveFrequency: wave.frequency
     property alias waveAmplitude: wave.amplitudeMultiplier
-    property bool wavePaused
+    final property bool wavePaused
     property alias waveDuration: waveProgAnim.duration
 
-    readonly property real size: Math.min(width, height)
-    readonly property real arcRadius: (size - padding - strokeWidth * (1 + waveAmplitude * 2)) / 2
-    property real clampedVal: Math.max(1 / 360, Math.min(1, isNaN(value) ? 0 : value)) // Not readonly for animations
-    readonly property real gapAngle: ((spacing + strokeWidth) / (arcRadius || 1)) * (180 / Math.PI)
-    readonly property real dotAngleRad: (startAngle + sweepAngle - gapAngle * (sweepAngle < 360 ? 0 : 1)) * Math.PI / 180
+    readonly final property real size: Math.min(width, height)
+    readonly final property real arcRadius: (size - padding - strokeWidth * (1 + waveAmplitude * 2)) / 2
+    final property real clampedVal: Math.max(1 / 360, Math.min(1, isNaN(value) ? 0 : value)) // Not readonly for animations
+    readonly final property real gapAngle: ((spacing + strokeWidth) / (arcRadius || 1)) * (180 / Math.PI)
+    readonly final property real dotAngleRad: (startAngle + sweepAngle - gapAngle * (sweepAngle < 360 ? 0 : 1)) * Math.PI / 180
 
-    readonly property real thickness: strokeWidth * (1 + waveAmplitude) * 2 // For consumers
-    property real implicitSize
+    readonly final property real thickness: strokeWidth * (1 + waveAmplitude) * 2 // For consumers
+    final property real implicitSize
 
     implicitWidth: implicitSize
     implicitHeight: implicitSize

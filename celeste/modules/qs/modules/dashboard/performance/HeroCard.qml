@@ -11,12 +11,12 @@ import qs.utils
 StyledRect {
     id: root
 
-    required property string icon
-    required property string label
-    required property string subLabel
-    required property color accent
-    required property real usage
-    required property real temperature
+    required final property string icon
+    required final property string label
+    required final property string subLabel
+    required final property color accent
+    required final property real usage
+    required final property real temperature
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.extraLarge
@@ -97,7 +97,7 @@ StyledRect {
             StyledText {
                 // Port: Windows has no CPU/GPU sensor without a driver; the services report NaN.
                 text: isNaN(root.temperature) ? "--" : Units.formatSensorTemp(root.temperature)
-                font: Tokens.font.body.builders.medium.build()
+                font: Tokens.styled("body", "medium", {  })
             }
         }
 
@@ -146,7 +146,7 @@ StyledRect {
             anchors.centerIn: parent
             text: isNaN(root.usage) ? "..." : Strings.percentOne(root.usage)
             color: root.accent
-            font: Tokens.font.headline.builders.small.width(50).build()
+            font: Tokens.styled("headline", "small", { width: 50 })
         }
     }
 }

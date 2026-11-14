@@ -1,3 +1,23 @@
+function field(object, key) {
+  return object ? object[key] : undefined
+}
+
+function setField(object, key, value) {
+  if (object) object[key] = value
+}
+
+function arrayLength(value) {
+  return value ? value.length : 0
+}
+
+function values(object) {
+  return object && object.values ? object.values : []
+}
+
+function invoke(callback, value) {
+  callback(value)
+}
+
 // Display numbers go through the shell's I18n.formatNumber when QML passes
 // it; Node tests leave it out and get plain English digits.
 function formatter(fmt) {
@@ -450,4 +470,8 @@ if (typeof module !== "undefined") {
     networkFailureReason: networkFailureReason,
     shouldRepromptPassphrase: shouldRepromptPassphrase
   }
+}
+
+function callMethod(object, name) {
+  object[name]()
 }

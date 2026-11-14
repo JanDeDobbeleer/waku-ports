@@ -1,11 +1,11 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Celeste
 import Celeste.Config
 import Celeste.I18n
 import Celeste.State
 import qs.services
+import "GameModeHelpers.js" as GameModeHelpers
 
 Scope {
     id: root
@@ -13,17 +13,17 @@ Scope {
     // waku gap: nothing to switch off. Windows has no compositor effects to disable, so game
     // mode is a flag other modules can read.
     function applyGameMode(): void {
-        Hypr.extras.applyOptions({});
+        GameModeHelpers.applyOptions(Hypr);
     }
 
     function syncState(enableDisable: bool): void {
         if (RuntimeState.gameMode) {
             root.applyGameMode();
             if (GlobalConfig.utilities.toasts.gameModeChanged)
-                Toaster.toast(Tr.tr("Game mode enabled"), Tr.tr("No window effects to disable on Windows"), "gamepad");
+                Toaster.toast(Tr.tr("Game mode enabled"), Tr.tr("No window effects to disable on Windows"), "gamepad", Toast.Info, 5000);
         } else if (enableDisable) {
             if (GlobalConfig.utilities.toasts.gameModeChanged)
-                Toaster.toast(Tr.tr("Game mode disabled"), Tr.tr("Window effects unchanged"), "gamepad");
+                Toaster.toast(Tr.tr("Game mode disabled"), Tr.tr("Window effects unchanged"), "gamepad", Toast.Info, 5000);
         }
     }
 

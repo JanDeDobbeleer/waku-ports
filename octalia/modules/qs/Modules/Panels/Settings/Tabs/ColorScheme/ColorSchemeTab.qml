@@ -1,14 +1,9 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 import "."
-import qs.Commons
-import qs.Services.System
-import qs.Services.Theming
-import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,18 +11,19 @@ ColumnLayout {
 
   // Time dropdown options (00:00 .. 23:30)
   ListModel {
-    id: timeOptions
+    id: timeOptionsModel
   }
 
   property var screen
 
   function populateTimeOptions() {
-    for (var h = 0; h < 24; h++) {
-      for (var m = 0; m < 60; m += 30) {
-        var hh = ("0" + h).slice(-2);
-        var mm = ("0" + m).slice(-2);
-        var key = hh + ":" + mm;
-        timeOptions.append({
+    var h, hh, key, m, mm;
+    for (h = 0; h < 24; h++) {
+      for (m = 0; m < 60; m += 30) {
+        hh = ("0" + h).slice(-2);
+        mm = ("0" + m).slice(-2);
+        key = hh + ":" + mm;
+        timeOptionsModel.append({
                              "key": key,
                              "name": key
                            });
@@ -53,14 +49,14 @@ ColumnLayout {
       pendingOpen = true;
       active = true;
       if (item) {
-        item.open();
+        SettingsValue.callIfPresent(item, "open");
         pendingOpen = false;
       }
     }
 
     onItemChanged: {
       if (item && pendingOpen) {
-        item.open();
+        SettingsValue.callIfPresent(item, "open");
         pendingOpen = false;
       }
     }
@@ -72,7 +68,7 @@ ColumnLayout {
 
     ColorsSubTab {
       screen: root.screen
-      timeOptions: timeOptions
+      timeOptions: timeOptionsModel
       onOpenDownloadPopup: downloadPopupLoader.open()
     }
   }

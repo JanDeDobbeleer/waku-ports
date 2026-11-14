@@ -6,7 +6,6 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs.Commons
 import qs.Services.System
-import qs.compat
 
 Singleton {
   id: root
@@ -237,6 +236,8 @@ Singleton {
 
   // Find application streams that are connected to the default sink
   readonly property var appStreams: {
+    var linkGroup;
+    var allNodes, i, j, node, sourceNode, streamId;
     if (!Pipewire.ready || !root.sink) {
       return [];
     }
@@ -265,8 +266,8 @@ Singleton {
     var intermediateNodeIds = {};
     var nodesToCheck = [];
 
-    for (var i = 0; i < linkGroupsCount; i++) {
-      var linkGroup;
+    for (i = 0; i < linkGroupsCount; i++) {
+
       if (sinkLinkTracker.linkGroups.get) {
         linkGroup = sinkLinkTracker.linkGroups.get(i);
       } else {
@@ -277,7 +278,7 @@ Singleton {
         continue;
       }
 
-      var sourceNode = linkGroup.source;
+      sourceNode = linkGroup.source;
 
       // Filter out quickshell
       const name = sourceNode.name || "";
@@ -304,11 +305,11 @@ Singleton {
     // If we found intermediate nodes, we need to find streams connected to them
     if (nodesToCheck.length > 0 || connectedStreams.length === 0) {
       try {
-        var allNodes = Pipewire.nodes.values || [];
+        allNodes = Pipewire.nodes.values || [];
 
         // Find all stream nodes
-        for (var j = 0; j < allNodes.length; j++) {
-          var node = allNodes[j];
+        for (j = 0; j < allNodes.length; j++) {
+          node = allNodes[j];
           if (!node || !node.isStream || !node.audio) {
             continue;
           }
@@ -326,7 +327,7 @@ Singleton {
             continue;
           }
 
-          var streamId = node.id;
+          streamId = node.id;
           if (connectedStreamIds[streamId]) {
             continue;
           }
@@ -411,6 +412,7 @@ Singleton {
   }
 
   function getAppBaseKey(node): string {
+    var appId, appName, parts;
     if (!node || !node.properties) {
       return "";
     }
@@ -418,17 +420,17 @@ Singleton {
     var base = "";
     var binary = props["application.process.binary"] || "";
     if (binary) {
-      var parts = binary.split("/");
+      parts = binary.split("/");
       base = parts[parts.length - 1].toLowerCase();
     }
     if (!base) {
-      var appName = props["application.name"] || "";
+      appName = props["application.name"] || "";
       if (appName) {
         base = appName.toLowerCase();
       }
     }
     if (!base) {
-      var appId = props["application.id"] || "";
+      appId = props["application.id"] || "";
       if (appId) {
         base = appId.toLowerCase();
       }
@@ -437,6 +439,7 @@ Singleton {
   }
 
   function _concurrentStreamsForSameBase(base: string): int {
+    var i, s;
     if (!base) {
       return 0;
     }
@@ -445,8 +448,8 @@ Singleton {
       return 0;
     }
     var n = 0;
-    for (var i = 0; i < streams.length; i++) {
-      var s = streams[i];
+    for (i = 0; i < streams.length; i++) {
+      s = streams[i];
       if (s && getAppBaseKey(s) === base) {
         n++;
       }
@@ -525,8 +528,9 @@ Singleton {
   }
 
   function _cloneStrMap(m) {
+    var k;
     var d = {};
-    for (var k in m) {
+    for (k in m) {
       if (Object.prototype.hasOwnProperty.call(m, k)) {
         d[k] = m[k];
       }
@@ -535,12 +539,14 @@ Singleton {
   }
 
   function _cloneOverrideMap(ovSrc) {
+    var ok;
+    var inner;
     var out = {};
-    for (var ok in ovSrc) {
+    for (ok in ovSrc) {
       if (!Object.prototype.hasOwnProperty.call(ovSrc, ok)) {
         continue;
       }
-      var inner = ovSrc[ok];
+      inner = ovSrc[ok];
       out[ok] = inner ? {
                           "volume": inner.volume,
                           "muted": inner.muted
@@ -577,28 +583,30 @@ Singleton {
   }
 
   function _writePanelStickyVolume(node, volume: real): void {
+    var psk, pvb;
     var base = getAppBaseKey(node);
     var key = getAppKey(node);
     if (_concurrentStreamsForSameBase(base) > 1 && key) {
-      var psk = panelAppVolumeByStreamKey;
+      psk = panelAppVolumeByStreamKey;
       psk[key] = volume;
       panelAppVolumeByStreamKey = psk;
     } else if (base) {
-      var pvb = panelAppVolumeByBase;
+      pvb = panelAppVolumeByBase;
       pvb[base] = volume;
       panelAppVolumeByBase = pvb;
     }
   }
 
   function _writePanelStickyMute(node, muted: bool): void {
+    var msk, pmb;
     var base = getAppBaseKey(node);
     var key = getAppKey(node);
     if (_concurrentStreamsForSameBase(base) > 1 && key) {
-      var msk = panelAppMutedByStreamKey;
+      msk = panelAppMutedByStreamKey;
       msk[key] = muted;
       panelAppMutedByStreamKey = msk;
     } else if (base) {
-      var pmb = panelAppMutedByBase;
+      pmb = panelAppMutedByBase;
       pmb[base] = muted;
       panelAppMutedByBase = pmb;
     }
@@ -623,14 +631,16 @@ Singleton {
   }
 
   function _migrateBasePanelLocksToPerStreamIfNeeded(): void {
+    var base;
+    var b, i, j, key, muteB, s, volB;
     var streams = root.appStreams;
     if (!streams || streams.length === 0) {
       return;
     }
 
     var bases = {};
-    for (var i = 0; i < streams.length; i++) {
-      var b = getAppBaseKey(streams[i]);
+    for (i = 0; i < streams.length; i++) {
+      b = getAppBaseKey(streams[i]);
       if (b) {
         bases[b] = true;
       }
@@ -643,25 +653,25 @@ Singleton {
     var oNew = _cloneOverrideMap(appVolumeOverrides);
     var changed = false;
 
-    for (var base in bases) {
+    for (base in bases) {
       if (!Object.prototype.hasOwnProperty.call(bases, base)) {
         continue;
       }
       if (_concurrentStreamsForSameBase(base) <= 1) {
         continue;
       }
-      var volB = pvb[base];
-      var muteB = pmb[base];
+      volB = pvb[base];
+      muteB = pmb[base];
       if (volB === undefined && muteB === undefined) {
         continue;
       }
 
-      for (var j = 0; j < streams.length; j++) {
-        var s = streams[j];
+      for (j = 0; j < streams.length; j++) {
+        s = streams[j];
         if (!s || getAppBaseKey(s) !== base) {
           continue;
         }
-        var key = getAppKey(s);
+        key = getAppKey(s);
         if (!key) {
           continue;
         }
@@ -710,6 +720,7 @@ Singleton {
   }
 
   function _applyAppOverrides(): void {
+    var base, i, key, ov, panelMute, panelVol, s, targetMuted, targetVol;
     var streams = root.appStreams;
     if (!streams) {
       return;
@@ -720,16 +731,16 @@ Singleton {
     var prevKnown = root._knownAppStreamIds;
     var currentIds = {};
     _isApplyingAppOverride = true;
-    for (var i = 0; i < streams.length; i++) {
-      var s = streams[i];
+    for (i = 0; i < streams.length; i++) {
+      s = streams[i];
       if (!s) {
         continue;
       }
 
       currentIds[s.id] = true;
-      var key = getAppKey(s);
-      var base = getAppBaseKey(s);
-      var ov = key ? appVolumeOverrides[key] : null;
+      key = getAppKey(s);
+      base = getAppBaseKey(s);
+      ov = key ? appVolumeOverrides[key] : null;
 
       if (key && s.audio && !prevKnown[s.id]) {
         ov = _seedNewStreamOverride(key, base, s.audio);
@@ -739,10 +750,10 @@ Singleton {
         continue;
       }
 
-      var panelVol = _panelStickyVolume(key, base);
-      var panelMute = _panelStickyMute(key, base);
-      var targetVol = (panelVol !== undefined) ? panelVol : (ov && ov.volume !== undefined ? ov.volume : undefined);
-      var targetMuted = (panelMute !== undefined) ? panelMute : (ov && ov.muted !== undefined ? ov.muted : undefined);
+      panelVol = _panelStickyVolume(key, base);
+      panelMute = _panelStickyMute(key, base);
+      targetVol = (panelVol !== undefined) ? panelVol : (ov && ov.volume !== undefined ? ov.volume : undefined);
+      targetMuted = (panelMute !== undefined) ? panelMute : (ov && ov.muted !== undefined ? ov.muted : undefined);
       if (targetVol !== undefined && Math.abs(s.audio.volume - targetVol) > root.epsilon) {
         s.audio.volume = targetVol;
       }
@@ -775,9 +786,8 @@ Singleton {
     onTriggered: root._applyAppOverrides()
   }
 
-  Component.onCompleted: {
-    wpctlAvailabilityProcess.running = true;
-  }
+  // Windows port: there is no wpctl (PipeWire) and no sh, so wpctlAvailable stays false and the
+  // availability probe never runs.
 
   Connections {
     target: root

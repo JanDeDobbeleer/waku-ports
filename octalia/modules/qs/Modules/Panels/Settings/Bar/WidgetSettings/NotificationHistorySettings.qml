@@ -1,8 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,11 +16,11 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueShowUnreadBadge: widgetData.showUnreadBadge !== undefined ? widgetData.showUnreadBadge : widgetMetadata.showUnreadBadge
-  property bool valueHideWhenZero: widgetData.hideWhenZero !== undefined ? widgetData.hideWhenZero : widgetMetadata.hideWhenZero
-  property bool valueHideWhenZeroUnread: widgetData.hideWhenZeroUnread !== undefined ? widgetData.hideWhenZeroUnread : widgetMetadata.hideWhenZeroUnread
-  property string valueUnreadBadgeColor: widgetData.unreadBadgeColor !== undefined ? widgetData.unreadBadgeColor : widgetMetadata.unreadBadgeColor
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
+  property bool valueShowUnreadBadge: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showUnreadBadge")
+  property bool valueHideWhenZero: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenZero")
+  property bool valueHideWhenZeroUnread: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenZeroUnread")
+  property string valueUnreadBadgeColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "unreadBadgeColor")
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -35,56 +35,56 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.notification-history.show-unread-badge-label")
     description: I18n.tr("bar.notification-history.show-unread-badge-description")
-    checked: valueShowUnreadBadge
+    checked: root.valueShowUnreadBadge
     onToggled: checked => {
-                 valueShowUnreadBadge = checked;
-                 saveSettings();
+                 root.valueShowUnreadBadge = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showUnreadBadge
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showUnreadBadge")
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
-                  saveSettings();
+                  root.valueIconColor = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 
   NColorChoice {
     label: I18n.tr("bar.notification-history.unread-badge-color-label")
     description: I18n.tr("bar.notification-history.unread-badge-color-description")
-    currentKey: valueUnreadBadgeColor
+    currentKey: root.valueUnreadBadgeColor
     onSelected: key => {
-                  valueUnreadBadgeColor = key;
-                  saveSettings();
+                  root.valueUnreadBadgeColor = key;
+                  root.saveSettings();
                 }
-    visible: valueShowUnreadBadge
-    defaultValue: widgetMetadata.unreadBadgeColor
+    visible: root.valueShowUnreadBadge
+    defaultValue: SettingsValue.read(root.widgetMetadata, "unreadBadgeColor")
   }
 
   NToggle {
     label: I18n.tr("bar.notification-history.hide-widget-when-zero-label")
     description: I18n.tr("bar.notification-history.hide-widget-when-zero-description")
-    checked: valueHideWhenZero
+    checked: root.valueHideWhenZero
     onToggled: checked => {
-                 valueHideWhenZero = checked;
-                 saveSettings();
+                 root.valueHideWhenZero = checked;
+                 root.saveSettings();
                }
-    enabled: !valueHideWhenZeroUnread
-    defaultValue: widgetMetadata.hideWhenZero
+    enabled: !root.valueHideWhenZeroUnread
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenZero")
   }
 
   NToggle {
     label: I18n.tr("bar.notification-history.hide-widget-when-zero-unread-label")
     description: I18n.tr("bar.notification-history.hide-widget-when-zero-unread-description")
-    checked: valueHideWhenZeroUnread
+    checked: root.valueHideWhenZeroUnread
     onToggled: checked => {
-                 valueHideWhenZeroUnread = checked;
-                 saveSettings();
+                 root.valueHideWhenZeroUnread = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenZeroUnread
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenZeroUnread")
   }
 }

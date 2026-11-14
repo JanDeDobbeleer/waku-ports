@@ -1,4 +1,5 @@
 import QtQuick
+import "ToastHelpers.js" as ToastHelpers
 
 // Port of upstream Toast. Made by Toaster.toast(); stays queued until it is closed and every
 // holder released its lock (a toast delegate locks it while it plays its close animation).
@@ -12,39 +13,22 @@ QtObject {
         Error
     }
 
-    property bool closed: false
-    property string title: ""
-    property string message: ""
-    property string icon: ""
-    property int timeout: 5000
-    property int type: Toast.Info
+    final property bool closed: false
+    final property string title: ""
+    final property string message: ""
+    final property string icon: ""
+    final property int timeout: 5000
+    final property int type: Toast.Info
 
     signal finishedClose
 
-    property var _locks: []
+    final property var _locks: []
 
-    function close(): void {
-        if (!closed)
-            closed = true;
-        if (_locks.length === 0)
-            finishedClose();
-    }
+    function close(): void { ToastHelpers.close(root); }
+    function lock(sender: QtObject): void { ToastHelpers.lock(root, sender); }
+    function unlock(sender: QtObject): void { ToastHelpers.unlock(root, sender); }
 
-    function lock(sender: QtObject): void {
-        if (_locks.includes(sender))
-            return;
-        _locks = [..._locks, sender];
-        sender.destroyed?.connect(() => unlock(sender)); // Port: QML objects expose no destroyed signal here
-    }
-
-    function unlock(sender: QtObject): void {
-        const had = _locks.includes(sender);
-        _locks = _locks.filter(l => l !== sender);
-        if (had && closed)
-            close();
-    }
-
-    property Timer _timer: Timer {
+    final property Timer _timer: Timer {
         interval: root.timeout
         running: true
         onTriggered: root.close()

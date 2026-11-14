@@ -1,13 +1,12 @@
 pragma Singleton
 
+import "CompositorServiceUtils.js" as CompositorServiceUtils
+
 import QtQuick 6.10
 import Quickshell
-import Quickshell.Io
 import waku.services as S
 import qs.Commons
 import qs.Services.Control
-import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root
@@ -60,7 +59,7 @@ Singleton {
     target: typeof ShellState !== 'undefined' ? ShellState : null
     function onIsLoadedChanged() {
       if (ShellState.isLoaded) {
-        loadDisplayScalesFromState();
+        root.loadDisplayScalesFromState();
       }
     }
   }
@@ -79,32 +78,19 @@ Singleton {
     id: backendLoader
     onLoaded: {
       if (item) {
-        if (isScroll) {
-          item.msgCommand = "scrollmsg";
+        if (root.isScroll) {
+          CompositorServiceUtils.setScrollCommand(item);
         }
         root.backend = item;
-        setupBackendConnections();
-        backend.initialize();
+        root.setupBackendConnections();
+        root.backend.initialize();
       }
     }
   }
 
   // Load display scales from ShellState
-  function loadDisplayScalesFromState() {
-    try {
-      const cached = ShellState.getDisplay();
-      if (cached && Object.keys(cached).length > 0) {
-        displayScales = cached;
-        displayScalesLoaded = true;
-        Logger.d("CompositorService", "Loaded display scales from ShellState");
-      } else {
-        // Migration is now handled in Settings.qml
-        displayScalesLoaded = true;
-      }
-    } catch (error) {
-      Logger.e("CompositorService", "Failed to load display scales:", error);
-      displayScalesLoaded = true;
-    }
+  function loadDisplayScalesFromState(): void {
+    CompositorServiceUtils.loadDisplayScalesFromState(root, ShellState, Logger);
   }
 
   // waku backend component
@@ -115,117 +101,42 @@ Singleton {
     }
   }
 
-  function setupBackendConnections() {
-    if (!backend)
-      return;
-
-    // Connect backend signals to facade signals
-    backend.workspaceChanged.connect(() => {
-                                       // Sync workspaces when they change
-                                       syncWorkspaces();
-                                       // Forward the signal
-                                       workspaceChanged();
-                                     });
-
-    backend.activeWindowChanged.connect(() => {
-                                          // Only sync focus state, not entire window list
-                                          syncFocusedWindow();
-                                          // Forward the signal
-                                          activeWindowChanged();
-                                        });
-
-    backend.windowListChanged.connect(() => {
-                                        syncWindows();
-                                      });
-
-    // Property bindings - use automatic property change signal
-    backend.focusedWindowIndexChanged.connect(() => {
-                                                focusedWindowIndex = backend.focusedWindowIndex;
-                                              });
-
-    // Overview state (Niri-specific)
-    if (backend.overviewActiveChanged) {
-      backend.overviewActiveChanged.connect(() => {
-                                              overviewActive = backend.overviewActive;
-                                            });
-    }
-
-    // Initial sync
-    syncWorkspaces();
-    syncWindows();
-    focusedWindowIndex = backend.focusedWindowIndex;
-    if (backend.overviewActive !== undefined) {
-      overviewActive = backend.overviewActive;
-    }
-    if (backend.globalWorkspaces !== undefined) {
-      globalWorkspaces = backend.globalWorkspaces;
-    }
+  function setupBackendConnections(): void {
+    CompositorServiceUtils.setupBackendConnections(root);
   }
 
-  function syncWorkspaces() {
-    workspaces.clear();
-    const ws = backend.workspaces;
-    for (var i = 0; i < ws.count; i++) {
-      workspaces.append(ws.get(i));
-    }
-    // Emit signal to notify listeners that workspace list has been updated
-    workspacesChanged();
+  function syncWorkspaces(): void {
+    CompositorServiceUtils.syncWorkspaces(root);
   }
 
-  function syncWindows() {
-    windows.clear();
-    const ws = backend.windows;
-    for (var i = 0; i < ws.length; i++) {
-      windows.append(ws[i]);
-    }
-    // Emit signal to notify listeners that window list has been updated
-    windowListChanged();
+  function syncWindows(): void {
+    CompositorServiceUtils.syncWindows(root);
   }
 
   // Sync only the focused window state, not the entire window list
-  function syncFocusedWindow() {
-    const newIndex = backend.focusedWindowIndex;
-
-    // Update isFocused flags by syncing from backend
-    for (var i = 0; i < windows.count && i < backend.windows.length; i++) {
-      const backendFocused = backend.windows[i].isFocused;
-      if (windows.get(i).isFocused !== backendFocused) {
-        windows.setProperty(i, "isFocused", backendFocused);
-      }
-    }
-
-    focusedWindowIndex = newIndex;
+  function syncFocusedWindow(): void {
+    CompositorServiceUtils.syncFocusedWindow(root);
   }
 
   // Update display scales from backend
-  function updateDisplayScales() {
-    if (!backend || !backend.queryDisplayScales) {
-      Logger.w("CompositorService", "Backend does not support display scale queries");
-      return;
-    }
-
-    backend.queryDisplayScales();
+  function updateDisplayScales(): void {
+    CompositorServiceUtils.updateDisplayScales(root, Logger);
   }
 
   // Called by backend when display scales are ready
-  function onDisplayScalesUpdated(scales) {
+  function onDisplayScalesUpdated(scales: var): void {
     displayScales = scales;
     saveDisplayScalesToCache();
     Logger.d("CompositorService", "Display scales updated");
   }
 
   // Save display scales to cache
-  function saveDisplayScalesToCache() {
-    try {
-      ShellState.setDisplay(displayScales);
-      Logger.d("CompositorService", "Saved display scales to ShellState");
-    } catch (error) {
-      Logger.e("CompositorService", "Failed to save display scales:", error);
-    }
+  function saveDisplayScalesToCache(): void {
+    CompositorServiceUtils.saveDisplayScalesToCache(root, ShellState, Logger);
   }
 
   // Public function to get scale for a specific display
-  function getDisplayScale(displayName) {
+  function getDisplayScale(displayName: var): var {
     if (!displayName || !displayScales[displayName]) {
       return 1.0;
     }
@@ -233,7 +144,7 @@ Singleton {
   }
 
   // Public function to get all display info for a specific display
-  function getDisplayInfo(displayName) {
+  function getDisplayInfo(displayName: var): var {
     if (!displayName || !displayScales[displayName]) {
       return null;
     }
@@ -241,148 +152,73 @@ Singleton {
   }
 
   // Get focused window
-  function getFocusedWindow() {
-    if (focusedWindowIndex >= 0 && focusedWindowIndex < windows.count) {
-      return windows.get(focusedWindowIndex);
-    }
-    return null;
+  function getFocusedWindow(): var {
+    return CompositorServiceUtils.getFocusedWindow(root);
   }
 
   // Get focused screen from compositor
-  function getFocusedScreen() {
-    if (backend && backend.getFocusedScreen) {
-      return backend.getFocusedScreen();
-    }
-    return null;
+  function getFocusedScreen(): var {
+    return CompositorServiceUtils.getFocusedScreen(root);
   }
 
   // Get focused window title
-  function getFocusedWindowTitle() {
-    if (focusedWindowIndex >= 0 && focusedWindowIndex < windows.count) {
-      var title = windows.get(focusedWindowIndex).title;
-      if (title !== undefined) {
-        title = title.replace(/(\r\n|\n|\r)/g, "");
-      }
-      return title || "";
-    }
-    return "";
+  function getFocusedWindowTitle(): string {
+    return CompositorServiceUtils.getFocusedWindowTitle(root);
   }
 
   // Get clean app name from appId
   // Extracts the last segment from reverse domain notation (e.g., "org.kde.dolphin" -> "Dolphin")
   // Falls back to title if appId is empty
-  function getCleanAppName(appId, fallbackTitle) {
+  function getCleanAppName(appId: var, fallbackTitle: var): string {
     var name = (appId || "").split(".").pop() || fallbackTitle || "Unknown";
     return name.charAt(0).toUpperCase() + name.slice(1);
   }
 
-  function getWindowsForWorkspace(workspaceId) {
-    var windowsInWs = [];
-    for (var i = 0; i < windows.count; i++) {
-      var window = windows.get(i);
-      if (window.workspaceId === workspaceId) {
-        // Snapshot to plain JS object so callers never hold live ListModel
-        // proxies that become invalid when syncWindows() clears the model.
-        windowsInWs.push({
-                           id: window.id,
-                           title: window.title,
-                           appId: window.appId,
-                           isFocused: window.isFocused,
-                           workspaceId: window.workspaceId,
-                           handle: window.handle
-                         });
-      }
-    }
-    return windowsInWs;
+  function getWindowsForWorkspace(workspaceId: var): var {
+    return CompositorServiceUtils.getWindowsForWorkspace(root, workspaceId);
   }
 
   // Generic workspace switching
-  function switchToWorkspace(workspace) {
-    if (backend && backend.switchToWorkspace) {
-      backend.switchToWorkspace(workspace);
-    } else {
-      Logger.w("Compositor", "No backend available for workspace switching");
-    }
+  function switchToWorkspace(workspace: var): void {
+    CompositorServiceUtils.switchToWorkspace(workspace, root, Logger);
   }
 
   // Scrollable workspace content (Niri)
-  function scrollWorkspaceContent(direction) {
-    if (backend && backend.scrollWorkspaceContent) {
-      backend.scrollWorkspaceContent(direction);
-    }
+  function scrollWorkspaceContent(direction: var): void {
+    CompositorServiceUtils.scrollWorkspaceContent(direction, root);
   }
 
   // Get current workspace
-  function getCurrentWorkspace() {
-    for (var i = 0; i < workspaces.count; i++) {
-      const ws = workspaces.get(i);
-      if (ws.isFocused) {
-        return ws;
-      }
-    }
-    return null;
+  function getCurrentWorkspace(): var {
+    return CompositorServiceUtils.getCurrentWorkspace(root);
   }
 
   // Get active workspaces
-  function getActiveWorkspaces() {
-    const activeWorkspaces = [];
-    for (var i = 0; i < workspaces.count; i++) {
-      const ws = workspaces.get(i);
-      if (ws.isActive) {
-        activeWorkspaces.push(ws);
-      }
-    }
-    return activeWorkspaces;
+  function getActiveWorkspaces(): var {
+    return CompositorServiceUtils.getActiveWorkspaces(root);
   }
 
   // Set focused window
-  function focusWindow(window) {
-    if (backend && backend.focusWindow) {
-      backend.focusWindow(window);
-    } else {
-      Logger.w("Compositor", "No backend available for window focus");
-    }
+  function focusWindow(window: var): void {
+    CompositorServiceUtils.focusWindow(window, root, Logger);
   }
 
   // Close window
-  function closeWindow(window) {
-    if (backend && backend.closeWindow) {
-      backend.closeWindow(window);
-    } else {
-      Logger.w("Compositor", "No backend available for window closing");
-    }
+  function closeWindow(window: var): void {
+    CompositorServiceUtils.closeWindow(window, root, Logger);
   }
 
   // Spawn command
-  function spawn(command) {
-    // Ensure command is a proper JS array (QML lists can behave unexpectedly in some contexts)
-    const cmdArray = Array.isArray(command) ? command : (command && typeof command === "object" && command.length !== undefined) ? Array.from(command) : [command];
-
-    Logger.d("CompositorService", `Spawning: ${cmdArray.join(" ")}`);
-    if (backend && backend.spawn) {
-      backend.spawn(cmdArray);
-    } else {
-      try {
-        Quickshell.execDetached(cmdArray);
-      } catch (e) {
-        Logger.e("CompositorService", "Failed to execute detached:", e);
-      }
-    }
+  function spawn(command: var): void {
+    CompositorServiceUtils.spawn(command, root, Logger, Quickshell);
   }
 
   // Session management helper for custom commands
-  function getCustomCommand(action) {
-    const powerOptions = Settings.data.sessionMenu.powerOptions || [];
-    for (let i = 0; i < powerOptions.length; i++) {
-      const option = powerOptions[i];
-      if (option.action === action && option.enabled && option.command && option.command.trim() !== "") {
-        return option.command.trim();
-      }
-    }
-    return "";
+  function getCustomCommand(action: var): var {
+    return CompositorServiceUtils.getCustomCommand(action, root, Settings);
   }
 
-  function executeSessionAction(action, defaultCommand) {
+  function executeSessionAction(action: var, defaultCommand: var): bool {
     const customCommand = getCustomCommand(action);
     if (customCommand) {
       Logger.i("Compositor", `Executing custom command for action: ${action} Command: ${customCommand}`);
@@ -395,7 +231,7 @@ Singleton {
   // Session management, through the engine's ControlCenter: lock, sleep, hibernate, signOut, restart and
   // shutdown. The engine asks for a second request of the same id before it runs a dangerous one;
   // Octalia's session menu has its own confirmation, so the request is repeated here.
-  function windowsSession(id) {
+  function windowsSession(id: var): void {
     if (!S.ControlCenter.requestAction(id))
       S.ControlCenter.requestAction(id);
   }
@@ -403,7 +239,7 @@ Singleton {
   // Session management
   function logout() {
     Logger.i("Compositor", "Logout requested");
-    if (executeSessionAction("logout"))
+    if (executeSessionAction("logout", undefined))
       return;
 
     windowsSession("signOut");
@@ -411,7 +247,7 @@ Singleton {
 
   function shutdown() {
     Logger.i("Compositor", "Shutdown requested");
-    if (executeSessionAction("shutdown"))
+    if (executeSessionAction("shutdown", undefined))
       return;
 
     HooksService.executeSessionHook("shutdown", () => {
@@ -421,7 +257,7 @@ Singleton {
 
   function reboot() {
     Logger.i("Compositor", "Reboot requested");
-    if (executeSessionAction("reboot"))
+    if (executeSessionAction("reboot", undefined))
       return;
 
     HooksService.executeSessionHook("reboot", () => {
@@ -431,7 +267,7 @@ Singleton {
 
   function userspaceReboot() {
     Logger.i("Compositor", "Userspace reboot requested");
-    if (executeSessionAction("userspaceReboot"))
+    if (executeSessionAction("userspaceReboot", undefined))
       return;
 
     HooksService.executeSessionHook("userspaceReboot", () => {
@@ -441,7 +277,7 @@ Singleton {
 
   function rebootToUefi() {
     Logger.i("Compositor", "Reboot to UEFI firmware requested requested");
-    if (executeSessionAction("rebootToUefi"))
+    if (executeSessionAction("rebootToUefi", undefined))
       return;
 
     HooksService.executeSessionHook("rebootToUefi", () => {
@@ -450,29 +286,16 @@ Singleton {
   }
 
   function turnOffMonitors() {
-    Logger.i("Compositor", "Turn off monitors requested");
-    if (backend && backend.turnOffMonitors) {
-      backend.turnOffMonitors();
-    } else {
-      // Windows: broadcast WM_SYSCOMMAND / SC_MONITORPOWER (0xF170) = 2 (power off). Any mouse or
-      // key input turns the displays back on, so turnOnMonitors() has nothing to do.
-      // The script is user32 SendMessage(HWND_BROADCAST, 0x0112, 0xF170, 2), UTF-16LE base64.
-      Quickshell.execDetached(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", "QQBkAGQALQBUAHkAcABlACAALQBOAGEAbQBlACAAVwAgAC0ATgBhAG0AZQBzAHAAYQBjAGUAIABOACAALQBNAGUAbQBiAGUAcgBEAGUAZgBpAG4AaQB0AGkAbwBuACAAJwBbAEQAbABsAEkAbQBwAG8AcgB0ACgAIgB1AHMAZQByADMAMgAuAGQAbABsACIAKQBdACAAcAB1AGIAbABpAGMAIABzAHQAYQB0AGkAYwAgAGUAeAB0AGUAcgBuACAASQBuAHQAUAB0AHIAIABTAGUAbgBkAE0AZQBzAHMAYQBnAGUAKABJAG4AdABQAHQAcgAgAGgALAAgAGkAbgB0ACAAbQAsACAASQBuAHQAUAB0AHIAIAB3ACwAIABJAG4AdABQAHQAcgAgAGwAKQA7ACcAOwAgAFsAdgBvAGkAZABdAFsATgAuAFcAXQA6ADoAUwBlAG4AZABNAGUAcwBzAGEAZwBlACgAWwBJAG4AdABQAHQAcgBdADAAeABGAEYARgBGACwAIAAwAHgAMAAxADEAMgAsACAAWwBJAG4AdABQAHQAcgBdADAAeABGADEANwAwACwAIABbAEkAbgB0AFAAdAByAF0AMgApAA=="]);
-    }
+    CompositorServiceUtils.turnOffMonitors(root, Logger, Quickshell);
   }
 
   function turnOnMonitors() {
-    Logger.i("Compositor", "Turn on monitors requested");
-    if (backend && backend.turnOnMonitors) {
-      backend.turnOnMonitors();
-    } else {
-      Logger.w("Compositor", "No backend available for turnOnMonitors");
-    }
+    CompositorServiceUtils.turnOnMonitors(root, Logger);
   }
 
   function suspend() {
     Logger.i("Compositor", "Suspend requested");
-    if (executeSessionAction("suspend"))
+    if (executeSessionAction("suspend", undefined))
       return;
 
     windowsSession("sleep");
@@ -480,7 +303,7 @@ Singleton {
 
   function lock() {
     Logger.i("Compositor", "LockScreen requested");
-    if (executeSessionAction("lock"))
+    if (executeSessionAction("lock", undefined))
       return;
 
     windowsSession("lock");
@@ -488,16 +311,14 @@ Singleton {
 
   function hibernate() {
     Logger.i("Compositor", "Hibernate requested");
-    if (executeSessionAction("hibernate"))
+    if (executeSessionAction("hibernate", undefined))
       return;
 
     windowsSession("hibernate");
   }
 
   function cycleKeyboardLayout() {
-    if (backend && backend.cycleKeyboardLayout) {
-      backend.cycleKeyboardLayout();
-    }
+    CompositorServiceUtils.cycleKeyboardLayout(root);
   }
 
   // Windows has no Octalia lock screen: lock the workstation through the engine, then sleep.
@@ -514,7 +335,7 @@ Singleton {
     running: false
     onTriggered: {
       // A custom sleep command is honoured by suspend()
-      suspend();
+      root.suspend();
     }
   }
 }

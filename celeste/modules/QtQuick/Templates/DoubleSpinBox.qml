@@ -6,20 +6,20 @@ import QtQuick
 Control {
     id: box
 
-    property real from: 0
-    property real to: 99
-    property real value: 0
-    property real stepSize: 1
-    property int decimals: 2
-    property bool editable: false
-    property bool wrap: false
-    property var validator: DoubleValidator {
+    final property real from: 0
+    final property real to: 99
+    final property real value: 0
+    final property real stepSize: 1
+    final property int decimals: 2
+    final property bool editable: false
+    final property bool wrap: false
+    final property var validator: DoubleValidator {
         bottom: Math.min(box.from, box.to)
         top: Math.max(box.from, box.to)
         decimals: box.decimals
     }
-    readonly property SpinButton up: SpinButton {}
-    readonly property SpinButton down: SpinButton {}
+    readonly final property SpinButton up: SpinButton {}
+    readonly final property SpinButton down: SpinButton {}
 
     signal valueModified
 

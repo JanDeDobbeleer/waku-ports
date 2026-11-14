@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.components.effects
@@ -10,12 +9,12 @@ import qs.services
 StyledRect {
     id: root
 
-    required property Workspace activeWs
-    required property Item mask
+    required final property Workspace activeWs
+    required final property Item mask
     property alias contentColour: colouriser.colorizationColor
 
-    property real start
-    property real end
+    final property real start
+    final property real end
 
     function runAnim(): void {
         if (!activeWs)

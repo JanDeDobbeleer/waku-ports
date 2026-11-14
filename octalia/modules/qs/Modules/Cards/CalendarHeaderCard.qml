@@ -1,10 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Services.Location
 import qs.Widgets
+import "CalendarHeaderCardUtils.js" as CalendarHeaderCardUtils
 
 // Calendar header with date, month/year, location, and clock
 Rectangle {
@@ -18,7 +17,7 @@ Rectangle {
 
   // Internal state
   readonly property var now: Time.now
-  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (LocationService.data.weather !== null)
+  readonly property bool weatherReady: Settings.data.location.weatherEnabled && (CalendarHeaderCardUtils.field(LocationService.data, "weather") !== null)
 
   // Expose current month/year for potential synchronization with CalendarMonthCard
   readonly property int currentMonth: now.getMonth()
@@ -38,7 +37,7 @@ Rectangle {
     // Combined layout for date, month year, location and time-zone
     RowLayout {
       Layout.fillWidth: true
-      height: 60 * Style.uiScaleRatio
+      Layout.preferredHeight: 60 * Style.uiScaleRatio
       clip: true
       spacing: Style.marginS
 
@@ -106,7 +105,7 @@ Rectangle {
           }
 
           NText {
-            text: root.weatherReady && !Settings.data.location.hideWeatherTimezone ? `${Settings.data.location.hideWeatherCityName ? "" : " "}(${LocationService.data.weather.timezone_abbreviation})` : ""
+            text: root.weatherReady && !Settings.data.location.hideWeatherTimezone ? `${Settings.data.location.hideWeatherCityName ? "" : " "}(${CalendarHeaderCardUtils.timezoneAbbreviation(LocationService.data)})` : ""
             pointSize: Style.fontSizeXS
             color: Qt.alpha(Color.mOnPrimary, 0.7)
           }

@@ -1,9 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -18,11 +20,11 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueClockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
-  property string valueFormatHorizontal: widgetData.formatHorizontal !== undefined ? widgetData.formatHorizontal : widgetMetadata.formatHorizontal
-  property string valueFormatVertical: widgetData.formatVertical !== undefined ? widgetData.formatVertical : widgetMetadata.formatVertical
+  property string valueClockColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockColor")
+  property bool valueUseCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useCustomFont")
+  property string valueCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customFont")
+  property string valueFormatHorizontal: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "formatHorizontal")
+  property string valueFormatVertical: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "formatVertical")
 
   readonly property color textColor: Color.resolveColorKey(valueClockColor)
 
@@ -42,68 +44,45 @@ ColumnLayout {
     settingsChanged(settings);
   }
 
-  // Function to insert token at cursor position in the focused input
-  function insertToken(token) {
-    if (!focusedInput || !focusedInput.inputItem) {
-      // If no input is focused, default to horiz
-      if (inputHoriz.inputItem) {
-        inputHoriz.inputItem.focus = true;
-        focusedInput = inputHoriz;
-      }
-    }
-
-    if (focusedInput && focusedInput.inputItem) {
-      var input = focusedInput.inputItem;
-      var cursorPos = input.cursorPosition;
-      var currentText = input.text;
-
-      // Insert token at cursor position
-      var newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
-      input.text = newText + " ";
-
-      // Move cursor after the inserted token
-      input.cursorPosition = cursorPos + token.length + 1;
-
-      // Ensure the input keeps focus
-      input.focus = true;
-    }
+  function insertToken(token: string): void {
+    SettingsValue.insertToken(root, inputHoriz, token);
   }
 
   NColorChoice {
-    currentKey: valueClockColor
+    currentKey: root.valueClockColor
     onSelected: key => {
-                  valueClockColor = key;
-                  saveSettings();
+                  root.valueClockColor = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.clockColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockColor")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.clock.use-custom-font-label")
     description: I18n.tr("bar.clock.use-custom-font-description")
-    checked: valueUseCustomFont
+    checked: root.valueUseCustomFont
     onToggled: checked => {
-                 valueUseCustomFont = checked;
-                 saveSettings();
+                 root.valueUseCustomFont = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.useCustomFont
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useCustomFont")
   }
 
   NSearchableComboBox {
     Layout.fillWidth: true
-    visible: valueUseCustomFont
+    visible: root.valueUseCustomFont
     label: I18n.tr("bar.clock.custom-font-label")
     description: I18n.tr("bar.clock.custom-font-description")
     model: FontService.availableFonts
-    currentKey: valueCustomFont
+    currentKey: root.valueCustomFont
     placeholder: I18n.tr("bar.clock.custom-font-placeholder")
     searchPlaceholder: I18n.tr("bar.clock.custom-font-search-placeholder")
     popupHeight: 420
     minimumWidth: 300
     onSelected: function (key) {
-      valueCustomFont = key;
-      saveSettings();
+      root.valueCustomFont = key;
+      root.saveSettings();
     }
     defaultValue: Settings.data.ui.fontDefault
   }
@@ -137,21 +116,13 @@ ColumnLayout {
         label: I18n.tr("bar.clock.horizontal-bar-label")
         description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm ddd, MMM dd"
-        text: valueFormatHorizontal
+        text: root.valueFormatHorizontal
         onTextChanged: {
-          valueFormatHorizontal = text;
-          saveSettings();
+          root.valueFormatHorizontal = text;
+          root.saveSettings();
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = inputHoriz;
-              }
-            });
-          }
-        }
-        defaultValue: widgetMetadata.formatHorizontal
+        Component.onCompleted: SettingsValue.watchInput(inputItem, root, inputHoriz)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "formatHorizontal")
       }
 
       Item {
@@ -165,21 +136,13 @@ ColumnLayout {
         description: I18n.tr("bar.clock.vertical-bar-description")
         // Tokens are Qt format tokens and must not be localized
         placeholderText: "HH mm dd MM"
-        text: valueFormatVertical
+        text: root.valueFormatVertical
         onTextChanged: {
-          valueFormatVertical = text;
-          saveSettings();
+          root.valueFormatVertical = text;
+          root.saveSettings();
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = inputVert;
-              }
-            });
-          }
-        }
-        defaultValue: widgetMetadata.formatVertical
+        Component.onCompleted: SettingsValue.watchInput(inputItem, root, inputVert)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "formatVertical")
       }
     }
 
@@ -220,14 +183,16 @@ ColumnLayout {
             // Horizontal
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormatHorizontal.trim()).split("\\n")
+              model: I18n.locale.toString(root.now, root.valueFormatHorizontal.trim()).split("\\n")
               delegate: NText {
+                id: horizontalPreviewLine
+                required property string modelData
                 visible: text !== ""
-                text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                text: horizontalPreviewLine.modelData
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: textColor
+                color: root.textColor
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
@@ -251,14 +216,16 @@ ColumnLayout {
 
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormatVertical.trim()).split(" ")
+              model: I18n.locale.toString(root.now, root.valueFormatVertical.trim()).split(" ")
               delegate: NText {
+                id: verticalPreviewLine
+                required property string modelData
                 visible: text !== ""
-                text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                text: verticalPreviewLine.modelData
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: textColor
+                color: root.textColor
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 

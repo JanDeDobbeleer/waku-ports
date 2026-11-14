@@ -1,9 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
-import qs.Modules.Bar.Extras
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -22,8 +20,9 @@ NIconButton {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -31,7 +30,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: (widgetSettings.iconColor !== undefined) ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: (BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   baseSize: Style.getCapsuleHeightForScreen(screenName)
   applyUiScale: false
@@ -58,13 +57,13 @@ NIconButton {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
 
-  onClicked: PanelService.getPanel("sessionMenuPanel", screen)?.toggle()
+  onClicked: PanelService.invokePanel(PanelService.getPanel("sessionMenuPanel", screen), "toggle", [])
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

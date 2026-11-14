@@ -1,15 +1,14 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.Octalia
-import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "SetupWizardUtils.js" as SetupWizardUtils
 
 SmartPanel {
   id: root
@@ -72,57 +71,8 @@ SmartPanel {
       }
     }
 
-    function completeSetup() {
-      if (isCompleting) {
-        Logger.w("SetupWizard", "completeSetup() called while already completing, ignoring");
-        return;
-      }
-
-      try {
-        Logger.i("SetupWizard", root.telemetryOnlyMode ? "Completing telemetry wizard" : "Completing setup with selected options");
-        isCompleting = true;
-
-        // In telemetry-only mode, we only need to save the telemetry setting
-        if (!root.telemetryOnlyMode) {
-          if (typeof WallpaperService !== "undefined" && WallpaperService.refreshWallpapersList) {
-            if (selectedWallpaperDirectory !== Settings.data.wallpaper.directory) {
-              Settings.data.wallpaper.directory = selectedWallpaperDirectory;
-              WallpaperService.refreshWallpapersList();
-            }
-
-            if (selectedWallpaper !== "") {
-              WallpaperService.changeWallpaper(selectedWallpaper, undefined);
-            }
-          }
-
-          Settings.data.general.scaleRatio = selectedScaleRatio;
-          Settings.data.bar.position = selectedBarPosition;
-        }
-
-        // Mark the current version as seen to prevent telemetry wizard on next startup
-        // (only for full setup wizard - telemetry wizard lets changelog mark it seen)
-        if (!root.telemetryOnlyMode) {
-          UpdateService.markChangelogSeen(UpdateService.currentVersion);
-        }
-
-        // Initialize telemetry now that user has made their choice
-        TelemetryService.init();
-
-        // Save settings immediately and wait for settingsSaved signal before closing
-        Settings.saveImmediate();
-        Logger.i("SetupWizard", "Setup completed successfully, waiting for settings save confirmation");
-
-        // Emit signal for telemetry wizard completion (shell.qml will show changelog)
-        if (root.telemetryOnlyMode) {
-          root.telemetryWizardCompleted();
-        }
-
-        // Fallback: if settingsSaved signal doesn't fire within 2 seconds, close anyway
-        closeTimer.start();
-      } catch (error) {
-        Logger.e("SetupWizard", "Error completing setup:", error);
-        isCompleting = false;
-      }
+    function completeSetup(): void {
+      SetupWizardUtils.completeSetup(panelContent, root, closeTimer, Settings, typeof WallpaperService !== "undefined" ? WallpaperService : null, UpdateService, TelemetryService, Logger);
     }
 
     function applyWallpaperSettings() {
@@ -158,7 +108,7 @@ SmartPanel {
         StackLayout {
           id: stepStack
           anchors.fill: parent
-          currentIndex: currentStep
+          currentIndex: panelContent.currentStep
 
           // Step 0: Welcome - Beautiful centered design
           Item {
@@ -184,6 +134,7 @@ SmartPanel {
                 }
 
                 Image {
+                  id: welcomeLogo
                   anchors.centerIn: parent
                   width: 110
                   height: 110
@@ -197,7 +148,7 @@ SmartPanel {
                     radius: width / 2
                     border.color: Color.mOutline
                     border.width: Style.borderM
-                    visible: parent.status === Image.Error
+                    visible: welcomeLogo.status === Image.Error
 
                     NIcon {
                       icon: "sparkles"
@@ -358,20 +309,24 @@ SmartPanel {
               }
             ]
             delegate: RowLayout {
+              id: progressStep
+              required property string icon
+              required property string label
+              required property int index
               spacing: Style.marginS
 
               Rectangle {
-                width: 24
-                height: 24
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
                 radius: width / 2
-                color: index <= currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                border.color: index === currentStep ? Color.mPrimary : "transparent"
-                border.width: index === currentStep ? 2 : 0
+                color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                border.color: progressStep.index === panelContent.currentStep ? Color.mPrimary : "transparent"
+                border.width: progressStep.index === panelContent.currentStep ? 2 : 0
 
                 NIcon {
-                  icon: modelData.icon
+                  icon: progressStep.icon
                   pointSize: Style.fontSizeS
-                  color: index <= currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
+                  color: progressStep.index <= panelContent.currentStep ? Color.mOnPrimary : Color.mOnSurfaceVariant
                   anchors.centerIn: parent
                 }
 
@@ -383,10 +338,10 @@ SmartPanel {
               }
 
               NText {
-                text: modelData.label
+                text: progressStep.label
                 pointSize: Style.fontSizeS
-                color: index <= currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
-                font.weight: index === currentStep ? Style.fontWeightBold : Style.fontWeightRegular
+                color: progressStep.index <= panelContent.currentStep ? Color.mPrimary : Color.mOnSurfaceVariant
+                font.weight: progressStep.index === panelContent.currentStep ? Style.fontWeightBold : Style.fontWeightRegular
 
                 Behavior on color {
                   ColorAnimation {
@@ -397,11 +352,11 @@ SmartPanel {
 
               // Connector line
               Rectangle {
-                width: 40
-                height: 2
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 2
                 radius: 1
-                color: index < currentStep ? Color.mPrimary : Color.mSurfaceVariant
-                visible: index < totalSteps - 1
+                color: progressStep.index < panelContent.currentStep ? Color.mPrimary : Color.mSurfaceVariant
+                visible: progressStep.index < panelContent.totalSteps - 1
 
                 Behavior on color {
                   ColorAnimation {
@@ -441,21 +396,21 @@ SmartPanel {
           NButton {
             text: "← " + I18n.tr("common.back")
             outlined: true
-            visible: currentStep > 0 && !root.telemetryOnlyMode
+            visible: panelContent.currentStep > 0 && !root.telemetryOnlyMode
             Layout.preferredHeight: 44
             onClicked: {
-              if (currentStep > 0) {
-                currentStep--;
+              if (panelContent.currentStep > 0) {
+                panelContent.currentStep--;
               }
             }
           }
 
           NButton {
-            text: root.telemetryOnlyMode ? I18n.tr("setup.telemetry-wizard-done") : (currentStep === totalSteps - 1 ? I18n.tr("setup.all-done") : I18n.tr("common.continue") + " →")
+            text: root.telemetryOnlyMode ? I18n.tr("setup.telemetry-wizard-done") : (panelContent.currentStep === panelContent.totalSteps - 1 ? I18n.tr("setup.all-done") : I18n.tr("common.continue") + " →")
             Layout.preferredHeight: 44
             onClicked: {
-              if (currentStep < totalSteps - 1) {
-                currentStep++;
+              if (panelContent.currentStep < panelContent.totalSteps - 1) {
+                panelContent.currentStep++;
               } else {
                 panelContent.completeSetup();
               }

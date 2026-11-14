@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.UI
@@ -10,20 +12,21 @@ DraggableDesktopWidget {
   id: root
 
   readonly property var now: Time.now
-  readonly property var widgetMetadata: DesktopWidgetRegistry.widgetMetadata["Clock"]
+  readonly property var widgetMetadata: DesktopWidgetHelpers.field(DesktopWidgetRegistry.widgetMetadata, "Clock")
 
   readonly property color clockTextColor: Color.resolveColorKey(clockColor)
   readonly property real fontSize: Math.round(Style.fontSizeXXXL * 2.5 * widgetScale)
-  readonly property real widgetOpacity: widgetData.opacity !== undefined ? widgetData.opacity : 1.0
-  readonly property string clockStyle: widgetData.clockStyle !== undefined ? widgetData.clockStyle : widgetMetadata.clockStyle
-  readonly property string clockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  readonly property bool useCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  readonly property string customFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.customFont
-  readonly property string format: widgetData.format !== undefined ? widgetData.format : widgetMetadata.format
+  readonly property real widgetOpacity: DesktopWidgetHelpers.field(widgetData, "opacity") !== undefined ? DesktopWidgetHelpers.field(widgetData, "opacity") : 1.0
+  readonly property string clockStyle: DesktopWidgetHelpers.field(widgetData, "clockStyle") !== undefined ? DesktopWidgetHelpers.field(widgetData, "clockStyle") : DesktopWidgetHelpers.field(widgetMetadata, "clockStyle")
+  readonly property string clockColor: DesktopWidgetHelpers.field(widgetData, "clockColor") !== undefined ? DesktopWidgetHelpers.field(widgetData, "clockColor") : DesktopWidgetHelpers.field(widgetMetadata, "clockColor")
+  readonly property bool useCustomFont: DesktopWidgetHelpers.field(widgetData, "useCustomFont") !== undefined ? DesktopWidgetHelpers.field(widgetData, "useCustomFont") : DesktopWidgetHelpers.field(widgetMetadata, "useCustomFont")
+  readonly property string customFont: DesktopWidgetHelpers.field(widgetData, "customFont") !== undefined ? DesktopWidgetHelpers.field(widgetData, "customFont") : DesktopWidgetHelpers.field(widgetMetadata, "customFont")
+  readonly property string format: DesktopWidgetHelpers.field(widgetData, "format") !== undefined ? DesktopWidgetHelpers.field(widgetData, "format") : DesktopWidgetHelpers.field(widgetMetadata, "format")
 
+  readonly property Item clockContent: contentLoader.item as Item
   readonly property real contentPadding: Math.round((clockStyle === "minimal" ? Style.marginL : Style.marginXL) * widgetScale)
-  implicitWidth: contentLoader.item ? Math.round((contentLoader.item.implicitWidth || contentLoader.item.width || 0) + contentPadding * 2) : 0
-  implicitHeight: contentLoader.item ? Math.round((contentLoader.item.implicitHeight || contentLoader.item.height || 0) + contentPadding * 2) : 0
+  implicitWidth: clockContent ? Math.round((DesktopWidgetHelpers.field(clockContent, "implicitWidth") || clockContent.width || 0) + contentPadding * 2) : 0
+  implicitHeight: clockContent ? Math.round((DesktopWidgetHelpers.field(clockContent, "implicitHeight") || clockContent.height || 0) + contentPadding * 2) : 0
   width: implicitWidth
   height: implicitHeight
 
@@ -33,13 +36,13 @@ DraggableDesktopWidget {
       now: root.now
       clockStyle: root.clockStyle
       backgroundColor: "transparent"
-      clockColor: clockTextColor
+      clockColor: root.clockTextColor
       progressColor: Color.mPrimary
       opacity: root.widgetOpacity
-      height: Math.round(fontSize * 1.9)
+      height: Math.round(root.fontSize * 1.9)
       width: height
-      hoursFontSize: fontSize * 0.6
-      minutesFontSize: fontSize * 0.4
+      hoursFontSize: root.fontSize * 0.6
+      minutesFontSize: root.fontSize * 0.4
       scaleRatio: root.widgetScale
     }
   }
@@ -51,16 +54,20 @@ DraggableDesktopWidget {
       opacity: root.widgetOpacity
 
       Repeater {
+        id: clockLines
         model: I18n.locale.toString(root.now, root.format.trim()).split("\\n")
         delegate: NText {
+          id: clockLine
+          required property string modelData
+          required property int index
           visible: text !== ""
-          text: modelData
+          text: clockLine.modelData
           family: root.useCustomFont && root.customFont ? root.customFont : Settings.data.ui.fontDefault
           pointSize: {
-            if (model.length == 1) {
+            if (clockLines.count == 1) {
               return Math.round(Style.fontSizeXXL * root.widgetScale);
             } else {
-              return Math.round((index == 0) ? Style.fontSizeXXL * root.widgetScale : Style.fontSizeM * root.widgetScale);
+              return Math.round((clockLine.index == 0) ? Style.fontSizeXXL * root.widgetScale : Style.fontSizeM * root.widgetScale);
             }
           }
           font.weight: Style.fontWeightBold
@@ -76,6 +83,6 @@ DraggableDesktopWidget {
     id: contentLoader
     anchors.centerIn: parent
     z: 2
-    sourceComponent: clockStyle === "minimal" ? minimalClockComponent : nclockComponent
+    sourceComponent: root.clockStyle === "minimal" ? minimalClockComponent : nclockComponent
   }
 }

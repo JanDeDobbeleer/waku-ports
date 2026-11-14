@@ -1,4 +1,5 @@
 import QtQuick
+import "ControlHelpers.js" as ControlHelpers
 
 // Pure QML stand-in for QtQuick.Templates.Control. The waku engine does not ship the real
 // QtQuick.Templates module, so the port provides the subset celeste's components use.
@@ -7,35 +8,35 @@ import QtQuick
 Item {
     id: control
 
-    property real padding: 0
-    property real horizontalPadding: padding
-    property real verticalPadding: padding
-    property real topPadding: verticalPadding
-    property real leftPadding: horizontalPadding
-    property real rightPadding: horizontalPadding
-    property real bottomPadding: verticalPadding
-    property real spacing: 0
-    property var locale: Qt.locale()
-    property bool mirrored: false
-    property bool hoverEnabled: true
-    readonly property bool hovered: hover.hovered
-    readonly property bool visualFocus: activeFocus
-    readonly property real availableWidth: Math.max(0, width - leftPadding - rightPadding)
-    readonly property real availableHeight: Math.max(0, height - topPadding - bottomPadding)
+    final property real padding: 0
+    final property real horizontalPadding: padding
+    final property real verticalPadding: padding
+    final property real topPadding: verticalPadding
+    final property real leftPadding: horizontalPadding
+    final property real rightPadding: horizontalPadding
+    final property real bottomPadding: verticalPadding
+    final property real spacing: 0
+    final property var locale: Qt.locale()
+    final property bool mirrored: false
+    final property bool hoverEnabled: true
+    readonly final property bool hovered: hover.hovered
+    readonly final property bool visualFocus: activeFocus
+    readonly final property real availableWidth: Math.max(0, width - leftPadding - rightPadding)
+    readonly final property real availableHeight: Math.max(0, height - topPadding - bottomPadding)
 
-    property Item background
-    property Item contentItem
+    final property Item background
+    final property Item contentItem
 
-    readonly property real implicitBackgroundWidth: background ? background.implicitWidth : 0
-    readonly property real implicitBackgroundHeight: background ? background.implicitHeight : 0
-    readonly property real implicitContentWidth: contentItem ? contentItem.implicitWidth : 0
-    readonly property real implicitContentHeight: contentItem ? contentItem.implicitHeight : 0
+    readonly final property real implicitBackgroundWidth: ControlHelpers.implicitWidth(background)
+    readonly final property real implicitBackgroundHeight: ControlHelpers.implicitHeight(background)
+    readonly final property real implicitContentWidth: ControlHelpers.implicitWidth(contentItem)
+    readonly final property real implicitContentHeight: ControlHelpers.implicitHeight(contentItem)
 
     implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
 
     // Subclasses that position the content themselves (a scroll bar) turn this off.
-    property bool autoPlaceContent: true
+    final property bool autoPlaceContent: true
 
     function layoutParts(): void {
         if (background) {

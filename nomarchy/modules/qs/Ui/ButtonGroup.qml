@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
+import "ButtonGroupUtils.js" as ButtonGroupUtils
 
 // Mutually-exclusive row of Buttons — the form-style "pick one of N"
 // pattern (bar position top/right/bottom/left, theme preset chips, etc.).
@@ -50,34 +52,40 @@ Row {
 
   activeFocusOnTab: focusable
 
-  function optionValue(o) {
-    return (o && typeof o === "object") ? String(o.value) : String(o)
+  function optionValue(o: var): string {
+    return o && typeof o === "object" ? String(ButtonGroupUtils.field(o, "value")) : String(o)
   }
-  function optionLabel(o) {
-    return (o && typeof o === "object" && o.label !== undefined) ? String(o.label) : String(o)
+  function optionLabel(o: var): string {
+    var label = ButtonGroupUtils.field(o, "label")
+    return o && typeof o === "object" && label !== undefined ? String(label) : String(o)
   }
-  function optionIcon(o) {
-    return (o && typeof o === "object" && o.icon) ? String(o.icon) : ""
+  function optionIcon(o: var): string {
+    var icon = ButtonGroupUtils.field(o, "icon")
+    return o && typeof o === "object" && icon ? String(icon) : ""
   }
-  function optionTooltip(o) {
-    return (o && typeof o === "object" && o.tooltip) ? String(o.tooltip) : ""
+  function optionTooltip(o: var): string {
+    var tooltip = ButtonGroupUtils.field(o, "tooltip")
+    return o && typeof o === "object" && tooltip ? String(tooltip) : ""
   }
 
-  function selectedOptionIndex() {
-    for (var i = 0; i < options.length; i++)
-      if (optionValue(options[i]) === value) return i
+  function optionCount(): int { return ButtonGroupUtils.arrayLength(options) }
+  function optionAt(index: int): var { return ButtonGroupUtils.arrayAt(options, index) }
+
+  function selectedOptionIndex(): int {
+    for (let i = 0; i < optionCount(); i++)
+      if (optionValue(optionAt(i)) === value) return i
     return -1
   }
 
-  function activateFocused() {
-    if (_focusedIndex < 0 || _focusedIndex >= options.length) return
-    var v = optionValue(options[_focusedIndex])
+  function activateFocused(): void {
+    if (_focusedIndex < 0 || _focusedIndex >= optionCount()) return
+    var v = optionValue(optionAt(_focusedIndex))
     root.changed(v)
   }
 
   onActiveFocusChanged: {
     if (activeFocus) {
-      var idx = selectedOptionIndex()
+      let idx = selectedOptionIndex()
       _focusedIndex = idx < 0 ? 0 : idx
     } else {
       _focusedIndex = -1
@@ -90,8 +98,8 @@ Row {
       _focusedIndex = Math.max(0, (_focusedIndex < 0 ? 0 : _focusedIndex) - 1)
       event.accepted = true
     } else if (Util.readingKey(event, true) === Qt.Key_Right) {
-      var max = options.length - 1
-      var next = (_focusedIndex < 0 ? 0 : _focusedIndex) + 1
+      let max = optionCount() - 1
+      let next = (_focusedIndex < 0 ? 0 : _focusedIndex) + 1
       _focusedIndex = Math.min(max, next)
       event.accepted = true
     } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter

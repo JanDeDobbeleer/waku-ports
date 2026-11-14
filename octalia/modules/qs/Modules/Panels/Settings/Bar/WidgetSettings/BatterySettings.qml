@@ -1,9 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Hardware
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -17,17 +17,17 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueDisplayMode: widgetData.displayMode !== undefined ? widgetData.displayMode : widgetMetadata.displayMode
-  property string valueDeviceNativePath: widgetData.deviceNativePath !== undefined ? widgetData.deviceNativePath : widgetMetadata.deviceNativePath
-  property bool valueShowPowerProfiles: widgetData.showPowerProfiles !== undefined ? widgetData.showPowerProfiles : widgetMetadata.showPowerProfiles
-  property bool valueShowOctaliaPerformance: widgetData.showOctaliaPerformance !== undefined ? widgetData.showOctaliaPerformance : widgetMetadata.showOctaliaPerformance
-  property bool valueHideIfNotDetected: widgetData.hideIfNotDetected !== undefined ? widgetData.hideIfNotDetected : widgetMetadata.hideIfNotDetected
-  property bool valueHideIfIdle: widgetData.hideIfIdle !== undefined ? widgetData.hideIfIdle : widgetMetadata.hideIfIdle
+  property string valueDisplayMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "displayMode")
+  property string valueDeviceNativePath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "deviceNativePath")
+  property bool valueShowPowerProfiles: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showPowerProfiles")
+  property bool valueShowOctaliaPerformance: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showOctaliaPerformance")
+  property bool valueHideIfNotDetected: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideIfNotDetected")
+  property bool valueHideIfIdle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideIfIdle")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
-    if (widgetData && widgetData.id) {
-      settings.id = widgetData.id;
+    if (widgetData && SettingsValue.read(widgetData, "id")) {
+      settings.id = SettingsValue.read(widgetData, "id");
     }
     settings.displayMode = valueDisplayMode;
     settings.showPowerProfiles = valueShowPowerProfiles;
@@ -48,9 +48,9 @@ ColumnLayout {
     currentKey: root.valueDeviceNativePath
     onSelected: key => {
                   root.valueDeviceNativePath = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.deviceNativePath
+    defaultValue: SettingsValue.read(root.widgetMetadata, "deviceNativePath")
   }
 
   NComboBox {
@@ -83,31 +83,31 @@ ColumnLayout {
     currentKey: root.valueDisplayMode
     onSelected: key => {
                   root.valueDisplayMode = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.displayMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "displayMode")
   }
 
   NToggle {
     label: I18n.tr("bar.battery.hide-if-not-detected-label")
     description: I18n.tr("bar.battery.hide-if-not-detected-description")
-    checked: valueHideIfNotDetected
+    checked: root.valueHideIfNotDetected
     onToggled: checked => {
-                 valueHideIfNotDetected = checked;
-                 saveSettings();
+                 root.valueHideIfNotDetected = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hideIfNotDetected
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideIfNotDetected")
   }
 
   NToggle {
     label: I18n.tr("bar.battery.hide-if-idle-label")
     description: I18n.tr("bar.battery.hide-if-idle-description")
-    checked: valueHideIfIdle
+    checked: root.valueHideIfIdle
     onToggled: checked => {
-                 valueHideIfIdle = checked;
-                 saveSettings();
+                 root.valueHideIfIdle = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hideIfIdle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideIfIdle")
   }
 
   NDivider {
@@ -117,22 +117,22 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.battery.show-power-profile-label")
     description: I18n.tr("bar.battery.show-power-profile-description")
-    checked: valueShowPowerProfiles
+    checked: root.valueShowPowerProfiles
     onToggled: checked => {
-                 valueShowPowerProfiles = checked;
-                 saveSettings();
+                 root.valueShowPowerProfiles = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showPowerProfiles
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showPowerProfiles")
   }
 
   NToggle {
     label: I18n.tr("bar.battery.show-octalia-performance-label")
     description: I18n.tr("bar.battery.show-octalia-performance-description")
-    checked: valueShowOctaliaPerformance
+    checked: root.valueShowOctaliaPerformance
     onToggled: checked => {
-                 valueShowOctaliaPerformance = checked;
-                 saveSettings();
+                 root.valueShowOctaliaPerformance = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showOctaliaPerformance
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showOctaliaPerformance")
   }
 }

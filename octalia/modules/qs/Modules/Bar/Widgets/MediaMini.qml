@@ -1,9 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
-import qs.Modules.Bar.Extras
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
@@ -23,8 +24,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -39,17 +41,17 @@ Item {
   readonly property real barFontSize: Style.getBarFontSizeForScreen(screenName)
 
   // Widget settings
-  readonly property string hideMode: widgetSettings.hideMode !== undefined ? widgetSettings.hideMode : widgetMetadata.hideMode
-  readonly property bool hideWhenIdle: widgetSettings.hideWhenIdle !== undefined ? widgetSettings.hideWhenIdle : widgetMetadata.hideWhenIdle
-  readonly property bool showAlbumArt: widgetSettings.showAlbumArt !== undefined ? widgetSettings.showAlbumArt : widgetMetadata.showAlbumArt
-  readonly property bool showArtistFirst: widgetSettings.showArtistFirst !== undefined ? widgetSettings.showArtistFirst : widgetMetadata.showArtistFirst
-  readonly property bool showVisualizer: widgetSettings.showVisualizer !== undefined ? widgetSettings.showVisualizer : widgetMetadata.showVisualizer
-  readonly property string visualizerType: widgetSettings.visualizerType !== undefined ? widgetSettings.visualizerType : widgetMetadata.visualizerType
-  readonly property string scrollingMode: widgetSettings.scrollingMode !== undefined ? widgetSettings.scrollingMode : widgetMetadata.scrollingMode
-  readonly property bool showProgressRing: widgetSettings.showProgressRing !== undefined ? widgetSettings.showProgressRing : widgetMetadata.showProgressRing
-  readonly property bool useFixedWidth: widgetSettings.useFixedWidth !== undefined ? widgetSettings.useFixedWidth : widgetMetadata.useFixedWidth
-  readonly property real maxWidth: widgetSettings.maxWidth !== undefined ? widgetSettings.maxWidth : Math.max(widgetMetadata.maxWidth, screen ? screen.width * 0.06 : 0)
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string hideMode: BarWidgetHelpers.readProperty(widgetSettings, "hideMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideMode") : BarWidgetHelpers.readProperty(widgetMetadata, "hideMode")
+  readonly property bool hideWhenIdle: BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideWhenIdle") : BarWidgetHelpers.readProperty(widgetMetadata, "hideWhenIdle")
+  readonly property bool showAlbumArt: BarWidgetHelpers.readProperty(widgetSettings, "showAlbumArt") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showAlbumArt") : BarWidgetHelpers.readProperty(widgetMetadata, "showAlbumArt")
+  readonly property bool showArtistFirst: BarWidgetHelpers.readProperty(widgetSettings, "showArtistFirst") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showArtistFirst") : BarWidgetHelpers.readProperty(widgetMetadata, "showArtistFirst")
+  readonly property bool showVisualizer: BarWidgetHelpers.readProperty(widgetSettings, "showVisualizer") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showVisualizer") : BarWidgetHelpers.readProperty(widgetMetadata, "showVisualizer")
+  readonly property string visualizerType: BarWidgetHelpers.readProperty(widgetSettings, "visualizerType") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "visualizerType") : BarWidgetHelpers.readProperty(widgetMetadata, "visualizerType")
+  readonly property string scrollingMode: BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "scrollingMode") : BarWidgetHelpers.readProperty(widgetMetadata, "scrollingMode")
+  readonly property bool showProgressRing: BarWidgetHelpers.readProperty(widgetSettings, "showProgressRing") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showProgressRing") : BarWidgetHelpers.readProperty(widgetMetadata, "showProgressRing")
+  readonly property bool useFixedWidth: BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useFixedWidth") : BarWidgetHelpers.readProperty(widgetMetadata, "useFixedWidth")
+  readonly property real maxWidth: BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "maxWidth") : Math.max(BarWidgetHelpers.readProperty(widgetMetadata, "maxWidth"), screen ? screen.width * 0.06 : 0)
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
   readonly property color textColor: Color.resolveColorKey(textColorKey)
 
   // Dimensions
@@ -162,22 +164,23 @@ Item {
   NPopupContextMenu {
     id: contextMenu
     model: {
+      var i, isCurrent;
       var items = [];
-      if (hasPlayer && MediaService.canPlay) {
+      if (root.hasPlayer && MediaService.canPlay) {
         items.push({
                      "label": MediaService.isPlaying ? I18n.tr("common.pause") : I18n.tr("common.play"),
                      "action": "play-pause",
                      "icon": MediaService.isPlaying ? "media-pause" : "media-play"
                    });
       }
-      if (hasPlayer && MediaService.canGoPrevious) {
+      if (root.hasPlayer && MediaService.canGoPrevious) {
         items.push({
                      "label": I18n.tr("common.previous"),
                      "action": "previous",
                      "icon": "media-prev"
                    });
       }
-      if (hasPlayer && MediaService.canGoNext) {
+      if (root.hasPlayer && MediaService.canGoNext) {
         items.push({
                      "label": I18n.tr("common.next"),
                      "action": "next",
@@ -187,9 +190,9 @@ Item {
 
       // Append available players (like in Control Center) so user can switch from the bar
       var players = MediaService.getAvailablePlayers ? MediaService.getAvailablePlayers() : [];
-      if (players && players.length > 1) {
-        for (var i = 0; i < players.length; i++) {
-          var isCurrent = (i === MediaService.selectedPlayerIndex);
+      if (players && BarWidgetHelpers.readProperty(players, "length") > 1) {
+        for (i = 0; i < BarWidgetHelpers.readProperty(players, "length"); i++) {
+          isCurrent = (i === MediaService.selectedPlayerIndex);
           items.push({
                        "label": players[i].identity,
                        "action": "player-" + i,
@@ -209,6 +212,7 @@ Item {
     }
 
     onTriggered: action => {
+      var idx;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
@@ -219,12 +223,12 @@ Item {
                    else if (action === "next")
                    MediaService.next();
                    else if (action && action.indexOf("player-") === 0) {
-                     var idx = parseInt(action.split("-")[1]);
+                     idx = parseInt(action.split("-")[1]);
                      if (!isNaN(idx)) {
                        MediaService.switchToPlayer(idx);
                      }
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -234,8 +238,8 @@ Item {
     id: container
     x: Style.pixelAlignCenter(parent.width, width)
     y: Style.pixelAlignCenter(parent.height, height)
-    width: Style.toOdd(isVertical ? (isHidden ? 0 : verticalSize) : (isHidden ? 0 : contentWidth))
-    height: Style.toOdd(isVertical ? (isHidden ? 0 : verticalSize) : capsuleHeight)
+    width: Style.toOdd(root.isVertical ? (root.isHidden ? 0 : root.verticalSize) : (root.isHidden ? 0 : root.contentWidth))
+    height: Style.toOdd(root.isVertical ? (root.isHidden ? 0 : root.verticalSize) : root.capsuleHeight)
     radius: Style.radiusM
     color: Style.capsuleColor
     border.color: Style.capsuleBorderColor
@@ -256,8 +260,8 @@ Item {
 
     Item {
       anchors.fill: parent
-      anchors.leftMargin: isVertical ? 0 : Style.marginS
-      anchors.rightMargin: isVertical ? 0 : Style.marginS
+      anchors.leftMargin: root.isVertical ? 0 : Style.marginS
+      anchors.rightMargin: root.isVertical ? 0 : Style.marginS
 
       // Visualizer
       Loader {
@@ -265,16 +269,16 @@ Item {
         y: Style.pixelAlignCenter(parent.height, height)
         width: Style.toOdd(parent.width)
         height: Style.toOdd(parent.height)
-        active: showVisualizer
+        active: root.showVisualizer
         z: 0
         sourceComponent: {
-          if (!showVisualizer)
+          if (!root.showVisualizer)
             return null;
-          if (visualizerType === "linear")
+          if (root.visualizerType === "linear")
             return linearSpectrum;
-          if (visualizerType === "mirrored")
+          if (root.visualizerType === "mirrored")
             return mirroredSpectrum;
-          if (visualizerType === "wave")
+          if (root.visualizerType === "wave")
             return waveSpectrum;
           return null;
         }
@@ -285,28 +289,28 @@ Item {
         anchors.fill: parent
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.marginS
-        visible: !isVertical
+        visible: !root.isVertical
         z: 1
 
         // Album art / Progress ring
         Item {
-          visible: hasPlayer && (showAlbumArt || showProgressRing)
-          Layout.preferredWidth: visible ? artSize : 0
-          Layout.preferredHeight: visible ? artSize : 0
+          visible: root.hasPlayer && (root.showAlbumArt || root.showProgressRing)
+          Layout.preferredWidth: visible ? root.artSize : 0
+          Layout.preferredHeight: visible ? root.artSize : 0
           Layout.alignment: Qt.AlignVCenter
 
           ProgressRing {
             id: progressRing
             anchors.fill: parent
-            visible: showProgressRing
+            visible: root.showProgressRing
             progress: MediaService.trackLength > 0 ? MediaService.currentPosition / MediaService.trackLength : 0
             lineWidth: root.progressWidth
           }
 
           NImageRounded {
-            visible: showAlbumArt && hasPlayer
+            visible: root.showAlbumArt && root.hasPlayer
             anchors.fill: parent
-            anchors.margins: showProgressRing ? root.progressWidth * 2 : 0
+            anchors.margins: root.showProgressRing ? root.progressWidth * 2 : 0
             radius: width / 2
             imagePath: MediaService.trackArtUrl
             borderWidth: 0
@@ -319,27 +323,27 @@ Item {
           id: titleContainer
           Layout.fillWidth: true
           Layout.alignment: Qt.AlignVCenter
-          Layout.preferredHeight: capsuleHeight
-          fadeRoundLeftCorners: !(showAlbumArt || showProgressRing)
+          Layout.preferredHeight: root.capsuleHeight
+          fadeRoundLeftCorners: !(root.showAlbumArt || root.showProgressRing)
 
-          text: title
+          text: root.title
 
           scrollMode: {
-            if (scrollingMode === "always")
+            if (root.scrollingMode === "always")
               return NScrollText.ScrollMode.Always;
-            if (scrollingMode === "hover")
+            if (root.scrollingMode === "hover")
               return NScrollText.ScrollMode.Hover;
             return NScrollText.ScrollMode.Never;
           }
-          cursorShape: hasPlayer ? Qt.PointingHandCursor : Qt.ArrowCursor
+          cursorShape: root.hasPlayer ? Qt.PointingHandCursor : Qt.ArrowCursor
           maxWidth: root.maxWidth - root.mainContentWidth
           forcedHover: mainMouseArea.containsMouse
           fadeExtent: 0.1
           fadeCornerRadius: Style.radiusM
 
           NText {
-            color: hasPlayer ? root.textColor : Color.mOnSurfaceVariant
-            pointSize: barFontSize
+            color: root.hasPlayer ? root.textColor : Color.mOnSurfaceVariant
+            pointSize: root.barFontSize
             elide: Text.ElideNone
           }
         }
@@ -348,8 +352,8 @@ Item {
       // Vertical layout
       Item {
         id: verticalLayout
-        visible: isVertical
-        width: Style.toOdd(verticalSize)
+        visible: root.isVertical
+        width: Style.toOdd(root.verticalSize)
         height: Style.toOdd(width)
         x: Style.pixelAlignCenter(parent.width, width)
         y: Style.pixelAlignCenter(parent.height, height)
@@ -357,15 +361,15 @@ Item {
 
         ProgressRing {
           anchors.fill: parent
-          visible: showProgressRing
+          visible: root.showProgressRing
           progress: MediaService.trackLength > 0 ? MediaService.currentPosition / MediaService.trackLength : 0
           lineWidth: root.progressWidth
         }
 
         NImageRounded {
-          visible: showAlbumArt && hasPlayer
+          visible: root.showAlbumArt && root.hasPlayer
           anchors.fill: parent
-          anchors.margins: showProgressRing ? root.progressWidth * 2 : 0
+          anchors.margins: root.showProgressRing ? root.progressWidth * 2 : 0
           radius: width / 2
           imagePath: MediaService.trackArtUrl
           borderWidth: 0
@@ -383,10 +387,10 @@ Item {
     anchors.fill: parent
 
     // Extend click area to screen edge if widget is at the start/end
-    anchors.leftMargin: (!isVertical && section === "left" && sectionWidgetIndex === 0) ? -Style.marginS : 0
-    anchors.rightMargin: (!isVertical && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginS : 0
-    anchors.topMargin: (isVertical && section === "left" && sectionWidgetIndex === 0) ? -Style.marginM : 0
-    anchors.bottomMargin: (isVertical && section === "right" && sectionWidgetIndex === sectionWidgetsCount - 1) ? -Style.marginM : 0
+    anchors.leftMargin: (!root.isVertical && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginS : 0
+    anchors.rightMargin: (!root.isVertical && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginS : 0
+    anchors.topMargin: (root.isVertical && root.section === "left" && root.sectionWidgetIndex === 0) ? -Style.marginM : 0
+    anchors.bottomMargin: (root.isVertical && root.section === "right" && root.sectionWidgetIndex === root.sectionWidgetsCount - 1) ? -Style.marginM : 0
 
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
@@ -394,14 +398,14 @@ Item {
 
     onClicked: mouse => {
                  if (mouse.button === Qt.LeftButton) {
-                   PanelService.getPanel("mediaPlayerPanel", screen)?.toggle(container);
+                   PanelService.invokePanel(PanelService.getPanel("mediaPlayerPanel", root.screen), "toggle", [container]);
                  } else if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, container, screen);
-                 } else if (mouse.button === Qt.MiddleButton && hasPlayer) {
+                   PanelService.showContextMenu(contextMenu, container, root.screen, null);
+                 } else if (mouse.button === Qt.MiddleButton && root.hasPlayer) {
                    MediaService.playPause();
-                 } else if (mouse.button === Qt.ForwardButton && hasPlayer) {
+                 } else if (mouse.button === Qt.ForwardButton && root.hasPlayer) {
                    MediaService.next();
-                 } else if (mouse.button === Qt.BackButton && hasPlayer) {
+                 } else if (mouse.button === Qt.BackButton && root.hasPlayer) {
                    MediaService.previous();
                  }
                }
@@ -447,6 +451,7 @@ Item {
 
   // Progress Ring Component
   component ProgressRing: Canvas {
+    id: progressRingCanvas
     property real progress: 0
     property real lineWidth: 2
 
@@ -455,13 +460,13 @@ Item {
         requestPaint();
     }
 
-    onProgressChanged: repaint()
-    Component.onCompleted: repaint()
+    onProgressChanged: progressRingCanvas.repaint()
+    Component.onCompleted: progressRingCanvas.repaint()
 
     Connections {
       target: Color
       function onMPrimaryChanged() {
-        repaint();
+        progressRingCanvas.repaint();
       }
     }
 

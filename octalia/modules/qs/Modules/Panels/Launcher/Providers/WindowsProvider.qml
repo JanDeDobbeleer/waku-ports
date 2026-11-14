@@ -1,7 +1,7 @@
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
 import qs.Services.Compositor
+import "WindowsProviderUtils.js" as WindowsProviderUtils
 
 Item {
   id: root
@@ -12,17 +12,17 @@ Item {
   property string supportedLayouts: "list"
   property string iconMode: Settings.data.appLauncher.iconMode
 
-  function init() {
+  function init(): void {
     Logger.d("WindowsProvider", "Initialized");
   }
 
   // Check if this provider handles the command
-  function handleCommand(searchText) {
+  function handleCommand(searchText: string): bool {
     return searchText.startsWith(">win");
   }
 
   // Return available commands when user types ">"
-  function commands() {
+  function commands(): var {
     return [
           {
             "name": ">win",
@@ -31,13 +31,14 @@ Item {
             "isTablerIcon": true,
             "isImage": false,
             "onActivate": function () {
-              launcher.setSearchText(">win ");
+              WindowsProviderUtils.setSearchText(launcher, ">win ");
             }
           }
         ];
   }
 
-  function getResults(query) {
+  function getResults(query: string): var {
+    var appEntry, entry, i, iconName, j, score, searchTerm, win;
     if (!query)
       return [];
 
@@ -47,7 +48,7 @@ Item {
     var isCommandMode = trimmed.startsWith(">win");
     if (isCommandMode) {
       // Extract search term after ">win "
-      var searchTerm = trimmed.substring(4).trim();
+      searchTerm = trimmed.substring(4).trim();
       // In command mode, show all windows if no search term
       if (searchTerm.length === 0) {
         return getAllWindows();
@@ -62,8 +63,8 @@ Item {
     var items = [];
 
     // Collect all windows from CompositorService
-    for (var i = 0; i < CompositorService.windows.count; i++) {
-      var win = CompositorService.windows.get(i);
+    for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+      win = WindowsProviderUtils.windowAt(CompositorService, i);
       items.push({
                    "id": win.id,
                    "title": win.title || "",
@@ -82,15 +83,15 @@ Item {
 
     // Map to launcher items
     var launcherItems = [];
-    for (var j = 0; j < results.length; j++) {
-      var entry = results[j].obj;
-      var score = results[j].score;
+    for (j = 0; j < results.length; j++) {
+      entry = results[j].obj;
+      score = results[j].score;
 
       // Get icon name from DesktopEntry if available, otherwise use appId
-      var iconName = entry.appId;
-      var appEntry = ThemeIcons.findAppEntry(entry.appId);
-      if (appEntry && appEntry.icon) {
-        iconName = appEntry.icon;
+      iconName = entry.appId;
+      appEntry = WindowsProviderUtils.iconForApp(ThemeIcons, entry.appId);
+      if (appEntry) {
+        iconName = appEntry;
       }
 
       launcherItems.push({
@@ -109,16 +110,17 @@ Item {
     return launcherItems;
   }
 
-  function getAllWindows() {
+  function getAllWindows(): var {
+    var appEntry, i, iconName, win;
     var launcherItems = [];
 
-    for (var i = 0; i < CompositorService.windows.count; i++) {
-      var win = CompositorService.windows.get(i);
+    for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+      win = WindowsProviderUtils.windowAt(CompositorService, i);
 
-      var iconName = win.appId;
-      var appEntry = ThemeIcons.findAppEntry(win.appId);
-      if (appEntry && appEntry.icon) {
-        iconName = appEntry.icon;
+      iconName = win.appId;
+      appEntry = WindowsProviderUtils.iconForApp(ThemeIcons, win.appId);
+      if (appEntry) {
+        iconName = appEntry;
       }
 
       launcherItems.push({
@@ -139,15 +141,16 @@ Item {
     return launcherItems;
   }
 
-  function createActivateHandler(windowEntry) {
+  function createActivateHandler(windowEntry: var): var {
     return function () {
       if (launcher)
         launcher.close();
 
       Qt.callLater(() => {
+        var i, win;
                      // Find the actual window object to pass to focusWindow
-                     for (var i = 0; i < CompositorService.windows.count; i++) {
-                       var win = CompositorService.windows.get(i);
+                     for (i = 0; i < WindowsProviderUtils.windowCount(CompositorService); i++) {
+                       win = WindowsProviderUtils.windowAt(CompositorService, i);
                        if (win.id === windowEntry.id) {
                          CompositorService.focusWindow(win);
                          break;

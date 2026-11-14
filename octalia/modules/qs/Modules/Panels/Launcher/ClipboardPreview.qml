@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Keyboard
 import qs.Widgets
+import "./ClipboardPreviewUtils.js" as ClipboardPreviewUtils
 
 Item {
   id: previewPanel
@@ -16,55 +17,20 @@ Item {
 
   implicitHeight: contentArea.implicitHeight + Style.margin2L
 
-  function loadContent() {
-    if (!currentItem || !currentItem.clipboardId)
-      return;
-
-    if (isImageContent) {
-      // For images, check cache first then decode
-      imageDataUrl = ClipboardService.getImageData(currentItem.clipboardId) || "";
-      loadingFullContent = !imageDataUrl;
-      if (!imageDataUrl && currentItem.mime) {
-        ClipboardService.decodeToDataUrl(currentItem.clipboardId, currentItem.mime, null);
-      }
-    } else {
-      // For text, check sync cache first
-      const cached = ClipboardService.getContent(currentItem.clipboardId);
-      if (cached) {
-        fullContent = cached;
-        loadingFullContent = false;
-      } else {
-        // Show preview while loading full content
-        fullContent = currentItem.preview || "";
-        loadingFullContent = true;
-        // Async decode as fallback
-        var requestedId = currentItem.clipboardId;
-        ClipboardService.decode(requestedId, function (content) {
-          if (!previewPanel || !previewPanel.currentItem) {
-            return;
-          }
-          if (previewPanel.currentItem.clipboardId === requestedId) {
-            var trimmed = content ? content.trim() : "";
-            if (trimmed !== "") {
-              previewPanel.fullContent = trimmed;
-            }
-            previewPanel.loadingFullContent = false;
-          }
-        });
-      }
-    }
+  function loadContent(): void {
+    ClipboardPreviewUtils.loadContent(previewPanel, ClipboardService);
   }
 
   Connections {
     target: previewPanel
-    function onCurrentItemChanged() {
-      fullContent = "";
-      imageDataUrl = "";
-      loadingFullContent = false;
-      isImageContent = currentItem && currentItem.isImage;
+    function onCurrentItemChanged(): void {
+      previewPanel.fullContent = "";
+      previewPanel.imageDataUrl = "";
+      previewPanel.loadingFullContent = false;
+      previewPanel.isImageContent = ClipboardPreviewUtils.field(previewPanel.currentItem, "isImage");
 
-      if (currentItem && currentItem.clipboardId) {
-        loadContent();
+      if (ClipboardPreviewUtils.field(previewPanel.currentItem, "clipboardId")) {
+        previewPanel.loadContent();
       }
     }
   }
@@ -72,31 +38,17 @@ Item {
   readonly property int _rev: ClipboardService.revision
   on_RevChanged: {
     // When cache updates, try to load content if we're still showing loading or preview
-    if (currentItem && currentItem.clipboardId && !isImageContent && loadingFullContent) {
-      const cached = ClipboardService.getContent(currentItem.clipboardId);
-      if (cached) {
-        fullContent = cached;
-        loadingFullContent = false;
-      }
-    }
+    ClipboardPreviewUtils.refreshCachedText(previewPanel, ClipboardService);
   }
 
   Timer {
     id: imageUpdateTimer
     interval: 200
-    running: currentItem && currentItem.isImage && imageDataUrl === ""
-    repeat: currentItem && currentItem.isImage && imageDataUrl === ""
+    running: ClipboardPreviewUtils.shouldUpdateImage(previewPanel)
+    repeat: ClipboardPreviewUtils.shouldUpdateImage(previewPanel)
 
     onTriggered: {
-      if (currentItem && currentItem.clipboardId) {
-        const newData = ClipboardService.getImageData(currentItem.clipboardId) || "";
-        if (newData !== imageDataUrl) {
-          imageDataUrl = newData;
-          if (newData) {
-            loadingFullContent = false;
-          }
-        }
-      }
+      ClipboardPreviewUtils.updateImage(previewPanel, ClipboardService);
     }
   }
 
@@ -107,8 +59,8 @@ Item {
 
     BusyIndicator {
       anchors.centerIn: parent
-      running: loadingFullContent
-      visible: loadingFullContent
+      running: previewPanel.loadingFullContent
+      visible: previewPanel.loadingFullContent
       width: Style.baseWidgetSize
       height: width
     }
@@ -118,14 +70,14 @@ Item {
       anchors.fill: parent
       anchors.margins: Style.marginS
       spacing: Style.marginS
-      visible: isImageContent && !loadingFullContent && imageDataUrl !== ""
+      visible: previewPanel.isImageContent && !previewPanel.loadingFullContent && previewPanel.imageDataUrl !== ""
 
       NImageRounded {
         id: previewImage
         Layout.fillWidth: true
         Layout.fillHeight: true
         radius: Style.marginS
-        imagePath: imageDataUrl
+        imagePath: previewPanel.imageDataUrl
         imageFillMode: Image.PreserveAspectFit
       }
 
@@ -137,11 +89,11 @@ Item {
       NText {
         Layout.fillWidth: true
         text: {
-          const meta = ClipboardService.parseImageMeta(currentItem?.preview);
+          const meta = ClipboardService.parseImageMeta(ClipboardPreviewUtils.field(previewPanel.currentItem, "preview"));
           if (meta)
-            return `${meta.fmt} • ${meta.w}×${meta.h} • ${meta.size}`;
+            return ClipboardPreviewUtils.formatImageMeta(meta);
           // Fallback to basic info
-          const format = (currentItem?.mime || "image").split("/")[1]?.toUpperCase() || "Image";
+          const format = ClipboardPreviewUtils.imageFormat(ClipboardPreviewUtils.field(previewPanel.currentItem, "mime")) || "Image";
           return `${format} • ${previewImage.implicitWidth}×${previewImage.implicitHeight}`;
         }
         pointSize: Style.fontSizeS
@@ -154,7 +106,7 @@ Item {
       anchors.fill: parent
       anchors.margins: Style.marginS
       spacing: Style.marginS
-      visible: !isImageContent && !loadingFullContent
+      visible: !previewPanel.isImageContent && !previewPanel.loadingFullContent
 
       NScrollView {
         id: clipboardScrollView
@@ -163,7 +115,7 @@ Item {
         horizontalPolicy: Settings.data.appLauncher.clipboardWrapText ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
 
         NText {
-          text: fullContent
+          text: previewPanel.fullContent
           width: Settings.data.appLauncher.clipboardWrapText ? clipboardScrollView.availableWidth : implicitWidth
           wrapMode: Settings.data.appLauncher.clipboardWrapText ? Text.Wrap : Text.NoWrap
           textFormat: Text.PlainText
@@ -180,13 +132,8 @@ Item {
 
       NText {
         Layout.fillWidth: true
-        visible: fullContent.length > 0
-        text: {
-          const chars = fullContent.length;
-          const words = fullContent.split(/\s+/).filter(w => w.length > 0).length;
-          const lines = fullContent.split('\n').length;
-          return `${chars} chars, ${words} words, ${lines} lines`;
-        }
+        visible: previewPanel.fullContent.length > 0
+        text: ClipboardPreviewUtils.contentStats(previewPanel.fullContent)
         pointSize: Style.fontSizeS
         color: Color.mOnSurfaceVariant
       }

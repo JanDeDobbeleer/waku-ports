@@ -4,47 +4,40 @@ import Celeste.Config
 import Celeste.Multimedia
 import Celeste.Shaders
 import Celeste.State
-import qs.services
+import waku.services as S
+import "WallpaperImplHelpers.js" as WallpaperImplHelpers
 
 Item {
     id: root
 
-    readonly property var shader: {
-        CUtils.dependency(Config.background.wallpaperTransition);
-        let transition = CUtils.enumToString(Config.background, "wallpaperTransition");
-        if (!transition)
-            return Shaders.crossfade;
+    readonly final property var shader: WallpaperImplHelpers.shader(Config.background, Shaders, CUtils)
 
-        transition = transition[0].toLowerCase() + transition.slice(1);
-        return Shaders[transition] ?? Shaders.crossfade;
-    }
-
-    property string source: Wallpapers.current
-    property ShaderEffectSource currentCapture: capture1
-    property real transitionProgress: 1
+    final property string source: S.Wallpapers.current
+    final property ShaderEffectSource currentCapture: capture1
+    final property real transitionProgress: 1
 
     onSourceChanged: {
         transitionAnim.stop();
 
         if (transitionProgress < 1) {
             currentCapture = currentCapture === capture1 ? capture2 : capture1;
-            currentCapture.sourceItem = transition;
+            WallpaperImplHelpers.setSourceItem(currentCapture, transition);
         } else {
-            currentCapture.sourceItem = live;
+            WallpaperImplHelpers.setSourceItem(currentCapture, liveItem);
         }
 
         currentCapture.visible = true;
-        currentCapture.scheduleUpdate();
+        WallpaperImplHelpers.scheduleUpdate(currentCapture);
     }
 
-    Component.onCompleted: live.source = source
+    Component.onCompleted: liveItem.source = source
 
     NumberAnimation on transitionProgress {
         id: transitionAnim
 
         running: false
-        duration: root.shader.duration * Tokens.anim.durations.scale
-        easing: root.shader.easing
+        duration: WallpaperImplHelpers.duration(root.shader) * Tokens.anim.durations.scale
+        easing: WallpaperImplHelpers.easing(root.shader)
         to: 1
     }
 
@@ -59,8 +52,8 @@ Item {
             visible = false;
             transition.from = this;
             root.transitionProgress = 0;
-            live.source = root.source;
-            if (live.ready)
+            liveItem.source = root.source;
+            if (liveItem.ready)
                 transitionAnim.start();
         }
     }
@@ -76,14 +69,14 @@ Item {
             visible = false;
             transition.from = this;
             root.transitionProgress = 0;
-            live.source = root.source;
-            if (live.ready)
+            liveItem.source = root.source;
+            if (liveItem.ready)
                 transitionAnim.start();
         }
     }
 
     Visual {
-        id: live
+        id: liveItem
 
         anchors.fill: parent
         playing: PersistentState.wallpaperPlaying
@@ -99,12 +92,12 @@ Item {
     ShaderEffect {
         id: transition
 
-        property Item from
-        property Item to: live
-        property real progress: root.transitionProgress
+        final property Item from
+        final property Item to: liveItem
+        final property real progress: root.transitionProgress
 
         anchors.fill: parent
         visible: root.transitionProgress < 1
-        fragmentShader: root.shader.url
+        fragmentShader: WallpaperImplHelpers.url(root.shader)
     }
 }

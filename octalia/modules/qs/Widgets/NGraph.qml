@@ -1,5 +1,8 @@
+pragma ComponentBehavior: Bound
+
+import "NGraphUtils.js" as GraphUtils
+
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
 import qs.compat
 
@@ -27,7 +30,7 @@ Item {
   property real strokeWidth: 1
   property bool fill: true
   property real fillOpacity: 0.15
-  property real antialiasing: 0.5
+  property real edgeSmoothing: 0.5
 
   // Smooth scrolling interval (how often data updates)
   property int updateInterval: 1000
@@ -38,8 +41,8 @@ Item {
   // Vertical padding (percentage of range) to keep values from touching edges
   readonly property real curvePadding: 0.12
 
-  readonly property bool hasData: values.length >= 4
-  readonly property bool hasData2: values2.length >= 4
+  readonly property bool hasData: GraphUtils.length(values) >= 4
+  readonly property bool hasData2: GraphUtils.length(values2) >= 4
 
   // Scale animation state
   property real _targetMax1: maxValue
@@ -98,11 +101,11 @@ Item {
   }
 
   onValuesChanged: {
-    if (values.length < 4)
+    if (GraphUtils.length(values) < 4)
       return;
 
-    const last = values[values.length - 1];
-    const prev = values[values.length - 2];
+    const last = values[GraphUtils.length(values) - 1];
+    const prev = values[GraphUtils.length(values) - 2];
     _pred1 = Math.max(minValue, last + (last - prev) * 0.5);
 
     if (!_ready1)
@@ -111,11 +114,11 @@ Item {
   }
 
   onValues2Changed: {
-    if (values2.length < 4)
+    if (GraphUtils.length(values2) < 4)
       return;
 
-    const last = values2[values2.length - 1];
-    const prev = values2[values2.length - 2];
+    const last = values2[GraphUtils.length(values2) - 1];
+    const prev = values2[GraphUtils.length(values2) - 2];
     _pred2 = Math.max(minValue2, last + (last - prev) * 0.5);
 
     if (!_ready2)
@@ -154,7 +157,7 @@ Item {
   }
 
   // Normalize a value to [0, 1] with padding applied
-  function _normalize(val, minVal, maxVal) {
+  function _normalize(val: var, minVal: var, maxVal: var): real {
     let range = maxVal - minVal;
     if (range <= 0)
       return 0.5;
@@ -169,31 +172,32 @@ Item {
   // R channel = primary, G channel = secondary.
   Item {
     id: _dataRow
-    width: Math.max(root.values.length + 1, root.values2.length + 1, 4)
+    width: Math.max(GraphUtils.length(root.values) + 1, GraphUtils.length(root.values2) + 1, 4)
     height: 1
 
     Repeater {
       model: _dataRow.width
 
       Rectangle {
+        id: dataPoint
         required property int index
-        x: index
+        x: dataPoint.index
         width: 1
         height: 1
         color: {
           let r = 0, g = 0;
-          let n1 = root.values.length;
-          let n2 = root.values2.length;
+          let n1 = GraphUtils.length(root.values);
+          let n2 = GraphUtils.length(root.values2);
           let eMax1 = root._effectiveMax1;
           let eMax2 = root._effectiveMax2;
 
-          if (index < n1)
-            r = root._normalize(root.values[index], root.minValue, eMax1);
+          if (dataPoint.index < n1)
+            r = root._normalize(root.values[dataPoint.index], root.minValue, eMax1);
           else if (n1 > 0)
             r = root._normalize(root._pred1, root.minValue, eMax1);
 
-          if (index < n2)
-            g = root._normalize(root.values2[index], root.minValue2, eMax2);
+          if (dataPoint.index < n2)
+            g = root._normalize(root.values2[dataPoint.index], root.minValue2, eMax2);
           else if (n2 > 0)
             g = root._normalize(root._pred2, root.minValue2, eMax2);
 
@@ -219,15 +223,15 @@ Item {
     property variant dataSource: _dataTex
     property color lineColor1: root.color
     property color lineColor2: root.color2
-    property real count1: root.values.length
-    property real count2: root.values2.length
+    property real count1: GraphUtils.length(root.values)
+    property real count2: GraphUtils.length(root.values2)
     property real scroll1: root._t1
     property real scroll2: root._t2
     property real lineWidth: root.strokeWidth
     property real graphFillOpacity: root.fill ? root.fillOpacity : 0.0
     property real texWidth: _dataRow.width
     property real resY: height
-    property real aaSize: root.antialiasing
+    property real aaSize: root.edgeSmoothing
 
     fragmentShader: Qt.resolvedUrl(ShellUrl.dir + "/Shaders/qsb/graph.frag.qsb")
     blending: true

@@ -1,10 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -113,26 +115,28 @@ ColumnLayout {
   Repeater {
     model: Quickshell.screens || []
     delegate: NCheckbox {
+      id: monitorOption
+      required property ShellScreen modelData
       Layout.fillWidth: true
       readonly property real compositorScale: {
-        const info = CompositorService.displayScales[modelData.name];
+        const info = CompositorService.displayScales[monitorOption.modelData.name];
         return (info && info.scale) ? info.scale : 1.0;
       }
-      label: modelData.name || I18n.tr("common.unknown")
+      label: monitorOption.modelData.name || I18n.tr("common.unknown")
       description: {
-        I18n.tr("system.monitor-description", {
-                  "model": modelData.model,
-                  "width": modelData.width * compositorScale,
-                  "height": modelData.height * compositorScale,
+        I18n.trArgs("system.monitor-description", {
+                  "model": monitorOption.modelData.model,
+                  "width": monitorOption.modelData.width * compositorScale,
+                  "height": monitorOption.modelData.height * compositorScale,
                   "scale": compositorScale
                 });
       }
-      checked: (Settings.data.osd.monitors || []).indexOf(modelData.name) !== -1
+      checked: (Settings.data.osd.monitors || []).indexOf(monitorOption.modelData.name) !== -1
       onToggled: checked => {
                    if (checked) {
-                     Settings.data.osd.monitors = root.addMonitor(Settings.data.osd.monitors, modelData.name);
+                     Settings.data.osd.monitors = SettingsValue.invoke(root, "addMonitor", Settings.data.osd.monitors, monitorOption.modelData.name);
                    } else {
-                     Settings.data.osd.monitors = root.removeMonitor(Settings.data.osd.monitors, modelData.name);
+                     Settings.data.osd.monitors = SettingsValue.invoke(root, "removeMonitor", Settings.data.osd.monitors, monitorOption.modelData.name);
                    }
                  }
     }

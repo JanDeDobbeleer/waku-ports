@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 // The notification daemon: Quickshell's NotificationServer owns
 // org.freedesktop.Notifications. docs/notifications.md describes the system.
 //
@@ -18,7 +19,7 @@ import "Security.js" as Security
 import "Layout.js" as Layout
 import "Markup.js" as Markup
 import "Delivery.js" as Delivery
-import "Icons.js" as Icons
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: service
@@ -88,8 +89,8 @@ Item {
   function surfaceStates() {
     var out = []
     var list = surfaceVariants.instances
-    for (var i = 0; i < list.length; i++) {
-      var s = list[i]
+    for (let i = 0; i < list.length; i++) {
+      let s = list[i]
       out.push({ display: s.modelData ? String(s.modelData.name) : "", mapped: s.visible === true,
                  stepAside: s.stepAside === true, showing: s.showingNotifications === true })
     }
@@ -100,14 +101,14 @@ Item {
     var revision = hyprRevision
     if (!name) return false
     var screen = null
-    for (var s = 0; s < Quickshell.screens.length; s++)
+    for (let s = 0; s < Quickshell.screens.length; s++)
       if (String(Quickshell.screens[s].name) === name) screen = Quickshell.screens[s]
     var monitor = screen ? Hyprland.monitorFor(screen) : null
     var workspace = monitor ? monitor.activeWorkspace : null
     if (!workspace || !workspace.hasFullscreen) return false
     var windows = workspace.toplevels ? workspace.toplevels.values : []
-    for (var i = 0; i < windows.length; i++) {
-      var ipc = windows[i].lastIpcObject || {}
+    for (let i = 0; i < windows.length; i++) {
+      let ipc = windows[i].lastIpcObject || {}
       // A workspace also reports maximized windows as fullscreen. Only a real
       // fullscreen (mode bit 2) can be scanned out.
       if ((Number(ipc.fullscreen) & 2) !== 0) return true
@@ -240,8 +241,8 @@ Item {
     if (!held.length) return
     var queue = held
     held = []
-    for (var i = 0; i < queue.length; i++) {
-      var pending = liveKeys[queue[i]]
+    for (let i = 0; i < queue.length; i++) {
+      let pending = liveKeys[queue[i]]
       if (!pending || !pending.row) continue
       pending.held = false
       service.showRow(pending.row)
@@ -286,8 +287,8 @@ Item {
   // Cards in the order they stand: deck by deck, front to back.
   function keyboardOrder() {
     var out = [], decks = layout.decks
-    for (var i = 0; i < decks.length; i++)
-      for (var j = 0; j < decks[i].rows.length; j++) out.push(String(decks[i].rows[j].key))
+    for (let i = 0; i < decks.length; i++)
+      for (let j = 0; j < decks[i].rows.length; j++) out.push(String(decks[i].rows[j].key))
     return out
   }
 
@@ -327,7 +328,7 @@ Item {
   function keepSelection(fromIndex) {
     if (!keyboardMode || rowIndexFor(keyboardKey) >= 0 && !leaving[keyboardKey]) return
     var order = keyboardOrder()
-    for (var i = Math.min(Math.max(0, fromIndex), order.length - 1); i >= 0; i--) {
+    for (let i = Math.min(Math.max(0, fromIndex), order.length - 1); i >= 0; i--) {
       if (!keyboardRejected[order[i]] && reachable(order[i])) { selectCard(order[i]); return }
     }
     stopKeyboard()
@@ -341,7 +342,7 @@ Item {
     var place = layoutWith(true, Layout.groupKeyFor(toasts.get(at))).placements[key]
     if (!place || place.hidden) return false
     var screen = null
-    for (var s = 0; s < Quickshell.screens.length; s++)
+    for (let s = 0; s < Quickshell.screens.length; s++)
       if (String(Quickshell.screens[s].name) === targetDisplayName) screen = Quickshell.screens[s]
     if (!screen) return true
     var room = screen.height - marginsFor(targetDisplayName).top - gap
@@ -352,7 +353,7 @@ Item {
   // while the next deck, opened in its place, is not.
   function moveSelection(step) {
     var order = keyboardOrder()
-    for (var next = order.indexOf(keyboardKey) + step; next >= 0 && next < order.length; next += step) {
+    for (let next = order.indexOf(keyboardKey) + step; next >= 0 && next < order.length; next += step) {
       if (!keyboardRejected[order[next]] && reachable(order[next])) { selectCard(order[next]); return }
     }
   }
@@ -364,7 +365,7 @@ Item {
     if (!keyboardMode || reachable(keyboardKey)) return
     keyboardRejected[keyboardKey] = true
     var order = keyboardOrder()
-    for (var i = order.indexOf(keyboardKey) - 1; i >= 0; i--) {
+    for (let i = order.indexOf(keyboardKey) - 1; i >= 0; i--) {
       if (!keyboardRejected[order[i]] && reachable(order[i])) { selectCard(order[i]); return }
     }
   }
@@ -400,7 +401,7 @@ Item {
       stopKeyboard()
       activate(selected)
     } else if (key === Qt.Key_Delete || key === Qt.Key_Backspace) {
-      var at = keyboardOrder().indexOf(selected)
+      let at = keyboardOrder().indexOf(selected)
       closeToast(selected, "dismissed")
       keepSelection(at)
     } else if (/^[1-9]$/.test(text)) {
@@ -480,7 +481,7 @@ Item {
   // the new target, so "was" and "to" would match and nothing would move.
   function snapshot() {
     var snap = {}
-    for (var key in placements)
+    for (let key in placements)
       snap[key] = { y: at(key, "y"), scale: at(key, "scale"),
                     opacity: at(key, "opacity"), height: at(key, "height") }
     return snap
@@ -518,14 +519,14 @@ Item {
   // A move started after the jump settles on its own finish instead.
   function landed() { if (t >= 1) settled() }
 
-  readonly property var layout: { layoutRevision; return layoutWith(expanded, openDeck) }
+  readonly property var layout: { const revision = layoutRevision; return layoutWith(expanded, openDeck) }
 
   // The deck as it would stand with this deck open; the keyboard asks before
   // it moves.
   function layoutWith(isExpanded, deckKey) {
     var rows = []
-    for (var i = 0; i < toasts.count; i++) {
-      var row = toasts.get(i)
+    for (let i = 0; i < toasts.count; i++) {
+      let row = toasts.get(i)
       if (!leaving[row.key]) rows.push(row)   // a card on its way out takes no space
     }
     return Layout.compute(rows, {
@@ -545,8 +546,8 @@ Item {
   readonly property var placements: {
     var out = {}
     var base = layout.placements
-    for (var k in base) out[k] = base[k]
-    for (var key in leaving) if (departures[key]) out[key] = departures[key]
+    for (let k in base) out[k] = base[k]
+    for (let key in leaving) if (departures[key]) out[key] = departures[key]
     return out
   }
 
@@ -561,7 +562,7 @@ Item {
   }
 
   function rowIndexFor(key) {
-    for (var i = 0; i < toasts.count; i++)
+    for (let i = 0; i < toasts.count; i++)
       if (toasts.get(i).key === key) return i
     return -1
   }
@@ -569,7 +570,7 @@ Item {
   // id 0 means "a new notification", not "replace the one with id 0".
   function keyForOriginal(id) {
     if (!id) return ""
-    for (var key in liveKeys)
+    for (let key in liveKeys)
       if (liveKeys[key].originalId === id && refs[key]) return key
     return ""
   }
@@ -618,7 +619,7 @@ Item {
 
     // Only a new card waits while the deck is held; an update changes a card in place.
     if (service.holding() && service.rowIndexFor(key) < 0) {
-      var pending = liveKeys[key]
+      let pending = liveKeys[key]
       pending.row = row
       if (!pending.held) {
         pending.held = true
@@ -662,7 +663,7 @@ Item {
                    notification.imageChanged, notification.urgencyChanged,
                    notification.expireTimeoutChanged, notification.hintsChanged,
                    notification.actionsChanged]
-    for (var i = 0; i < signals.length; i++) signals[i].connect(schedule)
+    for (let i = 0; i < signals.length; i++) signals[i].connect(schedule)
   }
 
   // Qt.callLater: mutating the model while a Repeater is mid-incubation
@@ -705,7 +706,7 @@ Item {
         service.arriving = ""
         // It drops in from just above where it lands, from under the bar for
         // the top card, and fades in on the way.
-        var landing = service.layout.placements[key]
+        let landing = service.layout.placements[key]
         snap[key] = { y: (landing ? landing.y : 0) - service.travel,
                       scale: landing ? landing.scale : 1, opacity: 0,
                       height: landing ? landing.height : 0 }
@@ -743,9 +744,9 @@ Item {
   // One move, or one jump, for the lot, however many cards leave together.
   function closeToasts(keys, reason, instant) {
     var next = {}, marked = false
-    for (var k in leaving) next[k] = leaving[k]
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i]
+    for (let k in leaving) next[k] = leaving[k]
+    for (let i = 0; i < keys.length; i++) {
+      let key = keys[i]
       if (next[key]) continue
       if (rowIndexFor(key) < 0) {
         finishClose(key, reason || "dismissed")
@@ -765,11 +766,11 @@ Item {
     }
     var snap = snapshot(), deckNow = deckHeight
     var staying = 0
-    for (var r = 0; r < toasts.count; r++) if (!next[toasts.get(r).key]) staying++
+    for (let r = 0; r < toasts.count; r++) if (!next[toasts.get(r).key]) staying++
     var gone = {}
-    for (var d in departures) gone[d] = departures[d]
-    for (var j = 0; j < keys.length; j++) {
-      var from = snap[keys[j]], place = placements[keys[j]]
+    for (let d in departures) gone[d] = departures[d]
+    for (let j = 0; j < keys.length; j++) {
+      let from = snap[keys[j]], place = placements[keys[j]]
       if (!next[keys[j]] || gone[keys[j]] || !from) continue
       // Under the cards closing in, so the one taking its place covers it on
       // the way up. Its text goes first, or it would read through them; the
@@ -795,7 +796,7 @@ Item {
 
   function finishDeparted(now) {
     var keys = Object.keys(departures), waiting = false
-    for (var i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       if (departures[keys[i]].until <= now) finishClose(keys[i], leaving[keys[i]])
       else waiting = true
     }
@@ -804,13 +805,13 @@ Item {
 
   function finishLeaving() {
     var keys = Object.keys(leaving)
-    for (var i = 0; i < keys.length; i++) finishClose(keys[i], leaving[keys[i]])
+    for (let i = 0; i < keys.length; i++) finishClose(keys[i], leaving[keys[i]])
   }
 
   function unmarkLeaving(key) {
     var rest = {}, stay = {}
-    for (var k in leaving) if (k !== key) rest[k] = leaving[k]
-    for (var g in departures) if (g !== key) stay[g] = departures[g]
+    for (let k in leaving) if (k !== key) rest[k] = leaving[k]
+    for (let g in departures) if (g !== key) stay[g] = departures[g]
     leaving = rest
     departures = stay
   }
@@ -839,8 +840,8 @@ Item {
 
   // The newest card still on screen, past any on their way out.
   function newestLive() {
-    for (var i = 0; i < toasts.count; i++) {
-      var key = String(toasts.get(i).key)
+    for (let i = 0; i < toasts.count; i++) {
+      let key = String(toasts.get(i).key)
       if (!leaving[key]) return key
     }
     return ""
@@ -878,7 +879,7 @@ Item {
     if (Security.parseExecArgv(row.execArgv)) return true
     var ref = refs[key]
     var actions = (ref && ref.actions) || []
-    for (var i = 0; i < Math.min(actions.length, Security.MAX_ACTIONS); i++)
+    for (let i = 0; i < Math.min(actions.length, Security.MAX_ACTIONS); i++)
       if (String(actions[i].identifier) === "default") return true
     return !!(windowForPid(row.senderPid) || Markup.hostname(row.source) || String(row.link || ""))
   }
@@ -889,15 +890,15 @@ Item {
     var out = []
     var ref = refs[key]
     if (!ref || !ref.actions) return out
-    for (var i = 0; i < Math.min(ref.actions.length, Security.MAX_ACTIONS); i++) {
-      var a = ref.actions[i]
-      var identifier = String(a.identifier || "")
+    for (let i = 0; i < Math.min(ref.actions.length, Security.MAX_ACTIONS); i++) {
+      let a = ref.actions[i]
+      let identifier = String(a.identifier || "")
       if (identifier.length > Security.MAX_ACTION_ID || !identifier) continue
       if (identifier === "default") {
         // The card click already runs it.
         continue
       }
-      var label = Security.bounded(String(a.text || identifier), Security.MAX_ACTION_LABEL)
+      let label = Security.bounded(String(a.text || identifier), Security.MAX_ACTION_LABEL)
       if (/^settings$/i.test(label) || /^settings$/i.test(identifier))
         continue
       out.push({ id: identifier, text: label })
@@ -923,7 +924,7 @@ Item {
   function invokeSenderAction(key, identifier) {
     var ref = refs[key]
     if (!ref || !ref.actions) return false
-    for (var i = 0; i < Math.min(ref.actions.length, Security.MAX_ACTIONS); i++) {
+    for (let i = 0; i < Math.min(ref.actions.length, Security.MAX_ACTIONS); i++) {
       if (String(ref.actions[i].identifier) === identifier) {
         try { ref.actions[i].invoke(); return true } catch (e) { return false }
       }
@@ -940,8 +941,8 @@ Item {
   function wordIn(text, word) {
     var at = text.indexOf(word)
     while (at >= 0) {
-      var before = at === 0 ? "" : text.charAt(at - 1)
-      var after = text.charAt(at + word.length)
+      let before = at === 0 ? "" : text.charAt(at - 1)
+      let after = text.charAt(at + word.length)
       if (!/[a-z0-9]/.test(before) && !/[a-z0-9]/.test(after)) return true
       at = text.indexOf(word, at + 1)
     }
@@ -951,9 +952,9 @@ Item {
   function openWindows() {
     var list = Hyprland.toplevels ? Hyprland.toplevels.values : []
     var out = []
-    for (var i = 0; i < list.length; i++) {
-      var ipc = list[i].lastIpcObject
-      var wmClass = String((ipc && ipc["class"]) || "")
+    for (let i = 0; i < list.length; i++) {
+      let ipc = list[i].lastIpcObject
+      let wmClass = String((ipc && ipc["class"]) || "")
       if (wmClass) out.push({ wmClass: wmClass,
                               title: String((ipc && ipc.title) || ""),
                               address: String((ipc && ipc.address) || ""),
@@ -983,7 +984,7 @@ Item {
   function brandsOf(host) {
     var labels = String(host || "").toLowerCase().split(".")
     var out = []
-    for (var i = 0; i < labels.length; i++) {
+    for (let i = 0; i < labels.length; i++) {
       if (labels[i].length >= 4 && !genericLabels[labels[i]]) { out.push(labels[i]); break }
     }
     var registered = labels.length >= 2 ? labels[labels.length - 2] : ""
@@ -997,7 +998,7 @@ Item {
     var want = Number(pid || 0)
     if (!want) return null
     var windows = openWindows()
-    for (var i = 0; i < windows.length; i++)
+    for (let i = 0; i < windows.length; i++)
       if (windows[i].pid === want) return windows[i]
     return null
   }
@@ -1006,7 +1007,7 @@ Item {
   function mostRecent(candidates) {
     if (!candidates.length) return null
     var best = candidates[0]
-    for (var i = 1; i < candidates.length; i++)
+    for (let i = 1; i < candidates.length; i++)
       if (candidates[i].focusOrder < best.focusOrder) best = candidates[i]
     return best
   }
@@ -1024,12 +1025,12 @@ Item {
       if (found.length) return mostRecent(found)
 
       // A browser tab, then. Browsers only: "slack" in an editor's title is a filename.
-      var brands = brandsOf(name)
-      for (var b = 0; b < brands.length; b++) {
+      let brands = brandsOf(name)
+      for (let b = 0; b < brands.length; b++) {
         found = []
         for (i = 0; i < windows.length; i++) {
           if (!browserClasses.test(windows[i].wmClass.toLowerCase())) continue
-          var title = windows[i].title.toLowerCase().replace(browserSuffix, "")
+          let title = windows[i].title.toLowerCase().replace(browserSuffix, "")
           if (wordIn(title, brands[b])) found.push(windows[i])
         }
         if (found.length) return mostRecent(found)
@@ -1047,13 +1048,13 @@ Item {
     var tail = words.length > 1 ? "." + words.join(".") : ""
     found = []
     for (i = 0; i < windows.length; i++) {
-      var lower = windows[i].wmClass.toLowerCase()
+      let lower = windows[i].wmClass.toLowerCase()
       if (lower === slug) { found.push(windows[i]); continue }
-      var dotted = "." + lower.replace(/[^a-z0-9]+/g, ".")
+      let dotted = "." + lower.replace(/[^a-z0-9]+/g, ".")
       if (tail && dotted.slice(-tail.length) === tail) { found.push(windows[i]); continue }
       if (lower.indexOf("chrome-") !== 0) continue
-      var labels = lower.substring(7).split("__")[0].split(".")
-      for (var l = 0; l < labels.length; l++)
+      let labels = lower.substring(7).split("__")[0].split(".")
+      for (let l = 0; l < labels.length; l++)
         if (labels[l] === slug) { found.push(windows[i]); break }
     }
     return mostRecent(found)
@@ -1084,7 +1085,7 @@ Item {
     if (!handled && row) {
       // Source first, link last: a Slack message quoting a link is still a
       // Slack notification, and that link is clickable in its text.
-      var win = windowForPid(row.senderPid) || windowForSource(row.source)
+      let win = windowForPid(row.senderPid) || windowForSource(row.source)
       if (win) focusWindow(win)
       else if (Markup.hostname(row.source))
         Security.openExternalUrl("https://" + Markup.hostname(row.source) + "/")
@@ -1156,7 +1157,7 @@ Item {
     onTriggered: {
       var pending = keys
       keys = []
-      for (var i = 0; i < pending.length; i++) service.closeToast(pending[i], "activated")
+      for (let i = 0; i < pending.length; i++) service.closeToast(pending[i], "activated")
     }
   }
 
@@ -1333,9 +1334,9 @@ Item {
 
   function restoreRows(rows, replay) {
     // Restore is oldest first; history is newest first. Both insert at zero.
-    for (var i = replay ? rows.length - 1 : 0;
+    for (let i = replay ? rows.length - 1 : 0;
          replay ? i >= 0 : i < rows.length; i += replay ? -1 : 1) {
-      var row = Store.restored(rows[i])
+      let row = Store.restored(rows[i])
       if (!row) continue
       if (liveKeys[row.key]) {
         // Startup must not overwrite a newer live arrival. Replaying the same
@@ -1370,7 +1371,7 @@ Item {
   function replayHistory() {
     var rows = currentHistory().slice(0, replayCount)
     // Replaying nothing at all looks like a dead keybinding, so say so.
-    if (rows.length === 0) showPlaceholder(I18n.t("notifications.noneRecent"))
+    if (rows.length === 0) showPlaceholder(I18nModel.translate(I18n, "notifications.noneRecent"))
     else restoreRows(rows, true)
   }
 
@@ -1393,7 +1394,7 @@ Item {
     return true
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     id: ipcHandler
     target: "notifications"
 
@@ -1452,10 +1453,10 @@ Item {
       var needle = String(summary || "")
       if (!needle) return "none"
       var keys = []
-      for (var i = 0; i < toasts.count; i++)
+      for (let i = 0; i < toasts.count; i++)
         if (String(toasts.get(i).summary || "").indexOf(needle) !== -1)
           keys.push(String(toasts.get(i).key))
-      for (var k = 0; k < keys.length; k++) service.closeToast(keys[k], "dismissed")
+      for (let k = 0; k < keys.length; k++) service.closeToast(keys[k], "dismissed")
       return keys.length ? "ok" : "none"
     }
 
@@ -1469,7 +1470,7 @@ Item {
           service.expanded = false; service.openDeck = ""; service.hoverKey = ""
         })
       } else if (toasts.count > 0) {
-        var front = toasts.get(0)
+        let front = toasts.get(0)
         service.pointerEntered(Layout.groupKeyFor(front))
         service.hoverKey = String(front.key)
       } else {
@@ -1566,10 +1567,10 @@ Item {
               service.hoverY = y
               var places = service.placements
               var found = ""
-              for (var key in places) {
-                var pl = places[key]
+              for (let key in places) {
+                let pl = places[key]
                 if (pl.hidden || pl.leaving) continue
-                var h = pl.height || Style.space(58)
+                let h = pl.height || Style.space(58)
                 if (y >= pl.y && y <= pl.y + h) { found = key; break }
               }
               service.hoverKey = found
@@ -1602,12 +1603,12 @@ Item {
 
               // Which deck you are over decides which opens.
               var decks = service.layout.decks
-              for (var i = 0; i < decks.length; i++) {
-                var first = decks[i].rows[0]
-                var place = service.layout.placements[first.key]
+              for (let i = 0; i < decks.length; i++) {
+                let first = decks[i].rows[0]
+                let place = service.layout.placements[first.key]
                 if (!place) continue
-                var top = place.y
-                var bottom = top + (service.heights[first.key] || Style.space(58))
+                let top = place.y
+                let bottom = top + (service.heights[first.key] || Style.space(58))
                 if (mouse.y >= top - Style.space(6) && mouse.y <= bottom + Style.space(6)) {
                   // Opening another deck would hide the keyboard's card.
                   if (service.keyboardMode && decks[i].key !== service.openDeck) service.stopKeyboard()

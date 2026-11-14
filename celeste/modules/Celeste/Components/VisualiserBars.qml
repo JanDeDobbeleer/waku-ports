@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import "VisualiserBarsHelpers.js" as VisualiserBarsHelpers
 
 // Visible stub for celeste's C++ VisualiserBars. Draws one rounded bar per value along the
 // bottom, no per-frame smoothing. Nothing feeds `values` on Windows (the cava source is dropped).
@@ -6,13 +9,13 @@ import QtQuick
 Item {
     id: root
 
-    property var values: []
-    property color primaryColor: "white"
-    property color secondaryColor: "gray"
-    property real rounding: 0
-    property real spacing: 0
-    property int animationDuration: 0
-    readonly property bool settled: true
+    final property var values: []
+    final property color primaryColor: "white"
+    final property color secondaryColor: "gray"
+    final property real rounding: 0
+    final property real spacing: 0
+    final property int animationDuration: 0
+    readonly final property bool settled: true
 
     function advance(dt: real): void {
     }
@@ -25,12 +28,12 @@ Item {
             model: root.values
 
             Rectangle {
-                required property var modelData
-                required property int index
+                required final property var modelData
+                required final property int index
 
-                readonly property real level: Math.max(0, Math.min(1, Number(modelData) || 0))
+                readonly final property real level: Math.max(0, Math.min(1, Number(modelData) || 0))
 
-                width: Math.max(1, (root.width - root.spacing * (root.values.length - 1)) / Math.max(1, root.values.length))
+                width: VisualiserBarsHelpers.barWidth(root)
                 height: Math.max(1, level * root.height)
                 y: root.height - height
                 radius: root.rounding

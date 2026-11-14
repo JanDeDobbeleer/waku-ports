@@ -28,7 +28,7 @@ Item {
     statusProbe.running = true
   }
 
-  function applyProbe(text) {
+  function applyProbe(text: string): void {
     var state = RemoteSessionModel.stateFromOutput(text)
     root.peers = state.peers
     root.active = state.active
@@ -43,8 +43,8 @@ Item {
   // folds the event bursts Hyprland sends around one transition into one probe.
   Connections {
     target: Hyprland
-    function onRawEvent(event) {
-      if (RemoteSessionModel.isCaptureEvent(event ? event.name : "")) eventDebounce.restart()
+    function onRawEvent(event: var): void {
+      if (RemoteSessionModel.isCaptureEventObject(event)) eventDebounce.restart()
     }
   }
 

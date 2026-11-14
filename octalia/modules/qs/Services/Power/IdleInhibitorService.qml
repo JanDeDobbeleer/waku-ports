@@ -1,11 +1,12 @@
 pragma Singleton
 
+import "IdleInhibitorUtils.js" as IdleUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root
@@ -24,50 +25,22 @@ Singleton {
   }
 
   // Add an inhibitor
-  function addInhibitor(id, reason = "Application request") {
-    if (activeInhibitors.includes(id)) {
-      Logger.w("IdleInhibitor", "Inhibitor already active:", id);
-      return false;
-    }
-
-    activeInhibitors.push(id);
-    updateInhibition(reason);
-    Logger.d("IdleInhibitor", "Added inhibitor:", id);
-    return true;
+  function addInhibitor(id: var, reason: var): bool {
+    return IdleUtils.addInhibitor(root, Logger, id, reason);
   }
 
   // Remove an inhibitor
-  function removeInhibitor(id) {
-    const index = activeInhibitors.indexOf(id);
-    if (index === -1) {
-      Logger.w("IdleInhibitor", "Inhibitor not found:", id);
-      return false;
-    }
-
-    activeInhibitors.splice(index, 1);
-    updateInhibition();
-    Logger.d("IdleInhibitor", "Removed inhibitor:", id);
-    return true;
+  function removeInhibitor(id: var): bool {
+    return IdleUtils.removeInhibitor(root, Logger, id);
   }
 
   // Update the actual system inhibition
-  function updateInhibition(newReason = reason) {
-    const shouldInhibit = activeInhibitors.length > 0;
-
-    if (shouldInhibit === isInhibited) {
-      return;
-      // No change needed
-    }
-
-    if (shouldInhibit) {
-      startInhibition(newReason);
-    } else {
-      stopInhibition();
-    }
+  function updateInhibition(newReason: var): void {
+    IdleUtils.updateInhibition(root, newReason);
   }
 
   // Start system inhibition
-  function startInhibition(newReason) {
+  function startInhibition(newReason: var): void {
     reason = newReason;
 
     if (nativeInhibitorAvailable) {
@@ -106,9 +79,9 @@ Singleton {
     running: false
 
     onExited: function (exitCode, exitStatus) {
-      if (isInhibited) {
+      if (root.isInhibited) {
         Logger.w("IdleInhibitor", "Inhibitor process exited unexpectedly:", exitCode);
-        isInhibited = false;
+        root.isInhibited = false;
       }
     }
 
@@ -122,21 +95,21 @@ Singleton {
     repeat: true
     interval: 1000 // 1 second
     onTriggered: function () {
-      if (timeout == null) {
+      if (root.timeout == null) {
         inhibitorTimeout.stop();
         return;
       }
 
-      timeout -= 1;
-      if (timeout <= 0) {
-        removeManualInhibitor();
+      root.timeout -= 1;
+      if (root.timeout <= 0) {
+        root.removeManualInhibitor();
         return;
       }
     }
   }
 
   // Manual toggle for user control
-  function manualToggle() {
+  function manualToggle(): bool {
     // clear any existing timeout
     timeout = null;
     if (activeInhibitors.includes("manual")) {
@@ -148,7 +121,7 @@ Singleton {
     }
   }
 
-  function changeTimeout(delta) {
+  function changeTimeout(delta: var): void {
     if (timeout == null && delta < 0) {
       // no inhibitor, ignored
       return;
@@ -188,7 +161,7 @@ Singleton {
     }
   }
 
-  function addManualInhibitor(timeoutSec) {
+  function addManualInhibitor(timeoutSec: var): void {
     if (!activeInhibitors.includes("manual")) {
       addInhibitor("manual", "Manually activated by user");
       ToastService.showNotice(I18n.tr("tooltips.keep-awake"), I18n.tr("common.enabled"), "keep-awake-on");

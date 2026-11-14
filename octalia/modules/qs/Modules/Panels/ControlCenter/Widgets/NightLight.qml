@@ -1,4 +1,3 @@
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Modules.Panels.Settings
@@ -27,7 +26,6 @@ NIconButtonHot {
 
   onRightClicked: {
     var settingsPanel = PanelService.getPanel("settingsPanel", screen);
-    settingsPanel.requestedTab = SettingsPanel.Tab.Display;
-    settingsPanel.open();
+    PanelService.openSettingsPanel(settingsPanel, SettingsPanel.Tab.Display);
   }
 }

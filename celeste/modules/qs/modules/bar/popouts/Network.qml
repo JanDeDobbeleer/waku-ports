@@ -13,15 +13,22 @@ import qs.utils
 ColumnLayout {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
-    property string connectingToSsid: ""
-    property string view: "wireless" // "wireless" or "ethernet"
-    property var passwordNetwork: null
-    property bool showPasswordDialog: false
+    final property string connectingToSsid: ""
+    final property string view: "wireless" // "wireless" or "ethernet"
+    final property AccessPoint passwordNetwork: null
+    final property bool showPasswordDialog: false
 
     spacing: Tokens.spacing.small
     width: Tokens.sizes.bar.networkWidth
+
+    // Password is required - show password dialog
+    function showPasswordFor(network: AccessPoint): void {
+        passwordNetwork = network;
+        showPasswordDialog = true;
+        popouts.currentName = "wirelesspassword";
+    }
 
     // Wireless section
     StyledText {
@@ -30,7 +37,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Tokens.padding.medium : 0
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Wireless")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     Toggle {
@@ -38,7 +45,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         label: Tr.trCtx("Enabled", "toggle label")
         checked: Nmcli.wifiEnabled
-        toggle.onToggled: Nmcli.enableWifi(checked)
+        toggle.onToggled: Nmcli.enableWifi(checked, null)
     }
 
     // The current link, shown at once: the scan list below fills only after the first scan.
@@ -50,7 +57,7 @@ ColumnLayout {
         spacing: Tokens.spacing.small
 
         MaterialIcon {
-            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+            text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0, false) : "wifi_off"
             color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
         }
 
@@ -59,7 +66,7 @@ ColumnLayout {
             text: Nmcli.active ? Tr.tr("Connected to %1").arg(Nmcli.active.ssid) : Tr.tr("Not connected to wireless")
             elide: Text.ElideRight
             color: Nmcli.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
     }
 
@@ -90,7 +97,7 @@ ColumnLayout {
         Layout.preferredHeight: visible ? implicitHeight : 0
         Layout.topMargin: visible ? Tokens.spacing.small : 0
         Layout.rightMargin: Tokens.padding.extraSmall
-        text: Tr.trN("%n network available", "%n networks available", Nmcli.networks.filter(n => !n.active).length)
+        text: Tr.trN("%n network available", "%n networks available", Nmcli.inactiveCount())
         color: Colours.palette.m3onSurfaceVariant
         font: Tokens.font.body.small
     }
@@ -100,15 +107,15 @@ ColumnLayout {
         model: ScriptModel {
             // The connected network is the "Connected to ..." line above, and the count above leaves
             // it out, so the list does too.
-            values: [...Nmcli.networks].filter(n => !n.active).sort((a, b) => b.strength - a.strength).slice(0, 8)
+            values: Nmcli.topInactive(8)
         }
 
         RowLayout {
             id: networkItem
 
-            required property Nmcli.AccessPoint modelData
-            readonly property bool isConnecting: root.connectingToSsid === modelData.ssid
-            readonly property bool loading: networkItem.isConnecting
+            required final property AccessPoint modelData
+            readonly final property bool isConnecting: root.connectingToSsid === modelData.ssid
+            readonly final property bool loading: networkItem.isConnecting
 
             visible: root.view === "wireless"
             Layout.preferredHeight: visible ? implicitHeight : 0
@@ -135,7 +142,7 @@ ColumnLayout {
             }
 
             MaterialIcon {
-                text: Icons.getNetworkIcon(networkItem.modelData.strength)
+                text: Icons.getNetworkIcon(networkItem.modelData.strength, false)
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
             }
 
@@ -151,7 +158,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: networkItem.modelData.ssid
                 elide: Text.ElideRight
-                font: Tokens.font.body.builders.medium.weight(networkItem.modelData.active ? Font.Medium : Font.Normal).build()
+                font: Tokens.styled("body", "medium", { weight: networkItem.modelData.active ? Font.Medium : Font.Normal })
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
@@ -176,12 +183,7 @@ ColumnLayout {
                             Nmcli.disconnectFromNetwork();
                         } else {
                             root.connectingToSsid = networkItem.modelData.ssid;
-                            NetworkConnection.handleConnect(networkItem.modelData, null, network => {
-                                // Password is required - show password dialog
-                                root.passwordNetwork = network;
-                                root.showPasswordDialog = true;
-                                root.popouts.currentName = "wirelesspassword";
-                            });
+                            NetworkConnection.handleConnect(networkItem.modelData, root.showPasswordFor);
 
                             // Clear connecting state if connection succeeds immediately (saved profile)
                             // This is handled by the onActiveChanged connection below
@@ -210,6 +212,8 @@ ColumnLayout {
     }
 
     StyledRect {
+        id: rescanBg
+
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
         Layout.topMargin: visible ? Tokens.spacing.small : 0
@@ -258,7 +262,7 @@ ColumnLayout {
             anchors.centerIn: parent
             strokeWidth: Tokens.padding.extraSmall / 2
             bgColour: "transparent"
-            implicitSize: parent.implicitHeight - Tokens.padding.large
+            implicitSize: rescanBg.implicitHeight - Tokens.padding.large
             running: Nmcli.scanning
         }
     }
@@ -270,7 +274,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Tokens.padding.medium : 0
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Ethernet")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     StyledText {
@@ -286,18 +290,14 @@ ColumnLayout {
     Repeater {
         visible: root.view === "ethernet"
         model: ScriptModel {
-            values: [...Nmcli.ethernetDevices].sort((a, b) => {
-                if (a.connected !== b.connected)
-                    return b.connected - a.connected;
-                return (a.iface || "").localeCompare(b.iface || "");
-            }).slice(0, 8)
+            values: Nmcli.sortedEthernet(8)
         }
 
         RowLayout {
             id: ethernetItem
 
-            required property var modelData
-            readonly property bool loading: false
+            required final property EthernetDevice modelData
+            readonly final property bool loading: false
 
             visible: root.view === "ethernet"
             Layout.preferredHeight: visible ? implicitHeight : 0
@@ -334,7 +334,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: ethernetItem.modelData.iface || Tr.trCtx("Unknown", "unknown network interface")
                 elide: Text.ElideRight
-                font: Tokens.font.body.builders.medium.weight(ethernetItem.modelData.connected ? Font.Medium : Font.Normal).build()
+                font: Tokens.styled("body", "medium", { weight: ethernetItem.modelData.connected ? Font.Medium : Font.Normal })
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
@@ -356,9 +356,9 @@ ColumnLayout {
 
                     onClicked: {
                         if (ethernetItem.modelData.connected && ethernetItem.modelData.connection) {
-                            Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
+                            Nmcli.disconnectEthernet(ethernetItem.modelData.connection, null);
                         } else {
-                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", () => {});
+                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", null);
                         }
                     }
                 }
@@ -419,7 +419,7 @@ ColumnLayout {
     }
 
     component Toggle: RowLayout {
-        required property string label
+        required final property string label
         property alias checked: toggle.checked
         property alias toggle: toggle
 

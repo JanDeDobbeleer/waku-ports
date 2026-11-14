@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
@@ -6,6 +7,7 @@ import Quickshell.Wayland
 import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
+import "BackgroundIntroUtils.js" as IntroUtils
 
 // Keep startup and theme covers alive across background service handoffs.
 Item {
@@ -19,7 +21,7 @@ Item {
   property bool startupPending: false
   property bool startupMediaReady: false
   property real startupOpacity: startupPending ? 1 : 0
-  readonly property bool desktopReady: !host || (!host.pluginReloading && (!host.pluginRegistry || !host.pluginRegistry.scanning) && (!("bar" in host) || !!host.bar))
+  readonly property bool desktopReady: IntroUtils.desktopReady(host)
   property bool checked: false
   property string themeToken: ""
   property string transitionToken: ""
@@ -43,31 +45,26 @@ Item {
   readonly property bool revealing: revealDelayFrames > 0 || themeFade.running || themeCutReveal.running || startupFade.running
   // The outgoing frame reached, or failed to reach, the screen.
   signal coverPresented()
-  readonly property var backgroundService: host && host.services ? host.firstPartyServiceFor("nomarchy.background") : null
-  readonly property bool backgroundActive: !!backgroundService && !backgroundService.suspended
-  readonly property bool backgroundReady: backgroundActive && backgroundService.ready !== false
+  readonly property var backgroundService: IntroUtils.backgroundService(host)
+  readonly property bool backgroundActive: !!backgroundService && !IntroUtils.field(backgroundService, "suspended")
+  readonly property bool backgroundReady: backgroundActive && IntroUtils.field(backgroundService, "ready") !== false
 
-  function restoreStartupCursor() {
+  function restoreStartupCursor(): void {
     // Windows port: Hyprland hides the cursor during the start-up intro; there is nothing to restore.
   }
 
-  function finishStartup() {
+  function finishStartup(): void {
     if (!cover || !startupSettled) return
-    var registry = host ? host.pluginRegistry : null
-    var backgroundId = registry ? registry.resolveEnabledId("nomarchy.background") : ""
-    var disabled = registry && registry.installedPlugins[backgroundId] && !registry.isEnabled(backgroundId)
-    if (!backgroundReady && !disabled) return
+    if (!IntroUtils.canFinishStartup(host, backgroundReady)) return
     cover = false
     if (!themeToken) themeBackground = ""
     startupMediaReady = true
     revealStartup()
   }
 
-  function revealStartup() {
+  function revealStartup(): void {
     if (!startupPending || startupFade.running || !startupMediaReady || !desktopReady) return
-    if (!startupCovers.instances.length) return
-    for (var panel of startupCovers.instances)
-      if (panel.readyFrames < 2) return
+    if (!startupCovers.instances.length || !IntroUtils.readyFrames(startupCovers.instances)) return
     startupFade.start()
   }
 
@@ -77,11 +74,11 @@ Item {
     if (themeFinishing && backgroundReady) revealTheme()
   }
   Connections {
-    target: root.host && root.host.pluginRegistry ? root.host.pluginRegistry : null
+    target: IntroUtils.pluginRegistry(root.host)
     function onPluginsChanged() { root.finishStartup() }
   }
 
-  function prepareTheme(fromPath, token, colors, shell) {
+  function prepareTheme(fromPath: string, token: string, colors: string, shell: string): void {
     framePoll.stop()
     themeFade.stop()
     themeCutReveal.stop()
@@ -91,7 +88,7 @@ Item {
     themeToken = token
     transitionToken = token
     if (themeBackground !== fromPath) {
-      themeNativeSize = backgroundService && backgroundService.nativeSizes ? backgroundService.nativeSizes[backgroundService.displayedBackground] : null
+      themeNativeSize = IntroUtils.nativeSize(backgroundService)
     }
     themeBackground = fromPath
     themeColors = colors
@@ -101,7 +98,7 @@ Item {
     themeFallback.restart()
   }
 
-  function revealTheme() {
+  function revealTheme(): void {
     if (!themeToken && !cover) return
     themeFinishing = false
     framePoll.stop()
@@ -128,28 +125,22 @@ Item {
 
   // OWE hands the desktop back to the shell when an intro ends or is cut
   // short, and the new still may still be decoding then.
-  function finishTheme(token, cut) {
+  function finishTheme(token: string, cut: bool): void {
     if (token !== themeToken) return
     themeCut = !!cut
     if (backgroundReady || !backgroundService) revealTheme()
     else themeFinishing = true
   }
 
-  function themeStatus(token) {
-    return token === transitionToken && (themeToken || revealing) ? "pending" : "ready"
+  function themeStatus(token: string): string {
+    return IntroUtils.themeStatus(token, transitionToken, themeToken, revealing)
   }
 
-  function themeCoverStatus(token) {
-    if (token !== themeToken) return "superseded"
-    if (!themeBackground) return "ready"
-    for (var panel of covers.instances) {
-      if (panel.coverFailed) return "error"
-      if (!panel.coverReady) return "loading"
-    }
-    return covers.instances.length > 0 ? "ready" : "loading"
+  function themeCoverStatus(token: string): string {
+    return IntroUtils.coverStatus(token, themeToken, themeBackground, covers.instances)
   }
 
-  function cancelTheme() {
+  function cancelTheme(): void {
     themeFinishing = false
     framePoll.stop()
     themeFallback.stop()
@@ -251,11 +242,7 @@ Item {
     stdout: StdioCollector { id: frameStatusOut }
     onExited: function(exitCode) {
       if (exitCode !== 0 || token !== root.themeToken || (!token && !root.cover)) return
-      try {
-        var status = JSON.parse(frameStatusOut.text)
-        if (status.kind === "video" && status.ready && !status.has_transition && status.time_pos > 0)
-          root.revealTheme()
-      } catch (e) {}
+      if (IntroUtils.readyVideo(frameStatusOut.text)) root.revealTheme()
     }
   }
 
@@ -270,7 +257,7 @@ Item {
 
   Process {
     id: startupBackground
-    command: ["readlink", "-f", (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/current/background"]
+    command: ["readlink", "-e", (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/current/background"]
     stdout: StdioCollector { id: startupBackgroundOut }
     onExited: function(exitCode) {
       var path = String(startupBackgroundOut.text || "").trim()
@@ -304,6 +291,7 @@ Item {
     model: Quickshell.screens
 
     PanelWindow {
+      id: startupCover
       required property var modelData
       property int readyFrames: 0
       screen: modelData
@@ -323,10 +311,10 @@ Item {
       }
 
       FrameAnimation {
-        running: root.startupPending && root.desktopReady && readyFrames < 2
+        running: root.startupPending && root.desktopReady && startupCover.readyFrames < 2
         onTriggered: {
-          readyFrames += 1
-          if (readyFrames === 2) root.revealStartup()
+          startupCover.readyFrames += 1
+          if (startupCover.readyFrames === 2) root.revealStartup()
         }
       }
     }
@@ -367,10 +355,10 @@ Item {
         anchors.fill: parent
         source: root.themeBackground ? Util.fileUrl(root.themeBackground) : ""
         sourceSize: {
-          var w = Math.ceil((parent.width || modelData.width) * modelData.devicePixelRatio)
-          var h = Math.ceil((parent.height || modelData.height) * modelData.devicePixelRatio)
+          var w = Math.ceil((parent.width || IntroUtils.field(panel.modelData, "width")) * IntroUtils.field(panel.modelData, "devicePixelRatio"))
+          var h = Math.ceil((parent.height || IntroUtils.field(panel.modelData, "height")) * IntroUtils.field(panel.modelData, "devicePixelRatio"))
           var nativeSz = root.themeNativeSize
-          return nativeSz && (nativeSz.width < w || nativeSz.height < h) ? Qt.size(nativeSz.width, nativeSz.height) : Qt.size(w, h)
+          return nativeSz && (IntroUtils.field(nativeSz, "width") < w || IntroUtils.field(nativeSz, "height") < h) ? Qt.size(IntroUtils.field(nativeSz, "width"), IntroUtils.field(nativeSz, "height")) : Qt.size(w, h)
         }
         fillMode: Image.PreserveAspectCrop
         opacity: root.themeOpacity

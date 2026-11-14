@@ -2,14 +2,14 @@ import QtQuick
 
 // One file or folder of a FileSystemModel. Only the model creates these.
 QtObject {
-    property string path
-    property string relativePath
-    property string name
-    property string baseName
-    property string parentDir
-    property string suffix
-    property real size
-    property bool isDir
-    property bool isImage
-    property string mimeType
+    final property string path
+    final property string relativePath
+    final property string name
+    final property string baseName
+    final property string parentDir
+    final property string suffix
+    final property real size
+    final property bool isDir
+    final property bool isImage
+    final property string mimeType
 }

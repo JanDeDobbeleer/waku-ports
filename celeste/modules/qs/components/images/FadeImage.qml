@@ -5,12 +5,12 @@ import qs.components
 Image {
     id: root
 
-    property bool hadPrevious
-    property bool fadingOut
-    property bool preventInit
-    property int fadeOutAnim: Anim.FastEffects
-    property int fadeInAnim: Anim.DefaultEffects
-    property int fadeInLargeAnim: Anim.StandardLarge
+    final property bool hadPrevious
+    final property bool fadingOut
+    final property bool preventInit
+    final property int fadeOutAnim: Anim.FastEffects
+    final property int fadeInAnim: Anim.DefaultEffects
+    final property int fadeInLargeAnim: Anim.StandardLarge
 
     function maybeStartInAnim(): void {
         if (!preventInit && !opacityInAnim.running && status === Image.Ready) {

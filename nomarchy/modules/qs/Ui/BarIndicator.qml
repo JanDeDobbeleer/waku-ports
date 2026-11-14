@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import "BarIndicatorUtils.js" as BarIndicatorUtils
 
 BarIconButton {
   id: root
@@ -18,9 +19,9 @@ BarIconButton {
   property bool revealWhenInactive: true
   readonly property bool effectiveActive: activeOverride === null || activeOverride === undefined ? active : activeOverride === true
   readonly property bool belongsInBlock: indicatorBlock === "active" ? effectiveActive : (indicatorBlock === "inactive" ? !effectiveActive && revealWhenInactive : true)
-  readonly property bool inactiveRevealed: !effectiveActive && revealWhenInactive && !!indicatorHost && indicatorHost.revealInactiveIndicators
+  readonly property bool inactiveRevealed: !effectiveActive && revealWhenInactive && !!indicatorHost && BarIndicatorUtils.field(indicatorHost, "revealInactiveIndicators")
 
-  function extractData(raw) {
+  function extractData(raw: string): var {
     return Util.parseModuleJson(raw)
   }
 

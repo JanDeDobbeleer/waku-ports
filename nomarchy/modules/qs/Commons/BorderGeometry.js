@@ -1,5 +1,8 @@
 .pragma library
 
+function arrayLength(value) { return value ? value.length : 0 }
+function field(object, key) { return object ? object[key] : undefined }
+
 function clamp(value, min, max) {
   var n = Number(value)
   if (!isFinite(n)) return min
@@ -370,4 +373,23 @@ function stopPosition(colors, index) {
   if (count <= 1) return index === 0 ? 0 : 1
   if (index >= count) return 1
   return index / (count - 1)
+}
+
+function withWidth(spec, width) {
+  return { color: spec.color, gradient: spec.gradient, widths: parseWidthSpec(width, 0) }
+}
+
+function isNone(spec) { return !spec || maxWidth(spec.widths) <= 0 }
+function side(spec, name) { return spec && spec.widths ? spec.widths[name] : 0 }
+function specColor(spec) { return spec ? spec.color : "transparent" }
+
+function sameColor(a, b) {
+  if (typeof Qt === "undefined" || !Qt.color) return String(a) === String(b)
+  var ca = typeof a === "string" ? Qt.color(a) : a
+  var cb = typeof b === "string" ? Qt.color(b) : b
+  if (!ca || !cb || ca.r === undefined || cb.r === undefined) return String(a) === String(b)
+  return Math.round(ca.r * 255) === Math.round(cb.r * 255)
+    && Math.round(ca.g * 255) === Math.round(cb.g * 255)
+    && Math.round(ca.b * 255) === Math.round(cb.b * 255)
+    && Math.round((ca.a === undefined ? 1 : ca.a) * 255) === Math.round((cb.a === undefined ? 1 : cb.a) * 255)
 }

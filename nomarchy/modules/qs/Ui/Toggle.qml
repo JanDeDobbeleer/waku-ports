@@ -65,7 +65,7 @@ BorderSurface {
     spacing: Style.spacing.rowPaddingX
 
     Column {
-      width: parent.width - track.width - parent.spacing
+      width: parent.width - track.width - content.spacing
       spacing: Style.spacing.xs
       anchors.verticalCenter: parent.verticalCenter
 

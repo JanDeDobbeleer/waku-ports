@@ -7,11 +7,11 @@ import waku.services
 QtObject {
     id: root
 
-    property string source
-    property Item sourceItem
-    property int rescaleSize: 128
-    readonly property color dominantColour: "#808080"
-    property real luminance: 0.5
+    final property string source
+    final property Item sourceItem
+    final property int rescaleSize: 128
+    readonly final property color dominantColour: "#808080"
+    final property real luminance: 0.5
 
     function requestUpdate(): void {
         if (!source) {

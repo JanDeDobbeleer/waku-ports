@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 // Session Menu Entry Settings Dialog Component
 Popup {
@@ -40,8 +41,8 @@ Popup {
   onOpened: {
     // Load command when popup opens
     if (entryData) {
-      commandInput.text = entryData.command || "";
-      keybindInputText = entryData.keybind || "";
+      commandInput.text = SettingsValue.read(entryData, "command") || "";
+      keybindInputText = SettingsValue.read(entryData, "keybind") || "";
     }
     // Request focus to ensure keyboard input works
     forceActiveFocus();
@@ -77,7 +78,7 @@ Popup {
         Layout.fillWidth: true
 
         NText {
-          text: I18n.tr("panels.session-menu.entry-settings-title", {
+          text: I18n.trArgs("panels.session-menu.entry-settings-title", {
                           "entry": root.entryText
                         })
           pointSize: Style.fontSizeL
@@ -164,10 +165,10 @@ Popup {
         allowEmpty: true
         maxKeybinds: 1
         requireModifierForNormalKeys: false
-        currentKeybinds: keybindInputText ? [keybindInputText] : []
+        currentKeybinds: root.keybindInputText ? [root.keybindInputText] : []
         settingsPath: "sessionMenu.powerOptions[" + root.entryIndex + "].keybind"
         onKeybindsChanged: newKeybinds => {
-                             keybindInputText = newKeybinds.length > 0 ? newKeybinds[0] : "";
+                             root.keybindInputText = SettingsValue.firstOrEmpty(newKeybinds);
                              root.save();
                            }
       }

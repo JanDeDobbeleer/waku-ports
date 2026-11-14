@@ -1,9 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Location
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,30 +16,10 @@ ColumnLayout {
     label: I18n.tr("panels.general.language-select-label")
     description: I18n.tr("panels.general.language-select-description")
     defaultValue: Settings.getDefaultValue("general.language")
-    model: [
-      {
-        "key": "",
-        "name": I18n.tr("panels.general.language-select-auto-detect") + " (" + I18n.systemDetectedLangCode + ")"
-      }
-    ].concat(I18n.availableLanguages.map(function (langCode) {
-      return {
-        "key": langCode,
-        "name": langCode
-      };
-    }))
+    model: SettingsValue.languageOptions(I18n.availableLanguages, I18n.systemDetectedLangCode, I18n.tr("panels.general.language-select-auto-detect"))
     currentKey: Settings.data.general.language
     settingsPath: "general.language"
-    onSelected: key => {
-                  // Need to change language on next frame using "callLater" or it will pull the rug below our feet: the NComboBox would be rebuilt immediately before it can close properly.
-                  Qt.callLater(() => {
-                                 Settings.data.general.language = key;
-                                 if (key === "") {
-                                   I18n.detectLanguage(); // Re-detect system language if "Automatic" is selected
-                                 } else {
-                                   I18n.setLanguage(key); // Set specific language
-                                 }
-                               });
-                }
+    onSelected: key => SettingsValue.selectLanguage(key, Settings, I18n)
   }
 
   NDivider {
@@ -91,7 +71,7 @@ ColumnLayout {
     }
 
     NText {
-      text: LocationService.coordinatesReady ? I18n.tr("system.location-display", {
+      text: LocationService.coordinatesReady ? I18n.trArgs("system.location-display", {
                                                          "name": LocationService.stableName,
                                                          "coordinates": LocationService.displayCoordinates
                                                        }) : ""

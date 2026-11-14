@@ -1,3 +1,7 @@
+function field(object, key) { return object ? object[key] : undefined }
+
+function length(value) { return value ? value.length || 0 : 0 }
+
 function normalizeEntry(value) {
   if (typeof value === "string")
     return value.trim().length > 0 ? { type: "text", text: value } : null

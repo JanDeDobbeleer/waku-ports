@@ -1,11 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
-import qs.Services.System
-import qs.Services.UI
 import qs.Widgets
+import "../CardSettings.js" as CardSettingsData
 
 ColumnLayout {
   id: root
@@ -16,16 +13,10 @@ ColumnLayout {
   required property var cardsModel
   required property list<var> cardsDefault
 
-  function saveCards() {
-    var toSave = [];
-    for (var i = 0; i < cardsModel.length; i++) {
-      toSave.push({
-        "id": cardsModel[i].id,
-        "enabled": cardsModel[i].enabled
-      });
-    }
-    Settings.data.controlCenter.cards = toSave;
+  function saveCards(): void {
+    CardSettingsData.saveCards(root.cardsModel, Settings.data.controlCenter, "cards");
   }
+
 
     NText {
       text: I18n.tr("panels.control-center.cards-desc")
@@ -39,19 +30,8 @@ ColumnLayout {
 
       Connections {
         target: Settings.data.location
-        function onWeatherEnabledChanged() {
-          // Auto-disable weather card when weather is disabled
-          var newModel = root.cardsModel.slice();
-          for (var i = 0; i < newModel.length; i++) {
-            if (newModel[i].id === "weather-card") {
-              newModel[i] = Object.assign({}, newModel[i], {
-                                            "enabled": Settings.data.location.weatherEnabled
-                                          });
-              root.cardsModel = newModel;
-              saveCards();
-              break;
-            }
-          }
+        function onWeatherEnabledChanged(): void {
+          CardSettingsData.setWeatherEnabled(root, Settings.data.location.weatherEnabled);
         }
       }
 
@@ -65,14 +45,14 @@ ColumnLayout {
                                             "enabled": enabled
                                           });
           root.cardsModel = newModel;
-          saveCards();
+          root.saveCards();
         }
         onItemsReordered: function (fromIndex, toIndex) {
           var newModel = root.cardsModel.slice();
           var item = newModel.splice(fromIndex, 1)[0];
           newModel.splice(toIndex, 0, item);
           root.cardsModel = newModel;
-          saveCards();
+          root.saveCards();
         }
       }
     }

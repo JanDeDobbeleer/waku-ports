@@ -8,6 +8,7 @@ import Celeste.I18n
 import waku.services as S
 import qs.compat
 import qs.utils
+import "UtilitiesActionsHelpers.js" as UtilitiesActionsHelpers
 
 // The quick actions of the dashboard's Utilities tab: each one opens a Windows window, flyout or
 // settings page. No action changes a setting itself; a toggle is left to the Windows UI it opens.
@@ -20,7 +21,7 @@ Singleton {
 
     // id, group, Material icon, label, ShellExecute target. `probe`: a file whose absence hides the
     // button (environment variables are expanded). `battery`: shown only on a machine with a battery.
-    readonly property var all: [
+    readonly final property var all: [
         {
             id: "snip",
             group: "capture",
@@ -219,7 +220,7 @@ Singleton {
         }
     ]
 
-    readonly property var groups: [
+    readonly final property var groups: [
         {
             id: "capture",
             label: Tr.tr("Capture")
@@ -244,18 +245,18 @@ Singleton {
 
     // Probe files the check found missing (expanded path -> true). Empty until the check ran, so
     // every button shows until then.
-    property var missing: ({})
-    property bool probed
-    property string lastLogged
+    final property var missing: ({})
+    final property bool probed
+    final property string lastLogged
 
-    readonly property var actions: all.filter(a => (!a.probe || !missing[a.probe]) && (!a.battery || UPower.displayDevice.isLaptopBattery))
+    readonly final property var actions: UtilitiesActionsHelpers.actions(all, missing, UPower.displayDevice)
 
     function inGroup(group: string): var {
-        return actions.filter(a => a.group === group);
+        return UtilitiesActionsHelpers.inGroup(actions, group);
     }
 
     function find(id: string): var {
-        return all.find(a => a.id === id) ?? null;
+        return UtilitiesActionsHelpers.find(all, id);
     }
 
     // Starts the existence check once. Read only: Test-Path on the probe files.
@@ -268,35 +269,15 @@ Singleton {
     // Opens action `id`. Returns the target it launched (or would launch in a dry run), "" when
     // there is no such action.
     function launch(id: string): string {
-        const a = find(id);
-        if (!a || !a.target)
-            return "";
-        if (Paths.dryRun) {
-            lastLogged = `DRYRUN utilities ${a.id} ${a.target}`;
-            console.warn(lastLogged);
-            return a.target;
-        }
-        lastLogged = `utilities ${a.id} ${a.target}`;
-        S.Shell.open(a.target);
-        return a.target;
+        return UtilitiesActionsHelpers.launch(root, id, all, Paths.dryRun, S.Shell);
     }
 
     Process {
         id: probeProc
 
-        command: {
-            const paths = root.all.filter(a => a.probe).map(a => `'${a.probe}'`).join(",");
-            return ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", `@(${paths}) | ForEach-Object { if (Test-Path -LiteralPath ([Environment]::ExpandEnvironmentVariables($_))) { 'Y ' + $_ } else { 'N ' + $_ } }`];
-        }
+        command: UtilitiesActionsHelpers.probeCommand(root.all)
         stdout: StdioCollector {
-            onStreamFinished: {
-                const next = {};
-                for (const line of text.split(/\r?\n/))
-                    if (line.startsWith("N "))
-                        next[line.slice(2).trim()] = true;
-                root.missing = next;
-                root.probed = true;
-            }
+            onStreamFinished: UtilitiesActionsHelpers.applyProbeOutput(root, text)
         }
     }
 }

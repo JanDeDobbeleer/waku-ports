@@ -1,10 +1,11 @@
 pragma Singleton
 
+import "TemplateRegistryUtils.js" as TemplateRegistryUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root
@@ -93,7 +94,7 @@ Singleton {
           "input": "gtk4.css"
         }
       ],
-      "postProcess": mode => `python3 ${gtkRefreshScript} ${mode}`
+      "postProcess": function (mode: var): string { return `python3 ${gtkRefreshScript} ${mode}`; }
     },
     {
       "id": "qt",
@@ -119,7 +120,7 @@ Singleton {
           "path": "~/.local/share/color-schemes/octalia.colors"
         }
       ],
-      "postProcess": () => `${kdeApplyScript} octalia`
+      "postProcess": function (): string { return `${kdeApplyScript} octalia`; }
     },
     {
       "id": "fuzzel",
@@ -131,7 +132,7 @@ Singleton {
           "path": "~/.config/fuzzel/themes/octalia"
         }
       ],
-      "postProcess": () => `${templateApplyScript} fuzzel`
+      "postProcess": function (): string { return `${templateApplyScript} fuzzel`; }
     },
     {
       "id": "vicinae",
@@ -143,7 +144,7 @@ Singleton {
           "path": "~/.local/share/vicinae/themes/octalia.toml"
         }
       ],
-      "postProcess": () => `cp --update=none ${Quickshell.shellDir}/Assets/octalia.svg ~/.local/share/vicinae/themes/octalia.svg && ${templateApplyScript} vicinae`
+      "postProcess": function (): string { return `cp --update=none ${Quickshell.shellDir}/Assets/octalia.svg ~/.local/share/vicinae/themes/octalia.svg && ${templateApplyScript} vicinae`; }
     },
     {
       "id": "walker",
@@ -155,7 +156,7 @@ Singleton {
           "path": "~/.config/walker/themes/octalia/style.css"
         }
       ],
-      "postProcess": () => `${templateApplyScript} walker`,
+      "postProcess": function (): string { return `${templateApplyScript} walker`; },
       "strict": true // Use strict mode for palette generation (preserves custom surface/outline values)
     },
     {
@@ -168,7 +169,7 @@ Singleton {
           "path": "~/.cache/wal/colors.json"
         }
       ],
-      "postProcess": mode => `${templateApplyScript} pywalfox ${mode}`
+      "postProcess": function (mode: var): string { return `${templateApplyScript} pywalfox ${mode}`; }
     } // CONSOLIDATED DISCORD CLIENTS
     ,
     {
@@ -268,7 +269,7 @@ Singleton {
           "path": "~/.config/spicetify/Themes/Comfy/color.ini"
         }
       ],
-      "postProcess": () => `spicetify -q apply --no-restart`
+      "postProcess": function (): string { return `spicetify -q apply --no-restart`; }
     },
     {
       "id": "telegram",
@@ -295,8 +296,7 @@ Singleton {
           "input": "zen-browser/zen-userContent.css"
         }
       ],
-      "postProcess": ()
-                     => "sh -c 'CSS_CHROME=\"$HOME/.cache/octalia/zen-browser/zen-userChrome.css\"; CSS_CONTENT=\"$HOME/.cache/octalia/zen-browser/zen-userContent.css\"; LINE_CHROME=\"@import \\\"$CSS_CHROME\\\";\"; LINE_CONTENT=\"@import \\\"$CSS_CONTENT\\\";\"; find \"$HOME/.config/zen\" \"$HOME/.zen\" -mindepth 2 -maxdepth 2 -type d -name chrome -print0 2>/dev/null | while IFS= read -r -d \"\" dir; do USER_CHROME=\"$dir/userChrome.css\"; USER_CONTENT=\"$dir/userContent.css\"; mkdir -p \"$dir\"; touch \"$USER_CHROME\" \"$USER_CONTENT\"; sed -i \"/zen-browser\\/zen-userChrome\\.css/d\" \"$USER_CHROME\"; sed -i \"/zen-browser\\/zen-userContent\\.css/d\" \"$USER_CONTENT\"; if ! grep -Fq \"$LINE_CHROME\" \"$USER_CHROME\"; then printf \"%s\\n\" \"$LINE_CHROME\" >> \"$USER_CHROME\"; fi; if ! grep -Fq \"$LINE_CONTENT\" \"$USER_CONTENT\"; then printf \"%s\\n\" \"$LINE_CONTENT\" >> \"$USER_CONTENT\"; fi; done'"
+      "postProcess": function (): string { return "sh -c 'CSS_CHROME=\"$HOME/.cache/octalia/zen-browser/zen-userChrome.css\"; CSS_CONTENT=\"$HOME/.cache/octalia/zen-browser/zen-userContent.css\"; LINE_CHROME=\"@import \\\"$CSS_CHROME\\\";\"; LINE_CONTENT=\"@import \\\"$CSS_CONTENT\\\";\"; find \"$HOME/.config/zen\" \"$HOME/.zen\" -mindepth 2 -maxdepth 2 -type d -name chrome -print0 2>/dev/null | while IFS= read -r -d \"\" dir; do USER_CHROME=\"$dir/userChrome.css\"; USER_CONTENT=\"$dir/userContent.css\"; mkdir -p \"$dir\"; touch \"$USER_CHROME\" \"$USER_CONTENT\"; sed -i \"/zen-browser\\/zen-userChrome\\.css/d\" \"$USER_CHROME\"; sed -i \"/zen-browser\\/zen-userContent\\.css/d\" \"$USER_CONTENT\"; if ! grep -Fq \"$LINE_CHROME\" \"$USER_CHROME\"; then printf \"%s\\n\" \"$LINE_CHROME\" >> \"$USER_CHROME\"; fi; if ! grep -Fq \"$LINE_CONTENT\" \"$USER_CONTENT\"; then printf \"%s\\n\" \"$LINE_CONTENT\" >> \"$USER_CONTENT\"; fi; done'"; }
     },
     {
       "id": "cava",
@@ -308,7 +308,7 @@ Singleton {
           "path": "~/.config/cava/themes/octalia"
         }
       ],
-      "postProcess": () => `${templateApplyScript} cava`
+      "postProcess": function (): string { return `${templateApplyScript} cava`; }
     },
     {
       "id": "yazi",
@@ -320,14 +320,14 @@ Singleton {
           "path": "~/.config/yazi/flavors/octalia.yazi/flavor.toml"
         }
       ],
-      "postProcess": () => `${templateApplyScript} yazi`
+      "postProcess": function (): string { return `${templateApplyScript} yazi`; }
     },
     {
       "id": "emacs",
       "name": "Emacs",
       "category": "editor",
       "input": "emacs.el",
-      "postProcess": () => `emacsclient -e "(load-theme 'octalia t)"`
+      "postProcess": function (): string { return `emacsclient -e "(load-theme 'octalia t)"`; }
     },
     {
       "id": "labwc",
@@ -339,7 +339,7 @@ Singleton {
           "path": "~/.config/labwc/themerc-override"
         }
       ],
-      "postProcess": () => `${templateApplyScript} labwc`
+      "postProcess": function (): string { return `${templateApplyScript} labwc`; }
     },
     {
       "id": "niri",
@@ -351,7 +351,7 @@ Singleton {
           "path": "~/.config/niri/octalia.kdl"
         }
       ],
-      "postProcess": () => `${templateApplyScript} niri`
+      "postProcess": function (): string { return `${templateApplyScript} niri`; }
     },
     {
       "id": "sway",
@@ -363,7 +363,7 @@ Singleton {
           "path": "~/.config/sway/octalia"
         }
       ],
-      "postProcess": () => `${templateApplyScript} sway`
+      "postProcess": function (): string { return `${templateApplyScript} sway`; }
     },
     {
       "id": "scroll",
@@ -375,7 +375,7 @@ Singleton {
           "path": "~/.config/scroll/octalia"
         }
       ],
-      "postProcess": () => `${templateApplyScript} scroll`
+      "postProcess": function (): string { return `${templateApplyScript} scroll`; }
     },
     {
       "id": "hyprland",
@@ -392,7 +392,7 @@ Singleton {
           "input": "hyprland.lua"
         },
       ],
-      "postProcess": () => `${templateApplyScript} hyprland`
+      "postProcess": function (): string { return `${templateApplyScript} hyprland`; }
     },
     {
       "id": "hyprtoolkit",
@@ -415,7 +415,7 @@ Singleton {
           "path": "~/.config/mango/octalia.conf"
         }
       ],
-      "postProcess": () => `${templateApplyScript} mango`
+      "postProcess": function (): string { return `${templateApplyScript} mango`; }
     },
     {
       "id": "btop",
@@ -427,7 +427,7 @@ Singleton {
           "path": "~/.config/btop/themes/octalia.theme"
         }
       ],
-      "postProcess": () => `${templateApplyScript} btop`
+      "postProcess": function (): string { return `${templateApplyScript} btop`; }
     },
     {
       "id": "zathura",
@@ -439,7 +439,7 @@ Singleton {
           "path": "~/.config/zathura/octaliarc"
         }
       ],
-      "postProcess": () => `${templateApplyScript} zathura`
+      "postProcess": function (): string { return `${templateApplyScript} zathura`; }
     },
     {
       "id": "steam",
@@ -455,23 +455,10 @@ Singleton {
   ]
 
   // Extract Discord clients for ProgramCheckerService compatibility
-  readonly property var discordClients: {
-    var clients = [];
-    var discordApp = applications.find(app => app.id === "discord");
-    if (discordApp && discordApp.clients) {
-      discordApp.clients.forEach(client => {
-                                   clients.push({
-                                                  "name": client.name,
-                                                  "configPath": client.path,
-                                                  "themePath": `${client.path}/themes/octalia.theme.css`
-                                                });
-                                 });
-    }
-    return clients;
-  }
+  readonly property var discordClients: TemplateRegistryUtils.discordClients(applications)
 
   // Get resolved theme paths for a code client (returns array of all matching paths)
-  function resolvedCodeClientPaths(clientName) {
+  function resolvedCodeClientPaths(clientName: var): var {
     if (clientName === "code")
       return resolvedCodePaths;
     if (clientName === "codium")
@@ -480,35 +467,12 @@ Singleton {
   }
 
   // Extract Code clients for ProgramCheckerService compatibility
-  readonly property var codeClients: {
-    var clients = [];
-    var codeApp = applications.find(app => app.id === "code");
-    if (codeApp && codeApp.clients) {
-      codeApp.clients.forEach(client => {
-                                // Extract base config directory from theme path
-                                var themePath = client.path;
-                                var baseConfigDir = "";
-                                if (client.name === "code") {
-                                  // For VSCode: ~/.vscode/extensions/... -> ~/.vscode
-                                  baseConfigDir = "~/.vscode";
-                                } else if (client.name === "codium") {
-                                  // For VSCodium: ~/.vscode-oss/extensions/... -> ~/.vscode-oss
-                                  baseConfigDir = "~/.vscode-oss";
-                                }
-                                clients.push({
-                                               "name": client.name,
-                                               "configPath": baseConfigDir,
-                                               "themePath": "" // resolved dynamically via resolvedCodeClientPaths()
-                                             });
-                              });
-    }
-    return clients;
-  }
+  readonly property var codeClients: TemplateRegistryUtils.codeClients(applications)
 
   // Resolve VSCode extension paths dynamically
   Process {
     id: codeResolverProcess
-    command: ["python3", vscodeHelperScript, "~/.vscode/extensions"]
+    command: ["python3", root.vscodeHelperScript, "~/.vscode/extensions"]
     running: true
     property var paths: []
     stdout: SplitParser {
@@ -525,7 +489,7 @@ Singleton {
 
   Process {
     id: codiumResolverProcess
-    command: ["python3", vscodeHelperScript, "~/.vscode-oss/extensions"]
+    command: ["python3", root.vscodeHelperScript, "~/.vscode-oss/extensions"]
     running: true
     property var paths: []
     stdout: SplitParser {
@@ -540,7 +504,7 @@ Singleton {
     }
   }
   // Build user templates TOML content
-  function buildUserTemplatesToml() {
+  function buildUserTemplatesToml(): string {
     var lines = [];
     lines.push("[config]");
     lines.push("");
@@ -613,7 +577,7 @@ Singleton {
         Logger.d("TemplateRegistry", "User templates config already exists, skipping creation");
       } else {
         // File doesn't exist or is empty, create it
-        doWriteUserTemplatesToml();
+        root.doWriteUserTemplatesToml();
       }
     }
   }

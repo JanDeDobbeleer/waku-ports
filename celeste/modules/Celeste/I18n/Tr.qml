@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import "TrHelpers.js" as TrHelpers
 
 // Port of upstream Tr (TranslatorInternal in C++). The port has no translation catalogues, so
 // every lookup is the identity: tr("x") is "x". The `%1` placeholders stay in the string for the
@@ -10,22 +11,18 @@ QtObject {
     id: root
 
     // Never changes; upstream bumps this when the language changes. CUtils.dependency(Tr.__trsChanged)
-    property bool __trsChanged: false
+    final property bool __trsChanged: false
 
-    readonly property var supportedLanguages: ["en"]
-    property string language: ""
-    readonly property var locale: Qt.locale()
+    readonly final property var supportedLanguages: ["en"]
+    final property string language: ""
+    readonly final property var locale: Qt.locale()
 
     function formatDateTime(date: date, fmt: var): string {
         return date.toLocaleString(locale, fmt);
     }
 
     function _subst(text: string, args: var): string {
-        let out = text;
-        if (args)
-            for (let i = 0; i < args.length; i++)
-                out = out.replace("%" + (i + 1), String(args[i]));
-        return out;
+        return TrHelpers.substitute(text, args);
     }
 
     function _plural(text: string, plural: string, n: int): string {

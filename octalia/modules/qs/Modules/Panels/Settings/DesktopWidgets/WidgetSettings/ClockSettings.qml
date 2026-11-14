@@ -1,9 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "ClockSettings.js" as ClockSettingsData
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,13 +18,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
-  property string valueClockStyle: widgetData.clockStyle !== undefined ? widgetData.clockStyle : widgetMetadata.clockStyle
-  property string valueClockColor: widgetData.clockColor !== undefined ? widgetData.clockColor : widgetMetadata.clockColor
-  property bool valueUseCustomFont: widgetData.useCustomFont !== undefined ? widgetData.useCustomFont : widgetMetadata.useCustomFont
-  property string valueCustomFont: widgetData.customFont !== undefined ? widgetData.customFont : widgetMetadata.custonFont
-  property string valueFormat: widgetData.format !== undefined ? widgetData.format : widgetMetadata.format
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground", "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners", "roundedCorners")
+  property string valueClockStyle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockStyle", "clockStyle")
+  property string valueClockColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "clockColor", "clockColor")
+  property bool valueUseCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "useCustomFont", "useCustomFont")
+  property string valueCustomFont: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customFont", "custonFont")
+  property string valueFormat: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "format", "format")
 
   // Track the currently focused input field
   property var focusedInput: null
@@ -41,39 +44,15 @@ ColumnLayout {
     settingsChanged(settings);
   }
 
-  // Function to insert token at cursor position in the focused input
-  function insertToken(token) {
-    if (!focusedInput || !focusedInput.inputItem) {
-      // If no input is focused, default to format input
-      if (formatInput.inputItem) {
-        formatInput.inputItem.focus = true;
-        focusedInput = formatInput;
-      }
-    }
-
-    if (focusedInput && focusedInput.inputItem) {
-      var input = focusedInput.inputItem;
-      var cursorPos = input.cursorPosition;
-      var currentText = input.text;
-
-      // Insert token at cursor position
-      var newText = currentText.substring(0, cursorPos) + token + currentText.substring(cursorPos);
-      input.text = newText + " ";
-
-      // Move cursor after the inserted token
-      input.cursorPosition = cursorPos + token.length + 1;
-
-      // Ensure the input keeps focus
-      input.focus = true;
-      saveSettings();
-    }
+  function insertToken(token: string): void {
+    ClockSettingsData.insertToken(root, formatInput, token);
   }
 
   NComboBox {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-style-label")
     description: I18n.tr("panels.desktop-widgets.clock-style-description")
-    currentKey: valueClockStyle
+    currentKey: root.valueClockStyle
     minimumWidth: 260 * Style.uiScaleRatio
     model: [
       {
@@ -94,61 +73,61 @@ ColumnLayout {
       }
     ]
     onSelected: key => {
-                  valueClockStyle = key;
-                  saveSettings();
+                  root.valueClockStyle = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.clockStyle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockStyle")
   }
 
   NColorChoice {
     label: I18n.tr("common.select-color")
     description: I18n.tr("common.select-color-description")
-    currentKey: valueClockColor
+    currentKey: root.valueClockColor
     onSelected: key => {
-                  valueClockColor = key;
-                  saveSettings();
+                  root.valueClockColor = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.clockColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "clockColor")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.clock.use-custom-font-label")
     description: I18n.tr("bar.clock.use-custom-font-description")
-    checked: valueUseCustomFont
+    checked: root.valueUseCustomFont
     onToggled: checked => {
-                 valueUseCustomFont = checked;
-                 saveSettings();
+                 root.valueUseCustomFont = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.useCustomFont
+    defaultValue: SettingsValue.read(root.widgetMetadata, "useCustomFont")
   }
 
   NSearchableComboBox {
     Layout.fillWidth: true
-    visible: valueUseCustomFont
+    visible: root.valueUseCustomFont
     label: I18n.tr("bar.clock.custom-font-label")
     description: I18n.tr("bar.clock.custom-font-description")
     model: FontService.availableFonts
-    currentKey: valueCustomFont
+    currentKey: root.valueCustomFont
     placeholder: I18n.tr("bar.clock.custom-font-placeholder")
     searchPlaceholder: I18n.tr("bar.clock.custom-font-search-placeholder")
     popupHeight: 420
     minimumWidth: 300
     onSelected: function (key) {
-      valueCustomFont = key;
-      saveSettings();
+      root.valueCustomFont = key;
+      root.saveSettings();
     }
-    enabled: valueClockStyle === "minimal"
+    enabled: root.valueClockStyle === "minimal"
     defaultValue: Settings.data.ui.fontDefault
   }
 
   NDivider {
     Layout.fillWidth: true
-    visible: isMinimalMode
+    visible: root.isMinimalMode
   }
 
   NHeader {
-    visible: isMinimalMode
+    visible: root.isMinimalMode
     label: I18n.tr("bar.clock.clock-display-label")
     description: I18n.tr("bar.clock.clock-display-description")
   }
@@ -156,7 +135,7 @@ ColumnLayout {
   // Format editor - only visible in minimal mode
   RowLayout {
     id: main
-    visible: isMinimalMode
+    visible: root.isMinimalMode
     spacing: Style.marginL
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
@@ -173,21 +152,13 @@ ColumnLayout {
         label: I18n.tr("panels.desktop-widgets.clock-format-label")
         description: I18n.tr("bar.clock.horizontal-bar-description")
         placeholderText: "HH:mm\\nd MMMM yyyy"
-        text: valueFormat
+        text: root.valueFormat
         onTextChanged: {
-          valueFormat = text;
-          settingsChanged(saveSettings());
+          root.valueFormat = text;
+          root.settingsChanged(root.saveSettings());
         }
-        Component.onCompleted: {
-          if (inputItem) {
-            inputItem.onActiveFocusChanged.connect(function () {
-              if (inputItem.activeFocus) {
-                root.focusedInput = formatInput;
-              }
-            });
-          }
-        }
-        defaultValue: widgetMetadata.format
+        Component.onCompleted: ClockSettingsData.watchInput(inputItem, root, formatInput)
+        defaultValue: SettingsValue.read(root.widgetMetadata, "format")
       }
     }
 
@@ -225,14 +196,15 @@ ColumnLayout {
 
             Repeater {
               Layout.topMargin: Style.marginM
-              model: I18n.locale.toString(now, valueFormat.trim()).split("\\n")
+              model: I18n.locale.toString(root.now, root.valueFormat.trim()).split("\\n")
               delegate: NText {
+                required property var modelData
                 visible: text !== ""
                 text: modelData
-                family: valueUseCustomFont && valueCustomFont ? valueCustomFont : Settings.data.ui.fontDefault
+                family: root.valueUseCustomFont && root.valueCustomFont ? root.valueCustomFont : Settings.data.ui.fontDefault
                 pointSize: Style.fontSizeM
                 font.weight: Style.fontWeightBold
-                color: Color.resolveColorKey(valueClockColor)
+                color: Color.resolveColorKey(root.valueClockColor)
                 wrapMode: Text.WordWrap
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
 
@@ -252,13 +224,13 @@ ColumnLayout {
   NDivider {
     Layout.topMargin: Style.marginM
     Layout.bottomMargin: Style.marginM
-    visible: isMinimalMode
+    visible: root.isMinimalMode
   }
 
   NDateTimeTokens {
     Layout.fillWidth: true
-    height: 200
-    visible: isMinimalMode
+    Layout.preferredHeight: 200
+    visible: root.isMinimalMode
     onTokenClicked: token => root.insertToken(token)
   }
 
@@ -270,24 +242,24 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.clock-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
-                 saveSettings();
+                 root.valueShowBackground = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.clock-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
-                 saveSettings();
+                 root.valueRoundedCorners = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 }

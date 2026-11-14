@@ -2,12 +2,13 @@ import QtQuick
 import Celeste.Config
 import qs.components
 import qs.services
+import "LauncherItemHelpers.js" as LauncherItemHelpers
 
 Item {
     id: root
 
-    required property var modelData
-    required property var list
+    required final property var modelData
+    required final property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
 
@@ -18,7 +19,7 @@ Item {
         objectName: "rowClick"
 
         radius: Tokens.rounding.large
-        onClicked: root.modelData?.onClicked(root.list)
+        onClicked: LauncherItemHelpers.invoke(root.modelData, root.list)
     }
 
     Item {
@@ -31,9 +32,9 @@ Item {
             id: icon
 
             anchors.verticalCenter: parent.verticalCenter
-            text: root.modelData?.icon ?? ""
+            text: LauncherItemHelpers.field(root.modelData, "icon")
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.builders.large.scale(1.3).build()
+            fontStyle: Tokens.styled("icon", "large", { scale: 1.3 })
         }
 
         Item {
@@ -47,14 +48,14 @@ Item {
             StyledText {
                 id: name
 
-                text: root.modelData?.name ?? ""
+                text: LauncherItemHelpers.field(root.modelData, "name")
                 font: Tokens.font.body.medium
             }
 
             StyledText {
                 id: desc
 
-                text: root.modelData?.desc ?? ""
+                text: LauncherItemHelpers.field(root.modelData, "desc")
                 font: Tokens.font.body.small
                 color: Colours.palette.m3outline
 

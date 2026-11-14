@@ -12,11 +12,11 @@ Item {
   property var borderSpec: Border.none()
   property real radius: 0
 
-  readonly property var _widths: borderSpec && borderSpec.widths ? borderSpec.widths : Geometry.parseWidthSpec(0, 0)
+  readonly property var _widths: Geometry.field(borderSpec, "widths") || Geometry.parseWidthSpec(0, 0)
   readonly property bool hasBorder: Geometry.maxWidth(_widths) > 0
-  readonly property var _gradient: borderSpec && borderSpec.gradient ? borderSpec.gradient : ({ colors: [], angle: 0, enabled: false })
-  readonly property var _colors: _gradient.enabled ? _gradient.colors : [Border.color(borderSpec), Border.color(borderSpec)]
-  readonly property var _endpoints: Geometry.gradientEndpoints(width, height, _gradient.angle || 0)
+  readonly property var _gradient: Geometry.field(borderSpec, "gradient") || ({ colors: [], angle: 0, enabled: false })
+  readonly property var _colors: Geometry.field(_gradient, "enabled") ? Geometry.field(_gradient, "colors") : [Border.color(borderSpec), Border.color(borderSpec)]
+  readonly property var _endpoints: Geometry.gradientEndpoints(width, height, Number(Geometry.field(_gradient, "angle")) || 0)
   readonly property string _path: Geometry.ringPath(width, height, radius, _widths)
 
   visible: hasBorder && width > 0 && height > 0
@@ -31,10 +31,10 @@ Item {
       fillRule: ShapePath.WindingFill
       strokeWidth: 0
       fillGradient: LinearGradient {
-        x1: root._endpoints.x1
-        y1: root._endpoints.y1
-        x2: root._endpoints.x2
-        y2: root._endpoints.y2
+        x1: Geometry.field(root._endpoints, "x1")
+        y1: Geometry.field(root._endpoints, "y1")
+        x2: Geometry.field(root._endpoints, "x2")
+        y2: Geometry.field(root._endpoints, "y2")
 
         GradientStop { position: Geometry.stopPosition(root._colors, 0); color: Geometry.stopColor(root._colors, 0) }
         GradientStop { position: Geometry.stopPosition(root._colors, 1); color: Geometry.stopColor(root._colors, 1) }

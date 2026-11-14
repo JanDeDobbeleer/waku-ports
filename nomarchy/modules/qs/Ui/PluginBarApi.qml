@@ -1,4 +1,5 @@
 import QtQuick
+import "PluginBarApiUtils.js" as PluginBarApiUtils
 
 // Bar surface exposed to an installed third-party widget. Scalar presentation
 // state is mirrored by Bar.qml and operations are delegated through scoped
@@ -45,56 +46,57 @@ QtObject {
   property var _run: null
   property var _setCenterHoverRevealSuppressed: null
 
-  function setCenterHoverRevealSuppressed(value) {
-    if (_setCenterHoverRevealSuppressed) _setCenterHoverRevealSuppressed(!!value)
+  function setCenterHoverRevealSuppressed(value: bool): void {
+    PluginBarApiUtils.invoke(_setCenterHoverRevealSuppressed, [!!value], api)
   }
 
-  function showTooltip(target, text) {
-    if (_showTooltip) _showTooltip(target, String(text || ""))
+  function showTooltip(target: var, text: string): void {
+    PluginBarApiUtils.invoke(_showTooltip, [target, String(text || "")], api)
   }
 
-  function hideTooltip(target) {
-    if (_hideTooltip) _hideTooltip(target)
+  function hideTooltip(target: var): void {
+    PluginBarApiUtils.invoke(_hideTooltip, [target], api)
   }
 
-  function registerClickTarget(target) {
-    if (_registerClickTarget) _registerClickTarget(target)
+  function registerClickTarget(target: var): void {
+    PluginBarApiUtils.invoke(_registerClickTarget, [target], api)
   }
 
-  function unregisterClickTarget(target) {
-    if (_unregisterClickTarget) _unregisterClickTarget(target)
+  function unregisterClickTarget(target: var): void {
+    PluginBarApiUtils.invoke(_unregisterClickTarget, [target], api)
   }
 
-  function requestPopout(owner) {
-    if (_requestPopout) _requestPopout(owner)
+  function requestPopout(owner: var): void {
+    PluginBarApiUtils.invoke(_requestPopout, [owner], api)
   }
 
-  function releasePopout(owner) {
-    if (_releasePopout) _releasePopout(owner)
+  function releasePopout(owner: var): void {
+    PluginBarApiUtils.invoke(_releasePopout, [owner], api)
   }
 
-  function notePopoutCard(card) {
-    if (_notePopoutCard) _notePopoutCard(card)
+  function notePopoutCard(card: var): void {
+    PluginBarApiUtils.invoke(_notePopoutCard, [card], api)
   }
 
   // Where the last panel's card stood, if it was in this owner's section.
-  function popoutCardFor(owner) {
-    return _popoutCardFor ? _popoutCardFor(owner) : null
+  function popoutCardFor(owner: var): var {
+    return PluginBarApiUtils.invoke(_popoutCardFor, [owner], api)
   }
 
-  function switchPanelFrom(owner, direction) {
-    return _switchPanelFrom ? _switchPanelFrom(owner, direction) : false
+  function switchPanelFrom(owner: var, direction: var): bool {
+    return !!PluginBarApiUtils.invoke(_switchPanelFrom, [owner, direction], api)
   }
 
-  function targetBelongsToWindow(target, window) {
-    return _targetBelongsToWindow ? _targetBelongsToWindow(target, window) : false
+  function targetBelongsToWindow(target: var, window: var): bool {
+    return !!PluginBarApiUtils.invoke(_targetBelongsToWindow, [target, window], api)
   }
 
-  function moduleWidgets(id) {
-    return _moduleWidgets ? _moduleWidgets(String(id || "")) : []
+  function moduleWidgets(id: string): var {
+    var result = PluginBarApiUtils.invoke(_moduleWidgets, [String(id || "")], api)
+    return result === undefined ? [] : result
   }
 
-  function run(command) {
-    if (_run) _run(String(command || ""))
+  function run(command: string): void {
+    PluginBarApiUtils.invoke(_run, [String(command || "")], api)
   }
 }

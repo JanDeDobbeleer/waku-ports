@@ -1,9 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.Power
 import qs.Widgets
+import "BehaviorSubTab.js" as BehaviorData
 
 ColumnLayout {
   id: root
@@ -58,7 +61,7 @@ ColumnLayout {
     parent: Overlay.overlay
   }
 
-  function openEdit(actionName, cmdVal, resumeCmdVal, onSaveCmd, onSaveResume) {
+  function openEdit(actionName: string, cmdVal: string, resumeCmdVal: string, onSaveCmd: var, onSaveResume: var): void {
     editPopup.editIndex = -1;
     editPopup.showCommand = true;
     editPopup.showTimeout = false;
@@ -67,16 +70,7 @@ ColumnLayout {
     editPopup.commandValue = cmdVal;
     editPopup.resumeCommandValue = resumeCmdVal;
 
-    try {
-      editPopup.saved.disconnect(editPopup._savedSlot);
-    } catch (e) {}
-
-    editPopup._savedSlot = function (timeout, cmd, resumeCmd, name) {
-      onSaveCmd(cmd);
-      onSaveResume(resumeCmd);
-    };
-
-    editPopup.saved.connect(editPopup._savedSlot);
+    BehaviorData.connectSaved(editPopup, onSaveCmd, onSaveResume);
     editPopup.open();
   }
 

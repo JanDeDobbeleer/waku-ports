@@ -1,3 +1,14 @@
+function field(value, key) { return value === undefined || value === null ? undefined : value[key] }
+function sequenceLength(value) {
+  var length = value === undefined || value === null ? 0 : Number(value.length)
+  return isFinite(length) && length > 0 ? Math.floor(length) : 0
+}
+function sequenceItem(value, index) { return value === undefined || value === null ? undefined : value[index] }
+function setContentOpacity(content, key, opacity) {
+  var target = content === undefined || content === null ? null : content[key]
+  if (target) target.opacity = opacity
+}
+
 function clampIndex(index, length) {
   if (length <= 0) return 0
   return Math.max(0, Math.min(length - 1, index))
@@ -9,33 +20,38 @@ function selectProfileIndex(index, delta, profiles) {
   return clampIndex(index + delta, values.length)
 }
 
-function parseKeyValue(raw) {
-  var next = {}
-  var lines = String(raw || "").split("\n")
-  for (var i = 0; i < lines.length; i++) {
-    var idx = lines[i].indexOf("\t")
-    if (idx <= 0) continue
-    next[lines[i].substring(0, idx)] = lines[i].substring(idx + 1).trim()
+// The battery figures the panel shows, from UPower's display device: plain
+// digits with the unit attached ("13.1W", "1h 25m"), like the Linux helper
+// printed them. Windows reports no charge cycles or charge limit.
+function batteryReadings(device) {
+  var d = device || {}
+  if (!d.isPresent) return {}
+  var readings = { percentage: Math.round(batteryFraction(d) * 100) + "%" }
+  if (d.energyCapacity > 0) readings.size = Number(d.energyCapacity).toFixed(1) + "Wh"
+  if (d.changeRate !== 0) readings.rate = Math.abs(Number(d.changeRate)).toFixed(1) + "W"
+  var seconds = Number(d.timeToEmpty) > 0 ? Number(d.timeToEmpty) : Number(d.timeToFull)
+  if (seconds > 0) {
+    var minutes = Math.round(seconds / 60)
+    readings.time = Math.floor(minutes / 60) + "h " + (minutes % 60) + "m"
   }
-  return next
+  return readings
 }
 
-function parseProfiles(raw, previousIndex) {
-  var lines = String(raw || "").split("\n")
-  var list = []
-  var active = ""
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim()
-    if (!line) continue
-    var parts = line.split("\t")
-    list.push(parts[0])
-    if (parts[1] === "1") active = parts[0]
-  }
-  return {
-    profiles: list,
-    activeProfile: active,
-    profileIndex: clampIndex(previousIndex || 0, list.length)
-  }
+// The profile names the panel lists for the power modes Windows offers.
+function profileNames(hasPerformance) {
+  return hasPerformance ? ["power-saver", "balanced", "performance"] : ["power-saver", "balanced"]
+}
+
+function profileName(profile, values) {
+  if (profile === values.PowerSaver) return "power-saver"
+  if (profile === values.Performance) return "performance"
+  return "balanced"
+}
+
+function profileValue(name, values) {
+  if (name === "power-saver") return values.PowerSaver
+  if (name === "performance") return values.Performance
+  return values.Balanced
 }
 
 function profileIcon(name) {
@@ -90,8 +106,8 @@ function modeLabel(device, onBattery, states, tr) {
   return t("power.charging", "Charging")
 }
 
-// nomarchy-battery-status --shell answers in plain digits with the unit
-// attached ("13.1W", "75-80%"); the panel writes each number in the
+// The battery figures (from UPower's display device on Windows) answer in plain
+// digits with the unit attached ("13.1W", "1h 25m"); the panel writes each number in the
 // language's digits and decimal separator, keeping its decimals and unit.
 function localizeReading(raw, fmt) {
   var f = typeof fmt === "function" ? fmt : function(v, d) { return d === undefined ? String(v) : Number(v).toFixed(d) }
@@ -112,10 +128,16 @@ function profileLabel(name, tr) {
 
 if (typeof module !== "undefined") {
   module.exports = {
+    field: field,
+    sequenceLength: sequenceLength,
+    sequenceItem: sequenceItem,
+    setContentOpacity: setContentOpacity,
     clampIndex: clampIndex,
     selectProfileIndex: selectProfileIndex,
-    parseKeyValue: parseKeyValue,
-    parseProfiles: parseProfiles,
+    batteryReadings: batteryReadings,
+    profileNames: profileNames,
+    profileName: profileName,
+    profileValue: profileValue,
     profileIcon: profileIcon,
     batteryFraction: batteryFraction,
     chargeThresholdActive: chargeThresholdActive,

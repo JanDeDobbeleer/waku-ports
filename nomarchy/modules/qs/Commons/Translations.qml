@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
-import "Plural.js" as Plural
+import "Catalog.js" as Catalog
+import "I18nUtils.js" as I18nUtils
 
 // Strings for a plugin that ships its own catalogs, following the language
 // picked under Setup > Language the same way the shell's I18n does. Point it
@@ -31,46 +32,47 @@ QtObject {
   // Read through FileView so blockLoading applies to the first lookup, and
   // keep the maps bound to the watched files for subsequent updates.
   property int rev: 0
-  readonly property var englishStrings: (root.rev, parseCatalog(englishFile.text()))
-  readonly property var baseStrings: (root.rev, parseCatalog(baseFile.text()))
-  readonly property var languageStrings: (root.rev, parseCatalog(languageFile.text()))
+  // Reading text() on a missing file retries the load and fails again. Bumping rev on every failure
+  // would re-run the bindings that read it, forever, so a failure only counts once per path.
+  property var failedPaths: ({})
+  function bump(): void { root.rev++ }
+  function fileLoaded(key: string): void {
+    I18nUtils.clearFailure(root.failedPaths, key)
+    Qt.callLater(root.bump)
+  }
+  function fileFailed(key: string, path: string): void {
+    if (root.failedPaths[key] === path) return
+    root.failedPaths[key] = path
+    Qt.callLater(root.bump)
+  }
+  readonly property var englishStrings: readCatalog(root.rev, I18nUtils.fileText(englishFile))
+  readonly property var baseStrings: readCatalog(root.rev, I18nUtils.fileText(baseFile))
+  readonly property var languageStrings: readCatalog(root.rev, I18nUtils.fileText(languageFile))
   readonly property var strings: {
     var merged = ({})
     var layers = [root.englishStrings, root.baseStrings, root.languageStrings]
-    for (var i = 0; i < layers.length; i++)
-      for (var key in layers[i])
+    for (let i = 0; i < layers.length; i++)
+      for (let key in layers[i])
         if (typeof layers[i][key] === "string" || (layers[i][key] && typeof layers[i][key] === "object")) merged[key] = layers[i][key]
     return merged
   }
 
-  function t(key, fallback) {
-    var value = root.strings[key]
-    if (value && typeof value === "object") value = value.other
-    if (typeof value === "string" && value.length > 0) return value
-    return fallback !== undefined ? fallback : key
+  // Model callbacks can supply an optional fallback through these helpers.
+  function translator(): var { return I18nUtils.translator(root) }
+  function pluralTranslator(): var { return I18nUtils.layeredPluralTranslator(root) }
+
+  function t(key: var): string {
+    return I18nUtils.translate(root, key, undefined)
   }
 
-  // The form of a plural entry for count, by the language's plural rules.
-  // The layer that carries the entry decides which language's rules apply.
-  function tn(key, count, fallback) {
-    var layers = [[root.languageStrings, root.language], [root.baseStrings, root.baseLanguage], [root.englishStrings, "en"]]
-    for (var i = 0; i < layers.length; i++) {
-      var value = Plural.pick(layers[i][0][key], layers[i][1], count)
-      if (typeof value === "string" && value.length > 0) return value
-    }
-    return fallback !== undefined ? fallback : key
+  function tn(key: var, count: var): string {
+    return I18nUtils.translateLayeredPlural(root, key, count, undefined)
   }
 
-  function parseCatalog(raw) {
-    try {
-      var parsed = JSON.parse(raw || "{}")
-      return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : ({})
-    } catch (e) {
-      return ({})
-    }
-  }
+  function parseCatalog(raw: var): var { return Catalog.parse(raw) }
+  function readCatalog(revision: int, raw: var): var { return Catalog.parse(raw) }
 
-  function catalogPath(code) {
+  function catalogPath(code: string): string {
     return root.directoryPath !== "" ? root.directoryPath + "/" + code + ".json" : ""
   }
 
@@ -80,8 +82,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("englishFile")
+    onLoadFailed: root.fileFailed("englishFile", String(root.englishFile.path))
   }
 
   // Only read for a regional code; for "da" the language file covers it.
@@ -91,8 +93,8 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("baseFile")
+    onLoadFailed: root.fileFailed("baseFile", String(root.baseFile.path))
   }
 
   property FileView languageFile: FileView {
@@ -101,7 +103,7 @@ QtObject {
     printErrors: false
     blockLoading: true
     onFileChanged: reload()
-    onLoaded: Qt.callLater(function() { root.rev++ })
-    onLoadFailed: Qt.callLater(function() { root.rev++ })
+    onLoaded: root.fileLoaded("languageFile")
+    onLoadFailed: root.fileFailed("languageFile", String(root.languageFile.path))
   }
 }

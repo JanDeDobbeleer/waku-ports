@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import "../PanelUtils.js" as PanelUtils
 
 // The shared gauge-cluster overlay (SpeedTestOverlay) dressed for the
 // internet speed test: download and upload dials in Mbps, titled with the
@@ -33,21 +34,18 @@ Item {
   readonly property real downloadValue: toMbps(downloadMbps)
   readonly property real uploadValue: toMbps(uploadMbps)
 
-  function toMbps(raw) {
+  function toMbps(raw: string): real {
     var value = parseFloat(raw)
     return isFinite(value) && value > 0 ? value : 0
   }
 
-  function open(payloadJson) {
-    var payload = {}
-    try { payload = JSON.parse(payloadJson || "{}") || {} } catch (e) {}
-    if (payload.connection !== undefined) root.connectionName = String(payload.connection)
-    else refreshConnectionName()
+  function open(payloadJson: string): void {
+    if (!PanelUtils.applyConnection(root, payloadJson)) refreshConnectionName()
     root.opened = true
     runSpeedTest()
   }
 
-  function close() {
+  function close(): void {
     root.opened = false
     root.pendingRun = false
     phaseTimer.stop()
@@ -61,19 +59,17 @@ Item {
     }
   }
 
-  function dismiss() {
-    if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "nomarchy.speedtest")
-    else close()
+  function dismiss(): void {
+    if (!PanelUtils.dismiss(root.shell, root.manifest, "nomarchy.speedtest")) close()
   }
 
-  function refreshConnectionName() {
+  function refreshConnectionName(): void {
     root.connectionName = ""
     statusProc.running = false
     statusProc.running = true
   }
 
-  function updateSpeedTestLine(line) {
+  function updateSpeedTestLine(line: string): void {
     var value = parseFloat(line)
     if (!isFinite(value) || value < 0) return
 
@@ -81,7 +77,7 @@ Item {
     else if (phase === "up") uploadMbps = String(value)
   }
 
-  function runSpeedTest() {
+  function runSpeedTest(): void {
     if (speedTestProc.running) {
       // A dismissal's SIGTERM is still in flight; Process.running stays true
       // until the child exits, so queue the fresh run for onExited.
@@ -95,7 +91,7 @@ Item {
     startPhase("down")
   }
 
-  function startPhase(nextPhase) {
+  function startPhase(nextPhase: string): void {
     expectedStop = false
     phase = nextPhase
     stderrText = ""
@@ -104,7 +100,7 @@ Item {
     phaseTimer.restart()
   }
 
-  function stopPhase() {
+  function stopPhase(): void {
     phaseTimer.stop()
     error = I18n.t("speedtest.failed")
     phase = ""
@@ -117,7 +113,7 @@ Item {
     finishPhase()
   }
 
-  function finishPhase() {
+  function finishPhase(): void {
     if (phase === "down") {
       startPhase("up")
       return

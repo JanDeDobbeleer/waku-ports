@@ -9,8 +9,8 @@ import qs.modules.bar as Bar
 Scope {
     id: root
 
-    required property ShellScreen screen
-    required property Bar.BarWrapper bar
+    required final property ShellScreen screen
+    required final property Bar.BarWrapper bar
 
     ExclusionZone {
         anchors.left: true
@@ -31,7 +31,7 @@ Scope {
 
     component ExclusionZone: StyledWindow {
         screen: root.screen
-        name: "border-exclusion"
+        windowName: "border-exclusion"
         exclusiveZone: Config.border.thickness
         mask: Region {}
         implicitWidth: 1

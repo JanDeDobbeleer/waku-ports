@@ -1,8 +1,9 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
-import qs.Widgets
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 
 Item {
   id: root
@@ -36,19 +37,21 @@ Item {
   signal middleClicked
   signal wheel(int delta)
 
+  readonly property Item pillItem: pillLoader.item as Item
+
   // Size based on content for the content dimension, fill parent for the extended dimension
   // Horizontal bars: width = content, height = fill parent (for extended click area)
   // Vertical bars: width = fill parent, height = content
-  width: isVerticalBar ? parent.width : (pillLoader.item ? pillLoader.item.implicitWidth : 0)
-  height: isVerticalBar ? (pillLoader.item ? pillLoader.item.implicitHeight : 0) : parent.height
-  implicitWidth: pillLoader.item ? pillLoader.item.implicitWidth : 0
-  implicitHeight: pillLoader.item ? pillLoader.item.implicitHeight : 0
+  width: isVerticalBar ? parent.width : (root.pillItem ? BarWidgetHelpers.readProperty(root.pillItem, "implicitWidth") : 0)
+  height: isVerticalBar ? (root.pillItem ? BarWidgetHelpers.readProperty(root.pillItem, "implicitHeight") : 0) : parent.height
+  implicitWidth: root.pillItem ? BarWidgetHelpers.readProperty(root.pillItem, "implicitWidth") : 0
+  implicitHeight: root.pillItem ? BarWidgetHelpers.readProperty(root.pillItem, "implicitHeight") : 0
 
   // Loader fills BarPill so child components can extend to full bar dimension
   Loader {
     id: pillLoader
     anchors.fill: parent
-    sourceComponent: isVerticalBar ? verticalPillComponent : horizontalPillComponent
+    sourceComponent: root.isVerticalBar ? verticalPillComponent : horizontalPillComponent
 
     Component {
       id: verticalPillComponent
@@ -108,21 +111,15 @@ Item {
     }
   }
 
-  function show() {
-    if (pillLoader.item && pillLoader.item.show) {
-      pillLoader.item.show();
-    }
+  function show(): void {
+    BarWidgetHelpers.callIfFunction(pillLoader.item, "show");
   }
 
-  function hide() {
-    if (pillLoader.item && pillLoader.item.hide) {
-      pillLoader.item.hide();
-    }
+  function hide(): void {
+    BarWidgetHelpers.callIfFunction(pillLoader.item, "hide");
   }
 
-  function showDelayed() {
-    if (pillLoader.item && pillLoader.item.showDelayed) {
-      pillLoader.item.showDelayed();
-    }
+  function showDelayed(): void {
+    BarWidgetHelpers.callIfFunction(pillLoader.item, "showDelayed");
   }
 }

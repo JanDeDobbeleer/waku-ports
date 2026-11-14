@@ -7,11 +7,12 @@ import Celeste.I18n
 import qs.components
 import qs.components.controls
 import qs.services
+import "DetailsHelpers.js" as DetailsHelpers
 
 ColumnLayout {
     id: root
 
-    readonly property bool hasUnknownLength: (Players.active?.length ?? 0) > 2147483647
+    readonly final property bool hasUnknownLength: (Players.active?.length ?? 0) > 2147483647
 
     function lengthStr(length: int): string {
         if (length < 0)
@@ -29,11 +30,11 @@ ColumnLayout {
     spacing: Tokens.spacing.extraSmall
 
     Timer {
-        running: Players.active?.isPlaying ?? false
+        running: DetailsHelpers.isPlaying(Players.active)
         interval: GlobalConfig.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
-        onTriggered: Players.active?.positionChanged()
+        onTriggered: DetailsHelpers.refreshPosition(Players.active)
     }
 
     StyledText {
@@ -70,7 +71,7 @@ ColumnLayout {
         TextMetrics {
             id: timeMetrics
 
-            text: Players.active ? root.lengthStr(Math.max(Players.active.position, root.hasUnknownLength ? 0 : Players.active.length)).replace(/[1-9]/g, "0") : "00:00"
+            text: Players.active ? root.lengthStr(Math.max(DetailsHelpers.position(Players.active), root.hasUnknownLength ? 0 : DetailsHelpers.length(Players.active))).replace(/[1-9]/g, "0") : "00:00"
             font: Tokens.font.label.medium
         }
 
@@ -78,7 +79,7 @@ ColumnLayout {
             id: positionLabel
 
             Layout.preferredWidth: timeMetrics.width
-            text: root.lengthStr(Players.active?.position ?? -1)
+            text: root.lengthStr(DetailsHelpers.position(Players.active))
             color: Colours.palette.m3onSurfaceVariant
             font: timeMetrics.font
             horizontalAlignment: Text.AlignHCenter
@@ -88,30 +89,28 @@ ColumnLayout {
             id: positionSlider
 
             Layout.fillWidth: true
-            value: Players.active ? Players.active.position / (Players.active.length || 1) : 0
-            enabled: (Players.active?.canSeek ?? false) && !root.hasUnknownLength
+            value: DetailsHelpers.positionRatio(Players.active)
+            enabled: DetailsHelpers.canSeek(Players.active) && !root.hasUnknownLength
             wavy: true
-            animateWave: Players.active?.isPlaying ?? false
+            animateWave: DetailsHelpers.isPlaying(Players.active)
             waveFrequency: 5
             waveDuration: 2000
             interactionOnMove: false
             onInteraction: value => {
-                const active = Players.active;
-                if (active?.canSeek && active?.positionSupported)
-                    active.position = value * active.length;
+                DetailsHelpers.seek(Players.active, value);
             }
 
             Binding {
                 target: positionLabel
                 property: "text"
-                value: root.lengthStr(positionSlider.pos * (Players.active?.length ?? 0))
+                value: root.lengthStr(positionSlider.pos * DetailsHelpers.length(Players.active))
                 when: positionSlider.dragging
             }
         }
 
         StyledText {
             Layout.preferredWidth: timeMetrics.width
-            text: root.hasUnknownLength ? "--:--" : root.lengthStr(Players.active?.length ?? -1)
+            text: root.hasUnknownLength ? "--:--" : root.lengthStr(DetailsHelpers.length(Players.active))
             color: Colours.palette.m3onSurfaceVariant
             font: timeMetrics.font
             horizontalAlignment: Text.AlignHCenter
@@ -128,10 +127,10 @@ ColumnLayout {
             icon: "shuffle"
             isRound: true
             shapeMorph: true
-            checked: Players.active?.shuffle ?? false
-            font: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
-            disabled: !Players.active?.shuffleSupported
-            onClicked: Players.active.shuffle = !Players.active?.shuffle
+            checked: DetailsHelpers.shuffle(Players.active)
+            font: Tokens.styled("icon", "medium", { weight: Font.Medium })
+            disabled: !DetailsHelpers.shuffleSupported(Players.active)
+            onClicked: DetailsHelpers.toggleShuffle(Players.active)
             implicitWidth: Math.round(implicitHeight * 0.9)
         }
 
@@ -143,8 +142,8 @@ ColumnLayout {
             isRound: true
             shapeMorph: true
             font: Tokens.font.icon.large
-            disabled: !Players.active?.canGoPrevious
-            onClicked: Players.active?.previous()
+            disabled: !DetailsHelpers.canGoPrevious(Players.active)
+            onClicked: DetailsHelpers.previous(Players.active)
         }
 
         IconButton {
@@ -154,10 +153,10 @@ ColumnLayout {
             isRound: true
             shapeMorph: true
             fillWidth: true
-            checked: Players.active?.isPlaying ?? false
+            checked: DetailsHelpers.isPlaying(Players.active)
             font: Tokens.font.icon.large
-            disabled: !Players.active?.canTogglePlaying
-            onClicked: Players.active?.togglePlaying()
+            disabled: !DetailsHelpers.canTogglePlaying(Players.active)
+            onClicked: DetailsHelpers.togglePlaying(Players.active)
         }
 
         IconButton {
@@ -168,27 +167,19 @@ ColumnLayout {
             isRound: true
             shapeMorph: true
             font: Tokens.font.icon.large
-            disabled: !Players.active?.canGoNext
-            onClicked: Players.active?.next()
+            disabled: !DetailsHelpers.canGoNext(Players.active)
+            onClicked: DetailsHelpers.next(Players.active)
         }
 
         IconButton {
             type: IconButton.Tonal
-            icon: Players.active?.loopState === MprisLoopState.Track ? "repeat_one" : "repeat"
+            icon: DetailsHelpers.loopIcon(Players.active, MprisLoopState.Track)
             isRound: true
             shapeMorph: true
-            checked: Players.active?.loopState === MprisLoopState.Track || Players.active?.loopState === MprisLoopState.Playlist
-            font: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
-            disabled: !Players.active?.loopSupported
-            onClicked: {
-                const state = Players.active.loopState;
-                if (state === MprisLoopState.None)
-                    Players.active.loopState = MprisLoopState.Track;
-                else if (state === MprisLoopState.Track)
-                    Players.active.loopState = MprisLoopState.Playlist;
-                else
-                    Players.active.loopState = MprisLoopState.None;
-            }
+            checked: DetailsHelpers.isLooping(Players.active, MprisLoopState.Track, MprisLoopState.Playlist)
+            font: Tokens.styled("icon", "medium", { weight: Font.Medium })
+            disabled: !DetailsHelpers.loopSupported(Players.active)
+            onClicked: DetailsHelpers.cycleLoop(Players.active, MprisLoopState.None, MprisLoopState.Track, MprisLoopState.Playlist)
             implicitWidth: Math.round(implicitHeight * 0.9)
         }
     }

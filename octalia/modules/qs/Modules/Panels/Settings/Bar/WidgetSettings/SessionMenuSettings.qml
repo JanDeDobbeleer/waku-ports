@@ -1,9 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -18,7 +17,7 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -31,8 +30,8 @@ ColumnLayout {
     currentKey: root.valueIconColor
     onSelected: key => {
                   root.valueIconColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 }

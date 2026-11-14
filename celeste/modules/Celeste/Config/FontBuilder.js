@@ -111,3 +111,53 @@ function fromConfig(cfg, fallbackFamily, scale) {
 function fontFromConfig(cfg, fallbackFamily, scale) {
     return fromConfig(cfg, fallbackFamily, scale).build();
 }
+
+// Applies the options of a call like `Tokens.font.body.styled("small", {weight: Font.Bold})` to a
+// builder. Options: size, scale (a factor or a list of factors, applied one after the other), weight, italic, width, fill, grade, capitalisation,
+// letterSpacing and vaxis ([tag, value]).
+function _apply(b, ops) {
+    let r = b;
+    if (ops.size !== undefined)
+        r = r.size(ops.size);
+    if (ops.scale !== undefined)
+        for (const f of [].concat(ops.scale))
+            r = r.scale(f);
+    if (ops.weight !== undefined)
+        r = r.weight(ops.weight);
+    if (ops.italic !== undefined)
+        r = r.italic(ops.italic);
+    if (ops.vaxes !== undefined)
+        r = r.vaxes(ops.vaxes);
+    if (ops.width !== undefined)
+        r = r.width(ops.width);
+    if (ops.fill !== undefined)
+        r = r.fill(ops.fill);
+    if (ops.grade !== undefined)
+        r = r.grade(ops.grade);
+    if (ops.capitalisation !== undefined)
+        r = r.capitalisation(ops.capitalisation);
+    if (ops.letterSpacing !== undefined)
+        r = r.letterSpacing(ops.letterSpacing);
+    if (ops.vaxis !== undefined)
+        r = r.vaxis(ops.vaxis[0], ops.vaxis[1]);
+    return r;
+}
+
+// The font of one size ("small", "medium", "large", "extraLarge") of a TokenFontStyle with the
+// options applied.
+function styled(style, name, ops) {
+    const cfg = style.cfg;
+    const c = name === "extraLarge" ? (cfg.extraLarge ?? cfg.large) : cfg[name];
+    return _apply(fromConfig(c, cfg.family, style.scale), ops).build();
+}
+
+// The same for a plain builder from make(), like the clock font.
+function builtFrom(builder, ops) {
+    return _apply(builder, ops).build();
+}
+
+// The font of one size of a font style config ("large", "medium", "small", "extraLarge").
+function sizeFont(cfg, name, scale) {
+    const c = name === "extraLarge" ? (cfg.extraLarge ?? cfg.large) : cfg[name];
+    return fromConfig(c, cfg.family, scale).build();
+}

@@ -1,3 +1,7 @@
+pragma ComponentBehavior: Bound
+
+import "NScrollTextUtils.js" as ScrollUtils
+
 import QtQuick 6.10
 import QtQuick.Effects
 import QtQuick.Layouts
@@ -51,8 +55,8 @@ Item {
   readonly property real contentWidth: {
     if (!titleText.item)
       return 0;
-    const implicit = titleText.item.implicitWidth;
-    return implicit > 0 ? implicit : titleText.item.width;
+    const implicit = ScrollUtils.implicitWidth(titleText.item);
+    return implicit > 0 ? implicit : (titleText.item as Item).width;
   }
   readonly property real measuredWidth: scrollContainer.width
 
@@ -73,13 +77,13 @@ Item {
     Resetting = 2
   }
 
-  property int state: NScrollText.ScrollState.None
+  property int scrollState: NScrollText.ScrollState.None
 
   onTextChanged: {
     if (titleText.item)
-      titleText.item.text = text;
+      ScrollUtils.setText(titleText.item, text);
     if (loopingText.item)
-      loopingText.item.text = text;
+      ScrollUtils.setText(loopingText.item, text);
 
     // reset state
     resetState();
@@ -89,7 +93,7 @@ Item {
   onForcedHoverChanged: updateState()
 
   function resetState() {
-    root.state = NScrollText.ScrollState.None;
+    root.scrollState = NScrollText.ScrollState.None;
     scrollContainer.x = 0;
     scrollTimer.restart();
     root.updateState();
@@ -99,7 +103,7 @@ Item {
     id: scrollTimer
     interval: root.waitBeforeScrolling
     onTriggered: {
-      root.state = NScrollText.ScrollState.Scrolling;
+      root.scrollState = NScrollText.ScrollState.Scrolling;
       root.updateState();
     }
   }
@@ -108,7 +112,7 @@ Item {
     id: marqueeTimer
     interval: root.scrollTickIntervalMs
     repeat: true
-    running: root.state === NScrollText.ScrollState.Scrolling
+    running: root.scrollState === NScrollText.ScrollState.Scrolling
     onTriggered: {
       const cw = titleText.width + scrollContainer.spacing;
       if (cw <= 0 || root.scrollCycleDuration <= 0)
@@ -131,13 +135,13 @@ Item {
   }
 
   function ensureReset() {
-    if (state === NScrollText.ScrollState.Scrolling)
-      state = NScrollText.ScrollState.Resetting;
+    if (scrollState === NScrollText.ScrollState.Scrolling)
+      scrollState = NScrollText.ScrollState.Resetting;
   }
 
   function updateState() {
     if (contentWidth <= root.maxWidth || scrollMode === NScrollText.ScrollMode.Never) {
-      state = NScrollText.ScrollState.None;
+      scrollState = NScrollText.ScrollState.None;
       return;
     }
     if (scrollMode === NScrollText.ScrollMode.Always) {
@@ -148,7 +152,7 @@ Item {
       }
     } else if (scrollMode === NScrollText.ScrollMode.Hover) {
       if (hoverArea.containsMouse || forcedHover)
-        state = NScrollText.ScrollState.Scrolling;
+        scrollState = NScrollText.ScrollState.Scrolling;
       else
         ensureReset();
     }
@@ -165,9 +169,9 @@ Item {
       sourceComponent: root.delegate
       Layout.fillHeight: true
       onLoaded: {
-        this.item.text = root.text;
+        ScrollUtils.setText(this.item, root.text);
         // Bind height to container to enable vertical centering of overly high text
-        this.item.height = Qt.binding(() => titleText.height);
+        (this.item as Item).height = Qt.binding(function (): real { return titleText.height; });
       }
     }
 
@@ -175,20 +179,20 @@ Item {
       id: loopingText
       sourceComponent: root.delegate
       Layout.fillHeight: true
-      visible: root.state !== NScrollText.ScrollState.None
+      visible: root.scrollState !== NScrollText.ScrollState.None
       onLoaded: {
-        this.item.text = root.text;
-        this.item.height = Qt.binding(() => loopingText.height);
+        ScrollUtils.setText(this.item, root.text);
+        (this.item as Item).height = Qt.binding(function (): real { return loopingText.height; });
       }
     }
 
     NumberAnimation on x {
-      running: root.state === NScrollText.ScrollState.Resetting
+      running: root.scrollState === NScrollText.ScrollState.Resetting
       to: 0
       duration: root.resettingDuration
       easing.type: Easing.OutQuad
       onFinished: {
-        root.state = NScrollText.ScrollState.None;
+        root.scrollState = NScrollText.ScrollState.None;
         root.updateState();
       }
     }
@@ -199,21 +203,21 @@ Item {
     id: fadeMask
     width: root.width
     height: root.height
-    topLeftRadius: fadeRoundLeftCorners ? fadeCornerRadius : 0
-    bottomLeftRadius: fadeRoundLeftCorners ? fadeCornerRadius : 0
-    topRightRadius: fadeCornerRadius
-    bottomRightRadius: fadeCornerRadius
+    topLeftRadius: root.fadeRoundLeftCorners ? root.fadeCornerRadius : 0
+    bottomLeftRadius: root.fadeRoundLeftCorners ? root.fadeCornerRadius : 0
+    topRightRadius: root.fadeCornerRadius
+    bottomRightRadius: root.fadeCornerRadius
     gradient: Gradient {
       GradientStop {
         position: 0.0
         color: "transparent"
       }
       GradientStop {
-        position: fadeExtent
+        position: root.fadeExtent
         color: "white"
       }
       GradientStop {
-        position: 1 - fadeExtent
+        position: 1 - root.fadeExtent
         color: "white"
       }
       GradientStop {

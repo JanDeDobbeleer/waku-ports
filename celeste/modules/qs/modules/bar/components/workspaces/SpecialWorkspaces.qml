@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Celeste
 import Celeste.Components
 import Celeste.Config
@@ -13,22 +12,19 @@ import qs.services
 Item {
     id: root
 
-    required property var monitor
+    required final property HyprMonitor monitor
 
-    readonly property int activeSpecialId: monitor?.lastIpcObject.specialWorkspace?.id ?? 0
-    readonly property var wsIds: {
-        const allMonitors = !Config.bar.workspaces.perMonitor;
-        return Hypr.workspaces.values.filter(w => w.name.startsWith("special:") && (allMonitors || w.monitor === root.monitor)).map(w => w.id);
-    }
-    readonly property int activeIdx: wsIds.indexOf(activeSpecialId)
-    readonly property real maxViewY: Math.max(0, view.contentHeight - height)
+    readonly final property int activeSpecialId: monitor?.specialId ?? 0
+    readonly final property var wsIds: Hypr.specialIds(monitor, !Config.bar.workspaces.perMonitor)
+    readonly final property int activeIdx: wsIds.indexOf(activeSpecialId)
+    readonly final property real maxViewY: Math.max(0, view.contentHeight - height)
 
-    readonly property Workspace activeWs: {
+    readonly final property Workspace activeWs: {
         CUtils.dependency(view.itemsDirty);
         return view.itemAtIndex(activeIdx) as Workspace;
     }
 
-    function ensureVisible(animate = true): void {
+    function ensureVisible(animate: bool): void {
         if (!activeWs)
             return;
 
@@ -56,10 +52,10 @@ Item {
         }
     }
 
-    onActiveWsChanged: ensureVisible()
+    onActiveWsChanged: ensureVisible(true)
     onHeightChanged: ensureVisible(false)
     Component.onCompleted: ensureVisible(false)
-    onMaxViewYChanged: ensureVisible()
+    onMaxViewYChanged: ensureVisible(true)
 
     layer.enabled: true
     layer.effect: Mask {
@@ -68,11 +64,11 @@ Item {
 
     Connections {
         function onLayoutYChanged(): void {
-            root.ensureVisible();
+            root.ensureVisible(true);
         }
 
         function onPreferredHeightChanged(): void {
-            root.ensureVisible();
+            root.ensureVisible(true);
         }
 
         target: root.activeWs
@@ -154,7 +150,7 @@ Item {
         spacing: Tokens.spacing.small
         removeDuration: Tokens.anim.durations.expressiveDefaultEffects
 
-        onContentHeightChanged: root.ensureVisible()
+        onContentHeightChanged: root.ensureVisible(true)
 
         model: ScriptModel {
             values: root.wsIds
@@ -196,9 +192,9 @@ Item {
     }
 
     MouseArea {
-        property real startY
-        property real startViewY
-        property bool dragging
+        final property real startY
+        final property real startViewY
+        final property bool dragging
 
         anchors.fill: parent
 
@@ -222,7 +218,7 @@ Item {
 
             const ws = view.itemAt(event.x, event.y - view.y) as Workspace;
             if (ws) {
-                const match = Hypr.workspaces.values.find(w => w.id === ws.ws);
+                const match = Hypr.workspaceById(ws.ws);
                 if (match)
                     Hypr.toggleSpecial(Hypr.trimWsName(match.name));
             } else {

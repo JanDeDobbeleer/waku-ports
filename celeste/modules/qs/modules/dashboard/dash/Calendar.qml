@@ -10,21 +10,22 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.services
+import "CalendarHelpers.js" as CalendarHelpers
 
 CustomMouseArea {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
-    property date currentDate: screenState.dashboardDate
-    readonly property int currMonth: currentDate.getMonth()
-    readonly property int currYear: currentDate.getFullYear()
-    readonly property int nonAnimCurrMonth: screenState.dashboardDate.getMonth()
-    readonly property int nonAnimCurrYear: screenState.dashboardDate.getFullYear()
+    final property date currentDate: screenState.dashboardDate
+    readonly final property int currMonth: currentDate.getMonth()
+    readonly final property int currYear: currentDate.getFullYear()
+    readonly final property int nonAnimCurrMonth: screenState.dashboardDate.getMonth()
+    readonly final property int nonAnimCurrYear: screenState.dashboardDate.getFullYear()
 
-    readonly property int animDirection: screenState.dashboardDate > currentDate ? -1 : 1
-    property real animTranslate
-    property real animOpacity: 1
+    readonly final property int animDirection: screenState.dashboardDate > currentDate ? -1 : 1
+    final property real animTranslate
+    final property real animOpacity: 1
 
     function onWheel(event: WheelEvent): void {
         if (event.angleDelta.y > 0)
@@ -46,7 +47,7 @@ CustomMouseArea {
         running: false
         target: root
         property: "animTranslate"
-        to: root.Tokens.padding.extraLarge * root.animDirection
+        to: Tokens.padding.extraLarge * root.animDirection
         type: Anim.FastSpatial
     }
 
@@ -66,7 +67,7 @@ CustomMouseArea {
             ScriptAction {
                 script: {
                     trOutAnim.complete();
-                    root.animTranslate = root.Tokens.padding.extraLarge * -root.animDirection;
+                    root.animTranslate = Tokens.padding.extraLarge * -root.animDirection;
                 }
             }
             PropertyAction {}
@@ -104,7 +105,7 @@ CustomMouseArea {
                 isRound: true
                 icon: "chevron_left"
                 type: IconButton.Text
-                font: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+                font: Tokens.styled("icon", "small", { weight: Font.Bold })
                 padding: Tokens.padding.small
                 onClicked: root.screenState.dashboardDate = new Date(root.nonAnimCurrYear, root.nonAnimCurrMonth - 1, 1)
             }
@@ -143,7 +144,7 @@ CustomMouseArea {
                     anchors.centerIn: parent
                     text: grid.title
                     color: Colours.palette.m3primary
-                    font: Tokens.font.title.builders.small.capitalisation(Font.Capitalize).build()
+                    font: Tokens.styled("title", "small", { capitalisation: Font.Capitalize })
                 }
             }
 
@@ -151,7 +152,7 @@ CustomMouseArea {
                 isRound: true
                 icon: "chevron_right"
                 type: IconButton.Text
-                font: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+                font: Tokens.styled("icon", "small", { weight: Font.Bold })
                 padding: Tokens.padding.small
                 onClicked: root.screenState.dashboardDate = new Date(root.nonAnimCurrYear, root.nonAnimCurrMonth + 1, 1)
             }
@@ -164,12 +165,12 @@ CustomMouseArea {
             locale: grid.locale
 
             delegate: StyledText {
-                required property var model
+                required final property var model
 
                 horizontalAlignment: Text.AlignHCenter
-                text: model.shortName
-                font: Tokens.font.body.builders.small.weight(Font.Medium).build()
-                color: (model.day === 0 || model.day === 6) ? Colours.palette.m3tertiary : Colours.palette.m3onSurface
+                text: CalendarHelpers.dayName(model)
+                font: Tokens.styled("body", "small", { weight: Font.Medium })
+                color: CalendarHelpers.weekendColour(model, Colours.palette.m3tertiary, Colours.palette.m3onSurface)
             }
         }
 
@@ -196,7 +197,7 @@ CustomMouseArea {
                 delegate: Item {
                     id: dayItem
 
-                    required property var model
+                    required final property var model
 
                     implicitWidth: implicitHeight
                     implicitHeight: text.implicitHeight + Tokens.padding.small
@@ -207,15 +208,9 @@ CustomMouseArea {
                         anchors.centerIn: parent
 
                         horizontalAlignment: Text.AlignHCenter
-                        text: grid.locale.toString(dayItem.model.day)
-                        color: {
-                            const dayOfWeek = dayItem.model.date.getDay();
-                            if (dayOfWeek === 0 || dayOfWeek === 6)
-                                return Colours.palette.m3tertiary;
-
-                            return Colours.palette.m3onSurfaceVariant;
-                        }
-                        opacity: dayItem.model.today || dayItem.model.month === grid.month ? 1 : 0.4
+                        text: CalendarHelpers.dateText(grid.locale, dayItem.model)
+                        color: CalendarHelpers.dateColour(dayItem.model, Colours.palette.m3tertiary, Colours.palette.m3onSurfaceVariant)
+                        opacity: CalendarHelpers.dateOpacity(dayItem.model, grid.month)
                         font: Tokens.font.body.small
                     }
                 }
@@ -224,8 +219,8 @@ CustomMouseArea {
             MaterialShape {
                 id: todayIndicator
 
-                readonly property Item todayItem: grid.contentItem.children.find(c => c.model.today) ?? null
-                property Item today
+                readonly final property Item todayItem: CalendarHelpers.findToday(grid)
+                final property Item today
 
                 onTodayItemChanged: {
                     if (todayItem)
@@ -235,7 +230,7 @@ CustomMouseArea {
                 x: today ? today.x + (today.width - implicitWidth) / 2 : 0
                 y: today ? today.y - Tokens.padding.extraSmall - 1 : 0
 
-                implicitSize: today ? Math.max(today.implicitWidth, today.implicitHeight) + Tokens.padding.extraSmall * 2 : 0
+                implicitSize: CalendarHelpers.todaySize(today, Tokens.padding.extraSmall)
                 shape: MaterialShape.Sunny
 
                 clip: true

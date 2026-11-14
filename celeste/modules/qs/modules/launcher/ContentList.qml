@@ -7,21 +7,22 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "ContentListHelpers.js" as ContentListHelpers
 
 Item {
     id: root
 
-    required property var content
-    required property ScreenState screenState
-    required property var panels
-    required property real maxHeight
-    required property SearchBar search
-    required property int padding
-    required property int rounding
+    required final property var content
+    required final property ScreenState screenState
+    required final property var panels
+    required final property real maxHeight
+    required final property SearchBar search
+    required final property int padding
+    required final property int rounding
 
-    readonly property bool showWallpapers: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `)
-    readonly property var currentList: showWallpapers ? wallpaperList.item : appList.item // Can be either ListView or PathView, so can't type properly
-    property string animState: showWallpapers ? "wallpapers" : "apps"
+    readonly final property bool showWallpapers: ContentListHelpers.showWallpapers(search, GlobalConfig.launcher.actionPrefix)
+    readonly final property var currentList: showWallpapers ? wallpaperList.item : appList.item // Can be either ListView or PathView, so can't type properly
+    final property string animState: showWallpapers ? "wallpapers" : "apps"
 
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
@@ -113,8 +114,8 @@ Item {
     Row {
         id: empty
 
-        opacity: root.currentList?.count === 0 ? 1 : 0
-        scale: root.currentList?.count === 0 ? 1 : 0.5
+        opacity: ContentListHelpers.isEmpty(root.currentList) ? 1 : 0
+        scale: ContentListHelpers.isEmpty(root.currentList) ? 1 : 0.5
 
         spacing: Tokens.spacing.medium
         padding: Tokens.padding.large
@@ -136,7 +137,7 @@ Item {
             StyledText {
                 text: root.state === "wallpapers" ? Tr.tr("No wallpapers found") : Tr.tr("No results")
                 color: Colours.palette.m3onSurfaceVariant
-                font: Tokens.font.body.builders.large.weight(Font.Medium).build()
+                font: Tokens.styled("body", "large", { weight: Font.Medium })
             }
 
             StyledText {

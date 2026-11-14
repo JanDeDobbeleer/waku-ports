@@ -1,16 +1,16 @@
 pragma Singleton
 
+import "IconsUtils.js" as IconsUtils
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root
 
   // Expose the font family name for easy access
-  readonly property string fontFamily: currentFontLoader ? currentFontLoader.name : ""
+  readonly property string fontFamily: currentFontLoader ? IconsUtils.name(currentFontLoader) : ""
   readonly property string defaultIcon: IconsTabler.defaultIcon
   readonly property var icons: IconsTabler.icons
   readonly property var aliases: IconsTabler.aliases
@@ -35,12 +35,12 @@ Singleton {
     target: Quickshell
     function onReloadCompleted() {
       Logger.d("Icons", "Quickshell reload completed - forcing font reload");
-      reloadFont();
+      root.reloadFont();
     }
   }
 
   // ---------------------------------------
-  function get(iconName) {
+  function get(iconName: var): var {
     // Check in aliases first
     if (aliases[iconName] !== undefined) {
       iconName = aliases[iconName];
@@ -55,7 +55,7 @@ Singleton {
 
     // Destroy old loader first
     if (currentFontLoader) {
-      currentFontLoader.destroy();
+      IconsUtils.destroy(currentFontLoader);
       currentFontLoader = null;
     }
 
@@ -65,14 +65,14 @@ Singleton {
                                            FontLoader {
                                            source: "${cacheBustingPath}"
                                            }
-                                           `, root, "dynamicFontLoader_" + fontVersion);
+                                           `, root, "dynamicFontLoader_" + fontVersion) as FontLoader;
 
     // Connect to the new loader's status changes
-    currentFontLoader.statusChanged.connect(function () {
-      if (currentFontLoader.status === FontLoader.Ready) {
-        Logger.d("Icons", "Font loaded successfully:", currentFontLoader.name, "(version " + fontVersion + ")");
+    IconsUtils.connectStatusChanged(currentFontLoader, function (): void {
+      if (IconsUtils.status(currentFontLoader) === FontLoader.Ready) {
+        Logger.d("Icons", "Font loaded successfully:", IconsUtils.name(currentFontLoader), "(version " + fontVersion + ")");
         fontReloaded();
-      } else if (currentFontLoader.status === FontLoader.Error) {
+      } else if (IconsUtils.status(currentFontLoader) === FontLoader.Error) {
         Logger.e("Icons", "Font failed to load (version " + fontVersion + ")");
       }
     });

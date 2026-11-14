@@ -1,11 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "SetupWallpaperStepUtils.js" as SetupWallpaperStepUtils
 
 ColumnLayout {
   id: root
@@ -23,7 +25,7 @@ ColumnLayout {
       return;
     }
     if (ImageCacheService.initialized) {
-      ImageCacheService.getLarge(selectedWallpaper, Screen.width, Screen.height, function (path, success) {
+      ImageCacheService.getLarge(selectedWallpaper, Screen.width, Screen.height, function (path: string, success: bool) {
         if (root)
           root.previewCachedPath = success ? path : selectedWallpaper;
       });
@@ -44,8 +46,8 @@ ColumnLayout {
       spacing: Style.marginM
 
       Rectangle {
-        width: 40
-        height: 40
+        Layout.preferredWidth: 40
+        Layout.preferredHeight: 40
         radius: Style.radiusL
         color: Color.mSurfaceVariant
         opacity: 0.6
@@ -88,23 +90,23 @@ ColumnLayout {
     // Image with rounded corners
     NImageRounded {
       anchors.fill: parent
-      visible: previewCachedPath !== ""
-      imagePath: previewCachedPath
+      visible: root.previewCachedPath !== ""
+      imagePath: root.previewCachedPath
       radius: Style.radiusL
-      borderColor: previewCachedPath !== "" ? Color.mPrimary : Color.mOutline
-      borderWidth: previewCachedPath !== "" ? 2 : 1
+      borderColor: root.previewCachedPath !== "" ? Color.mPrimary : Color.mOutline
+      borderWidth: root.previewCachedPath !== "" ? 2 : 1
       imageFillMode: Image.PreserveAspectCrop
     }
 
     ColumnLayout {
       anchors.centerIn: parent
       spacing: Style.marginL
-      visible: selectedWallpaper === ""
+      visible: root.selectedWallpaper === ""
 
       Rectangle {
         Layout.alignment: Qt.AlignHCenter
-        width: 64
-        height: 64
+        Layout.preferredWidth: 64
+        Layout.preferredHeight: 64
         radius: width / 2
         color: Color.mPrimary
 
@@ -136,7 +138,7 @@ ColumnLayout {
   Item {
     Layout.fillWidth: true
     Layout.preferredHeight: 92
-    visible: filteredWallpapers.length > 0
+    visible: root.filteredWallpapers.length > 0
 
     NScrollView {
       id: galleryScroll
@@ -151,20 +153,7 @@ ColumnLayout {
         target: galleryScroll.contentItem
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
-                   const flick = galleryScroll.contentItem;
-                   if (!flick)
-                   return;
-                   const delta = event.pixelDelta.x !== 0 || event.pixelDelta.y !== 0 ? (event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.pixelDelta.x) : (event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x);
-                   // Move opposite of wheel to scroll content to the right for wheel down
-                   const step = -delta;
-                   const maxX = Math.max(0, flick.contentWidth - flick.width);
-                   let newX = flick.contentX + step;
-                   if (newX < 0)
-                   newX = 0;
-                   if (newX > maxX)
-                   newX = maxX;
-                   flick.contentX = newX;
-                   event.accepted = true;
+                   SetupWallpaperStepUtils.scrollHorizontally(galleryScroll.contentItem, event);
                  }
       }
 
@@ -173,8 +162,9 @@ ColumnLayout {
         height: parent.height
 
         Repeater {
-          model: filteredWallpapers
+          model: root.filteredWallpapers
           delegate: Item {
+            required property string modelData
             id: thumbDelegate
             readonly property int baseWidth: 120
             readonly property int baseHeight: 80
@@ -186,12 +176,12 @@ ColumnLayout {
 
             Component.onCompleted: {
               if (ImageCacheService.initialized) {
-                ImageCacheService.getThumbnail(modelData, function (path, success) {
+                ImageCacheService.getThumbnail(thumbDelegate.modelData, function (path: string, success: bool) {
                   if (thumbDelegate)
-                    thumbDelegate.cachedPath = success ? path : modelData;
+                    thumbDelegate.cachedPath = success ? path : thumbDelegate.modelData;
                 });
               } else {
-                cachedPath = modelData;
+                cachedPath = thumbDelegate.modelData;
               }
             }
 
@@ -201,8 +191,8 @@ ColumnLayout {
               anchors.fill: parent
               imagePath: thumbDelegate.cachedPath
               radius: thumbDelegate.thumbRadius
-              borderColor: selectedWallpaper === modelData ? Color.mPrimary : Color.mOutline
-              borderWidth: selectedWallpaper === modelData ? 2 : 1
+              borderColor: root.selectedWallpaper === thumbDelegate.modelData ? Color.mPrimary : Color.mOutline
+              borderWidth: root.selectedWallpaper === thumbDelegate.modelData ? 2 : 1
               imageFillMode: Image.PreserveAspectCrop
             }
 
@@ -243,7 +233,7 @@ ColumnLayout {
 
             // Selection badge
             Rectangle {
-              visible: selectedWallpaper === modelData
+              visible: root.selectedWallpaper === thumbDelegate.modelData
               anchors.right: parent.right
               anchors.bottom: parent.bottom
               anchors.margins: 6
@@ -266,8 +256,8 @@ ColumnLayout {
 
             TapHandler {
               onTapped: {
-                selectedWallpaper = modelData;
-                wallpaperChanged(modelData);
+                root.selectedWallpaper = thumbDelegate.modelData;
+                root.wallpaperChanged(thumbDelegate.modelData);
               }
             }
           }
@@ -283,7 +273,7 @@ ColumnLayout {
     color: Color.mSurfaceVariant
     radius: Style.radiusM
     opacity: 0.4
-    visible: filteredWallpapers.length === 0
+    visible: root.filteredWallpapers.length === 0
 
     RowLayout {
       anchors.fill: parent
@@ -300,14 +290,14 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Style.marginXS
         NText {
-          text: filteredWallpapers.length === 0 && selectedDirectory !== "" ? I18n.tr("setup.wallpaper.none-in-dir") : I18n.tr("setup.wallpaper.no-dir")
+          text: root.filteredWallpapers.length === 0 && root.selectedDirectory !== "" ? I18n.tr("setup.wallpaper.none-in-dir") : I18n.tr("setup.wallpaper.no-dir")
           pointSize: Style.fontSizeM
           font.weight: Style.fontWeightBold
           color: Color.mOnSurfaceVariant
         }
         NText {
-          text: selectedDirectory !== "" ? I18n.tr("setup.wallpaper.no-valid", {
-                                                     "dir": selectedDirectory
+          text: root.selectedDirectory !== "" ? I18n.trArgs("setup.wallpaper.no-valid", {
+                                                     "dir": root.selectedDirectory
                                                    }) : I18n.tr("setup.wallpaper.choose-dir")
           pointSize: Style.fontSizeS
           color: Color.mOnSurfaceVariant
@@ -328,12 +318,12 @@ ColumnLayout {
       id: wallpaperPathInput
       label: I18n.tr("setup.wallpaper.dir-label")
       description: I18n.tr("setup.wallpaper.dir-description")
-      text: selectedDirectory
+      text: root.selectedDirectory
       buttonIcon: "folder-open"
       Layout.fillWidth: true
       onInputTextChanged: text => {
-                            selectedDirectory = text;
-                            directoryChanged(text);
+                            root.selectedDirectory = text;
+                            root.directoryChanged(text);
                           }
       onButtonClicked: directoryPicker.open()
     }
@@ -348,13 +338,14 @@ ColumnLayout {
   }
 
   function refreshWallpapers() {
+    var wallpapers;
     if (!selectedDirectory || selectedDirectory === "") {
       wallpapersList = [];
       filteredWallpapers = [];
       return;
     }
     if (typeof WallpaperService !== "undefined" && WallpaperService.getWallpapersList) {
-      var wallpapers = WallpaperService.getWallpapersList(Screen.name);
+      wallpapers = WallpaperService.getWallpapersList(Screen.name);
       wallpapersList = wallpapers;
       updateFilteredWallpapers();
       if (wallpapersList.length > 0 && selectedWallpaper === "") {
@@ -365,11 +356,12 @@ ColumnLayout {
     }
   }
 
-  function readDirectoryImages(directoryPath) {
+  function readDirectoryImages(directoryPath: string): list<string> {
+    var i;
     // Build find command args dynamically from ImageCacheService filters
     var filters = ImageCacheService.imageFilters;
     var findArgs = ["find", directoryPath, "-type", "f", "("];
-    for (var i = 0; i < filters.length; i++) {
+    for (i = 0; i < SetupWallpaperStepUtils.arrayLength(filters); i++) {
       if (i > 0) {
         findArgs.push("-o");
       }
@@ -395,9 +387,9 @@ ColumnLayout {
   Connections {
     target: WallpaperService
     enabled: typeof WallpaperService !== "undefined"
-    function onWallpaperListChanged(screenName, count) {
+    function onWallpaperListChanged(screenName: string, count: int): void {
       if (screenName === Screen.name) {
-        Qt.callLater(refreshWallpapers);
+        Qt.callLater(root.refreshWallpapers);
       }
     }
   }
@@ -407,7 +399,7 @@ ColumnLayout {
     interval: 1000
     running: false
     repeat: false
-    onTriggered: refreshWallpapers()
+    onTriggered: root.refreshWallpapers()
   }
 
   Component.onCompleted: {
@@ -416,8 +408,8 @@ ColumnLayout {
     } else {
       selectedDirectory = Settings.defaultWallpapersDirectory;
     }
-    if (typeof WallpaperService !== "undefined" && WallpaperService.currentWallpaper) {
-      selectedWallpaper = WallpaperService.currentWallpaper;
+    if (typeof WallpaperService !== "undefined" && SetupWallpaperStepUtils.field(WallpaperService, "currentWallpaper")) {
+      selectedWallpaper = SetupWallpaperStepUtils.field(WallpaperService, "currentWallpaper");
     }
     initialRefreshTimer.start();
   }
@@ -426,11 +418,11 @@ ColumnLayout {
     id: directoryPicker
     selectionMode: "folders"
     title: I18n.tr("setup.wallpaper.dir-select-title")
-    initialPath: selectedDirectory || Settings.defaultWallpapersDirectory
+    initialPath: root.selectedDirectory || Settings.defaultWallpapersDirectory
     onAccepted: paths => {
-                  if (paths.length > 0) {
-                    selectedDirectory = paths[0];
-                    directoryChanged(paths[0]);
+                  if (SetupWallpaperStepUtils.arrayLength(paths) > 0) {
+                    root.selectedDirectory = SetupWallpaperStepUtils.arrayAt(paths, 0);
+                    root.directoryChanged(SetupWallpaperStepUtils.arrayAt(paths, 0));
                   }
                 }
   }
@@ -441,20 +433,12 @@ ColumnLayout {
     running: false
     stdout: StdioCollector {}
     stderr: StdioCollector {}
-    onExited: function (exitCode) {
+    onExited: function (exitCode: int): void {
       if (exitCode === 0) {
-        var lines = stdout.text.split('\n');
-        var images = [];
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (line !== '') {
-            images.push(line);
-          }
-        }
-        wallpapersList = images;
-        updateFilteredWallpapers();
-        if (wallpapersList.length > 0 && selectedWallpaper === "") {
-          selectedWallpaper = wallpapersList[0];
+        root.wallpapersList = SetupWallpaperStepUtils.imageLines(directoryScanner);
+        root.updateFilteredWallpapers();
+        if (root.wallpapersList.length > 0 && root.selectedWallpaper === "") {
+          root.selectedWallpaper = root.wallpapersList[0];
         }
       }
     }

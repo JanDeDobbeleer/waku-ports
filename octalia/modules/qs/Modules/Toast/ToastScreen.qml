@@ -1,8 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Services.UI
+import "./ToastScreenUtils.js" as ToastScreenUtils
 
 Item {
   id: root
@@ -20,7 +23,7 @@ Item {
   Connections {
     target: ToastService
 
-    function onNotify(title, description, icon, type, duration, actionLabel, actionCallback) {
+    function onNotify(title: var, description: var, icon: var, type: var, duration: var, actionLabel: var, actionCallback: var): void {
       root.enqueueToast({
                           "title": title,
                           "description": description,
@@ -33,7 +36,7 @@ Item {
                         });
     }
 
-    function onDismiss() {
+    function onDismiss(): void {
       root.dismissToast();
     }
   }
@@ -46,20 +49,20 @@ Item {
     quickSwitchTimer.stop();
   }
 
-  function dismissToast() {
+  function dismissToast(): void {
     if (windowLoader.item) {
       hideTimer.stop();
-      windowLoader.item.hideToast();
+      ToastScreenUtils.hideToast(windowLoader.item);
     }
   }
 
-  function enqueueToast(toastData) {
+  function enqueueToast(toastData: var): void {
     // Safe logging - fix the substring bug
-    var descPreview = (toastData.description || "").substring(0, 100).replace(/\n/g, " ");
-    Logger.d("ToastScreen", "Queuing", toastData.type, ":", toastData.title, descPreview);
+    var descPreview = (ToastScreenUtils.field(toastData, "description") || "").substring(0, 100).replace(/\n/g, " ");
+    Logger.d("ToastScreen", "Queuing", ToastScreenUtils.field(toastData, "type"), ":", ToastScreenUtils.field(toastData, "title"), descPreview);
 
     // Bounded queue to prevent unbounded memory growth
-    if (messageQueue.length >= maxQueueSize) {
+    if (ToastScreenUtils.arrayLength(messageQueue) >= maxQueueSize) {
       Logger.d("ToastScreen", "Queue full, dropping oldest toast");
       messageQueue.shift();
     }
@@ -88,8 +91,8 @@ Item {
     onTriggered: root.processQueue()
   }
 
-  function processQueue() {
-    if (messageQueue.length === 0 || isShowingToast) {
+  function processQueue(): void {
+    if (ToastScreenUtils.arrayLength(messageQueue) === 0 || isShowingToast) {
       return;
     }
 
@@ -103,7 +106,7 @@ Item {
     windowLoader.active = true;
   }
 
-  function onToastHidden() {
+  function onToastHidden(): void {
     isShowingToast = false;
 
     // Deactivate the loader to completely remove the window and free memory
@@ -131,7 +134,7 @@ Item {
     onStatusChanged: {
       // When loader becomes ready, show the pending toast
       if (status === Loader.Ready && pendingToast !== null) {
-        item.showToast(pendingToast.title, pendingToast.description, pendingToast.icon, pendingToast.type, pendingToast.duration, pendingToast.actionLabel, pendingToast.actionCallback);
+        ToastScreenUtils.showToast(item, pendingToast);
         pendingToast = null;
       }
     }
@@ -139,7 +142,7 @@ Item {
     sourceComponent: PanelWindow {
       id: panel
 
-      property alias toastItem: toastItem
+      property alias toastItem: toastContent
 
       screen: root.screen
 
@@ -201,8 +204,8 @@ Item {
       margins.left: isLeft ? barOffsetLeft - shadowPadding + Style.marginM : 0
       margins.right: isRight ? barOffsetRight - shadowPadding + Style.marginM : 0
 
-      implicitWidth: Math.round(toastItem.width)
-      implicitHeight: Math.round(toastItem.height)
+      implicitWidth: Math.round(toastContent.width)
+      implicitHeight: Math.round(toastContent.height)
 
       color: "transparent"
 
@@ -229,16 +232,16 @@ Item {
         }
       }
 
-      function showToast(title, description, icon, type, duration, actionLabel, actionCallback) {
-        toastItem.show(title, description, icon, type, duration, actionLabel, actionCallback);
+      function showToast(title: var, description: var, icon: var, type: var, duration: var, actionLabel: var, actionCallback: var): void {
+        toastContent.show(title, description, icon, type, duration, actionLabel, actionCallback);
       }
 
-      function hideToast() {
-        toastItem.hideImmediately();
+      function hideToast(): void {
+        toastContent.hideImmediately();
       }
 
       Toast {
-        id: toastItem
+        id: toastContent
         onHidden: root.onToastHidden()
       }
     }

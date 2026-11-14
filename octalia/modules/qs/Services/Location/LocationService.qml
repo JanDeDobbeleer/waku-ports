@@ -184,7 +184,7 @@ Singleton {
     }
 
     if (adapter.latitude === "" || adapter.longitude === "") {
-      Logger.w("Location", "Cannot fetch weather without coordinates");
+      Logger.d("Location", "Cannot fetch weather without coordinates");
       return;
     }
     const needsWeatherUpdate = (adapter.weatherLastFetch === "") || (adapter.weather === null) || (Time.timestamp >= adapter.weatherLastFetch + weatherUpdateFrequency);
@@ -206,10 +206,11 @@ Singleton {
     var geoUrl = "https://api.noctalia.dev/geocode?city=" + encodeURIComponent(locationName);
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
+      var geoData;
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
           try {
-            var geoData = JSON.parse(xhr.responseText);
+            geoData = JSON.parse(xhr.responseText);
             if (geoData.lat != null) {
               callback(geoData.lat, geoData.lng, geoData.name, geoData.country);
             } else {
@@ -233,10 +234,11 @@ Singleton {
     var url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&current_weather=true&current=relativehumidity_2m,surface_pressure,is_day&daily=temperature_2m_max,temperature_2m_min,weathercode,sunset,sunrise&timezone=auto";
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
+      var weatherData;
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
           try {
-            var weatherData = JSON.parse(xhr.responseText);
+            weatherData = JSON.parse(xhr.responseText);
             //console.log(JSON.stringify(weatherData))
 
             // Save core data
@@ -268,10 +270,11 @@ Singleton {
     var url = "https://api.noctalia.dev/geolocate";
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
+      var data;
       if (xhr.readyState === XMLHttpRequest.DONE) {
         if (xhr.status === 200) {
           try {
-            var data = JSON.parse(xhr.responseText);
+            data = JSON.parse(xhr.responseText);
             if (data.lat != null) {
               callback(data.lat, data.lng, data.city, data.country);
             } else {

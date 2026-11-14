@@ -21,7 +21,7 @@ TextField {
 
   property color foreground: Commons.Color.foreground
   property color accent: Commons.Color.accent
-  property color selectionTint: Style.selectionFillFor(foreground, accent)
+  property color selectionTint: Style.selectionFillFor(foreground, accent, Commons.Color.urgent)
   property bool password: false
   property real horizontalPadding: Style.spacing.controlPaddingX
   property real verticalPadding: Style.spacing.inputPaddingY

@@ -4,6 +4,8 @@ import QtQuick.Layouts
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../DesktopWidgets/DesktopWidgetSettingsDialog.js" as DialogData
+import "../SettingsValue.js" as SettingsValue
 
 // Widget Settings Dialog Component
 Popup {
@@ -18,11 +20,11 @@ Popup {
 
   signal updateWidgetSettings(string section, int index, var settings)
 
-  readonly property real maxHeight: (screen ? screen.height : (parent ? parent.height : 800)) * 0.8
+  readonly property real maxHeight: (screen ? SettingsValue.read(screen, "height") : (parent ? parent.height : 800)) * 0.8
   readonly property real defaultContentWidth: Math.round(600 * Style.uiScaleRatio)
   readonly property real settingsContentWidth: {
-    if (settingsLoader.item && settingsLoader.item.implicitWidth > 0) {
-      return settingsLoader.item.implicitWidth;
+    if (settingsLoader.item && SettingsValue.read(settingsLoader.item, "implicitWidth") > 0) {
+      return SettingsValue.read(settingsLoader.item, "implicitWidth");
     }
     return defaultContentWidth;
   }
@@ -51,7 +53,7 @@ Popup {
   contentItem: ColumnLayout {
     id: content
     anchors.fill: parent
-    anchors.margins: dialogPadding
+    anchors.margins: root.dialogPadding
     spacing: Style.marginM
 
     // Title
@@ -61,7 +63,7 @@ Popup {
       Layout.preferredHeight: implicitHeight
 
       NText {
-        text: I18n.tr("system.widget-settings-title", {
+        text: I18n.trArgs("system.widget-settings-title", {
                         "widget": root.widgetId
                       })
         pointSize: Style.fontSizeL
@@ -72,7 +74,7 @@ Popup {
 
       NIconButton {
         icon: "close"
-        onClicked: saveAndClose()
+        onClicked: root.saveAndClose()
       }
     }
 
@@ -125,7 +127,7 @@ Popup {
   Connections {
     target: settingsLoader.item
     ignoreUnknownSignals: true
-    function onSettingsChanged(newSettings) {
+    function onSettingsChanged(newSettings: var): void {
       if (newSettings) {
         root.settingsCache = newSettings;
         saveTimer.start();
@@ -133,17 +135,13 @@ Popup {
     }
   }
 
-  function saveAndClose() {
-    if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
-      if (newSettings) {
-        root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
-      }
-    }
+  function saveAndClose(): void {
+    const newSettings = DialogData.saveSettings(settingsLoader.item);
+    if (newSettings) root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
     root.close();
   }
 
-  function loadWidgetSettings() {
+  function loadWidgetSettings(): void {
     const widgetSettingsMap = {
       "CustomButton": "WidgetSettings/CustomButtonSettings.qml"
     };

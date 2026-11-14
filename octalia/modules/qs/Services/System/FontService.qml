@@ -1,11 +1,10 @@
 pragma Singleton
 
+import "FontServiceUtils.js" as FontServiceUtils
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
-import Quickshell.Io
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root
@@ -24,8 +23,8 @@ Singleton {
 
   // The families Qt finds on Windows (fc-list does not exist). Qt has no query for monospace, so a name
   // pattern stands in.
-  function isMonospace(family) {
-    return /mono|code|consol|courier|cascadia|fixed|terminal|hack|lucida console|inconsolata|iosevka|menlo/i.test(family);
+  function isMonospace(family: var): bool {
+    return FontServiceUtils.isMonospace(family);
   }
 
   function loadFontsViaFcList() {
@@ -33,20 +32,21 @@ Singleton {
       return;
     isLoading = true;
     const all = Qt.fontFamilies();
-    populateModels(all.join("\n"), all.filter(isMonospace).join("\n"));
+    populateModels(all.join("\n"), all.filter(FontServiceUtils.isMonospace).join("\n"));
   }
 
-  function populateModels(allFontsText, monoFontsText) {
+  function populateModels(allFontsText: var, monoFontsText: var): void {
+    var families, fi, fontName, fontObj, i, j, k, line, m, mi, monoFamilies, monoName, n, name;
     // Parse monospace fonts into a lookup set
     // fc-list returns comma-separated family names for fonts with multiple families
     var monoLookup = {};
     var monoLines = monoFontsText.split('\n');
-    for (var i = 0; i < monoLines.length; i++) {
-      var line = monoLines[i].trim();
+    for (i = 0; i < monoLines.length; i++) {
+      line = monoLines[i].trim();
       if (line) {
-        var monoFamilies = line.split(',');
-        for (var mi = 0; mi < monoFamilies.length; mi++) {
-          var monoName = monoFamilies[mi].trim();
+        monoFamilies = line.split(',');
+        for (mi = 0; mi < monoFamilies.length; mi++) {
+          monoName = monoFamilies[mi].trim();
           if (monoName)
             monoLookup[monoName] = true;
         }
@@ -57,12 +57,12 @@ Singleton {
     var allLines = allFontsText.split('\n');
     var fontSet = {}; // Deduplicate font families
 
-    for (var j = 0; j < allLines.length; j++) {
-      var line = allLines[j].trim();
+    for (j = 0; j < allLines.length; j++) {
+      line = allLines[j].trim();
       if (line) {
-        var families = line.split(',');
-        for (var fi = 0; fi < families.length; fi++) {
-          var fontName = families[fi].trim();
+        families = line.split(',');
+        for (fi = 0; fi < families.length; fi++) {
+          fontName = families[fi].trim();
           if (fontName && !fontSet[fontName]) {
             fontSet[fontName] = true;
           }
@@ -71,17 +71,15 @@ Singleton {
     }
 
     // Sort font names
-    var sortedFonts = Object.keys(fontSet).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
+    var sortedFonts = FontServiceUtils.sortFontNames(fontSet);
 
     // Build arrays for batch insert
     var allBatch = [];
     var monoBatch = [];
 
-    for (var k = 0; k < sortedFonts.length; k++) {
-      var name = sortedFonts[k];
-      var fontObj = {
+    for (k = 0; k < sortedFonts.length; k++) {
+      name = sortedFonts[k];
+      fontObj = {
         "key": name,
         "name": name
       };
@@ -94,26 +92,26 @@ Singleton {
     }
 
     // Clear and populate models (single batch operation)
-    availableFonts.clear();
-    monospaceFonts.clear();
+    FontServiceUtils.clearModel(availableFonts);
+    FontServiceUtils.clearModel(monospaceFonts);
 
-    availableFonts.append({
-                            "key": Qt.application.font.family,
+    FontServiceUtils.appendItem(availableFonts, {
+                            "key": FontServiceUtils.applicationFontFamily(),
                             "name": I18n.tr("panels.indicator.system-default")
                           });
-    monospaceFonts.append({
+    FontServiceUtils.appendItem(monospaceFonts, {
                             "key": "monospace",
                             "name": I18n.tr("panels.indicator.system-default")
                           });
 
-    for (var m = 0; m < allBatch.length; m++)
-      availableFonts.append(allBatch[m]);
-    for (var n = 0; n < monoBatch.length; n++)
-      monospaceFonts.append(monoBatch[n]);
+    for (m = 0; m < allBatch.length; m++)
+      FontServiceUtils.appendItem(availableFonts, allBatch[m]);
+    for (n = 0; n < monoBatch.length; n++)
+      FontServiceUtils.appendItem(monospaceFonts, monoBatch[n]);
 
     fontsLoaded = true;
     isLoading = false;
-    Logger.i("Font", "Loaded", availableFonts.count, "fonts,", monospaceFonts.count, "monospace");
+    Logger.i("Font", "Loaded", FontServiceUtils.count(availableFonts), "fonts,", FontServiceUtils.count(monospaceFonts), "monospace");
   }
 
   // Temporary storage for process outputs

@@ -5,14 +5,15 @@ import Celeste.Config
 import qs.components
 import qs.services
 import qs.utils
+import "ActiveWindowHelpers.js" as ActiveWindowHelpers
 
 Item {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
     // The window the bar list points at, else the focused one.
-    readonly property var shown: Hypr.hoverToplevel ?? Hypr.activeToplevel
+    readonly final property HyprToplevel shown: Hypr.hoverToplevel ?? Hypr.activeToplevel
 
     implicitWidth: shown ? child.implicitWidth : -Tokens.padding.extraLargeIncreased
     implicitHeight: child.implicitHeight
@@ -36,7 +37,7 @@ Item {
                 asynchronous: true
                 Layout.alignment: Qt.AlignVCenter
                 implicitSize: details.implicitHeight
-                source: shown?.icon || Icons.getAppIcon(shown?.lastIpcObject.class ?? "", "image-missing")
+                source: ActiveWindowHelpers.iconPath(root.shown, Icons)
             }
 
             ColumnLayout {
@@ -47,14 +48,14 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: shown?.title ?? ""
+                    text: ActiveWindowHelpers.title(root.shown)
                     font: Tokens.font.body.medium
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: shown?.lastIpcObject.class ?? ""
+                    text: ActiveWindowHelpers.appClass(root.shown)
                     color: Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
                 }

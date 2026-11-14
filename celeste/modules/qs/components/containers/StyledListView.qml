@@ -4,7 +4,7 @@ import qs.components
 ListView {
     id: root
 
-    property bool doneFakeFlick
+    final property bool doneFakeFlick
 
     maximumFlickVelocity: 3000
 

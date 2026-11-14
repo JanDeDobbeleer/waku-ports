@@ -4,8 +4,8 @@ import qs.components
 import qs.services
 
 RectangularShadow {
-    property int level
-    property real dp: [0, 1, 3, 6, 8, 12][level]
+    final property int level
+    final property real dp: [0, 1, 3, 6, 8, 12][level]
 
     color: Qt.alpha(Colours.palette.m3shadow, 0.7)
     blur: (dp * 5) ** 0.7

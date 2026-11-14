@@ -5,38 +5,16 @@ import Celeste
 import Celeste.Config
 import Celeste.I18n
 import Celeste.Services
-import waku.services as S
-import qs.utils
+import "BatteryMonitorHelpers.js" as BatteryMonitorHelpers
 
 Scope {
     id: root
 
-    readonly property list<var> warnLevels: [...GlobalConfig.general.battery.warnLevels.values].sort((a, b) => a.level - b.level)
-    property real lastPercentage: 100
+    readonly final property list<var> warnLevels: BatteryMonitorHelpers.sortWarnLevels(GlobalConfig.general.battery.warnLevels)
+    final property real lastPercentage: 100
 
     function handleBatteryWarnings(): void {
-        const p = UPower.displayDevice.percentage * 100;
-
-        if (!UPower.onBattery) {
-            root.lastPercentage = p;
-            return;
-        }
-
-        if (root.lastPercentage >= 0) {
-            for (const level of root.warnLevels) {
-                if (p <= level.level && root.lastPercentage > level.level) {
-                    Toaster.toast(Tr.trMarked(level.title ?? Tr.tr("Battery warning")), Tr.trMarked(level.message ?? Tr.tr("Battery level is low")), level.icon ?? "battery_android_alert", level.critical ? Toast.Error : Toast.Warning);
-                    break;
-                }
-            }
-        }
-
-        if (!hibernateTimer.running && p <= GlobalConfig.general.battery.criticalLevel) {
-            Toaster.toast(Tr.tr("Hibernating in 5 seconds"), Tr.tr("Hibernating to prevent data loss"), "battery_android_alert", Toast.Error);
-            hibernateTimer.start();
-        }
-
-        root.lastPercentage = p;
+        root.lastPercentage = BatteryMonitorHelpers.handleWarnings(UPower.displayDevice.percentage * 100, UPower.onBattery, root.lastPercentage, root.warnLevels, hibernateTimer, GlobalConfig.general.battery.criticalLevel, Toaster, Tr, Toast.Error, Toast.Warning);
     }
 
     Connections {
@@ -46,11 +24,11 @@ Scope {
 
             if (UPower.onBattery) {
                 if (GlobalConfig.utilities.toasts.chargingChanged)
-                    Toaster.toast(Tr.tr("Charger unplugged"), Tr.tr("Battery is discharging"), "power_off");
+                    Toaster.toast(Tr.tr("Charger unplugged"), Tr.tr("Battery is discharging"), "power_off", Toast.Info, 5000);
                 root.handleBatteryWarnings();
             } else {
                 if (GlobalConfig.utilities.toasts.chargingChanged)
-                    Toaster.toast(Tr.tr("Charger plugged in"), Tr.tr("Battery is charging"), "power");
+                    Toaster.toast(Tr.tr("Charger plugged in"), Tr.tr("Battery is charging"), "power", Toast.Info, 5000);
                 root.lastPercentage = 100;
             }
         }

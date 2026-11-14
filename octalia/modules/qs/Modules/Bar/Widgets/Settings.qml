@@ -1,7 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -20,8 +20,9 @@ NIconButton {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -29,7 +30,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string valueIconColor: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string valueIconColor: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   readonly property color iconColor: Color.resolveColorKey(valueIconColor)
 
@@ -60,19 +61,19 @@ NIconButton {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
 
   onClicked: {
     if (Settings.data.ui.settingsPanelMode === "attached") {
-      PanelService.getPanel("settingsPanel", screen)?.toggle(this);
+      PanelService.invokePanel(PanelService.getPanel("settingsPanel", screen), "toggle", [this]);
     } else {
-      PanelService.getPanel("settingsPanel", screen)?.toggle();
+      PanelService.invokePanel(PanelService.getPanel("settingsPanel", screen), "toggle", []);
     }
   }
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

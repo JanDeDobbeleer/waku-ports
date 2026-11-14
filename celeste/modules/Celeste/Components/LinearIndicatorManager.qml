@@ -5,19 +5,19 @@ import "Bezier.js" as Bezier
 QtObject {
     id: root
 
-    property real progress: 0
-    property real completeEndProgress: 0
-    property int gap: 4
-    readonly property real duration: 1800
-    readonly property real completeEndDuration: 1800
+    final property real progress: 0
+    final property real completeEndProgress: 0
+    final property int gap: 4
+    readonly final property real duration: 1800
+    readonly final property real completeEndDuration: 1800
 
-    property LinearIndicatorSegment segment0: LinearIndicatorSegment {}
-    property LinearIndicatorSegment segment1: LinearIndicatorSegment {}
-    readonly property var activeIndicators: [segment0, segment1]
+    final property LinearIndicatorSegment segment0: LinearIndicatorSegment {}
+    final property LinearIndicatorSegment segment1: LinearIndicatorSegment {}
+    readonly final property var activeIndicators: [segment0, segment1]
 
-    readonly property var durations: [533, 567, 850, 750]
-    readonly property var delays: [1267, 1000, 333, 0]
-    readonly property var curves: [[0.2, 0.0, 0.8, 1.0], [0.4, 0.0, 1.0, 1.0], [0.0, 0.0, 0.65, 1.0], [0.1, 0.0, 0.45, 1.0]]
+    readonly final property var durations: [533, 567, 850, 750]
+    readonly final property var delays: [1267, 1000, 333, 0]
+    readonly final property var curves: [[0.2, 0.0, 0.8, 1.0], [0.4, 0.0, 1.0, 1.0], [0.0, 0.0, 0.65, 1.0], [0.1, 0.0, 0.45, 1.0]]
 
     onProgressChanged: refresh()
     onCompleteEndProgressChanged: refresh()

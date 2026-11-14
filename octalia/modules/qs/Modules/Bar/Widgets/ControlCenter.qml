@@ -1,10 +1,9 @@
+pragma ComponentBehavior: Bound
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Widgets
 import qs.Commons
-import qs.Modules.Bar.Extras
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
@@ -26,8 +25,9 @@ NIconButton {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -35,11 +35,13 @@ NIconButton {
     return {};
   }
 
-  readonly property string customIcon: widgetSettings.icon !== undefined ? widgetSettings.icon : widgetMetadata.icon
-  readonly property bool useDistroLogo: widgetSettings.useDistroLogo !== undefined ? widgetSettings.useDistroLogo : widgetMetadata.useDistroLogo
-  readonly property string customIconPath: widgetSettings.customIconPath !== undefined ? widgetSettings.customIconPath : widgetMetadata.customIconPath
-  readonly property bool enableColorization: widgetSettings.enableColorization !== undefined ? widgetSettings.enableColorization : widgetMetadata.enableColorization
-  readonly property string colorizeSystemIcon: widgetSettings.colorizeSystemIcon !== undefined ? widgetSettings.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
+  readonly property string customIcon: BarWidgetHelpers.readProperty(widgetSettings, "icon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "icon") : BarWidgetHelpers.readProperty(widgetMetadata, "icon")
+  readonly property bool useDistroLogo: BarWidgetHelpers.readProperty(widgetSettings, "useDistroLogo") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "useDistroLogo") : BarWidgetHelpers.readProperty(widgetMetadata, "useDistroLogo")
+  readonly property string customIconPath: BarWidgetHelpers.readProperty(widgetSettings, "customIconPath") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "customIconPath") : BarWidgetHelpers.readProperty(widgetMetadata, "customIconPath")
+  readonly property bool enableColorization: BarWidgetHelpers.readProperty(widgetSettings, "enableColorization") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "enableColorization") : BarWidgetHelpers.readProperty(widgetMetadata, "enableColorization")
+  readonly property string colorizeSystemIcon: BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "colorizeSystemIcon") : BarWidgetHelpers.readProperty(widgetMetadata, "colorizeSystemIcon")
+
+  readonly property color colorizationTargetColor: !hovering ? iconColor : Color.mOnHover
 
   readonly property color iconColor: {
     if (!enableColorization)
@@ -82,17 +84,18 @@ NIconButton {
     ]
 
     onTriggered: action => {
+      var panel;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
                    if (action === "open-launcher") {
                      PanelService.toggleLauncher(screen);
                    } else if (action === "open-settings") {
-                     var panel = PanelService.getPanel("settingsPanel", screen);
-                     panel.requestedTab = SettingsPanel.Tab.General;
-                     panel.toggle();
+                     panel = PanelService.getPanel("settingsPanel", screen);
+                     PanelService.setPanelProperties(panel, { "requestedTab": SettingsPanel.Tab.General });
+                     PanelService.invokePanel(panel, "toggle", []);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -101,13 +104,13 @@ NIconButton {
     var controlCenterPanel = PanelService.getPanel("controlCenterPanel", screen);
     if (Settings.data.controlCenter.position === "close_to_bar_button") {
       // Will open the panel next to the bar button.
-      controlCenterPanel?.toggle(this);
+      PanelService.invokePanel(controlCenterPanel, "toggle", [this]);
     } else {
-      controlCenterPanel?.toggle();
+      PanelService.invokePanel(controlCenterPanel, "toggle", []);
     }
   }
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
   onMiddleClicked: PanelService.toggleLauncher(screen)
 
@@ -117,18 +120,19 @@ NIconButton {
     width: root.buttonSize * 0.8
     height: width
     source: {
-      if (useDistroLogo)
+      if (root.useDistroLogo)
         return HostService.osLogo;
-      if (customIconPath !== "")
-        return customIconPath.startsWith("file://") ? customIconPath : "file:///" + customIconPath.replace(/[\\]/g, "/");
+      if (root.customIconPath !== "")
+        return root.customIconPath.startsWith("file://") ? root.customIconPath : "file:///" + root.customIconPath.replace(/[\\]/g, "/");
       return "";
     }
     visible: source !== ""
     smooth: true
     asynchronous: true
-    layer.enabled: (enableColorization) && (useDistroLogo || customIconPath !== "")
+    layer.enabled: (root.enableColorization) && (root.useDistroLogo || root.customIconPath !== "")
     layer.effect: ShaderEffect {
-      property color targetColor: !hovering ? iconColor : Color.mOnHover
+      id: logoColorEffect
+      property color targetColor: root.colorizationTargetColor
       property real colorizeMode: 2.0
 
       fragmentShader: Qt.resolvedUrl(ShellUrl.dir + "/Shaders/qsb/appicon_colorize.frag.qsb")

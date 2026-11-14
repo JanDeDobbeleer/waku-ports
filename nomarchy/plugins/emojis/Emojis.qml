@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -6,6 +7,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "EmojiSearch.js" as EmojiSearch
+import "../panels/PanelUtils.js" as PanelUtils
 
 Item {
   id: root
@@ -43,7 +45,7 @@ Item {
   property int cellHeight: Math.max(Style.space(44), Style.font.display + Style.spacing.md)
   property int columns: Math.floor((cardWidth - contentMargin * 2) / cellWidth)
 
-  function open(payloadJson) {
+  function open(payloadJson: string): void {
     root.opened = true
     root.filterText = ""
     root.selectedIndex = 0
@@ -52,32 +54,31 @@ Item {
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
-  function close() {
+  function close(): void {
     root.opened = false
   }
 
-  function dismiss() {
+  function dismiss(): void {
     root.opened = false
-    if (root.shell && typeof root.shell.hide === "function")
-      root.shell.hide((root.manifest && root.manifest.id) || "nomarchy.emojis")
+    PanelUtils.dismiss(root.shell, root.manifest, "nomarchy.emojis")
   }
 
-  function toggle() {
+  function toggle(): void {
     if (root.opened) root.dismiss()
     else root.open("{}")
   }
 
-  function loadEmojis(raw) {
+  function loadEmojis(raw: string): void {
     root.emojis = EmojiSearch.parseEmojis(raw)
     if (root.opened) root.rebuildDisplay()
   }
 
-  function rebuildDisplay() {
+  function rebuildDisplay(): void {
     var out = EmojiSearch.filterEmojis(root.emojis, root.filterText, 1000)
     root.filteredEmojis = out
 
     displayModel.clear()
-    for (var j = 0; j < out.length; j++) {
+    for (let j = 0; j < out.length; j++) {
       displayModel.append({ emoji: out[j].e, index: j })
     }
 
@@ -91,7 +92,7 @@ Item {
     })
   }
 
-  function select(delta) {
+  function select(delta: int): void {
     if (displayModel.count === 0) return
     if (!cursorActive) {
       cursorActive = true
@@ -102,7 +103,7 @@ Item {
     resultGrid.positionViewAtIndex(selectedIndex, GridView.Contain)
   }
 
-  function selectRow(delta) {
+  function selectRow(delta: int): void {
     if (displayModel.count === 0) return
     if (!cursorActive) {
       cursorActive = true
@@ -117,7 +118,7 @@ Item {
     resultGrid.positionViewAtIndex(selectedIndex, GridView.Contain)
   }
 
-  function selectPage(delta) {
+  function selectPage(delta: int): void {
     if (displayModel.count === 0) return
     if (!cursorActive) {
       cursorActive = true
@@ -133,20 +134,20 @@ Item {
     resultGrid.positionViewAtIndex(selectedIndex, GridView.Contain)
   }
 
-  function setFilter(nextFilter) {
+  function setFilter(nextFilter: string): void {
     root.filterText = nextFilter
     root.selectedIndex = 0
     root.cursorActive = true
     root.rebuildDisplay()
   }
 
-  function activateIndex(index) {
+  function activateIndex(index: int): void {
     if (index < 0 || index >= displayModel.count) return
     var row = displayModel.get(index)
     root.applySelected(row.emoji)
   }
 
-  function applySelected(emoji) {
+  function applySelected(emoji: string): void {
     if (!emoji) return
     root.dismiss()
     Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-menu-emoji-insert", emoji])
@@ -162,6 +163,7 @@ Item {
     id: panel
     shown: root.opened
     WlrLayershell.namespace: "nomarchy-emojis"
+    onFocusLost: root.dismiss()
 
     Rectangle {
       anchors.fill: parent
@@ -199,10 +201,10 @@ Item {
           } else if (Util.editsFilter(event, root.filterText)) {
             root.setFilter(Util.editedFilter(event, root.filterText))
             event.accepted = true
-          } else if (Util.readingKey(event) === Qt.Key_Left) {
+          } else if (Util.readingKey(event, false) === Qt.Key_Left) {
             root.select(-1)
             event.accepted = true
-          } else if (Util.readingKey(event) === Qt.Key_Right) {
+          } else if (Util.readingKey(event, false) === Qt.Key_Right) {
             root.select(1)
             event.accepted = true
           } else if (event.key === Qt.Key_Up) {
@@ -270,6 +272,7 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
 
             delegate: Rectangle {
+              id: emojiCell
               required property int index
               required property string emoji
 
@@ -282,7 +285,7 @@ Item {
 
               Text {
                 textFormat: Text.PlainText
-                text: parent.emoji
+                text: emojiCell.emoji
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.display
                 anchors.centerIn: parent
@@ -297,12 +300,12 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onContainsMouseChanged: if (containsMouse) {
                   root.cursorActive = true
-                  root.selectedIndex = index
+                  root.selectedIndex = emojiCell.index
                 }
                 onClicked: {
                   root.cursorActive = true
-                  root.selectedIndex = index
-                  root.activateIndex(index)
+                  root.selectedIndex = emojiCell.index
+                  root.activateIndex(emojiCell.index)
                 }
               }
             }

@@ -1,11 +1,11 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "OsdModel.js" as OsdModel
+import "OsdUtils.js" as OsdUtils
 
 Item {
   id: root
@@ -51,12 +51,12 @@ Item {
     ? root.iconWidth + root.gap + root.barWidth + root.gap + root.valueWidth
     : (root.message === "" ? root.iconWidth : root.iconWidth + root.messageGap + root.messageWidth)
 
-  function iconFor(name, percent) {
+  function iconFor(name: string, percent: int): string {
     return OsdModel.iconFor(name, percent)
   }
 
-  function show(iconName, rawMessage, rawValue, rawMax, rawProgressText, rawDuration) {
-    var next = OsdModel.stateForShow(iconName, rawMessage, rawValue, rawMax, rawProgressText, rawDuration, Commons.I18n.formatNumber)
+  function show(iconName: var, rawMessage: var, rawValue: var, rawMax: var, rawProgressText: var, rawDuration: var): void {
+    var next = OsdModel.stateForShow(iconName, rawMessage, rawValue, rawMax, rawProgressText, rawDuration, Commons.I18n.numberFormatter())
     // Update before opening so a fresh OSD starts at its new value; only
     // subsequent updates while it remains open animate the progress bar.
     iconKey = next.iconKey
@@ -71,14 +71,11 @@ Item {
     else hideTimer.stop()
   }
 
-  function open(payloadJson) {
-    try {
-      var p = JSON.parse(payloadJson || "{}")
-      show(p.icon || "", p.message || "", p.value === undefined ? "" : String(p.value), p.max === undefined ? "100" : String(p.max), p.progressText || "", p.duration === undefined ? "1200" : String(p.duration))
-    } catch (e) {}
+  function open(payloadJson: string): void {
+    OsdUtils.openPayload(root, payloadJson)
   }
 
-  function close() { opened = false }
+  function close(): void { opened = false }
 
   Timer {
     id: hideTimer
@@ -113,7 +110,7 @@ Item {
     text: OsdModel.widestIcon
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "osd"
     function show(payloadJson: string): string {
       root.open(payloadJson)

@@ -1,11 +1,12 @@
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Wayland
-import qs.Commons
 import qs.Services.Compositor
 import qs.Services.UI
+import qs.Modules.Bar.Extras
 import qs.Widgets
 import qs.compat
+import "../Bar/Extras/TrayMenuHelpers.js" as TrayMenuHelpers
 
 // Generic full-screen popup window for menus and context menus
 // This is a top-level PanelWindow (sibling to MainScreen, not nested inside it)
@@ -20,7 +21,7 @@ PanelWindow {
   property var popupItem: null
 
   // Expose the trayMenu Loader directly (for backward compatibility)
-  readonly property alias trayMenuLoader: trayMenuLoader
+  readonly property alias trayMenuLoader: defaultTrayMenuLoader
 
   // Dynamic context menu callback for items in other windows (e.g., desktop widgets)
   property var dynamicMenuCallback: null
@@ -55,13 +56,14 @@ PanelWindow {
 
   // Load TrayMenu as the default content
   Loader {
-    id: trayMenuLoader
+    id: defaultTrayMenuLoader
     source: ShellUrl.dir + "/modules/qs/Modules/Bar/Extras/TrayMenu.qml"
     onLoaded: {
       if (item) {
-        item.screen = root.screen;
+        const trayMenu = item as TrayMenu;
+        TrayMenuHelpers.setMenuScreen(trayMenu, root.screen);
         // Set the loaded item as default content
-        root.popupItem = item;
+        root.popupItem = trayMenu;
       }
     }
   }
@@ -71,13 +73,14 @@ PanelWindow {
   NPopupContextMenu {
     id: dynamicMenu
     visible: false
-    screen: root.screen
+    targetScreen: root.screen
     minWidth: 180
 
     onTriggered: (action, item) => {
+      var handled;
                    if (root.dynamicMenuCallback) {
                      // Callback returns true if it will handle closing (e.g., opening a dialog)
-                     var handled = root.dynamicMenuCallback(action);
+                     handled = TrayMenuHelpers.callDynamicMenuCallback(root, action);
                      if (!handled) {
                        root.close();
                      }
@@ -93,7 +96,7 @@ PanelWindow {
   }
 
   // Show a context menu (temporarily replaces TrayMenu as content)
-  function showContextMenu(menu) {
+  function showContextMenu(menu: var): void {
     if (menu) {
       popupItem = menu;
       open();
@@ -102,7 +105,7 @@ PanelWindow {
 
   // Show a dynamic context menu with model and callback at screen coordinates
   // Used for items in other window layers (e.g., desktop widgets in bottom layer)
-  function showDynamicContextMenu(model, screenX, screenY, callback) {
+  function showDynamicContextMenu(model: var, screenX: real, screenY: real, callback: var): void {
     dynamicMenu.model = model;
     dynamicMenuCallback = callback;
 
@@ -133,19 +136,14 @@ PanelWindow {
     visible = false;
     BarService.popupOpen = false;
     // Call close/hide method on current content
-    if (popupItem) {
-      if (typeof popupItem.hideMenu === "function") {
-        popupItem.hideMenu();
-      } else if (typeof popupItem.close === "function") {
-        popupItem.close();
-      }
-    }
+    if (popupItem)
+      TrayMenuHelpers.closePopupItem(popupItem);
     // Hide dynamic menu
     dynamicMenu.visible = false;
     dynamicMenuCallback = null;
     // Restore TrayMenu as default content
-    if (trayMenuLoader.item) {
-      popupItem = trayMenuLoader.item;
+    if (TrayMenuHelpers.strictField(trayMenuLoader, "item")) {
+      popupItem = TrayMenuHelpers.strictField(trayMenuLoader, "item");
     }
   }
 

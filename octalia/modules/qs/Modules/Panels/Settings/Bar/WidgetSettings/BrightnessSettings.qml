@@ -1,9 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -17,12 +17,12 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueDisplayMode: widgetData.displayMode !== undefined ? widgetData.displayMode : widgetMetadata.displayMode
-  property string valueIconColor: widgetData.iconColor !== undefined ? widgetData.iconColor : widgetMetadata.iconColor
-  property string valueTextColor: widgetData.textColor !== undefined ? widgetData.textColor : widgetMetadata.textColor
-  property bool valueApplyToAllMonitors: widgetData.applyToAllMonitors !== undefined ? widgetData.applyToAllMonitors : widgetMetadata.applyToAllMonitors
+  property string valueDisplayMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "displayMode")
+  property string valueIconColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconColor")
+  property string valueTextColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "textColor")
+  property bool valueApplyToAllMonitors: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "applyToAllMonitors")
 
-  readonly property bool hasMultipleMonitors: (Quickshell.screens || []).length > 1
+  readonly property bool hasMultipleMonitors: SettingsValue.hasMultipleMonitors(Quickshell.screens)
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -51,30 +51,30 @@ ColumnLayout {
         "name": I18n.tr("display-modes.always-hide")
       }
     ]
-    currentKey: valueDisplayMode
+    currentKey: root.valueDisplayMode
     onSelected: key => {
-                  valueDisplayMode = key;
-                  saveSettings();
+                  root.valueDisplayMode = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.displayMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "displayMode")
   }
 
   NColorChoice {
     label: I18n.tr("common.select-icon-color")
-    currentKey: valueIconColor
+    currentKey: root.valueIconColor
     onSelected: key => {
-                  valueIconColor = key;
-                  saveSettings();
+                  root.valueIconColor = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.iconColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconColor")
   }
 
   NColorChoice {
-    currentKey: valueTextColor
+    currentKey: root.valueTextColor
     onSelected: key => {
-                  valueTextColor = key;
-                  saveSettings();
+                  root.valueTextColor = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.textColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "textColor")
   }
 }

@@ -7,6 +7,7 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "KbLayoutHelpers.js" as KbLayoutHelpers
 
 ColumnLayout {
     id: root
@@ -28,7 +29,7 @@ ColumnLayout {
         Layout.topMargin: Tokens.padding.medium
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Keyboard layouts")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     ListView {
@@ -43,7 +44,7 @@ ColumnLayout {
         clip: true
         interactive: true
         implicitHeight: Math.min(contentHeight, 320)
-        visible: kb.visibleModel.count > 0
+        visible: KbLayoutHelpers.count(kb.visibleModel) > 0
         spacing: Tokens.spacing.small
 
         add: Transition {
@@ -84,17 +85,17 @@ ColumnLayout {
         delegate: Item {
             id: kbDelegate
 
-            required property int layoutIndex
-            required property string label
-            readonly property bool isDisabled: layoutIndex > 3
+            required final property int layoutIndex
+            required final property string label
+            readonly final property bool isDisabled: layoutIndex > 3
 
             width: list.width
             height: Math.max(36, rowText.implicitHeight + Tokens.padding.small)
-            ToolTip.visible: isDisabled && layer.containsMouse
+            ToolTip.visible: isDisabled && layerItem.containsMouse
             ToolTip.text: Tr.tr("XKB limitation: maximum 4 layouts allowed")
 
             StateLayer {
-                id: layer
+                id: layerItem
 
                 onClicked: {
                     if (!kbDelegate.isDisabled)
@@ -112,9 +113,9 @@ ColumnLayout {
             StyledText {
                 id: rowText
 
-                anchors.verticalCenter: layer.verticalCenter
-                anchors.left: layer.left
-                anchors.right: layer.right
+                anchors.verticalCenter: layerItem.verticalCenter
+                anchors.left: layerItem.left
+                anchors.right: layerItem.right
                 anchors.leftMargin: Tokens.padding.extraSmall
                 anchors.rightMargin: Tokens.padding.extraSmall
                 text: kbDelegate.label
@@ -156,7 +157,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: kb.activeLabel
             elide: Text.ElideRight
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
             color: Colours.palette.m3primary
         }
 

@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Services.Power
-import qs.compat
 
 /*
 Octalia is not strictly a Material Design project, it supports both some predefined
@@ -31,13 +30,13 @@ Singleton {
     onTriggered: {
       if (customColorsFile.path !== undefined) {
         Logger.d("Color", "Reloading colors from disk");
-        reloadColors = true;
+        root.reloadColors = true;
         customColorsFile.reload();
       }
     }
   }
 
-  function scheduleExternalColorReload() {
+  function scheduleExternalColorReload(): void {
     if (!Settings.directoriesCreated || customColorsFile.path === undefined) {
       return;
     }
@@ -197,7 +196,7 @@ Singleton {
   }
 
   // Helper to start transition and update a color
-  function startTransition() {
+  function startTransition(): void {
     root.isTransitioning = true;
     transitionTimer.restart();
   }
@@ -207,103 +206,103 @@ Singleton {
     target: customColorsData
     function onMPrimaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mPrimary = customColorsData.mPrimary;
     }
     function onMOnPrimaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnPrimary = customColorsData.mOnPrimary;
     }
     function onMSecondaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mSecondary = customColorsData.mSecondary;
     }
     function onMOnSecondaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnSecondary = customColorsData.mOnSecondary;
     }
     function onMTertiaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mTertiary = customColorsData.mTertiary;
     }
     function onMOnTertiaryChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnTertiary = customColorsData.mOnTertiary;
     }
     function onMErrorChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mError = customColorsData.mError;
     }
     function onMOnErrorChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnError = customColorsData.mOnError;
     }
     function onMSurfaceChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mSurface = customColorsData.mSurface;
     }
     function onMOnSurfaceChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnSurface = customColorsData.mOnSurface;
     }
     function onMSurfaceVariantChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mSurfaceVariant = customColorsData.mSurfaceVariant;
     }
     function onMOnSurfaceVariantChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnSurfaceVariant = customColorsData.mOnSurfaceVariant;
     }
     function onMOutlineChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOutline = customColorsData.mOutline;
     }
     function onMShadowChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mShadow = customColorsData.mShadow;
     }
     function onMHoverChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mHover = customColorsData.mHover;
     }
     function onMOnHoverChanged() {
       if (!root.skipTransition) {
-        startTransition();
+        root.startTransition();
       }
       root.mOnHover = customColorsData.mOnHover;
     }
   }
 
-  function resolveColorKey(key) {
+  function resolveColorKey(key: string): color {
     switch (key) {
     case "primary":
       return root.mPrimary;
@@ -318,7 +317,7 @@ Singleton {
     }
   }
 
-  function resolveOnColorKey(key) {
+  function resolveOnColorKey(key: string): color {
     switch (key) {
     case "primary":
       return root.mOnPrimary;
@@ -333,7 +332,7 @@ Singleton {
     }
   }
 
-  function resolveColorKeyOptional(key) {
+  function resolveColorKeyOptional(key: string): color {
     switch (key) {
     case "primary":
       return root.mPrimary;
@@ -349,13 +348,17 @@ Singleton {
   }
 
   // Adaptive opacity calculation: automatically makes light mode more transparent
-  function adaptiveOpacity(baseOpacity) {
+  function adaptiveOpacity(baseOpacity: real): real {
     if (PowerProfileService.octaliaPerformanceMode)
       return 1.0;
     return Settings.data.colorSchemes.darkMode ? baseOpacity : Math.pow(baseOpacity, 1.5);
   }
 
-  function smartAlpha(baseColor, minAlpha = 0.4) {
+  function smartAlpha(baseColor: color): color {
+    return smartAlphaWithMinAlpha(baseColor, 0.4);
+  }
+
+  function smartAlphaWithMinAlpha(baseColor: color, minAlpha: real): color {
     if (PowerProfileService.octaliaPerformanceMode)
       return baseColor;
 
@@ -429,7 +432,7 @@ Singleton {
     path: Settings.directoriesCreated ? (Settings.configDir + "colors.json") : undefined
     printErrors: false
     watchChanges: true
-    onFileChanged: scheduleExternalColorReload()
+    onFileChanged: root.scheduleExternalColorReload()
     onAdapterUpdated: {
       Logger.d("Color", "Writing colors to disk");
       writeAdapter();
@@ -450,8 +453,8 @@ Singleton {
       }
     }
     onLoadFailed: function (error) {
-      if (reloadColors) {
-        reloadColors = false;
+      if (root.reloadColors) {
+        root.reloadColors = false;
         return;
       }
 
@@ -503,6 +506,6 @@ Singleton {
     path: Settings.directoriesCreated ? Settings.configDir : undefined
     printErrors: false
     watchChanges: true
-    onFileChanged: scheduleExternalColorReload()
+    onFileChanged: root.scheduleExternalColorReload()
   }
 }

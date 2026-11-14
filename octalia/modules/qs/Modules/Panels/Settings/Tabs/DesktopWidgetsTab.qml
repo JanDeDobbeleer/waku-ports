@@ -1,13 +1,14 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "DesktopWidgetsTab.js" as DesktopWidgetsData
 
 ColumnLayout {
   id: root
@@ -45,14 +46,7 @@ ColumnLayout {
       onClicked: {
         DesktopWidgetRegistry.editMode = !DesktopWidgetRegistry.editMode;
         if (DesktopWidgetRegistry.editMode && Settings.data.ui.settingsPanelMode !== "window") {
-          var item = root.parent;
-          while (item) {
-            if (item.closeRequested !== undefined) {
-              item.closeRequested();
-              break;
-            }
-            item = item.parent;
-          }
+          DesktopWidgetsData.closeNearestOwner(root.parent);
         }
       }
     }
@@ -63,24 +57,17 @@ ColumnLayout {
 
       NSectionEditor {
         required property var modelData
-        readonly property real compositorScale: {
-          const info = CompositorService.displayScales[modelData.name];
-          return (info && info.scale) ? info.scale : 1.0;
-        }
+        readonly property real compositorScale: DesktopWidgetsData.compositorScale(CompositorService.displayScales, modelData)
 
         Layout.fillWidth: true
-        sectionName: modelData.name
-        sectionSubtitle: {
-          // Format scale to 2 decimal places to prevent overly long text
-          var formattedScale = compositorScale.toFixed(2);
-          return "(" + modelData.width + "x" + modelData.height + " @ " + formattedScale + "x)";
-        }
+        sectionName: DesktopWidgetsData.screenProperty(modelData, "name")
+        sectionSubtitle: DesktopWidgetsData.screenSubtitle(modelData, compositorScale)
 
-        sectionId: modelData.name
+        sectionId: DesktopWidgetsData.screenProperty(modelData, "name")
         screen: modelData
         settingsDialogComponent: Qt.resolvedUrl(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/DesktopWidgets/DesktopWidgetSettingsDialog.qml")
         widgetRegistry: DesktopWidgetRegistry
-        widgetModel: getWidgetsForMonitor(modelData.name)
+        widgetModel: root.getWidgetsForMonitor(DesktopWidgetsData.screenProperty(modelData, "name"))
         availableWidgets: root.availableWidgetsModel
         availableSections: root.getScreenNames()
         sectionLabels: root.getScreenLabels()
@@ -88,10 +75,10 @@ ColumnLayout {
         draggable: false // Desktop widgets are positioned by X,Y, not list order
         crossSectionDraggable: true
         maxWidgets: -1
-        onAddWidget: (widgetId, section) => _addWidgetToMonitor(modelData.name, widgetId)
-        onRemoveWidget: (section, index) => _removeWidgetFromMonitor(modelData.name, index)
-        onMoveWidget: (fromSection, index, toSection) => _moveWidgetToMonitor(fromSection, index, toSection)
-        onUpdateWidgetSettings: (section, index, settings) => _updateWidgetSettingsForMonitor(modelData.name, index, settings)
+        onAddWidget: (widgetId, section) => root._addWidgetToMonitor(DesktopWidgetsData.screenProperty(modelData, "name"), widgetId)
+        onRemoveWidget: (section, index) => root._removeWidgetFromMonitor(DesktopWidgetsData.screenProperty(modelData, "name"), index)
+        onMoveWidget: (fromSection, index, toSection) => root._moveWidgetToMonitor(fromSection, index, toSection)
+        onUpdateWidgetSettings: (section, index, settings) => root._updateWidgetSettingsForMonitor(DesktopWidgetsData.screenProperty(modelData, "name"), index, settings)
       }
     }
   }
@@ -101,185 +88,61 @@ ColumnLayout {
     Qt.callLater(updateAvailableWidgetsModel);
   }
 
-  // Helper to get screen names array
-  function getScreenNames() {
-    var names = [];
-    for (var i = 0; i < Quickshell.screens.length; i++) {
-      names.push(Quickshell.screens[i].name);
-    }
-    return names;
+  function getScreenNames(): var {
+    return DesktopWidgetsData.getScreenNames(Quickshell.screens);
   }
 
-  // Helper to get screen labels map (just screen names, NSectionEditor adds "Move to" prefix)
-  function getScreenLabels() {
-    var labels = {};
-    for (var i = 0; i < Quickshell.screens.length; i++) {
-      var screen = Quickshell.screens[i];
-      labels[screen.name] = screen.name;
-    }
-    return labels;
+  function getScreenLabels(): var {
+    return DesktopWidgetsData.getScreenLabels(Quickshell.screens);
   }
 
-  // Helper to get screen icons map
-  function getScreenIcons() {
-    var icons = {};
-    for (var i = 0; i < Quickshell.screens.length; i++) {
-      icons[Quickshell.screens[i].name] = "device-desktop";
-    }
-    return icons;
+  function getScreenIcons(): var {
+    return DesktopWidgetsData.getScreenIcons(Quickshell.screens);
   }
 
-  function updateAvailableWidgetsModel() {
-    availableWidgets.clear();
-    try {
-      if (typeof DesktopWidgetRegistry === "undefined" || !DesktopWidgetRegistry) {
-        Logger.e("DesktopWidgetsTab", "DesktopWidgetRegistry is not available");
-        // Retry after a short delay
-        Qt.callLater(function () {
-          if (typeof DesktopWidgetRegistry !== "undefined" && DesktopWidgetRegistry) {
-            updateAvailableWidgetsModel();
-          }
-        });
-        return;
-      }
-      var widgetIds = DesktopWidgetRegistry.getAvailableWidgets();
-      Logger.d("DesktopWidgetsTab", "Found widgets:", widgetIds, "count:", widgetIds ? widgetIds.length : 0);
-      if (!widgetIds || widgetIds.length === 0) {
-        Logger.w("DesktopWidgetsTab", "No widgets found in registry");
-        return;
-      }
-      for (var i = 0; i < widgetIds.length; i++) {
-        var widgetId = widgetIds[i];
-        var displayName = widgetId;
+  function desktopWidgetRegistry(): var {
+    return typeof DesktopWidgetRegistry === "undefined" || !DesktopWidgetRegistry ? null : DesktopWidgetRegistry;
+  }
 
-        const badges = [];
-        if (DesktopWidgetRegistry.isCpuIntensive(widgetId)) {
-          badges.push({
-                        "icon": "cpu-intensive",
-                        "color": Color.mSecondary
-                      });
-        }
+  function updateAvailableWidgetsModel(): void {
+    DesktopWidgetsData.updateAvailableWidgetsModel(root, availableWidgets, Color.mSecondary, Logger);
+  }
 
-        availableWidgets.append({
-                                  "key": widgetId,
-                                  "name": displayName,
-                                  "badges": badges
-                                });
-      }
-      Logger.d("DesktopWidgetsTab", "Available widgets model count:", availableWidgets.count);
-    } catch (e) {
-      Logger.e("DesktopWidgetsTab", "Error updating available widgets:", e, e.stack);
+  function getWidgetsForMonitor(monitorName: string): var {
+    return DesktopWidgetsData.getWidgetsForMonitor(Settings.data.desktopWidgets.monitorWidgets || [], monitorName);
+  }
+
+  function setWidgetsForMonitor(monitorName: string, widgets: var): void {
+    Settings.data.desktopWidgets.monitorWidgets = DesktopWidgetsData.setWidgetsForMonitor(Settings.data.desktopWidgets.monitorWidgets || [], monitorName, widgets);
+  }
+
+  function _addWidgetToMonitor(monitorName: string, widgetId: string): void {
+    Settings.data.desktopWidgets.monitorWidgets = DesktopWidgetsData.addWidget(Settings.data.desktopWidgets.monitorWidgets || [], monitorName, widgetId, desktopWidgetRegistry());
+  }
+
+  function _removeWidgetFromMonitor(monitorName: string, index: int): void {
+    const result = DesktopWidgetsData.removeWidget(Settings.data.desktopWidgets.monitorWidgets || [], monitorName, index);
+    if (result !== null) {
+      Settings.data.desktopWidgets.monitorWidgets = result;
     }
   }
 
-  // Get widgets for a specific monitor
-  function getWidgetsForMonitor(monitorName) {
-    var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-    for (var i = 0; i < monitorWidgets.length; i++) {
-      if (monitorWidgets[i].name === monitorName) {
-        return monitorWidgets[i].widgets || [];
-      }
-    }
-    return [];
-  }
-
-  // Set widgets for a specific monitor
-  function setWidgetsForMonitor(monitorName, widgets) {
-    var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-    var newMonitorWidgets = monitorWidgets.slice();
-    var found = false;
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
-      if (newMonitorWidgets[i].name === monitorName) {
-        newMonitorWidgets[i] = {
-          "name": monitorName,
-          "widgets": widgets
-        };
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      newMonitorWidgets.push({
-                               "name": monitorName,
-                               "widgets": widgets
-                             });
-    }
-    Settings.data.desktopWidgets.monitorWidgets = newMonitorWidgets;
-  }
-
-  function _addWidgetToMonitor(monitorName, widgetId) {
-    var newWidget = {
-      "id": widgetId
-    };
-    if (DesktopWidgetRegistry.widgetHasUserSettings(widgetId)) {
-      var metadata = DesktopWidgetRegistry.widgetMetadata[widgetId];
-      if (metadata) {
-        Object.keys(metadata).forEach(function (key) {
-          newWidget[key] = metadata[key];
-        });
-      }
-    }
-    // Set default positions
-    if (widgetId === "Clock") {
-      newWidget.x = 50;
-      newWidget.y = 50;
-    } else if (widgetId === "MediaPlayer") {
-      newWidget.x = 100;
-      newWidget.y = 200;
-    } else if (widgetId === "Weather") {
-      newWidget.x = 100;
-      newWidget.y = 300;
-    } else {
-      // Default position for other widgets
-      newWidget.x = 150;
-      newWidget.y = 150;
-    }
-    var widgets = getWidgetsForMonitor(monitorName).slice();
-    widgets.push(newWidget);
-    setWidgetsForMonitor(monitorName, widgets);
-  }
-
-  function _removeWidgetFromMonitor(monitorName, index) {
-    var widgets = getWidgetsForMonitor(monitorName);
-    if (index >= 0 && index < widgets.length) {
-      var newArray = widgets.slice();
-      newArray.splice(index, 1);
-      setWidgetsForMonitor(monitorName, newArray);
+  function _updateWidgetSettingsForMonitor(monitorName: string, index: int, settings: var): void {
+    const result = DesktopWidgetsData.updateWidgetSettings(Settings.data.desktopWidgets.monitorWidgets || [], monitorName, index, settings);
+    if (result !== null) {
+      Settings.data.desktopWidgets.monitorWidgets = result;
     }
   }
 
-  function _updateWidgetSettingsForMonitor(monitorName, index, settings) {
-    var widgets = getWidgetsForMonitor(monitorName);
-    if (index >= 0 && index < widgets.length) {
-      var newArray = widgets.slice();
-      newArray[index] = Object.assign({}, newArray[index], settings);
-      setWidgetsForMonitor(monitorName, newArray);
-    }
-  }
-
-  function _moveWidgetToMonitor(fromMonitor, index, toMonitor) {
+  function _moveWidgetToMonitor(fromMonitor: string, index: int, toMonitor: string): void {
+    const monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     Logger.i("DesktopWidgetsTab", "Moving widget from", fromMonitor, "index", index, "to", toMonitor);
-    var sourceWidgets = getWidgetsForMonitor(fromMonitor);
-    if (index < 0 || index >= sourceWidgets.length) {
+    if (!DesktopWidgetsData.validWidgetIndex(monitorWidgets, fromMonitor, index)) {
       Logger.e("DesktopWidgetsTab", "Invalid index", index, "for monitor", fromMonitor);
       return;
     }
-
-    // Get the widget to move
-    var newSourceWidgets = sourceWidgets.slice();
-    var widget = Object.assign({}, newSourceWidgets.splice(index, 1)[0]);
-
-    // Reset position and scale to ensure widget is accessible on new screen
-    widget.x = 100;
-    widget.y = 100;
-    widget.scale = 1.0;
-
-    // Add to destination monitor
-    var destWidgets = getWidgetsForMonitor(toMonitor).slice();
-    destWidgets.push(widget);
-
-    // Update both monitors
-    setWidgetsForMonitor(fromMonitor, newSourceWidgets);
-    setWidgetsForMonitor(toMonitor, destWidgets);
+    const moved = DesktopWidgetsData.moveWidget(monitorWidgets, fromMonitor, index, toMonitor);
+    setWidgetsForMonitor(fromMonitor, moved.sourceWidgets);
+    setWidgetsForMonitor(toMonitor, moved.destinationWidgets);
   }
 }

@@ -10,7 +10,7 @@ import qs.services
 StyledRect {
     id: root
 
-    required property Toast modelData
+    required final property Toast modelData
 
     anchors.left: parent.left
     anchors.right: parent.right
@@ -41,7 +41,7 @@ StyledRect {
 
     Elevation {
         anchors.fill: parent
-        radius: parent.radius
+        radius: root.radius
         opacity: parent.opacity
         z: -1
         level: 3
@@ -85,7 +85,7 @@ StyledRect {
                         return Colours.palette.m3onError;
                     return Colours.palette.m3onSurfaceVariant;
                 }
-                fontStyle: Tokens.font.icon.builders.large.scale(1.2).build()
+                fontStyle: Tokens.styled("icon", "large", { scale: 1.2 })
             }
         }
 

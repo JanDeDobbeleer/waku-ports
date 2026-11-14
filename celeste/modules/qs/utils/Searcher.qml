@@ -5,19 +5,19 @@ import Quickshell
 import qs.compat
 
 Singleton {
-    required property list<QtObject> list
-    property string key: "name"
-    property bool useFuzzy: false
-    property var extraOpts: ({})
+    required final property list<QtObject> list
+    final property string key: "name"
+    final property bool useFuzzy: false
+    final property var extraOpts: ({})
 
     // Extra stuff for fuzzy
-    property list<string> keys: [key]
-    property list<real> weights: [1]
+    final property list<string> keys: [key]
+    final property list<real> weights: [1]
 
-    readonly property var fzf: useFuzzy ? [] : new Fzf.Finder(list, Object.assign({
+    readonly final property var fzf: useFuzzy ? [] : new Fzf.Finder(list, Object.assign({
         selector
     }, extraOpts))
-    readonly property list<var> fuzzyPrepped: useFuzzy ? list.map(e => {
+    readonly final property var fuzzyPrepped: useFuzzy ? list.map(e => {
         const obj = {
             _item: e
         };

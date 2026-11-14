@@ -5,6 +5,7 @@ import Quickshell.Services.Pipewire
 import qs.Commons
 import qs.Services.Media
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -27,14 +28,15 @@ ColumnLayout {
     }
 
     Repeater {
-      model: AudioService.sinks
+      model: SettingsValue.attachButtonGroup(AudioService.sinks, sinks)
       NRadioButton {
-        ButtonGroup.group: sinks
-        required property PwNode modelData
-        text: modelData.description
-        checked: AudioService.sink?.id === modelData.id
+        required property PwNode device
+        required property var groupRef
+        ButtonGroup.group: groupRef
+        text: device.description
+        checked: SettingsValue.audioNodeSelected(AudioService.sink, device)
         onClicked: {
-          AudioService.setAudioSink(modelData);
+          AudioService.setAudioSink(device);
         }
         Layout.fillWidth: true
       }
@@ -56,13 +58,14 @@ ColumnLayout {
     }
 
     Repeater {
-      model: AudioService.sources
+      model: SettingsValue.attachButtonGroup(AudioService.sources, sources)
       NRadioButton {
-        ButtonGroup.group: sources
-        required property PwNode modelData
-        text: modelData.description
-        checked: AudioService.source?.id === modelData.id
-        onClicked: AudioService.setAudioSource(modelData)
+        required property PwNode device
+        required property var groupRef
+        ButtonGroup.group: groupRef
+        text: device.description
+        checked: SettingsValue.audioNodeSelected(AudioService.source, device)
+        onClicked: AudioService.setAudioSource(device)
         Layout.fillWidth: true
       }
     }

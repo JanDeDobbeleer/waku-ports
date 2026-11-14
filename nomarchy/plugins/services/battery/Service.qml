@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
-import qs.Commons
+import qs.Commons as Commons
 import "BatteryModel.js" as BatteryModel
 
 Item {
@@ -28,11 +28,11 @@ Item {
     property bool notifiedLowBattery: false
   }
 
-  function batteryPercentage() {
+  function batteryPercentage(): real {
     return BatteryModel.batteryPercentage(UPower.displayDevice)
   }
 
-  function isDischarging() {
+  function isDischarging(): bool {
     return BatteryModel.isDischarging(UPower.displayDevice, UPower.onBattery, UPowerDeviceState.Discharging)
   }
 
@@ -42,7 +42,7 @@ Item {
     if (state.notify) sendLowBatteryWarning(state.level)
   }
 
-  function sendLowBatteryWarning(level) {
+  function sendLowBatteryWarning(level: real): void {
     if (warningProcess.running) return
     warningProcess.command = [
       "nomarchy-battery-low",
@@ -74,7 +74,7 @@ Item {
     powerProfileReadProcess.running = true
   }
 
-  function profileName(profile) {
+  function profileName(profile: int): string {
     switch (profile) {
       case PowerProfile.PowerSaver: return "power-saver"
       case PowerProfile.Performance: return "performance"
@@ -118,7 +118,7 @@ Item {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "battery"
 
     function refreshPowerProfile(): void { root.refreshPowerProfile() }

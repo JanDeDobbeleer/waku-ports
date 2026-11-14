@@ -1,10 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "SetupDockStepUtils.js" as SetupDockStepUtils
 
 ColumnLayout {
   id: root
@@ -18,8 +20,8 @@ ColumnLayout {
     spacing: Style.marginM
 
     Rectangle {
-      width: 40
-      height: 40
+      Layout.preferredWidth: 40
+      Layout.preferredHeight: 40
       radius: Style.radiusL
       color: Color.mSurfaceVariant
       opacity: 0.6
@@ -176,33 +178,26 @@ ColumnLayout {
       visible: Settings.data.dock.enabled
       model: Quickshell.screens || []
       delegate: NCheckbox {
+        id: monitorOption
+        required property ShellScreen modelData
         Layout.fillWidth: true
         readonly property real compositorScale: {
-          const info = CompositorService.displayScales[modelData.name];
+          const info = CompositorService.displayScales[monitorOption.modelData.name];
           return (info && info.scale) ? info.scale : 1.0;
         }
-        label: modelData.name || "Unknown"
+        label: monitorOption.modelData.name || "Unknown"
         visible: Settings.data.dock.enabled
         description: {
-          I18n.tr("system.monitor-description", {
-                    "model": modelData.model,
-                    "width": modelData.width * compositorScale,
-                    "height": modelData.height * compositorScale,
+          I18n.trArgs("system.monitor-description", {
+                    "model": monitorOption.modelData.model,
+                    "width": monitorOption.modelData.width * compositorScale,
+                    "height": monitorOption.modelData.height * compositorScale,
                     "scale": compositorScale
                   });
         }
-        checked: (Settings.data.dock.monitors || []).indexOf(modelData.name) !== -1
+        checked: (Settings.data.dock.monitors || []).indexOf(monitorOption.modelData.name) !== -1
         onToggled: checked => {
-                     if (checked) {
-                       const arr = (Settings.data.dock.monitors || []).slice();
-                       if (arr.indexOf(modelData.name) === -1)
-                       arr.push(modelData.name);
-                       Settings.data.dock.monitors = arr;
-                     } else {
-                       Settings.data.dock.monitors = (Settings.data.dock.monitors || []).filter(function (n) {
-                         return n !== modelData.name;
-                       });
-                     }
+                     Settings.data.dock.monitors = SetupDockStepUtils.updateMonitors(Settings.data.dock.monitors, monitorOption.modelData.name, checked);
                    }
       }
     }

@@ -7,52 +7,33 @@ import qs.components
 import qs.services
 import qs.compat
 import waku.services as S
+import "ShellStateHelpers.js" as ShellStateHelpers
 
 Singleton {
-    property ShellRoot shellRoot
+    final property ShellRoot shellRoot
 
     function anySidebarOpen(): bool {
-        return states.instances.some(s => s.sidebar);
+        return ShellStateHelpers.anySidebarOpen(states.instances);
     }
 
     function forScreen(screen: ShellScreen): ScreenState {
-        for (const s of states.instances)
-            if (s.modelData === screen)
-                return s;
-        return null;
+        return ShellStateHelpers.forScreen(screen, states.instances);
     }
 
     function forActive(): ScreenState {
-        const c = componentsForActive();
-        return c ? forScreen(c.modelData) : null;
+        return ShellStateHelpers.forScreenForActive(states.instances, components.instances, S.WindowControl, Hypr);
     }
 
     function forDashboardToggle(): ScreenState {
-        const active = forActive();
-        if (active?.dashboard)
-            return active;
-        return states.instances.find(s => s.dashboard) ?? active;
+        return ShellStateHelpers.forDashboardToggle(states.instances, forActive());
     }
 
     function componentsFor(screen: ShellScreen): Components {
-        for (const c of components.instances)
-            if (c.modelData === screen)
-                return c;
-        return null;
+        return ShellStateHelpers.componentsFor(screen, components.instances);
     }
 
     function componentsForActive(): Components {
-        const handle = typeof S.WindowControl.monitor === "function" ? S.WindowControl.monitor(S.WindowControl.foreground()) : 0;
-        if (handle) {
-            for (const c of components.instances)
-                if (c.rootWindow?.monitorHandle === handle)
-                    return c;
-        }
-        const mon = Hypr.focusedMonitor;
-        for (const c of components.instances)
-            if (Hypr.monitorFor(c.modelData) === mon)
-                return c;
-        return null;
+        return ShellStateHelpers.componentsForActive(components.instances, S.WindowControl, Hypr);
     }
 
     Variants {
@@ -72,33 +53,33 @@ Singleton {
     }
 
     component Components: QtObject {
-        required property ShellScreen modelData
+        required final property ShellScreen modelData
 
-        property var background
-        property var rootWindow
-        property var interactionWrapper
-        property var bar
-        property var panels
+        final property var background
+        final property var rootWindow
+        final property var interactionWrapper
+        final property var bar
+        final property var panels
 
         function find(name: string, rootItem: Item): var {
-            return CUtils.findChild(rootItem ?? rootWindow?.contentItem, name);
+            return ShellStateHelpers.find(CUtils, rootItem, rootWindow, name, 0);
         }
 
         function findAll(name: string, rootItem: Item): var {
-            return CUtils.findChildren(rootItem ?? rootWindow?.contentItem, name);
+            return ShellStateHelpers.find(CUtils, rootItem, rootWindow, name, 1);
         }
 
         function findMatching(pattern: string, rootItem: Item): var {
-            return CUtils.findChildrenMatching(rootItem ?? rootWindow?.contentItem, pattern);
+            return ShellStateHelpers.find(CUtils, rootItem, rootWindow, pattern, 2);
         }
     }
 
     component ComponentRef: QtObject {
-        required property ShellScreen screen
-        required property string slot
-        required property var component
+        required final property ShellScreen screen
+        required final property string slot
+        required final property var component
 
-        readonly property QtObject target: ShellState.componentsFor(screen)
+        readonly final property QtObject target: ShellState.componentsFor(screen)
 
         onTargetChanged: {
             if (target)

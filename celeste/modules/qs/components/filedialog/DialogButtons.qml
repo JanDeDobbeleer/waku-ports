@@ -3,12 +3,13 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 
 StyledRect {
     id: root
 
-    required property var dialog
-    required property FolderContents folder
+    required final property var dialog
+    required final property FolderContents folder
 
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
 
@@ -39,9 +40,8 @@ StyledRect {
                 anchors.margins: Tokens.padding.medium
 
                 text: {
-                    const filters = root.dialog.filters.map(f => `*.${f}`).join(Tr.trCtx(", ", "file filter separator"));
-                    // TRANSLATORS: %1 = filter label, %2 = file patterns
-                    return Tr.trCtx("%1 (%2)", "file filter label and patterns").arg(root.dialog.filterLabel).arg(filters);
+                    const filters = FileDialogHelpers.filtersText(root.dialog, Tr.trCtx(", ", "file filter separator"));
+                    return Tr.trCtx("%1 (%2)", "file filter label and patterns").arg(FileDialogHelpers.filterLabel(root.dialog)).arg(filters);
                 }
             }
         }
@@ -54,8 +54,8 @@ StyledRect {
             implicitHeight: cancelText.implicitHeight + Tokens.padding.medium * 2
 
             StateLayer {
-                disabled: !root.dialog.selectionValid
-                onClicked: root.dialog.accepted(root.folder.currentItem.modelData.path)
+                disabled: !FileDialogHelpers.validSelection(root.dialog, root.folder.currentItem)
+                onClicked: FileDialogHelpers.acceptCurrent(root.dialog, root.folder.currentItem)
             }
 
             StyledText {
@@ -65,7 +65,7 @@ StyledRect {
                 anchors.margins: Tokens.padding.medium
 
                 text: Tr.trCtx("Select", "button")
-                color: root.dialog.selectionValid ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                color: FileDialogHelpers.validSelection(root.dialog, root.folder.currentItem) ? Colours.palette.m3onSurface : Colours.palette.m3outline
             }
         }
 
@@ -78,7 +78,7 @@ StyledRect {
 
             StateLayer {
                 onClicked: {
-                    root.dialog.rejected();
+                    FileDialogHelpers.reject(root.dialog);
                 }
             }
 

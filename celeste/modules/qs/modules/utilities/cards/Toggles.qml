@@ -11,31 +11,17 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.modules.bar.popouts as BarPopouts
+import "TogglesHelpers.js" as TogglesHelpers
 
 StyledRect {
     id: root
 
-    required property ScreenState screenState
-    required property BarPopouts.Wrapper popouts
+    required final property ScreenState screenState
+    required final property BarPopouts.Wrapper popouts
 
-    readonly property var quickToggles: {
-        const seenIds = new Set();
-
-        return Config.utilities.quickToggles.values.filter(item => {
-            if (!item.enabled || seenIds.has(item.id))
-                return false;
-
-            // TODO: hide wallpaper playing toggle if wallpaper is live
-
-            if (item.id === "vpn")
-                return GlobalConfig.utilities.vpn.selectedProvider.length > 0;
-
-            seenIds.add(item.id);
-            return true;
-        });
-    }
-    readonly property int splitIndex: Math.ceil(quickToggles.length / 2)
-    readonly property bool needExtraRow: quickToggles.length > 6
+    readonly final property var quickToggles: TogglesHelpers.quickToggles(Config.utilities.quickToggles, GlobalConfig.utilities.vpn.selectedProvider.length > 0)
+    readonly final property int splitIndex: TogglesHelpers.splitIndex(quickToggles)
+    readonly final property bool needExtraRow: TogglesHelpers.needsExtraRow(quickToggles)
 
     implicitHeight: layout.implicitHeight + Tokens.padding.extraLargeIncreased
 
@@ -83,7 +69,7 @@ StyledRect {
                         // waku gap: Nmcli.enableWifi is a no-op (no radio switch), so show the state only.
                         enabled: false
                         checked: Nmcli.wifiEnabled
-                        onClicked: Nmcli.toggleWifi()
+                        onClicked: Nmcli.toggleWifi(null)
                     }
                 }
                 DelegateChoice {
@@ -149,10 +135,10 @@ StyledRect {
                     roleValue: "vpn"
                     delegate: Toggle {
                         icon: "vpn_key"
-                        checked: VPN.connected && VPN.status.state !== "needs-auth" && VPN.status.state !== "error"
+                        checked: TogglesHelpers.vpnChecked(VPN.connected, VPN.status)
                         // waku gap: VPN is read only (VPN.toggle is a no-op), so show the state only.
                         enabled: false
-                        isToggle: VPN.status.state !== "needs-auth" && VPN.status.state !== "error"
+                        isToggle: TogglesHelpers.vpnToggleAllowed(VPN.status)
                         inactiveOnColour: Colours.palette.m3onSurfaceVariant
                         onClicked: VPN.toggle()
                     }

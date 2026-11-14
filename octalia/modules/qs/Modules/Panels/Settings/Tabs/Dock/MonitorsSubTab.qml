@@ -1,10 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -13,17 +15,8 @@ ColumnLayout {
   Layout.fillWidth: true
 
   // Helper functions to update arrays immutably
-  function addMonitor(list, name) {
-    const arr = (list || []).slice();
-    if (!arr.includes(name))
-      arr.push(name);
-    return arr;
-  }
-  function removeMonitor(list, name) {
-    return (list || []).filter(function (n) {
-      return n !== name;
-    });
-  }
+  function addMonitor(list: var, name: string): var { return SettingsValue.addUniqueValue(list, name); }
+  function removeMonitor(list: var, name: string): var { return SettingsValue.removeValue(list, name); }
 
   NText {
     text: I18n.tr("panels.dock.monitors-desc")
@@ -34,26 +27,28 @@ ColumnLayout {
   Repeater {
     model: Quickshell.screens || []
     delegate: NCheckbox {
+      id: monitorOption
+      required property ShellScreen modelData
       Layout.fillWidth: true
       readonly property real compositorScale: {
-        const info = CompositorService.displayScales[modelData.name];
+        const info = CompositorService.displayScales[monitorOption.modelData.name];
         return (info && info.scale) ? info.scale : 1.0;
       }
-      label: modelData.name || "Unknown"
+      label: monitorOption.modelData.name || "Unknown"
       description: {
-        I18n.tr("system.monitor-description", {
-                  "model": modelData.model,
-                  "width": modelData.width * compositorScale,
-                  "height": modelData.height * compositorScale,
+        I18n.trArgs("system.monitor-description", {
+                  "model": monitorOption.modelData.model,
+                  "width": monitorOption.modelData.width * compositorScale,
+                  "height": monitorOption.modelData.height * compositorScale,
                   "scale": compositorScale
                 });
       }
-      checked: (Settings.data.dock.monitors || []).indexOf(modelData.name) !== -1
+      checked: (Settings.data.dock.monitors || []).indexOf(monitorOption.modelData.name) !== -1
       onToggled: checked => {
                    if (checked) {
-                     Settings.data.dock.monitors = root.addMonitor(Settings.data.dock.monitors, modelData.name);
+                     Settings.data.dock.monitors = root.addMonitor(Settings.data.dock.monitors, monitorOption.modelData.name);
                    } else {
-                     Settings.data.dock.monitors = root.removeMonitor(Settings.data.dock.monitors, modelData.name);
+                     Settings.data.dock.monitors = root.removeMonitor(Settings.data.dock.monitors, monitorOption.modelData.name);
                    }
                  }
     }

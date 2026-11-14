@@ -6,12 +6,13 @@ import Celeste
 import Celeste.Config
 import qs.components
 import qs.services
+import "ToastsHelpers.js" as ToastsHelpers
 
 Item {
     id: root
 
-    readonly property int spacing: Tokens.spacing.small
-    property bool flag
+    readonly final property int spacing: Tokens.spacing.small
+    final property bool flag
 
     function shouldShowToast(toast: Toast): bool {
         if (!Notifs.hasFullscreen())
@@ -29,7 +30,7 @@ Item {
         for (let i = 0; i < repeater.count; i++) {
             const item = repeater.itemAt(i) as ToastWrapper;
             if (!item.modelData.closed && !item.previewHidden)
-                h += item.implicitHeight + spacing;
+                h += ToastsHelpers.itemHeight(item) + spacing;
         }
         return h;
     }
@@ -38,21 +39,7 @@ Item {
         id: repeater
 
         model: ScriptModel {
-            values: {
-                const toasts = [];
-                let count = 0;
-                for (const toast of Toaster.toasts) {
-                    if (!root.shouldShowToast(toast))
-                        continue;
-                    toasts.push(toast);
-                    if (!toast.closed) {
-                        count++;
-                        if (count > Config.utilities.maxToasts)
-                            break;
-                    }
-                }
-                return toasts;
-            }
+            values: ToastsHelpers.visibleToasts(Toaster.toasts, root.shouldShowToast, Config.utilities.maxToasts)
             onValuesChanged: root.flagChanged()
         }
 
@@ -62,10 +49,10 @@ Item {
     component ToastWrapper: MouseArea {
         id: toast
 
-        required property int index
-        required property Toast modelData
+        required final property int index
+        required final property Toast modelData
 
-        readonly property bool previewHidden: {
+        readonly final property bool previewHidden: {
             let extraHidden = 0;
             for (let i = 0; i < index; i++)
                 if (Toaster.toasts[i].closed)
@@ -87,7 +74,7 @@ Item {
             for (let i = 0; i < index; i++) {
                 const item = repeater.itemAt(i) as ToastWrapper;
                 if (item && !item.modelData.closed && !item.previewHidden)
-                    y += item.implicitHeight + root.spacing;
+                    y += ToastsHelpers.itemHeight(item) + root.spacing;
             }
             return y;
         }
@@ -98,9 +85,9 @@ Item {
         implicitHeight: toastInner.implicitHeight
 
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-        onClicked: modelData.close()
+        onClicked: ToastsHelpers.close(modelData)
 
-        Component.onCompleted: modelData.lock(this)
+        Component.onCompleted: ToastsHelpers.lock(modelData, this)
 
         Anim {
             id: initAnim
@@ -116,7 +103,7 @@ Item {
         ParallelAnimation {
             running: toast.modelData.closed
             onStarted: toast.anchors.bottomMargin = toast.anchors.bottomMargin
-            onFinished: toast.modelData.unlock(toast)
+            onFinished: ToastsHelpers.unlock(toast.modelData, toast)
 
             Anim {
                 type: Anim.DefaultEffects

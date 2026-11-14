@@ -2,21 +2,21 @@ pragma ComponentBehavior: Bound
 
 import "./kblayout"
 import QtQuick
-import Quickshell
 import Celeste.Config
 import qs.components
 import qs.services
+import "PopoutContentHelpers.js" as PopoutContentHelpers
 
 Item {
     id: root
 
-    required property PopoutState popouts
-    required property ScreenState screenState
-    readonly property Popout currentPopout: content.children.find(c => c.shouldBeActive) ?? null
-    readonly property Item current: currentPopout?.item ?? null
+    required final property PopoutState popouts
+    required final property ScreenState screenState
+    readonly final property Popout currentPopout: PopoutContentHelpers.activePopout(content.children)
+    readonly final property Item current: PopoutContentHelpers.item(currentPopout)
 
-    implicitWidth: currentPopout ? currentPopout.implicitWidth + Tokens.padding.large * 2 : 0
-    implicitHeight: currentPopout ? currentPopout.implicitHeight + Tokens.padding.large * 2 : 0
+    implicitWidth: PopoutContentHelpers.implicitWidth(currentPopout, Tokens.padding.large)
+    implicitHeight: PopoutContentHelpers.implicitHeight(currentPopout, Tokens.padding.large)
 
     Item {
         id: content
@@ -147,9 +147,9 @@ Item {
     component Popout: Loader {
         id: popout
 
-        required property string name
-        readonly property bool shouldBeActive: root.popouts.currentName === name
-        property bool ready: true
+        required final property string name
+        readonly final property bool shouldBeActive: root.popouts.currentName === name
+        final property bool ready: true
 
         anchors.centerIn: parent
 

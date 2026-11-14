@@ -6,16 +6,17 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "CalcItemHelpers.js" as CalcItemHelpers
 
 Item {
     id: root
 
-    required property var list
-    readonly property string math: list.search.text.slice(`${GlobalConfig.launcher.actionPrefix}calc `.length)
+    required final property var list
+    readonly final property string math: CalcItemHelpers.expression(list, GlobalConfig.launcher.actionPrefix)
 
     function onClicked(): void {
         Quickshell.clipboardText = Qalculator.rawResult;
-        root.list.screenState.launcher = false;
+        CalcItemHelpers.closeLauncher(root.list);
     }
 
     onMathChanged: {
@@ -83,7 +84,7 @@ Item {
                 // waku gap: there is no qalc terminal; the button copies the expression instead.
                 onClicked: {
                     Quickshell.clipboardText = root.math;
-                    root.list.screenState.launcher = false;
+                    CalcItemHelpers.closeLauncher(root.list);
                 }
 
                 color: Colours.palette.m3onTertiary

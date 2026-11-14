@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import qs.Commons
 import qs.Commons as Commons
+import "ButtonGroupUtils.js" as OptionData
 
 // Themed single-select dropdown. Trigger row paints with the kit's focus
 // chrome; the popup anchors below and uses Commons.Color.popups.background +
@@ -51,15 +53,17 @@ Item {
   signal changed(string value)
   signal hovered(bool isHovered)
 
-  function optionValue(o) {
-    return (o && typeof o === "object") ? String(o.value) : String(o)
+  function optionValue(o: var): string {
+    return o && typeof o === "object" ? String(OptionData.field(o, "value")) : String(o)
   }
-  function optionLabel(o) {
-    return (o && typeof o === "object") ? String(o.label) : String(o)
+  function optionLabel(o: var): string {
+    return o && typeof o === "object" ? String(OptionData.field(o, "label")) : String(o)
   }
-  function currentLabel() {
-    for (var i = 0; i < options.length; i++) {
-      if (optionValue(options[i]) === value) return optionLabel(options[i])
+  function optionCount(): int { return OptionData.arrayLength(options) }
+  function optionAt(index: int): var { return OptionData.arrayAt(options, index) }
+  function currentLabel(): string {
+    for (let i = 0; i < optionCount(); i++) {
+      if (optionValue(optionAt(i)) === value) return optionLabel(optionAt(i))
     }
     return value
   }
@@ -154,7 +158,7 @@ Item {
         y: trigger.height + Style.spacing.xxs
         closePolicy: Popup.CloseOnPressOutsideParent | Popup.CloseOnEscape
         width: trigger.width
-        implicitHeight: Math.min(root.options.length * root.popupRowHeight + Math.max(0, root.options.length - 1) * Style.spacing.labelGap,
+        implicitHeight: Math.min(root.optionCount() * root.popupRowHeight + Math.max(0, root.optionCount() - 1) * Style.spacing.labelGap,
                                  root.popupRowHeight * 8 + 7 * Style.spacing.labelGap)
                         + topPadding + bottomPadding
         padding: Style.spacing.hairline
@@ -183,7 +187,7 @@ Item {
           Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) { popup.close(); event.accepted = true }
             else if (event.key === Qt.Key_Down || event.text === "j") {
-              optionList.currentIndex = Math.min(root.options.length - 1, optionList.currentIndex + 1)
+              optionList.currentIndex = Math.min(root.optionCount() - 1, optionList.currentIndex + 1)
               event.accepted = true
             } else if (event.key === Qt.Key_Up || event.text === "k") {
               optionList.currentIndex = Math.max(0, optionList.currentIndex - 1)
@@ -198,27 +202,28 @@ Item {
           model: root.options
           currentIndex: -1
 
-          function indexOfValue(v) {
-            for (var i = 0; i < root.options.length; i++)
-              if (root.optionValue(root.options[i]) === v) return i
+          function indexOfValue(v: string): int {
+            for (let i = 0; i < root.optionCount(); i++)
+              if (root.optionValue(root.optionAt(i)) === v) return i
             return -1
           }
 
-          function selectCurrent() {
-            if (currentIndex < 0 || currentIndex >= root.options.length) return
-            var v = root.optionValue(root.options[currentIndex])
+          function selectCurrent(): void {
+            if (currentIndex < 0 || currentIndex >= root.optionCount()) return
+            var v = root.optionValue(root.optionAt(currentIndex))
             root.value = v
             root.changed(v)
             popup.close()
           }
 
           delegate: Rectangle {
+            id: optionItem
             required property var modelData
             required property int index
             width: optionList.width
             height: root.popupRowHeight
             color: index === optionList.currentIndex
-              ? Style.hoverFillFor(root.foreground, root.accent)
+              ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
               : "transparent"
 
             Text {
@@ -228,8 +233,8 @@ Item {
               anchors.verticalCenter: parent.verticalCenter
               anchors.leftMargin: Style.spacing.controlPaddingX
               anchors.rightMargin: Style.spacing.controlPaddingX
-              text: root.optionLabel(modelData)
-              color: index === optionList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent) : root.foreground
+              text: root.optionLabel(optionItem.modelData)
+              color: optionItem.index === optionList.currentIndex ? Style.hoverStateColor(root.foreground, root.accent, Commons.Color.urgent) : root.foreground
               font.family: root.fontFamily
               font.pixelSize: Style.font.body
               elide: Text.ElideRight
@@ -239,7 +244,7 @@ Item {
               anchors.fill: parent
               hoverEnabled: true
               cursorShape: Qt.PointingHandCursor
-              onPositionChanged: optionList.currentIndex = parent.index
+              onPositionChanged: optionList.currentIndex = optionItem.index
               onClicked: optionList.selectCurrent()
             }
           }

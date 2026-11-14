@@ -13,15 +13,16 @@ import qs.components.misc
 import qs.services
 import qs.utils
 import qs.compat
+import "NotifsHelpers.js" as NotifsHelpers
 
 Singleton {
     id: root
 
-    property list<NotifData> list: []
-    readonly property list<NotifData> notClosed: list.filter(n => !n.closed)
-    readonly property list<NotifData> popups: list.filter(n => n.popup)
+    final property list<NotifData> list: []
+    readonly final property list<NotifData> notClosed: NotifsHelpers.notClosed(list)
+    readonly final property list<NotifData> popups: NotifsHelpers.popups(list)
 
-    property bool loaded
+    final property bool loaded
 
     // waku gap: no fullscreen detection (upstream asks Hyprland).
     function hasFullscreen(): bool {
@@ -47,9 +48,9 @@ Singleton {
                 return;
 
             if (PersistentState.doNotDisturb)
-                Toaster.toast(Tr.tr("Do not disturb enabled"), Tr.tr("Popup notifications are now disabled"), "do_not_disturb_on");
+                Toaster.toast(Tr.tr("Do not disturb enabled"), Tr.tr("Popup notifications are now disabled"), "do_not_disturb_on", Toast.Info, 5000);
             else
-                Toaster.toast(Tr.tr("Do not disturb disabled"), Tr.tr("Popup notifications are now enabled"), "do_not_disturb_off");
+                Toaster.toast(Tr.tr("Do not disturb disabled"), Tr.tr("Popup notifications are now enabled"), "do_not_disturb_off", Toast.Info, 5000);
         }
 
         target: PersistentState
@@ -59,20 +60,7 @@ Singleton {
         id: saveTimer
 
         interval: 1000
-        onTriggered: storage.setText(JSON.stringify(root.notClosed.map(n => ({
-                    time: n.time,
-                    id: n.id,
-                    summary: n.summary,
-                    body: n.body,
-                    appIcon: n.appIcon,
-                    appName: n.appName,
-                    image: n.image,
-                    expireTimeout: n.expireTimeout,
-                    urgency: n.urgency,
-                    resident: n.resident,
-                    hasActionIcons: n.hasActionIcons,
-                    actions: n.actions
-                }))))
+        onTriggered: storage.setText(NotifsHelpers.serialize(root.notClosed))
     }
 
     NotificationServer {
@@ -86,15 +74,7 @@ Singleton {
         imageSupported: true
         persistenceSupported: true
 
-        onNotification: notif => {
-            notif.tracked = true;
-
-            const comp = notifComp.createObject(root, {
-                popup: root.shouldShowPopup(),
-                notification: notif
-            });
-            root.list = [comp, ...root.list];
-        }
+        onNotification: notif => NotifsHelpers.track(notif, root, notifComp)
     }
 
     FileView {
@@ -103,19 +83,7 @@ Singleton {
         printErrors: false
         path: `${Paths.state}/notifs.json`
         onLoaded: {
-            const data = JSON.parse(text());
-            for (const notif of data) {
-                const properties = Object.assign({}, notif);
-
-                // Backwards compatibility for old notifications
-                if (properties.notificationId === undefined && properties.id !== undefined)
-                    properties.notificationId = properties.id;
-
-                delete properties.id;
-                root.list.push(notifComp.createObject(root, properties));
-            }
-            root.list.sort((a, b) => b.time - a.time);
-            root.loaded = true;
+            NotifsHelpers.restore(text(), root, notifComp);
         }
         // Upstream creates an empty file here. The config home watcher reloads the shell on
         // every write under it, so the file appears with the first notification instead.
@@ -131,8 +99,7 @@ Singleton {
         name: "clearNotifs"
         description: "Clear all notifications"
         onPressed: {
-            for (const notif of root.list.slice())
-                notif.close();
+            NotifsHelpers.closeAll(root.list);
         }
     }
 
@@ -148,8 +115,7 @@ Singleton {
 
     IpcHandler {
         function clear(): void {
-            for (const notif of root.list.slice())
-                notif.close();
+            NotifsHelpers.closeAll(root.list);
         }
 
         function isDndEnabled(): bool {

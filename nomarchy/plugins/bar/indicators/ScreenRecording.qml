@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import "../I18nModel.js" as I18nModel
 
 BarIndicator {
   id: root
@@ -11,8 +12,8 @@ BarIndicator {
   active: recording
   activeText: "󰻂"
   inactiveText: "󰻂"
-  activeTooltipText: I18n.t("bar.stopRecording")
-  inactiveTooltipText: I18n.t("bar.screenRecording")
+  activeTooltipText: I18nModel.translate(I18n, "bar.stopRecording")
+  inactiveTooltipText: I18nModel.translate(I18n, "bar.screenRecording")
 
   function refresh() {
     if (!root.bar || statusProc.running) return
@@ -38,7 +39,7 @@ BarIndicator {
 
   onPressed: function() {
     if (root.bar) {
-      root.bar.run(root.recording ? "nomarchy-capture-screenrecording --stop-recording" : "nomarchy-menu toggle trigger.capture.screenrecord")
+      BarValues.run(root.bar, root.recording ? "nomarchy-capture-screenrecording --stop-recording" : "nomarchy-menu toggle trigger.capture.screenrecord")
     }
   }
 }

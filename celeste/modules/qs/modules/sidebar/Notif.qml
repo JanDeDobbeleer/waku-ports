@@ -6,17 +6,18 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "NotifHelpers.js" as NotifHelpers
 
 StyledRect {
     id: root
 
-    required property NotifData modelData
-    required property Props props
-    required property bool expanded
-    required property ScreenState screenState
+    required final property NotifData modelData
+    required final property Props props
+    required final property bool expanded
+    required final property ScreenState screenState
 
-    readonly property StyledText body: (expandedContent.item as ExpandedBody)?.body ?? null
-    readonly property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Tokens.padding.medium * 2 : summaryHeightMetrics.height
+    readonly final property StyledText bodyContent: NotifHelpers.body(expandedContent.item)
+    readonly final property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Tokens.padding.medium * 2 : summaryHeightMetrics.height
 
     implicitHeight: nonAnimHeight
 
@@ -154,7 +155,7 @@ StyledRect {
     component WrappedLoader: Loader {
         id: comp
 
-        required property bool shouldBeActive
+        required final property bool shouldBeActive
 
         active: false
         opacity: 0

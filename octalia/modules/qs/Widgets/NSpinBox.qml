@@ -1,5 +1,6 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
@@ -52,11 +53,11 @@ RowLayout {
       }
       root._holdTicks++;
       var stepMultiplier = Math.min(root.maxStepMultiplier, 1 + Math.floor(root._holdTicks / root.rampFactor));
-      changeValue(root._repeatDirection, root.stepSize * stepMultiplier);
+      root.changeValue(root._repeatDirection, root.stepSize * stepMultiplier);
     }
   }
 
-  function changeValue(direction, step) {
+  function changeValue(direction: var, step: var) {
     var currentStep = step || root.stepSize;
 
     if (direction === 1 && root.value < root.to) {
@@ -166,11 +167,11 @@ RowLayout {
         enabled: root.enabled && root.value > root.from
         onPressed: {
           root._repeatDirection = -1;
-          changeValue(root._repeatDirection, root.stepSize);
+          root.changeValue(root._repeatDirection, root.stepSize);
           repeatTimer.start();
         }
-        onReleased: stopRepeat()
-        onExited: stopRepeat()
+        onReleased: root.stopRepeat()
+        onExited: root.stopRepeat()
       }
     }
 
@@ -213,11 +214,11 @@ RowLayout {
         enabled: root.enabled && root.value < root.to
         onPressed: {
           root._repeatDirection = 1;
-          changeValue(root._repeatDirection, root.stepSize);
+          root.changeValue(root._repeatDirection, root.stepSize);
           repeatTimer.start();
         }
-        onReleased: stopRepeat()
-        onExited: stopRepeat()
+        onReleased: root.stopRepeat()
+        onExited: root.stopRepeat()
       }
     }
 

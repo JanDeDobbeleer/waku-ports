@@ -285,6 +285,116 @@ function iconForCode(code, night) {
   }
 }
 
+
+function field(value, name) {
+  return value == null ? undefined : value[name]
+}
+
+function itemCount(value) {
+  return value && value.length ? value.length : 0
+}
+
+function hasCoordinates(state) {
+  return !isNaN(parseFloat(String(field(state, "latitude")))) && !isNaN(parseFloat(String(field(state, "longitude"))))
+}
+
+function currentCondition(report, dailyReport, hasCoordinates) {
+  var openMeteo = openMeteoCurrentCondition(dailyReport)
+  if (hasCoordinates && openMeteo) return openMeteo
+  var conditions = field(report, "current_condition")
+  return conditions && conditions[0] ? conditions[0] : openMeteo
+}
+
+function areaInfo(report) {
+  var areas = field(report, "nearest_area")
+  return areas && areas[0] ? areas[0] : null
+}
+
+function countryName(area) {
+  var countries = field(area, "country")
+  return countries && countries[0] ? String(field(countries[0], "value") || "") : ""
+}
+
+function locationLabel(configured, auto, detected, area) {
+  var areaNames = field(area, "areaName")
+  return configured || (auto ? field(detected, "name") : "") || (areaNames && areaNames[0] ? field(areaNames[0], "value") : "")
+}
+
+function selectedSuggestion(suggestion, name) {
+  return field(suggestion, name)
+}
+
+function temperature(current, name, fmt) {
+  var value = field(current, name)
+  if (value === undefined || value === null || value === "") return ""
+  return displayNumber(fmt)(value)
+}
+
+function temperatureWithUnit(current, name, useImperial, fmt) {
+  return formatTemp(field(current, name), useImperial, fmt)
+}
+
+function windSpeed(current, imperial, fmt) {
+  return imperial
+    ? (temperature(current, "windspeedMiles", fmt) + " mph")
+    : (temperature(current, "windspeedKmph", fmt) + " km/h")
+}
+
+function areaCoordinates(location, sourceReport, fallbackArea, propertyName) {
+  var value = field(location, propertyName)
+  if (value !== undefined && value !== null && !isNaN(parseFloat(String(value)))) return value
+  var area = areaInfo(sourceReport) || fallbackArea
+  return field(area, propertyName)
+}
+
+
+function inputText(input) {
+  return input ? String(input.text || "") : ""
+}
+
+function setInputText(input, value) {
+  if (input) input.text = value
+}
+
+function selectInput(input) {
+  if (input) input.selectAll()
+}
+
+function focusInput(input) {
+  if (input) input.forceActiveFocus()
+}
+
+
+function parseResponse(raw) {
+  try {
+    return { ok: true, data: JSON.parse(String(raw || "")) }
+  } catch (e) {
+    return { ok: false, data: null }
+  }
+}
+
+function localizedDayName(dateString, locale, format) {
+  if (!dateString) return ""
+  var date = new Date(dateString + "T12:00:00")
+  if (isNaN(date.getTime())) return ""
+  return locale.standaloneDayName(date.getDay(), format)
+}
+
+
+function invoke(receiver, method) {
+  if (receiver && typeof receiver[method] === "function") receiver[method]()
+}
+
+
+function hasMethod(receiver, method) {
+  return !!receiver && typeof receiver[method] === "function"
+}
+
+
+function setField(receiver, name, value) {
+  if (receiver) receiver[name] = value
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     parseLocationFile: parseLocationFile,
@@ -312,6 +422,27 @@ if (typeof module !== "undefined") {
     bareTempForDay: bareTempForDay,
     dayIcon: dayIcon,
     iconForOpenMeteoCode: iconForOpenMeteoCode,
-    iconForCode: iconForCode
+    iconForCode: iconForCode,
+    field: field,
+    itemCount: itemCount,
+    hasCoordinates: hasCoordinates,
+    currentCondition: currentCondition,
+    areaInfo: areaInfo,
+    countryName: countryName,
+    locationLabel: locationLabel,
+    selectedSuggestion: selectedSuggestion,
+    temperature: temperature,
+    temperatureWithUnit: temperatureWithUnit,
+    windSpeed: windSpeed,
+    areaCoordinates: areaCoordinates,
+    inputText: inputText,
+    setInputText: setInputText,
+    selectInput: selectInput,
+    focusInput: focusInput,
+    parseResponse: parseResponse,
+    localizedDayName: localizedDayName,
+    invoke: invoke,
+    hasMethod: hasMethod,
+    setField: setField
   }
 }

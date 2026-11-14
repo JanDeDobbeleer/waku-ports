@@ -7,32 +7,35 @@ import Quickshell.Wayland
 import Celeste.Config
 import qs.components
 import qs.services
+import "WrapperHelpers.js" as WrapperHelpers
 
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property real offsetScale
+    required final property ShellScreen screen
+    required final property real offsetScale
 
-    readonly property alias content: content
+    readonly property alias content: contentItem
 
-    readonly property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? content.implicitWidth
-    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? content.implicitHeight
-    readonly property Item current: (content.item as Content)?.current ?? null
-    readonly property bool isDetached: detachedMode.length > 0
+    readonly final property real nonAnimWidth: WrapperHelpers.activeWidth(children, contentItem.implicitWidth)
+    readonly final property real nonAnimHeight: WrapperHelpers.activeHeight(children, contentItem.implicitHeight)
+    // Port: the submenu depth of the open tray menu. The port has no tray menu popout, so it is 0.
+    readonly final property int currentDepth: 0
+    readonly final property Item current: (contentItem.item as Content)?.current ?? null
+    readonly final property bool isDetached: detachedMode.length > 0
 
     property alias currentName: popoutState.currentName
     property alias hasCurrent: popoutState.hasCurrent
-    property real currentCenter
+    final property real currentCenter
 
-    property string detachedMode
-    property string queuedMode
+    final property string detachedMode
+    final property string queuedMode
 
     // Dummy object so Tokens attached prop resolves to global config
     // Anim configs are not per-monitor
-    readonly property QtObject dummy: QtObject {}
-    property int animLength: Tokens.anim.durations.expressiveDefaultSpatial
-    property var animCurve: Tokens.anim.expressiveDefaultSpatial // The easingCurve type is Qt 6.11+ so we gotta use var for now
+    readonly final property QtObject dummy: QtObject {}
+    final property int animLength: Tokens.anim.durations.expressiveDefaultSpatial
+    final property var animCurve: Tokens.anim.expressiveDefaultSpatial // The easingCurve type is Qt 6.11+ so we gotta use var for now
 
     function setAnims(detach: bool): void {
         const type = `expressive${detach ? "Slow" : "Default"}Spatial`;
@@ -63,13 +66,8 @@ Item {
     focus: hasCurrent
     Keys.onEscapePressed: {
         // Forward escape to password popout if active, otherwise close
-        if (currentName === "wirelesspassword" && content.item) {
-            const passwordPopout = (content.item as Content)?.children.find(c => c.name === "wirelesspassword");
-            if (passwordPopout && passwordPopout.item) {
-                passwordPopout.item.closeDialog();
-                return;
-            }
-        }
+        if (WrapperHelpers.closePassword(currentName, contentItem.item))
+            return;
         close();
     }
 
@@ -110,7 +108,7 @@ Item {
     }
 
     Comp {
-        id: content
+        id: contentItem
 
         shouldBeActive: root.hasCurrent && !root.detachedMode
         anchors.fill: parent
@@ -140,7 +138,7 @@ Item {
     component Comp: Loader {
         id: comp
 
-        property bool shouldBeActive
+        final property bool shouldBeActive
 
         active: false
         opacity: 0

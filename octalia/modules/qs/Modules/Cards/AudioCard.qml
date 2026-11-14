@@ -1,9 +1,9 @@
 import QtQuick 6.10
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Services.Media
 import qs.Widgets
+import "AudioCardUtils.js" as AudioCardUtils
 
 // Audio controls card: output and input volume controls
 NBox {
@@ -11,11 +11,11 @@ NBox {
 
   property real localOutputVolume: 0
   property bool localOutputVolumeChanging: false
-  property int lastSinkId: -1
+  property string lastSinkName: ""
 
   property real localInputVolume: 0
   property bool localInputVolumeChanging: false
-  property int lastSourceId: -1
+  property string lastSourceName: ""
 
   readonly property bool outputVolumeGuard: outputVolumeSlider.sliderActive || localOutputVolumeChanging
   readonly property bool inputVolumeGuard: inputVolumeSlider.sliderActive || localInputVolumeChanging
@@ -26,10 +26,10 @@ NBox {
     var inputVol = AudioService.inputVolume;
     localInputVolume = (inputVol !== undefined && !isNaN(inputVol)) ? inputVol : 0;
     if (AudioService.sink) {
-      lastSinkId = AudioService.sink.id ?? -1;
+      lastSinkName = AudioCardUtils.field(AudioService.sink, "name");
     }
     if (AudioService.source) {
-      lastSourceId = AudioService.source.id ?? -1;
+      lastSourceName = AudioCardUtils.field(AudioService.source, "name");
     }
   }
 
@@ -37,17 +37,18 @@ NBox {
   Connections {
     target: AudioService
     function onSinkChanged() {
+      var vol;
       if (AudioService.sink) {
-        const newSinkId = AudioService.sink.id ?? -1;
-        if (newSinkId !== lastSinkId) {
-          lastSinkId = newSinkId;
+        const newSinkName = AudioCardUtils.field(AudioService.sink, "name");
+        if (newSinkName !== root.lastSinkName) {
+          root.lastSinkName = newSinkName;
           // Immediately set local volume to current device's volume
-          var vol = AudioService.volume;
-          localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+          vol = AudioService.volume;
+          root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSinkId = -1;
-        localOutputVolume = 0;
+        root.lastSinkName = "";
+        root.localOutputVolume = 0;
       }
     }
   }
@@ -55,17 +56,18 @@ NBox {
   Connections {
     target: AudioService
     function onSourceChanged() {
+      var vol;
       if (AudioService.source) {
-        const newSourceId = AudioService.source.id ?? -1;
-        if (newSourceId !== lastSourceId) {
-          lastSourceId = newSourceId;
+        const newSourceName = AudioCardUtils.field(AudioService.source, "name");
+        if (newSourceName !== root.lastSourceName) {
+          root.lastSourceName = newSourceName;
           // Immediately set local volume to current device's volume
-          var vol = AudioService.inputVolume;
-          localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+          vol = AudioService.inputVolume;
+          root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
         }
       } else {
-        lastSourceId = -1;
-        localInputVolume = 0;
+        root.lastSourceName = "";
+        root.localInputVolume = 0;
       }
     }
   }
@@ -78,15 +80,15 @@ NBox {
     repeat: true
     onTriggered: {
       // Only sync if sink hasn't changed
-      if (AudioService.sink && AudioService.sink.id === lastSinkId) {
-        if (Math.abs(localOutputVolume - AudioService.volume) >= 0.01) {
-          AudioService.setVolume(localOutputVolume);
+      if (AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
+        if (Math.abs(root.localOutputVolume - AudioService.volume) >= 0.01) {
+          AudioService.setVolume(root.localOutputVolume);
         }
       }
       // Only sync if source hasn't changed
-      if (AudioService.source && AudioService.source.id === lastSourceId) {
-        if (Math.abs(localInputVolume - AudioService.inputVolume) >= 0.01) {
-          AudioService.setInputVolume(localInputVolume);
+      if (AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
+        if (Math.abs(root.localInputVolume - AudioService.inputVolume) >= 0.01) {
+          AudioService.setInputVolume(root.localInputVolume);
         }
       }
     }
@@ -95,9 +97,10 @@ NBox {
   Connections {
     target: AudioService
     function onVolumeChanged() {
-      if (!outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioService.sink.id === lastSinkId) {
-        var vol = AudioService.volume;
-        localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+      var vol;
+      if (!root.outputVolumeGuard && !AudioService.isSettingOutputVolume && AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
+        vol = AudioService.volume;
+        root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -105,9 +108,10 @@ NBox {
   Connections {
     target: AudioService
     function onInputVolumeChanged() {
-      if (!inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioService.source.id === lastSourceId) {
-        var vol = AudioService.inputVolume;
-        localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+      var vol;
+      if (!root.inputVolumeGuard && !AudioService.isSettingInputVolume && AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
+        vol = AudioService.inputVolume;
+        root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -115,9 +119,10 @@ NBox {
   Connections {
     target: outputVolumeSlider
     function onSliderActiveChanged() {
-      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioService.sink.id === lastSinkId) {
-        var vol = AudioService.volume;
-        localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+      var vol;
+      if (!outputVolumeSlider.sliderActive && AudioService.sink && AudioCardUtils.field(AudioService.sink, "name") === root.lastSinkName) {
+        vol = AudioService.volume;
+        root.localOutputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -125,9 +130,10 @@ NBox {
   Connections {
     target: inputVolumeSlider
     function onSliderActiveChanged() {
-      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioService.source.id === lastSourceId) {
-        var vol = AudioService.inputVolume;
-        localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
+      var vol;
+      if (!inputVolumeSlider.sliderActive && AudioService.source && AudioCardUtils.field(AudioService.source, "name") === root.lastSourceName) {
+        vol = AudioService.inputVolume;
+        root.localInputVolume = (vol !== undefined && !isNaN(vol)) ? vol : 0;
       }
     }
   }
@@ -161,7 +167,7 @@ NBox {
         }
 
         NText {
-          text: AudioService.sink ? AudioService.sink.description : "No output device"
+          text: AudioService.sink ? AudioCardUtils.field(AudioService.sink, "description") : "No output device"
           pointSize: Style.fontSizeXS
           color: Color.mOnSurfaceVariant
           elide: Text.ElideRight
@@ -176,11 +182,11 @@ NBox {
         Layout.fillWidth: true
         from: 0
         to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-        value: localOutputVolume
+        value: root.localOutputVolume
         stepSize: 0.01
         heightRatio: 0.5
-        onMoved: localOutputVolume = value
-        onPressedChanged: localOutputVolumeChanging = pressed
+        onMoved: root.localOutputVolume = value
+        onPressedChanged: root.localOutputVolumeChanging = pressed
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {
@@ -195,8 +201,8 @@ NBox {
                        const step = Settings.data.audio.volumeStep / 100.0; // Convert percentage to 0-1 range
                        const increment = delta > 0 ? step : -step;
                        const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
-                       const newValue = Math.max(0, Math.min(maxVolume, localOutputVolume + increment));
-                       localOutputVolume = newValue;
+                       const newValue = Math.max(0, Math.min(maxVolume, root.localOutputVolume + increment));
+                       root.localOutputVolume = newValue;
                      }
                    }
         }
@@ -227,7 +233,7 @@ NBox {
         }
 
         NText {
-          text: AudioService.source ? AudioService.source.description : "No input device"
+          text: AudioService.source ? AudioCardUtils.field(AudioService.source, "description") : "No input device"
           pointSize: Style.fontSizeXS
           color: Color.mOnSurfaceVariant
           elide: Text.ElideRight
@@ -242,11 +248,11 @@ NBox {
         Layout.fillWidth: true
         from: 0
         to: Settings.data.audio.volumeOverdrive ? 1.5 : 1.0
-        value: localInputVolume
+        value: root.localInputVolume
         stepSize: 0.01
         heightRatio: 0.5
-        onMoved: localInputVolume = value
-        onPressedChanged: localInputVolumeChanging = pressed
+        onMoved: root.localInputVolume = value
+        onPressedChanged: root.localInputVolumeChanging = pressed
 
         // MouseArea to handle wheel events when hovering over the slider
         MouseArea {
@@ -261,8 +267,8 @@ NBox {
                        const step = Settings.data.audio.volumeStep / 100.0; // Convert percentage to 0-1 range
                        const increment = delta > 0 ? step : -step;
                        const maxVolume = Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
-                       const newValue = Math.max(0, Math.min(maxVolume, localInputVolume + increment));
-                       localInputVolume = newValue;
+                       const newValue = Math.max(0, Math.min(maxVolume, root.localInputVolume + increment));
+                       root.localInputVolume = newValue;
                      }
                    }
         }

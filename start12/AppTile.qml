@@ -1,13 +1,16 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
+import waku.services as S
 
 // A pinned app: its icon over its name. Left click starts it; right click opens the app menu.
 Rectangle {
     id: root
 
-    required property var entry
+    required property S.DesktopEntry entry
     signal activated
-    signal contextRequested(var point)
+    signal contextRequested(point: point)
 
     width: 84
     height: 88

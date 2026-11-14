@@ -5,11 +5,12 @@ import Quickshell
 import Quickshell.Services.Notifications
 import Celeste.Config
 import qs.compat
+import "IconsHelpers.js" as IconsHelpers
 
 Singleton {
     id: root
 
-    readonly property var weatherIcons: ({
+    readonly final property var weatherIcons: ({
             "0": "clear_day",
             "1": "clear_day",
             "2": "partly_cloudy_day",
@@ -40,7 +41,7 @@ Singleton {
             "99": "thunderstorm"
         })
 
-    readonly property var categoryIcons: ({
+    readonly final property var categoryIcons: ({
             WebBrowser: "web",
             Printing: "print",
             Security: "security",
@@ -81,7 +82,7 @@ Singleton {
         })
 
     // qmlformat off
-    readonly property list<string> networkIcons: [
+    readonly final property list<string> networkIcons: [
         "signal_wifi_0_bar",
         "network_wifi_1_bar",
         "network_wifi_2_bar",
@@ -89,7 +90,7 @@ Singleton {
         "network_wifi"
     ]
 
-    readonly property var bluetoothIconRules: [
+    readonly final property var bluetoothIconRules: [
         [["headset", "headphones"], "headphones"],
         [["audio"], "speaker"],
         [["phone"], "smartphone"],
@@ -103,7 +104,7 @@ Singleton {
         [["camera"], "photo_camera"]
     ]
 
-    readonly property var notifIconRules: [
+    readonly final property var notifIconRules: [
         [["reboot"], "restart_alt"],
         [["recording"], "screen_record"],
         [["battery"], "power"],
@@ -122,29 +123,11 @@ Singleton {
      * Checks if a name matches an icon rule. See the IconRule type in the config module.
      */
     function matchIconRule(name: string, iconRule: var): bool {
-        if (!iconRule.icon)
-            return false;
-
-        if (iconRule.regex) {
-            const re = new RegExp(iconRule.regex, iconRule.flags ?? "");
-            if (re.test(name))
-                return true;
-        } else if (iconRule.name === name) {
-            return true;
-        }
-
-        return false;
+        return IconsHelpers.matchIconRule(name, iconRule);
     }
 
     function matchIconRuleList(name: string, rules: var): string {
-        if (!rules)
-            return "";
-
-        for (const iconRule of rules.values)
-            if (matchIconRule(name, iconRule))
-                return iconRule.icon;
-
-        return "";
+        return IconsHelpers.matchIconRuleList(name, rules);
     }
 
     function getAppIcon(name: string, fallback: string): string {
@@ -155,17 +138,7 @@ Singleton {
     }
 
     function getAppCategoryIcon(name: string, fallback: string): string {
-        const match = matchIconRuleList(name, GlobalConfig.bar.workspaces.windowIcons);
-        if (match)
-            return match;
-
-        const categories = DesktopEntries.heuristicLookup(name)?.categories;
-        if (categories)
-            for (const [key, value] of Object.entries(categoryIcons))
-                if (categories.includes(key))
-                    return value;
-
-        return fallback;
+        return IconsHelpers.appCategoryIcon(name, fallback, GlobalConfig.bar.workspaces.windowIcons, categoryIcons, DesktopEntries);
     }
 
     /**
@@ -173,22 +146,15 @@ Singleton {
      * If any of the strings are found in the text, returns the result associated with them. Otherwise returns the fallback.
      */
     function matchIcon(text: string, rules: var, fallback: string): string {
-        for (const [needles, result] of rules)
-            if (needles.some(n => text.includes(n)))
-                return result;
-
-        return fallback;
+        return IconsHelpers.matchIcon(text, rules, fallback);
     }
 
-    function getNetworkIcon(strength: int, isSecure = false): string {
-        const level = Math.max(0, Math.min(4, Math.floor(strength / 20)));
-        const icon = networkIcons[level];
-
-        return isSecure && level > 0 ? `${icon}_locked` : icon;
+    function getNetworkIcon(strength: int, isSecure: bool): string {
+        return IconsHelpers.networkIcon(strength, isSecure, networkIcons);
     }
 
     function getBluetoothIcon(icon: string): string {
-        return matchIcon(icon, bluetoothIconRules, "bluetooth");
+        return IconsHelpers.matchIcon(icon, bluetoothIconRules, "bluetooth");
     }
 
     function getWeatherIcon(code: string): string {
@@ -197,7 +163,7 @@ Singleton {
 
     function getNotifIcon(summary: string, urgency: int): string {
         const fallback = urgency === NotificationUrgency.Critical ? "release_alert" : "chat";
-        return matchIcon(summary.toLowerCase(), notifIconRules, fallback);
+        return IconsHelpers.matchIcon(summary.toLowerCase(), notifIconRules, fallback);
     }
 
     function getVolumeIcon(volume: real, isMuted: bool): string {
@@ -215,25 +181,10 @@ Singleton {
     }
 
     function getTrayIcon(id: string, icon: string): string {
-        for (const sub of GlobalConfig.bar.tray.iconSubs.values)
-            if (sub.id === id)
-                return sub.image ? Qt.resolvedUrl(sub.image) : Quickshell.iconPath(sub.icon);
-
-        if (icon.includes("?path=")) {
-            const [name, path] = icon.split("?path=");
-            const file = name.slice(name.lastIndexOf("/") + 1);
-            const themed = Quickshell.iconPath(file, true);
-            icon = themed ? themed : Qt.resolvedUrl(`${path}/${file}`);
-        }
-        return icon;
+        return IconsHelpers.trayIcon(id, icon, GlobalConfig.bar.tray, Quickshell, Qt);
     }
 
-    function getBatteryIcon(percentage: real, charging = false): string {
-        if (percentage === 1)
-            return charging ? "battery_charging_full" : "battery_full";
-        let level = Math.floor(percentage * 7);
-        if (charging && (level === 4 || level === 1))
-            level--;
-        return charging ? `battery_charging_${(level + 3) * 10}` : `battery_${level}_bar`;
+    function getBatteryIcon(percentage: real, charging: bool): string {
+        return IconsHelpers.batteryIcon(percentage, charging);
     }
 }

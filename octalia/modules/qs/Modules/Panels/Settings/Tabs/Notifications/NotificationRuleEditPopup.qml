@@ -2,7 +2,6 @@ import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.System
 import qs.Widgets
 
 Popup {
@@ -45,7 +44,7 @@ Popup {
     RowLayout {
       Layout.fillWidth: true
       NText {
-        text: editIndex >= 0 ? I18n.tr("panels.notifications.rules-edit") : I18n.tr("panels.notifications.rules-add")
+        text: root.editIndex >= 0 ? I18n.tr("panels.notifications.rules-edit") : I18n.tr("panels.notifications.rules-add")
         font.weight: Style.fontWeightBold
         pointSize: Style.fontSizeL
         Layout.fillWidth: true
@@ -86,16 +85,16 @@ Popup {
             "name": I18n.tr("panels.notifications.rules-action-hide")
           }
         ]
-        currentKey: actionValue
+        currentKey: root.actionValue
         onSelected: key => {
-                      actionValue = key;
-                      _selectedAction = key;
+                      root.actionValue = key;
+                      root._selectedAction = key;
                     }
       }
 
       NLabel {
         Layout.fillWidth: true
-        label: _selectedAction === "block" ? I18n.tr("panels.notifications.rules-action-block-desc") : (_selectedAction === "mute" ? I18n.tr("panels.notifications.rules-action-mute-desc") : I18n.tr("panels.notifications.rules-action-hide-desc"))
+        label: root._selectedAction === "block" ? I18n.tr("panels.notifications.rules-action-block-desc") : (root._selectedAction === "mute" ? I18n.tr("panels.notifications.rules-action-mute-desc") : I18n.tr("panels.notifications.rules-action-hide-desc"))
         labelColor: Color.mOnSurfaceVariant
       }
     }
@@ -121,7 +120,7 @@ Popup {
         textColor: Color.mOnPrimary
         enabled: patternInput.text.trim() !== ""
         onClicked: {
-          root.saved(patternInput.text.trim(), _selectedAction || "block");
+          root.saved(patternInput.text.trim(), root._selectedAction || "block");
           root.close();
         }
       }

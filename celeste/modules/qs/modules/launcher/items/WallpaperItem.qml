@@ -1,26 +1,21 @@
 import QtQuick
 import Celeste.Config
-import Celeste.Models
 import Celeste.Multimedia
 import Celeste.State
 import qs.components
 import qs.components.effects
 import qs.services
+import "WallpaperItemHelpers.js" as WallpaperItemHelpers
 
 Item {
     id: root
 
-    required property var modelData
-    required property ScreenState screenState
+    required final property var modelData
+    required final property ScreenState screenState
 
-    scale: 0.5
-    opacity: 0
-    z: PathView.z ?? 0 // qmllint disable missing-property
-
-    Component.onCompleted: {
-        scale = Qt.binding(() => PathView.isCurrentItem ? 1 : PathView.onPath ? 0.8 : 0);
-        opacity = Qt.binding(() => PathView.onPath ? 1 : 0);
-    }
+    scale: PathView.isCurrentItem ? 1 : PathView.onPath ? 0.8 : 0
+    opacity: PathView.onPath ? 1 : 0
+    z: WallpaperItemHelpers.pathZ(root.PathView)
 
     implicitWidth: image.width + Tokens.padding.medium * 2
     implicitHeight: image.height + label.height + Tokens.spacing.extraSmall + Tokens.padding.large + Tokens.padding.medium
@@ -32,7 +27,7 @@ Item {
 
         radius: Tokens.rounding.large
         onClicked: {
-            WallpaperService.setWallpaper(root.modelData?.path);
+            WallpaperItemHelpers.setWallpaper(WallpaperService, root.modelData);
             root.screenState.launcher = false;
         }
     }
@@ -65,12 +60,12 @@ Item {
             anchors.centerIn: parent
             text: "image"
             color: Colours.tPalette.m3outline
-            fontStyle: Tokens.font.icon.builders.extraLarge.scale(2).weight(Font.DemiBold).build()
+            fontStyle: Tokens.styled("icon", "extraLarge", { scale: 2, weight: Font.DemiBold })
         }
 
         Visual {
             anchors.fill: parent
-            source: root.modelData?.path
+            source: WallpaperItemHelpers.path(root.modelData)
             thumbnail: true
             playing: (root.PathView.isCurrentItem && PersistentState.wallpaperPlaying) || stateLayer.containsMouse
         }
@@ -87,7 +82,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight
         renderType: Text.QtRendering
-        text: root.modelData?.relativePath
+        text: WallpaperItemHelpers.relativePath(root.modelData)
         font: Tokens.font.label.medium
     }
 

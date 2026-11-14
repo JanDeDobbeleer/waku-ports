@@ -7,6 +7,7 @@ import qs.components
 import qs.components.effects
 import qs.services
 import qs.utils
+import "TrayItemHelpers.js" as TrayItemHelpers
 
 // One tray icon. Left click activates, middle click secondary-activates and right click asks the
 // item to show its own menu (Explorer shows the real one). The icon keeps its own colours unless
@@ -14,30 +15,23 @@ import qs.utils
 MouseArea {
     id: root
 
-    required property var modelData
-    property int size: Tokens.font.body.small.pointSize * 2
+    required final property var modelData
+    final property int size: Tokens.font.body.small.pointSize * 2
 
-    readonly property string name: modelData.tooltipTitle || modelData.title || modelData.id
+    readonly final property string name: TrayItemHelpers.name(modelData)
 
     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
     hoverEnabled: true
     implicitWidth: size
     implicitHeight: size
 
-    onClicked: event => {
-        if (event.button === Qt.LeftButton)
-            modelData.activate();
-        else if (event.button === Qt.MiddleButton)
-            modelData.secondaryActivate();
-        else
-            modelData.display(QsWindow.window, event.x, event.y);
-    }
+    onClicked: event => TrayItemHelpers.activate(modelData, event, Qt, QsWindow.window)
 
     Loader {
         anchors.fill: parent
-        active: !!root.modelData.fakeGlyph
+        active: !!TrayItemHelpers.fakeGlyph(root.modelData)
         sourceComponent: MaterialIcon {
-            text: root.modelData.fakeGlyph
+            text: TrayItemHelpers.fakeGlyph(root.modelData)
             color: Colours.palette.m3primary
             fontStyle: Tokens.font.icon.medium
             horizontalAlignment: Text.AlignHCenter
@@ -47,8 +41,8 @@ MouseArea {
 
     Image {
         anchors.fill: parent
-        visible: !root.modelData.fakeGlyph && !Config.bar.tray.recolour
-        source: root.modelData.fakeGlyph ? "" : Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
+        visible: !TrayItemHelpers.fakeGlyph(root.modelData) && !Config.bar.tray.recolour
+        source: TrayItemHelpers.fakeGlyph(root.modelData) ? "" : TrayItemHelpers.iconPath(root.modelData, Icons)
         sourceSize: Qt.size(root.size * 2, root.size * 2)
         fillMode: Image.PreserveAspectFit
         asynchronous: true
@@ -58,7 +52,7 @@ MouseArea {
     ColouredIcon {
         anchors.fill: parent
         visible: Config.bar.tray.recolour
-        source: root.modelData.fakeGlyph || !Config.bar.tray.recolour ? "" : Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
+        source: TrayItemHelpers.fakeGlyph(root.modelData) || !Config.bar.tray.recolour ? "" : TrayItemHelpers.iconPath(root.modelData, Icons)
         colour: Colours.palette.m3secondary
     }
 }

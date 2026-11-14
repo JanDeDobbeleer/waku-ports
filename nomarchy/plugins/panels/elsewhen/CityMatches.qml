@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons
 import qs.Ui
+import "Model.js" as Model
 
 // The matches for a CitySearch; hosts that overlay results place this themselves.
 Column {
@@ -11,7 +13,7 @@ Column {
   spacing: Style.space(2)
 
   Repeater {
-    model: list.citySearch.matches
+    model: Model.value(list.citySearch, "matches")
 
     CursorSurface {
       id: match
@@ -20,8 +22,8 @@ Column {
 
       width: parent.width
       implicitHeight: Style.spacing.popupRowHeight
-      foreground: list.citySearch.foreground
-      hasCursor: list.citySearch.selectedIndex === index
+      foreground: Model.value(list.citySearch, "foreground")
+      hasCursor: Model.value(list.citySearch, "selectedIndex") === index
 
       // The region is what tells Portland, Oregon from Portland, Maine; it
       // gives way first when the line is tight.
@@ -39,26 +41,26 @@ Column {
         TextMetrics {
           id: matchNameMetrics
           font: matchName.font
-          text: match.modelData.label
+          text: Model.value(match.modelData, "label")
         }
 
         Text {
           id: matchName
           width: Math.min(Math.ceil(matchNameMetrics.advanceWidth) + 1, parent.width)
           textFormat: Text.PlainText
-          text: match.modelData.label
-          color: list.citySearch.foreground
-          font.family: list.citySearch.fontFamily
-          font.pixelSize: list.citySearch.fontSize
+          text: Model.value(match.modelData, "label")
+          color: Model.value(list.citySearch, "foreground")
+          font.family: Model.value(list.citySearch, "fontFamily")
+          font.pixelSize: Model.value(list.citySearch, "fontSize")
           elide: Text.ElideRight
         }
 
         Caption {
           anchors.baseline: matchName.baseline
-          width: Math.max(0, parent.width - matchName.width - parent.spacing)
-          text: match.modelData.region || ""
+          width: Math.max(0, parent.width - matchName.width - Style.spacing.md)
+          text: Model.value(match.modelData, "region") || ""
           visible: text !== ""
-          color: list.citySearch.fainter
+          color: Model.value(list.citySearch, "fainter")
           elide: Text.ElideRight
         }
       }
@@ -73,13 +75,13 @@ Column {
         spacing: Style.spacing.md
 
         Caption {
-          text: match.modelData.value
-          visible: !match.modelData.region
-          color: list.citySearch.fainter
+          text: Model.value(match.modelData, "value")
+          visible: !Model.value(match.modelData, "region")
+          color: Model.value(list.citySearch, "fainter")
         }
 
         Caption {
-          text: list.citySearch.offsetLabel(match.modelData.value)
+          text: Model.callFunction(Model.value(list.citySearch, "offsetLabel"), [Model.value(match.modelData, "value")])
           visible: text !== ""
         }
       }
@@ -90,26 +92,26 @@ Column {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPositionChanged: list.citySearch.selectedIndex = match.index
-        onClicked: list.citySearch.pick(match.modelData)
+        onPositionChanged: Model.setValue(list.citySearch, "selectedIndex", match.index)
+        onClicked: Model.callFunction(Model.value(list.citySearch, "pick"), [match.modelData])
       }
     }
   }
 
   Caption {
-    visible: list.citySearch.matches.length === 0
+    visible: Model.itemCount(Model.value(list.citySearch, "matches")) === 0
     width: parent.width
     horizontalAlignment: Text.AlignHCenter
     topPadding: Style.spacing.md
-    text: list.citySearch.loading ? list.citySearch.loadingText
-      : list.citySearch.searching ? I18n.t("elsewhen.searchingPlaces") : I18n.t("common.noMatches")
-    color: list.citySearch.fainter
+    text: Model.value(list.citySearch, "loading") ? Model.value(list.citySearch, "loadingText")
+      : Model.value(list.citySearch, "searching") ? I18n.t("elsewhen.searchingPlaces") : I18n.t("common.noMatches")
+    color: Model.value(list.citySearch, "fainter")
   }
 
   component Caption: Text {
     textFormat: Text.PlainText
-    color: list.citySearch.dim
-    font.family: list.citySearch.fontFamily
+    color: Model.value(list.citySearch, "dim")
+    font.family: Model.value(list.citySearch, "fontFamily")
     font.pixelSize: Style.font.caption
   }
 }

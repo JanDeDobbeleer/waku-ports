@@ -38,7 +38,7 @@ Item {
       if (lit.length > 2) {
         ctx.beginPath()
         ctx.moveTo(lit[0].x, lit[0].y)
-        for (var i = 1; i < lit.length; i++) ctx.lineTo(lit[i].x, lit[i].y)
+        for (let i = 1; i < lit.length; i++) ctx.lineTo(lit[i].x, lit[i].y)
         ctx.closePath()
         ctx.fillStyle = c
         ctx.fill()

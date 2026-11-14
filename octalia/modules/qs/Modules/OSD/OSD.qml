@@ -1,5 +1,6 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -9,6 +10,7 @@ import qs.Services.Keyboard
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
+import "./OSDUtils.js" as OSDUtils
 
 // Unified OSD component that displays volume, input volume, and brightness changes
 Variants {
@@ -22,7 +24,7 @@ Variants {
     LockKey
   }
 
-  model: Quickshell.screens.filter(screen => (Settings.data.osd.monitors.includes(screen.name) || Settings.data.osd.monitors.length === 0) && Settings.data.osd.enabled)
+  model: OSDUtils.screensForOSD(Quickshell.screens, Settings.data.osd.monitors, Settings.data.osd.enabled)
 
   delegate: Loader {
     id: root
@@ -50,18 +52,12 @@ Variants {
     // LockKey OSD enabled state (reactive to settings)
     readonly property bool lockKeyOSDEnabled: {
       const enabledTypes = Settings.data.osd.enabledTypes || [];
-      if (enabledTypes.length === 0)
+      if (!OSDUtils.hasValues(enabledTypes))
         return false;
-      return enabledTypes.includes(OSD.Type.LockKey);
+      return OSDUtils.contains(enabledTypes, OSD.Type.LockKey);
     }
 
-    readonly property var validIcons: {
-      const iconKeys = Object.keys(Icons.icons);
-      const aliasKeys = Object.keys(Icons.aliases);
-      return new Set([...iconKeys, ...aliasKeys]);
-    }
-
-    function getIcon() {
+    function getIcon(): string {
       switch (currentOSDType) {
       case OSD.Type.Volume:
         if (isMuted)
@@ -84,7 +80,7 @@ Variants {
       }
     }
 
-    function getCurrentValue() {
+    function getCurrentValue(): real {
       switch (currentOSDType) {
       case OSD.Type.Volume:
         return isMuted ? 0 : currentVolume;
@@ -100,14 +96,14 @@ Variants {
       }
     }
 
-    function getMaxValue() {
+    function getMaxValue(): real {
       if (currentOSDType === OSD.Type.Volume || currentOSDType === OSD.Type.InputVolume) {
         return Settings.data.audio.volumeOverdrive ? 1.5 : 1.0;
       }
       return 1.0;
     }
 
-    function getDisplayPercentage() {
+    function getDisplayPercentage(): string {
       if (currentOSDType === OSD.Type.LockKey) {
         // For lock keys, return the pre-determined status text
         return lastLockKeyChanged;
@@ -123,7 +119,7 @@ Variants {
       return pct + "%";
     }
 
-    function getProgressColor() {
+    function getProgressColor(): color {
       const isMutedState = (currentOSDType === OSD.Type.Volume && isMuted) || (currentOSDType === OSD.Type.InputVolume && isInputMuted);
       if (isMutedState) {
         return Color.mError;
@@ -149,7 +145,7 @@ Variants {
       return Color.mPrimary;
     }
 
-    function getIconColor() {
+    function getIconColor(): color {
       const isMutedState = (currentOSDType === OSD.Type.Volume && isMuted) || (currentOSDType === OSD.Type.InputVolume && isInputMuted);
       if (isMutedState)
         return Color.mError;
@@ -169,15 +165,17 @@ Variants {
     }
 
     // Brightness Handling
-    function connectBrightnessMonitors() {
-      for (var i = 0; i < BrightnessService.monitors.length; i++) {
+    function connectBrightnessMonitors(): void {
+      var i;
+      for (i = 0; i < BrightnessService.monitors.length; i++) {
         const monitor = BrightnessService.monitors[i];
         monitor.brightnessUpdated.disconnect(onBrightnessChanged);
         monitor.brightnessUpdated.connect(onBrightnessChanged);
       }
     }
 
-    function onBrightnessChanged(newBrightness) {
+    function onBrightnessChanged(newBrightness: real): void {
+      var cards;
       if (!root)
         return;
 
@@ -186,27 +184,28 @@ Variants {
       var brightnessPanel = PanelService.getPanel("brightnessPanel", root.modelData);
       var controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.modelData);
 
-      if (brightnessPanel && brightnessPanel.isPanelOpen)
+      if (OSDUtils.isPanelOpen(brightnessPanel))
         return;
-      if (controlCenterPanel && controlCenterPanel.isPanelOpen) {
-        var cards = Settings.data.controlCenter.cards || [];
-        if (cards.some(c => c.enabled && c.id === "brightness-card"))
+      if (OSDUtils.isPanelOpen(controlCenterPanel)) {
+        cards = Settings.data.controlCenter.cards || [];
+        if (OSDUtils.hasEnabledCard(cards, "brightness-card"))
           return;
       }
       showOSD(OSD.Type.Brightness);
     }
 
     // Check if a specific OSD type is enabled
-    function isTypeEnabled(type) {
+    function isTypeEnabled(type: int): bool {
       const enabledTypes = Settings.data.osd.enabledTypes || [];
       // If enabledTypes is empty, no types are enabled (no OSD will be shown)
-      if (enabledTypes.length === 0)
+      if (!OSDUtils.hasValues(enabledTypes))
         return false;
-      return enabledTypes.includes(type);
+      return OSDUtils.contains(enabledTypes, type);
     }
 
     // OSD Display Control
-    function showOSD(type) {
+    function showOSD(type: int): void {
+      var audioPanel, cards, controlCenterPanel;
       // Ignore all OSD requests during startup period
       if (!startupComplete)
         return;
@@ -217,13 +216,13 @@ Variants {
 
       // Suppress Audio OSD if Audio Panel or Control Center (with audio card) is open
       if (type === OSD.Type.Volume || type === OSD.Type.InputVolume) {
-        var audioPanel = PanelService.getPanel("audioPanel", root.modelData);
-        if (audioPanel && audioPanel.isPanelOpen)
+        audioPanel = PanelService.getPanel("audioPanel", root.modelData);
+        if (OSDUtils.isPanelOpen(audioPanel))
           return;
-        var controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.modelData);
-        if (controlCenterPanel && controlCenterPanel.isPanelOpen) {
-          var cards = Settings.data.controlCenter.cards || [];
-          if (cards.some(c => c.enabled && c.id === "audio-card"))
+        controlCenterPanel = PanelService.getPanel("controlCenterPanel", root.modelData);
+        if (OSDUtils.isPanelOpen(controlCenterPanel)) {
+          cards = Settings.data.controlCenter.cards || [];
+          if (OSDUtils.hasEnabledCard(cards, "audio-card"))
             return;
         }
       }
@@ -235,18 +234,17 @@ Variants {
       }
 
       if (root.item) {
-        root.item.showOSD();
+        OSDUtils.showOSD(root.item);
       } else {
         Qt.callLater(() => {
                        if (root.item)
-                       root.item.showOSD();
+                       OSDUtils.showOSD(root.item);
                      });
       }
     }
 
-    function hideOSD() {
-      if (root.item?.osdItem) {
-        root.item.osdItem.hideImmediately();
+    function hideOSD(): void {
+      if (OSDUtils.hideLoadedOSD(root.item)) {
       } else if (root.active) {
         root.active = false;
       }
@@ -257,48 +255,48 @@ Variants {
       target: AudioService
 
       function onVolumeChanged() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onVolumeAtMaximum() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onVolumeAtMinimum() {
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onMutedChanged() {
         if (AudioService.consumeOutputOSDSuppression())
           return;
-        showOSD(OSD.Type.Volume);
+        root.showOSD(OSD.Type.Volume);
       }
 
       function onInputVolumeChanged() {
-        if (suppressInputOSD)
+        if (root.suppressInputOSD)
           return;
         if (AudioService.hasInput)
-          showOSD(OSD.Type.InputVolume);
+          root.showOSD(OSD.Type.InputVolume);
       }
 
       function onInputMutedChanged() {
-        if (suppressInputOSD)
+        if (root.suppressInputOSD)
           return;
         if (!AudioService.hasInput)
           return;
         if (AudioService.consumeInputOSDSuppression())
           return;
-        showOSD(OSD.Type.InputVolume);
+        root.showOSD(OSD.Type.InputVolume);
       }
 
       // Refresh OSD when device changes to ensure correct volume is displayed
       function onSinkChanged() {
-        suppressInputOSD = true;
+        root.suppressInputOSD = true;
         inputSuppressionTimer.restart();
         // If volume OSD is currently showing, refresh it to show new device's volume
         if (root.currentOSDType === OSD.Type.Volume) {
           Qt.callLater(() => {
-                         showOSD(OSD.Type.Volume);
+                         root.showOSD(OSD.Type.Volume);
                        });
         }
       }
@@ -307,7 +305,7 @@ Variants {
         // If input volume OSD is currently showing, refresh it to show new device's volume
         if (root.currentOSDType === OSD.Type.InputVolume) {
           Qt.callLater(() => {
-                         showOSD(OSD.Type.InputVolume);
+                         root.showOSD(OSD.Type.InputVolume);
                        });
         }
       }
@@ -317,7 +315,7 @@ Variants {
     Connections {
       target: BrightnessService
       function onMonitorsChanged() {
-        connectBrightnessMonitors();
+        root.connectBrightnessMonitors();
       }
     }
 
@@ -340,17 +338,17 @@ Variants {
     Connections {
       target: root.lockKeyOSDEnabled ? LockKeysService : null
 
-      function onCapsLockChanged(active) {
+      function onCapsLockChanged(active: bool): void {
         root.lastLockKeyChanged = active ? "CAPS ON" : "CAPS OFF";
         root.showOSD(OSD.Type.LockKey);
       }
 
-      function onNumLockChanged(active) {
+      function onNumLockChanged(active: bool): void {
         root.lastLockKeyChanged = active ? "NUM ON" : "NUM OFF";
         root.showOSD(OSD.Type.LockKey);
       }
 
-      function onScrollLockChanged(active) {
+      function onScrollLockChanged(active: bool): void {
         root.lastLockKeyChanged = active ? "SCROLL ON" : "SCROLL OFF";
         root.showOSD(OSD.Type.LockKey);
       }
@@ -362,7 +360,7 @@ Variants {
       interval: 2000
       running: true
       onTriggered: {
-        connectBrightnessMonitors();
+        root.connectBrightnessMonitors();
         root.startupComplete = true;
       }
     }
@@ -376,14 +374,11 @@ Variants {
     }
 
     Component.onDestruction: {
+      var i;
       LockKeysService.unregisterComponent("osd:" + (modelData?.name || "unknown"));
       if (typeof BrightnessService !== "undefined" && BrightnessService.monitors) {
-        for (var i = 0; i < BrightnessService.monitors.length; i++) {
-          try {
-            BrightnessService.monitors[i].brightnessUpdated.disconnect(onBrightnessChanged);
-          } catch (e) {
-            // Ignore errors if already disconnected or not connected
-          }
+        for (i = 0; i < BrightnessService.monitors.length; i++) {
+          OSDUtils.disconnectBrightnessMonitor(BrightnessService.monitors[i], onBrightnessChanged);
         }
       }
     }
@@ -391,7 +386,7 @@ Variants {
     // Visual Component
     sourceComponent: PanelWindow {
       id: panel
-      screen: modelData
+      screen: root.modelData
 
       // Position configuration
       readonly property string location: Settings.data.osd?.location || "top_right"
@@ -497,7 +492,7 @@ Variants {
       readonly property bool isFramed: Settings.data.bar.barType === "framed"
       readonly property real frameThickness: Settings.data.bar.frameThickness ?? 8
 
-      function calculateMargin(isAnchored, position) {
+      function calculateMargin(isAnchored: bool, position: string): real {
         if (!isAnchored)
           return 0;
 
@@ -641,10 +636,11 @@ Variants {
 
             // Progress Bar for Volume/Brightness
             Rectangle {
+              id: horizontalProgressTrack
               visible: root.currentOSDType !== OSD.Type.LockKey
               Layout.fillWidth: true
               Layout.alignment: Qt.AlignVCenter
-              height: panel.barThickness
+              Layout.preferredHeight: panel.barThickness
               radius: Math.min(Style.iRadiusL, panel.barThickness / 2)
               color: Color.mSurfaceVariant
 
@@ -653,7 +649,7 @@ Variants {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: parent.width * Math.min(1.0, root.getCurrentValue() / root.getMaxValue())
-                radius: parent.radius
+                radius: horizontalProgressTrack.radius
                 color: root.getProgressColor()
 
                 Behavior on width {
@@ -737,6 +733,7 @@ Variants {
                 model: textVerticalLayout.verticalTextChars
 
                 NText {
+                  required property var modelData
                   text: modelData || ""
                   color: root.getProgressColor()
                   pointSize: Style.fontSizeS
@@ -772,6 +769,7 @@ Variants {
               Layout.fillHeight: root.currentOSDType !== OSD.Type.LockKey
 
               Rectangle {
+                id: verticalProgressTrack
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
@@ -784,7 +782,7 @@ Variants {
                   anchors.right: parent.right
                   anchors.bottom: parent.bottom
                   height: parent.height * Math.min(1.0, root.getCurrentValue() / root.getMaxValue())
-                  radius: parent.radius
+                  radius: verticalProgressTrack.radius
                   color: root.getProgressColor()
 
                   Behavior on height {

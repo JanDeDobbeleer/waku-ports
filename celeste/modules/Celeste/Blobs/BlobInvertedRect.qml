@@ -7,20 +7,20 @@ import QtQuick.Shapes
 Item {
     id: root
 
-    property BlobGroup group
-    property real radius: 0
-    property real borderLeft: 0
-    property real borderRight: 0
-    property real borderTop: 0
-    property real borderBottom: 0
-    property matrix4x4 deformMatrix
-    property matrix4x4 rawDeformMatrix
+    final property BlobGroup group
+    final property real radius: 0
+    final property real borderLeft: 0
+    final property real borderRight: 0
+    final property real borderTop: 0
+    final property real borderBottom: 0
+    final property matrix4x4 deformMatrix
+    final property matrix4x4 rawDeformMatrix
 
-    readonly property real holeX: Math.max(0, borderLeft)
-    readonly property real holeY: Math.max(0, borderTop)
-    readonly property real holeW: Math.max(0, width - holeX - Math.max(0, borderRight))
-    readonly property real holeH: Math.max(0, height - holeY - Math.max(0, borderBottom))
-    readonly property real r: Math.max(0, Math.min(radius, holeW / 2, holeH / 2))
+    readonly final property real holeX: Math.max(0, borderLeft)
+    readonly final property real holeY: Math.max(0, borderTop)
+    readonly final property real holeW: Math.max(0, width - holeX - Math.max(0, borderRight))
+    readonly final property real holeH: Math.max(0, height - holeY - Math.max(0, borderBottom))
+    readonly final property real r: Math.max(0, Math.min(radius, holeW / 2, holeH / 2))
 
     Shape {
         anchors.fill: parent

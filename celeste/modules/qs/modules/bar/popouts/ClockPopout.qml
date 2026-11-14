@@ -12,7 +12,7 @@ import qs.modules.dashboard.dash as DashCards
 Column {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     spacing: Tokens.spacing.small
     width: Tokens.px(280)

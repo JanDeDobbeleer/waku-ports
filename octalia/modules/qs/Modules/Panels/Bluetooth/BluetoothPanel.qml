@@ -1,16 +1,16 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Bluetooth
 import "../Settings/Tabs/Connections" as BluetoothPrefs
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Modules.Panels.Settings
-import qs.Services.Hardware
 import qs.Services.Networking
 import qs.Services.UI
 import qs.Widgets
+import "BluetoothPanelUtils.js" as BluetoothPanelUtils
 
 SmartPanel {
   id: root
@@ -69,7 +69,7 @@ SmartPanel {
           NIconButton {
             icon: "settings"
             baseSize: Style.baseWidgetSize * 0.8
-            onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, screen)
+            onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, root.screen)
           }
 
           NIconButton {
@@ -149,7 +149,7 @@ SmartPanel {
               if (!BluetoothService.enabled || !BluetoothService.devices)
                 return false;
               // Pulling pairedDevices count from the source component
-              return (btSource.pairedDevices.length === 0 && btSource.connectedDevices.length === 0);
+              return (BluetoothPanelUtils.arrayLength(btSource.pairedDevices) === 0 && BluetoothPanelUtils.arrayLength(btSource.connectedDevices) === 0);
             }
             Layout.fillWidth: true
             Layout.preferredHeight: emptyColumn.implicitHeight + Style.margin2M
@@ -182,7 +182,7 @@ SmartPanel {
                 text: I18n.tr("common.settings")
                 icon: "settings"
                 Layout.alignment: Qt.AlignHCenter
-                onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, screen)
+                onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 1, root.screen)
               }
 
               Item {

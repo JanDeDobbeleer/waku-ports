@@ -5,7 +5,9 @@ import qs.components
 import qs.services
 
 StyledRect {
-    required property int extra
+    id: root
+
+    required final property int extra
 
     anchors.right: parent.right
     anchors.margins: Tokens.padding.medium
@@ -21,7 +23,7 @@ StyledRect {
 
     Elevation {
         anchors.fill: parent
-        radius: parent.radius
+        radius: root.radius
         opacity: parent.opacity
         z: -1
         level: 2

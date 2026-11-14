@@ -1,8 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -13,13 +13,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property int valueWidth: widgetData.width !== undefined ? widgetData.width : widgetMetadata.width
-  property int valueHeight: widgetData.height !== undefined ? widgetData.height : widgetMetadata.height
-  property string valueVisualizerType: widgetData.visualizerType !== undefined ? widgetData.visualizerType : widgetMetadata.visualizerType
-  property string valueColorName: widgetData.colorName !== undefined ? widgetData.colorName : widgetMetadata.colorName
-  property bool valueHideWhenIdle: widgetData.hideWhenIdle !== undefined ? widgetData.hideWhenIdle : widgetMetadata.hideWhenIdle
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
+  property int valueWidth: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "width")
+  property int valueHeight: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "height")
+  property string valueVisualizerType: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "visualizerType")
+  property string valueColorName: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorName")
+  property bool valueHideWhenIdle: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideWhenIdle")
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -38,19 +38,19 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.width")
     description: I18n.tr("bar.audio-visualizer.width-description")
-    text: String(valueWidth)
+    text: String(root.valueWidth)
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     inputMethodHints: Qt.ImhDigitsOnly
     onEditingFinished: {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
-        valueWidth = parsed;
-        saveSettings();
+        root.valueWidth = parsed;
+        root.saveSettings();
       } else {
-        text = String(valueWidth);
+        text = String(root.valueWidth);
       }
     }
-    defaultValue: String(widgetMetadata.width)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "width"))
   }
 
   NTextInput {
@@ -58,19 +58,19 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("common.height")
     description: I18n.tr("bar.audio-visualizer.height-description")
-    text: String(valueHeight)
+    text: String(root.valueHeight)
     placeholderText: I18n.tr("placeholders.enter-width-pixels")
     inputMethodHints: Qt.ImhDigitsOnly
     onEditingFinished: {
       const parsed = parseInt(text);
       if (!isNaN(parsed) && parsed > 0) {
-        valueHeight = parsed;
-        saveSettings();
+        root.valueHeight = parsed;
+        root.saveSettings();
       } else {
-        text = String(valueHeight);
+        text = String(root.valueHeight);
       }
     }
-    defaultValue: String(widgetMetadata.height)
+    defaultValue: String(SettingsValue.read(root.widgetMetadata, "height"))
   }
 
   NComboBox {
@@ -91,36 +91,36 @@ ColumnLayout {
         "name": I18n.tr("options.visualizer-types.wave")
       }
     ]
-    currentKey: valueVisualizerType
+    currentKey: root.valueVisualizerType
     onSelected: key => {
-                  valueVisualizerType = key;
-                  saveSettings();
+                  root.valueVisualizerType = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.visualizerType
+    defaultValue: SettingsValue.read(root.widgetMetadata, "visualizerType")
   }
 
   NColorChoice {
     Layout.fillWidth: true
     label: I18n.tr("bar.audio-visualizer.color-name-label")
     description: I18n.tr("bar.audio-visualizer.color-name-description")
-    currentKey: valueColorName
+    currentKey: root.valueColorName
     onSelected: key => {
-                  valueColorName = key;
-                  saveSettings();
+                  root.valueColorName = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.colorName
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorName")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("bar.audio-visualizer.hide-when-idle-label")
     description: I18n.tr("bar.audio-visualizer.hide-when-idle-description")
-    checked: valueHideWhenIdle
+    checked: root.valueHideWhenIdle
     onToggled: checked => {
-                 valueHideWhenIdle = checked;
-                 saveSettings();
+                 root.valueHideWhenIdle = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenIdle
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenIdle")
   }
 
   NDivider {
@@ -131,24 +131,24 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
-                 saveSettings();
+                 root.valueShowBackground = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.media-player-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
-                 saveSettings();
+                 root.valueRoundedCorners = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 }

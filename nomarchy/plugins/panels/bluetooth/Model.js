@@ -1,3 +1,12 @@
+function field(object, key) { return object ? object[key] : undefined }
+function setField(object, key, value) { if (object) object[key] = value }
+function arrayLength(value) { return value ? value.length : 0 }
+function values(object) { return object && object.values ? object.values : [] }
+function callMethod(object, name, args) { return object[name].apply(object, args || []) }
+function hasMethod(object, name) { return !!object && typeof object[name] === "function" }
+function invoke(object, name) { if (hasMethod(object, name)) object[name]() }
+function removeKey(object, key) { delete object[key] }
+
 function deviceLabel(device) {
   if (!device) return ""
   return String(device.deviceName || device.name || "").trim()

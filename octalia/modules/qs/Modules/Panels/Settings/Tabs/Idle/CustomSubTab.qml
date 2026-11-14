@@ -2,8 +2,9 @@ import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
-import qs.Services.Power
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
+import "CustomSubTab.js" as CustomData
 
 ColumnLayout {
   id: root
@@ -17,43 +18,15 @@ ColumnLayout {
     id: entriesModel
   }
 
-  function _loadToModel() {
-    if (_saving)
-      return;
-    entriesModel.clear();
-    var entries = [];
-    try {
-      entries = JSON.parse(Settings.data.idle.customCommands);
-    } catch (e) {
-      Logger.w("CustomSubTab", "Failed to parse customCommands:", e);
-    }
-    for (var i = 0; i < entries.length; i++) {
-      entriesModel.append({
-                            "name": String(entries[i].name || ""),
-                            "timeout": parseInt(entries[i].timeout) || 60,
-                            "command": String(entries[i].command || ""),
-                            "resumeCommand": String(entries[i].resumeCommand || "")
-                          });
-    }
+  function _loadToModel(): void {
+    CustomData.loadToModel(root, entriesModel, Settings, Logger);
   }
 
-  function _saveFromModel() {
-    _saving = true;
-    var arr = [];
-    for (var i = 0; i < entriesModel.count; i++) {
-      var item = entriesModel.get(i);
-      arr.push({
-                 "name": item.name,
-                 "timeout": item.timeout,
-                 "command": item.command,
-                 "resumeCommand": item.resumeCommand
-               });
-    }
-    Settings.data.idle.customCommands = JSON.stringify(arr);
-    _saving = false;
+  function _saveFromModel(): void {
+    CustomData.saveFromModel(root, entriesModel, Settings);
   }
 
-  function _removeEntry(index) {
+  function _removeEntry(index: int): void {
     entriesModel.remove(index, 1);
     _saveFromModel();
   }
@@ -73,7 +46,7 @@ ColumnLayout {
     parent: Overlay.overlay
   }
 
-  function openEdit(index, nameVal, timeoutVal, cmdVal, resumeCmdVal) {
+  function openEdit(index: int, nameVal: string, timeoutVal: int, cmdVal: string, resumeCmdVal: string): void {
     editPopup.editIndex = index;
     editPopup.nameValue = nameVal;
     editPopup.timeoutValue = timeoutVal;
@@ -81,28 +54,7 @@ ColumnLayout {
     editPopup.resumeCommandValue = resumeCmdVal;
     editPopup.showName = true;
 
-    try {
-      editPopup.saved.disconnect(editPopup._savedSlot);
-    } catch (e) {}
-
-    editPopup._savedSlot = function (timeout, cmd, resumeCmd, name) {
-      if (index >= 0 && index < entriesModel.count) {
-        entriesModel.setProperty(index, "name", name);
-        entriesModel.setProperty(index, "timeout", timeout);
-        entriesModel.setProperty(index, "command", cmd);
-        entriesModel.setProperty(index, "resumeCommand", resumeCmd);
-      } else {
-        entriesModel.append({
-                              "name": name,
-                              "timeout": timeout,
-                              "command": cmd,
-                              "resumeCommand": resumeCmd
-                            });
-      }
-      root._saveFromModel();
-    };
-
-    editPopup.saved.connect(editPopup._savedSlot);
+    CustomData.connectSaved(editPopup, index, entriesModel, root);
     editPopup.open();
   }
 
@@ -140,12 +92,12 @@ ColumnLayout {
 
       NIconButton {
         icon: "settings"
-        onClicked: root.openEdit(entryDelegate.index, entryDelegate.name, entryDelegate.timeout, entryDelegate.command, entryDelegate.resumeCommand)
+        onClicked: SettingsValue.invokeParent(entryDelegate, "openEdit", entryDelegate.index, entryDelegate.name, entryDelegate.timeout, entryDelegate.command, entryDelegate.resumeCommand)
       }
 
       NIconButton {
         icon: "trash"
-        onClicked: root._removeEntry(entryDelegate.index)
+        onClicked: SettingsValue.invokeParent(entryDelegate, "_removeEntry", entryDelegate.index)
       }
     }
   }

@@ -1,20 +1,19 @@
 import QtQuick 6.10
-import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
-import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
+import "ProfileCardUtils.js" as PanelCardUtils
 
 // Header card with avatar, user and quick actions
 NBox {
   id: root
 
   property string uptimeText: "--"
+  property var controlCenterScreen
 
   RowLayout {
     anchors.left: parent.left
@@ -47,8 +46,8 @@ NBox {
       NText {
         Layout.fillWidth: true
         Layout.minimumWidth: 0
-        text: I18n.tr("system.uptime", {
-                        "uptime": uptimeText
+        text: I18n.trArgs("system.uptime", {
+                        "uptime": root.uptimeText
                       })
         pointSize: Style.fontSizeS
         color: Color.mOnSurfaceVariant
@@ -66,26 +65,25 @@ NBox {
         icon: "settings"
         onClicked: {
           // Better close the control center in case the settings open in a separate window
-          PanelService.openedPanel?.close();
+          PanelCardUtils.closePanel(PanelService.openedPanel);
 
-          var panel = PanelService.getPanel("settingsPanel", screen);
-          panel.requestedTab = SettingsPanel.Tab.General;
-          panel.open();
+          var panel = PanelService.getPanel("settingsPanel", root.controlCenterScreen);
+          PanelService.openSettingsPanel(panel, SettingsPanel.Tab.General);
         }
       }
 
       NIconButton {
         icon: "power"
         onClicked: {
-          PanelService.getPanel("sessionMenuPanel", screen)?.open();
-          PanelService.getPanel("controlCenterPanel", screen)?.close();
+          PanelService.invokePanel(PanelService.getPanel("sessionMenuPanel", root.controlCenterScreen), "open", []);
+          PanelService.invokePanel(PanelService.getPanel("controlCenterPanel", root.controlCenterScreen), "close", []);
         }
       }
 
       NIconButton {
         icon: "close"
         onClicked: {
-          PanelService.getPanel("controlCenterPanel", screen)?.close();
+          PanelService.invokePanel(PanelService.getPanel("controlCenterPanel", root.controlCenterScreen), "close", []);
         }
       }
     }
@@ -109,7 +107,7 @@ NBox {
     stdout: StdioCollector {
       onStreamFinished: {
         var uptimeSeconds = parseFloat(this.text.trim().split(' ')[0]);
-        uptimeText = Time.formatVagueHumanReadableDuration(uptimeSeconds);
+        root.uptimeText = Time.formatVagueHumanReadableDuration(uptimeSeconds);
         uptimeProcess.running = false;
       }
     }

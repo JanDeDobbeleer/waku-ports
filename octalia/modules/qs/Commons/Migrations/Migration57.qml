@@ -1,16 +1,10 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 
 QtObject {
   id: root
 
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Settings", "Migrating settings to v57 (cavaFrameRate -> spectrumFrameRate)");
-
-    if (rawJson && rawJson.audio && rawJson.audio.cavaFrameRate !== undefined) {
-      adapter.audio.spectrumFrameRate = rawJson.audio.cavaFrameRate;
-      logger.i("Settings", "Migrated cavaFrameRate:", rawJson.audio.cavaFrameRate, "-> spectrumFrameRate");
-    }
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate57(adapter, logger, rawJson);
   }
 }

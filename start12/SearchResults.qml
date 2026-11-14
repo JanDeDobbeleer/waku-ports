@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
 
@@ -6,11 +8,11 @@ Item {
     id: root
 
     property string query: ""
-    readonly property var results: query === "" ? [] : S.AppsService.search(query, 40)
-    readonly property var first: results.length > 0 ? results[0] : null
+    readonly property list<S.DesktopEntry> results: query === "" ? [] : S.AppsService.search(query, 40)
+    readonly property S.DesktopEntry first: results.length > 0 ? results[0] : null
 
-    signal launch(var entry)
-    signal context(var entry, var point)
+    signal launch(entry: S.DesktopEntry)
+    signal context(entry: S.DesktopEntry, point: point)
 
     Text {
         text: root.results.length > 0 ? "Best match" : "No apps match"
@@ -28,7 +30,7 @@ Item {
         model: root.results
 
         delegate: AppRow {
-            required property var modelData
+            required property S.DesktopEntry modelData
             required property int index
             width: ListView.view.width
             entry: modelData

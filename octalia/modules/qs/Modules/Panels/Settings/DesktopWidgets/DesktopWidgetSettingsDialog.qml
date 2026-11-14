@@ -1,13 +1,12 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "../SettingsValue.js" as SettingsValue
+import "DesktopWidgetSettingsDialog.js" as DesktopWidgetsData
 
 Popup {
   id: root
@@ -19,7 +18,7 @@ Popup {
   property var screen: null
   property var settingsCache: ({})
 
-  readonly property real maxHeight: (screen ? screen.height : (parent ? parent.height : 800)) * 0.8
+  readonly property real maxHeight: (screen ? SettingsValue.read(screen, "height") : (parent ? parent.height : 800)) * 0.8
 
   signal updateWidgetSettings(string section, int index, var settings)
 
@@ -64,7 +63,7 @@ Popup {
         Layout.preferredHeight: implicitHeight
 
         NText {
-          text: I18n.tr("system.widget-settings-title", {
+          text: I18n.trArgs("system.widget-settings-title", {
                           "widget": DesktopWidgetRegistry.getWidgetDisplayName(root.widgetId)
                         })
           pointSize: Style.fontSizeL
@@ -75,7 +74,7 @@ Popup {
 
         NIconButton {
           icon: "close"
-          onClicked: saveAndClose()
+          onClicked: root.saveAndClose()
         }
       }
 
@@ -103,34 +102,11 @@ Popup {
             Layout.fillWidth: true
             onLoaded: {
               if (item) {
-                Qt.callLater(() => {
-                               var firstInput = findFirstFocusable(item);
-                               if (firstInput) {
-                                 firstInput.forceActiveFocus();
-                               } else {
-                                 focusScope.forceActiveFocus();
-                               }
-                             });
+                DesktopWidgetsData.focusFirstFocusable(item, focusScope);
               }
             }
 
-            function findFirstFocusable(item) {
-              if (!item)
-                return null;
-              if (item.focus !== undefined && item.focus === true)
-                return item;
-              if (item.children) {
-                for (var i = 0; i < item.children.length; i++) {
-                  var child = item.children[i];
-                  if (child && child.focus !== undefined && child.focus === true)
-                    return child;
-                  var found = findFirstFocusable(child);
-                  if (found)
-                    return found;
-                }
-              }
-              return null;
-            }
+
           }
         }
       }
@@ -161,9 +137,10 @@ Popup {
     }
 
     onPositionChanged: mouse => {
+      var deltaX, deltaY;
                          if (pressed) {
-                           var deltaX = mouse.x - pressX;
-                           var deltaY = mouse.y - pressY;
+                           deltaX = mouse.x - pressX;
+                           deltaY = mouse.y - pressY;
 
                            root.x += deltaX;
                            root.y += deltaY;
@@ -183,50 +160,30 @@ Popup {
   Connections {
     target: settingsLoader.item
     ignoreUnknownSignals: true
-    function onSettingsChanged(newSettings) {
+    function onSettingsChanged(newSettings: var): void {
       if (newSettings) {
         root.settingsCache = newSettings;
         saveTimer.start();
       }
     }
 
-    function onSettingsSaved(newSettings) {
+    function onSettingsSaved(newSettings: var): void {
       if (newSettings) {
         root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
       }
     }
   }
 
-  function saveAndClose() {
-    if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
-      if (newSettings) {
-        root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
-      }
+  function saveAndClose(): void {
+    const newSettings = DesktopWidgetsData.saveSettings(settingsLoader.item);
+    if (newSettings) {
+      root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
     }
     root.close();
   }
 
-  function loadWidgetSettings() {
-    // Handle core widgets
-    const source = DesktopWidgetRegistry.widgetSettingsMap[widgetId];
-    if (source) {
-      var currentWidgetData = widgetData;
-      var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
-      for (var i = 0; i < monitorWidgets.length; i++) {
-        if (monitorWidgets[i].name === sectionId) {
-          var widgets = monitorWidgets[i].widgets || [];
-          if (widgetIndex >= 0 && widgetIndex < widgets.length) {
-            currentWidgetData = widgets[widgetIndex];
-          }
-          break;
-        }
-      }
-      var fullPath = Qt.resolvedUrl(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/DesktopWidgets/" + source);
-      settingsLoader.setSource(fullPath, {
-                                 "widgetData": currentWidgetData,
-                                 "widgetMetadata": DesktopWidgetRegistry.widgetMetadata[widgetId]
-                               });
-    }
+  function loadWidgetSettings(): void {
+    DesktopWidgetsData.loadWidgetSettings(settingsLoader, DesktopWidgetRegistry, widgetData, Settings.data.desktopWidgets.monitorWidgets || [], sectionId, widgetIndex, widgetId, ShellUrl.dir);
   }
+
 }

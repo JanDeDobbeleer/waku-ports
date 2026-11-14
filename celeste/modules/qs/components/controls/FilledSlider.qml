@@ -8,9 +8,9 @@ import qs.services
 Slider {
     id: root
 
-    required property string icon
-    property real oldValue
-    property bool initialized
+    required final property string icon
+    final property real oldValue
+    final property bool initialized
 
     orientation: Qt.Vertical
 
@@ -26,12 +26,12 @@ Slider {
             implicitHeight: parent.height - y
 
             color: Colours.palette.m3secondary
-            radius: parent.radius
+            radius: Tokens.rounding.full
         }
     }
 
     handle: Item {
-        id: handle
+        id: handleItem
 
         property alias moving: icon.moving
 
@@ -65,7 +65,7 @@ Slider {
             MaterialIcon {
                 id: icon
 
-                property bool moving
+                final property bool moving
 
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: 1
@@ -96,7 +96,7 @@ Slider {
         }
     }
 
-    onPressedChanged: handle.moving = pressed
+    onPressedChanged: handleItem.moving = pressed
 
     onValueChanged: {
         if (!initialized) {
@@ -106,7 +106,7 @@ Slider {
         if (Math.abs(value - oldValue) < 0.01)
             return;
         oldValue = value;
-        handle.moving = true;
+        handleItem.moving = true;
         stateChangeDelay.restart();
     }
 
@@ -116,7 +116,7 @@ Slider {
         interval: 500
         onTriggered: {
             if (!root.pressed)
-                handle.moving = false;
+                handleItem.moving = false;
         }
     }
 

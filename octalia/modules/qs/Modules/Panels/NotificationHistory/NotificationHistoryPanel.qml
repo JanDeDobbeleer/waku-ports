@@ -1,15 +1,15 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Services.Notifications
-import Quickshell.Wayland
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Modules.Panels.Settings
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
+import "./NotificationHistoryUtils.js" as NotificationHistoryUtils
 
 // Notification History panel
 SmartPanel {
@@ -88,22 +88,19 @@ SmartPanel {
                       }
                     }
 
-    function parseActions(actions) {
-      try {
-        return JSON.parse(actions || "[]");
-      } catch (e) {
-        return [];
-      }
+    function parseActions(actions: string): var {
+      return NotificationHistoryUtils.parseActions(actions);
     }
 
-    function moveSelection(dir) {
+    function moveSelection(dir: int): void {
+      var item;
       var m = NotificationService.historyModel;
-      if (!m || m.count === 0)
+      if (!m || NotificationHistoryUtils.modelCount(m) === 0)
         return;
 
       var newIndex = focusIndex;
       var found = false;
-      var count = m.count;
+      var count = NotificationHistoryUtils.modelCount(m);
 
       // If no selection yet, start from beginning (or end if up)
       if (focusIndex === -1) {
@@ -123,7 +120,7 @@ SmartPanel {
           break; // Stop at edges
         }
 
-        var item = m.get(newIndex);
+        item = NotificationHistoryUtils.modelRecord(m, newIndex);
         if (item && isInCurrentRange(item.timestamp)) {
           found = true;
           break;
@@ -138,47 +135,48 @@ SmartPanel {
       }
     }
 
-    function moveAction(dir) {
+    function moveAction(dir: int): void {
       if (focusIndex === -1)
         return;
-      var item = NotificationService.historyModel.get(focusIndex);
+      var item = NotificationHistoryUtils.modelRecord(NotificationService.historyModel, focusIndex);
       if (!item)
         return;
 
       var actions = parseActions(item.actionsJson);
 
-      if (actions.length === 0)
+      if (NotificationHistoryUtils.actionCount(actions) === 0)
         return;
 
       var newActionIndex = actionIndex + dir;
 
-      // Clamp between -1 (body) and actions.length - 1
+      // Clamp between -1 (body) and NotificationHistoryUtils.actionCount(actions) - 1
       if (newActionIndex < -1)
         newActionIndex = -1;
-      if (newActionIndex >= actions.length)
-        newActionIndex = actions.length - 1;
+      if (newActionIndex >= NotificationHistoryUtils.actionCount(actions))
+        newActionIndex = NotificationHistoryUtils.actionCount(actions) - 1;
 
       actionIndex = newActionIndex;
     }
 
-    function activateSelection() {
+    function activateSelection(): void {
+      var actions, delegate;
       if (focusIndex === -1)
         return;
-      var item = NotificationService.historyModel.get(focusIndex);
+      var item = NotificationHistoryUtils.modelRecord(NotificationService.historyModel, focusIndex);
       if (!item)
         return;
 
       if (actionIndex >= 0) {
-        var actions = parseActions(item.actionsJson);
-        if (actionIndex < actions.length) {
-          if (NotificationService.invokeAction(item.id, actions[actionIndex].identifier))
+        actions = parseActions(item.actionsJson);
+        if (actionIndex < NotificationHistoryUtils.actionCount(actions)) {
+          if (NotificationService.invokeAction(item.id, NotificationHistoryUtils.actionIdentifier(actions, actionIndex)))
             root.close();
         }
       } else {
-        var delegate = notificationColumn.children[focusIndex];
+        delegate = notificationColumn.children[focusIndex];
         if (!delegate)
           return;
-        if (!(delegate.canExpand || delegate.isExpanded))
+        if (!NotificationHistoryUtils.canExpand(delegate))
           return;
 
         if (scrollView.expandedId === item.id) {
@@ -189,10 +187,10 @@ SmartPanel {
       }
     }
 
-    function removeSelection() {
+    function removeSelection(): void {
       if (focusIndex === -1)
         return;
-      var item = NotificationService.historyModel.get(focusIndex);
+      var item = NotificationHistoryUtils.modelRecord(NotificationService.historyModel, focusIndex);
       if (!item)
         return;
 
@@ -208,39 +206,15 @@ SmartPanel {
       // Better UX: select next available or previous if last.
     }
 
-    function scrollToItem(index) {
-      // Find the delegate item
+    function scrollToItem(index: int): void {
       if (index < 0 || index >= notificationColumn.children.length)
         return;
-
-      var item = notificationColumn.children[index];
-      if (item && item.visible) {
-        // Use the internal flickable from NScrollView for accurate scrolling
-        var flickable = scrollView._internalFlickable;
-        if (!flickable || !flickable.contentItem)
-          return;
-
-        var pos = flickable.contentItem.mapFromItem(item, 0, 0);
-        var itemY = pos.y;
-        var itemHeight = item.height;
-
-        var currentContentY = flickable.contentY;
-        var viewHeight = flickable.height;
-
-        // Check if above visible area
-        if (itemY < currentContentY) {
-          flickable.contentY = Math.max(0, itemY - Style.marginM);
-        } else
-          // Check if below visible area
-          if (itemY + itemHeight > currentContentY + viewHeight) {
-            flickable.contentY = (itemY + itemHeight) - viewHeight + Style.marginM;
-          }
-      }
+      NotificationHistoryUtils.scrollToItem(scrollView._internalFlickable, notificationColumn.children[index], Style.marginM);
     }
 
     // Calculate content height based on header + tabs (if visible) + content
     property real calculatedHeight: {
-      if (NotificationService.historyModel.count === 0) {
+      if (NotificationHistoryUtils.modelCount(NotificationService.historyModel) === 0) {
         return headerBox.implicitHeight + scrollView.implicitHeight + Style.margin2L + Style.marginM;
       }
       return headerBox.implicitHeight + scrollView.implicitHeight + Style.margin2L + Style.marginM;
@@ -263,27 +237,27 @@ SmartPanel {
     property int focusIndex: -1
     property int actionIndex: -1  // For actions within a notification
 
-    function resetFocus() {
+    function resetFocus(): void {
       focusIndex = -1;
       actionIndex = -1;
     }
 
-    function checkKey(event, settingName) {
+    function checkKey(event: var, settingName: string): bool {
       return Keybinds.checkKey(event, settingName, Settings);
     }
 
     // Helper functions (lazy-loaded with panelContent)
-    function dateOnly(d) {
+    function dateOnly(d: var): var {
       return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
-    function getDateKey(d) {
+    function getDateKey(d: var): string {
       // Returns a string key for the date (YYYY-MM-DD) for comparison
       var date = dateOnly(d);
       return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate();
     }
 
-    function rangeForTimestamp(ts) {
+    function rangeForTimestamp(ts: var): int {
       var dt = new Date(ts);
       var today = dateOnly(new Date());
       var thatDay = dateOnly(dt);
@@ -298,45 +272,47 @@ SmartPanel {
       return 2;
     }
 
-    function recalcRangeCounts() {
+    function recalcRangeCounts(): void {
+      var i, item, r;
       var m = NotificationService.historyModel;
-      if (!m || typeof m.count === "undefined" || m.count <= 0) {
+      if (!m || NotificationHistoryUtils.modelCount(m) <= 0) {
         panelContent.rangeCounts = [0, 0, 0, 0];
         return;
       }
 
       var counts = [0, 0, 0, 0];
 
-      counts[0] = m.count;
+      counts[0] = NotificationHistoryUtils.modelCount(m);
 
-      for (var i = 0; i < m.count; ++i) {
-        var item = m.get(i);
+      for (i = 0; i < NotificationHistoryUtils.modelCount(m); ++i) {
+        item = NotificationHistoryUtils.modelRecord(m, i);
         if (!item || typeof item.timestamp === "undefined")
           continue;
-        var r = rangeForTimestamp(item.timestamp);
+        r = rangeForTimestamp(item.timestamp);
         counts[r + 1] = counts[r + 1] + 1;
       }
 
       panelContent.rangeCounts = counts;
     }
 
-    function isInCurrentRange(ts) {
+    function isInCurrentRange(ts: var): bool {
       if (currentRange === 0)
         return true;
       return rangeForTimestamp(ts) === (currentRange - 1);
     }
 
-    function countForRange(range) {
+    function countForRange(range: int): int {
       return rangeCounts[range] || 0;
     }
 
-    function hasNotificationsInCurrentRange() {
+    function hasNotificationsInCurrentRange(): bool {
+      var i, item;
       var m = NotificationService.historyModel;
-      if (!m || m.count === 0) {
+      if (!m || NotificationHistoryUtils.modelCount(m) === 0) {
         return false;
       }
-      for (var i = 0; i < m.count; ++i) {
-        var item = m.get(i);
+      for (i = 0; i < NotificationHistoryUtils.modelCount(m); ++i) {
+        item = NotificationHistoryUtils.modelRecord(m, i);
         if (item && isInCurrentRange(item.timestamp))
           return true;
       }
@@ -351,7 +327,7 @@ SmartPanel {
 
     Connections {
       target: NotificationService.historyModel
-      function onCountChanged() {
+      function onCountChanged(): void {
         panelContent.recalcRangeCounts();
       }
     }
@@ -426,7 +402,7 @@ SmartPanel {
               icon: "settings"
               baseSize: Style.baseWidgetSize * 0.8
               onClicked: {
-                SettingsPanelService.openToTab(SettingsPanel.Tab.Notifications, 0, screen);
+                SettingsPanelService.openToTab(SettingsPanel.Tab.Notifications, 0, root.screen);
                 root.close();
               }
             }
@@ -442,7 +418,7 @@ SmartPanel {
           NTabBar {
             id: tabsBox
             Layout.fillWidth: true
-            visible: NotificationService.historyModel.count > 0 && panelContent.groupByDate
+            visible: NotificationHistoryUtils.modelCount(NotificationService.historyModel) > 0 && panelContent.groupByDate
             currentIndex: panelContent.currentRange
             tabHeight: Style.toOdd(Style.baseWidgetSize * 0.8)
             spacing: Style.marginXS
@@ -521,20 +497,20 @@ SmartPanel {
 
                 NIcon {
                   icon: "bell-off"
-                  pointSize: (NotificationService.historyModel.count === 0) ? 48 : Style.baseWidgetSize
+                  pointSize: (NotificationHistoryUtils.modelCount(NotificationService.historyModel) === 0) ? 48 : Style.baseWidgetSize
                   color: Color.mOnSurfaceVariant
                   Layout.alignment: Qt.AlignHCenter
                 }
 
                 NText {
                   text: I18n.tr("notifications.panel.no-notifications")
-                  pointSize: (NotificationService.historyModel.count === 0) ? Style.fontSizeL : Style.fontSizeM
+                  pointSize: (NotificationHistoryUtils.modelCount(NotificationService.historyModel) === 0) ? Style.fontSizeL : Style.fontSizeM
                   color: Color.mOnSurfaceVariant
                   Layout.alignment: Qt.AlignHCenter
                 }
 
                 NText {
-                  visible: NotificationService.historyModel.count === 0
+                  visible: NotificationHistoryUtils.modelCount(NotificationService.historyModel) === 0
                   text: I18n.tr("notifications.panel.description")
                   pointSize: Style.fontSizeS
                   color: Color.mOnSurfaceVariant
@@ -564,14 +540,16 @@ SmartPanel {
                   model: NotificationService.historyModel
 
                   delegate: Item {
+                    required property var model
+                    required property int index
                     id: notificationDelegate
                     width: parent.width
-                    visible: panelContent.isInCurrentRange(model.timestamp)
+                    visible: panelContent.isInCurrentRange(NotificationHistoryUtils.role(notificationDelegate.model, "timestamp"))
                     height: visible && !isRemoving ? contentColumn.height + Style.margin2M : 0
 
-                    property int listIndex: index
-                    property string notificationId: model.id
-                    property string appName: model.appName || ""
+                    property int listIndex: notificationDelegate.index
+                    property string notificationId: NotificationHistoryUtils.role(notificationDelegate.model, "id")
+                    property string appName: NotificationHistoryUtils.role(notificationDelegate.model, "appName") || ""
                     property bool isExpanded: scrollView.expandedId === notificationId
                     property bool canExpand: summaryText.truncated || bodyText.truncated
                     property real swipeOffset: 0
@@ -588,15 +566,15 @@ SmartPanel {
                     readonly property real buttonClusterWidth: notificationDelegate.actionButtonSize * 2 + Style.marginXS
                     readonly property real iconSize: Math.round(40 * Style.uiScaleRatio)
 
-                    function isSafeLink(link) {
+                    function isSafeLink(link: string): bool {
                       if (!link)
                         return false;
                       const lower = link.toLowerCase();
                       const schemes = ["http://", "https://", "mailto:"];
-                      return schemes.some(scheme => lower.startsWith(scheme));
+                      return NotificationHistoryUtils.hasSafeScheme(lower);
                     }
 
-                    function linkAtPoint(x, y) {
+                    function linkAtPoint(x: real, y: real): string {
                       if (!Settings.data.notifications.enableMarkdown || !notificationDelegate.isExpanded)
                         return "";
 
@@ -621,7 +599,7 @@ SmartPanel {
                       return "";
                     }
 
-                    function updateCursorAt(x, y) {
+                    function updateCursorAt(x: real, y: real): void {
                       if (notificationDelegate.isExpanded && notificationDelegate.linkAtPoint(x, y)) {
                         historyInteractionArea.cursorShape = Qt.PointingHandCursor;
                       } else {
@@ -633,7 +611,7 @@ SmartPanel {
                       x: notificationDelegate.swipeOffset
                     }
 
-                    function dismissBySwipe() {
+                    function dismissBySwipe(): void {
                       if (isRemoving)
                         return;
                       isRemoving = true;
@@ -653,7 +631,7 @@ SmartPanel {
                       id: removeTimer
                       interval: notificationDelegate.removeAnimationDuration
                       repeat: false
-                      onTriggered: NotificationService.removeFromHistory(notificationId)
+                      onTriggered: NotificationService.removeFromHistory(notificationDelegate.notificationId)
                     }
 
                     Behavior on swipeOffset {
@@ -689,9 +667,9 @@ SmartPanel {
                     }
 
                     // Parse actions safely
-                    property var actionsList: parseActions(model.actionsJson)
+                    property var actionsList: NotificationHistoryUtils.parseActions(NotificationHistoryUtils.role(notificationDelegate.model, "actionsJson"))
 
-                    property bool isFocused: index === panelContent.focusIndex
+                    property bool isFocused: notificationDelegate.index === panelContent.focusIndex
 
                     Rectangle {
                       anchors.fill: parent
@@ -723,7 +701,7 @@ SmartPanel {
                       hoverEnabled: true
                       cursorShape: Qt.ArrowCursor
                       onPressed: mouse => {
-                                   panelContent.focusIndex = index;
+                                   panelContent.focusIndex = notificationDelegate.index;
                                    panelContent.actionIndex = -1;
 
                                    if (notificationDelegate.isExpanded) {
@@ -791,9 +769,7 @@ SmartPanel {
                                     // Without a default action, or if invoking it fails,
                                     // fall back to focusing the sender window by app identity.
                                     var actions = notificationDelegate.actionsList;
-                                    var hasDefault = actions.some(function (a) {
-                                      return a.identifier === "default";
-                                    });
+                                    var hasDefault = NotificationHistoryUtils.hasDefaultAction(actions);
                                     if (hasDefault && NotificationService.invokeAction(notificationDelegate.notificationId, "default")) {
                                       root.close();
                                     } else {
@@ -849,7 +825,7 @@ SmartPanel {
                           width: notificationDelegate.iconSize
                           height: notificationDelegate.iconSize
                           radius: Math.min(Style.radiusL, width / 2)
-                          imagePath: model.cachedImage || model.originalImage || ""
+                          imagePath: NotificationHistoryUtils.role(notificationDelegate.model, "cachedImage") || NotificationHistoryUtils.role(notificationDelegate.model, "originalImage") || ""
                           borderColor: "transparent"
                           borderWidth: 0
                           fallbackIcon: "bell"
@@ -872,11 +848,11 @@ SmartPanel {
                               height: 6
                               anchors.verticalCenter: parent.verticalCenter
                               radius: 3
-                              visible: model.urgency !== 1
+                              visible: NotificationHistoryUtils.role(notificationDelegate.model, "urgency") !== 1
                               color: {
-                                if (model.urgency === 2)
+                                if (NotificationHistoryUtils.role(notificationDelegate.model, "urgency") === 2)
                                   return Color.mError;
-                                else if (model.urgency === 0)
+                                else if (NotificationHistoryUtils.role(notificationDelegate.model, "urgency") === 0)
                                   return Color.mOnSurfaceVariant;
                                 else
                                   return "transparent";
@@ -884,7 +860,7 @@ SmartPanel {
                             }
 
                             NText {
-                              text: model.appName || "Unknown App"
+                              text: NotificationHistoryUtils.role(notificationDelegate.model, "appName") || "Unknown App"
                               pointSize: Style.fontSizeXS
                               font.weight: Style.fontWeightBold
                               color: Color.mSecondary
@@ -892,7 +868,7 @@ SmartPanel {
 
                             NText {
                               textFormat: Text.PlainText
-                              text: " " + Time.formatRelativeTime(model.timestamp)
+                              text: " " + Time.formatRelativeTime(NotificationHistoryUtils.role(notificationDelegate.model, "timestamp"))
                               pointSize: Style.fontSizeXXS
                               color: Color.mOnSurfaceVariant
                               anchors.bottom: parent.bottom
@@ -903,7 +879,7 @@ SmartPanel {
                           NText {
                             id: summaryText
                             width: parent.width
-                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (model.summaryMarkdown || I18n.tr("common.no-summary")) : (model.summary || I18n.tr("common.no-summary"))
+                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (NotificationHistoryUtils.role(notificationDelegate.model, "summaryMarkdown") || I18n.tr("common.no-summary")) : (NotificationHistoryUtils.role(notificationDelegate.model, "summary") || I18n.tr("common.no-summary"))
                             pointSize: Style.fontSizeM
                             color: Color.mOnSurface
                             textFormat: notificationDelegate.notificationTextFormat
@@ -916,7 +892,7 @@ SmartPanel {
                           NText {
                             id: bodyText
                             width: parent.width
-                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (model.bodyMarkdown || "") : (model.body || "")
+                            text: (Settings.data.notifications.enableMarkdown && notificationDelegate.isExpanded) ? (NotificationHistoryUtils.role(notificationDelegate.model, "bodyMarkdown") || "") : (NotificationHistoryUtils.role(notificationDelegate.model, "body") || "")
                             pointSize: Style.fontSizeS
                             color: Color.mOnSurfaceVariant
                             textFormat: notificationDelegate.notificationTextFormat
@@ -930,17 +906,20 @@ SmartPanel {
                           Flow {
                             width: parent.width
                             spacing: Style.marginS
-                            visible: notificationDelegate.actionsList.length > 0
+                            visible: NotificationHistoryUtils.actionCount(notificationDelegate.actionsList) > 0
 
                             Repeater {
                               model: notificationDelegate.actionsList
 
                               delegate: NButton {
-                                text: modelData.text
+                                id: historyAction
+                                required property var modelData
+                                required property int index
+                                text: NotificationHistoryUtils.role(historyAction.modelData, "text")
                                 fontSize: Style.fontSizeS
 
                                 readonly property bool actionNavActive: notificationDelegate.isFocused && panelContent.actionIndex !== -1
-                                readonly property bool isSelected: actionNavActive && panelContent.actionIndex === index
+                                readonly property bool isSelected: actionNavActive && panelContent.actionIndex === historyAction.index
 
                                 backgroundColor: isSelected ? Color.mSecondary : Color.mPrimary
                                 textColor: isSelected ? Color.mOnSecondary : Color.mOnPrimary
@@ -954,10 +933,10 @@ SmartPanel {
                                   }
                                 }
 
-                                // Capture modelData in a property to avoid reference errors
-                                property var actionData: modelData
+                                // Capture historyAction.modelData in a property to avoid reference errors
+                                property var actionData: historyAction.modelData
                                 onClicked: {
-                                  if (NotificationService.invokeAction(notificationDelegate.notificationId, actionData.identifier))
+                                  if (NotificationService.invokeAction(notificationDelegate.notificationId, NotificationHistoryUtils.role(actionData, "identifier")))
                                     root.close();
                                 }
                               }
@@ -983,10 +962,10 @@ SmartPanel {
                               onClicked: {
                                 notificationDelegate.pendingLink = "";
                                 historyInteractionArea.cursorShape = Qt.ArrowCursor;
-                                if (scrollView.expandedId === notificationId) {
+                                if (scrollView.expandedId === notificationDelegate.notificationId) {
                                   scrollView.expandedId = "";
                                 } else {
-                                  scrollView.expandedId = notificationId;
+                                  scrollView.expandedId = notificationDelegate.notificationId;
                                 }
                               }
                             }
@@ -997,7 +976,7 @@ SmartPanel {
                               baseSize: notificationDelegate.actionButtonSize
 
                               onClicked: {
-                                NotificationService.removeFromHistory(notificationId);
+                                NotificationService.removeFromHistory(notificationDelegate.notificationId);
                               }
                             }
                           }

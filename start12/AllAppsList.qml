@@ -1,16 +1,20 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
+import "Data.js" as Data
 
 // "All apps": every app in the Start Menu, A to Z, with a letter header.
 Item {
     id: root
 
-    signal launch(var entry)
-    signal context(var entry, var point)
+    signal launch(entry: S.DesktopEntry)
+    signal context(entry: S.DesktopEntry, point: point)
     signal back
 
     readonly property var rows: {
-        S.AppsService.count;
+        if (S.AppsService.count === 0)
+            return [];
         return S.AppsService.applications.values.filter(e => !e.noDisplay).map(e => {
             const c = e.name.charAt(0).toUpperCase();
             return { entry: e, letter: /[A-Z]/.test(c) ? c : "#" };
@@ -73,9 +77,9 @@ Item {
             id: item
             required property var modelData
             width: ListView.view.width
-            entry: modelData.entry
-            onActivated: root.launch(modelData.entry)
-            onContextRequested: point => root.context(modelData.entry, point)
+            entry: Data.rowEntry(modelData)
+            onActivated: root.launch(item.entry)
+            onContextRequested: point => root.context(item.entry, point)
         }
     }
 }

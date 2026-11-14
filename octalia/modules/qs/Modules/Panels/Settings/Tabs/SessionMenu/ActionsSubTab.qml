@@ -1,8 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -106,12 +108,13 @@ ColumnLayout {
                          }
 
               onPositionChanged: mouse => {
+                var dy, newY, targetIndex;
                                    if (delegateItem.dragging) {
-                                     var dy = mouse.y - height / 2;
-                                     var newY = delegateItem.y + dy;
+                                     dy = mouse.y - height / 2;
+                                     newY = delegateItem.y + dy;
                                      newY = Math.max(0, Math.min(newY, listView.contentHeight - delegateItem.height));
                                      delegateItem.y = newY;
-                                     var targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + Style.marginS));
+                                     targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + Style.marginS));
                                      targetIndex = Math.max(0, Math.min(targetIndex, listView.count - 1));
                                      delegateItem.dragTargetIndex = targetIndex;
                                    }
@@ -120,7 +123,7 @@ ColumnLayout {
               onReleased: {
                 preventStealing = false;
                 if (delegateItem.dragStartIndex !== -1 && delegateItem.dragTargetIndex !== -1 && delegateItem.dragStartIndex !== delegateItem.dragTargetIndex) {
-                  root.reorderEntries(delegateItem.dragStartIndex, delegateItem.dragTargetIndex);
+                  SettingsValue.invoke(root, "reorderEntries", delegateItem.dragStartIndex, delegateItem.dragTargetIndex);
                 }
                 delegateItem.dragging = false;
                 delegateItem.dragStartIndex = -1;
@@ -144,7 +147,7 @@ ColumnLayout {
             Layout.preferredHeight: Style.baseWidgetSize * 0.7
             Layout.alignment: Qt.AlignVCenter
             radius: Style.radiusXS
-            color: modelData.enabled ? Color.mPrimary : Color.mSurface
+            color: SettingsValue.read(delegateItem.modelData, "enabled") ? Color.mPrimary : Color.mSurface
             border.color: Color.mOutline
             border.width: Style.borderS
 
@@ -155,7 +158,7 @@ ColumnLayout {
             }
 
             NIcon {
-              visible: modelData.enabled
+              visible: SettingsValue.read(delegateItem.modelData, "enabled")
               anchors.centerIn: parent
               anchors.horizontalCenterOffset: -1
               icon: "check"
@@ -167,8 +170,8 @@ ColumnLayout {
               anchors.fill: parent
               cursorShape: Qt.PointingHandCursor
               onClicked: {
-                root.updateEntry(index, {
-                                   "enabled": !modelData.enabled
+                SettingsValue.invoke(root, "updateEntry", delegateItem.index, {
+                                   "enabled": !SettingsValue.read(delegateItem.modelData, "enabled")
                                  });
               }
             }
@@ -177,7 +180,7 @@ ColumnLayout {
           // Label
           NText {
             Layout.fillWidth: true
-            text: modelData.text
+            text: SettingsValue.read(delegateItem.modelData, "text")
             color: Color.mOnSurface
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -187,11 +190,11 @@ ColumnLayout {
           NIconButtonHot {
             visible: Settings.data.sessionMenu.enableCountdown
             icon: "clock"
-            hot: modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true
+            hot: SettingsValue.read(delegateItem.modelData, "countdownEnabled") !== undefined ? SettingsValue.read(delegateItem.modelData, "countdownEnabled") : true
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
-            onClicked: root.updateEntry(delegateItem.index, {
-                                          "countdownEnabled": !(modelData.countdownEnabled !== undefined ? modelData.countdownEnabled : true)
+            onClicked: SettingsValue.invoke(root, "updateEntry", delegateItem.index, {
+                                          "countdownEnabled": !(SettingsValue.read(delegateItem.modelData, "countdownEnabled") !== undefined ? SettingsValue.read(delegateItem.modelData, "countdownEnabled") : true)
                                         })
           }
 
@@ -200,29 +203,30 @@ ColumnLayout {
             icon: "settings"
             baseSize: Style.baseWidgetSize * 0.8
             Layout.alignment: Qt.AlignVCenter
-            onClicked: root.openEntrySettingsDialog(delegateItem.index)
+            onClicked: SettingsValue.invoke(root, "openEntrySettingsDialog", delegateItem.index)
           }
         }
 
         // Position binding for non-dragging state
         y: {
+          var currentIndex, i, item;
           if (delegateItem.dragging) {
             return delegateItem.y;
           }
 
           var draggedIndex = -1;
           var targetIndex = -1;
-          for (var i = 0; i < listView.count; i++) {
-            var item = listView.itemAtIndex(i);
-            if (item && item.dragging) {
-              draggedIndex = item.dragStartIndex;
-              targetIndex = item.dragTargetIndex;
+          for (i = 0; i < listView.count; i++) {
+            item = listView.itemAtIndex(i);
+            if (item && SettingsValue.read(item, "dragging")) {
+              draggedIndex = SettingsValue.read(item, "dragStartIndex");
+              targetIndex = SettingsValue.read(item, "dragTargetIndex");
               break;
             }
           }
 
           if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
-            var currentIndex = delegateItem.index;
+            currentIndex = delegateItem.index;
             if (draggedIndex < targetIndex) {
               if (currentIndex > draggedIndex && currentIndex <= targetIndex) {
                 return (currentIndex - 1) * (delegateItem.height + Style.marginS);

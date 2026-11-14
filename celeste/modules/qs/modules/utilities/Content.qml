@@ -5,18 +5,21 @@ import QtQuick
 import QtQuick.Layouts
 import Celeste.Config
 import qs.components
+import "UtilitiesContentHelpers.js" as UtilitiesContentHelpers
 import qs.modules.bar.popouts as BarPopouts
 
 Item {
     id: root
 
-    required property var props
-    required property ScreenState screenState
-    required property BarPopouts.Wrapper popouts
-    required property matrix4x4 deformMatrix
+    required final property var props
+    required final property ScreenState screenState
+    required final property BarPopouts.Wrapper popouts
+    required final property matrix4x4 deformMatrix
 
-    readonly property int enabledCards: (idleInhibit.active ? 1 : 0) + (toggles.active ? 1 : 0)
-    readonly property real nonAnimHeight: ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + ((toggles.item as Toggles)?.implicitHeight ?? 0) + layout.spacing * Math.max(0, enabledCards - 1)
+    function togglesHeight(): real { return UtilitiesContentHelpers.implicitHeight(toggles.item); }
+
+    readonly final property int enabledCards: (idleInhibit.active ? 1 : 0) + (toggles.active ? 1 : 0)
+    readonly final property real nonAnimHeight: ((idleInhibit.item as IdleInhibit)?.nonAnimHeight ?? 0) + root.togglesHeight() + layout.spacing * Math.max(0, enabledCards - 1)
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight

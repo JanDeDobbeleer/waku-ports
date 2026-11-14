@@ -1,16 +1,10 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Effects
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Widgets
 import qs.Commons
 import qs.Services.Compositor
-import qs.Services.System
 import qs.Services.UI
-import qs.Widgets
-import qs.compat
 
 Loader {
 
@@ -220,7 +214,7 @@ Loader {
       }
 
       function getStaticDockPanel() {
-        return PanelService.getPanel("staticDockPanel", modelData, false);
+        return PanelService.getPanelWithFallback("staticDockPanel", modelData, false);
       }
 
       function getAppKey(appData) {
@@ -312,7 +306,7 @@ Loader {
                                 }
                               });
 
-        if (JSON.stringify(currentPinned) !== JSON.stringify(newPinned)) {
+        if (JSON.stringify(Array.from(currentPinned)) !== JSON.stringify(newPinned)) {
           Settings.data.dock.pinnedApps = newPinned;
         }
       }
@@ -907,13 +901,8 @@ Loader {
             width: contentWidth
             height: contentHeight
 
-            anchors.horizontalCenter: isVertical ? undefined : parent.horizontalCenter
-            anchors.verticalCenter: isVertical ? parent.verticalCenter : undefined
-
-            anchors.top: dockPosition === "top" ? parent.top : undefined
-            anchors.bottom: dockPosition === "bottom" ? parent.bottom : undefined
-            anchors.left: dockPosition === "left" ? parent.left : undefined
-            anchors.right: dockPosition === "right" ? parent.right : undefined
+            x: dockPosition === "left" ? 0 : (dockPosition === "right" ? parent.width - width : (parent.width - width) / 2)
+            y: dockPosition === "top" ? 0 : (dockPosition === "bottom" ? parent.height - height : (parent.height - height) / 2)
 
             // Slide content inside the fixed window
             transform: Translate {

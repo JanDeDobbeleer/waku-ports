@@ -12,20 +12,20 @@ import waku as W
 Item {
     id: root
 
-    property string source
-    property int fillMode: VisualSource.Stretch
-    property bool playing: true
-    readonly property int type: kind === "video" ? VisualSource.Live : source ? VisualSource.Still : VisualSource.Unknown
-    property bool animate: true
-    property bool thumbnail: false
-    property int thumbnailWidth: 640
-    readonly property bool ready: kind === "animated" ? animated.status === Image.Ready : kind === "still" && still.status === Image.Ready
+    final property string source
+    final property int fillMode: VisualSource.Stretch
+    final property bool playing: true
+    readonly final property int type: kind === "video" ? VisualSource.Live : source ? VisualSource.Still : VisualSource.Unknown
+    final property bool animate: true
+    final property bool thumbnail: false
+    final property int thumbnailWidth: 640
+    readonly final property bool ready: kind === "animated" ? animated.status === Image.Ready : kind === "still" && still.status === Image.Ready
 
-    readonly property string suffix: {
+    readonly final property string suffix: {
         const m = /\.([A-Za-z0-9]+)(?:[?#].*)?$/.exec(source);
         return m ? m[1].toLowerCase() : "";
     }
-    readonly property string kind: {
+    readonly final property string kind: {
         if (!source)
             return "none";
         if (["mp4", "webm", "mkv", "mov", "avi", "m4v"].includes(suffix))
@@ -35,7 +35,7 @@ Item {
         return "still";
     }
     // A bare path (/x/y, C:\x\y) becomes a file URL; anything with a scheme stays.
-    readonly property url resolvedSource: {
+    readonly final property url resolvedSource: {
         if (!source)
             return "";
         if (/^[A-Za-z][A-Za-z0-9+.-]+:\/\//.test(source) || source.startsWith("qrc:") || source.startsWith("data:"))
@@ -43,7 +43,7 @@ Item {
         return "file:///" + source.replace(/\\/g, "/").replace(/^\/+/, "");
     }
 
-    readonly property bool useThumbnail: thumbnail && kind === "still" && !/^(qrc|data|https?):/i.test(source)
+    readonly final property bool useThumbnail: thumbnail && kind === "still" && !/^(qrc|data|https?):/i.test(source)
 
     opacity: !animate || ready ? 1 : 0
 

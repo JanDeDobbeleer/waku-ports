@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
 import qs.Modules.Bar.Extras
@@ -7,6 +6,7 @@ import qs.Modules.Panels.Settings
 import qs.Services.Hardware
 import qs.Services.UI
 import qs.Widgets
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 
 Item {
   id: root
@@ -23,8 +23,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -34,10 +35,13 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: (widgetSettings.displayMode !== undefined) ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
-  readonly property bool applyToAllMonitors: widgetSettings.applyToAllMonitors !== undefined ? widgetSettings.applyToAllMonitors : (Settings.data.brightness.syncAllMonitors !== undefined ? Settings.data.brightness.syncAllMonitors : widgetMetadata.applyToAllMonitors)
+  readonly property string displayMode: (BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
+  readonly property bool applyToAllMonitors: {
+    const syncAllMonitors = BarWidgetHelpers.getProperty(Settings.data.brightness, "syncAllMonitors");
+    return BarWidgetHelpers.readProperty(widgetSettings, "applyToAllMonitors") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "applyToAllMonitors") : (syncAllMonitors !== undefined ? syncAllMonitors : BarWidgetHelpers.readProperty(widgetMetadata, "applyToAllMonitors"));
+  }
   readonly property bool reverseScroll: Settings.data.general.reverseScroll
 
   // Used to avoid opening the pill on Quickshell startup
@@ -58,24 +62,18 @@ Item {
     return BrightnessService.getMonitorForScreen(screen) ?? null;
   }
 
-  function getControllableMonitorCount() {
-    var monitors = BrightnessService.monitors || [];
-    var count = 0;
-    for (var i = 0; i < monitors.length; i++) {
-      if (monitors[i] && monitors[i].brightnessControlAvailable)
-        count++;
-    }
-    return count;
+  function getControllableMonitorCount(): int {
+    return BarWidgetHelpers.countControllableMonitors(BrightnessService.monitors || []);
   }
 
   visible: brightnessMonitor !== null
   opacity: brightnessMonitor !== null ? 1.0 : 0.0
 
-  function getIcon() {
+  function getIcon(): string {
     var monitor = brightnessMonitor;
-    if (!monitor || !monitor.brightnessControlAvailable || isNaN(monitor.brightness))
+    if (!monitor || !BarWidgetHelpers.readProperty(monitor, "brightnessControlAvailable") || isNaN(BarWidgetHelpers.readProperty(monitor, "brightness")))
       return "sun-off";
-    var brightness = monitor.brightness;
+    var brightness = BarWidgetHelpers.readProperty(monitor, "brightness");
     if (brightness <= 0.001)
       return "sun-off";
     return brightness <= 0.5 ? "brightness-low" : "brightness-high";
@@ -83,13 +81,13 @@ Item {
 
   // Connection used to open the pill when brightness changes
   Connections {
-    target: brightnessMonitor
+    target: root.brightnessMonitor
     ignoreUnknownSignals: true
     function onBrightnessUpdated() {
       // Ignore if this is the first time we receive an update.
       // Most likely service just kicked off.
-      if (!firstBrightnessReceived) {
-        firstBrightnessReceived = true;
+      if (!root.firstBrightnessReceived) {
+        root.firstBrightnessReceived = true;
         return;
       }
 
@@ -123,15 +121,15 @@ Item {
     ]
 
     onTriggered: action => {
+      var settingsPanel;
                    contextMenu.close();
                    PanelService.closeContextMenu(screen);
 
                    if (action === "open-display-settings") {
-                     var settingsPanel = PanelService.getPanel("settingsPanel", screen);
-                     settingsPanel.requestedTab = SettingsPanel.Tab.Display;
-                     settingsPanel.open();
+                     settingsPanel = PanelService.getPanel("settingsPanel", screen);
+                     PanelService.openSettingsPanel(settingsPanel, SettingsPanel.Tab.Display);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -143,21 +141,21 @@ Item {
     oppositeDirection: BarService.getPillDirection(root)
     customIconColor: Color.resolveColorKeyOptional(root.iconColorKey)
     customTextColor: Color.resolveColorKeyOptional(root.textColorKey)
-    icon: getIcon()
+    icon: root.getIcon()
     autoHide: false // Important to be false so we can hover as long as we want
     text: {
-      var monitor = brightnessMonitor;
-      if (!monitor || !monitor.brightnessControlAvailable || isNaN(monitor.brightness))
+      var monitor = root.brightnessMonitor;
+      if (!monitor || !BarWidgetHelpers.readProperty(monitor, "brightnessControlAvailable") || isNaN(BarWidgetHelpers.readProperty(monitor, "brightness")))
         return "";
-      return Math.round(monitor.brightness * 100);
+      return Math.round(BarWidgetHelpers.readProperty(monitor, "brightness") * 100);
     }
     suffix: text.length > 0 ? "%" : "-"
-    forceOpen: displayMode === "alwaysShow"
-    forceClose: displayMode === "alwaysHide"
+    forceOpen: root.displayMode === "alwaysShow"
+    forceClose: root.displayMode === "alwaysHide"
 
     onWheel: function (angle) {
-      var monitor = brightnessMonitor;
-      if (!monitor || !monitor.brightnessControlAvailable)
+      var monitor = root.brightnessMonitor;
+      if (!monitor || !BarWidgetHelpers.readProperty(monitor, "brightnessControlAvailable"))
         return;
 
       if (root.reverseScroll)
@@ -182,10 +180,10 @@ Item {
       }
     }
 
-    onClicked: PanelService.getPanel("brightnessPanel", screen)?.toggle(this)
+    onClicked: PanelService.invokePanel(PanelService.getPanel("brightnessPanel", screen), "toggle", [this])
 
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
   }
 }

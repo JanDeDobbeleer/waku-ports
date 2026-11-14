@@ -9,34 +9,29 @@ import qs.components
 import qs.components.effects
 import qs.services
 import qs.utils
+import "NotifGroupHelpers.js" as NotifGroupHelpers
 
 StyledRect {
     id: root
 
-    required property string modelData
-    required property Props props
-    required property Flickable container
-    required property ScreenState screenState
+    required final property string modelData
+    required final property Props props
+    required final property Flickable container
+    required final property ScreenState screenState
 
-    readonly property list<var> notifs: Notifs.list.filter(n => n.appName === modelData)
-    readonly property list<var> activeNotifs: notifs.filter(n => !n.closed)
-    readonly property int notifCount: activeNotifs.length
-    readonly property string image: activeNotifs.find(n => n.image.length > 0)?.image ?? ""
-    readonly property string appIcon: activeNotifs.find(n => n.appIcon.length > 0)?.appIcon ?? ""
-    readonly property int urgency: {
-        if (activeNotifs.find(n => n.urgency === NotificationUrgency.Critical))
-            return NotificationUrgency.Critical;
-        if (activeNotifs.find(n => n.urgency === NotificationUrgency.Normal))
-            return NotificationUrgency.Normal;
-        return NotificationUrgency.Low;
-    }
+    readonly final property list<var> notifs: NotifGroupHelpers.forApp(Notifs.list, modelData)
+    readonly final property list<var> activeNotifs: NotifGroupHelpers.active(notifs)
+    readonly final property int notifCount: activeNotifs.length
+    readonly final property string image: NotifGroupHelpers.image(activeNotifs)
+    readonly final property string appIcon: NotifGroupHelpers.appIcon(activeNotifs)
+    readonly final property int urgency: NotifGroupHelpers.urgency(activeNotifs, NotificationUrgency.Critical, NotificationUrgency.Normal, NotificationUrgency.Low)
 
-    readonly property int nonAnimHeight: {
+    readonly final property int nonAnimHeight: {
         const headerHeight = header.implicitHeight + (root.expanded ? Math.round(Tokens.spacing.extraSmall) : 0);
         const columnHeight = headerHeight + notifList.layoutHeight;
         return Math.round(Math.max(Tokens.sizes.notifs.image, columnHeight) + Tokens.padding.medium * 2);
     }
-    readonly property bool expanded: props.expandedNotifs.includes(modelData)
+    readonly final property bool expanded: props.expandedNotifs.includes(modelData)
 
     function toggleExpand(expand: bool): void {
         if (expand) {
@@ -111,7 +106,7 @@ StyledRect {
                 id: materialIconComp
 
                 MaterialIcon {
-                    text: Icons.getNotifIcon(root.activeNotifs[0]?.summary, root.urgency)
+                    text: Icons.getNotifIcon(NotifGroupHelpers.summary(root.activeNotifs), root.urgency)
                     color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
                     fontStyle: Tokens.font.icon.medium
                 }
@@ -181,7 +176,7 @@ StyledRect {
 
                 StyledText {
                     animate: true
-                    text: root.activeNotifs[0]?.timeStr ?? ""
+                    text: NotifGroupHelpers.timeStr(root.activeNotifs)
                     color: Colours.palette.m3outline
                     font: Tokens.font.body.small
                 }

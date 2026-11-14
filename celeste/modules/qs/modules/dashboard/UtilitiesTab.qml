@@ -3,19 +3,19 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Celeste.Config
-import Celeste.I18n
 import qs.components
 import qs.services
+import "UtilitiesTabHelpers.js" as UtilitiesTabHelpers
 
 // Port: the Utilities tab. Buttons that open Windows' own windows, flyouts and settings pages
 // (UtilitiesActions); a click launches the target and closes the dashboard.
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
-    readonly property int columns: 6
-    readonly property real tileWidth: (implicitWidth - Tokens.spacing.small * (columns - 1)) / columns
+    readonly final property int columns: 6
+    readonly final property real tileWidth: (implicitWidth - Tokens.spacing.small * (columns - 1)) / columns
 
     implicitWidth: Tokens.px(840)
     implicitHeight: layout.implicitHeight
@@ -35,17 +35,17 @@ Item {
             ColumnLayout {
                 id: group
 
-                required property var modelData
-                readonly property var items: UtilitiesActions.inGroup(modelData.id)
+                required final property var modelData
+                readonly final property var items: UtilitiesTabHelpers.groupItems(UtilitiesActions, modelData)
 
                 Layout.fillWidth: true
-                visible: items.length > 0
+                visible: UtilitiesTabHelpers.hasItems(items)
                 spacing: Tokens.spacing.small
 
                 StyledText {
                     Layout.leftMargin: Tokens.padding.medium
-                    text: group.modelData.label
-                    font: Tokens.font.body.builders.medium.weight(Font.DemiBold).build()
+                    text: UtilitiesTabHelpers.label(group.modelData)
+                    font: Tokens.styled("body", "medium", { weight: Font.DemiBold })
                     color: Colours.palette.m3onSurface
                 }
 
@@ -66,7 +66,7 @@ Item {
     component Tile: StyledRect {
         id: tile
 
-        required property var modelData
+        required final property var modelData
 
         implicitWidth: root.tileWidth
         implicitHeight: Tokens.px(92)
@@ -78,7 +78,7 @@ Item {
             color: Colours.palette.m3onSurface
             onClicked: {
                 root.screenState.dashboard = false;
-                UtilitiesActions.launch(tile.modelData.id);
+                UtilitiesTabHelpers.launch(UtilitiesActions, tile.modelData);
             }
         }
 
@@ -89,7 +89,7 @@ Item {
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
-                text: tile.modelData.icon
+                text: UtilitiesTabHelpers.icon(tile.modelData)
                 color: Colours.palette.m3primary
                 fontStyle: Tokens.font.icon.large
             }
@@ -100,7 +100,7 @@ Item {
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
-                text: tile.modelData.label
+                text: UtilitiesTabHelpers.label(tile.modelData)
                 font: Tokens.font.body.small
                 color: Colours.palette.m3onSurfaceVariant
             }

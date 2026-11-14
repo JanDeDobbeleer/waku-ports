@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "SettingsUtils.js" as SettingsUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
@@ -7,7 +9,6 @@ import "../Helpers/QtObj2JS.js" as QtObj2JS
 import qs.Commons
 import qs.Commons.Migrations
 import qs.Modules.OSD
-import qs.Services.Octalia
 import qs.Services.UI
 import qs.compat
 
@@ -25,7 +26,7 @@ Singleton {
   - Default config directory: ~/.config/octalia
   - Default cache directory: ~/.cache/octalia
   */
-  readonly property alias data: adapter  // Used to access via Settings.data.xxx.yyy
+  readonly property alias data: settingsAdapter  // Used to access via Settings.data.xxx.yyy
   readonly property int settingsVersion: 59
   property bool isDebug: Quickshell.env("OCTALIA_DEBUG") === "1"
   readonly property string shellName: "octalia"
@@ -33,7 +34,8 @@ Singleton {
   readonly property string cacheDir: ensureTrailingSlash(Quickshell.env("OCTALIA_CACHE_DIR") || (Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache") + "/" + shellName + "/")
 
   readonly property string settingsFile: Quickshell.env("OCTALIA_SETTINGS_FILE") || (configDir + "settings.json")
-  readonly property string defaultAvatar: Quickshell.env("HOME") + "/.face"
+  // ~/.face is a Linux convention; on Windows there is no default avatar, so the profile icon shows.
+  readonly property string defaultAvatar: ""
   readonly property string defaultVideosDirectory: Quickshell.env("HOME") + "/Videos"
   readonly property string defaultWallpapersDirectory: Quickshell.env("HOME") + "/.config/wallpapers"
 
@@ -50,7 +52,7 @@ Singleton {
     onTriggered: {
       if (settingsFileView.path !== undefined) {
         Logger.d("Settings", "Reloading settings after external change detection");
-        reloadSettings = true;
+        root.reloadSettings = true;
         settingsFileView.reload();
       }
     }
@@ -83,13 +85,13 @@ Singleton {
     }
 
     // Patch-in the local default, resolved to user's home
-    adapter.general.avatarImage = defaultAvatar;
-    adapter.wallpaper.directory = defaultWallpapersDirectory;
-    adapter.ui.fontDefault = Qt.application.font.family;
-    adapter.ui.fontFixed = "monospace";
+    settingsAdapter.general.avatarImage = defaultAvatar;
+    settingsAdapter.wallpaper.directory = defaultWallpapersDirectory;
+    settingsAdapter.ui.fontDefault = SettingsUtils.applicationFontFamily();
+    settingsAdapter.ui.fontFixed = "monospace";
 
     // Set the adapter to the settingsFileView to trigger the real settings load
-    settingsFileView.adapter = adapter;
+    settingsFileView.adapter = settingsAdapter;
   }
 
   // Don't write settings to disk immediately
@@ -105,12 +107,12 @@ Singleton {
 
   FileView {
     id: settingsFileView
-    path: directoriesCreated ? settingsFile : undefined
+    path: root.directoriesCreated ? root.settingsFile : undefined
     printErrors: false
     watchChanges: true
     onAdapterUpdated: saveTimer.start()
 
-    onFileChanged: scheduleExternalReload()
+    onFileChanged: root.scheduleExternalReload()
 
     // Trigger initial load when path changes from empty to actual path
     onPathChanged: {
@@ -119,36 +121,32 @@ Singleton {
       }
     }
     onLoaded: function () {
-      if (!isLoaded) {
+      var rawJson;
+      if (!root.isLoaded) {
         Logger.i("Settings", "Settings loaded");
 
         // Load raw JSON for migrations (adapter doesn't expose removed properties)
-        var rawJson = null;
-        try {
-          rawJson = JSON.parse(settingsFileView.text());
-        } catch (e) {
-          Logger.w("Settings", "Could not parse raw JSON for migrations");
-        }
+        rawJson = SettingsUtils.parseRawSettings(settingsFileView, Logger);
 
         // Run versioned migrations immediately, don't move it in upgradeSettings
-        runVersionedMigrations(rawJson);
+        root.runVersionedMigrations(rawJson);
 
         // Finally, update our local settings version
-        adapter.settingsVersion = settingsVersion;
+        settingsAdapter.settingsVersion = root.settingsVersion;
 
         // Emit the signal
         root.isLoaded = true;
         root.settingsLoaded();
 
-        upgradeSettings();
+        root.upgradeSettings();
       } else {
         Logger.d("Settings", "Settings reloaded from external file change");
         root.settingsReloaded();
       }
     }
     onLoadFailed: function (error) {
-      if (reloadSettings) {
-        reloadSettings = false;
+      if (root.reloadSettings) {
+        root.reloadSettings = false;
         return;
       }
       if (error.toString().includes("No such file") || error === 2) {
@@ -166,10 +164,10 @@ Singleton {
   // settings.json may be replaced atomically (e.g., symlink/store-path swap).
   FileView {
     id: settingsDirWatcher
-    path: directoriesCreated ? configDir : undefined
+    path: root.directoriesCreated ? root.configDir : undefined
     printErrors: false
     watchChanges: true
-    onFileChanged: scheduleExternalReload()
+    onFileChanged: root.scheduleExternalReload()
   }
 
   // FileView to load default settings for comparison
@@ -187,211 +185,214 @@ Singleton {
   Connections {
     target: defaultSettingsFileView
     function onLoaded() {
-      try {
-        root._defaultSettings = JSON.parse(defaultSettingsFileView.text());
-      } catch (e) {
-        Logger.w("Settings", "Failed to parse default settings file: " + e);
-        root._defaultSettings = null;
-      }
+      SettingsUtils.loadDefaultSettings(root, defaultSettingsFileView, Logger);
     }
   }
 
   JsonAdapter {
-    id: adapter
+    id: settingsAdapter
 
     property int settingsVersion: 0
 
     // bar
-    property JsonObject bar: JsonObject {
-      property string barType: "simple" // "simple", "floating", "framed"
-      property string position: "top" // "top", "bottom", "left", or "right"
-      property list<string> monitors: [] // holds bar visibility per monitor
-      property string density: "default" // "compact", "default", "comfortable"
-      property bool showOutline: false
-      property bool showCapsule: true
-      property real capsuleOpacity: 1.0
-      property string capsuleColorKey: "none"
-      property int widgetSpacing: 6
-      property int contentPadding: 2
-      property real fontScale: 1.0
-      property bool enableExclusionZoneInset: true
+    component BarWidgetsSettings: JsonObject {
+      final property list<var> left: [
+        {
+          "id": "Launcher"
+        },
+        {
+          "id": "Clock"
+        },
+        {
+          "id": "SystemMonitor"
+        },
+        {
+          "id": "ActiveWindow"
+        },
+        {
+          "id": "MediaMini"
+        }
+      ]
+      final property list<var> center: [
+        {
+          "id": "Workspace"
+        },
+        {
+          "id": "LayoutSwitcher"
+        }
+      ]
+      final property list<var> right: [
+        {
+          "id": "Tray"
+        },
+        {
+          "id": "NotificationHistory"
+        },
+        {
+          "id": "Battery"
+        },
+        {
+          "id": "Volume"
+        },
+        {
+          "id": "Brightness"
+        },
+        {
+          "id": "ControlCenter"
+        }
+      ]
+    }
+
+    component BarSettings: JsonObject {
+      final property string barType: "simple" // "simple", "floating", "framed"
+      final property string position: "top" // "top", "bottom", "left", or "right"
+      final property list<string> monitors: [] // holds bar visibility per monitor
+      final property string density: "default" // "compact", "default", "comfortable"
+      final property bool showOutline: false
+      final property bool showCapsule: true
+      final property real capsuleOpacity: 1.0
+      final property string capsuleColorKey: "none"
+      final property int widgetSpacing: 6
+      final property int contentPadding: 2
+      final property real fontScale: 1.0
+      final property bool enableExclusionZoneInset: true
 
       // Bar background opacity settings
-      property real backgroundOpacity: 0.93
-      property bool useSeparateOpacity: false
+      final property real backgroundOpacity: 0.93
+      final property bool useSeparateOpacity: false
 
       // Floating bar settings
-      property int marginVertical: 4
-      property int marginHorizontal: 4
+      final property int marginVertical: 4
+      final property int marginHorizontal: 4
 
       // Framed bar settings
-      property int frameThickness: 8
-      property int frameRadius: 12
+      final property int frameThickness: 8
+      final property int frameRadius: 12
 
       // Bar outer corners (inverted/concave corners at bar edges when not floating)
-      property bool outerCorners: true
+      final property bool outerCorners: true
 
       // Hide bar/panels when compositor overview is active
-      property bool hideOnOverview: false
+      final property bool hideOnOverview: false
 
       // Auto-hide settings
-      property string displayMode: "always_visible"
-      property int autoHideDelay: 500 // ms before hiding after mouse leaves
-      property int autoShowDelay: 150 // ms before showing when mouse enters
-      property bool showOnWorkspaceSwitch: true // show bar briefly on workspace switch
+      final property string displayMode: "always_visible"
+      final property int autoHideDelay: 500 // ms before hiding after mouse leaves
+      final property int autoShowDelay: 150 // ms before showing when mouse enters
+      final property bool showOnWorkspaceSwitch: true // show bar briefly on workspace switch
 
       // Widget configuration for modular bar system
-      property JsonObject widgets
-      widgets: JsonObject {
-        property list<var> left: [
-          {
-            "id": "Launcher"
-          },
-          {
-            "id": "Clock"
-          },
-          {
-            "id": "SystemMonitor"
-          },
-          {
-            "id": "ActiveWindow"
-          },
-          {
-            "id": "MediaMini"
-          }
-        ]
-        property list<var> center: [
-          {
-            "id": "Workspace"
-          },
-          {
-            "id": "LayoutSwitcher"
-          }
-        ]
-        property list<var> right: [
-          {
-            "id": "Tray"
-          },
-          {
-            "id": "NotificationHistory"
-          },
-          {
-            "id": "Battery"
-          },
-          {
-            "id": "Volume"
-          },
-          {
-            "id": "Brightness"
-          },
-          {
-            "id": "ControlCenter"
-          }
-        ]
-      }
-      property string mouseWheelAction: "none"
-      property bool reverseScroll: false
-      property bool mouseWheelWrap: true
-      property string middleClickAction: "none"
-      property bool middleClickFollowMouse: false
-      property string middleClickCommand: ""
-      property string rightClickAction: "controlCenter"
-      property bool rightClickFollowMouse: true
-      property string rightClickCommand: ""
+      final property BarWidgetsSettings widgets: BarWidgetsSettings {}
+
+      final property string mouseWheelAction: "none"
+      final property bool reverseScroll: false
+      final property bool mouseWheelWrap: true
+      final property string middleClickAction: "none"
+      final property bool middleClickFollowMouse: false
+      final property string middleClickCommand: ""
+      final property string rightClickAction: "controlCenter"
+      final property bool rightClickFollowMouse: true
+      final property string rightClickCommand: ""
       // Per-screen overrides for position and widgets
       // Format: [{ "name": "HDMI-1", "position": "left" }, { "name": "DP-1", "position": "bottom", "widgets": {...} }]
-      property list<var> screenOverrides: []
+      final property list<var> screenOverrides: []
     }
+    final property BarSettings bar: BarSettings {}
 
     // general
-    property JsonObject general: JsonObject {
-      property string avatarImage: ""
-      property real dimmerOpacity: 0.2
-      property bool showScreenCorners: false
-      property bool forceBlackScreenCorners: false
-      property real scaleRatio: 1.0
-      property real radiusRatio: 1.0
-      property real iRadiusRatio: 1.0
-      property real boxRadiusRatio: 1.0
-      property real screenRadiusRatio: 0.4 // Port: screenRadius 8, the Windows 11 window radius
-      property real animationSpeed: 1.0
-      property bool animationDisabled: false
-      property bool compactLockScreen: false
-      property bool lockScreenAnimations: false
-      property bool lockOnSuspend: true
-      property bool showSessionButtonsOnLockScreen: true
-      property bool showHibernateOnLockScreen: false
-      property bool enableLockScreenMediaControls: false
-      property bool enableShadows: true
-      property bool enableBlurBehind: true
-      property string shadowDirection: "bottom_right"
-      property int shadowOffsetX: 2
-      property int shadowOffsetY: 3
-      property string language: ""
-      property bool allowPanelsOnScreenWithoutBar: true
-      property bool showChangelogOnStartup: true
-      property bool telemetryEnabled: false
-      property bool enableLockScreenCountdown: true
-      property int lockScreenCountdownDuration: 10000
-      property bool autoStartAuth: false
-      property bool allowPasswordWithFprintd: false
-      property string clockStyle: "custom"
-      property string clockFormat: "hh\\nmm"
-      property bool passwordChars: false
-      property list<string> lockScreenMonitors: [] // holds lock screen visibility per monitor
-      property real lockScreenBlur: 0.0
-      property real lockScreenTint: 0.0
-      property JsonObject keybinds: JsonObject {
-        property list<string> keyUp: ["Up"]
-        property list<string> keyDown: ["Down"]
-        property list<string> keyLeft: ["Left"]
-        property list<string> keyRight: ["Right"]
-        property list<string> keyEnter: ["Return", "Enter"]
-        property list<string> keyEnterNew: ["Shift+Return"]
-        property list<string> keyEnterAdmin: ["Ctrl+Shift+Return"]
-        property list<string> keyEscape: ["Esc"]
-        property list<string> keyRemove: ["Del"]
-      }
-      property bool reverseScroll: false
-      property bool smoothScrollEnabled: true
+    component GeneralKeybindsSettings: JsonObject {
+      final property list<string> keyUp: ["Up"]
+      final property list<string> keyDown: ["Down"]
+      final property list<string> keyLeft: ["Left"]
+      final property list<string> keyRight: ["Right"]
+      final property list<string> keyEnter: ["Return", "Enter"]
+      final property list<string> keyEnterNew: ["Shift+Return"]
+      final property list<string> keyEnterAdmin: ["Ctrl+Shift+Return"]
+      final property list<string> keyEscape: ["Esc"]
+      final property list<string> keyRemove: ["Del"]
     }
+
+    component GeneralSettings: JsonObject {
+      final property string avatarImage: ""
+      final property real dimmerOpacity: 0.2
+      final property bool showScreenCorners: false
+      final property bool forceBlackScreenCorners: false
+      final property real scaleRatio: 1.0
+      final property real radiusRatio: 1.0
+      final property real iRadiusRatio: 1.0
+      final property real boxRadiusRatio: 1.0
+      final property real screenRadiusRatio: 0.4 // Port: screenRadius 8, the Windows 11 window radius
+      final property real animationSpeed: 1.0
+      final property bool animationDisabled: false
+      final property bool compactLockScreen: false
+      final property bool lockScreenAnimations: false
+      final property bool lockOnSuspend: true
+      final property bool showSessionButtonsOnLockScreen: true
+      final property bool showHibernateOnLockScreen: false
+      final property bool enableLockScreenMediaControls: false
+      final property bool enableShadows: true
+      final property bool enableBlurBehind: true
+      final property string shadowDirection: "bottom_right"
+      final property int shadowOffsetX: 2
+      final property int shadowOffsetY: 3
+      final property string language: ""
+      final property bool allowPanelsOnScreenWithoutBar: true
+      final property bool showChangelogOnStartup: true
+      final property bool telemetryEnabled: false
+      final property bool enableLockScreenCountdown: true
+      final property int lockScreenCountdownDuration: 10000
+      final property bool autoStartAuth: false
+      final property bool allowPasswordWithFprintd: false
+      final property string clockStyle: "custom"
+      final property string clockFormat: "hh\\nmm"
+      final property bool passwordChars: false
+      final property list<string> lockScreenMonitors: [] // holds lock screen visibility per monitor
+      final property real lockScreenBlur: 0.0
+      final property real lockScreenTint: 0.0
+      final property GeneralKeybindsSettings keybinds: GeneralKeybindsSettings {}
+      final property bool reverseScroll: false
+      final property bool smoothScrollEnabled: true
+    }
+    final property GeneralSettings general: GeneralSettings {}
 
     // ui
-    property JsonObject ui: JsonObject {
-      property string fontDefault: ""
-      property string fontFixed: ""
-      property real fontDefaultScale: 1.0
-      property real fontFixedScale: 1.0
-      property bool scrollbarAlwaysVisible: true
-      property bool boxBorderEnabled: false
-      property real panelBackgroundOpacity: 0.93
-      property bool translucentWidgets: false
-      property bool panelsAttachedToBar: true
-      property string settingsPanelMode: "attached" // "centered", "attached", "window"
-      property bool settingsPanelSideBarCardStyle: false
+    component UiSettings: JsonObject {
+      final property string fontDefault: ""
+      final property string fontFixed: ""
+      final property real fontDefaultScale: 1.0
+      final property real fontFixedScale: 1.0
+      final property bool scrollbarAlwaysVisible: true
+      final property bool boxBorderEnabled: false
+      final property real panelBackgroundOpacity: 0.93
+      final property bool translucentWidgets: false
+      final property bool panelsAttachedToBar: true
+      final property string settingsPanelMode: "attached" // "centered", "attached", "window"
+      final property bool settingsPanelSideBarCardStyle: false
     }
+    final property UiSettings ui: UiSettings {}
 
     // location
-    property JsonObject location: JsonObject {
-      property string name: ""
-      property bool weatherEnabled: true
-      property bool weatherShowEffects: true
-      property bool weatherTaliaMascotAlways: false
-      property bool useFahrenheit: false
-      property bool use12hourFormat: false
-      property bool showWeekNumberInCalendar: false
-      property bool showCalendarEvents: true
-      property bool showCalendarWeather: true
-      property bool analogClockInCalendar: false
-      property int firstDayOfWeek: -1 // -1 = auto (use locale), 0 = Sunday, 1 = Monday, 6 = Saturday
-      property bool hideWeatherTimezone: false
-      property bool hideWeatherCityName: false
-      property bool autoLocate: false
+    component LocationSettings: JsonObject {
+      final property string name: ""
+      final property bool weatherEnabled: true
+      final property bool weatherShowEffects: true
+      final property bool weatherTaliaMascotAlways: false
+      final property bool useFahrenheit: false
+      final property bool use12hourFormat: false
+      final property bool showWeekNumberInCalendar: false
+      final property bool showCalendarEvents: true
+      final property bool showCalendarWeather: true
+      final property bool analogClockInCalendar: false
+      final property int firstDayOfWeek: -1 // -1 = auto (use locale), 0 = Sunday, 1 = Monday, 6 = Saturday
+      final property bool hideWeatherTimezone: false
+      final property bool hideWeatherCityName: false
+      final property bool autoLocate: false
     }
+    final property LocationSettings location: LocationSettings {}
 
     // calendar
-    property JsonObject calendar: JsonObject {
-      property list<var> cards: [
+    component CalendarSettings: JsonObject {
+      final property list<var> cards: [
         {
           "id": "calendar-header-card",
           "enabled": true
@@ -406,118 +407,123 @@ Singleton {
         }
       ]
     }
+    final property CalendarSettings calendar: CalendarSettings {}
 
     // wallpaper
-    property JsonObject wallpaper: JsonObject {
-      property bool enabled: true
-      property bool overviewEnabled: false
-      property string directory: ""
-      property list<var> monitorDirectories: []
-      property bool enableMultiMonitorDirectories: false
-      property bool showHiddenFiles: false
-      property string viewMode: "single" // "single" | "recursive" | "browse"
-      property bool setWallpaperOnAllMonitors: true
-      property bool linkLightAndDarkWallpapers: true
-      property string fillMode: "crop"
-      property color fillColor: "#000000"
-      property bool useSolidColor: false
-      property color solidColor: "#1a1a2e"
-      property bool automationEnabled: false
-      property string wallpaperChangeMode: "random" // "random" or "alphabetical"
-      property int randomIntervalSec: 300 // 5 min
-      property int transitionDuration: 1500 // 1500 ms
-      property list<string> transitionType: ["fade", "disc", "stripes", "wipe", "pixelate", "honeycomb"]
-      property bool skipStartupTransition: false
-      property real transitionEdgeSmoothness: 0.05
-      property string panelPosition: "follow_bar"
-      property bool hideWallpaperFilenames: false
-      property bool useOriginalImages: false
-      property real overviewBlur: 0.4
-      property real overviewTint: 0.6
+    component WallpaperSettings: JsonObject {
+      final property bool enabled: true
+      final property bool overviewEnabled: false
+      final property string directory: ""
+      final property list<var> monitorDirectories: []
+      final property bool enableMultiMonitorDirectories: false
+      final property bool showHiddenFiles: false
+      final property string viewMode: "single" // "single" | "recursive" | "browse"
+      final property bool setWallpaperOnAllMonitors: true
+      final property bool linkLightAndDarkWallpapers: true
+      final property string fillMode: "crop"
+      final property color fillColor: "#000000"
+      final property bool useSolidColor: false
+      final property color solidColor: "#1a1a2e"
+      final property bool automationEnabled: false
+      final property string wallpaperChangeMode: "random" // "random" or "alphabetical"
+      final property int randomIntervalSec: 300 // 5 min
+      final property int transitionDuration: 1500 // 1500 ms
+      final property list<string> transitionType: ["fade", "disc", "stripes", "wipe", "pixelate", "honeycomb"]
+      final property bool skipStartupTransition: false
+      final property real transitionEdgeSmoothness: 0.05
+      final property string panelPosition: "follow_bar"
+      final property bool hideWallpaperFilenames: false
+      final property bool useOriginalImages: false
+      final property real overviewBlur: 0.4
+      final property real overviewTint: 0.6
       // Wallhaven settings
-      property bool useWallhaven: false
-      property string wallhavenQuery: ""
-      property string wallhavenSorting: "relevance"
-      property string wallhavenOrder: "desc"
-      property string wallhavenCategories: "111" // general,anime,people
-      property string wallhavenPurity: "100" // sfw only
-      property string wallhavenRatios: ""
-      property string wallhavenApiKey: ""
-      property string wallhavenResolutionMode: "atleast" // "atleast" or "exact"
-      property string wallhavenResolutionWidth: ""
+      final property bool useWallhaven: false
+      final property string wallhavenQuery: ""
+      final property string wallhavenSorting: "relevance"
+      final property string wallhavenOrder: "desc"
+      final property string wallhavenCategories: "111" // general,anime,people
+      final property string wallhavenPurity: "100" // sfw only
+      final property string wallhavenRatios: ""
+      final property string wallhavenApiKey: ""
+      final property string wallhavenResolutionMode: "atleast" // "atleast" or "exact"
+      final property string wallhavenResolutionWidth: ""
 
-      property string wallhavenResolutionHeight: ""
-      property string sortOrder: "name" // "name", "name_desc", "date", "date_desc", "random"
-      property list<var> favorites: []
+      final property string wallhavenResolutionHeight: ""
+      final property string sortOrder: "name" // "name", "name_desc", "date", "date_desc", "random"
+      final property list<var> favorites: []
       // Format: [{ "path": "...", "appearance": "light"|"dark", "colorScheme": "...", "darkMode": bool, "useWallpaperColors": bool, "generationMethod": "...", "paletteColors": [...] }]
       // Legacy entries omit "appearance" and use darkMode to infer light vs dark slot.
     }
+    final property WallpaperSettings wallpaper: WallpaperSettings {}
 
     // applauncher
-    property JsonObject appLauncher: JsonObject {
-      property bool enableClipboardHistory: false
-      property bool autoPasteClipboard: false
-      property bool enableClipPreview: true
-      property bool clipboardWrapText: true
-      property bool enableClipboardSmartIcons: true
-      property bool enableClipboardChips: true
-      property string clipboardWatchTextCommand: "wl-paste --type text --watch cliphist store"
-      property string clipboardWatchImageCommand: "wl-paste --type image --watch cliphist store"
-      property string position: "center"  // Position: center, top_left, top_right, bottom_left, bottom_right, bottom_center, top_center
-      property list<string> pinnedApps: []
-      property bool sortByMostUsed: true
-      property string terminalCommand: "wt.exe"
-      property bool customLaunchPrefixEnabled: false
-      property string customLaunchPrefix: ""
+    component AppLauncherSettings: JsonObject {
+      final property bool enableClipboardHistory: false
+      final property bool autoPasteClipboard: false
+      final property bool enableClipPreview: true
+      final property bool clipboardWrapText: true
+      final property bool enableClipboardSmartIcons: true
+      final property bool enableClipboardChips: true
+      final property string clipboardWatchTextCommand: "wl-paste --type text --watch cliphist store"
+      final property string clipboardWatchImageCommand: "wl-paste --type image --watch cliphist store"
+      final property string position: "center"  // Position: center, top_left, top_right, bottom_left, bottom_right, bottom_center, top_center
+      final property list<string> pinnedApps: []
+      final property bool sortByMostUsed: true
+      final property string terminalCommand: "wt.exe"
+      final property bool customLaunchPrefixEnabled: false
+      final property string customLaunchPrefix: ""
       // View mode: "list" or "grid"
-      property string viewMode: "list"
-      property bool showCategories: true
+      final property string viewMode: "list"
+      final property bool showCategories: true
       // Icon mode: "tabler" or "native"
-      property string iconMode: "tabler"
-      property bool showIconBackground: false
-      property bool enableSettingsSearch: true
-      property bool enableWindowsSearch: true
-      property bool enableSessionSearch: true
-      property bool ignoreMouseInput: false
-      property string screenshotAnnotationTool: ""
-      property bool overviewLayer: false
-      property string density: "default" // "compact", "default", "comfortable"
+      final property string iconMode: "tabler"
+      final property bool showIconBackground: false
+      final property bool enableSettingsSearch: true
+      final property bool enableWindowsSearch: true
+      final property bool enableSessionSearch: true
+      final property bool ignoreMouseInput: false
+      final property string screenshotAnnotationTool: ""
+      final property bool overviewLayer: false
+      final property string density: "default" // "compact", "default", "comfortable"
     }
+    final property AppLauncherSettings appLauncher: AppLauncherSettings {}
 
     // control center
-    property JsonObject controlCenter: JsonObject {
+    component ControlCenterShortcutsSettings: JsonObject {
+      final property list<var> left: [
+        {
+          "id": "Network"
+        },
+        {
+          "id": "Bluetooth"
+        },
+        {
+          "id": "WallpaperSelector"
+        },
+        {
+          "id": "OctaliaPerformance"
+        }
+      ]
+      final property list<var> right: [
+        {
+          "id": "Notifications"
+        },
+        {
+          "id": "PowerProfile"
+        },
+        {
+          "id": "KeepAwake"
+        }
+      ]
+    }
+
+    component ControlCenterSettings: JsonObject {
       // Position: close_to_bar_button, center, top_left, top_right, bottom_left, bottom_right, bottom_center, top_center
-      property string position: "close_to_bar_button"
-      property string diskPath: "/"
-      property JsonObject shortcuts
-      shortcuts: JsonObject {
-        property list<var> left: [
-          {
-            "id": "Network"
-          },
-          {
-            "id": "Bluetooth"
-          },
-          {
-            "id": "WallpaperSelector"
-          },
-          {
-            "id": "OctaliaPerformance"
-          }
-        ]
-        property list<var> right: [
-          {
-            "id": "Notifications"
-          },
-          {
-            "id": "PowerProfile"
-          },
-          {
-            "id": "KeepAwake"
-          }
-        ]
-      }
-      property list<var> cards: [
+      final property string position: "close_to_bar_button"
+      final property string diskPath: "/"
+      final property ControlCenterShortcutsSettings shortcuts: ControlCenterShortcutsSettings {}
+
+      final property list<var> cards: [
         {
           "id": "profile-card",
           "enabled": true
@@ -544,93 +550,98 @@ Singleton {
         }
       ]
     }
+    final property ControlCenterSettings controlCenter: ControlCenterSettings {}
 
     // system monitor
-    property JsonObject systemMonitor: JsonObject {
-      property int cpuWarningThreshold: 80
-      property int cpuCriticalThreshold: 90
-      property int tempWarningThreshold: 80
-      property int tempCriticalThreshold: 90
-      property int gpuWarningThreshold: 80
-      property int gpuCriticalThreshold: 90
-      property int memWarningThreshold: 80
-      property int memCriticalThreshold: 90
-      property int swapWarningThreshold: 80
-      property int swapCriticalThreshold: 90
-      property int diskWarningThreshold: 80
-      property int diskCriticalThreshold: 90
-      property int diskAvailWarningThreshold: 20
-      property int diskAvailCriticalThreshold: 10
-      property int batteryWarningThreshold: 20
-      property int batteryCriticalThreshold: 5
-      property bool enableDgpuMonitoring: false // Opt-in: reading dGPU sysfs/nvidia-smi wakes it from D3cold, draining battery
-      property bool useCustomColors: false
-      property string warningColor: ""
-      property string criticalColor: ""
-      property string externalMonitor: "taskmgr"
+    component SystemMonitorSettings: JsonObject {
+      final property int cpuWarningThreshold: 80
+      final property int cpuCriticalThreshold: 90
+      final property int tempWarningThreshold: 80
+      final property int tempCriticalThreshold: 90
+      final property int gpuWarningThreshold: 80
+      final property int gpuCriticalThreshold: 90
+      final property int memWarningThreshold: 80
+      final property int memCriticalThreshold: 90
+      final property int swapWarningThreshold: 80
+      final property int swapCriticalThreshold: 90
+      final property int diskWarningThreshold: 80
+      final property int diskCriticalThreshold: 90
+      final property int diskAvailWarningThreshold: 20
+      final property int diskAvailCriticalThreshold: 10
+      final property int batteryWarningThreshold: 20
+      final property int batteryCriticalThreshold: 5
+      final property bool enableDgpuMonitoring: false // Opt-in: reading dGPU sysfs/nvidia-smi wakes it from D3cold, draining battery
+      final property bool useCustomColors: false
+      final property string warningColor: ""
+      final property string criticalColor: ""
+      final property string externalMonitor: "taskmgr"
     }
+    final property SystemMonitorSettings systemMonitor: SystemMonitorSettings {}
 
     // performance
-    property JsonObject octaliaPerformance: JsonObject {
-      property bool disableWallpaper: true
-      property bool disableDesktopWidgets: true
+    component OctaliaPerformanceSettings: JsonObject {
+      final property bool disableWallpaper: true
+      final property bool disableDesktopWidgets: true
     }
+    final property OctaliaPerformanceSettings octaliaPerformance: OctaliaPerformanceSettings {}
 
     // dock
-    property JsonObject dock: JsonObject {
-      property bool enabled: false
-      property string position: "bottom" // "top", "bottom", "left", "right"
-      property string displayMode: "auto_hide" // "always_visible", "auto_hide", "exclusive"
-      property string dockType: "floating" // "floating", "attached"
-      property real backgroundOpacity: 1.0
-      property real floatingRatio: 1.0
-      property real size: 1
-      property bool onlySameOutput: true
-      property list<string> monitors: [] // holds dock visibility per monitor
-      property list<string> pinnedApps: [] // Desktop entry IDs pinned to the dock (e.g., "org.kde.konsole", "firefox.desktop")
-      property bool colorizeIcons: false
-      property bool showLauncherIcon: false
-      property string launcherPosition: "end" // "start", "end"
-      property bool launcherUseDistroLogo: false
-      property string launcherIcon: ""
-      property string launcherIconColor: "none"
-      property bool pinnedStatic: false
-      property bool inactiveIndicators: false
-      property bool groupApps: false
-      property string groupContextMenuMode: "extended" // "list", "extended"
-      property string groupClickAction: "cycle" // "cycle", "list"
-      property string groupIndicatorStyle: "dots" // "number", "dots"
-      property double deadOpacity: 0.6
-      property real animationSpeed: 1.0 // Speed multiplier for hide/show animations (0.1 = slowest, 2.0 = fastest)
-      property bool sitOnFrame: false
-      property bool showDockIndicator: false
-      property int indicatorThickness: 3
-      property string indicatorColor: "primary"
-      property real indicatorOpacity: 0.6
+    component DockSettings: JsonObject {
+      final property bool enabled: false
+      final property string position: "bottom" // "top", "bottom", "left", "right"
+      final property string displayMode: "auto_hide" // "always_visible", "auto_hide", "exclusive"
+      final property string dockType: "floating" // "floating", "attached"
+      final property real backgroundOpacity: 1.0
+      final property real floatingRatio: 1.0
+      final property real size: 1
+      final property bool onlySameOutput: true
+      final property list<string> monitors: [] // holds dock visibility per monitor
+      final property list<string> pinnedApps: [] // Desktop entry IDs pinned to the dock (e.g., "org.kde.konsole", "firefox.desktop")
+      final property bool colorizeIcons: false
+      final property bool showLauncherIcon: false
+      final property string launcherPosition: "end" // "start", "end"
+      final property bool launcherUseDistroLogo: false
+      final property string launcherIcon: ""
+      final property string launcherIconColor: "none"
+      final property bool pinnedStatic: false
+      final property bool inactiveIndicators: false
+      final property bool groupApps: false
+      final property string groupContextMenuMode: "extended" // "list", "extended"
+      final property string groupClickAction: "cycle" // "cycle", "list"
+      final property string groupIndicatorStyle: "dots" // "number", "dots"
+      final property double deadOpacity: 0.6
+      final property real animationSpeed: 1.0 // Speed multiplier for hide/show animations (0.1 = slowest, 2.0 = fastest)
+      final property bool sitOnFrame: false
+      final property bool showDockIndicator: false
+      final property int indicatorThickness: 3
+      final property string indicatorColor: "primary"
+      final property real indicatorOpacity: 0.6
     }
+    final property DockSettings dock: DockSettings {}
 
     // network
-    property JsonObject network: JsonObject {
-      property bool bluetoothRssiPollingEnabled: false  // Opt-in Bluetooth RSSI polling (uses bluetoothctl)
-      property int bluetoothRssiPollIntervalMs: 60000 // Polling interval in milliseconds for RSSI queries
-      property string networkPanelView: "wifi"
-      property string wifiDetailsViewMode: "grid"   // "grid" or "list"
-      property string bluetoothDetailsViewMode: "grid" // "grid" or "list"
-      property bool bluetoothHideUnnamedDevices: false
-      property bool disableDiscoverability: false
-      property bool bluetoothAutoConnect: true
+    component NetworkSettings: JsonObject {
+      final property bool bluetoothRssiPollingEnabled: false  // Opt-in Bluetooth RSSI polling (uses bluetoothctl)
+      final property int bluetoothRssiPollIntervalMs: 60000 // Polling interval in milliseconds for RSSI queries
+      final property string networkPanelView: "wifi"
+      final property string wifiDetailsViewMode: "grid"   // "grid" or "list"
+      final property string bluetoothDetailsViewMode: "grid" // "grid" or "list"
+      final property bool bluetoothHideUnnamedDevices: false
+      final property bool disableDiscoverability: false
+      final property bool bluetoothAutoConnect: true
     }
+    final property NetworkSettings network: NetworkSettings {}
 
     // session menu
-    property JsonObject sessionMenu: JsonObject {
-      property bool enableCountdown: true
-      property int countdownDuration: 10000
-      property string position: "center"
-      property bool showHeader: true
-      property bool showKeybinds: true
-      property bool largeButtonsStyle: true
-      property string largeButtonsLayout: "single-row"
-      property list<var> powerOptions: [
+    component SessionMenuSettings: JsonObject {
+      final property bool enableCountdown: true
+      final property int countdownDuration: 10000
+      final property string position: "center"
+      final property bool showHeader: true
+      final property bool showKeybinds: true
+      final property bool largeButtonsStyle: true
+      final property string largeButtonsLayout: "single-row"
+      final property list<var> powerOptions: [
         {
           "action": "lock",
           "enabled": true,
@@ -668,153 +679,168 @@ Singleton {
         }
       ]
     }
+    final property SessionMenuSettings sessionMenu: SessionMenuSettings {}
 
     // notifications
-    property JsonObject notifications: JsonObject {
-      property bool enabled: true
-      property bool enableMarkdown: false
-      property string density: "default" // "default", "compact"
-      property list<string> monitors: [] // holds notifications visibility per monitor
-      property string location: "top_right"
-      property bool overlayLayer: true
-      property real backgroundOpacity: 1.0
-      property bool respectExpireTimeout: false
-      property int lowUrgencyDuration: 3
-      property int normalUrgencyDuration: 8
-      property int criticalUrgencyDuration: 15
-      property bool clearDismissed: true
-      property JsonObject saveToHistory: JsonObject {
-        property bool low: true
-        property bool normal: true
-        property bool critical: true
-      }
-      property JsonObject sounds: JsonObject {
-        property bool enabled: false
-        property real volume: 0.5
-        property bool separateSounds: false
-        property string criticalSoundFile: ""
-        property string normalSoundFile: ""
-        property string lowSoundFile: ""
-        property string excludedApps: "discord,firefox,chrome,chromium,edge"
-      }
-      property bool enableMediaToast: false
-      property bool enableKeyboardLayoutToast: true
-      property bool enableBatteryToast: true
+    component NotificationsSaveToHistorySettings: JsonObject {
+      final property bool low: true
+      final property bool normal: true
+      final property bool critical: true
     }
+
+    component NotificationsSoundsSettings: JsonObject {
+      final property bool enabled: false
+      final property real volume: 0.5
+      final property bool separateSounds: false
+      final property string criticalSoundFile: ""
+      final property string normalSoundFile: ""
+      final property string lowSoundFile: ""
+      final property string excludedApps: "discord,firefox,chrome,chromium,edge"
+    }
+
+    component NotificationsSettings: JsonObject {
+      final property bool enabled: true
+      final property bool enableMarkdown: false
+      final property string density: "default" // "default", "compact"
+      final property list<string> monitors: [] // holds notifications visibility per monitor
+      final property string location: "top_right"
+      final property bool overlayLayer: true
+      final property real backgroundOpacity: 1.0
+      final property bool respectExpireTimeout: false
+      final property int lowUrgencyDuration: 3
+      final property int normalUrgencyDuration: 8
+      final property int criticalUrgencyDuration: 15
+      final property bool clearDismissed: true
+      final property NotificationsSaveToHistorySettings saveToHistory: NotificationsSaveToHistorySettings {}
+      final property NotificationsSoundsSettings sounds: NotificationsSoundsSettings {}
+      final property bool enableMediaToast: false
+      final property bool enableKeyboardLayoutToast: true
+      final property bool enableBatteryToast: true
+    }
+    final property NotificationsSettings notifications: NotificationsSettings {}
 
     // on-screen display
-    property JsonObject osd: JsonObject {
-      property bool enabled: true
-      property string location: "top_right"
-      property int autoHideMs: 2000
-      property bool overlayLayer: true
-      property real backgroundOpacity: 1.0
-      property list<var> enabledTypes: [OSD.Type.Volume, OSD.Type.InputVolume, OSD.Type.Brightness]
-      property list<string> monitors: [] // holds osd visibility per monitor
+    component OsdSettings: JsonObject {
+      final property bool enabled: true
+      final property string location: "top_right"
+      final property int autoHideMs: 2000
+      final property bool overlayLayer: true
+      final property real backgroundOpacity: 1.0
+      final property list<var> enabledTypes: [OSD.Type.Volume, OSD.Type.InputVolume, OSD.Type.Brightness]
+      final property list<string> monitors: [] // holds osd visibility per monitor
     }
+    final property OsdSettings osd: OsdSettings {}
 
     // audio
-    property JsonObject audio: JsonObject {
-      property int volumeStep: 5
-      property bool volumeOverdrive: false
-      property int spectrumFrameRate: 30
-      property string visualizerType: "linear"
-      property bool spectrumMirrored: true
-      property list<string> mprisBlacklist: []
-      property string preferredPlayer: ""
-      property bool volumeFeedback: false
-      property string volumeFeedbackSoundFile: ""
+    component AudioSettings: JsonObject {
+      final property int volumeStep: 5
+      final property bool volumeOverdrive: false
+      final property int spectrumFrameRate: 30
+      final property string visualizerType: "linear"
+      final property bool spectrumMirrored: true
+      final property list<string> mprisBlacklist: []
+      final property string preferredPlayer: ""
+      final property bool volumeFeedback: false
+      final property string volumeFeedbackSoundFile: ""
     }
+    final property AudioSettings audio: AudioSettings {}
 
     // brightness
-    property JsonObject brightness: JsonObject {
-      property int brightnessStep: 5
-      property bool enforceMinimum: true
-      property bool enableDdcSupport: false
-      property list<var> backlightDeviceMappings: []
+    component BrightnessSettings: JsonObject {
+      final property int brightnessStep: 5
+      final property bool enforceMinimum: true
+      final property bool enableDdcSupport: false
+      final property list<var> backlightDeviceMappings: []
       // Format: [{ "output": "eDP-1", "device": "/sys/class/backlight/intel_backlight" }]
     }
+    final property BrightnessSettings brightness: BrightnessSettings {}
 
-    property JsonObject colorSchemes: JsonObject {
-      property bool useWallpaperColors: false
-      property string predefinedScheme: "Octalia (default)"
-      property bool darkMode: true
-      property string schedulingMode: "off"
-      property string manualSunrise: "06:30"
-      property string manualSunset: "18:30"
-      property string generationMethod: "tonal-spot"
-      property string monitorForColors: ""
-      property bool syncGsettings: true
+    component ColorSchemesSettings: JsonObject {
+      final property bool useWallpaperColors: false
+      final property string predefinedScheme: "Octalia (default)"
+      final property bool darkMode: true
+      final property string schedulingMode: "off"
+      final property string manualSunrise: "06:30"
+      final property string manualSunset: "18:30"
+      final property string generationMethod: "tonal-spot"
+      final property string monitorForColors: ""
+      final property bool syncGsettings: true
     }
+    final property ColorSchemesSettings colorSchemes: ColorSchemesSettings {}
 
     // templates toggles
-    property JsonObject templates: JsonObject {
-      property list<var> activeTemplates: []
+    component TemplatesSettings: JsonObject {
+      final property list<var> activeTemplates: []
       // Format: [{ "id": "gtk", "enabled": true }, { "id": "qt", "enabled": true }, ...]
-      property bool enableUserTheming: false
+      final property bool enableUserTheming: false
     }
+    final property TemplatesSettings templates: TemplatesSettings {}
 
     // night light
-    property JsonObject nightLight: JsonObject {
-      property bool enabled: false
-      property bool forced: false
-      property bool autoSchedule: true
-      property string nightTemp: "4000"
-      property string dayTemp: "6500"
-      property string manualSunrise: "06:30"
-      property string manualSunset: "18:30"
+    component NightLightSettings: JsonObject {
+      final property bool enabled: false
+      final property bool forced: false
+      final property bool autoSchedule: true
+      final property string nightTemp: "4000"
+      final property string dayTemp: "6500"
+      final property string manualSunrise: "06:30"
+      final property string manualSunset: "18:30"
     }
+    final property NightLightSettings nightLight: NightLightSettings {}
 
     // hooks
-    property JsonObject hooks: JsonObject {
-      property bool enabled: false
-      property string wallpaperChange: ""
-      property string darkModeChange: ""
-      property string screenLock: ""
-      property string screenUnlock: ""
-      property string performanceModeEnabled: ""
-      property string performanceModeDisabled: ""
-      property string startup: ""
-      property string session: ""
-      property string colorGeneration: ""
+    component HooksSettings: JsonObject {
+      final property bool enabled: false
+      final property string wallpaperChange: ""
+      final property string darkModeChange: ""
+      final property string screenLock: ""
+      final property string screenUnlock: ""
+      final property string performanceModeEnabled: ""
+      final property string performanceModeDisabled: ""
+      final property string startup: ""
+      final property string session: ""
+      final property string colorGeneration: ""
     }
+    final property HooksSettings hooks: HooksSettings {}
 
     // idle management
-    property JsonObject idle: JsonObject {
-      property bool enabled: false
-      property int screenOffTimeout: 600    // seconds, 0 = disabled
-      property int lockTimeout: 660         // seconds, 0 = disabled
-      property int suspendTimeout: 1800     // seconds, 0 = disabled
-      property int fadeDuration: 5       // seconds of fade-to-black before action fires
-      property string screenOffCommand: ""
-      property string lockCommand: ""
-      property string suspendCommand: ""
-      property string resumeScreenOffCommand: ""
-      property string resumeLockCommand: ""
-      property string resumeSuspendCommand: ""
-      property string customCommands: "[]" // JSON array of {timeout, command, resumeCommand}
+    component IdleSettings: JsonObject {
+      final property bool enabled: false
+      final property int screenOffTimeout: 600    // seconds, 0 = disabled
+      final property int lockTimeout: 660         // seconds, 0 = disabled
+      final property int suspendTimeout: 1800     // seconds, 0 = disabled
+      final property int fadeDuration: 5       // seconds of fade-to-black before action fires
+      final property string screenOffCommand: ""
+      final property string lockCommand: ""
+      final property string suspendCommand: ""
+      final property string resumeScreenOffCommand: ""
+      final property string resumeLockCommand: ""
+      final property string resumeSuspendCommand: ""
+      final property string customCommands: "[]" // JSON array of {timeout, command, resumeCommand}
     }
+    final property IdleSettings idle: IdleSettings {}
 
     // desktop widgets
-    property JsonObject desktopWidgets: JsonObject {
-      property bool enabled: false
-      property bool overviewEnabled: true
-      property bool gridSnap: false
-      property bool gridSnapScale: false
-      property list<var> monitorWidgets: []
+    component DesktopWidgetsSettings: JsonObject {
+      final property bool enabled: false
+      final property bool overviewEnabled: true
+      final property bool gridSnap: false
+      final property bool gridSnapScale: false
+      final property list<var> monitorWidgets: []
       // Format: [{ "name": "DP-1", "widgets": [...] }, { "name": "HDMI-1", "widgets": [...] }]
     }
+    final property DesktopWidgetsSettings desktopWidgets: DesktopWidgetsSettings {}
   }
 
   // -----------------------------------------------------
   // Preprocess paths by adding trailing "/"
-  function ensureTrailingSlash(path) {
+  function ensureTrailingSlash(path: var): string {
     return path.endsWith("/") ? path : path + "/";
   }
 
   // -----------------------------------------------------
   // Preprocess paths by expanding "~" to user's home directory
-  function preprocessPath(path) {
+  function preprocessPath(path: var): var {
     if (typeof path !== "string" || path === "") {
       return path;
     }
@@ -832,7 +858,8 @@ Singleton {
   // -----------------------------------------------------
   // Get default value for a setting path (e.g., "general.scaleRatio" or "bar.position")
   // Returns undefined if not found
-  function getDefaultValue(path) {
+  function getDefaultValue(path: var): var {
+    var i;
     if (!root._defaultSettings) {
       return undefined;
     }
@@ -840,7 +867,7 @@ Singleton {
     var parts = path.split(".");
     var current = root._defaultSettings;
 
-    for (var i = 0; i < parts.length; i++) {
+    for (i = 0; i < parts.length; i++) {
       if (current === undefined || current === null) {
         return undefined;
       }
@@ -853,7 +880,7 @@ Singleton {
   // -----------------------------------------------------
   // Compare current value with default value
   // Returns true if values differ, false if they match or default is not found
-  function isValueChanged(path, currentValue) {
+  function isValueChanged(path: var, currentValue: var): bool {
     var defaultValue = getDefaultValue(path);
     if (defaultValue === undefined) {
       return false; // Can't compare if default not found
@@ -861,7 +888,7 @@ Singleton {
 
     // Deep comparison for objects and arrays
     if (typeof currentValue === "object" && typeof defaultValue === "object") {
-      return JSON.stringify(currentValue) !== JSON.stringify(defaultValue);
+      return SettingsUtils.stringifyCurrentValue(currentValue) !== JSON.stringify(defaultValue);
     }
 
     // Simple comparison for primitives
@@ -872,124 +899,78 @@ Singleton {
   // Helper to find a screen override entry by name in the array
   // Format: [{ "name": "HDMI-A-1", "position": "left" }, ...]
   // Note: QML's list<var> is not a true JS array, so we check for .length instead of Array.isArray()
-  function _findScreenOverride(screenName) {
-    var overrides = data.bar.screenOverrides;
-    if (!screenName || !overrides || overrides.length === undefined) {
-      return null;
-    }
-    for (var i = 0; i < overrides.length; i++) {
-      if (overrides[i] && overrides[i].name === screenName) {
-        return overrides[i];
-      }
-    }
-    return null;
+  function _findScreenOverride(screenName: var): var {
+    return SettingsUtils._findScreenOverride(screenName, data.bar.screenOverrides);
   }
 
   // Helper to find index of a screen override entry
-  function _findScreenOverrideIndex(screenName) {
-    var overrides = data.bar.screenOverrides;
-    if (!screenName || !overrides || overrides.length === undefined) {
-      return -1;
-    }
-    for (var i = 0; i < overrides.length; i++) {
-      if (overrides[i] && overrides[i].name === screenName) {
-        return i;
-      }
-    }
-    return -1;
+  function _findScreenOverrideIndex(screenName: var): int {
+    return SettingsUtils._findScreenOverrideIndex(screenName, data.bar.screenOverrides);
   }
 
   // -----------------------------------------------------
   // Check if a screen's overrides are enabled
   // Returns true if enabled flag is true or undefined (backward compat)
   // Returns false only if enabled is explicitly false
-  function isScreenOverrideEnabled(screenName) {
-    var override = _findScreenOverride(screenName);
-    if (!override) {
-      return false;
-    }
-    return override.enabled !== false;
+  function isScreenOverrideEnabled(screenName: var): bool {
+    return SettingsUtils.isScreenOverrideEnabled(screenName, data.bar.screenOverrides);
   }
 
   // -----------------------------------------------------
   // Get effective bar position for a screen (with inheritance)
   // If the screen has a position override and overrides are enabled, use it; otherwise use global default
-  function getBarPositionForScreen(screenName) {
-    var override = _findScreenOverride(screenName);
-    if (override && override.enabled !== false && override.position !== undefined) {
-      return override.position;
-    }
-    return data.bar.position || "top";
+  function getBarPositionForScreen(screenName: var): var {
+    return SettingsUtils.getBarOverride(screenName, data.bar, "position", "top");
   }
 
   // -----------------------------------------------------
   // Get effective bar widgets for a screen (with inheritance)
   // If the screen has widget overrides and overrides are enabled, use them; otherwise use global defaults
-  function getBarWidgetsForScreen(screenName) {
-    var override = _findScreenOverride(screenName);
-    if (override && override.enabled !== false && override.widgets !== undefined) {
-      return override.widgets;
-    }
-    return data.bar.widgets;
+  function getBarWidgetsForScreen(screenName: var): var {
+    return SettingsUtils.getBarOverride(screenName, data.bar, "widgets", undefined);
   }
 
   // -----------------------------------------------------
   // Get effective bar density for a screen (with inheritance)
   // If the screen has a density override and overrides are enabled, use it; otherwise use global default
-  function getBarDensityForScreen(screenName) {
-    var override = _findScreenOverride(screenName);
-    if (override && override.enabled !== false && override.density !== undefined) {
-      return override.density;
-    }
-    return data.bar.density || "default";
+  function getBarDensityForScreen(screenName: var): var {
+    return SettingsUtils.getBarOverride(screenName, data.bar, "density", "default");
   }
 
   // -----------------------------------------------------
   // Get effective bar display mode for a screen (with inheritance)
   // If the screen has a displayMode override and overrides are enabled, use it; otherwise use global default
-  function getBarDisplayModeForScreen(screenName) {
-    var override = _findScreenOverride(screenName);
-    if (override && override.enabled !== false && override.displayMode !== undefined) {
-      return override.displayMode;
-    }
-    return data.bar.displayMode || "always_visible";
+  function getBarDisplayModeForScreen(screenName: var): var {
+    return SettingsUtils.getBarOverride(screenName, data.bar, "displayMode", "always_visible");
   }
 
   // -----------------------------------------------------
   // Check if a screen has any overrides, optionally for a specific property
-  function hasScreenOverride(screenName, property) {
-    var override = _findScreenOverride(screenName);
-    if (!override) {
-      return false;
-    }
-    if (property) {
-      return override[property] !== undefined;
-    }
-    // Check if screen has any override property (besides "name")
-    var keys = Object.keys(override);
-    return keys.length > 1 || (keys.length === 1 && keys[0] !== "name");
+  function hasScreenOverride(screenName: var, property: var): bool {
+    return SettingsUtils.hasScreenOverride(screenName, data.bar.screenOverrides, property);
   }
 
   // -----------------------------------------------------
   // Get the screen override entry directly (for in-place modifications)
   // Returns the actual entry object from the array, not a copy
-  function getScreenOverrideEntry(screenName) {
-    return _findScreenOverride(screenName);
+  function getScreenOverrideEntry(screenName: var): var {
+    return SettingsUtils._findScreenOverride(screenName, data.bar.screenOverrides);
   }
 
   // -----------------------------------------------------
   // Set a per-screen override
-  function setScreenOverride(screenName, property, value) {
+  function setScreenOverride(screenName: var, property: var, value: var): void {
+    var i, newEntry;
     if (!screenName)
       return;
 
-    var overrides = JSON.parse(JSON.stringify(data.bar.screenOverrides || []));
+    var overrides = JSON.parse(JSON.stringify(Array.from(data.bar.screenOverrides || [])));
     if (overrides.length === undefined) {
       overrides = [];
     }
 
     var index = -1;
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         index = i;
         break;
@@ -998,7 +979,7 @@ Singleton {
 
     if (index === -1) {
       // Create new entry
-      var newEntry = {
+      newEntry = {
         "name": screenName
       };
       newEntry[property] = value;
@@ -1013,7 +994,8 @@ Singleton {
   // -----------------------------------------------------
   // Clear a per-screen override (revert to global default)
   // If property is null, clears all overrides for that screen
-  function clearScreenOverride(screenName, property) {
+  function clearScreenOverride(screenName: var, property: var): void {
+    var i, keys;
     if (!screenName)
       return;
 
@@ -1022,10 +1004,10 @@ Singleton {
       return;
     }
 
-    overrides = JSON.parse(JSON.stringify(overrides));
+    overrides = JSON.parse(JSON.stringify(Array.from(overrides)));
 
     var index = -1;
-    for (var i = 0; i < overrides.length; i++) {
+    for (i = 0; i < overrides.length; i++) {
       if (overrides[i] && overrides[i].name === screenName) {
         index = i;
         break;
@@ -1037,9 +1019,9 @@ Singleton {
     }
 
     if (property) {
-      delete overrides[index][property];
+      SettingsUtils.deleteOverride(overrides[index], property);
       // Remove screen entry if only "name" remains
-      var keys = Object.keys(overrides[index]);
+      keys = Object.keys(overrides[index]);
       if (keys.length <= 1 && (keys.length === 0 || keys[0] === "name")) {
         overrides.splice(index, 1);
       }
@@ -1058,63 +1040,37 @@ Singleton {
 
   // -----------------------------------------------------
   // Generate default settings: for reference only, not used by the shell
-  function generateDefaultSettings() {
-    try {
-      Logger.d("Settings", "Generating settings-default.json");
-
-      // Prepare a clean JSON
-      var plainAdapter = QtObj2JS.qtObjectToPlainObject(adapter);
-      var jsonData = JSON.stringify(plainAdapter, null, 2);
-
-      var defaultPath = Quickshell.shellDir + "/Assets/settings-default.json";
-
-      Quickshell.execDetached(["sh", "-c", `cat > "${defaultPath}" << 'OCTALIA_EOF'\n${jsonData}\nOCTALIA_EOF`]);
-    } catch (error) {
-      Logger.e("Settings", "Failed to generate default settings file: " + error);
-    }
+  function generateDefaultSettings(): void {
+    SettingsUtils.generateDefaultSettings(Logger, Quickshell, QtObj2JS, settingsAdapter);
   }
 
   // -----------------------------------------------------
   // Generate default widget settings: for reference only, not used by the shell
-  function generateWidgetDefaultSettings() {
-    try {
-      Logger.d("Settings", "Generating settings-widgets-default.json");
-
-      var output = {
-        "bar": QtObj2JS.qtObjectToPlainObject(BarWidgetRegistry.widgetMetadata),
-        "controlCenter": QtObj2JS.qtObjectToPlainObject(ControlCenterWidgetRegistry.widgetMetadata),
-        "desktop": QtObj2JS.qtObjectToPlainObject(DesktopWidgetRegistry.widgetMetadata)
-      };
-      var jsonData = JSON.stringify(output, null, 2);
-
-      var defaultPath = Quickshell.shellDir + "/Assets/settings-widgets-default.json";
-
-      Quickshell.execDetached(["sh", "-c", `cat > "${defaultPath}" << 'OCTALIA_EOF'\n${jsonData}\nOCTALIA_EOF`]);
-    } catch (error) {
-      Logger.e("Settings", "Failed to generate widget default settings file: " + error);
-    }
+  function generateWidgetDefaultSettings(): void {
+    SettingsUtils.generateWidgetDefaultSettings(Logger, Quickshell, QtObj2JS, BarWidgetRegistry, ControlCenterWidgetRegistry, DesktopWidgetRegistry);
   }
 
   // -----------------------------------------------------
   // Run versioned migrations using MigrationRegistry
   // rawJson is the parsed JSON file content (before adapter filtering)
-  function runVersionedMigrations(rawJson) {
+  function runVersionedMigrations(rawJson: var) {
+    var i;
     // Skip migrations on fresh installs (no prior settings file)
     if (!rawJson || root.isFreshInstall) {
       Logger.i("Settings", "Fresh install detected, skipping migrations");
       return;
     }
 
-    const currentVersion = adapter.settingsVersion;
+    const currentVersion = settingsAdapter.settingsVersion;
     const migrations = MigrationRegistry.migrations;
 
-    Logger.i("Settings", "adapter.settingsVersion:", adapter.settingsVersion);
+    Logger.i("Settings", "adapter.settingsVersion:", settingsAdapter.settingsVersion);
 
     // Get all migration versions and sort them
-    const versions = Object.keys(migrations).map(v => parseInt(v)).sort((a, b) => a - b);
+    const versions = SettingsUtils.sortedMigrationVersions(migrations);
 
     // Run migrations in order for versions newer than current
-    for (var i = 0; i < versions.length; i++) {
+    for (i = 0; i < versions.length; i++) {
       const version = versions[i];
 
       if (currentVersion < version) {
@@ -1123,7 +1079,7 @@ Singleton {
         const migration = migrationComponent.createObject(root);
 
         if (migration && typeof migration.migrate === "function") {
-          const success = migration.migrate(adapter, Logger, rawJson);
+          const success = migration.migrate(settingsAdapter, Logger, rawJson);
           if (!success) {
             Logger.e("Settings", "Migration to v" + version + " failed");
           }
@@ -1149,111 +1105,12 @@ Singleton {
       Qt.callLater(upgradeSettings);
       return;
     }
-
-    // -----------------
-    const sections = ["left", "center", "right"];
-
-    // 1. remove any non existing bar widget type
-    var removedWidget = false;
-    for (var s = 0; s < sections.length; s++) {
-      const sectionName = sections[s];
-      const widgets = adapter.bar.widgets[sectionName];
-      // Iterate backward through the widgets array, so it does not break when removing a widget
-      for (var i = widgets.length - 1; i >= 0; i--) {
-        var widget = widgets[i];
-        if (!BarWidgetRegistry.hasWidget(widget.id)) {
-          Logger.w(`Settings`, `!!! Deleted invalid bar widget ${widget.id} !!!`);
-          widgets.splice(i, 1);
-          removedWidget = true;
-        }
-      }
-    }
-
-    // -----------------
-    // 2. remove any non existing control center widget type
-    const ccSections = ["left", "right"];
-    for (var s = 0; s < ccSections.length; s++) {
-      const sectionName = ccSections[s];
-      const shortcuts = adapter.controlCenter.shortcuts[sectionName];
-      for (var i = shortcuts.length - 1; i >= 0; i--) {
-        var shortcut = shortcuts[i];
-        if (!ControlCenterWidgetRegistry.hasWidget(shortcut.id)) {
-          Logger.w(`Settings`, `!!! Deleted invalid control center widget ${shortcut.id} !!!`);
-          shortcuts.splice(i, 1);
-          removedWidget = true;
-        }
-      }
-    }
-
-    // -----------------
-    // 3. remove any non existing desktop widget type
-    const monitorWidgets = adapter.desktopWidgets.monitorWidgets;
-    for (var m = 0; m < monitorWidgets.length; m++) {
-      const monitor = monitorWidgets[m];
-      if (!monitor.widgets)
-        continue;
-      for (var i = monitor.widgets.length - 1; i >= 0; i--) {
-        var desktopWidget = monitor.widgets[i];
-        if (!DesktopWidgetRegistry.hasWidget(desktopWidget.id)) {
-          Logger.w(`Settings`, `!!! Deleted invalid desktop widget ${desktopWidget.id} !!!`);
-          monitor.widgets.splice(i, 1);
-          removedWidget = true;
-        }
-      }
-    }
-
-    // -----------------
-    // 4. upgrade user widget settings
-    for (var s = 0; s < sections.length; s++) {
-      const sectionName = sections[s];
-      for (var i = 0; i < adapter.bar.widgets[sectionName].length; i++) {
-        var widget = adapter.bar.widgets[sectionName][i];
-
-        // Check if widget registry supports user settings, if it does not, then there is nothing to do
-        if (BarWidgetRegistry.widgetMetadata[widget.id] === undefined) {
-          continue;
-        }
-
-        if (upgradeWidget(widget)) {
-          Logger.d("Settings", `Upgraded ${widget.id} widget:`, JSON.stringify(widget));
-        }
-      }
-    }
+    SettingsUtils.upgradeSettings(root, settingsAdapter, BarWidgetRegistry, ControlCenterWidgetRegistry, DesktopWidgetRegistry, Logger);
   }
 
   // -----------------------------------------------------
   // Function to clean up deprecated user/custom bar widgets settings
-  function upgradeWidget(widget) {
-    // Backup the widget definition before altering
-    const widgetBefore = JSON.stringify(widget);
-
-    // Get all existing custom settings keys
-    const keys = Object.keys(BarWidgetRegistry.widgetMetadata[widget.id]);
-
-    // Delete deprecated user settings from the wiget
-    for (const k of Object.keys(widget)) {
-      if (k === "id") {
-        continue;
-      }
-      if (!keys.includes(k)) {
-        delete widget[k];
-      }
-    }
-
-    // Inject missing default setting (metaData) from BarWidgetRegistry
-    for (var i = 0; i < keys.length; i++) {
-      const k = keys[i];
-      if (k === "id") {
-        continue;
-      }
-
-      if (widget[k] === undefined) {
-        widget[k] = BarWidgetRegistry.widgetMetadata[widget.id][k];
-      }
-    }
-
-    // Compare settings, to detect if something has been upgraded
-    const widgetAfter = JSON.stringify(widget);
-    return (widgetAfter !== widgetBefore);
+  function upgradeWidget(widget: var): bool {
+    return SettingsUtils.upgradeWidget(widget, BarWidgetRegistry);
   }
 }

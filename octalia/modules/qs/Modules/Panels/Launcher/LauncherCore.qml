@@ -1,14 +1,11 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Widgets
 import "Helpers/LauncherNavigation.js" as LauncherNav
 
 import "Providers"
 import qs.Commons
 import qs.Services.Keyboard
-import qs.Services.UI
 import qs.Widgets
 
 // Core launcher logic and UI - shared between SmartPanel (Launcher.qml) and overlay (LauncherOverlayWindow.qml)
@@ -405,6 +402,7 @@ Rectangle {
 
   // Keyboard handler
   function handleKeyPress(event) {
+    var cats, cats2, idx, idx2, item, nextIdx, prevIdx, provider;
     if (checkKey(event, 'escape')) {
       close();
       event.accepted = true;
@@ -466,9 +464,9 @@ Rectangle {
     switch (event.key) {
     case Qt.Key_Tab:
       if (showProviderCategories) {
-        var cats = providerCategories;
-        var idx = cats.indexOf(currentProvider.selectedCategory);
-        var nextIdx = (idx + 1) % cats.length;
+        cats = providerCategories;
+        idx = cats.indexOf(currentProvider.selectedCategory);
+        nextIdx = (idx + 1) % cats.length;
         selectCategoryWithSlide(nextIdx);
       } else {
         selectNextWrapped();
@@ -477,9 +475,9 @@ Rectangle {
       break;
     case Qt.Key_Backtab:
       if (showProviderCategories) {
-        var cats2 = providerCategories;
-        var idx2 = cats2.indexOf(currentProvider.selectedCategory);
-        var prevIdx = ((idx2 - 1) % cats2.length + cats2.length) % cats2.length;
+        cats2 = providerCategories;
+        idx2 = cats2.indexOf(currentProvider.selectedCategory);
+        prevIdx = ((idx2 - 1) % cats2.length + cats2.length) % cats2.length;
         selectCategoryWithSlide(prevIdx);
       } else {
         selectPreviousWrapped();
@@ -504,8 +502,8 @@ Rectangle {
       break;
     case Qt.Key_Delete:
       if (selectedIndex >= 0 && results && results[selectedIndex]) {
-        var item = results[selectedIndex];
-        var provider = item.provider || currentProvider;
+        item = results[selectedIndex];
+        provider = item.provider || currentProvider;
         if (provider && provider.canDeleteItem && provider.canDeleteItem(item))
           provider.deleteItem(item);
       }
@@ -865,12 +863,13 @@ Rectangle {
       NText {
         Layout.fillWidth: true
         text: {
+          var provider;
           if (root.results.length === 0) {
             if (root.searchText) {
               return I18n.tr("common.no-results");
             }
             // Use provider's empty browsing message if available
-            var provider = root.currentProvider;
+            provider = root.currentProvider;
             if (provider && provider.emptyBrowsingMessage) {
               return provider.emptyBrowsingMessage;
             }
@@ -892,11 +891,11 @@ Rectangle {
         readonly property var parts: {
           const out = [];
           if (selected && selected.onActivateNew && newKeys && newKeys.length > 0)
-            out.push(I18n.tr("launcher.new-window-hint", {
+            out.push(I18n.trArgs("launcher.new-window-hint", {
                                "key": newKeys[0]
                              }));
           if (selected && selected.onActivateAdmin && adminKeys && adminKeys.length > 0)
-            out.push(I18n.tr("launcher.admin-hint", {
+            out.push(I18n.trArgs("launcher.admin-hint", {
                                "key": adminKeys[0]
                              }));
           return out;

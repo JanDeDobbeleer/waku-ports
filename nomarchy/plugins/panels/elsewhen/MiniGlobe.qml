@@ -40,7 +40,11 @@ Item {
     path: root.pluginDir + "/world.json"
     printErrors: false
     onLoaded: {
-      try { root.land = JSON.parse(text()); canvas.requestPaint() } catch (e) { }
+      var parsed = Solar.parseJson(text())
+      if (parsed.ok) {
+        root.land = parsed.value
+        canvas.requestPaint()
+      }
     }
   }
 
@@ -49,11 +53,11 @@ Item {
     anchors.fill: parent
     renderStrategy: Canvas.Cooperative
 
-    function strokePath(ctx, pts) {
+    function strokePath(ctx: var, pts: var): void {
       var segs = Solar.visibleSegments(pts, root.spin, 0, root.radius)
-      for (var i = 0; i < segs.length; i++) {
+      for (let i = 0; i < segs.length; i++) {
         ctx.moveTo(segs[i][0].x, segs[i][0].y)
-        for (var j = 1; j < segs[i].length; j++) ctx.lineTo(segs[i][j].x, segs[i][j].y)
+        for (let j = 1; j < segs[i].length; j++) ctx.lineTo(segs[i][j].x, segs[i][j].y)
       }
     }
 
@@ -91,16 +95,16 @@ Item {
       ctx.strokeStyle = Util.alpha(c, root.showLand ? (root.bold ? 0.42 : 0.30) : 0.85)
       ctx.stroke()
 
-      if (root.showLand && root.land.length > 0) {
+      if (root.showLand && Solar.arrayLength(root.land) > 0) {
         ctx.beginPath()
-        for (i = 0; i < root.land.length; i++) {
-          var ring = root.land[i]
+        for (i = 0; i < Solar.arrayLength(root.land); i++) {
+          let ring = root.land[i]
           // Major landmasses only; islands read as dirt on the lens.
           if (ring.length < 40) continue
-          var poly = Solar.clipRingToDisc(ring, root.spin, 0, root.radius)
+          let poly = Solar.clipRingToDisc(ring, root.spin, 0, root.radius)
           if (poly.length < 3) continue
           ctx.moveTo(poly[0].x, poly[0].y)
-          for (var q = 1; q < poly.length; q++) ctx.lineTo(poly[q].x, poly[q].y)
+          for (let q = 1; q < poly.length; q++) ctx.lineTo(poly[q].x, poly[q].y)
           ctx.closePath()
         }
         ctx.fillStyle = Util.alpha(c, root.bold ? 1.0 : 0.85)
@@ -109,9 +113,9 @@ Item {
 
       // "You are here", only while on the near side.
       if (root.showMarker) {
-        var mp = Solar.project(root.markerLat, root.markerLon, root.spin, 0, r)
+        let mp = Solar.project(root.markerLat, root.markerLon, root.spin, 0, r)
         if (mp.visible) {
-          var mr = Math.max(1.6, r * 0.13)
+          let mr = Math.max(1.6, r * 0.13)
           ctx.beginPath()
           ctx.arc(mp.x, mp.y, mr, 0, Math.PI * 2)
           ctx.fillStyle = root.markerColor

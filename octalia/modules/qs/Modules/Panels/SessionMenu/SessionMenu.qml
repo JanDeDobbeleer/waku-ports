@@ -1,16 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
-import Quickshell.Wayland
-import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.Compositor
-import qs.Services.UI
 import qs.Widgets
+import "./SessionMenuUtils.js" as SessionMenuUtils
 
 SmartPanel {
   id: root
@@ -35,7 +31,7 @@ SmartPanel {
     var dividerHeight = Settings.data.sessionMenu.showHeader ? Style.marginS : 0;
     var buttonHeight = Style.baseWidgetSize * 1.3 * Style.uiScaleRatio;
     var buttonSpacing = Style.marginS;
-    var enabledCount = powerOptions.length;
+    var enabledCount = powerOptionsCount;
 
     var headerSpacing = Settings.data.sessionMenu.showHeader ? Style.margin2L : 0;
     var baseHeight = (Style.marginL * 4) + headerHeight + dividerHeight + headerSpacing;
@@ -56,7 +52,7 @@ SmartPanel {
   panelAnchorTop: !largeButtonsStyle && panelPosition.startsWith("top_")
 
   // SessionMenu handle it's own closing logic
-  property bool closeWithEscape: false
+  closeWithEscape: false
 
   // Timer properties
   readonly property int timerDuration: Settings.data.sessionMenu.countdownDuration
@@ -131,30 +127,8 @@ SmartPanel {
   // Build powerOptions from settings, filtering enabled ones and adding metadata
   // _powerOptionsVersion forces re-evaluation when settings change
   property int _powerOptionsVersion: 0
-  property var powerOptions: {
-    // Reference version to trigger re-evaluation
-    void (_powerOptionsVersion);
-    var options = [];
-    var settingsOptions = Settings.data.sessionMenu.powerOptions || [];
-
-    for (var i = 0; i < settingsOptions.length; i++) {
-      var settingOption = settingsOptions[i];
-      if (settingOption.enabled && actionMetadata[settingOption.action]) {
-        var metadata = actionMetadata[settingOption.action];
-        options.push({
-                       "action": settingOption.action,
-                       "icon": metadata.icon,
-                       "title": metadata.title,
-                       "isShutdown": metadata.isShutdown,
-                       "countdownEnabled": settingOption.countdownEnabled !== undefined ? settingOption.countdownEnabled : true,
-                       "command": settingOption.command || "",
-                       "keybind": settingOption.keybind || ""
-                     });
-      }
-    }
-
-    return options;
-  }
+  property var powerOptions: SessionMenuUtils.buildPowerOptions(Settings.data.sessionMenu.powerOptions || [], actionMetadata, _powerOptionsVersion)
+  readonly property int powerOptionsCount: SessionMenuUtils.arrayLength(powerOptions)
 
   Connections {
     target: Settings.data.sessionMenu
@@ -165,7 +139,7 @@ SmartPanel {
 
   // Lifecycle handlers
   onOpened: {
-    if (powerOptions.length > 0) {
+    if (powerOptionsCount > 0) {
       selectedIndex = -1;
       ignoreMouseHover = true;
       globalMouseInitialized = false;
@@ -184,7 +158,7 @@ SmartPanel {
   }
 
   // Timer management
-  function startTimer(action) {
+  function startTimer(action: string): void {
     // Check if global countdown is disabled
     if (!Settings.data.sessionMenu.enableCountdown) {
       executeAction(action);
@@ -192,16 +166,8 @@ SmartPanel {
     }
 
     // Check per-item countdown setting
-    var option = null;
-    for (var i = 0; i < powerOptions.length; i++) {
-      if (powerOptions[i].action === action) {
-        option = powerOptions[i];
-        break;
-      }
-    }
-
     // If this specific action has countdown disabled, execute immediately
-    if (option && option.countdownEnabled === false) {
+    if (SessionMenuUtils.isCountdownDisabled(powerOptions, action)) {
       executeAction(action);
       return;
     }
@@ -218,14 +184,14 @@ SmartPanel {
     countdownTimer.start();
   }
 
-  function cancelTimer() {
+  function cancelTimer(): void {
     timerActive = false;
     pendingAction = "";
     timeRemaining = 0;
     countdownTimer.stop();
   }
 
-  function executeAction(action) {
+  function executeAction(action: string): void {
     // Stop timer but don't reset other properties yet
     countdownTimer.stop();
 
@@ -268,112 +234,58 @@ SmartPanel {
   }
 
   // Navigation functions
-  function selectNextWrapped() {
-    if (powerOptions.length > 0) {
+  function selectNextWrapped(): void {
+    if (powerOptionsCount > 0) {
       if (selectedIndex < 0) {
         selectedIndex = 0;
       } else {
-        selectedIndex = (selectedIndex + 1) % powerOptions.length;
+        selectedIndex = (selectedIndex + 1) % powerOptionsCount;
       }
     }
   }
 
-  function selectPreviousWrapped() {
-    if (powerOptions.length > 0) {
+  function selectPreviousWrapped(): void {
+    if (powerOptionsCount > 0) {
       if (selectedIndex < 0) {
-        selectedIndex = powerOptions.length - 1;
+        selectedIndex = powerOptionsCount - 1;
       } else {
-        selectedIndex = (((selectedIndex - 1) % powerOptions.length) + powerOptions.length) % powerOptions.length;
+        selectedIndex = (((selectedIndex - 1) % powerOptionsCount) + powerOptionsCount) % powerOptionsCount;
       }
     }
   }
 
-  function selectFirst() {
-    if (powerOptions.length > 0) {
+  function selectFirst(): void {
+    if (powerOptionsCount > 0) {
       selectedIndex = 0;
     } else {
       selectedIndex = -1;
     }
   }
 
-  function selectLast() {
-    if (powerOptions.length > 0) {
-      selectedIndex = powerOptions.length - 1;
+  function selectLast(): void {
+    if (powerOptionsCount > 0) {
+      selectedIndex = powerOptionsCount - 1;
     } else {
       selectedIndex = -1;
     }
   }
 
-  function getGridInfo() {
-    let columns, rows;
-    if (Settings.data.sessionMenu.largeButtonsLayout === "single-row") {
-      columns = powerOptions.length;
-      rows = 1;
-    } else {
-      columns = Math.min(3, Math.ceil(Math.sqrt(powerOptions.length)));
-      rows = Math.ceil(powerOptions.length / columns);
-    }
-
-    return {
-      columns,
-      rows,
-      currentRow: selectedIndex >= 0 ? Math.floor(selectedIndex / columns) : -1,
-      currentCol: selectedIndex >= 0 ? selectedIndex % columns : -1,
-      itemsInRow: row => Math.min(columns, powerOptions.length - row * columns)
-    };
-  }
-
-  // Unified navigation function
-  function navigateGrid(direction) {
-    if (powerOptions.length === 0)
+  function navigateGrid(direction: string): void {
+    if (powerOptionsCount === 0)
       return;
-
-    const grid = getGridInfo();
-    // If no selection, start at first item
-    let newRow = grid.currentRow >= 0 ? grid.currentRow : 0;
-    let newCol = grid.currentCol >= 0 ? grid.currentCol : 0;
-
-    switch (direction) {
-    case "left":
-      newCol = newCol - 1 < 0 ? grid.itemsInRow(newRow) - 1 : newCol - 1;
-      break;
-    case "right":
-      // We already moved to newCol to 0 if grid.currentCol was negative
-      newCol = grid.currentCol < 0 ? newRow : newCol + 1 >= grid.itemsInRow(newRow) ? 0 : newCol + 1;
-      break;
-    case "up":
-      newRow = newRow - 1 < 0 ? grid.rows - 1 : newRow - 1;
-      break;
-    case "down":
-      // We already moved to newRow to 0 if grid.currentRow was negative
-      newRow = grid.currentRow < 0 ? newRow : newRow + 1 >= grid.rows ? 0 : newRow + 1;
-      break;
-    }
-
-    // For vertical movement, clamp column if row has fewer items
-    if (direction === "up" || direction === "down") {
-      const itemsInNewRow = grid.itemsInRow(newRow);
-      newCol = Math.min(newCol, itemsInNewRow - 1);
-    }
-
-    const newIndex = newRow * grid.columns + newCol;
-    if (newIndex < powerOptions.length) {
-      selectedIndex = newIndex;
-    }
+    selectedIndex = SessionMenuUtils.navigateGrid(powerOptionsCount, selectedIndex, Settings.data.sessionMenu.largeButtonsLayout, direction);
   }
 
-  function activate() {
-    if (powerOptions.length > 0 && selectedIndex >= 0 && powerOptions[selectedIndex]) {
-      const option = powerOptions[selectedIndex];
-      startTimer(option.action);
-    }
+  function activate(): void {
+    if (powerOptionsCount > 0 && selectedIndex >= 0 && SessionMenuUtils.hasOption(powerOptions, selectedIndex))
+      startTimer(SessionMenuUtils.actionAt(powerOptions, selectedIndex));
   }
 
-  function checkKey(event, settingName) {
+  function checkKey(event: var, settingName: string): bool {
     return Keybinds.checkKey(event, settingName, Settings);
   }
 
-  function handleUp() {
+  function handleUp(): void {
     if (largeButtonsStyle) {
       navigateGrid("up");
     } else {
@@ -381,7 +293,7 @@ SmartPanel {
     }
   }
 
-  function handleDown() {
+  function handleDown(): void {
     if (largeButtonsStyle) {
       navigateGrid("down");
     } else {
@@ -389,7 +301,7 @@ SmartPanel {
     }
   }
 
-  function handleLeft() {
+  function handleLeft(): void {
     if (largeButtonsStyle) {
       navigateGrid("left");
     } else {
@@ -397,7 +309,7 @@ SmartPanel {
     }
   }
 
-  function handleRight() {
+  function handleRight(): void {
     if (largeButtonsStyle) {
       navigateGrid("right");
     } else {
@@ -405,11 +317,11 @@ SmartPanel {
     }
   }
 
-  function handleEnter() {
+  function handleEnter(): void {
     activate();
   }
 
-  function handleEscape() {
+  function handleEscape(): void {
     if (timerActive) {
       cancelTimer();
     } else {
@@ -418,39 +330,39 @@ SmartPanel {
   }
 
   // Override keyboard handlers from SmartPanel
-  function onEscapePressed() {
+  function onEscapePressed(): void {
     handleEscape();
   }
-  function onTabPressed() {
+  function onTabPressed(): void {
     selectNextWrapped();
   }
-  function onBackTabPressed() {
+  function onBackTabPressed(): void {
     selectPreviousWrapped();
   }
-  function onLeftPressed() {
+  function onLeftPressed(): void {
     handleLeft();
   }
-  function onRightPressed() {
+  function onRightPressed(): void {
     handleRight();
   }
-  function onUpPressed() {
+  function onUpPressed(): void {
     handleUp();
   }
-  function onDownPressed() {
+  function onDownPressed(): void {
     handleDown();
   }
-  function onEnterPressed() {
+  function onEnterPressed(): void {
     handleEnter();
   }
-  function onHomePressed() {
+  function onHomePressed(): void {
     selectFirst();
   }
-  function onEndPressed() {
+  function onEndPressed(): void {
     selectLast();
   }
 
-  function checkKeybind(event) {
-    if (powerOptions.length === 0)
+  function checkKeybind(event: KeyEvent): bool {
+    if (powerOptionsCount === 0)
       return false;
 
     // Construct key string in the same format as the recorder
@@ -463,13 +375,11 @@ SmartPanel {
     if (!pressedKeybind)
       return false;
 
-    for (var i = 0; i < powerOptions.length; i++) {
-      const option = powerOptions[i];
-      if (option.keybind === pressedKeybind) {
-        selectedIndex = i;
-        startTimer(option.action);
-        return true;
-      }
+    const index = SessionMenuUtils.keybindIndex(powerOptions, pressedKeybind);
+    if (index >= 0) {
+      selectedIndex = index;
+      startTimer(SessionMenuUtils.actionAt(powerOptions, index));
+      return true;
     }
     return false;
   }
@@ -480,9 +390,9 @@ SmartPanel {
     interval: 100
     repeat: true
     onTriggered: {
-      timeRemaining -= interval;
-      if (timeRemaining <= 0) {
-        executeAction(pendingAction);
+      root.timeRemaining -= countdownTimer.interval;
+      if (root.timeRemaining <= 0) {
+        root.executeAction(root.pendingAction);
       }
     }
   }
@@ -493,8 +403,8 @@ SmartPanel {
     focus: true
 
     // For large buttons style, use full screen dimensions
-    readonly property var contentPreferredWidth: largeButtonsStyle ? (root.screen?.width || root.width || 0) : undefined
-    readonly property var contentPreferredHeight: largeButtonsStyle ? (root.screen?.height || root.height || 0) : undefined
+    readonly property var contentPreferredWidth: root.largeButtonsStyle ? (root.screen?.width || root.width || 0) : undefined
+    readonly property var contentPreferredHeight: root.largeButtonsStyle ? (root.screen?.height || root.height || 0) : undefined
 
     // Focus management
     Connections {
@@ -514,33 +424,33 @@ SmartPanel {
                       }
 
                       // Check global navigation keybinds
-                      if (checkKey(event, 'up')) {
-                        handleUp();
+                      if (root.checkKey(event, 'up')) {
+                        root.handleUp();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'down')) {
-                        handleDown();
+                      if (root.checkKey(event, 'down')) {
+                        root.handleDown();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'left')) {
-                        handleLeft();
+                      if (root.checkKey(event, 'left')) {
+                        root.handleLeft();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'right')) {
-                        handleRight();
+                      if (root.checkKey(event, 'right')) {
+                        root.handleRight();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'enter')) {
-                        handleEnter();
+                      if (root.checkKey(event, 'enter')) {
+                        root.handleEnter();
                         event.accepted = true;
                         return;
                       }
-                      if (checkKey(event, 'escape')) {
-                        handleEscape();
+                      if (root.checkKey(event, 'escape')) {
+                        root.handleEscape();
                         event.accepted = true;
                         return;
                       }
@@ -581,7 +491,7 @@ SmartPanel {
     // Timer text for large buttons style, positioned absolutely with background
     Rectangle {
       id: timerTextContainer
-      visible: largeButtonsStyle && timerActive
+      visible: root.largeButtonsStyle && root.timerActive
       anchors.bottom: largeButtonsContainer.top
       anchors.horizontalCenter: largeButtonsContainer.horizontalCenter
       anchors.bottomMargin: Style.marginM
@@ -596,9 +506,9 @@ SmartPanel {
       NText {
         id: timerText
         anchors.centerIn: parent
-        text: I18n.tr("session-menu.action-in-seconds", {
-                        "action": root.actionMetadata[pendingAction] ? root.actionMetadata[pendingAction].title : "",
-                        "seconds": Math.ceil(timeRemaining / 1000)
+        text: I18n.trArgs("session-menu.action-in-seconds", {
+                        "action": root.actionMetadata[root.pendingAction] ? root.actionMetadata[root.pendingAction].title : "",
+                        "seconds": Math.ceil(root.timeRemaining / 1000)
                       })
         font.weight: Style.fontWeightBold
         pointSize: Style.fontSizeL
@@ -609,14 +519,14 @@ SmartPanel {
     // Large buttons style layout container
     ColumnLayout {
       id: largeButtonsContainer
-      visible: largeButtonsStyle
+      visible: root.largeButtonsStyle
       anchors.centerIn: parent
 
       // Large buttons style layout (grid)
       GridLayout {
         id: largeButtonsGrid
         Layout.alignment: Qt.AlignHCenter
-        columns: Settings.data.sessionMenu.largeButtonsLayout === "single-row" ? powerOptions.length : Math.min(3, Math.ceil(Math.sqrt(powerOptions.length)))
+        columns: Settings.data.sessionMenu.largeButtonsLayout === "single-row" ? root.powerOptionsCount : Math.min(3, Math.ceil(Math.sqrt(root.powerOptionsCount)))
         rowSpacing: Style.marginXL
         columnSpacing: Style.marginXL
         // Button edge: 200 scaled, shrunk so a single row of seven fits 90% of the screen width.
@@ -625,26 +535,29 @@ SmartPanel {
           const avail = (root.screen?.width || 0) * 0.9 - (columns - 1) * Style.marginXL;
           return avail > 0 ? Math.min(wanted, avail / columns) : wanted;
         }
-        width: columns * buttonSize + (columns - 1) * Style.marginXL
-        height: Math.ceil(powerOptions.length / columns) * buttonSize + (Math.ceil(powerOptions.length / columns) - 1) * Style.marginXL
+        Layout.preferredWidth: columns * buttonSize + (columns - 1) * Style.marginXL
+        Layout.preferredHeight: Math.ceil(root.powerOptionsCount / columns) * buttonSize + (Math.ceil(root.powerOptionsCount / columns) - 1) * Style.marginXL
 
         Repeater {
-          model: powerOptions
+          model: root.powerOptions
           delegate: LargeButton {
+            id: largePowerOption
+            required property var modelData
+            required property int index
             Layout.preferredWidth: Math.round(largeButtonsGrid.buttonSize)
             Layout.preferredHeight: Math.round(largeButtonsGrid.buttonSize)
-            icon: modelData.icon
-            title: modelData.title
-            isShutdown: modelData.isShutdown || false
-            isSelected: index === selectedIndex
-            number: index + 1
-            buttonIndex: index
+            icon: SessionMenuUtils.field(largePowerOption.modelData, "icon")
+            title: SessionMenuUtils.field(largePowerOption.modelData, "title")
+            isShutdown: SessionMenuUtils.field(largePowerOption.modelData, "isShutdown") || false
+            isSelected: largePowerOption.index === root.selectedIndex
+            number: largePowerOption.index + 1
+            buttonIndex: largePowerOption.index
             onClicked: {
-              selectedIndex = index;
-              startTimer(modelData.action);
+              root.selectedIndex = largePowerOption.index;
+              root.startTimer(SessionMenuUtils.field(largePowerOption.modelData, "action"));
             }
-            pending: timerActive && pendingAction === modelData.action
-            keybind: modelData.keybind || ""
+            pending: root.timerActive && root.pendingAction === SessionMenuUtils.field(largePowerOption.modelData, "action")
+            keybind: SessionMenuUtils.field(largePowerOption.modelData, "keybind") || ""
           }
         }
       }
@@ -652,7 +565,7 @@ SmartPanel {
 
     // Normal style layout
     NBox {
-      visible: !largeButtonsStyle
+      visible: !root.largeButtonsStyle
       anchors.fill: parent
       anchors.margins: Style.marginL
       color: Color.mSurfaceVariant
@@ -669,13 +582,13 @@ SmartPanel {
           Layout.preferredHeight: Style.baseWidgetSize * 0.6
 
           NText {
-            text: timerActive ? I18n.tr("session-menu.action-in-seconds", {
-                                          "action": root.actionMetadata[pendingAction] ? root.actionMetadata[pendingAction].title : "",
-                                          "seconds": Math.ceil(timeRemaining / 1000)
+            text: root.timerActive ? I18n.trArgs("session-menu.action-in-seconds", {
+                                          "action": root.actionMetadata[root.pendingAction] ? root.actionMetadata[root.pendingAction].title : "",
+                                          "seconds": Math.ceil(root.timeRemaining / 1000)
                                         }) : I18n.tr("session-menu.title")
             font.weight: Style.fontWeightBold
             pointSize: Style.fontSizeL
-            color: timerActive ? Color.mPrimary : Color.mOnSurface
+            color: root.timerActive ? Color.mPrimary : Color.mOnSurface
             Layout.alignment: Qt.AlignVCenter
             verticalAlignment: Text.AlignVCenter
           }
@@ -685,16 +598,16 @@ SmartPanel {
           }
 
           NIconButton {
-            icon: timerActive ? "stop" : "close"
+            icon: root.timerActive ? "stop" : "close"
             Layout.alignment: Qt.AlignVCenter
             baseSize: Style.baseWidgetSize * 0.7
-            colorBg: timerActive ? Qt.alpha(Color.mError, 0.08) : "transparent"
-            colorFg: timerActive ? Color.mError : Color.mOnSurface
+            colorBg: root.timerActive ? Qt.alpha(Color.mError, 0.08) : "transparent"
+            colorFg: root.timerActive ? Color.mError : Color.mOnSurface
             onClicked: {
-              if (timerActive) {
-                cancelTimer();
+              if (root.timerActive) {
+                root.cancelTimer();
               } else {
-                cancelTimer();
+                root.cancelTimer();
                 root.close();
               }
             }
@@ -712,21 +625,25 @@ SmartPanel {
           spacing: Style.marginS
 
           Repeater {
-            model: powerOptions
+            model: root.powerOptions
             delegate: PowerButton {
+              id: powerOption
+              required property var modelData
+              required property int index
               Layout.fillWidth: true
-              icon: modelData.icon
-              title: modelData.title
-              isShutdown: modelData.isShutdown || false
-              isSelected: index === selectedIndex
-              number: index + 1
-              buttonIndex: index
+              icon: SessionMenuUtils.field(powerOption.modelData, "icon")
+              title: SessionMenuUtils.field(powerOption.modelData, "title")
+              isShutdown: SessionMenuUtils.field(powerOption.modelData, "isShutdown") || false
+              isSelected: powerOption.index === root.selectedIndex
+              number: powerOption.index + 1
+              buttonIndex: powerOption.index
+              action: SessionMenuUtils.field(powerOption.modelData, "action")
               onClicked: {
-                selectedIndex = index;
-                startTimer(modelData.action);
+                root.selectedIndex = powerOption.index;
+                root.startTimer(SessionMenuUtils.field(powerOption.modelData, "action"));
               }
-              pending: timerActive && pendingAction === modelData.action
-              keybind: modelData.keybind || ""
+              pending: root.timerActive && root.pendingAction === SessionMenuUtils.field(powerOption.modelData, "action")
+              keybind: SessionMenuUtils.field(powerOption.modelData, "keybind") || ""
             }
           }
         }
@@ -735,16 +652,16 @@ SmartPanel {
 
     // Background MouseArea for large buttons style - closes panel when clicking outside buttons
     MouseArea {
-      visible: largeButtonsStyle
+      visible: root.largeButtonsStyle
       anchors.fill: parent
       z: -1
       acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
       onClicked: mouse => {
                    // Only close if not clicking on a button
                    // The buttons are above this MouseArea, so clicks on them won't reach here
-                   if (timerActive) {
+                   if (root.timerActive) {
                      // Cancel countdown if active
-                     cancelTimer();
+                     root.cancelTimer();
                    } else {
                      root.close();
                    }
@@ -756,6 +673,7 @@ SmartPanel {
   component PowerButton: Rectangle {
     id: buttonRoot
 
+    property string action: ""
     property string icon: ""
     property string title: ""
     property bool pending: false
@@ -837,10 +755,10 @@ SmartPanel {
         // Countdown as plain text (left of keybind)
         NText {
           id: countdownText
-          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && timerActive && pendingAction === modelData.action
+          visible: !Settings.data.sessionMenu.showHeader && buttonRoot.pending && root.timerActive && root.pendingAction === buttonRoot.action
           anchors.left: parent.left
           anchors.verticalCenter: parent.verticalCenter
-          text: Math.ceil(timeRemaining / 1000)
+          text: Math.ceil(root.timeRemaining / 1000)
           pointSize: Style.fontSizeS
           color: Color.mPrimary
           font.weight: Style.fontWeightBold
@@ -918,13 +836,13 @@ SmartPanel {
 
       onEntered: {
         if (!root.ignoreMouseHover) {
-          selectedIndex = buttonRoot.buttonIndex;
+          root.selectedIndex = buttonRoot.buttonIndex;
         }
       }
 
       onExited: {
-        if (!root.ignoreMouseHover && selectedIndex === buttonRoot.buttonIndex) {
-          selectedIndex = -1;
+        if (!root.ignoreMouseHover && root.selectedIndex === buttonRoot.buttonIndex) {
+          root.selectedIndex = -1;
         }
       }
 
@@ -976,8 +894,8 @@ SmartPanel {
     transform: Scale {
       origin.x: largeButtonRoot.width / 2
       origin.y: largeButtonRoot.height / 2
-      xScale: hoverScale
-      yScale: hoverScale
+      xScale: largeButtonRoot.hoverScale
+      yScale: largeButtonRoot.hoverScale
     }
 
     Behavior on color {
@@ -1022,8 +940,8 @@ SmartPanel {
           return Color.mOnSurface;
         }
         pointSize: Style.fontSizeXXXL * 2.25
-        width: 90 * Style.uiScaleRatio
-        height: 90 * Style.uiScaleRatio
+        Layout.preferredWidth: 90 * Style.uiScaleRatio
+        Layout.preferredHeight: 90 * Style.uiScaleRatio
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
@@ -1125,13 +1043,13 @@ SmartPanel {
 
       onEntered: {
         if (!root.ignoreMouseHover) {
-          selectedIndex = largeButtonRoot.buttonIndex;
+          root.selectedIndex = largeButtonRoot.buttonIndex;
         }
       }
 
       onExited: {
-        if (!root.ignoreMouseHover && selectedIndex === largeButtonRoot.buttonIndex) {
-          selectedIndex = -1;
+        if (!root.ignoreMouseHover && root.selectedIndex === largeButtonRoot.buttonIndex) {
+          root.selectedIndex = -1;
         }
       }
 

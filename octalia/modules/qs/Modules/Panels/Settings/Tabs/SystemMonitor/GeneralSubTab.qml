@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
@@ -73,7 +72,7 @@ ColumnLayout {
         Layout.preferredHeight: Style.baseWidgetSize
         enabled: Settings.data.systemMonitor.useCustomColors
         selectedColor: Settings.data.systemMonitor.warningColor || Color.mTertiary
-        onColorSelected: color => Settings.data.systemMonitor.warningColor = color
+        onColorSelected: color => Settings.data.systemMonitor.warningColor = color.toString()
       }
     }
 
@@ -92,7 +91,7 @@ ColumnLayout {
         Layout.preferredHeight: Style.baseWidgetSize
         enabled: Settings.data.systemMonitor.useCustomColors
         selectedColor: Settings.data.systemMonitor.criticalColor || Color.mError
-        onColorSelected: color => Settings.data.systemMonitor.criticalColor = color
+        onColorSelected: color => Settings.data.systemMonitor.criticalColor = color.toString()
       }
     }
   }

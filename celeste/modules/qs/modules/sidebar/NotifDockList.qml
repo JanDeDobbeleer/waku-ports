@@ -6,13 +6,14 @@ import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "NotifDockListHelpers.js" as NotifDockListHelpers
 
 LazyListView {
     id: root
 
-    required property Props props
-    required property Flickable container
-    required property ScreenState screenState
+    required final property Props props
+    required final property Flickable container
+    required final property ScreenState screenState
 
     anchors.left: parent?.left
     anchors.right: parent?.right
@@ -26,7 +27,7 @@ LazyListView {
     // Port: the ListView stand-in never asks for a viewport adjustment (onViewportAdjustNeeded).
 
     useCustomViewport: true
-    viewport: Qt.rect(0, container.contentY, width, container.height)
+    viewport: NotifDockListHelpers.viewport(Qt, container, width)
 
     removeDuration: Tokens.anim.durations.normal
 
@@ -45,25 +46,18 @@ LazyListView {
     }
 
     model: ScriptModel {
-        values: {
-            const map = new Map();
-            for (const n of Notifs.notClosed)
-                map.set(n.appName, null);
-            for (const n of Notifs.list)
-                map.set(n.appName, null);
-            return [...map.keys()];
-        }
+        values: NotifDockListHelpers.appNames(Notifs.notClosed, Notifs.list)
     }
 
     delegate: Component {
         MouseArea {
             id: notif
 
-            required property int index
-            required property string modelData
+            required final property int index
+            required final property string modelData
 
-            readonly property bool closed: notifInner.notifCount === 0
-            property int startY
+            readonly final property bool closed: notifInner.notifCount === 0
+            final property int startY
 
             function closeAll(): void {
                 clearTimer.start();
@@ -72,11 +66,11 @@ LazyListView {
             // Port: LazyListView's attached layout properties are plain properties here, and the
             // list is a ListView, so the delegate sets its own height. Adding runs the list's add
             // transition; removing is the fade and shrink on `closed`.
-            readonly property real preferredHeight: closed ? 0 : notifInner.nonAnimHeight
-            readonly property real visibleHeight: closed ? 0 : notifInner.implicitHeight
-            readonly property bool removing: false
-            readonly property bool adding: false
-            readonly property bool ready: true
+            readonly final property real preferredHeight: closed ? 0 : notifInner.nonAnimHeight
+            readonly final property real visibleHeight: closed ? 0 : notifInner.implicitHeight
+            readonly final property bool removing: false
+            readonly final property bool adding: false
+            readonly final property bool ready: true
             implicitHeight: notifInner.implicitHeight
             width: ListView.view?.width ?? 0
             height: visibleHeight
@@ -120,16 +114,7 @@ LazyListView {
                 interval: 15
                 repeat: true
                 triggeredOnStart: true
-                onTriggered: {
-                    const notifs = Notifs.notClosed.filter(n => n.appName === notif.modelData);
-                    if (notifs.length === 0) {
-                        stop();
-                        return;
-                    }
-
-                    for (const n of notifs.slice(0, 30))
-                        n.close();
-                }
+                onTriggered: NotifDockListHelpers.closeBatch(Notifs.notClosed, notif.modelData, clearTimer)
             }
 
             NotifGroup {

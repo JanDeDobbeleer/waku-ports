@@ -55,7 +55,7 @@ Item {
     component Resource: CircularProgress {
         id: res
 
-        required property string icon
+        required final property string icon
 
         Layout.fillHeight: true
         implicitSize: height

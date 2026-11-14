@@ -1,0 +1,6 @@
+{
+  "celeste": { "startupMs": 5000, "idleCpuPct": 5, "privateMB": 300, "handles": 2500, "bindingLoops": 0 },
+  "octalia": { "startupMs": 5000, "idleCpuPct": 5, "privateMB": 450, "handles": 2500, "bindingLoops": 0 },
+  "nomarchy": { "startupMs": 5000, "idleCpuPct": 5, "privateMB": 300, "handles": 2500, "bindingLoops": 0 },
+  "start12": { "startupMs": 5000, "idleCpuPct": 3, "privateMB": 200, "handles": 2000, "bindingLoops": 0 }
+}

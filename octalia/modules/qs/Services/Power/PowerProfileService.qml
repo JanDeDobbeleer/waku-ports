@@ -1,23 +1,24 @@
 pragma Singleton
 
+import "PowerProfileUtils.js" as ProfileUtils
+
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Services.UI
-import qs.compat
 
 Singleton {
   id: root
 
   readonly property var powerProfiles: PowerProfiles
-  readonly property bool available: powerProfiles && powerProfiles.hasPerformanceProfile
-  property int profile: powerProfiles ? powerProfiles.profile : PowerProfile.Balanced
+  readonly property bool available: ProfileUtils.available(powerProfiles)
+  property int profile: ProfileUtils.profile(powerProfiles, PowerProfile.Balanced)
 
   // Not a power profile but a volatile property to quickly disable shadows, animations, etc..
   property bool octaliaPerformanceMode: false
 
-  function getName(p) {
+  function getName(p: var): string {
     if (!available)
       return "Unknown";
 
@@ -35,7 +36,7 @@ Singleton {
     }
   }
 
-  function getIcon(p) {
+  function getIcon(p: var): string {
     if (!available)
       return "balanced";
 
@@ -57,20 +58,14 @@ Singleton {
     Logger.d("PowerProfileService", "Service started");
   }
 
-  function setProfile(p) {
-    if (!available)
-      return;
-    try {
-      powerProfiles.profile = p;
-    } catch (e) {
-      Logger.e("PowerProfileService", "Failed to set profile:", e);
-    }
+  function setProfile(p: var): void {
+    ProfileUtils.setProfile(root, p, Logger);
   }
 
   function cycleProfile() {
     if (!available)
       return;
-    const current = powerProfiles.profile;
+    const current = ProfileUtils.profile(powerProfiles, PowerProfile.Balanced);
     if (current === PowerProfile.Performance)
       setProfile(PowerProfile.PowerSaver);
     else if (current === PowerProfile.Balanced)
@@ -82,7 +77,7 @@ Singleton {
   function cycleProfileReverse() {
     if (!available)
       return;
-    const current = powerProfiles.profile;
+    const current = ProfileUtils.profile(powerProfiles, PowerProfile.Balanced);
     if (current === PowerProfile.Performance)
       setProfile(PowerProfile.Balanced);
     else if (current === PowerProfile.Balanced)
@@ -91,20 +86,20 @@ Singleton {
       setProfile(PowerProfile.Performance);
   }
 
-  function isDefault() {
+  function isDefault(): bool {
     if (!available)
       return true;
     return (profile === PowerProfile.Balanced);
   }
 
   Connections {
-    target: powerProfiles
+    target: root.powerProfiles
     function onProfileChanged() {
-      root.profile = powerProfiles.profile;
+      root.profile = ProfileUtils.profile(root.powerProfiles, PowerProfile.Balanced);
       // Only show toast if we have a valid profile name (not "Unknown")
-      const profileName = root.getName();
+      const profileName = root.getName(undefined);
       if (profileName !== "Unknown") {
-        ToastService.showNotice(I18n.tr("toast.power-profile.profile-name", {
+        ToastService.showNotice(I18n.trArgs("toast.power-profile.profile-name", {
                                           "profile": profileName
                                         }), I18n.tr("toast.power-profile.changed"), profileName.toLowerCase().replace(" ", ""));
       }
@@ -119,7 +114,7 @@ Singleton {
     octaliaPerformanceMode = !octaliaPerformanceMode;
   }
 
-  function setOctaliaPerformance(value) {
+  function setOctaliaPerformance(value: var): void {
     octaliaPerformanceMode = value;
   }
 

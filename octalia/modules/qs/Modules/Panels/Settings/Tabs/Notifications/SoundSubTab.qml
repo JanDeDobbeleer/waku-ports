@@ -1,7 +1,5 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
@@ -82,6 +80,7 @@ ColumnLayout {
 
   // Unified Sound File (shown when separateSounds is false)
   ColumnLayout {
+    id: unifiedSoundColumn
     enabled: SoundService.multimediaAvailable && (Settings.data.notifications?.sounds?.enabled ?? false)
     visible: !(Settings.data.notifications?.sounds?.separateSounds ?? false)
     spacing: Style.marginXXS
@@ -93,7 +92,7 @@ ColumnLayout {
     }
 
     NTextInputButton {
-      enabled: parent.enabled
+      enabled: unifiedSoundColumn.enabled
       Layout.fillWidth: true
       placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
       text: Settings.data.notifications?.sounds?.normalSoundFile ?? ""
@@ -122,6 +121,7 @@ ColumnLayout {
 
     // Low Urgency Sound File
     ColumnLayout {
+      id: lowSoundColumn
       spacing: Style.marginXXS
       Layout.fillWidth: true
 
@@ -131,7 +131,7 @@ ColumnLayout {
       }
 
       NTextInputButton {
-        enabled: parent.enabled
+        enabled: lowSoundColumn.enabled
         Layout.fillWidth: true
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.lowSoundFile ?? ""
@@ -143,6 +143,7 @@ ColumnLayout {
 
     // Normal Urgency Sound File
     ColumnLayout {
+      id: normalSoundColumn
       spacing: Style.marginXXS
       Layout.fillWidth: true
 
@@ -152,7 +153,7 @@ ColumnLayout {
       }
 
       NTextInputButton {
-        enabled: parent.enabled
+        enabled: normalSoundColumn.enabled
         Layout.fillWidth: true
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.normalSoundFile ?? ""
@@ -164,6 +165,7 @@ ColumnLayout {
 
     // Critical Urgency Sound File
     ColumnLayout {
+      id: criticalSoundColumn
       spacing: Style.marginXXS
       Layout.fillWidth: true
 
@@ -173,7 +175,7 @@ ColumnLayout {
       }
 
       NTextInputButton {
-        enabled: parent.enabled
+        enabled: criticalSoundColumn.enabled
         Layout.fillWidth: true
         placeholderText: I18n.tr("panels.notifications.sounds-files-placeholder")
         text: Settings.data.notifications?.sounds?.criticalSoundFile ?? ""
@@ -186,6 +188,7 @@ ColumnLayout {
 
   // Excluded Apps List
   ColumnLayout {
+    id: excludedAppsColumn
     enabled: SoundService.multimediaAvailable && (Settings.data.notifications?.sounds?.enabled ?? false)
     spacing: Style.marginXXS
     Layout.fillWidth: true
@@ -196,7 +199,7 @@ ColumnLayout {
     }
 
     NTextInput {
-      enabled: parent.enabled
+      enabled: excludedAppsColumn.enabled
       Layout.fillWidth: true
       placeholderText: I18n.tr("panels.notifications.sounds-excluded-apps-placeholder")
       text: Settings.data.notifications?.sounds?.excludedApps ?? ""

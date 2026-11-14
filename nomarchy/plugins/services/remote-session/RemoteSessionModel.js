@@ -29,3 +29,5 @@ if (typeof module !== "undefined") {
     stateFromOutput: stateFromOutput
   }
 }
+
+function isCaptureEventObject(event) { return isCaptureEvent(event ? event.name : "") }

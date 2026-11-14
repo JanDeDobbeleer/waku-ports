@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 // One notification card. Layout.js decides where it goes and the scene animates
 // it there; the card owns only what happens inside its own edges.
 
@@ -12,6 +13,7 @@ import "Security.js" as Security
 import "Delivery.js" as Delivery
 import "Store.js" as Store
 import "Icons.js" as Icons
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: card
@@ -26,7 +28,7 @@ Item {
   property bool selected: false              // the keyboard's card
   property double now: Date.now()
   property real cardWidth: Style.space(380)
-  property var actions: []                   // what the sender put on the wire
+  property list<var> actions: []                   // what the sender put on the wire
 
   // The pointer in the deck's coordinates: the deck owns hover, so cards and
   // their buttons work out what is under it themselves.
@@ -35,27 +37,24 @@ Item {
   readonly property real localHoverX: hoverX - x
   readonly property real localHoverY: hoverY - y
 
-  function pointerOver(item) {
-    if (!hovered) return false
-    var origin = item.mapToItem(card, 0, 0)
-    return localHoverX >= origin.x && localHoverX <= origin.x + item.width
-        && localHoverY >= origin.y && localHoverY <= origin.y + item.height
+  function pointerOver(item: var): bool {
+    return hovered && Delivery.pointerOver(item, card, localHoverX, localHoverY)
   }
 
   // Nothing while it is fresh, then minutes, then the clock time, then
   // "yesterday", then the day.
-  function ago() {
-    var t = Number(row.ts || 0) * 1000
+  function ago(): var {
+    var t = Number(Delivery.field(row, "ts") || 0) * 1000
     if (!t) return ""
     var s = Math.max(0, (now - t) / 1000)
     if (s < 300) return ""
-    if (s < 3600) return I18n.t("notifications.minutesAgo").arg(I18n.formatNumber(Math.round(s / 60)))
+    if (s < 3600) return I18nModel.translate(I18n, "notifications.minutesAgo").arg(I18nModel.formatNumber(I18n, Math.round(s / 60)))
     var then = new Date(t)
-    var locale = Qt.locale(I18n.formatLocale)
+    var locale = Qt.locale(I18nModel.value(I18n, "formatLocale"))
     var sameDay = new Date(now).toDateString() === then.toDateString()
     if (sameDay) return locale.toString(then, "HH:mm")
     var yest = new Date(now - 86400000).toDateString() === then.toDateString()
-    if (yest) return I18n.t("notifications.yesterday")
+    if (yest) return I18nModel.translate(I18n, "notifications.yesterday")
     return locale.toString(then, "ddd")
   }
 
@@ -70,17 +69,17 @@ Item {
   signal execInvoked(int index)
   signal linkOpened()
 
-  readonly property bool critical: row.urgency === 2
+  readonly property bool critical: Delivery.field(row, "urgency") === 2
   readonly property color dimColor: Qt.darker(Commons.Color.notifications.text, 1.4)
   readonly property color bodyColor: Qt.darker(Commons.Color.notifications.text, 1.15)
   readonly property color accentColor: critical ? Commons.Color.urgent
-                                               : (row.urgency === 0 ? dimColor : Commons.Color.notifications.countdown)
-  readonly property bool hasBody: String(row.body || "").length > 0
+                                               : (Delivery.field(row, "urgency") === 0 ? dimColor : Commons.Color.notifications.countdown)
+  readonly property bool hasBody: String(Delivery.field(row, "body") || "").length > 0
   readonly property bool redacted: Store.redacted(row)
   // Nomarchy's own toasts and bare notify-send calls name no source worth a
   // letter, and a summary that opens with its own glyph already has its mark.
-  readonly property bool anonymous: row.app === "nomarchy-action" || row.app === "notify-send"
-  readonly property bool glyphLed: Delivery.summaryStartsWithGlyph(row.summary)
+  readonly property bool anonymous: Delivery.field(row, "app") === "nomarchy-action" || Delivery.field(row, "app") === "notify-send"
+  readonly property bool glyphLed: Delivery.summaryStartsWithGlyph(Delivery.field(row, "summary"))
   readonly property real contentPaddingY: hasBody ? Style.space(10) : Style.space(7)
   // A card behind the front of a collapsed deck is a shape: the cards are
   // translucent, so its text would read through the one in front. The text
@@ -88,10 +87,10 @@ Item {
   // leaving it the front) and jumps with it when a keypress skips the move.
   // It goes out in half the time it comes in, so a card arriving over this one
   // doesn't show both texts at once.
-  property real contentOpacity: expanded || place.front ? 1 : 0
+  property real contentOpacity: expanded || Delivery.field(place, "front") ? 1 : 0
   Behavior on contentOpacity {
     id: contentFade
-    enabled: !(card.scene && card.scene.jumping)
+    enabled: !(card.scene && Delivery.field(card.scene, "jumping"))
     NumberAnimation {
       duration: contentFade.targetValue > 0 ? card.fade : card.fade / 2
       easing.type: Easing.OutCubic
@@ -105,40 +104,40 @@ Item {
   readonly property int bodyLines: bodyOpen ? 8 : 2
 
   // Every code the body carried; two or more have to say which they copy.
-  readonly property var foundCodes: {
-    var all = String(row.codes || row.code || "").split(" ")
+  readonly property list<var> foundCodes: {
+    var all = String(Delivery.field(row, "codes") || Delivery.field(row, "code") || "").split(" ")
     var out = []
-    for (var i = 0; i < all.length; i++) if (all[i]) out.push(all[i])
+    for (let i = 0; i < all.length; i++) if (all[i]) out.push(all[i])
     return out
   }
 
   // Buttons an Nomarchy sender asked for (--action), as commands the shell runs.
-  readonly property var execActions: Security.parseExecActions(row.execActions) || []
+  readonly property var execActions: Security.parseExecActions(Delivery.field(row, "execActions")) || []
 
   // Every button, in Delivery.deeds' order, with the code labels translated.
-  readonly property var allDeeds: {
+  readonly property list<var> allDeeds: {
     var out = Delivery.deeds(row, actions)
-    for (var i = 0; i < out.length; i++)
+    for (let i = 0; i < out.length; i++)
       if (out[i].kind === "code")
-        out[i].label = foundCodes.length > 1 ? I18n.t("notifications.copyThisCode").arg(out[i].value)
-                                             : I18n.t("notifications.copyCode")
+        out[i].label = foundCodes.length > 1 ? I18nModel.translate(I18n, "notifications.copyThisCode").arg(out[i].value)
+                                             : I18nModel.translate(I18n, "notifications.copyCode")
     return out
   }
 
   // Marks on the headline. Buttons say for themselves that a card can be
   // acted on; a verification code is marked even where they are hidden.
-  readonly property var marks: {
+  readonly property list<var> marks: {
     var out = []
-    if (String(row.code || "")) out.push("\u{f0306}")
+    if (String(Delivery.field(row, "code") || "")) out.push("\u{f0306}")
     return out
   }
 
-  function doDeed(deed) {
-    var kind = String(deed.kind || "")
-    if (kind === "action") { actionInvoked(String(deed.value)); return }
-    if (kind === "exec") { execInvoked(Number(deed.value)); return }
-    codeCopied(String(deed.value))
-    copiedCode = String(deed.value)
+  function doDeed(deed: var): var {
+    var kind = String(Delivery.field(deed, "kind") || "")
+    if (kind === "action") { actionInvoked(String(Delivery.field(deed, "value"))); return }
+    if (kind === "exec") { execInvoked(Number(Delivery.field(deed, "value"))); return }
+    codeCopied(String(Delivery.field(deed, "value")))
+    copiedCode = String(Delivery.field(deed, "value"))
     tick.restart()
   }
 
@@ -150,15 +149,15 @@ Item {
   // An update (replaces_id) rewrites the row in place with a new arrival
   // time, and gets a fresh display period of its own duration. Its picture
   // may be new at the same path, so the image is read again too.
-  property real remaining: Number(row.duration || 0)
-  readonly property bool ticking: Number(row.duration || 0) > 0 && !paused
-  readonly property string arrival: String(row.ts) + ":" + String(row.duration)
+  property real remaining: Number(Delivery.field(row, "duration") || 0)
+  readonly property bool ticking: Number(Delivery.field(row, "duration") || 0) > 0 && !paused
+  readonly property string arrival: String(Delivery.field(row, "ts")) + ":" + String(Delivery.field(row, "duration"))
   property bool reloading: false
   onArrivalChanged: {
-    remaining = Number(row.duration || 0)
+    remaining = Number(Delivery.field(row, "duration") || 0)
     thumb.failed = 0
     reloading = true
-    Qt.callLater(function() { card.reloading = false })
+    Qt.callLater(function(): var { card.reloading = false })
   }
 
   // Coarse: nothing draws the time left, only the expiry needs it.
@@ -206,16 +205,16 @@ Item {
   property real drawnHeight: targetHeight
 
 
-  y: scene ? scene.at(row.key, "y") : 0
-  z: place.z
-  scale: scene ? scene.at(row.key, "scale") : 1
-  opacity: place.hidden ? 0 : (scene ? scene.at(row.key, "opacity") : 1)
+  y: scene ? scene.at(Delivery.field(row, "key"), "y") : 0
+  z: Delivery.field(place, "z")
+  scale: scene ? scene.at(Delivery.field(row, "key"), "scale") : 1
+  opacity: Delivery.field(place, "hidden") ? 0 : (scene ? scene.at(Delivery.field(row, "key"), "opacity") : 1)
   transformOrigin: Item.Top
 
   // `visible` is deliberately unbound: anything derived from layout output
-  // (opacity, place.hidden) closes a binding loop through `heights`. A hidden
+  // (opacity, Delivery.field(place, "hidden")) closes a binding loop through `heights`. A hidden
   // card is at opacity 0 and costs no drawing; `enabled` refuses the pointer.
-  enabled: !place.hidden && !place.leaving
+  enabled: !Delivery.field(place, "hidden") && !Delivery.field(place, "leaving")
 
   // BorderSurface keeps gradients and per-side border widths; content below is
   // inset by those exact widths.
@@ -235,7 +234,7 @@ Item {
     anchors { leftMargin: plate.borderLeft; rightMargin: plate.borderRight
               topMargin: plate.borderTop; bottomMargin: plate.borderBottom }
     visible: card.selected
-    color: Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent)
+    color: Style.hoverFillFor(Commons.Color.notifications.text, Commons.Color.accent, Commons.Color.urgent)
   }
 
   Item {
@@ -257,7 +256,7 @@ Item {
       Item {
         id: thumb
         readonly property bool pictured: picture.status === Image.Ready && best !== ""
-        readonly property bool glyphed: !pictured && String(card.row.glyph || "").length > 0
+        readonly property bool glyphed: !pictured && String(Delivery.field(card.row, "glyph") || "").length > 0
         readonly property bool lettered: !pictured && !glyphed && !card.anonymous && !card.glyphLed
         // A one-line toast keeps its glyph at text size beside the line.
         readonly property bool compact: glyphed && !card.hasBody
@@ -268,7 +267,7 @@ Item {
         y: Math.max(0, (card.restingBlock - height) / 2)
         opacity: card.contentOpacity
 
-        function entryIcon(icon) {
+        function entryIcon(icon: var): var {
           var value = String(icon || "")
           return value.charAt(0) === "/" ? Util.fileUrl(value) : value ? Quickshell.iconPath(value, true) : ""
         }
@@ -276,29 +275,25 @@ Item {
         // Only what the sender handed over and what is installed for its source:
         // Quickshell.iconPath answers "" for a missing icon when asked to check,
         // where a bare image://icon/ URL would draw a checkerboard.
-        readonly property string sent: /^image:\/\/qsimage\/[0-9]+\/[0-9]+$/.test(String(card.row.image || ""))
-                                       ? String(card.row.image) : Security.localImageUrl(card.row.image)
+        readonly property string sent: /^image:\/\/qsimage\/[0-9]+\/[0-9]+$/.test(String(Delivery.field(card.row, "image") || ""))
+                                       ? String(Delivery.field(card.row, "image")) : Security.localImageUrl(Delivery.field(card.row, "image"))
 
         // Best first: the sender's picture, then the icon theme, then a
         // desktop entry's icon (Icons.candidates has the names). A file that will not load gives way to the next.
-        function firstOf(names, look) {
-          for (var i = 0; i < names.length; i++) {
-            var found = look(names[i])
-            if (found) return found
-          }
-          return ""
+        function firstOf(names: var, look: var): var {
+          return Icons.firstOf(names, look)
         }
-        readonly property var sources: {
-          var appsRevision = DesktopEntries.applications.values.length
-          var want = Icons.candidates(card.row)
-          var found = [sent,
-            firstOf(want.themed, function(name) { return Quickshell.iconPath(name, true) }),
-            firstOf(want.entries, function(name) {
-              var entry = DesktopEntries.heuristicLookup(name)
-              return entry ? thumb.entryIcon(entry.icon) : ""
-            })]
-          return found.filter(function(url, i) { return url && found.indexOf(url) === i })
-        }
+        readonly property var applications: Delivery.field(DesktopEntries.applications, "values")
+        readonly property int applicationsCount: Delivery.length(applications)
+        readonly property var candidates: Icons.candidates(card.row)
+        readonly property var sources: applicationsCount >= 0 ? Delivery.uniqueTruthy([
+          sent,
+          firstOf(Delivery.field(candidates, "themed"), function(name: var): var { return Quickshell.iconPath(name, true) }),
+          firstOf(Delivery.field(candidates, "entries"), function(name: var): var {
+            var entry = DesktopEntries.heuristicLookup(name)
+            return entry ? thumb.entryIcon(Delivery.field(entry, "icon")) : ""
+          })
+        ]) : []
         readonly property string sourcesKey: sources.join("\n")
         property int failed: 0
         onSourcesKeyChanged: failed = 0
@@ -315,7 +310,7 @@ Item {
           Text {
             textFormat: Text.PlainText
             anchors.centerIn: parent
-            text: String(card.row.source || card.row.app || "?").substring(0, 1).toUpperCase()
+            text: String(Delivery.field(card.row, "source") || Delivery.field(card.row, "app") || "?").substring(0, 1).toUpperCase()
             color: card.dimColor
             font.family: Style.font.family
             font.pixelSize: Style.font.body
@@ -328,9 +323,9 @@ Item {
           textFormat: Text.PlainText
           anchors.centerIn: parent
           visible: thumb.glyphed
-          text: String(card.row.glyph || "")
+          text: String(Delivery.field(card.row, "glyph") || "")
           color: Commons.Color.notifications.text
-          font.family: Delivery.nomarchyGlyph(card.row.glyph) ? "omarchy" : Style.font.family
+          font.family: Delivery.nomarchyGlyph(Delivery.field(card.row, "glyph")) ? "omarchy" : Style.font.family
           font.pixelSize: (thumb.compact ? Style.font.icon : Style.font.displayLarge)
         }
 
@@ -339,7 +334,7 @@ Item {
           anchors.fill: parent
           visible: thumb.pictured
           source: card.reloading ? "" : thumb.best
-          onStatusChanged: if (status === Image.Error && thumb.failed < thumb.sources.length) thumb.failed += 1
+          onStatusChanged: if (status === Image.Error && thumb.failed < Delivery.length(thumb.sources)) thumb.failed += 1
           // A photo fills its square; an app icon keeps its own shape.
           fillMode: thumb.photo ? Image.PreserveAspectCrop : Image.PreserveAspectFit
           // Constant, so the slot resizing never reloads the image.
@@ -394,7 +389,7 @@ Item {
             width: Math.max(1, parent.width - rightSide.width
                    - (titleMarks.visible ? titleMarks.width + Style.space(7) : 0)
                    - Style.space(8))
-            text: card.redacted ? I18n.t("notifications.redactedSummary") : String(card.row.summary || "")
+            text: card.redacted ? I18nModel.translate(I18n, "notifications.redactedSummary") : String(Delivery.field(card.row, "summary") || "")
             color: Commons.Color.notifications.text
             font.family: "Liberation Sans"
             font.pixelSize: Style.font.title
@@ -504,7 +499,7 @@ Item {
           opacity: card.contentOpacity
 
           textFormat: Text.StyledText
-          text: card.redacted ? I18n.t("notifications.redactedBody") : String(card.row.bodyRich || "")
+          text: card.redacted ? I18nModel.translate(I18n, "notifications.redactedBody") : String(Delivery.field(card.row, "bodyRich") || "")
           color: card.bodyColor
           linkColor: Commons.Color.notifications.countdown
           font.family: "Liberation Sans"
@@ -513,7 +508,7 @@ Item {
           maximumLineCount: card.bodyLines
           elide: Text.ElideRight
           // Second gate: Markup already drops anchors it will not vouch for.
-          onLinkActivated: function(url) { card.linkOpened(); Security.openExternalUrl(url) }
+          onLinkActivated: function(url: string): var { card.linkOpened(); Security.openExternalUrl(url) }
         }
       }
     }
@@ -529,7 +524,7 @@ Item {
                 leftMargin: plate.borderLeft; rightMargin: plate.borderRight
                 bottomMargin: plate.borderBottom }
 
-      readonly property bool shown: card.allDeeds.length > 0 && (card.expanded ? card.hovered : card.place.front)
+      readonly property bool shown: card.allDeeds.length > 0 && (card.expanded ? card.hovered : Delivery.field(card.place, "front"))
       readonly property int columns: Math.max(1, Math.min(3, card.allDeeds.length))
       readonly property int rows: Math.ceil(card.allDeeds.length / columns)
       readonly property real rule: 1
@@ -589,7 +584,7 @@ Item {
       acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
       cursorShape: Qt.PointingHandCursor
 
-      onClicked: function(mouse) {
+      onClicked: function(mouse: MouseEvent): var {
         if (mouse.button === Qt.LeftButton) card.activated()
         else card.dismissed()
       }

@@ -1,13 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
 import qs.Commons
-import qs.Services.System
 import qs.Services.Theming
 import qs.Services.UI
 import qs.Widgets
+import "ColorsSubTab.js" as ColorsSubTabData
 
 ColumnLayout {
   id: root
@@ -21,7 +21,7 @@ ColumnLayout {
 
   signal openDownloadPopup
 
-  function extractSchemeName(schemePath) {
+  function extractSchemeName(schemePath: string): string {
     var pathParts = schemePath.split("/");
     var filename = pathParts[pathParts.length - 1];
     var schemeName = filename.replace(".json", "");
@@ -39,36 +39,12 @@ ColumnLayout {
     return schemeName;
   }
 
-  function getSchemeColor(schemeName, colorKey) {
-    var _ = cacheVersion;
-
-    if (schemeColorsCache[schemeName]) {
-      var entry = schemeColorsCache[schemeName];
-      var variant = entry;
-
-      if (entry.dark || entry.light) {
-        variant = Settings.data.colorSchemes.darkMode ? (entry.dark || entry.light) : (entry.light || entry.dark);
-      }
-
-      if (variant && variant[colorKey]) {
-        return variant[colorKey];
-      }
-    }
-
-    if (colorKey === "mSurface")
-      return Color.mSurfaceVariant;
-    if (colorKey === "mPrimary")
-      return Color.mPrimary;
-    if (colorKey === "mSecondary")
-      return Color.mSecondary;
-    if (colorKey === "mTertiary")
-      return Color.mTertiary;
-    if (colorKey === "mError")
-      return Color.mError;
-    return Color.mOnSurfaceVariant;
+  function getSchemeColor(schemeName: string, colorKey: string): color {
+    var fallback = colorKey === "mSurface" ? Color.mSurfaceVariant : colorKey === "mPrimary" ? Color.mPrimary : colorKey === "mSecondary" ? Color.mSecondary : colorKey === "mTertiary" ? Color.mTertiary : colorKey === "mError" ? Color.mError : Color.mOnSurfaceVariant;
+    return ColorsSubTabData.getSchemeColor(root.schemeColorsCache, root.cacheVersion, schemeName, colorKey, Settings.data.colorSchemes.darkMode, fallback);
   }
 
-  function schemeLoaded(schemeName, jsonData) {
+  function schemeLoaded(schemeName: string, jsonData: var): void {
     var value = jsonData || {};
     schemeColorsCache[schemeName] = value;
     cacheVersion++;
@@ -89,20 +65,12 @@ ColumnLayout {
     Repeater {
       model: ColorSchemeService.schemes
       delegate: Item {
+        id: schemeFile
+        required property string modelData
         FileView {
-          path: modelData
+          path: schemeFile.modelData
           blockLoading: false
-          onLoaded: {
-            var schemeName = root.extractSchemeName(path);
-
-            try {
-              var jsonData = JSON.parse(text());
-              root.schemeLoaded(schemeName, jsonData);
-            } catch (e) {
-              Logger.w("ColorSchemeTab", "Failed to parse JSON for scheme:", schemeName, e);
-              root.schemeLoaded(schemeName, null);
-            }
-          }
+          onLoaded: ColorsSubTabData.loadScheme(text(), path, root)
         }
       }
     }
@@ -254,9 +222,10 @@ ColumnLayout {
 
         Rectangle {
           id: schemeItem
+          required property string modelData
 
-          property string schemePath: modelData
-          property string schemeName: root.extractSchemeName(modelData)
+          property string schemePath: schemeItem.modelData
+          property string schemeName: root.extractSchemeName(schemeItem.modelData)
 
           opacity: enabled ? 1.0 : 0.6
           Layout.fillWidth: true
@@ -295,29 +264,29 @@ ColumnLayout {
             property int diameter: 16 * Style.uiScaleRatio
 
             Rectangle {
-              width: scheme.diameter
-              height: scheme.diameter
+              Layout.preferredWidth: scheme.diameter
+              Layout.preferredHeight: scheme.diameter
               radius: scheme.diameter * 0.5
               color: root.getSchemeColor(schemeItem.schemeName, "mPrimary")
             }
 
             Rectangle {
-              width: scheme.diameter
-              height: scheme.diameter
+              Layout.preferredWidth: scheme.diameter
+              Layout.preferredHeight: scheme.diameter
               radius: scheme.diameter * 0.5
               color: root.getSchemeColor(schemeItem.schemeName, "mSecondary")
             }
 
             Rectangle {
-              width: scheme.diameter
-              height: scheme.diameter
+              Layout.preferredWidth: scheme.diameter
+              Layout.preferredHeight: scheme.diameter
               radius: scheme.diameter * 0.5
               color: root.getSchemeColor(schemeItem.schemeName, "mTertiary")
             }
 
             Rectangle {
-              width: scheme.diameter
-              height: scheme.diameter
+              Layout.preferredWidth: scheme.diameter
+              Layout.preferredHeight: scheme.diameter
               radius: scheme.diameter * 0.5
               color: root.getSchemeColor(schemeItem.schemeName, "mError")
             }

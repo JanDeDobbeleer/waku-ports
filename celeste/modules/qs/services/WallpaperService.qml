@@ -10,6 +10,7 @@ import waku as W
 import waku.services as S
 import qs.services
 import qs.utils
+import "WallpaperServiceHelpers.js" as WallpaperServiceHelpers
 
 // The wallpaper list and the current wallpaper. Upstream calls this singleton `Wallpapers`; that
 // name is taken by waku.services.Wallpapers, which `import Quickshell` re-exports and which
@@ -25,67 +26,39 @@ Searcher {
     id: root
 
     // No bundled picture: when waku reports no current wallpaper, nothing is shown.
-    readonly property string fallback: ""
+    readonly final property string fallback: ""
 
-    property bool showPreview: false
-    readonly property string current: showPreview ? previewPath : actualCurrent
-    property string previewPath
-    property string actualCurrent: fromWaku(S.Wallpapers.current)
-    property bool previewColourLock
-    property bool pendingPreviewClear
+    final property bool showPreview: false
+    readonly final property string current: showPreview ? previewPath : actualCurrent
+    final property string previewPath
+    final property string actualCurrent: fromWaku(S.Wallpapers.current)
+    final property bool previewColourLock
+    final property bool pendingPreviewClear
 
-    property list<QtObject> entries: []
+    final property list<QtObject> entries: []
 
     // The width of the picker's thumbnails; Visual's `thumbnailWidth` default must match.
-    readonly property int thumbnailWidth: 640
+    readonly final property int thumbnailWidth: 640
 
     function fromWaku(path: string): string {
         return Paths.slash(path) || fallback;
     }
 
     function getCategoryFor(w: var): string {
-        let category = w.parentDir.slice(Paths.wallsdir.length + 1);
-        if (category.includes("/"))
-            category = category.slice(0, category.indexOf("/"));
-        return category;
+        return WallpaperServiceHelpers.category(w, Paths.wallsdir);
     }
 
     // Fills waku's thumbnail cache in the background, current wallpaper first, then its neighbours
     // outward (the picker opens on the current one), so the first open shows images at once.
     function prewarmThumbnails(): void {
-        const all = entries;
-        const n = all.length;
-        if (n === 0)
-            return;
-        let start = 0;
-        for (let i = 0; i < n; i++) {
-            if (all[i].path === actualCurrent) {
-                start = i;
-                break;
-            }
-        }
-        const paths = [];
-        for (let d = 0; paths.length < n; d++) {
-            if (d === 0) {
-                paths.push(all[start].path);
-                continue;
-            }
-            if (d <= n - 1 && paths.length < n)
-                paths.push(all[(start + d) % n].path);
-            if (paths.length < n && 2 * d < n)
-                paths.push(all[(start - d + n) % n].path);
-        }
-        W.Thumbnails.cancelPrewarm();
-        W.Thumbnails.prewarm(paths, thumbnailWidth);
+        WallpaperServiceHelpers.prewarm(entries, actualCurrent, W.Thumbnails, thumbnailWidth);
     }
 
     function setRandom(): void {
         if (list.length === 0)
             return;
         if (Paths.dryRun || !S.Wallpapers.available) {
-            const others = list.filter(w => w.path !== actualCurrent);
-            const pool = others.length > 0 ? others : list;
-            setWallpaper(pool[Math.floor(Math.random() * pool.length)].path);
+            setWallpaper(WallpaperServiceHelpers.randomPath(list, actualCurrent));
             return;
         }
         // The engine picks (never the current one) and plays the transition.
@@ -155,24 +128,9 @@ Searcher {
 
     // Parses the output of `dir /s /b /a-d` into entries.
     function setEntries(text: string): void {
-        const base = Paths.wallsdir;
-        const old = [...entries]; // a copy: a list property read is live
-        const next = [];
-        for (const line of text.split(/\r?\n/)) {
-            const path = Paths.slash(line.trim());
-            if (!path || !Images.isValidImageByName(path))
-                continue;
-            const slash = path.lastIndexOf("/");
-            next.push(entryComp.createObject(root, {
-                path: path,
-                name: path.slice(slash + 1),
-                parentDir: path.slice(0, slash),
-                relativePath: path.startsWith(base + "/") ? path.slice(base.length + 1) : path
-            }));
-        }
-        entries = next;
-        for (const o of old)
-            o.destroy();
+        const old = entries.slice();
+        entries = WallpaperServiceHelpers.createEntries(text, Paths.wallsdir, Paths, Images, entryComp, root);
+        WallpaperServiceHelpers.destroyEntries(old);
         prewarmTimer.restart();
     }
 
@@ -182,7 +140,7 @@ Searcher {
         if (Paths.wallsdir.length === 0)
             return;
         lister.running = false;
-        Qt.callLater(() => lister.running = true);
+        WallpaperServiceHelpers.startListerLater(Qt, lister);
     }
 
     Component.onCompleted: {
@@ -259,7 +217,7 @@ Searcher {
         }
 
         function list(): string {
-            return root.list.map(w => w.path).join("\n");
+            return WallpaperServiceHelpers.pathsText(root.list);
         }
 
         target: "wallpaper"
@@ -288,10 +246,10 @@ Searcher {
         id: entryComp
 
         QtObject {
-            property string path
-            property string name
-            property string parentDir
-            property string relativePath
+            final property string path
+            final property string name
+            final property string parentDir
+            final property string relativePath
         }
     }
 }

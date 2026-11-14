@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Commons
@@ -24,8 +23,8 @@ Item {
 
   // Returns false when the focused display is not one to handle here, so the
   // caller falls back to the script.
-  function handle(action) {
-    var monitor = Hyprland.focusedMonitor
+  function handle(action: var): bool {
+    var monitor = Hyprland.focusedMonitor as HyprlandMonitor
     var name = monitor ? String(monitor.name || "") : ""
     if (!/^(eDP|LVDS|DSI)-/.test(name) || !device) return false
     if (action !== "raise" && action !== "lower") return false
@@ -46,7 +45,7 @@ Item {
   // reload() reads in the background, so wait for it: text() would otherwise
   // still hold the previous reading, and a level changed elsewhere (the
   // monitor panel, a script) would step from the wrong place.
-  function readNumber(file) {
+  function readNumber(file: var): real {
     file.reload()
     file.waitForJob()
     return Number(String(file.text() || "").trim())

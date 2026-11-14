@@ -10,7 +10,7 @@ Variants {
     Scope {
         id: scope
 
-        required property ShellScreen modelData
+        required final property ShellScreen modelData
 
         Exclusions {
             screen: scope.modelData

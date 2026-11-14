@@ -3,12 +3,13 @@ import Celeste.Config
 import qs.components
 import qs.services
 import qs.modules.launcher.services
+import "LauncherItemHelpers.js" as LauncherItemHelpers
 
 Item {
     id: root
 
-    required property var modelData
-    required property var list
+    required final property var modelData
+    required final property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
 
@@ -19,7 +20,7 @@ Item {
         objectName: "rowClick"
 
         radius: Tokens.rounding.large
-        onClicked: root.modelData?.onClicked(root.list)
+        onClicked: LauncherItemHelpers.invoke(root.modelData, root.list)
     }
 
     Item {
@@ -31,7 +32,7 @@ Item {
         MaterialIcon {
             id: icon
 
-            text: root.modelData?.icon ?? ""
+            text: LauncherItemHelpers.field(root.modelData, "icon")
             fontStyle: Tokens.font.icon.extraLarge
 
             anchors.verticalCenter: parent.verticalCenter
@@ -46,12 +47,12 @@ Item {
             spacing: 0
 
             StyledText {
-                text: root.modelData?.name ?? ""
+                text: LauncherItemHelpers.field(root.modelData, "name")
                 font: Tokens.font.body.medium
             }
 
             StyledText {
-                text: root.modelData?.description ?? ""
+                text: LauncherItemHelpers.field(root.modelData, "description")
                 font: Tokens.font.body.small
                 color: Colours.palette.m3outline
 
@@ -68,7 +69,7 @@ Item {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
 
-            active: root.modelData?.variant === Schemes.currentVariant
+            active: LauncherItemHelpers.isCurrentVariant(root.modelData, Schemes.currentVariant)
 
             sourceComponent: MaterialIcon {
                 text: "check"

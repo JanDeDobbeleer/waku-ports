@@ -1,8 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -16,15 +16,15 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property bool valueShowCapsLock: widgetData.showCapsLock !== undefined ? widgetData.showCapsLock : widgetMetadata.showCapsLock
-  property bool valueShowNumLock: widgetData.showNumLock !== undefined ? widgetData.showNumLock : widgetMetadata.showNumLock
-  property bool valueShowScrollLock: widgetData.showScrollLock !== undefined ? widgetData.showScrollLock : widgetMetadata.showScrollLock
+  property bool valueShowCapsLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showCapsLock")
+  property bool valueShowNumLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showNumLock")
+  property bool valueShowScrollLock: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showScrollLock")
 
-  property string capsIcon: widgetData.capsLockIcon !== undefined ? widgetData.capsLockIcon : widgetMetadata.capsLockIcon
-  property string numIcon: widgetData.numLockIcon !== undefined ? widgetData.numLockIcon : widgetMetadata.numLockIcon
-  property string scrollIcon: widgetData.scrollLockIcon !== undefined ? widgetData.scrollLockIcon : widgetMetadata.scrollLockIcon
+  property string capsIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "capsLockIcon")
+  property string numIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "numLockIcon")
+  property string scrollIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "scrollLockIcon")
 
-  property bool valueHideWhenOff: widgetData.hideWhenOff !== undefined ? widgetData.hideWhenOff : (widgetMetadata.hideWhenOff !== undefined ? widgetMetadata.hideWhenOff : false)
+  property bool valueHideWhenOff: SettingsValue.undefinedFallbackDefault(widgetData, widgetMetadata, "hideWhenOff", false)
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -44,35 +44,35 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-caps-lock-label")
       description: I18n.tr("bar.lock-keys.show-caps-lock-description")
-      checked: valueShowCapsLock
+      checked: root.valueShowCapsLock
       onToggled: checked => {
-                   valueShowCapsLock = checked;
-                   saveSettings();
+                   root.valueShowCapsLock = checked;
+                   root.saveSettings();
                  }
-      defaultValue: widgetMetadata.showCapsLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showCapsLock")
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: capsIcon
+      icon: root.capsIcon
       pointSize: Style.fontSizeXL
-      visible: capsIcon !== ""
+      visible: root.capsIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: capsPicker.open()
-      enabled: valueShowCapsLock
+      enabled: root.valueShowCapsLock
     }
   }
 
   NIconPicker {
     id: capsPicker
-    initialIcon: capsIcon
+    initialIcon: root.capsIcon
     query: "letter-c"
     onIconSelected: function (iconName) {
-      capsIcon = iconName;
-      saveSettings();
+      root.capsIcon = iconName;
+      root.saveSettings();
     }
   }
 
@@ -82,35 +82,35 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-num-lock-label")
       description: I18n.tr("bar.lock-keys.show-num-lock-description")
-      checked: valueShowNumLock
+      checked: root.valueShowNumLock
       onToggled: checked => {
-                   valueShowNumLock = checked;
-                   saveSettings();
+                   root.valueShowNumLock = checked;
+                   root.saveSettings();
                  }
-      defaultValue: widgetMetadata.showNumLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showNumLock")
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: numIcon
+      icon: root.numIcon
       pointSize: Style.fontSizeXL
-      visible: numIcon !== ""
+      visible: root.numIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: numPicker.open()
-      enabled: valueShowNumLock
+      enabled: root.valueShowNumLock
     }
   }
 
   NIconPicker {
     id: numPicker
-    initialIcon: numIcon
+    initialIcon: root.numIcon
     query: "letter-n"
     onIconSelected: function (iconName) {
-      numIcon = iconName;
-      saveSettings();
+      root.numIcon = iconName;
+      root.saveSettings();
     }
   }
 
@@ -120,35 +120,35 @@ ColumnLayout {
     NToggle {
       label: I18n.tr("bar.lock-keys.show-scroll-lock-label")
       description: I18n.tr("bar.lock-keys.show-scroll-lock-description")
-      checked: valueShowScrollLock
+      checked: root.valueShowScrollLock
       onToggled: checked => {
-                   valueShowScrollLock = checked;
-                   saveSettings();
+                   root.valueShowScrollLock = checked;
+                   root.saveSettings();
                  }
-      defaultValue: widgetMetadata.showScrollLock
+      defaultValue: SettingsValue.read(root.widgetMetadata, "showScrollLock")
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: scrollIcon
+      icon: root.scrollIcon
       pointSize: Style.fontSizeXL
-      visible: scrollIcon !== ""
+      visible: root.scrollIcon !== ""
     }
 
     NButton {
       text: I18n.tr("common.browse")
       onClicked: scrollPicker.open()
-      enabled: valueShowScrollLock
+      enabled: root.valueShowScrollLock
     }
   }
 
   NIconPicker {
     id: scrollPicker
-    initialIcon: scrollIcon
+    initialIcon: root.scrollIcon
     query: "letter-s"
     onIconSelected: function (iconName) {
-      scrollIcon = iconName;
-      saveSettings();
+      root.scrollIcon = iconName;
+      root.saveSettings();
     }
   }
 
@@ -160,11 +160,11 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("bar.lock-keys.hide-when-off-label")
     description: I18n.tr("bar.lock-keys.hide-when-off-description")
-    checked: valueHideWhenOff
+    checked: root.valueHideWhenOff
     onToggled: checked => {
-                 valueHideWhenOff = checked;
-                 saveSettings();
+                 root.valueHideWhenOff = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hideWhenOff
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideWhenOff")
   }
 }

@@ -8,25 +8,29 @@ import qs.modules.bar.popouts // Need to import this module so the Wrapper type 
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property real borderThickness
+    required final property ShellScreen screen
+    required final property real borderThickness
 
-    readonly property alias content: content
-    property real offsetScale: x > 0 || content.hasCurrent ? 0 : 1
+    readonly final property Wrapper content: contentItem
+    final property real offsetScale: x > 0 || contentItem.hasCurrent ? 0 : 1
+
+    function close(): void {
+        contentItem.close();
+    }
 
     visible: width > 0 && height > 0
     clip: true
 
-    implicitWidth: content.implicitWidth * (1 - offsetScale)
-    implicitHeight: content.implicitHeight
+    implicitWidth: contentItem.implicitWidth * (1 - offsetScale)
+    implicitHeight: contentItem.implicitHeight
 
-    x: content.isDetached ? (parent.width - content.nonAnimWidth) / 2 : 0
+    x: contentItem.isDetached ? (parent.width - contentItem.nonAnimWidth) / 2 : 0
     y: {
-        if (content.isDetached)
-            return (parent.height - content.nonAnimHeight) / 2;
+        if (contentItem.isDetached)
+            return (parent.height - contentItem.nonAnimHeight) / 2;
 
-        const off = content.currentCenter - borderThickness - content.nonAnimHeight / 2;
-        const diff = parent.height - Math.floor(off + content.nonAnimHeight);
+        const off = contentItem.currentCenter - borderThickness - contentItem.nonAnimHeight / 2;
+        const diff = parent.height - Math.floor(off + contentItem.nonAnimHeight);
         if (diff < 0)
             return off + diff;
         return Math.max(off, 0);
@@ -38,8 +42,8 @@ Item {
 
     Behavior on x {
         Anim {
-            duration: content.animLength
-            easing: content.animCurve
+            duration: contentItem.animLength
+            easing: contentItem.animCurve
         }
     }
 
@@ -47,13 +51,13 @@ Item {
         enabled: root.offsetScale < 1
 
         Anim {
-            duration: content.animLength
-            easing: content.animCurve
+            duration: contentItem.animLength
+            easing: contentItem.animCurve
         }
     }
 
     Wrapper {
-        id: content
+        id: contentItem
 
         screen: root.screen
         offsetScale: root.offsetScale

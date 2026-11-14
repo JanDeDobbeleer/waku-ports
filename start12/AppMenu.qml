@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
 
@@ -5,7 +7,7 @@ import waku.services as S
 Rectangle {
     id: root
 
-    property var entry: null
+    property S.DesktopEntry entry: null
     signal done
 
     width: 220

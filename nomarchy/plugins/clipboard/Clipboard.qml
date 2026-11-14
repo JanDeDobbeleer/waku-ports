@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -40,7 +41,7 @@ Item {
   property int rowHeight: Math.max(Style.space(50), Style.font.body + Style.font.caption + Style.spacing.rowPaddingX * 2)
   property int historyLimit: 500
 
-  function open(payloadJson) {
+  function open(payloadJson: string): void {
     root.opened = true
     root.filterText = ""
     root.selectedIndex = 0
@@ -50,34 +51,34 @@ Item {
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
-  function close() {
+  function close(): void {
     root.cancelClearHistory()
     root.opened = false
   }
 
-  function toggle() {
+  function toggle(): void {
     if (root.opened) root.close()
     else root.open("{}")
   }
 
-  function normalizeEntry(value) {
+  function normalizeEntry(value: var): var {
     return ClipboardHistory.normalizeEntry(value)
   }
 
-  function entryKey(entry) {
+  function entryKey(entry: var): string {
     return ClipboardHistory.entryKey(entry)
   }
 
-  function loadHistory(raw) {
+  function loadHistory(raw: string): void {
     root.history = ClipboardHistory.parseHistory(raw)
     if (root.opened) root.rebuildDisplay()
   }
 
-  function saveHistory() {
+  function saveHistory(): void {
     historyFile.setText(JSON.stringify(root.history.slice(0, root.historyLimit), null, 2) + "\n")
   }
 
-  function addClipboardEntry(entry) {
+  function addClipboardEntry(entry: var): void {
     var normalized = ClipboardHistory.normalizeEntry(entry)
     if (!normalized) return
 
@@ -86,23 +87,23 @@ Item {
     if (root.opened) root.rebuildDisplay()
   }
 
-  function addClipboardJson(line) {
+  function addClipboardJson(line: string): void {
     root.addClipboardEntry(ClipboardHistory.parseEntryJson(line))
   }
 
-  function requestClearHistory() {
-    if (root.history.length === 0) return
+  function requestClearHistory(): void {
+    if (ClipboardHistory.length(root.history) === 0) return
     clearConfirm.selectedIndex = 1
     root.clearConfirmOpen = true
   }
 
-  function cancelClearHistory() {
+  function cancelClearHistory(): void {
     root.clearConfirmOpen = false
     root.disarmPointer()
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
-  function confirmClearHistory() {
+  function confirmClearHistory(): void {
     root.history = ClipboardHistory.clearHistory()
     root.saveHistory()
     root.selectedIndex = 0
@@ -113,7 +114,7 @@ Item {
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
-  function removeDisplayIndex(index) {
+  function removeDisplayIndex(index: int): void {
     if (index < 0 || index >= displayModel.count) return
 
     var row = displayModel.get(index)
@@ -131,12 +132,12 @@ Item {
     root.rebuildDisplay()
   }
 
-  function rebuildDisplay() {
-    var rows = ClipboardHistory.displayRows(root.history, root.filterText, 50, Commons.I18n.t, Commons.I18n.tn, Commons.I18n.formatNumber)
+  function rebuildDisplay(): void {
+    var rows = ClipboardHistory.displayRows(root.history, root.filterText, 50, Commons.I18n.translator(), Commons.I18n.pluralTranslator(), Commons.I18n.numberFormatter())
 
     displayModel.clear()
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i]
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i]
       displayModel.append({
         entryType: row.entryType,
         fullText: row.fullText,
@@ -164,7 +165,7 @@ Item {
     function onStringsChanged() { if (root.opened) root.rebuildDisplay() }
   }
 
-  function select(delta) {
+  function select(delta: int): void {
     if (displayModel.count === 0) return
     root.disarmPointer()
     if (!cursorActive) {
@@ -176,7 +177,7 @@ Item {
     resultList.positionViewAtIndex(selectedIndex, ListView.Contain)
   }
 
-  function selectAbsolute(index) {
+  function selectAbsolute(index: int): void {
     if (displayModel.count === 0) return
     root.disarmPointer()
     root.cursorActive = true
@@ -184,7 +185,7 @@ Item {
     resultList.positionViewAtIndex(root.selectedIndex, ListView.Contain)
   }
 
-  function setFilter(nextFilter) {
+  function setFilter(nextFilter: string): void {
     root.filterText = nextFilter
     root.selectedIndex = 0
     root.cursorActive = true
@@ -192,58 +193,58 @@ Item {
     root.rebuildDisplay()
   }
 
-  function disarmPointer() {
+  function disarmPointer(): void {
     pointerGate.reset()
   }
 
-  function selectFromPointer(index, item, mouse) {
+  function selectFromPointer(index: int, item: Item, mouse: var): void {
     if (!pointerGate.moved(item, mouse)) return
     root.cursorActive = true
     root.selectedIndex = index
   }
 
-  function activateIndex(index) {
+  function activateIndex(index: int): void {
     if (index < 0 || index >= displayModel.count) return
     var row = displayModel.get(index)
     root.applySelected(row)
   }
 
-  function copyIndex(index) {
+  function copyIndex(index: int): void {
     if (index < 0 || index >= displayModel.count) return
     var row = displayModel.get(index)
     root.copySelected(row)
   }
 
-  function openIndex(index) {
+  function openIndex(index: int): void {
     if (index < 0 || index >= displayModel.count) return
     var row = displayModel.get(index)
     root.openSelected(row)
   }
 
-  function applySelected(row) {
+  function applySelected(row: var): void {
     if (!row) return
     root.opened = false
-    if (row.entryType === "image") {
-      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-file", row.mime, row.path])
-    } else if (row.fullText) {
-      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-text", "--shift-insert", "--history-index", String(row.historyIndex)])
+    if (ClipboardHistory.field(row, "entryType") === "image") {
+      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-file", ClipboardHistory.field(row, "mime"), ClipboardHistory.field(row, "path")])
+    } else if (ClipboardHistory.field(row, "fullText")) {
+      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-text", "--shift-insert", "--history-index", String(ClipboardHistory.field(row, "historyIndex"))])
     }
   }
 
-  function copySelected(row) {
+  function copySelected(row: var): void {
     if (!row) return
     root.opened = false
-    if (row.entryType === "image") {
-      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-file", "--copy-only", row.mime, row.path])
-    } else if (row.fullText) {
-      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-text", "--copy-only", "--history-index", String(row.historyIndex)])
+    if (ClipboardHistory.field(row, "entryType") === "image") {
+      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-file", "--copy-only", ClipboardHistory.field(row, "mime"), ClipboardHistory.field(row, "path")])
+    } else if (ClipboardHistory.field(row, "fullText")) {
+      Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-paste-text", "--copy-only", "--history-index", String(ClipboardHistory.field(row, "historyIndex"))])
     }
   }
 
-  function openSelected(row) {
+  function openSelected(row: var): void {
     if (!row) return
     root.opened = false
-    Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-open", "--history-index", String(row.historyIndex)])
+    Quickshell.execDetached([root.nomarchyPath + "/bin/nomarchy-clipboard-open", "--history-index", String(ClipboardHistory.field(row, "historyIndex"))])
   }
 
   Component.onCompleted: initProc.running = true
@@ -323,6 +324,7 @@ Item {
     id: panel
     shown: root.opened
     WlrLayershell.namespace: "nomarchy-clipboard"
+    onFocusLost: root.close()
 
     Rectangle {
       anchors.fill: parent
@@ -486,6 +488,7 @@ Item {
                   color: hasCursor ? root.selectedBackground : "transparent"
 
                   Row {
+                    id: contentRow
                     anchors.fill: parent
                     anchors.leftMargin: Style.space(12)
                     anchors.rightMargin: Style.space(12)
@@ -494,23 +497,23 @@ Item {
                     spacing: Style.space(10)
 
                     SizedImage {
-                      visible: parent.parent.previewImage.length > 0
+                      visible: row.previewImage.length > 0
                       width: visible ? parent.height : 0
                       height: parent.height
-                      url: parent.parent.previewImage
+                      url: row.previewImage
                       asynchronous: true
                       smooth: true
                     }
 
                     Text {
                       textFormat: Text.PlainText
-                      width: parent.width - (parent.parent.previewImage.length > 0 ? parent.height + parent.spacing : 0)
+                      width: parent.width - (row.previewImage.length > 0 ? parent.height + contentRow.spacing : 0)
                       height: parent.height
-                      text: parent.parent.previewText
-                      color: parent.parent.hasCursor ? root.selectedText : root.foreground
+                      text: row.previewText
+                      color: row.hasCursor ? root.selectedText : root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.title
-                      opacity: parent.parent.entryType === "image" || parent.parent.entryType === "file" ? 0.72 : 1.0
+                      opacity: row.entryType === "image" || row.entryType === "file" ? 0.72 : 1.0
                       elide: Text.ElideRight
                       wrapMode: Text.NoWrap
                       verticalAlignment: Text.AlignVCenter
@@ -535,6 +538,7 @@ Item {
             }
 
             Item {
+              id: previewPane
               width: parent.width / 2
               height: parent.height
               clip: true
@@ -551,13 +555,13 @@ Item {
 
               Text {
                 textFormat: Text.PlainText
-                visible: parent.activeRow && !parent.activeRow.previewImage
+                visible: previewPane.activeRow && !ClipboardHistory.field(previewPane.activeRow, "previewImage")
                 anchors.fill: parent
                 anchors.leftMargin: root.contentMargin
                 anchors.rightMargin: 0
                 anchors.topMargin: 0
                 anchors.bottomMargin: 0
-                text: parent.activeRow ? parent.activeRow.fullText : ""
+                text: previewPane.activeRow ? ClipboardHistory.field(previewPane.activeRow, "fullText") : ""
                 color: root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.title
@@ -567,13 +571,13 @@ Item {
               }
 
               SizedImage {
-                visible: parent.activeRow && parent.activeRow.previewImage
+                visible: previewPane.activeRow && ClipboardHistory.field(previewPane.activeRow, "previewImage")
                 anchors.fill: parent
                 anchors.leftMargin: root.contentMargin
                 anchors.rightMargin: 0
                 anchors.topMargin: 0
                 anchors.bottomMargin: 0
-                url: parent.activeRow ? parent.activeRow.previewImage : ""
+                url: previewPane.activeRow ? ClipboardHistory.field(previewPane.activeRow, "previewImage") : ""
                 verticalAlignment: Image.AlignTop
                 asynchronous: true
                 smooth: true
@@ -598,7 +602,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: root.history.length === 0 ? Commons.I18n.t("clipboard.empty") : Commons.I18n.t("common.noMatchesFor").arg(root.filterText)
+              text: ClipboardHistory.length(root.history) === 0 ? Commons.I18n.t("clipboard.empty") : Commons.I18n.t("common.noMatchesFor").arg(root.filterText)
               color: root.foreground
               opacity: 0.7
               font.family: root.fontFamily

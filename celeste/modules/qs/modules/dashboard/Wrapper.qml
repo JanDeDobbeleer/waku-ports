@@ -1,8 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
-import Celeste
 import Celeste.Config
 import Celeste.I18n
 import Celeste.State
@@ -13,10 +11,10 @@ import qs.utils
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
     // Port: kept in state/persistent.json, so the choice survives a restart.
-    readonly property string faceOverride: PersistentState.faceImage
-    readonly property FileDialog facePicker: FileDialog {
+    readonly final property string faceOverride: PersistentState.faceImage
+    readonly final property FileDialog facePicker: FileDialog {
         title: Tr.tr("Select a profile picture")
         filterLabel: Tr.tr("Image files")
         filters: Images.validImageExtensions
@@ -24,9 +22,9 @@ Item {
         onAccepted: path => PersistentState.faceImage = path
     }
 
-    readonly property real nonAnimHeight: (content.item as Content)?.nonAnimHeight ?? 0
-    readonly property bool shouldBeActive: screenState.dashboard && Config.dashboard.enabled
-    property real offsetScale: shouldBeActive ? 0 : 1
+    readonly final property real nonAnimHeight: (content.item as Content)?.nonAnimHeight ?? 0
+    readonly final property bool shouldBeActive: screenState.dashboard && Config.dashboard.enabled
+    final property real offsetScale: shouldBeActive ? 0 : 1
 
     visible: offsetScale < 1
     anchors.topMargin: (-implicitHeight - 5) * offsetScale

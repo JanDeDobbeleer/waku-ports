@@ -100,18 +100,18 @@ Slider {
     }
 
     LinearGradient {
-      id: fillGradient
+      id: activeFillGradient
       x1: 0
       y1: 0
       x2: root.availableWidth
       y2: 0
       GradientStop {
         position: 0.0
-        color: Qt.darker(effectiveFillColor, 1.2)
+        color: Qt.darker(root.effectiveFillColor, 1.2)
       }
       GradientStop {
         position: 1.0
-        color: effectiveFillColor
+        color: root.effectiveFillColor
       }
     }
 
@@ -127,7 +127,7 @@ Slider {
       ShapePath {
         id: fillPath
         strokeColor: "transparent"
-        fillGradient: fillGradient
+        fillGradient: activeFillGradient
 
         readonly property real fullWidth: root.availableWidth
         readonly property real h: root.trackHeight
@@ -192,18 +192,18 @@ Slider {
   }
 
   handle: Item {
-    implicitWidth: knobDiameter
-    implicitHeight: knobDiameter
+    implicitWidth: root.knobDiameter
+    implicitHeight: root.knobDiameter
     x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
     anchors.verticalCenter: parent.verticalCenter
 
     Rectangle {
       id: knob
-      implicitWidth: knobDiameter
-      implicitHeight: knobDiameter
+      implicitWidth: root.knobDiameter
+      implicitHeight: root.knobDiameter
       radius: Math.min(Style.iRadiusL, width / 2)
       color: root.pressed ? Color.mHover : Color.mSurface
-      border.color: effectiveFillColor
+      border.color: root.effectiveFillColor
       border.width: Style.borderL
       anchors.centerIn: parent
 

@@ -21,7 +21,8 @@ Item {
   property Component trailingControl: null
 
   readonly property color dim: Qt.darker(foreground, 1.4)
-  readonly property real trailingInset: trailingLoader.item && trailingLoader.item.visible ? trailingLoader.width + Style.space(12) : 0
+  readonly property Item trailingItem: trailingLoader.item as Item
+  readonly property real trailingInset: trailingItem && trailingItem.visible ? trailingLoader.width + Style.space(12) : 0
 
   width: parent ? parent.width : implicitWidth
   implicitHeight: Math.max(iconLoader.implicitHeight, heroLabels.implicitHeight, trailingLoader.implicitHeight)
@@ -49,6 +50,7 @@ Item {
       width: parent.width
 
       Text {
+        id: titleText
         textFormat: Text.PlainText
         visible: root.title !== ""
         text: root.title
@@ -61,7 +63,7 @@ Item {
       }
 
       Item {
-        width: Math.max(0, parent.width - parent.children[0].width - detailPill.implicitWidth)
+        width: Math.max(0, parent.width - titleText.width - detailPill.implicitWidth)
         height: 1
       }
 

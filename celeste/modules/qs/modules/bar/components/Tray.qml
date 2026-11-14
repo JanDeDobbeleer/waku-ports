@@ -11,8 +11,8 @@ import qs.services
 StyledRect {
     id: root
 
-    readonly property bool active: TrayItems.count > 0
-    property color colour: Colours.palette.m3secondary
+    readonly final property bool active: TrayItems.count > 0
+    final property color colour: Colours.palette.m3secondary
 
     // Port: a click opens the flyout (handled in Bar.qml).
     signal clicked
@@ -23,7 +23,7 @@ StyledRect {
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: active ? icon.implicitHeight + padding * 2 : 0
 
-    readonly property int padding: Config.bar.tray.background ? Tokens.padding.medium : Tokens.padding.extraSmall
+    readonly final property int padding: Config.bar.tray.background ? Tokens.padding.medium : Tokens.padding.extraSmall
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.tray.background ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Tokens.rounding.full

@@ -1,3 +1,7 @@
+pragma ComponentBehavior: Bound
+
+import "NColorChoiceUtils.js" as ColorChoiceUtils
+
 import QtQuick 6.10
 import QtQuick.Layouts
 import qs.Commons
@@ -28,22 +32,23 @@ RowLayout {
     id: colourRow
 
     opacity: enabled ? 1.0 : 0.6
-    Layout.minimumWidth: root.diameter * Color.colorKeyModel.length
+    Layout.minimumWidth: root.diameter * ColorChoiceUtils.length(Color.colorKeyModel)
 
     Repeater {
       model: Color.colorKeyModel
 
       Rectangle {
+        required property var modelData
         id: colorCircle
 
-        property bool isSelected: root.currentKey === modelData.key
+        property bool isSelected: root.currentKey === ColorChoiceUtils.key(colorCircle.modelData)
         property bool isHovered: circleMouseArea.containsMouse
 
         Layout.alignment: Qt.AlignHCenter
         implicitWidth: root.diameter
         implicitHeight: root.diameter
         radius: root.diameter * 0.5
-        color: (modelData.key === "none" && root.noneColor !== undefined) ? root.noneColor : Color.resolveColorKey(modelData.key)
+        color: (ColorChoiceUtils.key(colorCircle.modelData) === "none" && root.noneColor !== undefined) ? root.noneColor : Color.resolveColorKey(ColorChoiceUtils.key(colorCircle.modelData))
         border.color: (isSelected || isHovered) ? Color.mOnSurface : Color.mOutline
         border.width: Style.borderM
 
@@ -54,8 +59,8 @@ RowLayout {
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
           onClicked: {
-            root.currentKey = modelData.key;
-            root.selected(modelData.key);
+            root.currentKey = ColorChoiceUtils.key(colorCircle.modelData);
+            root.selected(ColorChoiceUtils.key(colorCircle.modelData));
           }
         }
 
@@ -63,7 +68,7 @@ RowLayout {
           anchors.centerIn: parent
           icon: "check"
           pointSize: Math.max(Style.fontSizeXS, colorCircle.width * 0.4)
-          color: (modelData.key === "none" && root.noneOnColor !== undefined) ? root.noneOnColor : Color.resolveOnColorKey(modelData.key)
+          color: (ColorChoiceUtils.key(colorCircle.modelData) === "none" && root.noneOnColor !== undefined) ? root.noneOnColor : Color.resolveOnColorKey(ColorChoiceUtils.key(colorCircle.modelData))
           font.weight: Style.fontWeightBold
           visible: colorCircle.isSelected
         }

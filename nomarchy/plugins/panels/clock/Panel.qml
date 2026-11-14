@@ -1,5 +1,5 @@
+pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
@@ -66,7 +66,7 @@ Panel {
   // starts out matching the rest of the desktop rather than a hardcoded
   // convention. Clicking the grid's "W" heading writes the choice back to
   // shell.json.
-  readonly property int weekStart: Model.normalizedWeekStart(setting("weekStartDay", null), labelLocale.firstDayOfWeek)
+  readonly property int weekStart: Model.normalizedWeekStart(setting("weekStartDay", null), Model.localeWeekStart(labelLocale))
   // Names and the default week start follow the Nomarchy language rather than
   // the system locale, which only catches up at the next login.
   readonly property var labelLocale: Qt.locale(Commons.I18n.formatLocale)
@@ -83,8 +83,8 @@ Panel {
 
   // Guarded so the widget renders before the bar is injected (the bar-widget
   // contract instantiates it bare).
-  readonly property color contentForeground: bar ? bar.foreground : Commons.Color.foreground
-  readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
 
   readonly property int cellWidth: Style.space(52)
   readonly property int cellHeight: Style.space(34)
@@ -94,7 +94,7 @@ Panel {
 
   function open() {
     refresh()
-    root.controller.show()
+    Model.showController(root.controller)
     // Set after showing, not before: showing hands the popout coordinator
     // over, which closes whichever panel was open, and that close clears the
     // shared flag. Deferring means the panel taking over always wins, while
@@ -110,7 +110,7 @@ Panel {
     // Dismissing the panel mid-edit would otherwise leave the inputs up,
     // waiting behind a closed popup for the next time it opens.
     if (root.editingLife) root.cancelEditingLife()
-    root.controller.hide()
+    Model.hideController(root.controller)
   }
 
   function toggle() {
@@ -118,19 +118,14 @@ Panel {
     else root.open()
   }
 
-  function switchPanel(direction) {
-    if (root.bar && typeof root.bar.switchPanelFrom === "function")
-      return root.bar.switchPanelFrom(root.barIdentity, direction)
-    return false
+  function switchPanel(direction: var): var {
+    return BarValues.switchPanel(root.bar, root.barIdentity, direction)
   }
 
   // Summoning by hotkey moves no pointer, so a hover the bar was still
   // holding must not keep the center indicators revealed behind the panel.
-  function setCenterHoverRevealSuppressed(value) {
-    if (root.bar && typeof root.bar.setCenterHoverRevealSuppressed === "function")
-      root.bar.setCenterHoverRevealSuppressed(value)
-    else if (root.bar && "centerHoverRevealSuppressed" in root.bar)
-      root.bar.centerHoverRevealSuppressed = value
+  function setCenterHoverRevealSuppressed(value: var): void {
+    BarValues.setCenterHoverRevealSuppressed(root.bar, value)
   }
 
   function refresh() {
@@ -143,13 +138,13 @@ Panel {
     root.viewMonth = today.getMonth()
   }
 
-  function moveMonth(delta) {
+  function moveMonth(delta: int): void {
     var next = Model.stepMonth(viewYear, viewMonth, delta)
     root.viewYear = next.year
     root.viewMonth = next.month
   }
 
-  function moveYear(delta) {
+  function moveYear(delta: int): void {
     moveMonth(delta * 12)
   }
 
@@ -159,18 +154,18 @@ Panel {
   // preference rather than doing nothing. The host widget builds its own
   // entry when the label format is cycled, so it has to be kept in step or
   // it would write this key straight back out from a stale copy.
-  function persistSettings(values) {
+  function persistSettings(values: var): void {
     var entry = { id: root.moduleName }
-    for (var existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
-    for (var key in values) entry[key] = values[key]
+    for (let existing in root.settings) if (existing !== "id") entry[existing] = root.settings[existing]
+    for (let key in values) entry[key] = values[key]
 
     root.settings = entry
-    if (root.hostWidget && "settings" in root.hostWidget) root.hostWidget.settings = entry
-    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
-      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    if (Model.hasField(root.hostWidget, "settings")) Model.setField(root.hostWidget, "settings", entry)
+    if (BarValues.hasUpdateEntryInline(root.bar))
+      BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
-  function setWeekStart(day) {
+  function setWeekStart(day: int): void {
     var next = Model.normalizedWeekStart(day, root.weekStart)
     if (next === root.weekStart) return
     persistSettings({ weekStartDay: Model.weekStartSettingName(next) })
@@ -179,25 +174,20 @@ Panel {
   function startEditingLife() {
     root.editingLife = true
     Qt.callLater(function() {
-      var content = panel.loadedContent
+      var content = panel.loadedContent as LazyContent
       if (!content) return
-      var bornField = content.bornField
-      var expectancyField = content.expectancyField
-      bornField.text = root.birthYear > 0 ? String(root.birthYear) : ""
-      expectancyField.text = String(root.lifeExpectancy)
-      bornField.selectAll()
-      bornField.forceActiveFocus()
+      Model.initializeLifeFields(content, root.birthYear, root.lifeExpectancy)
     })
   }
 
   function cancelEditingLife() {
     root.editingLife = false
-    Qt.callLater(function() { if (panel.loadedContent) panel.loadedContent.forceActiveFocus() })
+    Qt.callLater(function() { if (panel.loadedContent) Model.forceActiveFocus(panel.loadedContent) })
   }
 
   // Shared by both fields: Tab hops to the other one, Enter commits the pair,
   // Escape drops the lot.
-  function handleLifeKey(event, other) {
+  function handleLifeKey(event: KeyEvent, other: TextField): void {
     if (event.key === Qt.Key_Escape) {
       root.cancelEditingLife()
       event.accepted = true
@@ -205,8 +195,7 @@ Panel {
       root.commitLife()
       event.accepted = true
     } else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
-      other.selectAll()
-      other.forceActiveFocus()
+      Model.selectAndFocus(other)
       event.accepted = true
     }
   }
@@ -220,12 +209,10 @@ Panel {
   }
 
   function commitLife() {
-    var content = panel.loadedContent
+    var content = panel.loadedContent as LazyContent
     if (!content) return
-    var bornField = content.bornField
-    var expectancyField = content.expectancyField
-    var born = Model.parseBirthYear(bornField.text, today.getFullYear())
-    var span = Model.parseLifeExpectancy(expectancyField.text)
+    var born = Model.parseBirthYear(Model.lifeFieldText(content, "bornField"), today.getFullYear())
+    var span = Model.parseLifeExpectancy(Model.lifeFieldText(content, "expectancyField"))
     if (born !== root.birthYear || span !== root.lifeExpectancy)
       persistSettings({ birthYear: born, lifeExpectancy: span })
     cancelEditingLife()
@@ -236,7 +223,7 @@ Panel {
   }
 
   // English short day names, matching the rest of the interface.
-  function weekdayLabel(weekday) {
+  function weekdayLabel(weekday: int): string {
     return String(labelLocale.dayName(weekday, Locale.ShortFormat)).toUpperCase()
   }
 
@@ -260,13 +247,15 @@ Panel {
     // popup follows wherever the widget is placed.
     centerOnBar: false
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(560))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(560), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias bornField: bornField
-      property alias expectancyField: expectancyField
+      final property alias bornField: bornField
+      final property alias expectancyField: expectancyField
       implicitHeight: calendarColumn.implicitHeight
       anchors.fill: parent
       blocked: root.editingLife
@@ -322,7 +311,7 @@ Panel {
                 anchors.baseline: heroDate.baseline
                 text: "󰃭"
                 color: heroMouse.containsMouse
-                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                   : root.contentForeground
                 font.family: root.contentFontFamily
                 // Decorative, and deliberately outside the Style.font.*
@@ -337,7 +326,7 @@ Panel {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.today.toLocaleDateString(root.labelLocale, Commons.I18n.t("clock.dayMonthFormat"))
                 color: heroMouse.containsMouse
-                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                  ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                   : root.contentForeground
                 font.family: root.contentFontFamily
                 font.pixelSize: 52
@@ -474,10 +463,11 @@ Panel {
                 color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.12)
 
                 Rectangle {
+                  id: yearTrackFill
                   width: Math.round(parent.width * root.yearDone)
                   height: parent.height
-                  radius: parent.radius
-                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent)
+                  radius: yearTrack.radius
+                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                   Behavior on width { NumberAnimation { duration: Style.duration(160); easing.type: Easing.OutCubic } }
                 }
@@ -523,6 +513,7 @@ Panel {
               }
 
               Rectangle {
+                id: lifeTrack
                 anchors.left: lifeLabel.right
                 anchors.right: lifePercent.left
                 anchors.leftMargin: Style.space(12)
@@ -533,10 +524,11 @@ Panel {
                 color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.12)
 
                 Rectangle {
+                  id: lifeTrackFill
                   width: Math.round(parent.width * root.lifeDone)
                   height: parent.height
-                  radius: parent.radius
-                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent)
+                  radius: lifeTrack.radius
+                  color: Style.selectedStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                   Behavior on width { NumberAnimation { duration: Style.duration(160); easing.type: Easing.OutCubic } }
                 }
@@ -598,7 +590,7 @@ Panel {
                   height: Style.space(16)
                   radius: Style.cornerRadius
                   color: weekStartMouse.containsMouse
-                    ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent)
+                    ? Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                     : "transparent"
 
                   Text {
@@ -606,7 +598,7 @@ Panel {
                     textFormat: Text.PlainText
                     text: Commons.I18n.t("clock.weekShort")
                     color: weekStartMouse.containsMouse
-                      ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent)
+                      ? Style.hoverStateColor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
                       : Qt.darker(root.contentForeground, 1.9)
                     font.family: root.contentFontFamily
                     font.pixelSize: Style.font.caption
@@ -658,6 +650,7 @@ Panel {
                 model: root.weeks
 
                 Row {
+                  id: weekRow
                   required property var modelData
                   spacing: root.cellSpacing
 
@@ -667,7 +660,7 @@ Panel {
                     height: root.cellHeight
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    text: Commons.I18n.formatNumber(modelData.week)
+                    text: Commons.I18n.formatNumber(Model.field(weekRow.modelData, "week"))
                     color: Qt.darker(root.contentForeground, 1.9)
                     font.family: root.contentFontFamily
                     font.pixelSize: Style.font.caption
@@ -679,9 +672,10 @@ Panel {
                   }
 
                   Repeater {
-                    model: modelData.days
+                    model: Model.field(weekRow.modelData, "days")
 
                     Rectangle {
+                      id: dayCell
                       required property var modelData
 
                       width: root.cellWidth
@@ -690,19 +684,19 @@ Panel {
                       // Today is outlined, not filled: a lit-up block shouts
                       // over a grid this quiet.
                       color: "transparent"
-                      border.width: modelData.today ? Style.spacing.hairline : 0
-                      border.color: Style.normalBorderFor(root.contentForeground, Commons.Color.accent)
+                      border.width: Model.field(modelData, "today") ? Style.spacing.hairline : 0
+                      border.color: Style.normalBorderFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
 
                       Text {
                         textFormat: Text.PlainText
                         anchors.centerIn: parent
-                        text: Commons.I18n.formatNumber(modelData.day)
-                        color: modelData.inMonth
-                          ? (modelData.weekend ? Qt.darker(root.contentForeground, 1.45) : root.contentForeground)
+                        text: Commons.I18n.formatNumber(Model.field(dayCell.modelData, "day"))
+                        color: Model.field(dayCell.modelData, "inMonth")
+                          ? (Model.field(dayCell.modelData, "weekend") ? Qt.darker(root.contentForeground, 1.45) : root.contentForeground)
                           : Qt.darker(root.contentForeground, 2.2)
                         font.family: root.contentFontFamily
                         font.pixelSize: Style.font.body
-                        font.bold: modelData.today
+                        font.bold: Model.field(dayCell.modelData, "today")
                       }
                     }
                   }

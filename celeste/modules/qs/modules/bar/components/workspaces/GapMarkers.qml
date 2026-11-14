@@ -10,8 +10,8 @@ import qs.services
 Item {
     id: root
 
-    required property var workspaces
-    required property int wsSpacing
+    required final property var workspaces
+    required final property int wsSpacing
 
     AnimatedRepeater {
         model: ScriptModel {
@@ -21,10 +21,10 @@ Item {
         removeDuration: Tokens.anim.durations.expressiveDefaultEffects
 
         StyledRect {
-            required property int index
-            required property Workspace modelData
+            required final property int index
+            required final property Workspace modelData
 
-            property real shift: {
+            final property real shift: {
                 if (!modelData || index === 0)
                     return 0;
                 if (modelData.focused)

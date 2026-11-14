@@ -10,16 +10,17 @@ import qs.components
 import qs.components.effects
 import qs.components.filedialog
 import qs.services
+import "UserHelpers.js" as UserHelpers
 import qs.utils
 
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property FileDialog facePicker
-    property string faceOverride
+    required final property ScreenState screenState
+    required final property FileDialog facePicker
+    final property string faceOverride
 
-    property color pfpFallbackColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+    final property color pfpFallbackColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.large
@@ -52,7 +53,7 @@ Item {
 
                 containmentMask: QtObject {
                     function contains(pt: point): bool {
-                        return shape.contains(pt) && !logoShape.contains(mouse.mapToItem(logoShape, pt)) && !uptimeShape.contains(mouse.mapToItem(uptimeShape, pt));
+                        return UserHelpers.contains(shape, logoShape, uptimeShape, mouse, pt);
                     }
                 }
 
@@ -61,7 +62,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     root.screenState.dashboard = false;
-                    root.facePicker.open();
+                    UserHelpers.open(root.facePicker);
                 }
             }
         }
@@ -252,7 +253,7 @@ Item {
                 anchors.verticalCenterOffset: Math.round(fontInfo.pointSize * 0.1)
                 text: SysInfo.wm + "..."
                 color: Colours.palette.m3onSecondaryContainer
-                font: Tokens.font.body.builders.small.vaxis("slnt", -4).build()
+                font: Tokens.styled("body", "small", { vaxis: ["slnt", -4] })
                 width: Math.min(implicitWidth, Tokens.sizes.dashboard.userWidth - wmContainer.x - Tokens.padding.medium * 2 - wmIcon.implicitWidth - wmLabel.spacing - Tokens.padding.extraLarge)
                 elide: Text.ElideRight
             }

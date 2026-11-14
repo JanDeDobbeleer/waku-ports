@@ -17,10 +17,10 @@ Singleton {
 
   readonly property var source: Pipewire.defaultAudioSource
   // The default input is untyped, so this drives it.
-  readonly property bool active: !!source && !source.audio
+  readonly property bool active: !!source && !Model.sourceHasAudio(source)
   // Every handler reads nodeId itself: a property bound to it could still hold
   // its old value when onNodeIdChanged runs.
-  readonly property int nodeId: active ? source.id : -1
+  readonly property int nodeId: active ? Model.sourceId(source) : -1
 
   property bool known: false
   property real volume: 0
@@ -40,7 +40,7 @@ Singleton {
   onNodeIdChanged: reset()
   Component.onCompleted: reset()
 
-  function reset() {
+  function reset(): void {
     generation++
     known = false
     pendingVolume = null
@@ -50,7 +50,7 @@ Singleton {
     refresh()
   }
 
-  function refresh() {
+  function refresh(): void {
     if (nodeId < 0) return
     if (reader.running || writer.running) {
       readAgain = true
@@ -61,21 +61,21 @@ Singleton {
     reader.running = true
   }
 
-  function setVolume(value) {
+  function setVolume(value: real): void {
     if (nodeId < 0) return
     volume = Math.max(0, Math.min(1, value))
     pendingVolume = [String(nodeId), volume.toFixed(2)]
     flush()
   }
 
-  function setMuted(value) {
+  function setMuted(value: bool): void {
     if (nodeId < 0 || !known) return
     muted = value
     pendingMute = [String(nodeId), value ? "1" : "0"]
     flush()
   }
 
-  function flush() {
+  function flush(): bool {
     if (reader.running || writer.running) return true
     var args = null
     if (pendingMute !== null) {
@@ -91,7 +91,7 @@ Singleton {
     return true
   }
 
-  function settle() {
+  function settle(): void {
     if (flush()) return
     if (readAgain) {
       readAgain = false

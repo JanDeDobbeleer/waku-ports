@@ -1,18 +1,20 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
-import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Services.Pipewire
 import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
-import qs.compat
 import waku.services as S
 
 Panel {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   moduleName: "nomarchy.bluetooth"
   ipcTarget: "nomarchy.bluetooth"
   // manageIpc: false so this panel can own the single IpcHandler the target
@@ -24,7 +26,7 @@ Panel {
   // the audio output switch. Cleared when the engine reports an error.
   property var pendingActions: ({})
 
-  readonly property var adapter: Bluetooth.defaultAdapter
+  readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
 
   // True while this instance owes BlueZ a StopDiscovery: set when it starts
   // discovery (or opens onto a session already running) and cleared once
@@ -32,40 +34,42 @@ Panel {
   // Discovering property also reflects sessions other clients hold, which are
   // never this panel's to stop.
   property bool owesDiscoveryStop: false
-  readonly property var devices: Bluetooth.devices ? Bluetooth.devices.values : []
-  readonly property var pipewireNodes: Pipewire.nodes ? Pipewire.nodes.values : []
+  readonly property var devices: Model.values(Bluetooth.devices)
+  readonly property var pipewireNodes: Model.values(Pipewire.nodes)
   property var pendingAudioOutputDevice: null
   property int pendingAudioOutputAttempts: 0
 
-  function deviceLabel(device) {
+  function arrayLength(value: var): int { return Model.arrayLength(value) }
+  function fieldValue(object: var, name: string): var { return Model.field(object, name) }
+  function deviceLabel(device: var): string {
     return Model.deviceLabel(device)
   }
 
-  function isUuidLike(value) {
+  function isUuidLike(value: string): bool {
     return Model.isUuidLike(value)
   }
 
-  function isAddressLike(value) {
+  function isAddressLike(value: string): bool {
     return Model.isAddressLike(value)
   }
 
-  function hasHumanName(device) {
+  function hasHumanName(device: var): bool {
     return Model.hasHumanName(device)
   }
 
   readonly property var deviceGroups: Model.deviceLists(devices)
-  readonly property var connectedDevices: deviceGroups.connected || []
-  readonly property var knownDevices: deviceGroups.known || []
-  readonly property var discoveredDevices: deviceGroups.discovered || []
+  readonly property var connectedDevices: Model.field(deviceGroups, "connected") || []
+  readonly property var knownDevices: Model.field(deviceGroups, "known") || []
+  readonly property var discoveredDevices: Model.field(deviceGroups, "discovered") || []
 
   readonly property string icon: {
     if (!adapter || !adapter.enabled) return "󰂲"
-    if (connectedDevices.length > 0) return "󰂱"
+    if (Model.arrayLength(connectedDevices) > 0) return "󰂱"
     return "󰂯"
   }
 
   property int phraseIndex: 0
-  readonly property var activePhrases: [
+  readonly property list<string> activePhrases: [
     Commons.I18n.t("bluetooth.phrase1"),
     Commons.I18n.t("bluetooth.phrase2"),
     Commons.I18n.t("bluetooth.phrase3"),
@@ -107,31 +111,31 @@ Panel {
   readonly property string toggleHint: root.adapter && root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOff") : Commons.I18n.t("bluetooth.turnOn")
 
   readonly property color hoverFill: bar
-    ? Style.hoverFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.hoverFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
   readonly property color selectedFill: bar
-    ? Style.selectedFillFor(bar.foreground, Commons.Color.accent)
+    ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent)
     : "transparent"
 
-  function sectionCount(section) {
-    if (section === "connected") return connectedDevices.length
-    if (section === "known") return knownDevices.length
-    if (section === "discovered") return discoveredDevices.length
+  function sectionCount(section: string): int {
+    if (section === "connected") return Model.arrayLength(connectedDevices)
+    if (section === "known") return Model.arrayLength(knownDevices)
+    if (section === "discovered") return Model.arrayLength(discoveredDevices)
     return 0
   }
 
-  function sectionVisible(section) {
-    if (section === "connected") return connectedDevices.length > 0
-    if (section === "known") return knownDevices.length > 0
-    if (section === "discovered") return adapter && adapter.discovering && discoveredDevices.length > 0
+  function sectionVisible(section: string): bool {
+    if (section === "connected") return Model.arrayLength(connectedDevices) > 0
+    if (section === "known") return Model.arrayLength(knownDevices) > 0
+    if (section === "discovered") return adapter && adapter.discovering && Model.arrayLength(discoveredDevices) > 0
     return false
   }
 
-  readonly property var visibleSections: {
+  readonly property list<string> visibleSections: {
     return Model.visibleSections(deviceGroups, adapter && adapter.discovering)
   }
 
-  function devicesForSection(section) {
+  function devicesForSection(section: string): var {
     return Model.sectionDevices(deviceGroups, section)
   }
 
@@ -141,10 +145,10 @@ Panel {
   // the delegate and the cursor keep working in section-relative terms.
   readonly property var scrollRows: {
     var rows = []
-    for (var k = 0; k < knownDevices.length; k++)
+    for (let k = 0; k < Model.arrayLength(knownDevices); k++)
       rows.push({ dev: Model.deviceRow(knownDevices[k]), section: "known", indexInSection: k })
     if (sectionVisible("discovered"))
-      for (var d = 0; d < discoveredDevices.length; d++)
+      for (let d = 0; d < Model.arrayLength(discoveredDevices); d++)
         rows.push({ dev: Model.deviceRow(discoveredDevices[d]), section: "discovered", indexInSection: d })
     return rows
   }
@@ -153,7 +157,7 @@ Panel {
   // projection so those delegates never hold Device QObject wrappers either.
   readonly property var connectedRows: {
     var rows = []
-    for (var i = 0; i < connectedDevices.length; i++)
+    for (let i = 0; i < Model.arrayLength(connectedDevices); i++)
       rows.push(Model.deviceRow(connectedDevices[i]))
     return rows
   }
@@ -162,12 +166,12 @@ Panel {
   // resolve the backend object here rather than holding a wrapper that can
   // dangle mid-incubation. `devices` is already the raw device array (see the
   // property declaration), so it is iterated directly.
-  function deviceFor(row) {
-    if (!row || !row.dev) return null
-    var addr = row.dev.address || ""
+  function deviceFor(row: var): var {
+    if (!row || !Model.field(row, "dev")) return null
+    var addr = Model.field(Model.field(row, "dev"), "address") || ""
     var devs = devices || []
-    for (var i = 0; i < devs.length; i++) {
-      if ((devs[i].address || "") === addr) return devs[i]
+    for (let i = 0; i < Model.arrayLength(devs); i++) {
+      if ((Model.field(devs[i], "address") || "") === addr) return devs[i]
     }
     return null
   }
@@ -176,59 +180,59 @@ Panel {
   // in the connected list (both of which live outside the scroll area).
   readonly property int scrollRowIndex: {
     if (focusSection !== "known" && focusSection !== "discovered") return -1
-    for (var i = 0; i < scrollRows.length; i++)
+    for (let i = 0; i < Model.arrayLength(scrollRows); i++)
       if (scrollRows[i].section === focusSection && scrollRows[i].indexInSection === selectedIndex) return i
     return -1
   }
 
   // A row opens a section when it is the first of its kind in the flat list.
-  function scrollSectionTitle(index) {
+  function scrollSectionTitle(index: int): string {
     var rows = scrollRows
-    if (index < 0 || index >= rows.length) return ""
+    if (index < 0 || index >= Model.arrayLength(rows)) return ""
     if (index > 0 && rows[index - 1].section === rows[index].section) return ""
     return rows[index].section === "known" ? Commons.I18n.t("bluetooth.paired") : Commons.I18n.t("bluetooth.available")
   }
 
-  function audioSinks() {
+  function audioSinks(): var {
     var sinks = []
-    for (var i = 0; i < pipewireNodes.length; i++) {
-      var node = pipewireNodes[i]
-      if (node && node.isSink && !node.isStream) sinks.push(node)
+    for (let i = 0; i < Model.arrayLength(pipewireNodes); i++) {
+      let node = pipewireNodes[i]
+      if (node && Model.field(node, "isSink") && !Model.field(node, "isStream")) sinks.push(node)
     }
     return sinks
   }
 
-  function bluetoothAudioSink(device) {
+  function bluetoothAudioSink(device: var): var {
     var sinks = audioSinks()
-    for (var i = 0; i < sinks.length; i++) {
+    for (let i = 0; i < Model.arrayLength(sinks); i++) {
       if (Model.bluetoothSinkMatchesDevice(sinks[i], device)) return sinks[i]
     }
     return null
   }
 
-  function setDefaultAudioSink(sink) {
+  function setDefaultAudioSink(sink: var): void {
     if (!sink) return
     Pipewire.preferredDefaultAudioSink = sink
-    if (sink.id !== undefined && sink.name) {
+    if (Model.field(sink, "id") !== undefined && Model.field(sink, "name")) {
       Quickshell.execDetached([
         "nomarchy-audio-output-set-default",
-        String(sink.id),
-        String(sink.name)
+        String(Model.field(sink, "id")),
+        String(Model.field(sink, "name"))
       ])
     }
   }
 
-  function scheduleAudioOutputSwitch(device) {
+  function scheduleAudioOutputSwitch(device: var): void {
     pendingAudioOutputDevice = {
-      address: device && device.address ? device.address : "",
-      name: device && device.name ? device.name : "",
-      deviceName: device && device.deviceName ? device.deviceName : ""
+      address: device && Model.field(device, "address") ? Model.field(device, "address") : "",
+      name: device && Model.field(device, "name") ? Model.field(device, "name") : "",
+      deviceName: device && Model.field(device, "deviceName") ? Model.field(device, "deviceName") : ""
     }
     pendingAudioOutputAttempts = 0
     audioSwitchTimer.restart()
   }
 
-  function switchPendingAudioOutput() {
+  function switchPendingAudioOutput(): void {
     if (!pendingAudioOutputDevice) return
 
     var sink = bluetoothAudioSink(pendingAudioOutputDevice)
@@ -247,72 +251,72 @@ Panel {
     audioSwitchTimer.restart()
   }
 
-  function deviceAt(section, index) {
+  function deviceAt(section: string, index: int): var {
     var list = devicesForSection(section)
-    return index >= 0 && index < list.length ? list[index] : null
+    return index >= 0 && index < Model.arrayLength(list) ? list[index] : null
   }
 
-  function cloneMap(map) {
+  function cloneMap(map: var): var {
     return Model.cloneMap(map)
   }
 
-  function pendingAction(address) {
+  function pendingAction(address: string): string {
     return Model.pendingAction(pendingActions, address)
   }
 
-  function setPendingAction(address, action) {
+  function setPendingAction(address: string, action: string): void {
     if (!address) return
     pendingActions = Model.withPendingAction(pendingActions, address, action)
     if (action) pendingTimeout.restart()
   }
 
-  function runDeviceAction(device, action, pending) {
-    if (!device || !device.address) return
-    setPendingAction(device.address, pending)
+  function runDeviceAction(device: var, action: string, pending: string): void {
+    if (!device || !Model.field(device, "address")) return
+    setPendingAction(Model.field(device, "address"), pending)
     // The engine's BluetoothDevice has connect/disconnect/pair/forget; anything else goes to Windows.
-    if (typeof device[action] === "function") device[action]()
+    if (Model.hasMethod(device, action)) Model.invoke(device, action)
     else Quickshell.execDetached(["explorer.exe", "ms-settings:bluetooth"])
   }
 
-  function connectDevice(device) {
-    if (!device || device.connected) return
-    if (device.paired || device.bonded || device.trusted) runDeviceAction(device, "connect", "connecting")
+  function connectDevice(device: var): void {
+    if (!device || Model.field(device, "connected")) return
+    if (Model.field(device, "paired") || Model.field(device, "bonded") || Model.field(device, "trusted")) runDeviceAction(device, "connect", "connecting")
     else runDeviceAction(device, "pair", "")
   }
 
-  function disconnectDevice(device) {
-    if (!device || !device.address) return
-    if (!device.connected) return
-    if (device.disconnect) device.disconnect()
-    else device.connected = false
+  function disconnectDevice(device: var): void {
+    if (!device || !Model.field(device, "address")) return
+    if (!Model.field(device, "connected")) return
+    if (Model.hasMethod(device, "disconnect")) Model.invoke(device, "disconnect")
+    else Model.setField(device, "connected", false)
   }
 
-  function forgetDevice(device) {
-    if (!device || !device.address) return
+  function forgetDevice(device: var): void {
+    if (!device || !Model.field(device, "address")) return
     runDeviceAction(device, "forget", "forgetting")
   }
 
-  function syncPendingActions() {
+  function syncPendingActions(): void {
     var next = cloneMap(pendingActions)
     var changed = false
 
-    for (var address in next) {
-      var action = next[address]
-      var found = null
+    for (let address in next) {
+      let action = next[address]
+      let found = null
 
-      for (var i = 0; i < devices.length; i++) {
-        var d = devices[i]
-        if (d && d.address === address) {
+      for (let i = 0; i < Model.arrayLength(devices); i++) {
+        let d = devices[i]
+        if (d && Model.field(d, "address") === address) {
           found = d
           break
         }
       }
 
-      var finishedConnecting = action === "connecting" && found && found.connected
+      let finishedConnecting = action === "connecting" && found && Model.field(found, "connected")
       if (finishedConnecting
-          || (action === "forgetting" && (!found || (!found.paired && !found.bonded && !found.trusted)))) {
+          || (action === "forgetting" && (!found || (!Model.field(found, "paired") && !Model.field(found, "bonded") && !Model.field(found, "trusted"))))) {
         if (finishedConnecting) scheduleAudioOutputSwitch(found)
-        delete next[address]
+        Model.removeKey(next, address)
         changed = true
       }
     }
@@ -322,15 +326,15 @@ Panel {
 
   // j/k navigates the hero toggle ("header") and the device sections
   // row-by-row.
-  function moveCursor(delta) {
+  function moveCursor(delta: int): void {
     var sections = visibleSections
     if (focusSection === "header") {
-      if (delta > 0 && sections && sections.length > 0) {
+      if (delta > 0 && sections && Model.arrayLength(sections) > 0) {
         focusSection = sections[0]; selectedIndex = 0; actionFocused = false
       }
       return
     }
-    if (!sections || sections.length === 0) { focusSection = "header"; actionFocused = false; return }
+    if (!sections || Model.arrayLength(sections) === 0) { focusSection = "header"; actionFocused = false; return }
     var sIdx = sections.indexOf(focusSection)
     if (sIdx < 0) { focusSection = sections[0]; selectedIndex = 0; actionFocused = false; return }
 
@@ -339,7 +343,7 @@ Panel {
 
     if (delta > 0) {
       if (idx < max) { selectedIndex = idx + 1; actionFocused = false; return }
-      if (sIdx < sections.length - 1) {
+      if (sIdx < Model.arrayLength(sections) - 1) {
         focusSection = sections[sIdx + 1]
         selectedIndex = 0
         actionFocused = false
@@ -356,22 +360,22 @@ Panel {
     }
   }
 
-  function setHeaderCursor() {
+  function setHeaderCursor(): void {
     cursorActive = true
     focusSection = "header"
     actionFocused = false
   }
 
-  function moveCursorH(delta) {
+  function moveCursorH(delta: int): void {
     if (!cursorActive) { cursorActive = true; return }
     if (focusSection !== "known" && focusSection !== "connected") return
     var dev = deviceAt(focusSection, selectedIndex)
-    if (!dev || !dev.address) return
+    if (!dev || !Model.field(dev, "address")) return
     if (delta > 0) actionFocused = true
     else if (delta < 0) actionFocused = false
   }
 
-  function activateCursor() {
+  function activateCursor(): void {
     if (focusSection === "header") {
       toggleBluetooth()
       return
@@ -382,14 +386,14 @@ Panel {
     }
 
     if (focusSection === "connected" || focusSection === "known") {
-      var dev = deviceAt(focusSection, selectedIndex)
+      let dev = deviceAt(focusSection, selectedIndex)
       if (!dev) return
-      if (dev.connected) disconnectDevice(dev)
+      if (Model.field(dev, "connected")) disconnectDevice(dev)
       else connectDevice(dev)
       return
     }
     if (focusSection === "discovered") {
-      var d = discoveredDevices[selectedIndex]
+      let d = discoveredDevices[selectedIndex]
       if (!d) return
       connectDevice(d)
     }
@@ -397,7 +401,7 @@ Panel {
 
   // 'x' forgets remembered devices. For connected devices this first
   // disconnects, then removes the BlueZ pairing record via nomarchy-bluetooth-device.
-  function deleteSelected() {
+  function deleteSelected(): void {
     if (focusSection !== "known" && focusSection !== "connected") return
     var dev = deviceAt(focusSection, selectedIndex)
     if (!dev) return
@@ -410,9 +414,9 @@ Panel {
       // from another monitor, or one leaked by an instance that could not
       // finish its own stop — so this close settles it either way.
       if (adapter !== null && adapter.discovering) owesDiscoveryStop = true
-      if (connectedDevices.length > 0) { focusSection = "connected"; selectedIndex = 0 }
-      else if (knownDevices.length > 0) { focusSection = "known"; selectedIndex = 0 }
-      else if (discoveredDevices.length > 0) { focusSection = "discovered"; selectedIndex = 0 }
+      if (Model.arrayLength(connectedDevices) > 0) { focusSection = "connected"; selectedIndex = 0 }
+      else if (Model.arrayLength(knownDevices) > 0) { focusSection = "known"; selectedIndex = 0 }
+      else if (Model.arrayLength(discoveredDevices) > 0) { focusSection = "discovered"; selectedIndex = 0 }
       else { focusSection = "header" }
       actionFocused = false
       cursorActive = false
@@ -423,32 +427,31 @@ Panel {
   // All instances share the default adapter, and switching the popout to a
   // different monitor closes one instance as it opens the next, so the
   // closing side has to leave the scan alone for the side still on screen.
-  function openSibling() {
-    if (!bar || typeof bar.moduleWidgets !== "function") return null
-    var items = bar.moduleWidgets(moduleName)
-    for (var i = 0; i < items.length; i++) {
+  function openSibling(): var {
+    var items = BarValues.moduleWidgets(bar, moduleName, [])
+    for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root && items[i].opened === true) return items[i]
     }
     return null
   }
 
-  function updateFocusedAddress() {
+  function updateFocusedAddress(): void {
     var d = deviceAt(focusSection, selectedIndex)
-    focusedDeviceAddress = d ? (d.address || "") : ""
+    focusedDeviceAddress = d ? (Model.field(d, "address") || "") : ""
   }
 
-  function reselectFocusedDevice() {
+  function reselectFocusedDevice(): void {
     if (focusedDeviceAddress === "") {
       clampCursor()
       return
     }
 
     var sections = ["connected", "known", "discovered"]
-    for (var s = 0; s < sections.length; s++) {
-      var section = sections[s]
+    for (let s = 0; s < Model.arrayLength(sections); s++) {
+      let section = sections[s]
       if (!sectionVisible(section)) continue
-      var list = devicesForSection(section)
-      for (var i = 0; i < list.length; i++) {
+      let list = devicesForSection(section)
+      for (let i = 0; i < Model.arrayLength(list); i++) {
         if (list[i] && list[i].address === focusedDeviceAddress) {
           focusSection = section
           selectedIndex = i
@@ -468,14 +471,14 @@ Panel {
   onDiscoveredDevicesChanged: { reselectFocusedDevice(); syncPendingActions() }
   onVisibleSectionsChanged: clampCursor()
 
-  function clampCursor() {
+  function clampCursor(): void {
     var sections = visibleSections
     // "header" is virtual and never appears in visibleSections, so it has to
     // be let through: toggling the adapter empties and refills the device
     // lists, and clamping would knock the cursor off the hero switch every
     // time it is used.
     if (focusSection === "header") return
-    if (!sections || !sections.length) {
+    if (!sections || !Model.arrayLength(sections)) {
       selectedIndex = 0
       return
     }
@@ -487,7 +490,7 @@ Panel {
     var count = sectionCount(focusSection)
     if (count === 0) {
       // Section emptied out — bounce to the previous visible one.
-      var sIdx = sections.indexOf(focusSection)
+      let sIdx = sections.indexOf(focusSection)
       focusSection = sIdx > 0 ? sections[sIdx - 1] : sections[0]
       selectedIndex = Math.max(0, sectionCount(focusSection) - 1)
       return
@@ -545,7 +548,7 @@ Panel {
       // open-time adoption saw nothing to adopt.
       var sibling = root.openSibling()
       if (sibling) {
-        sibling.owesDiscoveryStop = true
+        Model.setField(sibling, "owesDiscoveryStop", true)
         root.owesDiscoveryStop = false
         return
       }
@@ -572,8 +575,8 @@ Panel {
   // when it is the last one standing.
   Component.onDestruction: {
     if (!owesDiscoveryStop) return
-    var items = bar && typeof bar.moduleWidgets === "function" ? bar.moduleWidgets(moduleName) : []
-    for (var i = 0; i < items.length; i++) {
+    var items = BarValues.moduleWidgets(bar, moduleName, [])
+    for (let i = 0; i < items.length; i++) {
       if (items[i] && items[i] !== root) { items[i].owesDiscoveryStop = true; return }
     }
     if (adapter !== null && adapter.discovering) adapter.discovering = false
@@ -613,14 +616,14 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent as LazyContent, "heroStatus") : null; property: "opacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: root.phraseIndex = (root.phraseIndex + 1) % root.activePhrases.length
     }
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent as LazyContent, "heroStatus") : null; property: "opacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -630,7 +633,7 @@ Panel {
     function onRotatingPhrasesChanged() {
       if (!root.rotatingPhrases) {
         phraseSwap.stop()
-        if (panel.loadedContent) panel.loadedContent.heroStatus.opacity = 1.0
+        if (panel.loadedContent) Model.field(panel.loadedContent as LazyContent, "heroStatus").opacity = 1.0
       }
     }
   }
@@ -643,12 +646,12 @@ Panel {
   // Asking for a direction rather than a toggle: the helper runs detached and the
   // switch only moves once BlueZ catches up, so a second click inside that window
   // would re-read the old state and undo the first.
-  function toggleBluetooth() {
+  function toggleBluetooth(): void {
     if (!adapter) return
     adapter.enabled = !adapter.enabled
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.bluetooth"
 
     function open() { root.open() }
@@ -677,12 +680,14 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias heroStatus: heroStatus
+      final property alias heroStatus: heroStatus
       implicitHeight: column.implicitHeight
       anchors.fill: parent
       onMoveRequested: function(dx, dy) {
@@ -715,8 +720,8 @@ Panel {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: root.icon
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.display
             opacity: root.adapter && root.adapter.enabled ? 1.0 : 0.5
           }
@@ -728,7 +733,7 @@ Panel {
             visible: !!root.adapter
             checked: !!root.adapter && root.adapter.enabled
             hasCursor: root.headerHasCursor
-            foreground: root.bar.foreground
+            foreground: root.contentForeground
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             onHovered: function(on) { if (on) root.setHeaderCursor() }
@@ -737,7 +742,7 @@ Panel {
             PanelToolTip {
               visible: powerSwitch.containsMouse
               text: root.toggleHint
-              fontFamily: root.bar.fontFamily
+              fontFamily: root.contentFontFamily
             }
           }
 
@@ -753,8 +758,8 @@ Panel {
             Text {
               text: Commons.I18n.t("bluetooth.title")
               textFormat: Text.PlainText
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: root.contentForeground
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -765,8 +770,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(root.contentForeground, 1.4)
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -779,19 +784,19 @@ Panel {
         // Scrollable device list — capped so a noisy neighborhood doesn't
         // grow the popup past the screen.
         PanelSeparator {
-          foreground: root.bar.foreground
+          foreground: root.contentForeground
         }
 
         Column {
           id: connectedList
-          visible: root.connectedDevices.length > 0
+          visible: root.arrayLength(root.connectedDevices) > 0
           width: parent.width
           spacing: Style.space(10)
 
           PanelSectionHeader {
             text: Commons.I18n.t("bluetooth.connected")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: root.contentForeground
+            fontFamily: root.contentFontFamily
           }
 
           Repeater {
@@ -809,8 +814,8 @@ Panel {
         }
 
         PanelSeparator {
-          visible: root.connectedDevices.length > 0 && root.scrollRows.length > 0
-          foreground: root.bar.foreground
+          visible: root.arrayLength(root.connectedDevices) > 0 && root.arrayLength(root.scrollRows) > 0
+          foreground: root.contentForeground
         }
 
         // ListView, not a Flickable: it owns the scroll position, so it keeps
@@ -841,6 +846,7 @@ Panel {
           }
 
           delegate: Item {
+            id: bluetoothListRow
             required property var modelData
             required property int index
             readonly property string sectionTitle: root.scrollSectionTitle(index)
@@ -854,25 +860,25 @@ Panel {
               spacing: Style.space(10)
 
               PanelSeparator {
-                visible: index > 0 && sectionTitle !== ""
+                visible: bluetoothListRow.index > 0 && bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
-                foreground: root.bar.foreground
+                foreground: root.contentForeground
               }
 
               PanelSectionHeader {
-                visible: sectionTitle !== ""
+                visible: bluetoothListRow.sectionTitle !== ""
                 height: visible ? implicitHeight : 0
-                text: sectionTitle
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                text: bluetoothListRow.sectionTitle
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
               }
 
               DeviceRow {
                 width: parent.width
-                dev: modelData.dev
-                rowIndex: modelData.indexInSection
-                sectionName: modelData.section
-                isDiscovered: modelData.section === "discovered"
+                dev: root.fieldValue(bluetoothListRow.modelData, "dev")
+                rowIndex: root.fieldValue(bluetoothListRow.modelData, "indexInSection")
+                sectionName: root.fieldValue(bluetoothListRow.modelData, "section")
+                isDiscovered: root.fieldValue(bluetoothListRow.modelData, "section") === "discovered"
               }
             }
           }
@@ -880,12 +886,12 @@ Panel {
 
         Text {
           textFormat: Text.PlainText
-          visible: root.connectedDevices.length === 0 && root.scrollRows.length === 0
+          visible: root.arrayLength(root.connectedDevices) === 0 && root.arrayLength(root.scrollRows) === 0
           text: !root.adapter ? Commons.I18n.t("bluetooth.noBluetoothAdapter")
               : !root.adapter.enabled ? Commons.I18n.t("bluetooth.turnOnToScan")
               : Commons.I18n.t("bluetooth.scanning")
-          color: Qt.darker(root.bar.foreground, 1.5)
-          font.family: root.bar.fontFamily
+          color: Qt.darker(root.contentForeground, 1.5)
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
           wrapMode: Text.WordWrap
           width: parent.width
@@ -903,9 +909,9 @@ Panel {
     required property string sectionName
     required property bool isDiscovered
 
-    readonly property bool isConnected: dev && dev.connected
-    readonly property int devState: dev && dev.state !== undefined ? dev.state : -1
-    readonly property string action: root.pendingAction(dev ? dev.address : "")
+    readonly property bool isConnected: dev && Model.field(dev, "connected")
+    readonly property int devState: dev && Model.field(dev, "state") !== undefined ? Model.field(dev, "state") : -1
+    readonly property string action: root.pendingAction(dev ? Model.field(dev, "address") : "")
     readonly property string actionTooltip: {
       if (!dev) return ""
       if (isConnected) return Commons.I18n.t("bluetooth.disconnect")
@@ -919,7 +925,7 @@ Panel {
 
     hasCursor: rowSelected && !root.actionFocused
     current: isConnected
-    foreground: root.bar.foreground
+    foreground: root.contentForeground
     fill: root.hoverFill
     currentFill: root.selectedFill
 
@@ -928,18 +934,18 @@ Panel {
       if (action === "forgetting") return Commons.I18n.t("bluetooth.forgetting")
       if (devState === 2) return Commons.I18n.t("bluetooth.disconnecting")
       if (isConnected) {
-        if (dev.batteryAvailable) return Commons.I18n.formatNumber(Math.round(dev.battery * 100)) + "%"
+        if (Model.field(dev, "batteryAvailable")) return Commons.I18n.formatNumber(Math.round(Model.field(dev, "battery") * 100)) + "%"
         return sectionName === "connected" ? "" : Commons.I18n.t("bluetooth.connectedStatus")
       }
-      if (devState === 3 || dev.pairing === true) return Commons.I18n.t("bluetooth.connecting")
+      if (devState === 3 || Model.field(dev, "pairing") === true) return Commons.I18n.t("bluetooth.connecting")
       if (isDiscovered) return ""
       return ""
     }
 
     readonly property color statusColor: {
-      if (isConnected) return root.bar.foreground
-      if (action !== "" || devState === 3 || dev.pairing === true) return root.bar.foreground
-      return Qt.darker(root.bar.foreground, 1.5)
+      if (isConnected) return root.contentForeground
+      if (action !== "" || devState === 3 || Model.field(dev, "pairing") === true) return root.contentForeground
+      return Qt.darker(root.contentForeground, 1.5)
     }
 
     implicitHeight: rowContent.implicitHeight + Style.spacing.rowPaddingX
@@ -949,7 +955,7 @@ Panel {
       anchors.fill: parent
       hoverEnabled: true
       acceptedButtons: Qt.LeftButton | Qt.RightButton
-      cursorShape: row.dev ? Qt.PointingHandCursor : Qt.ArrowCursor
+      cursorShape: Model.field(row, "dev") ? Qt.PointingHandCursor : Qt.ArrowCursor
 
       onContainsMouseChanged: if (containsMouse) {
         root.cursorActive = true
@@ -974,7 +980,7 @@ Panel {
     PanelToolTip {
       visible: row.actionTooltip !== "" && rowMouse.containsMouse && !root.actionFocused
       text: row.actionTooltip
-      fontFamily: root.bar.fontFamily
+      fontFamily: root.contentFontFamily
     }
 
     Item {
@@ -991,7 +997,7 @@ Panel {
         textFormat: Text.PlainText
         text: row.isConnected ? "󰂱" : "󰂯"
         color: row.statusColor
-        font.family: root.bar.fontFamily
+        font.family: root.contentFontFamily
         font.pixelSize: Style.font.heading
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
@@ -1008,9 +1014,9 @@ Panel {
 
         Text {
           textFormat: Text.PlainText
-          text: root.deviceLabel(row.dev) || Commons.I18n.t("bluetooth.device")
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          text: root.deviceLabel(Model.field(row, "dev")) || Commons.I18n.t("bluetooth.device")
+          color: root.contentForeground
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.body
           elide: Text.ElideRight
           width: parent.width
@@ -1020,7 +1026,7 @@ Panel {
           visible: row.statusText !== ""
           text: row.statusText
           color: row.statusColor
-          font.family: root.bar.fontFamily
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
           width: parent.width
@@ -1034,9 +1040,9 @@ Panel {
         visible: row.showForgetButton
         iconText: "󰅙"
         tooltipText: Commons.I18n.t("bluetooth.forget")
-        foreground: root.bar.foreground
-        hoverColor: root.bar.foreground
-        fontFamily: root.bar.fontFamily
+        foreground: root.contentForeground
+        hoverColor: root.contentForeground
+        fontFamily: root.contentFontFamily
         hasCursor: row.rowSelected && root.actionFocused
         onHovered: function(isHovered) {
           if (!isHovered) {

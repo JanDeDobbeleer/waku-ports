@@ -1,3 +1,5 @@
+import "NColorPickerUtils.js" as ColorPickerUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -26,18 +28,8 @@ Rectangle {
     anchors.fill: parent
     cursorShape: Qt.PointingHandCursor
     onClicked: {
-      var dialog = Qt.createComponent("NColorPickerDialog.qml").createObject(root, {
-                                                                               "selectedColor": selectedColor,
-                                                                               "parent": Overlay.overlay,
-                                                                               "screen": root.screen
-                                                                             });
-      // Connect the dialog's signal to the picker's signal
-      dialog.colorSelected.connect(function (color) {
-        root.selectedColor = color;
-        root.colorSelected(color);
-      });
-
-      dialog.open();
+      const component = Qt.createComponent("NColorPickerDialog.qml");
+      ColorPickerUtils.openDialog(component, root, Overlay.overlay);
     }
 
     RowLayout {

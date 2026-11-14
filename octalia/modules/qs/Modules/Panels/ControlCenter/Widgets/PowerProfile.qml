@@ -1,7 +1,4 @@
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.UPower
-import qs.Commons
 import qs.Services.Power
 import qs.Widgets
 
@@ -12,7 +9,7 @@ NIconButtonHot {
   readonly property bool hasPP: PowerProfileService.available
 
   enabled: hasPP
-  icon: PowerProfileService.getIcon()
+  icon: PowerProfileService.getIcon(undefined)
   hot: !PowerProfileService.isDefault()
   onClicked: PowerProfileService.cycleProfile()
 }

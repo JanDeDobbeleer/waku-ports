@@ -3,96 +3,79 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Hyprland
 import Celeste
 import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "WorkspacesData.js" as WD
 
 ClipRect {
     id: root
 
-    required property ShellScreen screen
-    required property bool fullscreen
+    required final property ShellScreen screen
+    required final property bool fullscreen
 
-    readonly property var monitor: Hypr.monitorFor(screen)
-    readonly property bool onSpecial: monitor?.lastIpcObject.specialWorkspace?.name !== ""
-    readonly property int activeWsId: monitor.activeWorkspace?.id ?? 1
-    readonly property int activeWsIdx: workspaceIndex(activeWsId)
+    readonly final property HyprMonitor monitor: Hypr.monitorFor(screen)
+    readonly final property bool onSpecial: monitor?.specialName !== ""
+    readonly final property int activeWsId: monitor?.activeWorkspace?.id ?? 1
+    readonly final property int activeWsIdx: workspaceIndex(activeWsId)
     // Port: the desktops that exist plus one dot that creates the next.
-    readonly property int existing: Hypr.workspaces.values.filter(w => w.monitor === monitor).length
-    readonly property int shown: Math.min(20, existing + 1)
+    readonly final property int existing: WD.workspaceCount(Hypr.workspaces.values, monitor)
+    readonly final property int shown: Math.min(20, existing + 1)
 
-    readonly property bool dynamic: Config.bar.workspaces.dynamic
+    readonly final property bool dynamic: Config.bar.workspaces.dynamic
 
     // Port, dynamic: every occupied workspace, the active one and the first empty one after the
     // last of those (a slot to move to an empty desktop), in workspace order.
-    readonly property var dynamicIds: {
-        const mine = Hypr.workspaces.values.filter(w => w.monitor === monitor);
-        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        const used = w => w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags));
-        const ids = mine.filter(used).map(w => w.id);
-        const last = ids.length > 0 ? Math.max(...ids) : 0;
-        const spare = mine.find(w => w.id > last);
-        if (spare)
-            ids.push(spare.id);
-        return ids;
-    }
+    readonly final property var dynamicIds: WD.dynamicIds(Hypr.workspaces.values, monitor, activeWsId)
 
     // Port: the dots' ids, replaced only when the set of dots changes. A recomputation that gives
     // the same ids (a window title changed, a state refresh) hands the dot model nothing new.
-    property var wsIds: []
+    final property list<int> wsIds
     onWsIdsRawChanged: {
-        if (wsIds.join(",") !== wsIdsRaw.join(","))
+        if (!WD.sameIds(wsIds, wsIdsRaw))
             wsIds = wsIdsRaw;
     }
     Component.onCompleted: wsIds = wsIdsRaw
 
-    readonly property var wsIdsRaw: {
+    readonly final property var wsIdsRaw: {
         if (dynamic)
             return dynamicIds;
         if (Config.bar.workspaces.showUnoccupied)
-            return Array.from({
-                length: shown
-            }, (_, i) => i + 1);
-
-        const allMonitors = !Config.bar.workspaces.perMonitor;
-        const ignoredTags = GlobalConfig.bar.workspaces.ignoredTags;
-        const workspaces = Hypr.workspaces.values.filter(w => w.id > 0 && (allMonitors || w.monitor === root.monitor) && (w.id === activeWsId || w.toplevels.values.some(t => !Hypr.isToplevelIgnored(t, ignoredTags))));
-        const currentIdx = workspaces.findIndex(w => w.id === activeWsId);
-        if (currentIdx < 0)
-            return [];
-
-        const end = CUtils.clamp(currentIdx + 1, Math.min(shown, workspaces.length), workspaces.length);
-        const start = Math.max(0, end - shown);
-
-        return workspaces.slice(start, end).map(w => w.id);
+            return WD.range(shown);
+        return WD.shownIds(Hypr.workspaces.values, monitor, activeWsId, !Config.bar.workspaces.perMonitor, shown);
     }
 
-    readonly property var workspaces: {
-        CUtils.dependency(workspaces.itemsDirty);
-        return wsIds.map(id => workspaces.itemAtIndex(workspaceIndex(id)));
+    readonly final property var workspaces: {
+        CUtils.dependency(workspacesItem.itemsDirty);
+        return dotItems();
     }
 
+    function dotItems(): var {
+        const out = [];
+        for (let i = 0; i < wsIds.length; i++)
+            out.push(workspacesItem.itemAtIndex(workspaceIndex(wsIds[i])));
+        return out;
+    }
     // Only relevant for when showUnoccupied is true
-    readonly property int groupOffset: {
+    readonly final property int groupOffset: {
         if (dynamic || !Config.bar.workspaces.showUnoccupied)
             return 0;
         return Math.floor((activeWsId - 1) / shown) * shown;
     }
 
-    property real blur: onSpecial ? 1 : 0
+    final property real blur: onSpecial ? 1 : 0
 
     // Port: no `as Workspace` cast. On waku a cast to a type of the same module came back null
     // (like the Loader casts in the hover path), so the click never found a workspace.
     function clickWorkspaceAt(x: real, y: real): string {
-        return clickWorkspace(workspaces.itemAt(x, y)?.ws ?? 0);
+        return clickWorkspace(WD.itemWs(workspacesItem.itemAt(x, y)));
     }
 
     // Right click on a dot closes that desktop (Windows virtual desktops only).
     function removeWorkspaceAt(x: real, y: real): string {
-        const ws = workspaces.itemAt(x, y)?.ws ?? 0;
+        const ws = WD.itemWs(workspacesItem.itemAt(x, y));
         if (!ws)
             return "none";
         Hypr.removeWorkspace(ws);
@@ -127,7 +110,7 @@ ClipRect {
     }
 
     implicitWidth: Tokens.sizes.bar.innerWidth
-    implicitHeight: workspaces.layoutHeight + workspaces.anchors.margins * 2
+    implicitHeight: workspacesItem.layoutHeight + workspacesItem.anchors.margins * 2
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.full
@@ -155,7 +138,7 @@ ClipRect {
 
             sourceComponent: OccupiedBg {
                 workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
+                wsSpacing: workspacesItem.spacing
             }
 
             Behavior on opacity {
@@ -166,7 +149,7 @@ ClipRect {
         }
 
         LazyListView {
-            id: workspaces
+            id: workspacesItem
 
             anchors.left: parent.left
             anchors.right: parent.right
@@ -178,7 +161,7 @@ ClipRect {
             removeDuration: Tokens.anim.durations.expressiveDefaultEffects
 
             model: ScriptModel {
-                values: root.wsIds
+                values: WD.toArray(root.wsIds)
             }
 
             delegate: Workspace {
@@ -205,7 +188,7 @@ ClipRect {
 
             sourceComponent: GapMarkers {
                 workspaces: root.workspaces
-                wsSpacing: workspaces.spacing
+                wsSpacing: workspacesItem.spacing
             }
 
             Behavior on opacity {
@@ -217,21 +200,21 @@ ClipRect {
 
         Loader {
             asynchronous: true
-            anchors.left: workspaces.left
-            anchors.right: workspaces.right
+            anchors.left: workspacesItem.left
+            anchors.right: workspacesItem.right
             active: Config.bar.workspaces.activeIndicator
 
             sourceComponent: ActiveIndicator {
                 activeWs: {
-                    CUtils.dependency(workspaces.itemsDirty);
-                    return workspaces.itemAtIndex(root.activeWsIdx) as Workspace;
+                    CUtils.dependency(workspacesItem.itemsDirty);
+                    return workspacesItem.itemAtIndex(root.activeWsIdx) as Workspace;
                 }
-                mask: workspaces
+                mask: workspacesItem
             }
         }
 
         MouseArea {
-            anchors.fill: workspaces
+            anchors.fill: workspacesItem
             acceptedButtons: Hypr.canRemoveWorkspace ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton
             onClicked: event => {
                 if (event.button === Qt.RightButton)
@@ -273,8 +256,7 @@ ClipRect {
                 anchors.margins: Tokens.padding.extraSmall
                 monitor: root.monitor
 
-                scale: 0.5
-                Component.onCompleted: scale = Qt.binding(() => root.onSpecial ? 1 : 0.5)
+                scale: root.onSpecial ? 1 : 0.5
 
                 Behavior on scale {
                     Anim {}

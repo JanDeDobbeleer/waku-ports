@@ -1,12 +1,17 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.Panels.ControlCenter
 import qs.Widgets
+import "../Panels/ControlCenter/ControlCenterPanelUtils.js" as ControlCenterPanelUtils
 
 RowLayout {
+  id: root
+  objectName: "shortcutsCardRoot"
+
+  property int shortcutsHeight: 0
+  property var screen
+
   Layout.fillWidth: true
   spacing: Style.marginL
 
@@ -31,10 +36,10 @@ RowLayout {
           required property int index
 
           Layout.fillWidth: false
-          widgetId: (modelData.id !== undefined ? modelData.id : "")
-          widgetScreen: root.screen
+          widgetId: (ControlCenterPanelUtils.field(modelData, "id") !== undefined ? ControlCenterPanelUtils.field(modelData, "id") : "")
+          widgetScreen: ControlCenterPanelUtils.ancestorField(parent, "shortcutsCardRoot", "screen")
           widgetProps: {
-            "widgetId": modelData.id,
+            "widgetId": ControlCenterPanelUtils.field(modelData, "id"),
             "section": "quickSettings",
             "sectionWidgetIndex": index,
             "sectionWidgetsCount": Settings.data.controlCenter.shortcuts.left.length,
@@ -71,10 +76,10 @@ RowLayout {
           required property int index
 
           Layout.fillWidth: false
-          widgetId: (modelData.id !== undefined ? modelData.id : "")
-          widgetScreen: root.screen
+          widgetId: (ControlCenterPanelUtils.field(modelData, "id") !== undefined ? ControlCenterPanelUtils.field(modelData, "id") : "")
+          widgetScreen: ControlCenterPanelUtils.ancestorField(parent, "shortcutsCardRoot", "screen")
           widgetProps: {
-            "widgetId": modelData.id,
+            "widgetId": ControlCenterPanelUtils.field(modelData, "id"),
             "section": "quickSettings",
             "sectionWidgetIndex": index,
             "sectionWidgetsCount": Settings.data.controlCenter.shortcuts.right.length,

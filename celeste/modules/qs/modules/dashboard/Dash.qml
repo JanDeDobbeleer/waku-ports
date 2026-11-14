@@ -8,9 +8,9 @@ import qs.services
 GridLayout {
     id: root
 
-    required property ScreenState screenState
-    required property FileDialog facePicker
-    property string faceOverride
+    required final property ScreenState screenState
+    required final property FileDialog facePicker
+    final property string faceOverride
 
     rowSpacing: Tokens.spacing.medium
     columnSpacing: Tokens.spacing.medium
@@ -76,13 +76,13 @@ GridLayout {
     Rect {
         Layout.row: 1
         Layout.column: 4
-        Layout.preferredWidth: resources.implicitWidth
+        Layout.preferredWidth: resourcesItem.implicitWidth
         Layout.fillHeight: true
 
         radius: Tokens.rounding.large
 
         Resources {
-            id: resources
+            id: resourcesItem
         }
     }
 

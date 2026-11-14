@@ -1,0 +1,41 @@
+# Commands tools\check.ps1 runs against the shell during the runtime step (see check.ps1 for the
+# syntax). They open every drawer, popout, dashboard tab and launcher list, so the code behind each
+# one runs and logs. Only UI: nothing here changes the machine or starts an app.
+call drawers toggle dashboard
+call bar dashTab 0
+call bar dashTab 1
+call bar dashTab 2
+call bar dashTab 3
+call bar dashTab -- -1 => closed
+call drawers toggle utilities
+call drawers toggle utilities
+call drawers toggle sidebar
+call drawers toggle sidebar
+call drawers toggle session
+call drawers toggle session
+call drawers toggle osd
+call drawers toggle osd
+call bar popout clock
+call bar popoutClose
+call bar popout tray
+call bar popoutClose
+call bar popout network
+call bar popoutClose
+call bar popout bluetooth
+call bar popoutClose
+call bar popout battery
+call bar popoutClose
+call bar popout lockstatus
+call bar popoutClose
+call launcher open
+call launcher search notepad
+call launcher search >
+call launcher search >wallpaper
+sleep 1
+call launcher search >scheme
+call launcher search >variant
+call launcher search =1+2
+call launcher close
+call toaster info smoke check.ps1 info
+call toaster warn smoke check.ps1 warning
+call notifs clear

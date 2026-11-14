@@ -6,62 +6,34 @@ import Quickshell
 import Celeste.Config
 import qs.components.controls
 import qs.services
+import "WallpaperListHelpers.js" as WallpaperListHelpers
 
 PathView {
     id: root
 
-    required property SearchBar search
-    required property var screenState
-    required property var panels
-    required property var content
+    required final property SearchBar search
+    required final property var screenState
+    required final property var panels
+    required final property var content
 
-    readonly property int itemWidth: Tokens.sizes.launcher.wallpaperWidth * 0.8 + Tokens.padding.medium * 2
+    readonly final property int itemWidth: Tokens.sizes.launcher.wallpaperWidth * 0.8 + Tokens.padding.medium * 2
 
-    readonly property int numItems: {
-        const screen = QsWindow.window?.screen;
-        if (!screen)
-            return 0;
-
-        // Screen width - 4x outer rounding - 2x max side thickness (cause centered)
-        const barMargins = Math.max(Config.border.thickness, panels.bar.implicitWidth);
-        let outerMargins = 0;
-        if (panels.popouts.hasCurrent && panels.popouts.currentCenter + panels.popouts.nonAnimHeight / 2 > screen.height - content.implicitHeight - Config.border.thickness * 2)
-            outerMargins = panels.popouts.nonAnimWidth;
-        if ((screenState.utilities || screenState.sidebar) && panels.utilities.implicitWidth > outerMargins)
-            outerMargins = panels.utilities.implicitWidth;
-        const maxWidth = screen.width - Config.border.rounding * 4 - (barMargins + outerMargins) * 2;
-
-        if (maxWidth <= 0)
-            return 0;
-
-        const maxItemsOnScreen = Math.floor(maxWidth / itemWidth);
-        const visible = Math.min(maxItemsOnScreen, Config.launcher.maxWallpapers, scriptModel.values.length);
-
-        if (visible === 2)
-            return 1;
-        if (visible > 1 && visible % 2 === 0)
-            return visible - 1;
-        return visible;
-    }
+    readonly final property int numItems: WallpaperListHelpers.numItems(QsWindow.window, panels, screenState, content, Config.border, Config.launcher.maxWallpapers, itemWidth, scriptModel.values.length)
 
     model: ScriptModel {
         id: scriptModel
 
-        readonly property string search: root.search.text.split(" ").slice(1).join(" ")
+        readonly final property string search: WallpaperListHelpers.search(root.search)
 
         // waku: entries of an earlier directory scan are destroyed, so drop the nulls.
-        values: WallpaperService.query(search).filter(w => w)
-        onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === WallpaperService.actualCurrent)
+        values: WallpaperListHelpers.query(WallpaperService, search)
+        onValuesChanged: root.currentIndex = WallpaperListHelpers.queryIndex(values, search, WallpaperService.actualCurrent)
     }
 
-    Component.onCompleted: currentIndex = WallpaperService.list.findIndex(w => w?.path === WallpaperService.actualCurrent)
+    Component.onCompleted: currentIndex = WallpaperListHelpers.currentIndex(WallpaperService.list, WallpaperService.actualCurrent)
     Component.onDestruction: WallpaperService.stopPreview()
 
-    onCurrentItemChanged: {
-        const path = currentItem?.modelData?.path;
-        if (path)
-            WallpaperService.preview(path);
-    }
+    onCurrentItemChanged: WallpaperListHelpers.preview(WallpaperService, currentItem)
 
     implicitWidth: Math.min(numItems, count) * itemWidth
     pathItemCount: numItems

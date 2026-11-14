@@ -1,24 +1,24 @@
+pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
-import Quickshell.Io
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "Model.js" as Model
-import qs.compat
 
 Panel {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   moduleName: "nomarchy.power"
   ipcTarget: "nomarchy.power"
   // manageIpc: false so this panel can own the single IpcHandler the target
   // permits — needed for the togglePercentage method below.
   manageIpc: false
-  property var batteryInfo: ({})
-  property var systemInfo: ({})
-  property var profiles: []
-  property string activeProfile: ""
+  readonly property var batteryInfo: Model.batteryReadings(UPower.displayDevice)
+  readonly property var profiles: Model.profileNames(PowerProfiles.hasPerformanceProfile)
+  readonly property string activeProfile: Model.profileName(PowerProfiles.profile, profileValues())
   property int profileIndex: 0
   property bool cursorActive: false
   readonly property bool showPercentage: setting("showPercentage", false) === true
@@ -31,7 +31,7 @@ Panel {
     return !!(device && device.isPresent)
   }
 
-  function upowerStates() {
+  function upowerStates(): var {
     return {
       Charging: UPowerDeviceState.Charging,
       Discharging: UPowerDeviceState.Discharging,
@@ -40,26 +40,34 @@ Panel {
     }
   }
 
-  function selectProfileByDelta(delta) {
+  function profileValues(): var {
+    return {
+      PowerSaver: PowerProfile.PowerSaver,
+      Balanced: PowerProfile.Balanced,
+      Performance: PowerProfile.Performance
+    }
+  }
+
+  function selectProfileByDelta(delta: int): void {
     profileIndex = Model.selectProfileIndex(profileIndex, delta, profiles)
   }
 
-  function activateSelectedProfile() {
-    if (profileIndex < 0 || profileIndex >= profiles.length) return
-    setProfile(profiles[profileIndex])
+  function activateSelectedProfile(): void {
+    if (profileIndex < 0 || profileIndex >= Model.sequenceLength(profiles)) return
+    setProfile(Model.sequenceItem(profiles, profileIndex))
   }
 
-  function batteryIcon() {
+  function batteryIcon(): string {
     var device = UPower.displayDevice
     return Model.batteryIcon(device, root.discharging, upowerStates())
   }
 
-  function modeLabel() {
+  function modeLabel(): string {
     var device = UPower.displayDevice
-    return Model.modeLabel(device, root.discharging, upowerStates(), Commons.I18n.t)
+    return Model.modeLabel(device, root.discharging, upowerStates(), Commons.I18n.translator())
   }
 
-  function profileIcon(name) {
+  function profileIcon(name: string): string {
     return Model.profileIcon(name)
   }
 
@@ -90,7 +98,7 @@ Panel {
   }
 
   readonly property color batteryFillColor: {
-    return root.bar ? root.bar.foreground : Commons.Color.foreground
+    return root.contentForeground
   }
 
   // Cute agent-flavored phrases shown in the hero status line, rotated on a
@@ -126,63 +134,33 @@ Panel {
     if (discharging) return onBatteryPhrases
     return []
   }
-  readonly property bool rotatingPhrases: activePhrases.length > 0
+  readonly property bool rotatingPhrases: Model.sequenceLength(activePhrases) > 0
 
   // The battery script's readings in the current language's digits; the
   // time field already comes translated, so it is shown as it arrives.
-  function reading(raw) {
-    return Model.localizeReading(raw, Commons.I18n.formatNumber)
+  function reading(raw: var): string {
+    return Model.localizeReading(raw, Commons.I18n.numberFormatter())
   }
 
   readonly property string heroStatusText: {
     if (fullyCharged) return Commons.I18n.t("power.fullyCharged")
-    if (rotatingPhrases) return activePhrases[phraseIndex % activePhrases.length]
+    if (rotatingPhrases) return activePhrases[phraseIndex % Model.sequenceLength(activePhrases)]
     return modeLabel()
   }
 
-  function refresh() {
-    if (!batteryPresent) return
-
-    if (!batteryProc.running) batteryProc.running = true
-    if (!profilesProc.running) profilesProc.running = true
-    if (!systemProc.running) systemProc.running = true
+  // The battery readings and power modes are live properties of the engine's
+  // UPower and PowerProfiles, so there is nothing to poll.
+  function setProfile(profile: string): void {
+    if (!profile) return
+    PowerProfiles.profile = Model.profileValue(profile, profileValues())
   }
 
-  function updateKeyValue(raw, targetName) {
-    var next = Model.parseKeyValue(raw)
-    // Keep last known good data if a refresh briefly returns nothing — happens
-    // around AC plug/unplug events. Avoids the section collapsing mid-transition.
-    if (Object.keys(next).length === 0) return
-    if (targetName === "battery") batteryInfo = next
-    else systemInfo = next
-  }
-
-  function updateProfiles(raw) {
-    var parsed = Model.parseProfiles(raw, profileIndex)
-    // Same guard as battery: preserve the last known profile list across
-    // transient empty payloads so the buttons don't blink out.
-    if (parsed.profiles.length === 0) return
-    profiles = parsed.profiles
-    activeProfile = parsed.activeProfile
-    profileIndex = parsed.profileIndex
-    if (opened && !cursorActive) {
-      var idx = profiles.indexOf(activeProfile)
-      if (idx >= 0) profileIndex = idx
-    }
-  }
-
-  function setProfile(profile) {
-    if (!profile || actionProc.running) return
-    actionProc.command = ["nomarchy-powerprofiles-set", root.discharging ? "battery" : "ac", profile]
-    actionProc.running = true
-  }
-
-  function togglePercentage() {
+  function togglePercentage(): void {
     root.settings = Object.assign({}, root.settings, { showPercentage: !root.showPercentage })
-    if (root.bar && root.bar.shell) root.bar.shell.updateEntryInline(root.moduleName, root.settings)
+    if (BarValues.hasShell(root.bar)) BarValues.updateEntryInline(root.bar, root.moduleName, root.settings)
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.power"
 
     function open() { root.open() }
@@ -190,7 +168,7 @@ Panel {
     function show() { root.open() }
     function hide() { root.close() }
     function toggle() { root.toggle() }
-    function togglePercentage() { root.togglePercentage() }
+    function togglePercentage(): void { root.togglePercentage() }
   }
 
   onOpenedChanged: {
@@ -203,8 +181,7 @@ Panel {
         return
       }
 
-      refresh()
-      var idx = profiles.indexOf(activeProfile)
+      let idx = profiles.indexOf(activeProfile)
       profileIndex = idx >= 0 ? idx : 0
       cursorActive = false
     }
@@ -215,31 +192,6 @@ Panel {
   visible: batteryPresent
   implicitWidth: batteryPresent ? button.implicitWidth : 0
   implicitHeight: batteryPresent ? button.implicitHeight : 0
-
-  Process {
-    id: batteryProc
-    command: ["nomarchy-battery-status", "--shell"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateKeyValue(text, "battery") }
-  }
-
-  Process {
-    id: profilesProc
-    command: ["nomarchy-powerprofiles-list", "--active-state"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateProfiles(text) }
-  }
-
-  Process {
-    id: systemProc
-    command: ["nomarchy-system-stats"]
-    stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateKeyValue(text, "system") }
-  }
-
-  Process {
-    id: actionProc
-    onExited: root.refresh()
-  }
-
-  Timer { interval: 5000; running: root.opened; repeat: true; onTriggered: root.refresh() }
 
   // Rotate the status phrase while the panel is open and we're in a
   // rotating state (charging or on battery). The text swap is wrapped in a
@@ -256,17 +208,17 @@ Panel {
   SequentialAnimation {
     id: phraseSwap
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent, "statusText") : null; property: "opacity"
       to: 0.0; duration: Style.duration(150); easing.type: Easing.OutCubic
     }
     ScriptAction {
       script: {
-        var n = root.activePhrases.length
+        var n = Model.sequenceLength(root.activePhrases)
         if (n > 0) root.phraseIndex = (root.phraseIndex + 1) % n
       }
     }
     PropertyAnimation {
-      target: panel.loadedContent ? panel.loadedContent.heroStatus : null; property: "opacity"
+      target: panel.loadedContent ? Model.field(panel.loadedContent, "statusText") : null; property: "opacity"
       to: 1.0; duration: Style.duration(200); easing.type: Easing.OutCubic
     }
   }
@@ -279,7 +231,7 @@ Panel {
     function onRotatingPhrasesChanged() {
       if (!root.rotatingPhrases) {
         phraseSwap.stop()
-        if (panel.loadedContent) panel.loadedContent.heroStatus.opacity = 1.0
+        if (panel.loadedContent) Model.setContentOpacity(panel.loadedContent, "statusText", 1.0)
       }
     }
   }
@@ -306,12 +258,14 @@ Panel {
     bar: root.bar
     open: root.opened && root.batteryPresent
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
+    contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, undefined)
 
-    panelContent: PanelKeyCatcher {
+    panelContent: LazyContent {}
+
+    component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      property alias heroStatus: heroStatus
+      final property alias statusText: heroStatus
       anchors.fill: parent
       implicitHeight: column.implicitHeight
       onMoveRequested: function(dx, dy) {
@@ -339,8 +293,8 @@ Panel {
             id: heroIcon
             textFormat: Text.PlainText
             text: root.batteryIcon()
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.display
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -360,8 +314,8 @@ Panel {
             Text {
               text: Commons.I18n.t("power.battery")
               textFormat: Text.PlainText
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
+              color: root.contentForeground
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.title
               font.bold: true
               elide: Text.ElideRight
@@ -372,8 +326,8 @@ Panel {
               id: heroStatus
               textFormat: Text.PlainText
               text: root.heroStatusText.toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(root.contentForeground, 1.4)
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               font.bold: true
               font.letterSpacing: 1.2
@@ -385,9 +339,9 @@ Panel {
           Text {
             id: heroPercent
             textFormat: Text.PlainText
-            text: root.reading(root.batteryInfo.percentage) || "—"
-            color: root.bar.foreground
-            font.family: root.bar.fontFamily
+            text: root.reading(Model.field(root.batteryInfo, "percentage")) || "—"
+            color: root.contentForeground
+            font.family: root.contentFontFamily
             font.pixelSize: Style.font.displayLarge
             font.bold: true
             anchors.right: parent.right
@@ -406,7 +360,7 @@ Panel {
             id: barTrack
             anchors.fill: parent
             radius: height / 2
-            color: Qt.rgba(root.bar.foreground.r, root.bar.foreground.g, root.bar.foreground.b, 0.12)
+            color: Qt.rgba(root.contentForeground.r, root.contentForeground.g, root.contentForeground.b, 0.12)
           }
 
           Rectangle {
@@ -439,47 +393,48 @@ Panel {
         // the battery sits above the charge-control start threshold, and we
         // refuse to flicker the whole panel for that ~1s window.
         Row {
-          visible: root.batteryInfo.percentage !== undefined
+          id: statsRow
+          visible: Model.field(root.batteryInfo, "percentage") !== undefined
           width: parent.width
           spacing: Style.space(20)
 
           Column {
-            width: (parent.width - parent.spacing) / 2
+            width: (statsRow.width - statsRow.spacing) / 2
             spacing: Style.spacing.labelGap
-            InfoPair { label: Commons.I18n.t("power.batterySize"); value: root.reading(root.batteryInfo.size) }
-            InfoPair { label: Commons.I18n.t("power.chargeCycles"); value: root.reading(root.batteryInfo.cycles) || "—" }
+            InfoPair { label: Commons.I18n.t("power.batterySize"); value: root.reading(Model.field(root.batteryInfo, "size")) }
+            InfoPair { label: Commons.I18n.t("power.chargeCycles"); value: root.reading(Model.field(root.batteryInfo, "cycles")) || "—" }
           }
 
           Column {
-            width: (parent.width - parent.spacing) / 2
+            width: (statsRow.width - statsRow.spacing) / 2
             spacing: Style.spacing.labelGap
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.chargeLimit") : (root.discharging ? Commons.I18n.t("power.timeLeft") : Commons.I18n.t("power.timeToFull"))
-              value: root.chargeThresholdActive ? (root.reading(root.batteryInfo.threshold) || "-") : (root.batteryFlowIdle ? "-" : (root.batteryInfo.time || "—"))
+              value: root.chargeThresholdActive ? (root.reading(Model.field(root.batteryInfo, "threshold")) || "-") : (root.batteryFlowIdle ? "-" : (root.reading(Model.field(root.batteryInfo, "time")) || "—"))
             }
             InfoPair {
               label: root.chargeThresholdActive ? Commons.I18n.t("power.batteryState") : (root.discharging ? Commons.I18n.t("power.discharging") : Commons.I18n.t("power.charging"))
-              value: root.chargeThresholdActive ? Commons.I18n.t("power.holding") : (root.batteryFull ? "-" : root.reading(root.batteryInfo.rate))
+              value: root.chargeThresholdActive ? Commons.I18n.t("power.holding") : (root.batteryFull ? "-" : root.reading(Model.field(root.batteryInfo, "rate")))
             }
           }
         }
 
         // ---------- Power profile picker ----------
-        // Windows port: no profiles to list, so no header and no separator either.
+        // The Windows power modes, through the engine's PowerProfiles.
         PanelSeparator {
-          visible: root.profiles.length > 0
-          foreground: root.bar.foreground
+          visible: Model.sequenceLength(root.profiles) > 0
+          foreground: root.contentForeground
         }
 
         Column {
-          visible: root.profiles.length > 0
+          visible: Model.sequenceLength(root.profiles) > 0
           width: parent.width
           spacing: Style.space(10)
 
           PanelSectionHeader {
             text: Commons.I18n.t("power.powerProfile")
-            foreground: root.bar.foreground
-            fontFamily: root.bar.fontFamily
+            foreground: root.contentForeground
+            fontFamily: root.contentFontFamily
           }
 
           Row {
@@ -487,8 +442,8 @@ Panel {
             width: parent.width
             spacing: Style.space(6)
 
-            readonly property real cellWidth: root.profiles.length > 0
-              ? (width - spacing * (root.profiles.length - 1)) / root.profiles.length
+            readonly property real cellWidth: Model.sequenceLength(root.profiles) > 0
+              ? (width - spacing * (Model.sequenceLength(root.profiles) - 1)) / Model.sequenceLength(root.profiles)
               : 0
 
             Repeater {
@@ -499,10 +454,10 @@ Panel {
                 width: profileRow.cellWidth
                 iconText: root.profileIcon(String(modelData))
                 iconSize: Style.font.title
-                text: Model.profileLabel(modelData, Commons.I18n.t)
+                text: Model.profileLabel(modelData, Commons.I18n.translator())
                 fontSize: Style.font.bodySmall
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 horizontalPadding: Style.spacing.controlPaddingX
                 verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
                 bordered: true
@@ -524,29 +479,30 @@ Panel {
   }
 
   component InfoPair: Row {
+    id: infoPair
     property string label: ""
     property string value: ""
 
     width: parent.width
     spacing: Style.space(8)
 
-    InfoLabel { text: label }
-    Item { width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth - parent.spacing * 2); height: 1 }
-    InfoValue { text: value }
+    InfoLabel { text: infoPair.label }
+    Item { width: Math.max(0, infoPair.width - infoPair.children[0].implicitWidth - infoPair.children[2].implicitWidth - infoPair.spacing * 2); height: 1 }
+    InfoValue { text: infoPair.value }
   }
 
   component InfoLabel: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
+    color: root.contentForeground
     opacity: 0.6
-    font.family: root.bar.fontFamily
+    font.family: root.contentFontFamily
     font.pixelSize: Style.font.bodySmall
   }
 
   component InfoValue: Text {
     textFormat: Text.PlainText
-    color: root.bar.foreground
-    font.family: root.bar.fontFamily
+    color: root.contentForeground
+    font.family: root.contentFontFamily
     font.pixelSize: Style.font.bodySmall
   }
 }

@@ -1,4 +1,6 @@
 // Start12: a Start11-style taskbar and Start menu for waku. See README.md.
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku
 import waku.services as S
@@ -14,10 +16,11 @@ ShellRoot {
     }
 
     StartMenu {
-        id: startMenu
+        id: menu
     }
 
     BarWindow {
-        startMenu: startMenu
+        startMenuOpen: menu.visible
+        onStartClicked: menu.toggle()
     }
 }

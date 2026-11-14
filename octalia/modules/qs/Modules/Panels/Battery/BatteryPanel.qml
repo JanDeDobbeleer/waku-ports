@@ -1,9 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Services.UPower
 import qs.Commons
+import "BatteryPanelUtils.js" as BatteryPanelUtils
 import qs.Modules.MainScreen
 import qs.Services.Hardware
 import qs.Services.Networking
@@ -22,34 +23,34 @@ SmartPanel {
 
     property real contentPreferredHeight: mainLayout.implicitHeight + Style.margin2L
 
-    property var batteryWidgetInstance: BarService.lookupWidget("Battery", screen ? screen.name : null)
-    readonly property var batteryWidgetSettings: batteryWidgetInstance ? batteryWidgetInstance.widgetSettings : null
-    readonly property var batteryWidgetMetadata: BarWidgetRegistry.widgetMetadata["Battery"]
+    property var batteryWidgetInstance: BarService.lookupWidget("Battery", root.screen ? root.screen.name : null)
+    readonly property var batteryWidgetSettings: BatteryPanelUtils.field(batteryWidgetInstance, "widgetSettings")
+    readonly property var batteryWidgetMetadata: BatteryPanelUtils.field(BarWidgetRegistry.widgetMetadata, "Battery")
     readonly property bool powerProfileAvailable: PowerProfileService.available
     readonly property var powerProfiles: [PowerProfile.PowerSaver, PowerProfile.Balanced, PowerProfile.Performance]
     readonly property bool profilesAvailable: PowerProfileService.available
     property int profileIndex: profileToIndex(PowerProfileService.profile)
-    readonly property bool showPowerProfiles: panelID ? panelID.showPowerProfiles : resolveWidgetSetting("showPowerProfiles", false)
-    readonly property bool showOctaliaPerformance: panelID ? panelID.showOctaliaPerformance : resolveWidgetSetting("showOctaliaPerformance", false)
+    readonly property bool showPowerProfiles: root.panelID ? BatteryPanelUtils.field(root.panelID, "showPowerProfiles") : resolveWidgetSetting("showPowerProfiles", false)
+    readonly property bool showOctaliaPerformance: root.panelID ? BatteryPanelUtils.field(root.panelID, "showOctaliaPerformance") : resolveWidgetSetting("showOctaliaPerformance", false)
     readonly property bool isLowBattery: BatteryService.isLowBattery
     readonly property bool isCriticalBattery: BatteryService.isCriticalBattery
     readonly property var primaryDevice: BatteryService.primaryDevice
 
-    function profileToIndex(p) {
+    function profileToIndex(p: var): int {
       return powerProfiles.indexOf(p) ?? 1;
     }
 
-    function indexToProfile(idx) {
+    function indexToProfile(idx: int): var {
       return powerProfiles[idx] ?? PowerProfile.Balanced;
     }
 
-    function setProfileByIndex(idx) {
+    function setProfileByIndex(idx: int): void {
       var prof = indexToProfile(idx);
       profileIndex = idx;
       PowerProfileService.setProfile(prof);
     }
 
-    function resolveWidgetSetting(key, defaultValue) {
+    function resolveWidgetSetting(key: string, defaultValue: var): var {
       if (batteryWidgetSettings && batteryWidgetSettings[key] !== undefined)
         return batteryWidgetSettings[key];
       if (batteryWidgetMetadata && batteryWidgetMetadata[key] !== undefined)
@@ -67,7 +68,7 @@ SmartPanel {
     Connections {
       target: BarService
       function onActiveWidgetsChanged() {
-        panelContent.batteryWidgetInstance = BarService.lookupWidget("Battery", screen ? screen.name : null);
+        panelContent.batteryWidgetInstance = BarService.lookupWidget("Battery", root.screen ? root.screen.name : null);
       }
     }
 
@@ -90,8 +91,8 @@ SmartPanel {
 
           NIcon {
             pointSize: Style.fontSizeXXL
-            color: (BatteryService.isCharging(primaryDevice) || BatteryService.isPluggedIn(primaryDevice)) ? Color.mPrimary : (BatteryService.isCriticalBattery(primaryDevice) || BatteryService.isLowBattery(primaryDevice)) ? Color.mError : Color.mOnSurface
-            icon: BatteryService.getIcon(BatteryService.getPercentage(primaryDevice), BatteryService.isCharging(primaryDevice), BatteryService.isPluggedIn(primaryDevice), BatteryService.isDeviceReady(primaryDevice))
+            color: (BatteryService.isCharging(panelContent.primaryDevice) || BatteryService.isPluggedIn(panelContent.primaryDevice)) ? Color.mPrimary : (BatteryService.isCriticalBattery(panelContent.primaryDevice) || BatteryService.isLowBattery(panelContent.primaryDevice)) ? Color.mError : Color.mOnSurface
+            icon: BatteryService.getIcon(BatteryService.getPercentage(panelContent.primaryDevice), BatteryService.isCharging(panelContent.primaryDevice), BatteryService.isPluggedIn(panelContent.primaryDevice), BatteryService.isDeviceReady(panelContent.primaryDevice))
           }
 
           ColumnLayout {
@@ -120,7 +121,7 @@ SmartPanel {
       NBox {
         Layout.fillWidth: true
         implicitHeight: chargeLayout.implicitHeight + Style.margin2L
-        visible: BatteryService.laptopBatteries.length > 0 || BatteryService.bluetoothBatteries.length > 0
+        visible: BatteryPanelUtils.arrayLength(BatteryService.laptopBatteries) > 0 || BatteryPanelUtils.arrayLength(BatteryService.bluetoothBatteries) > 0
 
         ColumnLayout {
           id: chargeLayout
@@ -132,6 +133,8 @@ SmartPanel {
           Repeater {
             model: BatteryService.laptopBatteries
             delegate: ColumnLayout {
+              id: laptopBattery
+              required property var modelData
               Layout.fillWidth: true
               spacing: Style.marginS
 
@@ -154,14 +157,14 @@ SmartPanel {
                         anchors.fill: parent
 
                         NIcon {
-                          icon: BatteryService.getIcon(BatteryService.getPercentage(modelData), BatteryService.isCharging(modelData), BatteryService.isPluggedIn(modelData), BatteryService.isDeviceReady(modelData))
-                          color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                          icon: BatteryService.getIcon(BatteryService.getPercentage(laptopBattery.modelData), BatteryService.isCharging(laptopBattery.modelData), BatteryService.isPluggedIn(laptopBattery.modelData), BatteryService.isDeviceReady(laptopBattery.modelData))
+                          color: (BatteryService.isCharging(laptopBattery.modelData) || BatteryService.isPluggedIn(laptopBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(laptopBattery.modelData) || BatteryService.isLowBattery(laptopBattery.modelData)) ? Color.mError : Color.mOnSurface
                         }
 
                         NText {
-                          readonly property string dName: BatteryService.getDeviceName(modelData)
+                          readonly property string dName: BatteryService.getDeviceName(laptopBattery.modelData)
                           text: dName ? dName : I18n.tr("common.battery")
-                          color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                          color: (BatteryService.isCharging(laptopBattery.modelData) || BatteryService.isPluggedIn(laptopBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(laptopBattery.modelData) || BatteryService.isLowBattery(laptopBattery.modelData)) ? Color.mError : Color.mOnSurface
                           pointSize: Style.fontSizeS
                         }
                       }
@@ -172,7 +175,7 @@ SmartPanel {
                     }
 
                     NText {
-                      text: BatteryService.getTimeRemainingText(modelData)
+                      text: BatteryService.getTimeRemainingText(laptopBattery.modelData)
                       pointSize: Style.fontSizeS
                       color: Color.mOnSurfaceVariant
                     }
@@ -183,16 +186,16 @@ SmartPanel {
                     spacing: Style.marginS
                     Rectangle {
                       Layout.fillWidth: true
-                      height: Math.round(8 * Style.uiScaleRatio)
+                      Layout.preferredHeight: Math.round(8 * Style.uiScaleRatio)
                       radius: Math.min(Style.radiusL, height / 2)
                       color: Color.mSurface
 
                       Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         height: parent.height
-                        radius: parent.radius
+                        radius: Math.min(Style.radiusL, height / 2)
                         width: {
-                          var p = BatteryService.getPercentage(modelData);
+                          var p = BatteryService.getPercentage(laptopBattery.modelData);
                           var ratio = Math.max(0, Math.min(1, p / 100));
                           return parent.width * ratio;
                         }
@@ -203,8 +206,8 @@ SmartPanel {
                     NText {
                       Layout.preferredWidth: 40 * Style.uiScaleRatio
                       horizontalAlignment: Text.AlignRight
-                      text: `${BatteryService.getPercentage(modelData)}%`
-                      color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                      text: `${BatteryService.getPercentage(laptopBattery.modelData)}%`
+                      color: (BatteryService.isCharging(laptopBattery.modelData) || BatteryService.isPluggedIn(laptopBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(laptopBattery.modelData) || BatteryService.isLowBattery(laptopBattery.modelData)) ? Color.mError : Color.mOnSurface
                       pointSize: Style.fontSizeS
                       font.weight: Style.fontWeightBold
                     }
@@ -216,13 +219,15 @@ SmartPanel {
 
           NDivider {
             Layout.fillWidth: true
-            visible: BatteryService.laptopBatteries.length > 0 && BatteryService.bluetoothBatteries.length > 0
+            visible: BatteryPanelUtils.arrayLength(BatteryService.laptopBatteries) > 0 && BatteryPanelUtils.arrayLength(BatteryService.bluetoothBatteries) > 0
           }
 
           // Other devices (Bluetooth) section
           Repeater {
             model: BatteryService.bluetoothBatteries
             delegate: ColumnLayout {
+              id: bluetoothBattery
+              required property var modelData
               Layout.fillWidth: true
               spacing: Style.marginS
               RowLayout {
@@ -230,14 +235,14 @@ SmartPanel {
                 spacing: Style.marginS
 
                 NIcon {
-                  icon: BluetoothService.getDeviceIcon(modelData)
-                  color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                  icon: BluetoothService.getDeviceIcon(bluetoothBattery.modelData)
+                  color: (BatteryService.isCharging(bluetoothBattery.modelData) || BatteryService.isPluggedIn(bluetoothBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(bluetoothBattery.modelData) || BatteryService.isLowBattery(bluetoothBattery.modelData)) ? Color.mError : Color.mOnSurface
                 }
 
                 NText {
-                  readonly property string dName: BatteryService.getDeviceName(modelData)
+                  readonly property string dName: BatteryService.getDeviceName(bluetoothBattery.modelData)
                   text: dName ? dName : I18n.tr("common.bluetooth")
-                  color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                  color: (BatteryService.isCharging(bluetoothBattery.modelData) || BatteryService.isPluggedIn(bluetoothBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(bluetoothBattery.modelData) || BatteryService.isLowBattery(bluetoothBattery.modelData)) ? Color.mError : Color.mOnSurface
                   pointSize: Style.fontSizeS
                 }
               }
@@ -247,16 +252,16 @@ SmartPanel {
 
                 Rectangle {
                   Layout.fillWidth: true
-                  height: Math.round(8 * Style.uiScaleRatio)
+                  Layout.preferredHeight: Math.round(8 * Style.uiScaleRatio)
                   radius: Math.min(Style.radiusL, height / 2)
                   color: Color.mSurface
 
                   Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     height: parent.height
-                    radius: parent.radius
+                    radius: Math.min(Style.radiusL, height / 2)
                     width: {
-                      var p = BatteryService.getPercentage(modelData);
+                      var p = BatteryService.getPercentage(bluetoothBattery.modelData);
                       var ratio = Math.max(0, Math.min(1, p / 100));
                       return parent.width * ratio;
                     }
@@ -267,8 +272,8 @@ SmartPanel {
                 NText {
                   Layout.preferredWidth: 40 * Style.uiScaleRatio
                   horizontalAlignment: Text.AlignRight
-                  text: `${BatteryService.getPercentage(modelData)}%`
-                  color: (BatteryService.isCharging(modelData) || BatteryService.isPluggedIn(modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(modelData) || BatteryService.isLowBattery(modelData)) ? Color.mError : Color.mOnSurface
+                  text: `${BatteryService.getPercentage(bluetoothBattery.modelData)}%`
+                  color: (BatteryService.isCharging(bluetoothBattery.modelData) || BatteryService.isPluggedIn(bluetoothBattery.modelData)) ? Color.mPrimary : (BatteryService.isCriticalBattery(bluetoothBattery.modelData) || BatteryService.isLowBattery(bluetoothBattery.modelData)) ? Color.mError : Color.mOnSurface
                   pointSize: Style.fontSizeS
                   font.weight: Style.fontWeightBold
                 }
@@ -280,8 +285,8 @@ SmartPanel {
 
       NBox {
         Layout.fillWidth: true
-        height: controlsLayout.implicitHeight + Style.margin2L
-        visible: showPowerProfiles || showOctaliaPerformance
+        Layout.preferredHeight: controlsLayout.implicitHeight + Style.margin2L
+        visible: panelContent.showPowerProfiles || panelContent.showOctaliaPerformance
 
         ColumnLayout {
           id: controlsLayout
@@ -290,7 +295,7 @@ SmartPanel {
           spacing: Style.marginM
 
           ColumnLayout {
-            visible: powerProfileAvailable && showPowerProfiles
+            visible: panelContent.powerProfileAvailable && panelContent.showPowerProfiles
 
             RowLayout {
               Layout.fillWidth: true
@@ -304,7 +309,7 @@ SmartPanel {
               }
 
               NText {
-                text: PowerProfileService.getName(profileIndex)
+                text: PowerProfileService.getName(panelContent.profileIndex)
                 color: Color.mOnSurfaceVariant
               }
             }
@@ -316,15 +321,15 @@ SmartPanel {
               stepSize: 1
               snapAlways: true
               heightRatio: 0.5
-              value: profileIndex
-              enabled: profilesAvailable
+              value: panelContent.profileIndex
+              enabled: panelContent.profilesAvailable
               onPressedChanged: (pressed, v) => {
                                   if (!pressed) {
-                                    setProfileByIndex(v);
+                                    panelContent.setProfileByIndex(v);
                                   }
                                 }
               onMoved: v => {
-                         profileIndex = v;
+                         panelContent.profileIndex = v;
                        }
             }
 
@@ -335,33 +340,33 @@ SmartPanel {
               NIcon {
                 icon: "powersaver"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "powersaver" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "powersaver" ? Color.mPrimary : Color.mOnSurfaceVariant
               }
 
               NIcon {
                 icon: "balanced"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "balanced" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "balanced" ? Color.mPrimary : Color.mOnSurfaceVariant
                 Layout.fillWidth: true
               }
 
               NIcon {
                 icon: "performance"
                 pointSize: Style.fontSizeS
-                color: PowerProfileService.getIcon() === "performance" ? Color.mPrimary : Color.mOnSurfaceVariant
+                color: PowerProfileService.getIcon(undefined) === "performance" ? Color.mPrimary : Color.mOnSurfaceVariant
               }
             }
           }
 
           NDivider {
             Layout.fillWidth: true
-            visible: showPowerProfiles && PowerProfileService.available && showOctaliaPerformance
+            visible: panelContent.showPowerProfiles && PowerProfileService.available && panelContent.showOctaliaPerformance
           }
 
           RowLayout {
             Layout.fillWidth: true
             spacing: Style.marginS
-            visible: showOctaliaPerformance
+            visible: panelContent.showOctaliaPerformance
 
             NText {
               text: I18n.tr("toast.octalia-performance.label")

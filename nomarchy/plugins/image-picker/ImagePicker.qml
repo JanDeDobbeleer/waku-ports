@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -10,6 +11,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "ImagePickerModel.js" as ImagePickerModel
+import "../bar/I18nModel.js" as I18nModel
 
 Item {
   id: root
@@ -34,9 +36,11 @@ Item {
   property bool requestActive: false
   property int requestSerial: 0
   property int applySerial: 0
+  property int deferredRowsSerial: 0
+  property string deferredRows: ""
   property string doneFile: ""
   property string filterText: ""
-  property var doneFilesToRelease: []
+  property list<var> doneFilesToRelease: []
   // Themes open from rows the shell already holds, so the picker shows without
   // waiting on nomarchy-theme-switcher; each open refreshes them behind it.
   property string themeRows: ""
@@ -47,8 +51,8 @@ Item {
   readonly property string portPath: String(root.nomarchyPath).replace(/\\/g, "/")
   readonly property string previewsPath: root.home + "/.cache/nomarchy/theme-selector/previews"
   property bool themeOpenPending: false
-  property var extraThemeNames: []
-  property var stockThemeNames: []
+  property list<var> extraThemeNames: []
+  property list<var> stockThemeNames: []
   property bool stockThemesKnown: false
   property bool awaitingDeleteRefresh: false
   property string pendingDeleteTheme: ""
@@ -82,17 +86,17 @@ Item {
     onHeldChanged: if (!held) root.neighborImagesEnabled = false
   }
 
-  function scriptPath(name) {
+  function scriptPath(name: var): var {
     return nomarchyPath + "/plugins/image-picker/" + name
   }
 
-  function focusPicker() {
+  function focusPicker(): var {
     if (root.opened && root.imagesLoaded && root.layoutSettled)
       carousel.forceActiveFocus()
   }
 
-  function revealWhenSettled(serial) {
-    Qt.callLater(function() {
+  function revealWhenSettled(serial: var): var {
+    Qt.callLater(function(): var {
       if (serial === root.requestSerial) root.maybeReveal()
     })
   }
@@ -101,59 +105,55 @@ Item {
   // and its masked layers have presented, so the picker lands in one
   // complete frame instead of flashing its images in as each asynchronous
   // decode and layer upload finishes.
-  function allPreviewsSettled() {
+  function allPreviewsSettled(): bool {
     if (!opened || !imagesLoaded || layoutSettled || imageArray.length === 0 || imageCards.count === 0) return false
-    for (var i = 0; i < imageCards.count; i++) {
-      var item = imageCards.itemAt(i)
-      if (!item || !item.previewSettled) return false
-    }
-    return true
+    return ImagePickerModel.allPreviewsSettled(imageCards)
   }
 
-  function settleReveal() {
+  function settleReveal(): var {
     if (!opened || !imagesLoaded || layoutSettled || imageArray.length === 0) return
     layoutSettled = true
     focusPicker()
   }
 
-  function maybeReveal() {
+  function maybeReveal(): var {
     if (!allPreviewsSettled() || renderedFrames < 2) return
     // Confirm on the next tick: delegates inserted later in the same window
     // sync must not pop in after an early all-ready reading.
-    Qt.callLater(function() {
+    Qt.callLater(function(): var {
       if (root.allPreviewsSettled() && root.renderedFrames >= 2) root.settleReveal()
     })
   }
 
-  function currentPath() {
+  function currentPath(): var {
     if (imageArray.length === 0 || !itemMatches(selectedIndex)) return ""
-    return imageArray[selectedIndex].filePath
+    return ImagePickerModel.filePathAt(imageArray, selectedIndex)
   }
 
-  function nameForPath(path) {
+  function nameForPath(path: var): var {
     return ImagePickerModel.nameForPath(path)
   }
 
-  function labelForPath(path) {
+  function labelForPath(path: var): var {
     return ImagePickerModel.labelForPath(path)
   }
 
-  function currentLabel() {
+  function currentLabel(): var {
     var path = currentPath()
-    if (!path) return filterText ? Commons.I18n.t("common.noMatches") : ""
+    if (!path) return filterText ? I18nModel.translate(Commons.I18n, "common.noMatches") : ""
 
     return labelForPath(path)
   }
 
-  function itemMatches(index) {
+  function itemMatches(index: var): var {
     return ImagePickerModel.itemMatches(imageArray, index, filterText)
   }
 
-  function firstMatchingIndex() {
+  function firstMatchingIndex(): var {
     return ImagePickerModel.firstMatchingIndex(imageArray, filterText)
   }
 
-  function select(index, immediate) {
+  function select(index: var, immediate: var): var {
     if (imageArray.length === 0) return
     if (index < 0) index = 0
     else if (index >= imageArray.length) index = imageArray.length - 1
@@ -163,30 +163,30 @@ Item {
     selectedIndex = index
   }
 
-  function selectAdjacent(direction) {
-    var count = imageArray.length
+  function selectAdjacent(direction: var): var {
+    var count = ImagePickerModel.sequenceLength(imageArray)
     if (count === 0) return
 
     var index = selectedIndex
-    for (var i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
       index = (index + direction + count) % count
       if (itemMatches(index)) {
-        select(index)
+        select(index, undefined)
         return
       }
     }
   }
 
-  function updateFilter(nextFilterText) {
+  function updateFilter(nextFilterText: var): var {
     filterText = nextFilterText
 
     if (!itemMatches(selectedIndex)) {
-      var first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, filterText)
+      let first = ImagePickerModel.nextSelectedIndexForFilter(imageArray, selectedIndex, filterText)
       if (first >= 0) selectedIndex = first
     }
   }
 
-  function releaseNextDoneFile() {
+  function releaseNextDoneFile(): var {
     if (releaseProc.running || doneFilesToRelease.length === 0) return
 
     var path = doneFilesToRelease.shift()
@@ -194,13 +194,13 @@ Item {
     releaseProc.running = true
   }
 
-  function finishDoneFile(path) {
+  function finishDoneFile(path: var): var {
     if (!path) return
     doneFilesToRelease.push(path)
     releaseNextDoneFile()
   }
 
-  function applySelected() {
+  function applySelected(): var {
     if (themeMode && (deleteThemeProc.running || awaitingDeleteRefresh)) return
     var path = currentPath()
 
@@ -234,7 +234,7 @@ Item {
     applyProc.running = true
   }
 
-  function cancel() {
+  function cancel(): var {
     themeOpenPending = false
 
     if (requestActive)
@@ -246,7 +246,7 @@ Item {
     root.opened = false
   }
 
-  function closeSelector(nextDoneFile) {
+  function closeSelector(nextDoneFile: var): var {
     requestSerial += 1
     themeOpenPending = false
 
@@ -263,7 +263,11 @@ Item {
     root.opened = false
   }
 
-  function loadRows(rows, reveal) {
+  function loadDeferredRows(): void {
+    if (deferredRowsSerial === requestSerial) root.loadRows(deferredRows, true)
+  }
+
+  function loadRows(rows: var, reveal: var): var {
     var newImages = ImagePickerModel.loadRows(rows)
 
     root.loadedImageRows = rows
@@ -280,7 +284,7 @@ Item {
     }
   }
 
-  function openSelector(nextImageDirs, nextImageRows, nextSelectedImage, nextSelectionFile, nextDoneFile, nextShowLabels, nextFilterable) {
+  function openSelector(nextImageDirs: var, nextImageRows: var, nextSelectedImage: var, nextSelectionFile: var, nextDoneFile: var, nextShowLabels: var, nextFilterable: var): var {
     deleteConfirmOpen = false
     pendingDeleteTheme = ""
     deleteSelectionPath = ""
@@ -313,16 +317,13 @@ Item {
     }
 
     if (imageRows) {
-      var rowsToLoad = imageRows
-      var rowsSerial = requestSerial
       imageArray = []
       selectedIndex = 0
       imagesLoaded = true
       opened = true
-      Qt.callLater(function() {
-        if (rowsSerial === root.requestSerial)
-          root.loadRows(rowsToLoad, true)
-      })
+      deferredRows = imageRows
+      deferredRowsSerial = requestSerial
+      deferredRowsTimer.restart()
       return
     }
 
@@ -333,7 +334,13 @@ Item {
     startImageScan(requestSerial, imageDirs)
   }
 
-  property var imageArray: []
+  Timer {
+    id: deferredRowsTimer
+    interval: 0
+    onTriggered: root.loadDeferredRows()
+  }
+
+  property list<var> imageArray: []
   readonly property var matchingImageIndices: ImagePickerModel.matchingIndices(imageArray, filterText)
   onMatchingImageIndicesChanged: updateVisibleItems()
   onSelectedIndexChanged: {
@@ -360,37 +367,34 @@ Item {
     onExited: if (root.opened && root.themeMode && theme !== root.nameForPath(root.currentPath())) introPrepareTimer.restart()
   }
 
-  function updateVisibleItems() {
+  function updateVisibleItems(): var {
     ImagePickerModel.syncWindow(visibleImages, ImagePickerModel.visibleWindow(matchingImageIndices, selectedIndex, previewRadius))
   }
 
-  function enableNeighborsWhenReady() {
-    for (var i = 0; i < imageCards.count; i++) {
-      var item = imageCards.itemAt(i)
-      if (item && item.selected && item.previewReady) neighborImagesEnabled = true
-    }
+  function enableNeighborsWhenReady(): var {
+    if (ImagePickerModel.selectedPreviewReady(imageCards)) neighborImagesEnabled = true
   }
 
   ListModel { id: visibleImages }
 
 
-  function currentThemePreview() {
+  function currentThemePreview(): var {
     var name = String(themeNameFile.text() || "").trim()
     var images = ImagePickerModel.loadRows(themeRows)
-    for (var i = 0; i < images.length; i++) {
+    for (let i = 0; i < images.length; i++) {
       if (nameForPath(images[i].filePath) === name) return images[i].filePath
     }
     return ""
   }
 
   // Windows PowerShell ships with Windows; the script rewrites the files the shell watches.
-  function applyTheme(name) {
+  function applyTheme(name: var): var {
     Quickshell.execDetached(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", root.portPath + "/tools/theme-apply.ps1", String(name)])
   }
 
   // The images of the folder the current wallpaper lives in; the engine's own list stays empty
   // until something configures its folder.
-  function wallpaperDir() {
+  function wallpaperDir(): var {
     var env = String(Quickshell.env("NOMARCHY_WALLPAPER_DIR") || "")
     if (env) return env.replace(/\\/g, "/")
     var current = String(S.Wallpapers.current || "").replace(/\\/g, "/")
@@ -402,7 +406,7 @@ Item {
 
   // The engine ignores setWallpaper ("No image paths configured") until it has been told its folder,
   // so give it the folder of the picked image first. No hotkey, no auto-change: this shell owns those.
-  function setWallpaper(path) {
+  function setWallpaper(path: var): var {
     var file = path.replace(/\\/g, "/")
     var folder = file.lastIndexOf("/") > 0 ? file.slice(0, file.lastIndexOf("/")) : root.wallpaperDir()
     if (String(S.Wallpapers.imagePath).replace(/\\/g, "/") !== folder) S.Wallpapers.configure(folder, "", "primary", 0)
@@ -415,7 +419,7 @@ Item {
   // 2x; theme previews are small already and load as files.
   readonly property int thumbnailWidth: 1280
 
-  function cardSource(path) {
+  function cardSource(path: var): var {
     if (!path) return ""
     if (!wallpaperMode) return Util.fileUrl(path)
     return W.Thumbnails.url(String(path).replace(/\\/g, "/"), thumbnailWidth)
@@ -423,15 +427,9 @@ Item {
 
   // Fills the thumbnail cache in the background, the current wallpaper first and then its
   // neighbours outward, so the picker opens on images that are ready.
-  function prewarmWallpapers(paths, current) {
-    var n = paths.length
-    if (n === 0) return
-    var start = Math.max(0, paths.indexOf(current))
-    var order = [paths[start]]
-    for (var d = 1; order.length < n; d++) {
-      if (order.length < n) order.push(paths[(start + d) % n])
-      if (order.length < n && 2 * d < n) order.push(paths[(start - d + n) % n])
-    }
+  function prewarmWallpapers(paths: var, current: var): var {
+    var order = ImagePickerModel.prewarmOrder(paths, current)
+    if (order.length === 0) return
     W.Thumbnails.cancelPrewarm()
     W.Thumbnails.prewarm(order, thumbnailWidth)
   }
@@ -439,10 +437,10 @@ Item {
   // The scan takes a moment. Until its result arrives the picker may still show the theme layout
   // (the background hotkey pressed while the theme switcher is open), so the old cards go at once,
   // and a list from an earlier scan of the same folder opens without waiting.
-  property var wallpaperCache: []
+  property list<var> wallpaperCache: []
   property string wallpaperCacheDir: ""
 
-  function openWallpapers() {
+  function openWallpapers(): var {
     wallpaperPending = String(S.Wallpapers.current || "").replace(/\\/g, "/")
     if (opened && !wallpaperMode) {
       imageArray = []
@@ -458,14 +456,14 @@ Item {
     scanWallpapers()
   }
 
-  function openWallpaperList(list) {
+  function openWallpaperList(list: var): var {
     root.openSelector("", list.join("\n"), root.wallpaperPending, "", "", true, true)
     root.wallpaperMode = true
   }
 
   property bool wallpaperWarmOnly: false
 
-  function scanWallpapers() {
+  function scanWallpapers(): var {
     if (wallpaperRowsProc.running) return
     wallpaperRowsProc.command = [root.gitFind, root.wallpaperDir(), "-maxdepth", "2", "-type", "f", "(",
       "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", "-o", "-iname", "*.bmp", ")"]
@@ -482,9 +480,8 @@ Item {
     id: wallpaperRowsProc
     stdout: StdioCollector {
       onStreamFinished: {
-        var list = String(text || "").split("\n").map(function(l) { return l.trim().replace(/\\/g, "/") })
-          .filter(function(l) { return l.length > 0 }).sort()
-        if (list.length === 0) return
+        var list = ImagePickerModel.normalizedLines(text)
+        if (ImagePickerModel.sequenceLength(list) === 0) return
         var current = root.wallpaperPending || String(S.Wallpapers.current || "").replace(/\\/g, "/")
         root.wallpaperCache = list
         root.wallpaperCacheDir = root.wallpaperDir()
@@ -495,7 +492,7 @@ Item {
     }
   }
 
-  function openThemes() {
+  function openThemes(): var {
     if (themeRows) {
       openThemeRows()
     } else {
@@ -507,54 +504,54 @@ Item {
     refreshStockThemes()
   }
 
-  function openThemeRows() {
+  function openThemeRows(): var {
     openSelector("", themeRows, currentThemePreview(), "", "", true, true)
     themeMode = true
   }
 
   // A refresh asked mid-refresh (a deletion finishing behind the open-time
   // one) queues a second pass instead of leaving the list stale.
-  function refreshThemeRows() {
+  function refreshThemeRows(): var {
     if (themeRowsProc.running) { themeRowsProc.queued = true; return }
     themeRowsProc.running = true
   }
 
-  function refreshExtraThemes() {
+  function refreshExtraThemes(): var {
     if (extraThemesProc.running) { extraThemesProc.queued = true; return }
     extraThemesProc.running = true
   }
 
-  function refreshStockThemes() {
+  function refreshStockThemes(): var {
     if (!stockThemesProc.running) stockThemesProc.running = true
   }
 
-  function selectedThemeName() {
+  function selectedThemeName(): var {
     return nameForPath(currentPath())
   }
 
-  function canDeleteSelectedTheme() {
+  function canDeleteSelectedTheme(): bool {
     return false // Windows port: nomarchy-theme-remove does not exist
   }
 
-  function canDeleteSelectedThemeUpstream() {
+  function canDeleteSelectedThemeUpstream(): var {
     return themeMode && !deleteThemeProc.running && !awaitingDeleteRefresh && stockThemesKnown && ImagePickerModel.canDeleteTheme(selectedThemeName(), extraThemeNames, stockThemeNames)
   }
 
-  function requestDeleteSelectedTheme() {
+  function requestDeleteSelectedTheme(): var {
     if (!canDeleteSelectedTheme()) return
     pendingDeleteTheme = selectedThemeName()
     deleteConfirm.selectedIndex = 1
     deleteConfirmOpen = true
   }
 
-  function cancelDeleteTheme() {
+  function cancelDeleteTheme(): var {
     deleteConfirmOpen = false
     pendingDeleteTheme = ""
   }
 
   // Removal itself is nomarchy-theme-remove's job (including its guards and
   // notification); the picker only refreshes its rows once it finishes.
-  function confirmDeleteTheme() {
+  function confirmDeleteTheme(): var {
     var name = pendingDeleteTheme
     deleteConfirmOpen = false
     pendingDeleteTheme = ""
@@ -565,7 +562,7 @@ Item {
     deleteThemeProc.running = true
   }
 
-  function updateThemeRows(rows) {
+  function updateThemeRows(rows: var): var {
     var changed = rows !== themeRows
     themeRows = rows
 
@@ -596,8 +593,7 @@ Item {
     property bool queued: false
     command: [root.gitFind, root.previewsPath, "-maxdepth", "1", "-type", "f", "-name", "*.png"]
     stdout: StdioCollector {
-      onStreamFinished: root.updateThemeRows(String(text || "").split("\n").map(function(l) { return l.trim().replace(/\\/g, "/") })
-        .filter(function(l) { return l.length > 0 }).sort().join("\n"))
+      onStreamFinished: root.updateThemeRows(ImagePickerModel.normalizedLines(text).join("\n"))
     }
     onExited: {
       if (queued) {
@@ -632,12 +628,12 @@ Item {
     }
     // Until this lands, stockThemeNames is empty and an override would look
     // deletable: deletion stays disabled unless the listing succeeded.
-    onExited: function(exitCode) { if (exitCode === 0) root.stockThemesKnown = true }
+    onExited: function(exitCode: int): var { if (exitCode === 0) root.stockThemesKnown = true }
   }
 
   Process {
     id: deleteThemeProc
-    onExited: function(exitCode) {
+    onExited: function(exitCode: int): var {
       if (exitCode === 0) root.awaitingDeleteRefresh = true
       else root.deleteSelectionPath = ""
       root.refreshExtraThemes()
@@ -651,7 +647,7 @@ Item {
     refreshStockThemes()
   }
 
-  function startImageScan(serial, dirs) {
+  function startImageScan(serial: var, dirs: var): var {
     if (loadImagesProc.running) {
       loadImagesProc.queuedSerial = serial
       loadImagesProc.queuedDirs = dirs
@@ -665,11 +661,11 @@ Item {
     loadImagesProc.running = true
   }
 
-  function indexForSelectedImage(images) {
+  function indexForSelectedImage(images: var): var {
     return ImagePickerModel.indexForSelectedImage(images, selectedImage)
   }
 
-  function selectedImageIndex() {
+  function selectedImageIndex(): var {
     return indexForSelectedImage(imageArray)
   }
 
@@ -700,31 +696,29 @@ Item {
   // payloadJson) hands the JSON to open() here; shell.hide(id) calls close().
   // The shell host owns the stable `image-selector` IPC target and forwards
   // those lower-level positional calls here.
-  function open(payload) {
-    var args = {}
-    if (payload) {
-      try { args = JSON.parse(payload) || {} } catch (e) { args = {} }
-    }
-    if (args.source === "themes") {
+  function open(payload: var): var {
+    var source = ImagePickerModel.payloadSource(payload)
+    if (source === "themes") {
       openThemes()
       return
     }
-    if (args.source === "wallpapers") {
+    if (source === "wallpapers") {
       openWallpapers()
       return
     }
-    var dirs = String(args.imageDirs || imageDirs)
-    var rows = String(args.imageRows || "")
-    var sel = String(args.selectedImage || selectedImage)
-    var selFile = String(args.selectionFile || "")
-    var doneF = String(args.doneFile || "")
-    var labels = args.showLabels === true || args.showLabels === "true"
-    var filter = args.filterable === true || args.filterable === "true"
-    openSelector(dirs, rows, sel, selFile, doneF, labels, filter)
+    openSelector(
+      ImagePickerModel.payloadString(payload, "imageDirs", imageDirs),
+      ImagePickerModel.payloadString(payload, "imageRows", ""),
+      ImagePickerModel.payloadString(payload, "selectedImage", selectedImage),
+      ImagePickerModel.payloadString(payload, "selectionFile", ""),
+      ImagePickerModel.payloadString(payload, "doneFile", ""),
+      ImagePickerModel.payloadBoolean(payload, "showLabels"),
+      ImagePickerModel.payloadBoolean(payload, "filterable")
+    )
   }
 
   // PORTDBG: pick row `index` as Enter would, for `wakuc call shell call nomarchy.image-picker debugApply 1`
-  function debugApply(index) {
+  function debugApply(index: var): var {
     selectedIndex = Number(index)
     var path = currentPath()
     applySelected()
@@ -732,19 +726,18 @@ Item {
   }
 
   // PORTDBG: state dump for `wakuc call shell call nomarchy.image-picker debugState x`
-  function debugState() {
+  function debugState(): var {
     var names = []
-    for (var i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(imageArray[i].filePath))
+    for (let i = 0; i < Math.min(imageArray.length, 30); i++) names.push(nameForPath(ImagePickerModel.filePathAt(imageArray, i)))
     return JSON.stringify({ opened: opened, themeMode: themeMode, wallpaperMode: wallpaperMode, count: imageArray.length,
-      selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("
-").length, wallDir: wallpaperDir() })
+      selected: selectedIndex, names: names.join(","), themeRows: themeRows.split("\n").length, wallDir: wallpaperDir() })
   }
 
-  function close() {
+  function close(): var {
     cancel()
   }
 
-  function preloadRows(nextImageRows, nextSelectedImage, nextShowLabels, nextFilterable) {
+  function preloadRows(nextImageRows: var, nextSelectedImage: var, nextShowLabels: var, nextFilterable: var): var {
     // Theme/background set hooks can warm selector rows after a picker was
     // dismissed. Ignore those preloads while a user-visible request is open;
     // otherwise the preload resets layoutSettled without revealing again,
@@ -786,6 +779,7 @@ Item {
     shown: root.opened
     shownKeyboardFocus: root.imagesLoaded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "nomarchy-image-selector"
+    onFocusLost: root.cancel()
 
     MouseArea {
       anchors.fill: parent
@@ -837,7 +831,7 @@ Item {
           readonly property bool mirrored: LayoutMirroring.enabled
 
           Keys.priority: Keys.BeforeItem
-          Keys.onPressed: function(event) {
+          Keys.onPressed: function(event: KeyEvent): var {
             if (root.deleteConfirmOpen) {
               if (deleteConfirm.handleKey(event)) event.accepted = true
               return
@@ -867,10 +861,10 @@ Item {
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
               event.accepted = true
-            } else if (Util.readingKey(event) === Qt.Key_Left || (event.key === Qt.Key_Tab && event.modifiers & Qt.ShiftModifier) || event.key === Qt.Key_Backtab) {
+            } else if (Util.readingKey(event, false) === Qt.Key_Left || (event.key === Qt.Key_Tab && event.modifiers & Qt.ShiftModifier) || event.key === Qt.Key_Backtab) {
               root.selectAdjacent(-1)
               event.accepted = true
-            } else if (Util.readingKey(event) === Qt.Key_Right || event.key === Qt.Key_Tab) {
+            } else if (Util.readingKey(event, false) === Qt.Key_Right || event.key === Qt.Key_Tab) {
               root.selectAdjacent(1)
               event.accepted = true
             } else if (root.filterable && event.text && event.text.length === 1 && event.text.charCodeAt(0) >= 32 && event.text.charCodeAt(0) !== 127 && (event.modifiers === Qt.NoModifier || event.modifiers === Qt.ShiftModifier)) {
@@ -892,9 +886,9 @@ Item {
               required property int relativeIndex
 
               readonly property var imageData: root.imageArray[imageIndex]
-              readonly property string filePath: imageData ? imageData.filePath : ""
-              readonly property string fileName: imageData ? imageData.fileName : ""
-              readonly property string thumbnailPath: imageData ? imageData.thumbnailPath : ""
+              readonly property string filePath: ImagePickerModel.pathField(imageData, "filePath")
+              readonly property string fileName: ImagePickerModel.pathField(imageData, "fileName")
+              readonly property string thumbnailPath: ImagePickerModel.pathField(imageData, "thumbnailPath")
 
               readonly property bool selected: imageIndex === root.selectedIndex
               readonly property bool previewReady: image.status === Image.Ready || image.status === Image.Error
@@ -999,7 +993,7 @@ Item {
                 anchors.fill: parent
                 enabled: root.layoutSettled
                 cursorShape: Qt.PointingHandCursor
-                onClicked: item.selected ? root.applySelected() : root.select(item.imageIndex)
+                onClicked: item.selected ? root.applySelected() : root.select(item.imageIndex, undefined)
               }
             }
           }
@@ -1048,8 +1042,8 @@ Item {
       anchors.fill: parent
       opened: root.deleteConfirmOpen
       z: 10
-      message: Commons.I18n.t("imagePicker.deleteTheme").arg(root.pendingDeleteTheme ? root.labelForPath(root.pendingDeleteTheme) : "")
-      confirmText: Commons.I18n.t("common.delete")
+      message: I18nModel.translate(Commons.I18n, "imagePicker.deleteTheme").arg(root.pendingDeleteTheme ? root.labelForPath(root.pendingDeleteTheme) : "")
+      confirmText: I18nModel.translate(Commons.I18n, "common.delete")
       background: root.dimColor
       foreground: root.foreground
       onCanceled: root.cancelDeleteTheme()

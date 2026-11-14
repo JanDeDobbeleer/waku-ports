@@ -22,7 +22,7 @@ Item {
         animate: true
         text: Weather.icon
         color: Colours.palette.m3secondary
-        fontStyle: Tokens.font.icon.builders.extraLarge.scale(1.6).build()
+        fontStyle: Tokens.styled("icon", "extraLarge", { scale: 1.6 })
     }
 
     Column {
@@ -40,7 +40,7 @@ Item {
             animate: true
             text: Weather.temp
             color: Colours.palette.m3primary
-            font: Tokens.font.headline.builders.medium.width(110).weight(Font.DemiBold).build()
+            font: Tokens.styled("headline", "medium", { width: 110, weight: Font.DemiBold })
         }
 
         StyledText {

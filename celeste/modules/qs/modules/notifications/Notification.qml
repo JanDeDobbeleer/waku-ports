@@ -11,16 +11,17 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.utils
+import "NotificationHelpers.js" as NotificationHelpers
 
 StyledRect {
     id: root
 
-    required property NotifData modelData
-    readonly property bool hasImage: modelData.image.length > 0
-    readonly property bool hasAppIcon: modelData.appIcon.length > 0
-    readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
-    property bool expanded: Config.notifs.openExpanded
+    required final property NotifData modelData
+    readonly final property bool hasImage: modelData.image.length > 0
+    readonly final property bool hasAppIcon: modelData.appIcon.length > 0
+    readonly final property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
+    readonly final property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    final property bool expanded: Config.notifs.openExpanded
 
     color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.large
@@ -30,9 +31,9 @@ StyledRect {
     x: implicitWidth
     Component.onCompleted: {
         x = 0;
-        modelData.lock(this);
+        NotificationHelpers.lock(modelData, this);
     }
-    Component.onDestruction: modelData.unlock(this)
+    Component.onDestruction: NotificationHelpers.unlock(modelData, this)
 
     Behavior on x {
         Anim {
@@ -41,7 +42,7 @@ StyledRect {
     }
 
     MouseArea {
-        property int startY
+        final property int startY
 
         anchors.fill: parent
         hoverEnabled: true
@@ -49,24 +50,24 @@ StyledRect {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         preventStealing: true
 
-        onEntered: root.modelData.timer.stop()
+        onEntered: NotificationHelpers.stopTimer(root.modelData.timer)
         onExited: {
             if (!pressed)
-                root.modelData.timer.start();
+                NotificationHelpers.startTimer(root.modelData.timer);
         }
 
         drag.target: parent
         drag.axis: Drag.XAxis
 
         onPressed: event => {
-            root.modelData.timer.stop();
+            NotificationHelpers.stopTimer(root.modelData.timer);
             startY = event.y;
             if (event.button === Qt.MiddleButton)
-                root.modelData.close();
+                NotificationHelpers.close(root.modelData);
         }
         onReleased: event => {
             if (!containsMouse)
-                root.modelData.timer.start();
+                NotificationHelpers.startTimer(root.modelData.timer);
 
             if (Math.abs(root.x) < root.implicitWidth * Config.notifs.clearThreshold)
                 root.x = 0;
@@ -85,7 +86,7 @@ StyledRect {
                 return;
 
             const actions = root.modelData.actions;
-            if (actions.length === 1)
+            if (root.modelData.actionCount === 1)
                 actions[0].invoke();
         }
 
@@ -211,7 +212,7 @@ StyledRect {
                         centerY: progressIndicator.height / 2
 
                         startAngle: -90
-                        sweepAngle: ((root.modelData.hints.value ?? 0) / 100) * 360
+                        sweepAngle: NotificationHelpers.progressAngle(root.modelData.hints)
 
                         Behavior on sweepAngle {
                             Anim {
@@ -467,26 +468,26 @@ StyledRect {
                 IconButton {
                     isRound: true
                     shapeMorph: true
-                    fillWidth: root.modelData.actions.length === 0
+                    fillWidth: root.modelData.actionCount === 0
                     inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                     inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
                     icon: "close"
                     padding: Tokens.padding.extraSmall
-                    onClicked: root.modelData.close()
+                    onClicked: NotificationHelpers.close(root.modelData)
                 }
 
                 Repeater {
                     model: root.modelData.actions
 
                     TextButton {
-                        required property var modelData
+                        required final property var modelData
 
                         isRound: true
                         shapeMorph: true
                         fillWidth: true
                         inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                         inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
-                        text: modelData.text
+                        text: NotificationHelpers.actionText(modelData)
                         onClicked: modelData.invoke()
 
                         label.horizontalAlignment: Text.AlignHCenter
@@ -502,7 +503,7 @@ StyledRect {
                 IconButton {
                     isRound: true
                     shapeMorph: true
-                    fillWidth: root.modelData.actions.length === 0
+                    fillWidth: root.modelData.actionCount === 0
                     inactiveColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
                     inactiveOnColour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
                     icon: copyTimer.running ? "inventory" : "content_copy"

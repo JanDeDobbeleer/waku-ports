@@ -1,8 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,22 +17,18 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property var localBlacklist: widgetData.blacklist || []
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property string valueChevronColor: widgetData.chevronColor !== undefined ? widgetData.chevronColor : widgetMetadata.chevronColor
-  property bool valueDrawerEnabled: widgetData.drawerEnabled !== undefined ? widgetData.drawerEnabled : widgetMetadata.drawerEnabled
-  property bool valueHidePassive: widgetData.hidePassive !== undefined ? widgetData.hidePassive : widgetMetadata.hidePassive
+  property var localBlacklist: SettingsValue.read(widgetData, "blacklist") || []
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property string valueChevronColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "chevronColor")
+  property bool valueDrawerEnabled: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "drawerEnabled")
+  property bool valueHidePassive: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hidePassive")
 
   ListModel {
     id: blacklistModel
   }
 
-  function populateBlacklist() {
-    for (var i = 0; i < localBlacklist.length; i++) {
-      blacklistModel.append({
-                              "rule": localBlacklist[i]
-                            });
-    }
+  function populateBlacklist(): void {
+    SettingsValue.populateModel(localBlacklist, blacklistModel);
   }
 
   Component.onCompleted: {
@@ -46,9 +44,9 @@ ColumnLayout {
     checked: root.valueDrawerEnabled
     onToggled: checked => {
                  root.valueDrawerEnabled = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.drawerEnabled
+    defaultValue: SettingsValue.read(root.widgetMetadata, "drawerEnabled")
   }
 
   NColorChoice {
@@ -57,10 +55,10 @@ ColumnLayout {
     currentKey: root.valueChevronColor
     onSelected: key => {
                   root.valueChevronColor = key;
-                  saveSettings();
+                  root.saveSettings();
                 }
     visible: root.valueDrawerEnabled
-    defaultValue: widgetMetadata.chevronColor
+    defaultValue: SettingsValue.read(root.widgetMetadata, "chevronColor")
   }
 
   NToggle {
@@ -70,9 +68,9 @@ ColumnLayout {
     checked: root.valueColorizeIcons
     onToggled: checked => {
                  root.valueColorizeIcons = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.colorizeIcons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeIcons")
   }
 
   NToggle {
@@ -82,9 +80,9 @@ ColumnLayout {
     checked: root.valueHidePassive
     onToggled: checked => {
                  root.valueHidePassive = checked;
-                 saveSettings();
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.hidePassive
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hidePassive")
   }
 
   ColumnLayout {
@@ -106,10 +104,11 @@ ColumnLayout {
         placeholderText: I18n.tr("panels.bar.tray-blacklist-placeholder")
         buttonIcon: "add"
         onButtonClicked: {
+          var exists, i, newRule;
           if (newRuleInput.text.length > 0) {
-            var newRule = newRuleInput.text.trim();
-            var exists = false;
-            for (var i = 0; i < blacklistModel.count; i++) {
+            newRule = newRuleInput.text.trim();
+            exists = false;
+            for (i = 0; i < blacklistModel.count; i++) {
               if (blacklistModel.get(i).rule === newRule) {
                 exists = true;
                 break;
@@ -120,7 +119,7 @@ ColumnLayout {
                                       "rule": newRule
                                     });
               newRuleInput.text = "";
-              saveSettings();
+              root.saveSettings();
             }
           }
         }
@@ -130,6 +129,7 @@ ColumnLayout {
 
   // List of current blacklist items
   NListView {
+    id: blacklistView
     Layout.fillWidth: true
     Layout.preferredHeight: 150
     Layout.topMargin: Style.marginL // Increased top margin
@@ -137,7 +137,10 @@ ColumnLayout {
 
     model: blacklistModel
     delegate: Item {
-      width: ListView.width
+      id: blacklistItem
+      required property int index
+      required property string rule
+      width: blacklistView.width
       height: 40
 
       Rectangle {
@@ -148,7 +151,7 @@ ColumnLayout {
         border.color: Color.mOutline
         border.width: Style.borderS
         radius: Style.radiusS
-        visible: model.rule !== undefined && model.rule !== "" // Only visible if rule exists
+        visible: blacklistItem.rule !== undefined && blacklistItem.rule !== "" // Only visible if rule exists
       }
 
       Row {
@@ -159,7 +162,7 @@ ColumnLayout {
 
         NText {
           anchors.verticalCenter: parent.verticalCenter
-          text: model.rule
+          text: blacklistItem.rule
           elide: Text.ElideRight
         }
 
@@ -172,8 +175,8 @@ ColumnLayout {
           colorBgHover: Color.mError
           colorFgHover: Color.mOnError
           onClicked: {
-            blacklistModel.remove(index);
-            saveSettings();
+            blacklistModel.remove(blacklistItem.index);
+            root.saveSettings();
           }
         }
       }
@@ -182,8 +185,9 @@ ColumnLayout {
 
   // This function will be called by the dialog to get the new settings
   function saveSettings() {
+    var i;
     var newBlacklist = [];
-    for (var i = 0; i < blacklistModel.count; i++) {
+    for (i = 0; i < blacklistModel.count; i++) {
       newBlacklist.push(blacklistModel.get(i).rule);
     }
 

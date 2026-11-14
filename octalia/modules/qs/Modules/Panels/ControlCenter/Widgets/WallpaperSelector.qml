@@ -1,4 +1,3 @@
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.UI
@@ -9,6 +8,6 @@ NIconButtonHot {
 
   enabled: Settings.data.wallpaper.enabled
   icon: "wallpaper-selector"
-  onClicked: PanelService.getPanel("wallpaperPanel", screen)?.toggle()
+  onClicked: PanelService.invokePanel(PanelService.getPanel("wallpaperPanel", screen), "toggle", [])
   onRightClicked: WallpaperService.setRandomWallpaper()
 }

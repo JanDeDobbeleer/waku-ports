@@ -3,7 +3,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import "IdleModel.js" as IdleModel
-import qs.Commons
+import "IdleUtils.js" as IdleUtils
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -16,10 +17,9 @@ Item {
   readonly property string stayAwakeStatePath: stayAwakeStateDir + "/stay-awake"
   readonly property int defaultScreensaverSeconds: 150
   readonly property int defaultLockSeconds: 300
-  readonly property var idleConfig: shell && shell.shellConfig && shell.shellConfig.idle
-    ? shell.shellConfig.idle : (shell && shell.idleConfig ? shell.idleConfig : ({}))
-  readonly property int screensaverTimeoutSeconds: secondsFromConfig(idleConfig.screensaver, defaultScreensaverSeconds)
-  readonly property int lockTimeoutSeconds: secondsFromConfig(idleConfig.lock, defaultLockSeconds)
+  readonly property var idleConfig: IdleUtils.idleConfig(shell)
+  readonly property int screensaverTimeoutSeconds: secondsFromConfig(IdleUtils.field(idleConfig, "screensaver"), defaultScreensaverSeconds)
+  readonly property int lockTimeoutSeconds: secondsFromConfig(IdleUtils.field(idleConfig, "lock"), defaultLockSeconds)
   readonly property bool screensaverEnabled: screensaverTimeoutSeconds > 0
   readonly property bool lockEnabled: lockTimeoutSeconds > 0
   readonly property bool idleTimersEnabled: screensaverEnabled || lockEnabled
@@ -37,39 +37,32 @@ Item {
   property string lastEvent: "starting"
   property string lastEventAt: ""
 
-  function secondsFromConfig(value, fallback) {
+  function secondsFromConfig(value: var, fallback: int): int {
     return IdleModel.secondsFromConfig(value, fallback)
   }
 
-  function nowIso() {
+  function nowIso(): string {
     return new Date().toISOString()
   }
 
-  function logEvent(event, details) {
+  function logEvent(event: string, details: var): void {
     var suffix = details === undefined || details === null || details === "" ? "" : ": " + String(details)
     root.lastEventAt = nowIso()
     root.lastEvent = event + suffix
     console.log("nomarchy idle " + root.lastEventAt + " " + root.lastEvent)
   }
 
-  function runProcess(process, label, command) {
-    if (process.running) {
-      logEvent("process-skip", label + " already running")
-      return false
-    }
-    logEvent("process-start", label + " " + command)
-    process.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", command]
-    process.running = true
-    return true
+  function runProcess(process: var, label: string, command: string): bool {
+    return IdleUtils.runProcess(root, process, label, command)
   }
 
-  function launchScreensaver() {
+  function launchScreensaver(): void {
     root.screensaverStartedThisCycle = true
     screensaverLaunchGraceTimer.restart()
     runProcess(screensaverProcess, "screensaver", "[[ $(nomarchy-shell lock isLocked 2>/dev/null) == \"true\" ]] || nomarchy-launch-screensaver")
   }
 
-  function lockSystem(reason) {
+  function lockSystem(reason: string): void {
     logEvent("lock-system", reason || "requested")
     screensaverTimer.stop()
     lockTimer.stop()
@@ -79,9 +72,9 @@ Item {
     runProcess(lockProcess, "lock", "nomarchy-system-lock")
   }
 
-  function startIdleCycle() {
+  function startIdleCycle(): void {
     if (root.idledThisCycle) {
-      logEvent("idle-cycle-already-running")
+      logEvent("idle-cycle-already-running", undefined)
       return
     }
 
@@ -108,7 +101,7 @@ Item {
     }
   }
 
-  function cancelIdleCycle(reason) {
+  function cancelIdleCycle(reason: string): void {
     logEvent("idle-cycle-cancel", reason || "requested")
     screensaverTimer.stop()
     lockTimer.stop()
@@ -120,7 +113,7 @@ Item {
     root.screensaverStartedThisCycle = false
   }
 
-  function handleActiveSignal() {
+  function handleActiveSignal(): void {
     if (!root.idledThisCycle) return
 
     // Starting the screensaver can make the compositor report activity, so the
@@ -133,20 +126,20 @@ Item {
     userReturned()
   }
 
-  function userReturned() {
+  function userReturned(): void {
     // Input the screensaver never sees (a bound media key, a touchscreen) still means the user is back.
     if (root.screensaverStartedThisCycle) screensaverStopProcess.running = true
     cancelIdleCycle("activity")
   }
 
-  function handleScreensaverExited() {
+  function handleScreensaverExited(): void {
     // Closing while the user is active is a dismissal, even inside the launch grace.
     if (root.idleEnabled && root.idledThisCycle && root.screensaverStartedThisCycle && !idleMonitor.isIdle) {
       cancelIdleCycle("screensaver-dismissed")
     }
   }
 
-  function handleIdleChanged() {
+  function handleIdleChanged(): void {
     logEvent("idle-monitor", idleMonitor.isIdle ? "idle" : "active")
     if (!root.idleEnabled || !root.idleTimersEnabled) return
 
@@ -154,7 +147,7 @@ Item {
     else handleActiveSignal()
   }
 
-  function statusJson() {
+  function statusJson(): string {
     return JSON.stringify({
       enabled: root.idleEnabled,
       stayAwake: root.stayAwake,
@@ -182,7 +175,7 @@ Item {
     })
   }
 
-  function persistStayAwake(value) {
+  function persistStayAwake(value: bool): void {
     var command = value
       ? "mkdir -p \"$HOME/.local/state/nomarchy/indicators\" && touch \"$HOME/.local/state/nomarchy/indicators/stay-awake\""
       : "rm -f \"$HOME/.local/state/nomarchy/indicators/stay-awake\""
@@ -197,11 +190,11 @@ Item {
     stayAwakeStateWriter.running = true
   }
 
-  function refreshStayAwakeState() {
+  function refreshStayAwakeState(): void {
     if (!stayAwakeStateProbe.running) stayAwakeStateProbe.running = true
   }
 
-  function applyStayAwake(value, persist, reason) {
+  function applyStayAwake(value: bool, persist: bool, reason: string): string {
     var enabled = !!value
     var changed = !root.stayAwakeStateLoaded || root.stayAwake !== enabled
 
@@ -219,7 +212,7 @@ Item {
     return enabled ? "disabled" : "enabled"
   }
 
-  function setIdleEnabled(value) {
+  function setIdleEnabled(value: bool): string {
     return applyStayAwake(!value, true, "ipc")
   }
 
@@ -293,7 +286,7 @@ Item {
     id: stayAwakeStateWriter
     onExited: function() {
       if (root.hasPendingStayAwakePersist) {
-        var pending = root.pendingStayAwakePersist
+        let pending = root.pendingStayAwakePersist
         root.hasPendingStayAwakePersist = false
         root.persistStayAwake(pending)
         return
@@ -312,11 +305,11 @@ Item {
   }
 
   Component.onCompleted: {
-    logEvent("service-ready")
+    logEvent("service-ready", undefined)
     refreshStayAwakeState()
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "idle"
 
     function status(): string {

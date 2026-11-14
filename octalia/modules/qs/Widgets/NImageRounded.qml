@@ -1,7 +1,8 @@
+pragma ComponentBehavior: Bound
+
+import "NImageRoundedUtils.js" as ImageUtils
+
 import QtQuick 6.10
-import QtQuick.Effects
-import Quickshell
-import Quickshell.Widgets
 import qs.Commons
 import qs.compat
 
@@ -19,9 +20,9 @@ Item {
   property int imageFillMode: Image.PreserveAspectCrop
 
   readonly property bool _isAnimated: imagePath.toLowerCase().endsWith(".gif")
-  readonly property Item imageSource: imageSourceLoader.item
-  readonly property bool showFallback: fallbackIcon !== "" && (imagePath === "" || (imageSource && imageSource.status === Image.Error))
-  readonly property int status: imageSource ? imageSource.status : Image.Null
+  readonly property Image imageSource: imageSourceLoader.item as Image
+  readonly property bool showFallback: fallbackIcon !== "" && (imagePath === "" || (imageSource && ImageUtils.status(imageSource) === Image.Error))
+  readonly property int status: imageSource ? ImageUtils.status(imageSource) : Image.Null
 
   Rectangle {
     anchors.fill: parent
@@ -84,8 +85,8 @@ Item {
       property var source: root.imageSource ?? _safeFallback
       property real itemWidth: width
       property real itemHeight: height
-      property real sourceWidth: root.imageSource?.sourceSize.width ?? 0
-      property real sourceHeight: root.imageSource?.sourceSize.height ?? 0
+      property real sourceWidth: ImageUtils.width(root.imageSource)
+      property real sourceHeight: ImageUtils.height(root.imageSource)
       property real cornerRadius: Math.max(0, root.radius - root.borderWidth)
       property real imageOpacity: 1.0
       property int fillMode: root.imageFillMode

@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import "NightlightModel.js" as NightlightModel
-import qs.Commons
+import qs.Commons as Commons
 
 Item {
   id: root
@@ -16,7 +16,7 @@ Item {
 
   property bool stateLoaded: false
   property var temperature: null
-  readonly property bool enabled: stateLoaded && NightlightModel.isNightlight(temperature)
+  readonly property bool nightlightEnabled: stateLoaded && NightlightModel.isNightlight(temperature)
 
   property bool hasPendingTemperature: false
   property int pendingTemperature: 0
@@ -25,15 +25,15 @@ Item {
     if (!statusProbe.running) statusProbe.running = true
   }
 
-  function setNightlight(value) {
+  function setNightlight(value: bool): void {
     applyTemperature(value ? nightTemperature : dayTemperature)
   }
 
   function toggle() {
-    setNightlight(!enabled)
+    setNightlight(!nightlightEnabled)
   }
 
-  function applyTemperature(temp) {
+  function applyTemperature(temp: int): void {
     root.temperature = temp
     root.stateLoaded = true
 
@@ -46,7 +46,7 @@ Item {
     runApply(temp)
   }
 
-  function runApply(temp) {
+  function runApply(temp: int): void {
     applyProcess.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc",
       "pgrep -x hyprsunset >/dev/null || { setsid uwsm-app -- hyprsunset >/dev/null 2>&1 & sleep 1; }; " +
       "hyprctl hyprsunset temperature " + Number(temp) +
@@ -88,11 +88,11 @@ Item {
 
   Component.onCompleted: refresh()
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nightlight"
 
     function status(): string {
-      return JSON.stringify({ enabled: root.enabled, temperature: root.temperature })
+      return JSON.stringify({ enabled: root.nightlightEnabled, temperature: root.temperature })
     }
 
     function refresh(): void {
@@ -110,7 +110,7 @@ Item {
     }
 
     function toggle(): string {
-      var enabling = !root.enabled
+      var enabling = !root.nightlightEnabled
       root.setNightlight(enabling)
       return enabling ? "enabled" : "disabled"
     }

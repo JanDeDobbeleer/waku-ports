@@ -11,29 +11,32 @@ import qs.compat
 Singleton {
     id: root
 
-    readonly property string home: slash(Quickshell.env("USERPROFILE") || Quickshell.env("HOME"))
-    readonly property string pictures: `${home}/Pictures`
-    readonly property string videos: `${home}/Videos`
+    readonly final property string home: slash(Quickshell.env("USERPROFILE") || Quickshell.env("HOME"))
+    readonly final property string pictures: `${home}/Pictures`
+    readonly final property string videos: `${home}/Videos`
 
-    readonly property string root_: slash(Quickshell.shellDir)
-    readonly property string data: `${root_}/state/data`
-    readonly property string state: `${root_}/state`
-    readonly property string cache: `${root_}/state/cache`
-    readonly property string config: `${root_}/config`
+    readonly final property string root_: slash(Quickshell.shellDir)
+    readonly final property string dataDir: `${root_}/state/data`
+    readonly final property string state: `${root_}/state`
+    readonly final property string cache: `${root_}/state/cache`
+    readonly final property string config: `${root_}/config`
 
-    readonly property string imagecache: `${cache}/imagecache`
-    readonly property string notifimagecache: `${imagecache}/notifs`
-    readonly property string wallsdir: slash(Quickshell.env("CELESTE_WALLPAPERS_DIR")) || absolutePath(GlobalConfig.paths.wallpaperDir)
-    readonly property string recsdir: slash(Quickshell.env("CELESTE_RECORDINGS_DIR")) || `${videos}/Recordings`
-    readonly property string libdir: ""
+    readonly final property string imagecache: `${cache}/imagecache`
+    readonly final property string notifimagecache: `${imagecache}/notifs`
+    readonly final property string wallsdir: slash(Quickshell.env("CELESTE_WALLPAPERS_DIR")) || absolutePath(GlobalConfig.paths.wallpaperDir)
+    readonly final property string recsdir: slash(Quickshell.env("CELESTE_RECORDINGS_DIR")) || `${videos}/Recordings`
+    readonly final property string libdir: ""
 
     // Test switch: CELESTE_DRYRUN=1 makes every action that changes the machine (wallpaper,
     // light/dark theme, lock, sleep, shutdown) log a `DRYRUN ...` line and do nothing else.
-    readonly property bool dryRun: Quickshell.env("CELESTE_DRYRUN") === "1"
+    readonly final property bool dryRun: Quickshell.env("CELESTE_DRYRUN") === "1"
 
     function slash(path: var): string {
         // The drive letter is upper case, so two spellings of one path compare equal.
-        return String(path ?? "").split("\\").join("/").replace(/^[a-z]:/, m => m.toUpperCase());
+        let normalized = String(path ?? "").split("\\").join("/");
+        if (/^[a-z]:/.test(normalized))
+            normalized = normalized[0].toUpperCase() + normalized.slice(1);
+        return normalized;
     }
 
     function toLocalFile(path: url): string {

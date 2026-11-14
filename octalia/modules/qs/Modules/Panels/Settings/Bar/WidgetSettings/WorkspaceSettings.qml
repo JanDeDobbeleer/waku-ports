@@ -1,8 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,26 +15,26 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property string valueLabelMode: widgetData.labelMode !== undefined ? widgetData.labelMode : widgetMetadata.labelMode
-  property bool valueHideUnoccupied: widgetData.hideUnoccupied !== undefined ? widgetData.hideUnoccupied : widgetMetadata.hideUnoccupied
-  property bool valueFollowFocusedScreen: widgetData.followFocusedScreen !== undefined ? widgetData.followFocusedScreen : widgetMetadata.followFocusedScreen
-  property int valueCharacterCount: widgetData.characterCount !== undefined ? widgetData.characterCount : widgetMetadata.characterCount
+  property string valueLabelMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "labelMode")
+  property bool valueHideUnoccupied: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideUnoccupied")
+  property bool valueFollowFocusedScreen: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "followFocusedScreen")
+  property int valueCharacterCount: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "characterCount")
 
   // Grouped mode settings
-  property bool valueShowApplications: widgetData.showApplications !== undefined ? widgetData.showApplications : widgetMetadata.showApplications
-  property bool valueShowApplicationsHover: widgetData.showApplicationsHover !== undefined ? widgetData.showApplicationsHover : widgetMetadata.showApplicationsHover
-  property bool valueShowLabelsOnlyWhenOccupied: widgetData.showLabelsOnlyWhenOccupied !== undefined ? widgetData.showLabelsOnlyWhenOccupied : widgetMetadata.showLabelsOnlyWhenOccupied
-  property bool valueColorizeIcons: widgetData.colorizeIcons !== undefined ? widgetData.colorizeIcons : widgetMetadata.colorizeIcons
-  property real valueUnfocusedIconsOpacity: widgetData.unfocusedIconsOpacity !== undefined ? widgetData.unfocusedIconsOpacity : widgetMetadata.unfocusedIconsOpacity
-  property real valueGroupedBorderOpacity: widgetData.groupedBorderOpacity !== undefined ? widgetData.groupedBorderOpacity : widgetMetadata.groupedBorderOpacity
-  property bool valueEnableScrollWheel: widgetData.enableScrollWheel !== undefined ? widgetData.enableScrollWheel : widgetMetadata.enableScrollWheel
-  property real valueIconScale: widgetData.iconScale !== undefined ? widgetData.iconScale : widgetMetadata.iconScale
-  property string valueFocusedColor: widgetData.focusedColor !== undefined ? widgetData.focusedColor : widgetMetadata.focusedColor
-  property string valueOccupiedColor: widgetData.occupiedColor !== undefined ? widgetData.occupiedColor : widgetMetadata.occupiedColor
-  property string valueEmptyColor: widgetData.emptyColor !== undefined ? widgetData.emptyColor : widgetMetadata.emptyColor
-  property bool valueShowBadge: widgetData.showBadge !== undefined ? widgetData.showBadge : widgetMetadata.showBadge
-  property real valuePillSize: widgetData.pillSize !== undefined ? widgetData.pillSize : widgetMetadata.pillSize
-  property string valueFontWeight: widgetData.fontWeight !== undefined ? widgetData.fontWeight : widgetMetadata.fontWeight
+  property bool valueShowApplications: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showApplications")
+  property bool valueShowApplicationsHover: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showApplicationsHover")
+  property bool valueShowLabelsOnlyWhenOccupied: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showLabelsOnlyWhenOccupied")
+  property bool valueColorizeIcons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeIcons")
+  property real valueUnfocusedIconsOpacity: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "unfocusedIconsOpacity")
+  property real valueGroupedBorderOpacity: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "groupedBorderOpacity")
+  property bool valueEnableScrollWheel: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "enableScrollWheel")
+  property real valueIconScale: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconScale")
+  property string valueFocusedColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "focusedColor")
+  property string valueOccupiedColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "occupiedColor")
+  property string valueEmptyColor: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "emptyColor")
+  property bool valueShowBadge: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBadge")
+  property real valuePillSize: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "pillSize")
+  property string valueFontWeight: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "fontWeight")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -81,10 +81,10 @@ ColumnLayout {
         "name": I18n.tr("options.workspace-labels.index-and-name")
       }
     ]
-    currentKey: widgetData.labelMode || widgetMetadata.labelMode
+    currentKey: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "labelMode")
     onSelected: key => {
-                  valueLabelMode = key;
-                  saveSettings();
+                  root.valueLabelMode = key;
+                  root.saveSettings();
                 }
     minimumWidth: 200
   }
@@ -94,12 +94,12 @@ ColumnLayout {
     description: I18n.tr("bar.workspace.character-count-description")
     from: 1
     to: 10
-    value: valueCharacterCount
+    value: root.valueCharacterCount
     onValueChanged: {
-      valueCharacterCount = value;
-      saveSettings();
+      root.valueCharacterCount = value;
+      root.saveSettings();
     }
-    visible: valueLabelMode === "name"
+    visible: root.valueLabelMode === "name"
   }
 
   NValueSlider {
@@ -108,15 +108,15 @@ ColumnLayout {
     from: 0.4
     to: 1.0
     stepSize: 0.01
-    value: valuePillSize
-    defaultValue: widgetMetadata.pillSize
+    value: root.valuePillSize
+    defaultValue: SettingsValue.read(root.widgetMetadata, "pillSize")
     showReset: true
     onMoved: value => {
-               valuePillSize = value;
-               saveSettings();
+               root.valuePillSize = value;
+               root.saveSettings();
              }
-    text: Math.round(valuePillSize * 100) + "%"
-    visible: !valueShowApplications
+    text: Math.round(root.valuePillSize * 100) + "%"
+    visible: !root.valueShowApplications
   }
 
   NComboBox {
@@ -141,10 +141,10 @@ ColumnLayout {
         "name": I18n.tr("common.font-weight-bold")
       },
     ]
-    currentKey: widgetData.fontWeight || widgetMetadata.fontWeight
+    currentKey: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "fontWeight")
     onSelected: key => {
-                  valueFontWeight = key;
-                  saveSettings();
+                  root.valueFontWeight = key;
+                  root.saveSettings();
                 }
     minimumWidth: 200
   }
@@ -152,40 +152,40 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.hide-unoccupied-label")
     description: I18n.tr("bar.workspace.hide-unoccupied-description")
-    checked: valueHideUnoccupied
+    checked: root.valueHideUnoccupied
     onToggled: checked => {
-                 valueHideUnoccupied = checked;
-                 saveSettings();
+                 root.valueHideUnoccupied = checked;
+                 root.saveSettings();
                }
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.show-labels-only-when-occupied-label")
     description: I18n.tr("bar.workspace.show-labels-only-when-occupied-description")
-    checked: valueShowLabelsOnlyWhenOccupied
+    checked: root.valueShowLabelsOnlyWhenOccupied
     onToggled: checked => {
-                 valueShowLabelsOnlyWhenOccupied = checked;
-                 saveSettings();
+                 root.valueShowLabelsOnlyWhenOccupied = checked;
+                 root.saveSettings();
                }
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.follow-focused-screen-label")
     description: I18n.tr("bar.workspace.follow-focused-screen-description")
-    checked: valueFollowFocusedScreen
+    checked: root.valueFollowFocusedScreen
     onToggled: checked => {
-                 valueFollowFocusedScreen = checked;
-                 saveSettings();
+                 root.valueFollowFocusedScreen = checked;
+                 root.saveSettings();
                }
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.enable-scrollwheel-label")
     description: I18n.tr("bar.workspace.enable-scrollwheel-description")
-    checked: valueEnableScrollWheel
+    checked: root.valueEnableScrollWheel
     onToggled: checked => {
-                 valueEnableScrollWheel = checked;
-                 saveSettings();
+                 root.valueEnableScrollWheel = checked;
+                 root.saveSettings();
                }
   }
 
@@ -196,44 +196,44 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.workspace.show-applications-label")
     description: I18n.tr("bar.workspace.show-applications-description")
-    checked: valueShowApplications
+    checked: root.valueShowApplications
     onToggled: checked => {
-                 valueShowApplications = checked;
-                 saveSettings();
+                 root.valueShowApplications = checked;
+                 root.saveSettings();
                }
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.show-applications-hover-label")
     description: I18n.tr("bar.workspace.show-applications-hover-description")
-    checked: valueShowApplicationsHover
+    checked: root.valueShowApplicationsHover
     onToggled: checked => {
-                 valueShowApplicationsHover = checked;
-                 saveSettings();
+                 root.valueShowApplicationsHover = checked;
+                 root.saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NToggle {
     label: I18n.tr("bar.workspace.show-badge-label")
     description: I18n.tr("bar.workspace.show-badge-description")
-    checked: valueShowBadge
+    checked: root.valueShowBadge
     onToggled: checked => {
-                 valueShowBadge = checked;
-                 saveSettings();
+                 root.valueShowBadge = checked;
+                 root.saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NToggle {
     label: I18n.tr("bar.tray.colorize-icons-label")
     description: I18n.tr("bar.active-window.colorize-icons-description")
-    checked: valueColorizeIcons
+    checked: root.valueColorizeIcons
     onToggled: checked => {
-                 valueColorizeIcons = checked;
-                 saveSettings();
+                 root.valueColorizeIcons = checked;
+                 root.saveSettings();
                }
-    visible: valueShowApplications
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -243,14 +243,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueUnfocusedIconsOpacity
-    defaultValue: widgetMetadata.unfocusedIconsOpacity
+    value: root.valueUnfocusedIconsOpacity
+    defaultValue: SettingsValue.read(root.widgetMetadata, "unfocusedIconsOpacity")
     onMoved: value => {
-               valueUnfocusedIconsOpacity = value;
-               saveSettings();
+               root.valueUnfocusedIconsOpacity = value;
+               root.saveSettings();
              }
-    text: Math.floor(valueUnfocusedIconsOpacity * 100) + "%"
-    visible: valueShowApplications
+    text: Math.floor(root.valueUnfocusedIconsOpacity * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -260,14 +260,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueGroupedBorderOpacity
-    defaultValue: widgetMetadata.groupedBorderOpacity
+    value: root.valueGroupedBorderOpacity
+    defaultValue: SettingsValue.read(root.widgetMetadata, "groupedBorderOpacity")
     onMoved: value => {
-               valueGroupedBorderOpacity = value;
-               saveSettings();
+               root.valueGroupedBorderOpacity = value;
+               root.saveSettings();
              }
-    text: Math.floor(valueGroupedBorderOpacity * 100) + "%"
-    visible: valueShowApplications
+    text: Math.floor(root.valueGroupedBorderOpacity * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NValueSlider {
@@ -277,14 +277,14 @@ ColumnLayout {
     to: 1
     stepSize: 0.01
     showReset: true
-    value: valueIconScale
-    defaultValue: widgetMetadata.iconScale
+    value: root.valueIconScale
+    defaultValue: SettingsValue.read(root.widgetMetadata, "iconScale")
     onMoved: value => {
-               valueIconScale = value;
-               saveSettings();
+               root.valueIconScale = value;
+               root.saveSettings();
              }
-    text: Math.round(valueIconScale * 100) + "%"
-    visible: valueShowApplications
+    text: Math.round(root.valueIconScale * 100) + "%"
+    visible: root.valueShowApplications
   }
 
   NDivider {
@@ -294,30 +294,30 @@ ColumnLayout {
   NColorChoice {
     label: I18n.tr("bar.workspace.focused-color-label")
     description: I18n.tr("bar.workspace.focused-color-description")
-    currentKey: valueFocusedColor
+    currentKey: root.valueFocusedColor
     onSelected: key => {
-                  valueFocusedColor = key;
-                  saveSettings();
+                  root.valueFocusedColor = key;
+                  root.saveSettings();
                 }
   }
 
   NColorChoice {
     label: I18n.tr("bar.workspace.occupied-color-label")
     description: I18n.tr("bar.workspace.occupied-color-description")
-    currentKey: valueOccupiedColor
+    currentKey: root.valueOccupiedColor
     onSelected: key => {
-                  valueOccupiedColor = key;
-                  saveSettings();
+                  root.valueOccupiedColor = key;
+                  root.saveSettings();
                 }
   }
 
   NColorChoice {
     label: I18n.tr("bar.workspace.empty-color-label")
     description: I18n.tr("bar.workspace.empty-color-description")
-    currentKey: valueEmptyColor
+    currentKey: root.valueEmptyColor
     onSelected: key => {
-                  valueEmptyColor = key;
-                  saveSettings();
+                  root.valueEmptyColor = key;
+                  root.saveSettings();
                 }
   }
 }

@@ -1,26 +1,11 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 
 QtObject {
   id: root
 
   // Migrate wallpaper.randomEnabled to wallpaper.wallpaperChangeMode
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Settings", "Migrating settings to v33");
-
-    if (rawJson?.wallpaper?.randomEnabled !== undefined) {
-      // We'll keep randomEnabled for backward compatibility but set wallpaperChangeMode
-      if (rawJson.wallpaper.randomEnabled === true) {
-        adapter.wallpaper.wallpaperChangeMode = "random";
-        logger.i("Settings", "Migrated wallpaper.randomEnabled=true to wallpaperChangeMode=random");
-      } else {
-        adapter.wallpaper.wallpaperChangeMode = "random";
-        logger.i("Settings", "Set wallpaperChangeMode=random (randomEnabled was false)");
-      }
-    } else {
-      adapter.wallpaper.wallpaperChangeMode = "random";
-      logger.i("Settings", "Set default wallpaperChangeMode=random");
-    }
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate33(adapter, logger, rawJson);
   }
 }

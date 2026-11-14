@@ -9,7 +9,7 @@ import waku.services as S
 Item {
     id: root
 
-    readonly property string layoutName: S.Tiling.currentLayout
+    readonly final property string layoutName: S.Tiling.currentLayout
 
     implicitWidth: col.implicitWidth
     implicitHeight: col.implicitHeight

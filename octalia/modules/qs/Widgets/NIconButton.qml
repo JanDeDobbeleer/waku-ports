@@ -1,6 +1,4 @@
 import QtQuick 6.10
-import Quickshell
-import Quickshell.Widgets
 import qs.Commons
 
 Item {
@@ -51,9 +49,9 @@ Item {
     height: root.buttonSize
     anchors.centerIn: parent
 
-    color: root.enabled && root.hovering ? colorBgHover : colorBg
-    radius: Math.min((customRadius >= 0 ? customRadius : Style.iRadiusL), width / 2)
-    border.color: root.enabled && root.hovering ? colorBorderHover : colorBorder
+    color: root.enabled && root.hovering ? root.colorBgHover : root.colorBg
+    radius: Math.min((root.customRadius >= 0 ? root.customRadius : Style.iRadiusL), width / 2)
+    border.color: root.enabled && root.hovering ? root.colorBorderHover : root.colorBorder
     border.width: Style.borderS
 
     Behavior on color {
@@ -68,7 +66,7 @@ Item {
       icon: root.icon
       pointSize: Style.toOdd(visualButton.width * 0.48)
       applyUiScale: root.applyUiScale
-      color: root.enabled && root.hovering ? colorFgHover : colorFg
+      color: root.enabled && root.hovering ? root.colorFgHover : root.colorFg
       // Pixel-perfect centering
       x: Style.pixelAlignCenter(visualButton.width, width)
       y: Style.pixelAlignCenter(visualButton.height, contentHeight)
@@ -92,15 +90,15 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
     hoverEnabled: true
     onEntered: {
-      hovering = root.enabled ? true : false;
+      root.hovering = root.enabled ? true : false;
       root.entered();
     }
     onExited: {
-      hovering = false;
+      root.hovering = false;
       root.exited();
     }
     onClicked: mouse => {
-                 if (!root.enabled && !allowClickWhenDisabled) {
+                 if (!root.enabled && !root.allowClickWhenDisabled) {
                    return;
                  }
                  if (mouse.button === Qt.LeftButton) {

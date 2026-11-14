@@ -1,5 +1,6 @@
 import QtQuick
 import waku.services as S
+import "WifiDeviceItemUtils.js" as WifiDeviceItemUtils
 
 // The Wi-Fi interface: its scan result as `networks.values`, and `scannerEnabled`, which asks the
 // engine for a fresh scan.
@@ -47,11 +48,11 @@ QtObject {
         model: device.scanned
         delegate: WifiNetworkItem {
             required property var modelData
-            name: String(modelData.ssid || "")
-            signalStrength: Number(modelData.signal || 0) / 100
-            security: modelData.secured ? WifiSecurityType.Wpa : WifiSecurityType.Open
-            connected: !!modelData.connected
-            known: !!modelData.known
+            name: WifiDeviceItemUtils.networkName(modelData)
+            signalStrength: WifiDeviceItemUtils.signalStrength(modelData)
+            security: WifiDeviceItemUtils.secured(modelData) ? WifiSecurityType.Wpa : WifiSecurityType.Open
+            connected: WifiDeviceItemUtils.connected(modelData)
+            known: WifiDeviceItemUtils.known(modelData)
         }
         onObjectAdded: Qt.callLater(device.collect)
         onObjectRemoved: Qt.callLater(device.collect)
@@ -59,7 +60,7 @@ QtObject {
 
     function collect() {
         var out = []
-        for (var i = 0; i < builder.count; ++i) out.push(builder.objectAt(i))
+        for (let i = 0; i < WifiDeviceItemUtils.count(builder); ++i) out.push(WifiDeviceItemUtils.objectAt(builder, i))
         items = out
     }
 }

@@ -1,17 +1,19 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell.Io
 import qs.Commons
-import qs.Services.System
 import qs.Services.Theming
 import qs.Widgets
+import "./SetupAppearanceStepUtils.js" as SetupAppearanceStepUtils
 
 ColumnLayout {
   id: root
   spacing: Style.marginM
 
-  function extractSchemeName(path) {
+  function extractSchemeName(path: string): string {
     var basename = path.split('/').pop();
     return basename.replace('.json', '');
   }
@@ -20,18 +22,12 @@ ColumnLayout {
   property var schemeColorsCache: ({})
   property int cacheVersion: 0
 
-  function getSchemeColor(schemeName, key) {
-    try {
-      var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-      var data = schemeColorsCache[schemeName];
-      if (data && data[mode] && data[mode][key])
-        return data[mode][key];
-    } catch (e) {}
-    return Color.mSurfaceVariant;
+  function getSchemeColor(schemeName: string, key: string): color {
+    return SetupAppearanceStepUtils.schemeColor(cacheVersion, schemeColorsCache, Settings.data.colorSchemes.darkMode, schemeName, key, Color.mSurfaceVariant);
   }
 
   // Match ColorSchemeTab helpers
-  function schemeLoaded(schemeName, jsonData) {
+  function schemeLoaded(schemeName: string, jsonData: var): void {
     var value = jsonData || {};
     schemeColorsCache[schemeName] = value;
     cacheVersion++;
@@ -40,10 +36,10 @@ ColumnLayout {
 
   Connections {
     target: ColorSchemeService
-    function onSchemesChanged() {
-      Logger.i("SetupAppearanceStep", `Color schemes changed: ${ColorSchemeService.schemes.length}`);
-      schemeColorsCache = {};
-      cacheVersion++;
+    function onSchemesChanged(): void {
+      Logger.i("SetupAppearanceStep", `Color schemes changed: ${SetupAppearanceStepUtils.arrayLength(ColorSchemeService.schemes)}`);
+      root.schemeColorsCache = {};
+      root.cacheVersion++;
     }
   }
 
@@ -54,8 +50,8 @@ ColumnLayout {
     spacing: Style.marginM
 
     Rectangle {
-      width: 40
-      height: 40
+      Layout.preferredWidth: 40
+      Layout.preferredHeight: 40
       radius: Style.radiusL
       color: Color.mSurfaceVariant
       opacity: 0.6
@@ -104,8 +100,8 @@ ColumnLayout {
         spacing: Style.marginM
 
         Rectangle {
-          width: 28
-          height: 28
+          Layout.preferredWidth: 28
+          Layout.preferredHeight: 28
           radius: Style.radiusM
           color: Color.mSurface
 
@@ -159,8 +155,8 @@ ColumnLayout {
         spacing: Style.marginM
 
         Rectangle {
-          width: 28
-          height: 28
+          Layout.preferredWidth: 28
+          Layout.preferredHeight: 28
           radius: Style.radiusM
           color: Color.mSurface
 
@@ -230,8 +226,8 @@ ColumnLayout {
           spacing: Style.marginS
 
           Rectangle {
-            width: 28
-            height: 28
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
             radius: Style.radiusM
             color: Color.mSurface
 
@@ -274,10 +270,11 @@ ColumnLayout {
             model: ColorSchemeService.schemes
 
             delegate: Rectangle {
+              required property string modelData
               id: schemeItem
 
-              property string schemePath: modelData
-              property string schemeName: root.extractSchemeName(modelData)
+              property string schemePath: schemeItem.modelData
+              property string schemeName: root.extractSchemeName(schemeItem.modelData)
 
               Layout.fillWidth: true
               Layout.alignment: Qt.AlignHCenter
@@ -305,44 +302,28 @@ ColumnLayout {
                 }
 
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
-                  color: root.cacheVersion >= 0 ? (function () {
-                    var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-                    var cached = root.schemeColorsCache[schemeItem.schemeName];
-                    return (cached && cached[mode] && cached[mode].mPrimary) || root.getSchemeColor(schemeItem.schemeName, "mPrimary");
-                  })() : Color.mPrimary
+                  color: SetupAppearanceStepUtils.schemeColor(root.cacheVersion, root.schemeColorsCache, Settings.data.colorSchemes.darkMode, schemeItem.schemeName, "mPrimary", Color.mSurfaceVariant)
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
-                  color: root.cacheVersion >= 0 ? (function () {
-                    var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-                    var cached = root.schemeColorsCache[schemeItem.schemeName];
-                    return (cached && cached[mode] && cached[mode].mSecondary) || root.getSchemeColor(schemeItem.schemeName, "mSecondary");
-                  })() : Color.mSecondary
+                  color: SetupAppearanceStepUtils.schemeColor(root.cacheVersion, root.schemeColorsCache, Settings.data.colorSchemes.darkMode, schemeItem.schemeName, "mSecondary", Color.mSurfaceVariant)
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
-                  color: root.cacheVersion >= 0 ? (function () {
-                    var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-                    var cached = root.schemeColorsCache[schemeItem.schemeName];
-                    return (cached && cached[mode] && cached[mode].mTertiary) || root.getSchemeColor(schemeItem.schemeName, "mTertiary");
-                  })() : Color.mTertiary
+                  color: SetupAppearanceStepUtils.schemeColor(root.cacheVersion, root.schemeColorsCache, Settings.data.colorSchemes.darkMode, schemeItem.schemeName, "mTertiary", Color.mSurfaceVariant)
                 }
                 Rectangle {
-                  width: 14
-                  height: 14
+                  Layout.preferredWidth: 14
+                  Layout.preferredHeight: 14
                   radius: width * 0.5
-                  color: root.cacheVersion >= 0 ? (function () {
-                    var mode = Settings.data.colorSchemes.darkMode ? "dark" : "light";
-                    var cached = root.schemeColorsCache[schemeItem.schemeName];
-                    return (cached && cached[mode] && cached[mode].mError) || root.getSchemeColor(schemeItem.schemeName, "mError");
-                  })() : Color.mError
+                  color: SetupAppearanceStepUtils.schemeColor(root.cacheVersion, root.schemeColorsCache, Settings.data.colorSchemes.darkMode, schemeItem.schemeName, "mError", Color.mSurfaceVariant)
                 }
               }
 
@@ -376,17 +357,14 @@ ColumnLayout {
     Repeater {
       model: ColorSchemeService.schemes
       delegate: Item {
+        id: schemeLoader
+        required property string modelData
         FileView {
-          path: modelData
+          path: schemeLoader.modelData
           blockLoading: false
           onLoaded: {
-            var schemeName = root.extractSchemeName(path);
-            try {
-              var jsonData = JSON.parse(text());
-              root.schemeLoaded(schemeName, jsonData);
-            } catch (e) {
-              root.schemeLoaded(schemeName, null);
-            }
+            const schemeName = root.extractSchemeName(path);
+            root.schemeLoaded(schemeName, SetupAppearanceStepUtils.parseSchemeJson(text()));
           }
         }
       }

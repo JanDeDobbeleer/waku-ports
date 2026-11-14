@@ -6,56 +6,57 @@ import Celeste.Config
 import qs.components
 import qs.utils
 import qs.modules.bar.popouts as BarPopouts
+import "BarWrapperHelpers.js" as BarWrapperHelpers
 
 Item {
     id: root
 
-    required property ShellScreen screen
-    required property ScreenState screenState
-    required property BarPopouts.Wrapper popouts
-    required property bool fullscreen
+    required final property ShellScreen screen
+    required final property ScreenState screenState
+    required final property BarPopouts.Wrapper popouts
+    required final property bool fullscreen
 
-    readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
+    readonly final property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
 
-    readonly property int clampedWidth: Math.max(Config.border.minThickness, implicitWidth)
-    readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
-    readonly property int contentWidth: Tokens.sizes.bar.innerWidth + padding * 2
-    readonly property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? contentWidth : Config.border.thickness
-    readonly property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
-    property bool isHovered
+    readonly final property int clampedWidth: Math.max(Config.border.minThickness, implicitWidth)
+    readonly final property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
+    readonly final property int contentWidth: Tokens.sizes.bar.innerWidth + padding * 2
+    readonly final property int exclusiveZone: !disabled && (Config.bar.persistent || screenState.bar) ? contentWidth : Config.border.thickness
+    readonly final property bool shouldBeVisible: !fullscreen && !disabled && (Config.bar.persistent || screenState.bar || isHovered)
+    final property bool isHovered
 
     // Port: no `as Bar` casts here. On waku the cast of a Loader item to a type of the same module came
     // back null, so the hover path (Interactions -> checkPopout) did nothing. The item is called untyped.
     function closeTray(): void {
-        content.item?.closeTray();
+        BarWrapperHelpers.closeTray(content.item);
     }
 
     function checkPopout(y: real): void {
-        content.item?.checkPopout(y);
+        BarWrapperHelpers.checkPopout(content.item, y);
     }
 
     function debugEntries(): string {
-        return content.item ? content.item.debugEntries() : "no content";
+        return BarWrapperHelpers.debugEntries(content.item);
     }
 
     function openPopoutNamed(name: string): bool {
-        return content.item ? content.item.openPopoutNamed(name) : false;
+        return BarWrapperHelpers.openPopoutNamed(content.item, name);
     }
 
     function entryItem(id: string): var {
-        return content.item ? content.item.entryItem(id) : null;
+        return BarWrapperHelpers.entryItem(content.item, id);
     }
 
     function emptyAt(x: real, y: real): bool {
-        return content.item ? content.item.emptyAt(x, y) : false;
+        return BarWrapperHelpers.emptyAt(content.item, x, y);
     }
 
     function clickClock(): string {
-        return content.item ? content.item.clickClock() : "no content";
+        return BarWrapperHelpers.clickClock(content.item);
     }
 
     function handleWheel(y: real, angleDelta: point): void {
-        content.item?.handleWheel(y, angleDelta);
+        BarWrapperHelpers.handleWheel(content.item, y, angleDelta);
     }
 
     clip: true

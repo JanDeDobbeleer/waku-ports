@@ -79,15 +79,17 @@ Singleton {
   }
 
   function getCategoriesWithCounts() {
+    var cat;
+    var category, emoji, i;
     if (!loaded) {
       return [];
     }
 
     var categoryCounts = {};
 
-    for (var i = 0; i < emojis.length; i++) {
-      var emoji = emojis[i];
-      var category = emoji.category || "other";
+    for (i = 0; i < emojis.length; i++) {
+      emoji = emojis[i];
+      category = emoji.category || "other";
       if (!categoryCounts[category]) {
         categoryCounts[category] = 0;
       }
@@ -95,7 +97,7 @@ Singleton {
     }
 
     var categories = [];
-    for (var cat in categoryCounts) {
+    for (cat in categoryCounts) {
       categories.push({
                         name: cat,
                         count: categoryCounts[cat]
@@ -136,7 +138,7 @@ Singleton {
 
   // Ensure usage file exists with default content
   function _ensureUsageFileExists() {
-    Quickshell.execDetached(["sh", "-c", `mkdir -p "$(dirname "${root.usageFilePath}")" && echo '{}' > "${root.usageFilePath}"`]);
+    usageFile.setText("{}");
   }
 
   // File paths
@@ -298,8 +300,7 @@ Singleton {
   // Actually save usage data to file
   function _doSaveUsageData() {
     try {
-      const content = JSON.stringify(root.usageCounts);
-      Quickshell.execDetached(["sh", "-c", `mkdir -p "$(dirname "${root.usageFilePath}")" && echo '${content}' > "${root.usageFilePath}"`]);
+      usageFile.setText(JSON.stringify(root.usageCounts));
     } catch (e) {
       Logger.e("EmojiService", "Failed to save usage data: " + e.message);
     }
@@ -309,7 +310,7 @@ Singleton {
   function copy(emojiChar) {
     if (emojiChar) {
       recordUsage(emojiChar);  // Record usage before copying
-      Quickshell.execDetached(["sh", "-c", `echo -n "${emojiChar}" | wl-copy`]);
+      Os.copy(emojiChar);
     }
   }
 }

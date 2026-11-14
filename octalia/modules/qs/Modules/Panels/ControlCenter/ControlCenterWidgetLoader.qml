@@ -1,8 +1,7 @@
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
+import "./ControlCenterWidgetLoaderUtils.js" as ControlCenterWidgetLoaderUtils
 
 Item {
   id: root
@@ -11,16 +10,12 @@ Item {
   required property var widgetScreen
   required property var widgetProps
 
-  property string section: widgetProps && widgetProps.section || ""
-  property int sectionIndex: widgetProps && widgetProps.sectionWidgetIndex || 0
+  property string section: ControlCenterWidgetLoaderUtils.field(widgetProps, "section") || ""
+  property int sectionIndex: ControlCenterWidgetLoaderUtils.field(widgetProps, "sectionWidgetIndex") || 0
 
   // Don't reserve space unless the loaded widget is really visible
-  implicitWidth: getImplicitSize(loader.item, "implicitWidth")
-  implicitHeight: getImplicitSize(loader.item, "implicitHeight")
-
-  function getImplicitSize(item, prop) {
-    return (item && item.visible) ? item[prop] : 0;
-  }
+  implicitWidth: ControlCenterWidgetLoaderUtils.implicitSize(loader.item, "implicitWidth")
+  implicitHeight: ControlCenterWidgetLoaderUtils.implicitSize(loader.item, "implicitHeight")
 
   Loader {
     id: loader
@@ -28,36 +23,14 @@ Item {
     asynchronous: false
 
     Component.onCompleted: {
-      sourceComponent = Qt.binding(function () {
-        return ControlCenterWidgetRegistry.getWidget(widgetId);
-      });
+      sourceComponent = ControlCenterWidgetRegistry.getWidget(root.widgetId);
     }
 
-    onLoaded: {
-      if (!item)
-        return;
-
-      // Apply properties to loaded widget
-      for (var prop in widgetProps) {
-        if (item.hasOwnProperty(prop)) {
-          item[prop] = widgetProps[prop];
-        }
-      }
-
-      // Set screen property
-      if (item.hasOwnProperty("screen")) {
-        item.screen = widgetScreen;
-      }
-
-      // Call custom onLoaded if it exists
-      if (item.hasOwnProperty("onLoaded")) {
-        item.onLoaded();
-      }
-    }
+    onLoaded: ControlCenterWidgetLoaderUtils.configureWidget(item, root.widgetProps, root.widgetScreen)
 
     Component.onDestruction: {
       // Explicitly clear references
-      widgetProps = null;
+      root.widgetProps = null;
     }
   }
 
@@ -79,8 +52,8 @@ Item {
     property int attempts: 0
     onTriggered: {
       attempts += 1;
-      if (ControlCenterWidgetRegistry.hasWidget(widgetId)) {
-        loader.sourceComponent = ControlCenterWidgetRegistry.getWidget(widgetId);
+      if (ControlCenterWidgetRegistry.hasWidget(root.widgetId)) {
+        loader.sourceComponent = ControlCenterWidgetRegistry.getWidget(root.widgetId);
         stop();
         attempts = 0;
         return;
@@ -88,7 +61,7 @@ Item {
       if (attempts >= 20) { // ~3s max
         stop();
         attempts = 0;
-        Logger.w("ControlCenterWidgetLoader", "Giving up waiting for widget:", widgetId);
+        Logger.w("ControlCenterWidgetLoader", "Giving up waiting for widget:", root.widgetId);
       }
     }
   }

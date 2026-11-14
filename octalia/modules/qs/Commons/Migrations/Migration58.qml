@@ -1,14 +1,8 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 
 QtObject {
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Settings", "Migrating settings to v58 (dock.dockType: static -> attached)");
-
-    if (rawJson && rawJson.dock && rawJson.dock.dockType === "static") {
-      adapter.dock.dockType = "attached";
-      logger.i("Settings", "Migrated dock.dockType: static -> attached");
-    }
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate58(adapter, logger, rawJson);
   }
 }

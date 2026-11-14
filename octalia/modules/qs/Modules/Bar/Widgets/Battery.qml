@@ -1,12 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.UPower
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Services.Hardware
-import qs.Services.Networking
 import qs.Services.UI
 import qs.Widgets
 
@@ -25,8 +22,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -38,11 +36,11 @@ Item {
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
   readonly property real capsuleHeight: Style.getCapsuleHeightForScreen(screenName)
 
-  readonly property string displayMode: widgetSettings.displayMode !== undefined ? widgetSettings.displayMode : widgetMetadata.displayMode
+  readonly property string displayMode: BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
   readonly property bool useGraphicMode: displayMode === "graphic" || displayMode === "graphic-clean"
 
-  readonly property bool hideIfNotDetected: widgetSettings.hideIfNotDetected !== undefined ? widgetSettings.hideIfNotDetected : widgetMetadata.hideIfNotDetected
-  readonly property bool hideIfIdle: widgetSettings.hideIfIdle !== undefined ? widgetSettings.hideIfIdle : widgetMetadata.hideIfIdle
+  readonly property bool hideIfNotDetected: BarWidgetHelpers.readProperty(widgetSettings, "hideIfNotDetected") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideIfNotDetected") : BarWidgetHelpers.readProperty(widgetMetadata, "hideIfNotDetected")
+  readonly property bool hideIfIdle: BarWidgetHelpers.readProperty(widgetSettings, "hideIfIdle") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "hideIfIdle") : BarWidgetHelpers.readProperty(widgetMetadata, "hideIfIdle")
 
   // Check if selected device is actually present/connected
   readonly property bool isReady: BatteryService.isDeviceReady(selectedDevice)
@@ -55,7 +53,7 @@ Item {
 
   // Visibility: show if hideIfNotDetected is false, or if battery is ready
   readonly property bool shouldShow: !hideIfNotDetected || (isReady && (hideIfIdle ? !isPluggedIn : true))
-  readonly property string deviceNativePath: widgetSettings.deviceNativePath !== undefined ? widgetSettings.deviceNativePath : widgetMetadata.deviceNativePath
+  readonly property string deviceNativePath: BarWidgetHelpers.readProperty(widgetSettings, "deviceNativePath") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "deviceNativePath") : BarWidgetHelpers.readProperty(widgetMetadata, "deviceNativePath")
   readonly property var selectedDevice: BatteryService.isDevicePresent(BatteryService.findDevice(deviceNativePath)) ? BatteryService.findDevice(deviceNativePath) : null
 
   visible: shouldShow
@@ -80,7 +78,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -134,9 +132,9 @@ Item {
     cursorShape: Qt.PointingHandCursor
     onClicked: mouse => {
                  if (mouse.button === Qt.RightButton) {
-                   PanelService.showContextMenu(contextMenu, nBattery, screen);
+                   PanelService.showContextMenu(contextMenu, nBattery, root.screen, null);
                  } else {
-                   toggleBatteryPanel();
+                   root.toggleBatteryPanel();
                  }
                }
   }
@@ -156,24 +154,24 @@ Item {
     forceClose: root.displayMode === "icon-only" || !root.isReady
     customBackgroundColor: root.isCharging ? Color.mPrimary : ((root.isLowBattery || root.isCriticalBattery) ? Color.mError : "transparent")
     customTextIconColor: root.isCharging ? Color.mOnPrimary : ((root.isLowBattery || root.isCriticalBattery) ? Color.mOnError : "transparent")
-    onClicked: toggleBatteryPanel()
-    onRightClicked: PanelService.showContextMenu(contextMenu, pill, screen)
+    onClicked: root.toggleBatteryPanel()
+    onRightClicked: PanelService.showContextMenu(contextMenu, pill, screen, null)
   }
 
   // ==================== SHARED ====================
 
-  function getBatteryPanel() {
+  function getBatteryPanel(): var {
     var panel = PanelService.getPanel("batteryPanel", screen);
     if (panel) {
-      panel.panelID = {
-        showPowerProfiles: widgetSettings.showPowerProfiles !== undefined ? widgetSettings.showPowerProfiles : widgetMetadata.showPowerProfiles,
-        showOctaliaPerformance: widgetSettings.showOctaliaPerformance !== undefined ? widgetSettings.showOctaliaPerformance : widgetMetadata.showOctaliaPerformance
-      };
+      BarWidgetHelpers.writeProperty(panel, "panelID", {
+        showPowerProfiles: BarWidgetHelpers.readProperty(widgetSettings, "showPowerProfiles") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showPowerProfiles") : BarWidgetHelpers.readProperty(widgetMetadata, "showPowerProfiles"),
+        showOctaliaPerformance: BarWidgetHelpers.readProperty(widgetSettings, "showOctaliaPerformance") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "showOctaliaPerformance") : BarWidgetHelpers.readProperty(widgetMetadata, "showOctaliaPerformance")
+      });
     }
     return panel;
   }
 
   function toggleBatteryPanel() {
-    getBatteryPanel()?.toggle(root);
+    BarWidgetHelpers.toggleIfPresent(getBatteryPanel(), root);
   }
 }

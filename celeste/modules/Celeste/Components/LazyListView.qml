@@ -13,18 +13,20 @@ import QtQuick
 ListView {
     id: root
 
-    property real layoutHeight: contentHeight
-    property bool useCustomViewport: false
-    property rect viewport: Qt.rect(0, 0, width, height)
-    property real estimatedHeight: -1
-    property bool asynchronous: false
-    property int removeDuration: 300
-    property int readyDelay: 0
+    final property real layoutHeight: contentHeight
+    final property bool useCustomViewport: false
+    final property rect viewport: Qt.rect(0, 0, width, height)
+    final property real estimatedHeight: -1
+    final property bool asynchronous: false
+    final property int removeDuration: 300
+    final property int readyDelay: 0
     // ListView has cacheBuffer, contentY and count already.
     // Bumped after the delegates change, so bindings that read itemAtIndex() run again.
-    property int itemsDirty
+    final property int itemsDirty
 
-    onCountChanged: Qt.callLater(() => itemsDirty++)
+    onCountChanged: Qt.callLater(root.bumpItemsDirty)
+
+    function bumpItemsDirty(): void { itemsDirty++; }
 
     function itemAt(x: real, y: real): Item {
         return itemAtIndex(indexAt(x, y));

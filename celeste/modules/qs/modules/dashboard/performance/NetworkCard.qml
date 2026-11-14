@@ -53,8 +53,8 @@ StyledRect {
             SparklineItem {
                 id: sparkline
 
-                property real targetMax: 1024
-                property real smoothMax: targetMax
+                final property real targetMax: 1024
+                final property real smoothMax: targetMax
 
                 anchors.fill: parent
                 line1: NetworkUsage.uploadBuffer
@@ -123,8 +123,8 @@ StyledRect {
             }
 
             StyledText {
-                text: Units.formatBytes(NetworkUsage.downloadSpeed ?? 0, true)
-                font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+                text: Units.formatBytesWithRate(NetworkUsage.downloadSpeed ?? 0, true)
+                font: Tokens.styled("body", "medium", { weight: Font.Medium })
                 color: Colours.palette.m3tertiary
             }
         }
@@ -151,8 +151,8 @@ StyledRect {
             }
 
             StyledText {
-                text: Units.formatBytes(NetworkUsage.uploadSpeed ?? 0, true)
-                font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+                text: Units.formatBytesWithRate(NetworkUsage.uploadSpeed ?? 0, true)
+                font: Tokens.styled("body", "medium", { weight: Font.Medium })
                 color: Colours.palette.m3secondary
             }
         }

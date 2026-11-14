@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+import "BarValues.js" as BarValues
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
@@ -11,9 +13,9 @@ Item {
   property real maximum: 1
   property real step: 0.05
   property bool integer: false
-  property color trackColor: bar ? Style.selectedFillFor(bar.foreground, Commons.Color.accent) : "#333"
-  property color fillColor: bar ? bar.foreground : Commons.Color.foreground
-  property color knobColor: bar ? bar.foreground : Commons.Color.foreground
+  property color trackColor: bar ? Style.selectedFillFor(BarValues.foreground(bar), Commons.Color.accent, Commons.Color.urgent) : "#333"
+  property color fillColor: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  property color knobColor: bar ? BarValues.foreground(bar) : Commons.Color.foreground
   property bool dragging: false
   property real trackHeight: Math.max(4, Math.round(Style.spacing.controlHeight * 0.11))
   property real knobSize: Math.max(14, Math.round(Style.spacing.controlHeight * 0.38))
@@ -24,7 +26,7 @@ Item {
   // crossing the track shows). Purely visual — snapping is the caller's job via
   // `integer`/`step` or an index-based value. Default 0 leaves the track plain.
   property int tickCount: 0
-  property color tickColor: bar ? bar.background : Commons.Color.background
+  property color tickColor: bar ? BarValues.background(bar) : Commons.Color.background
 
   onValueChanged: if (!dragging) liveValue = value
 
@@ -44,7 +46,7 @@ Item {
   // In a mirrored (right-to-left) layout the anchored fill already starts at
   // the right; the knob, ticks, and pointer are placed by x, so they flip here.
   readonly property bool mirrored: LayoutMirroring.enabled
-  function trackX(fraction) {
+  function trackX(fraction: real): real {
     return track.x + track.width * (root.mirrored ? 1 - fraction : fraction)
   }
 
@@ -94,7 +96,7 @@ Item {
     height: root.knobSize
     radius: root.knobSize / 2
     color: root.knobColor
-    borderSpec: Border.flat(root.bar ? root.bar.background : "#101315", Math.max(1, Style.space(2)))
+    borderSpec: Border.flat(root.bar ? BarValues.background(root.bar) : "#101315", Math.max(1, Style.space(2)))
     anchors.verticalCenter: track.verticalCenter
     x: root.trackX(root.progress) - width / 2
     scale: root._hot ? 1.15 : 1.0
@@ -116,7 +118,7 @@ Item {
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-    function valueFromX(x) {
+    function valueFromX(x: real): real {
       if (track.width <= 0) return root.minimum
       var fraction = Math.max(0, Math.min(1, (x - track.x) / track.width))
       if (root.mirrored) fraction = 1 - fraction

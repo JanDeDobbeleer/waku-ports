@@ -20,7 +20,7 @@ Item {
     border.color: Style.boxBorderColor
     border.width: Style.borderS
     color: {
-      if (forceOpaque) {
+      if (root.forceOpaque) {
         return root.color;
       }
 

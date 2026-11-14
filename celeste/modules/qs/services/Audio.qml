@@ -2,31 +2,31 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Celeste
 import Celeste.Config
 import Celeste.I18n
 import qs.compat
+import "AudioHelpers.js" as H
 
 Singleton {
     id: root
 
-    property string previousSinkName: ""
-    property string previousSourceName: ""
+    final property string previousSinkName: ""
+    final property string previousSourceName: ""
 
-    property list<PwNode> sinks: []
-    property list<PwNode> sources: []
-    property list<PwNode> streams: []
+    final property list<PwNode> sinks: []
+    final property list<PwNode> sources: []
+    final property list<PwNode> streams: []
 
-    readonly property PwNode sink: Pipewire.defaultAudioSink
-    readonly property PwNode source: Pipewire.defaultAudioSource
+    readonly final property PwNode sink: Pipewire.defaultAudioSink
+    readonly final property PwNode source: Pipewire.defaultAudioSource
 
-    readonly property bool muted: !!sink?.audio?.muted
-    readonly property real volume: sink?.audio?.volume ?? 0
+    readonly final property bool muted: !!sink?.audio?.muted
+    readonly final property real volume: sink?.audio?.volume ?? 0
 
-    readonly property bool sourceMuted: !!source?.audio?.muted
-    readonly property real sourceVolume: source?.audio?.volume ?? 0
+    readonly final property bool sourceMuted: !!source?.audio?.muted
+    readonly final property real sourceVolume: source?.audio?.volume ?? 0
 
     // waku gap: no audio capture. cava and the beat tracker keep upstream's names and stay silent.
     readonly property alias cava: cava
@@ -74,7 +74,11 @@ Singleton {
         if (sinks.length === 0)
             return;
 
-        const currentIndex = sinks.findIndex(s => s === sink);
+        let currentIndex = -1;
+        for (let i = 0; i < sinks.length; i++) {
+            if (sinks[i] === sink)
+                currentIndex = i;
+        }
         const nextIndex = (currentIndex + 1) % sinks.length;
         setAudioSink(sinks[nextIndex]);
     }
@@ -104,28 +108,11 @@ Singleton {
         if (!stream)
             return Tr.trCtx("Unknown", "unknown audio stream");
         // Try application name first, then description, then name
-        return stream.properties["application.name"] || stream.description || stream.name || Tr.trCtx("Unknown application", "unknown application audio stream");
+        return H.streamName(stream) || Tr.trCtx("Unknown application", "unknown application audio stream");
     }
 
     function refreshNodes(): void {
-        const newSinks = [];
-        const newSources = [];
-        const newStreams = [];
-
-        for (const node of Pipewire.nodes.values) {
-            if (!node.isStream) {
-                if (node.isSink)
-                    newSinks.push(node);
-                else if (node.audio)
-                    newSources.push(node);
-            } else if (node.audio) {
-                newStreams.push(node);
-            }
-        }
-
-        root.sinks = newSinks;
-        root.sources = newSources;
-        root.streams = newStreams;
+        H.refreshNodes(Pipewire.nodes.values, root);
     }
 
     onSinkChanged: {
@@ -135,7 +122,7 @@ Singleton {
         const newSinkName = sink.description || sink.name || Tr.trCtx("Unknown device", "unknown audio device");
 
         if (previousSinkName && previousSinkName !== newSinkName && GlobalConfig.utilities.toasts.audioOutputChanged)
-            Toaster.toast(Tr.tr("Audio output changed"), Tr.tr("Now using: %1").arg(newSinkName), "volume_up");
+            Toaster.toast(Tr.tr("Audio output changed"), Tr.tr("Now using: %1").arg(newSinkName), "volume_up", Toast.Info, 5000);
 
         previousSinkName = newSinkName;
     }
@@ -147,7 +134,7 @@ Singleton {
         const newSourceName = source.description || source.name || Tr.trCtx("Unknown device", "unknown audio device");
 
         if (previousSourceName && previousSourceName !== newSourceName && GlobalConfig.utilities.toasts.audioInputChanged)
-            Toaster.toast(Tr.tr("Audio input changed"), Tr.tr("Now using: %1").arg(newSourceName), "mic");
+            Toaster.toast(Tr.tr("Audio input changed"), Tr.tr("Now using: %1").arg(newSourceName), "mic", Toast.Info, 5000);
 
         previousSourceName = newSourceName;
     }
@@ -171,22 +158,20 @@ Singleton {
     // Always track the current defaults so volume/mute bind even if the lists
     // momentarily lag behind the default node.
     PwObjectTracker {
-        objects: [root.sink, root.source, ...root.sinks, ...root.sources, ...root.streams].filter(n => n)
+        objects: H.trackable(root.sink, root.source, root.sinks, root.sources, root.streams)
     }
 
     QtObject {
         id: cava
 
-        readonly property int bars: GlobalConfig.services.visualiserBars
-        readonly property var values: Array.from({
-            length: bars
-        }, () => 0)
+        readonly final property int bars: GlobalConfig.services.visualiserBars
+        readonly final property var values: H.zeros(bars)
     }
 
     QtObject {
         id: beatTracker
 
-        readonly property real bpm: 0
+        readonly final property real bpm: 0
     }
 
     IpcHandler {

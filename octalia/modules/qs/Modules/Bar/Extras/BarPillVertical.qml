@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
 import qs.Widgets
@@ -86,7 +85,7 @@ Item {
   // Unified background for the entire pill area to avoid overlapping opacity
   Rectangle {
     id: pillBackground
-    width: buttonSize
+    width: root.buttonSize
     height: root.contentHeight
     radius: Style.radiusM
     color: root.bgColor
@@ -108,25 +107,25 @@ Item {
   Rectangle {
     id: pill
 
-    width: revealed ? maxPillWidth : 1
-    height: revealed ? maxPillHeight : 1
+    width: root.revealed ? root.maxPillWidth : 1
+    height: root.revealed ? root.maxPillHeight : 1
 
     // Position based on direction - center the pill relative to the icon
     x: 0
     y: {
-      if (!hasIcon)
+      if (!root.hasIcon)
         return 0;
-      return openUpward ? (iconCircle.y + iconCircle.height / 2 - height) : (iconCircle.y + iconCircle.height / 2);
+      return root.openUpward ? (iconCircle.y + iconCircle.height / 2 - height) : (iconCircle.y + iconCircle.height / 2);
     }
 
-    opacity: revealed ? Style.opacityFull : Style.opacityNone
+    opacity: root.revealed ? Style.opacityFull : Style.opacityNone
     color: "transparent" // Make pill background transparent to avoid double opacity
 
     // Radius logic for vertical expansion - rounded on the side that connects to icon
-    topLeftRadius: openUpward ? Style.radiusM : 0
-    bottomLeftRadius: openDownward ? Style.radiusM : 0
-    topRightRadius: openUpward ? Style.radiusM : 0
-    bottomRightRadius: openDownward ? Style.radiusM : 0
+    topLeftRadius: root.openUpward ? Style.radiusM : 0
+    bottomLeftRadius: root.openDownward ? Style.radiusM : 0
+    topRightRadius: root.openUpward ? Style.radiusM : 0
+    bottomRightRadius: root.openDownward ? Style.radiusM : 0
 
     anchors.horizontalCenter: parent.horizontalCenter
 
@@ -134,8 +133,8 @@ Item {
       id: textItem
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
-      anchors.verticalCenterOffset: hasIcon ? (openDownward ? Style.marginXXS : -Style.marginXXS) : 0
-      rotation: rotateText ? -90 : 0
+      anchors.verticalCenterOffset: root.hasIcon ? (root.openDownward ? Style.marginXXS : -Style.marginXXS) : 0
+      rotation: root.rotateText ? -90 : 0
       text: root.text + root.suffix
       family: Settings.data.ui.fontFixed
       pointSize: root.barFontSize
@@ -143,11 +142,11 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
       color: root.textFgColor
-      visible: revealed
+      visible: root.revealed
 
-      function getVerticalCenterOffset() {
+      function getVerticalCenterOffset(): real {
         // A small, symmetrical offset to push the text slightly away from the icon's edge.
-        return openDownward ? Style.marginXS : -Style.marginXS;
+        return root.openDownward ? Style.marginXS : -Style.marginXS;
       }
     }
     Behavior on width {
@@ -175,19 +174,19 @@ Item {
 
   Rectangle {
     id: iconCircle
-    width: buttonSize
-    height: buttonSize
+    width: root.buttonSize
+    height: root.buttonSize
     radius: Math.min(Style.radiusL, width / 2)
     color: "transparent" // Make icon background transparent to avoid double opacity
 
     // Icon positioning based on direction
     x: 0
-    y: openUpward ? (root.contentHeight - height) : 0
+    y: root.openUpward ? (root.contentHeight - height) : 0
     anchors.horizontalCenter: parent.horizontalCenter
 
     NIcon {
       icon: root.icon
-      pointSize: iconSize
+      pointSize: root.iconSize
       applyUiScale: false
       color: root.iconFgColor
       // Center horizontally
@@ -204,7 +203,7 @@ Item {
       target: pill
       property: "width"
       from: 1
-      to: maxPillWidth
+      to: root.maxPillWidth
       duration: Style.animationNormal
       easing.type: Easing.OutCubic
     }
@@ -212,7 +211,7 @@ Item {
       target: pill
       property: "height"
       from: 1
-      to: maxPillHeight
+      to: root.maxPillHeight
       duration: Style.animationNormal
       easing.type: Easing.OutCubic
     }
@@ -225,7 +224,7 @@ Item {
       easing.type: Easing.OutCubic
     }
     onStarted: {
-      showPill = true;
+      root.showPill = true;
     }
     onStopped: {
       delayedHideAnim.start();
@@ -252,7 +251,7 @@ Item {
     NumberAnimation {
       target: pill
       property: "width"
-      from: maxPillWidth
+      from: root.maxPillWidth
       to: 1
       duration: Style.animationNormal
       easing.type: Easing.InCubic
@@ -260,7 +259,7 @@ Item {
     NumberAnimation {
       target: pill
       property: "height"
-      from: maxPillHeight
+      from: root.maxPillHeight
       to: 1
       duration: Style.animationNormal
       easing.type: Easing.InCubic
@@ -274,8 +273,8 @@ Item {
       easing.type: Easing.InCubic
     }
     onStopped: {
-      showPill = false;
-      shouldAnimateHide = false;
+      root.showPill = false;
+      root.shouldAnimateHide = false;
       root.hidden();
     }
   }
@@ -284,7 +283,7 @@ Item {
     id: showTimer
     interval: Style.pillDelay
     onTriggered: {
-      if (!showPill) {
+      if (!root.showPill) {
         showAnim.start();
       }
     }
@@ -296,20 +295,20 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
     cursorShape: root.clicked ? Qt.PointingHandCursor : Qt.ArrowCursor
     onEntered: {
-      hovered = true;
+      root.hovered = true;
       root.entered();
-      if (forceClose) {
+      if (root.forceClose) {
         return;
       }
-      if (!forceOpen) {
-        showDelayed();
+      if (!root.forceOpen) {
+        root.showDelayed();
       }
     }
     onExited: {
-      hovered = false;
+      root.hovered = false;
       root.exited();
-      if (!forceOpen && !forceClose) {
-        hide();
+      if (!root.forceOpen && !root.forceClose) {
+        root.hide();
       }
     }
     onClicked: mouse => {

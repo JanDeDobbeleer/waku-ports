@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
+import "../DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Effects
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.DesktopWidgets
 import qs.Services.Media
@@ -15,12 +17,11 @@ DraggableDesktopWidget {
   defaultY: 200
 
   // Widget settings - check widgetData exists before accessing properties
-  readonly property string hideMode: (widgetData && widgetData.hideMode !== undefined) ? widgetData.hideMode : "visible"
-  readonly property bool showButtons: (widgetData && widgetData.showButtons !== undefined) ? widgetData.showButtons : true
-  readonly property bool showAlbumArt: (widgetData && widgetData.showAlbumArt !== undefined) ? widgetData.showAlbumArt : true
-  readonly property bool showVisualizer: (widgetData && widgetData.showVisualizer !== undefined) ? widgetData.showVisualizer : true
-  readonly property string visualizerType: (widgetData && widgetData.visualizerType && widgetData.visualizerType !== "") ? widgetData.visualizerType : "linear"
-  readonly property bool roundedCorners: (widgetData && widgetData.roundedCorners !== undefined) ? widgetData.roundedCorners : true
+  readonly property string hideMode: (widgetData && DesktopWidgetHelpers.field(widgetData, "hideMode") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "hideMode") : "visible"
+  readonly property bool showButtons: (widgetData && DesktopWidgetHelpers.field(widgetData, "showButtons") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showButtons") : true
+  readonly property bool showAlbumArt: (widgetData && DesktopWidgetHelpers.field(widgetData, "showAlbumArt") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showAlbumArt") : true
+  readonly property bool showVisualizer: (widgetData && DesktopWidgetHelpers.field(widgetData, "showVisualizer") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "showVisualizer") : true
+  readonly property string visualizerType: (widgetData && DesktopWidgetHelpers.field(widgetData, "visualizerType") && DesktopWidgetHelpers.field(widgetData, "visualizerType") !== "") ? DesktopWidgetHelpers.field(widgetData, "visualizerType") : "linear"
   readonly property bool hasPlayer: MediaService.currentPlayer !== null
   readonly property bool isPlaying: MediaService.isPlaying
   readonly property bool hasActiveTrack: hasPlayer && (MediaService.trackTitle || MediaService.trackArtist)
@@ -58,8 +59,8 @@ DraggableDesktopWidget {
   readonly property bool showNext: hasPlayer && MediaService.canGoNext
   readonly property int visibleButtonCount: root.showButtons ? (1 + (showPrev ? 1 : 0) + (showNext ? 1 : 0)) : 0
 
-  implicitWidth: Math.round(400 * widgetScale)
-  implicitHeight: Math.round(64 * widgetScale + Style.margin2M * widgetScale)
+  implicitWidth: Math.round(400 * root.widgetScale)
+  implicitHeight: Math.round(64 * root.widgetScale + Style.margin2M * root.widgetScale)
   width: implicitWidth
   height: implicitHeight
 
@@ -76,22 +77,22 @@ DraggableDesktopWidget {
   // Completely disabled during scaling to avoid expensive canvas redraws
   Loader {
     anchors.fill: parent
-    anchors.leftMargin: Math.round(Style.marginXS * widgetScale)
-    anchors.rightMargin: Math.round(Style.marginXS * widgetScale)
-    anchors.topMargin: Math.round(Style.marginXS * widgetScale)
+    anchors.leftMargin: Math.round(Style.marginXS * root.widgetScale)
+    anchors.rightMargin: Math.round(Style.marginXS * root.widgetScale)
+    anchors.topMargin: Math.round(Style.marginXS * root.widgetScale)
     anchors.bottomMargin: 0
     z: 0
     clip: true
-    active: needsSpectrum
+    active: root.needsSpectrum
     layer.enabled: true
     layer.smooth: true
     layer.effect: MultiEffect {
       maskEnabled: root.roundedCorners
       maskSource: ShaderEffectSource {
         sourceItem: Rectangle {
-          width: root.width - Math.round(Style.marginXS * widgetScale) * 2
-          height: root.height - Math.round(Style.marginXS * widgetScale)
-          radius: root.roundedCorners ? Math.round(Math.max(0, (Style.radiusL - Style.marginXS) * widgetScale)) : 0
+          width: root.width - Math.round(Style.marginXS * root.widgetScale) * 2
+          height: root.height - Math.round(Style.marginXS * root.widgetScale)
+          radius: root.roundedCorners ? Math.round(Math.max(0, (Style.radiusL - Style.marginXS) * root.widgetScale)) : 0
           color: "white"
         }
       }
@@ -186,32 +187,32 @@ DraggableDesktopWidget {
         }
       }
     ]
-    anchors.margins: Math.round(Style.marginM * widgetScale)
-    spacing: Math.round(Style.marginS * widgetScale)
+    anchors.margins: Math.round(Style.marginM * root.widgetScale)
+    spacing: Math.round(Style.marginS * root.widgetScale)
     z: 2
 
     Item {
       visible: root.showAlbumArt
-      Layout.preferredWidth: Math.round(48 * widgetScale)
-      Layout.preferredHeight: Math.round(48 * widgetScale)
+      Layout.preferredWidth: Math.round(48 * root.widgetScale)
+      Layout.preferredHeight: Math.round(48 * root.widgetScale)
       Layout.alignment: Qt.AlignVCenter
 
       NImageRounded {
-        visible: hasPlayer
+        visible: root.hasPlayer
         anchors.fill: parent
-        radius: Math.round(Style.radiusM * widgetScale)
+        radius: Math.round(Style.radiusM * root.widgetScale)
         imagePath: MediaService.trackArtUrl
         imageFillMode: Image.PreserveAspectCrop
-        fallbackIcon: isPlaying ? "media-pause" : "media-play"
-        fallbackIconSize: Math.round(20 * widgetScale)
+        fallbackIcon: root.isPlaying ? "media-pause" : "media-play"
+        fallbackIconSize: Math.round(20 * root.widgetScale)
         borderWidth: 0
       }
 
       NIcon {
-        visible: !hasPlayer
+        visible: !root.hasPlayer
         anchors.centerIn: parent
         icon: "disc"
-        pointSize: Math.round(24 * widgetScale)
+        pointSize: Math.round(24 * root.widgetScale)
         color: Color.mOnSurfaceVariant
       }
     }
@@ -224,8 +225,8 @@ DraggableDesktopWidget {
 
       NText {
         Layout.fillWidth: true
-        text: hasPlayer ? (MediaService.trackTitle || "Unknown Track") : "No media playing"
-        pointSize: Math.round(Style.fontSizeS * widgetScale)
+        text: root.hasPlayer ? (MediaService.trackTitle || "Unknown Track") : "No media playing"
+        pointSize: Math.round(Style.fontSizeS * root.widgetScale)
         font.weight: Style.fontWeightSemiBold
         color: Color.mOnSurface
         elide: Text.ElideRight
@@ -233,10 +234,10 @@ DraggableDesktopWidget {
       }
 
       NText {
-        visible: hasPlayer && MediaService.trackArtist
+        visible: root.hasPlayer && MediaService.trackArtist
         Layout.fillWidth: true
         text: MediaService.trackArtist || ""
-        pointSize: Math.round(Style.fontSizeXS * widgetScale)
+        pointSize: Math.round(Style.fontSizeXS * root.widgetScale)
         font.weight: Style.fontWeightRegular
         color: Color.mSecondary
         elide: Text.ElideRight
@@ -246,25 +247,25 @@ DraggableDesktopWidget {
 
     RowLayout {
       id: controlsRow
-      spacing: Math.round(Style.marginXS * widgetScale)
+      spacing: Math.round(Style.marginXS * root.widgetScale)
       z: 10
       visible: root.showButtons
       Layout.alignment: root.showAlbumArt ? Qt.AlignVCenter : Qt.AlignCenter
 
       NIconButton {
-        opacity: showPrev ? 1 : 0
+        opacity: root.showPrev ? 1 : 0
         Behavior on opacity {
           NumberAnimation {
             duration: Style.animationSlow
             easing.type: Easing.InOutQuad
           }
         }
-        baseSize: Math.round(32 * widgetScale)
+        baseSize: Math.round(32 * root.widgetScale)
         icon: "media-prev"
-        enabled: hasPlayer && MediaService.canGoPrevious
+        enabled: root.hasPlayer && MediaService.canGoPrevious
         colorBg: Color.mSurfaceVariant
         colorFg: enabled ? Color.mPrimary : Color.mOnSurfaceVariant
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled)
             MediaService.previous();
@@ -272,14 +273,14 @@ DraggableDesktopWidget {
       }
 
       NIconButton {
-        baseSize: Math.round(36 * widgetScale)
-        icon: isPlaying ? "media-pause" : "media-play"
-        enabled: hasPlayer && (MediaService.canPlay || MediaService.canPause)
+        baseSize: Math.round(36 * root.widgetScale)
+        icon: root.isPlaying ? "media-pause" : "media-play"
+        enabled: root.hasPlayer && (MediaService.canPlay || MediaService.canPause)
         colorBg: Color.mPrimary
         colorFg: Color.mOnPrimary
         colorBgHover: Qt.lighter(Color.mPrimary, 1.1)
         colorFgHover: Color.mOnPrimary
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled) {
             MediaService.playPause();
@@ -288,19 +289,19 @@ DraggableDesktopWidget {
       }
 
       NIconButton {
-        opacity: showNext ? 1 : 0
+        opacity: root.showNext ? 1 : 0
         Behavior on opacity {
           NumberAnimation {
             duration: Style.animationSlow
             easing.type: Easing.InOutQuad
           }
         }
-        baseSize: Math.round(32 * widgetScale)
+        baseSize: Math.round(32 * root.widgetScale)
         icon: "media-next"
-        enabled: hasPlayer && MediaService.canGoNext
+        enabled: root.hasPlayer && MediaService.canGoNext
         colorBg: Color.mSurfaceVariant
         colorFg: enabled ? Color.mPrimary : Color.mOnSurfaceVariant
-        customRadius: Math.round(Style.radiusS * widgetScale)
+        customRadius: Math.round(Style.radiusS * root.widgetScale)
         onClicked: {
           if (enabled)
             MediaService.next();

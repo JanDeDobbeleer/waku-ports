@@ -4,7 +4,6 @@ import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.Mpris
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root
@@ -51,6 +50,7 @@ Singleton {
   }
 
   function getAvailablePlayers() {
+    var i, j;
     if (!Mpris.players || !Mpris.players.values) {
       return [];
     }
@@ -63,7 +63,7 @@ Singleton {
     // Separate players into specific and generic lists
     let specificPlayers = [];
     let genericPlayers = [];
-    for (var i = 0; i < allPlayers.length; i++) {
+    for (i = 0; i < allPlayers.length; i++) {
       if (!allPlayers[i])
         continue;
       const identity = String(allPlayers[i].identity || "").toLowerCase();
@@ -84,13 +84,13 @@ Singleton {
     let matchedGenericIndices = {};
 
     // For each specific player, try to find and pair it with a generic partner
-    for (var i = 0; i < specificPlayers.length; i++) {
+    for (i = 0; i < specificPlayers.length; i++) {
       let specificPlayer = specificPlayers[i];
       let title1 = String(specificPlayer.trackTitle || "").trim();
       let wasMatched = false;
 
       if (title1) {
-        for (var j = 0; j < genericPlayers.length; j++) {
+        for (j = 0; j < genericPlayers.length; j++) {
           if (matchedGenericIndices[j])
             continue;
           let genericPlayer = genericPlayers[j];
@@ -139,7 +139,7 @@ Singleton {
     }
 
     // Add any generic players that were not matched
-    for (var i = 0; i < genericPlayers.length; i++) {
+    for (i = 0; i < genericPlayers.length; i++) {
       if (!matchedGenericIndices[i]) {
         finalPlayers.push(genericPlayers[i]);
       }
@@ -147,7 +147,7 @@ Singleton {
 
     // Filter for controllable players
     let controllablePlayers = [];
-    for (var i = 0; i < finalPlayers.length; i++) {
+    for (i = 0; i < finalPlayers.length; i++) {
       let player = finalPlayers[i];
       if (player && player.canPlay) {
         controllablePlayers.push(player);
@@ -157,6 +157,7 @@ Singleton {
   }
 
   function findActivePlayer() {
+    var i;
     let availablePlayers = getAvailablePlayers();
     if (availablePlayers.length === 0) {
       //Logger.i("Media", "No active player found")
@@ -164,7 +165,7 @@ Singleton {
     }
 
     // Prioritize the actively playing player ---
-    for (var i = 0; i < availablePlayers.length; i++) {
+    for (i = 0; i < availablePlayers.length; i++) {
       if (availablePlayers[i] && availablePlayers[i].playbackState === MprisPlaybackState.Playing) {
         Logger.d("Media", "Found actively playing player: " + availablePlayers[i].identity);
         selectedPlayerIndex = i;
@@ -175,7 +176,7 @@ Singleton {
     // fallback if nothing is playing)
     const preferred = (Settings.data.audio.preferredPlayer || "");
     if (preferred !== "") {
-      for (var i = 0; i < availablePlayers.length; i++) {
+      for (i = 0; i < availablePlayers.length; i++) {
         const p = availablePlayers[i];
         const identity = String(p.identity || "").toLowerCase();
         const pref = preferred.toLowerCase();

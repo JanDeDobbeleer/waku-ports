@@ -6,15 +6,16 @@ import Celeste.I18n
 import qs.components
 import qs.services
 import qs.utils
+import "ActiveWindowHelpers.js" as ActiveWindowHelpers
 
 Item {
     id: root
 
-    required property var bar
-    required property Brightness.Monitor monitor
-    property color colour: Colours.palette.m3primary
+    required final property var bar
+    required final property Brightness.Monitor monitor
+    final property color colour: Colours.palette.m3primary
 
-    readonly property string windowTitle: {
+    readonly final property string windowTitle: {
         const title = Hypr.activeToplevel?.title;
         if (!title)
             return Tr.trCtx("Desktop", "shown when no window is focused");
@@ -27,17 +28,12 @@ Item {
         return title;
     }
 
-    readonly property int maxHeight: {
-        const otherModules = bar.children.filter(c => c.entryId && c.item !== this && c.entryId !== "spacer");
-        const otherHeight = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimHeight ?? curr.height), 0);
-        // Length - 2 cause repeater counts as a child
-        return bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
-    }
-    property Title current: text1
+    readonly final property int maxHeight: ActiveWindowHelpers.maxHeight(bar, root)
+    final property Title current: text1
 
     clip: true
-    implicitWidth: Math.max(icon.implicitWidth, current.implicitHeight)
-    implicitHeight: icon.implicitHeight + current.implicitWidth + current.anchors.topMargin
+    implicitWidth: Math.max(icon.implicitWidth, root.current === text1 ? text1.implicitHeight : text2.implicitHeight)
+    implicitHeight: icon.implicitHeight + (root.current === text1 ? text1.implicitWidth + text1.anchors.topMargin : text2.implicitWidth + text2.anchors.topMargin)
 
     Loader {
         asynchronous: true
@@ -47,21 +43,8 @@ Item {
         sourceComponent: MouseArea {
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onPositionChanged: {
-                const popouts = root.bar.popouts;
-                if (popouts.hasCurrent && popouts.currentName !== "activewindow")
-                    popouts.hasCurrent = false;
-            }
-            onClicked: {
-                const popouts = root.bar.popouts;
-                if (popouts.hasCurrent) {
-                    popouts.hasCurrent = false;
-                } else {
-                    popouts.currentName = "activewindow";
-                    popouts.currentCenter = root.mapToItem(root.bar, 0, root.implicitHeight / 2).y;
-                    popouts.hasCurrent = true;
-                }
-            }
+            onPositionChanged: ActiveWindowHelpers.positionChanged(root.bar)
+            onClicked: ActiveWindowHelpers.clicked(root, root.bar)
         }
     }
 
@@ -71,7 +54,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
 
         animate: true
-        text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
+        text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.appClass, "desktop_windows")
         color: root.colour
     }
 
@@ -87,7 +70,7 @@ Item {
         id: metrics
 
         text: root.windowTitle
-        font: Tokens.font.body.builders.small.letterSpacing(1.4).build()
+        font: Tokens.styled("body", "small", { letterSpacing: 1.4 })
         elide: Qt.ElideRight
         elideWidth: root.maxHeight - icon.height
 
@@ -96,7 +79,12 @@ Item {
             next.text = elidedText;
             root.current = next;
         }
-        onElideWidthChanged: root.current.text = elidedText
+        onElideWidthChanged: {
+            if (root.current === text1)
+                text1.text = elidedText;
+            else
+                text2.text = elidedText;
+        }
     }
 
     Behavior on implicitHeight {

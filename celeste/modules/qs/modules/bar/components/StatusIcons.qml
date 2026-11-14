@@ -8,25 +8,26 @@ import qs.components
 import qs.services
 import qs.utils
 import qs.modules.bar.components.status
+import "StatusIconsHelpers.js" as StatusIconsHelpers
 
 StyledRect {
     id: root
 
-    property color colour: Colours.palette.m3secondary
+    final property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
-    readonly property int spacing: Tokens.spacing.medium / 2
-    readonly property int padding: Config.bar.status.background ? Tokens.padding.medium : Tokens.padding.extraSmall
+    readonly final property int spacing: Tokens.spacing.medium / 2
+    readonly final property int padding: Config.bar.status.background ? Tokens.padding.medium : Tokens.padding.extraSmall
 
     // Index of the first/last entry that isn't collapsed, for edge margin gating
-    readonly property int firstPresent: {
+    readonly final property int firstPresent: {
         const values = model.values;
         for (let i = 0; i < values.length; i++)
             if (!collapsed(values[i]))
                 return i;
         return -1;
     }
-    readonly property int lastPresent: {
+    readonly final property int lastPresent: {
         const values = model.values;
         for (let i = values.length - 1; i >= 0; i--)
             if (!collapsed(values[i]))
@@ -36,9 +37,7 @@ StyledRect {
 
     // Entries that can shrink to nothing, spacing included
     function collapsed(entry: var): bool {
-        if (entry.id === "lockStatus")
-            return !Hypr.capsLock && !Hypr.numLock;
-        return false;
+        return StatusIconsHelpers.collapsed(entry, Hypr.capsLock, Hypr.numLock);
     }
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, Config.bar.status.background ? Colours.tPalette.m3surfaceContainer.a : 0)
@@ -62,7 +61,7 @@ StyledRect {
             model: ScriptModel {
                 id: model
 
-                values: Config.bar.statusIcons.values.filter(e => e.enabled)
+                values: StatusIconsHelpers.enabledEntries(Config.bar.statusIcons)
             }
 
             DelegateChooser {
@@ -122,7 +121,7 @@ StyledRect {
                     delegate: EntryWrapper {
                         MaterialIcon {
                             animate: true
-                            text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+                            text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0, false) : "wifi_off"
                             color: root.colour
 
                             // waku gap: upstream has no VPN badge; a small key marks an active tunnel.
@@ -160,21 +159,21 @@ StyledRect {
     }
 
     component EntryWrapper: Item {
-        required property var modelData
-        required property int index
-        property int margin: root.spacing / 2
-        readonly property bool present: !root.collapsed(modelData)
-        property real topGap: present && index !== root.firstPresent ? margin : 0
-        property real bottomGap: present && index !== root.lastPresent ? margin : 0
-        default property Item item
-        property string name: modelData.id.toLowerCase()
+        required final property var modelData
+        required final property int index
+        final property int margin: root.spacing / 2
+        readonly final property bool present: !root.collapsed(modelData)
+        final property real topGap: present && index !== root.firstPresent ? margin : 0
+        final property real bottomGap: present && index !== root.lastPresent ? margin : 0
+        default final property Item item
+        final property string name: StatusIconsHelpers.entryName(modelData)
 
         Layout.topMargin: Math.round(topGap)
         Layout.bottomMargin: Math.round(bottomGap)
         Layout.alignment: Qt.AlignHCenter
 
-        implicitWidth: item?.implicitWidth ?? 0
-        implicitHeight: item?.implicitHeight ?? 0
+        implicitWidth: StatusIconsHelpers.implicitWidth(item)
+        implicitHeight: StatusIconsHelpers.implicitHeight(item)
 
         children: item
 

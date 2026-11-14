@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
 import qs.Commons
 import qs.Widgets
@@ -75,8 +74,8 @@ Item {
   // Unified background for the entire pill area to avoid overlapping opacity
   Rectangle {
     id: pillBackground
-    width: collapseToIcon ? pillHeight : root.width
-    height: pillHeight
+    width: root.collapseToIcon ? root.pillHeight : root.width
+    height: root.pillHeight
     radius: Style.radiusM
     color: root.bgColor
     anchors.verticalCenter: parent.verticalCenter
@@ -95,50 +94,50 @@ Item {
   Rectangle {
     id: pill
 
-    width: revealed ? pillMaxWidth : 1
-    height: pillHeight
+    width: root.revealed ? root.pillMaxWidth : 1
+    height: root.pillHeight
 
     x: {
-      if (!hasIcon)
+      if (!root.hasIcon)
         return 0;
       // iconPosition takes precedence, fallback to oppositeDirection
-      if (iconPosition === "right")
+      if (root.iconPosition === "right")
         return (iconCircle.x + iconCircle.width / 2) - width;
-      if (iconPosition === "left")
+      if (root.iconPosition === "left")
         return (iconCircle.x + iconCircle.width / 2);
-      return oppositeDirection ? (iconCircle.x + iconCircle.width / 2) : (iconCircle.x + iconCircle.width / 2) - width;
+      return root.oppositeDirection ? (iconCircle.x + iconCircle.width / 2) : (iconCircle.x + iconCircle.width / 2) - width;
     }
 
-    opacity: revealed ? Style.opacityFull : Style.opacityNone
+    opacity: root.revealed ? Style.opacityFull : Style.opacityNone
     color: "transparent" // Make pill background transparent to avoid double opacity
 
     // iconPosition takes precedence, fallback to oppositeDirection
-    topLeftRadius: iconPosition ? (iconPosition === "right" ? Style.radiusM : 0) : (oppositeDirection ? 0 : Style.radiusM)
-    bottomLeftRadius: iconPosition ? (iconPosition === "right" ? Style.radiusM : 0) : (oppositeDirection ? 0 : Style.radiusM)
-    topRightRadius: iconPosition ? (iconPosition === "right" ? 0 : Style.radiusM) : (oppositeDirection ? Style.radiusM : 0)
-    bottomRightRadius: iconPosition ? (iconPosition === "right" ? 0 : Style.radiusM) : (oppositeDirection ? Style.radiusM : 0)
+    topLeftRadius: root.iconPosition ? (root.iconPosition === "right" ? Style.radiusM : 0) : (root.oppositeDirection ? 0 : Style.radiusM)
+    bottomLeftRadius: root.iconPosition ? (root.iconPosition === "right" ? Style.radiusM : 0) : (root.oppositeDirection ? 0 : Style.radiusM)
+    topRightRadius: root.iconPosition ? (root.iconPosition === "right" ? 0 : Style.radiusM) : (root.oppositeDirection ? Style.radiusM : 0)
+    bottomRightRadius: root.iconPosition ? (root.iconPosition === "right" ? 0 : Style.radiusM) : (root.oppositeDirection ? Style.radiusM : 0)
     anchors.verticalCenter: parent.verticalCenter
 
     NText {
       id: textItem
       anchors.verticalCenter: parent.verticalCenter
       x: {
-        if (!hasIcon)
+        if (!root.hasIcon)
           return (parent.width - width) / 2;
 
         // Better text horizontal centering
         var centerX = (parent.width - width) / 2;
         // iconPosition takes precedence, fallback to oppositeDirection
         var offset;
-        if (iconPosition === "right")
+        if (root.iconPosition === "right")
           offset = -Style.marginXS;
-        else if (iconPosition === "left")
+        else if (root.iconPosition === "left")
           offset = Style.marginXS;
         else
-          offset = oppositeDirection ? Style.marginXS : -Style.marginXS;
-        if (forceOpen) {
+          offset = root.oppositeDirection ? Style.marginXS : -Style.marginXS;
+        if (root.forceOpen) {
           // If its force open, the icon disc background is the same color as the bg pill move text slightly
-          offset += iconPosition === "right" ? Style.marginXXS : (iconPosition === "left" ? -Style.marginXXS : oppositeDirection ? -Style.marginXXS : Style.marginXXS);
+          offset += root.iconPosition === "right" ? Style.marginXXS : (root.iconPosition === "left" ? -Style.marginXXS : root.oppositeDirection ? -Style.marginXXS : Style.marginXXS);
         }
         return centerX + offset;
       }
@@ -147,7 +146,7 @@ Item {
       pointSize: root.barFontSize
       applyUiScale: false
       color: root.textFgColor
-      visible: revealed
+      visible: root.revealed
     }
 
     Behavior on width {
@@ -168,18 +167,18 @@ Item {
 
   Rectangle {
     id: iconCircle
-    width: hasIcon ? pillHeight : 0
-    height: pillHeight
+    width: root.hasIcon ? root.pillHeight : 0
+    height: root.pillHeight
     radius: Math.min(Style.radiusL, width / 2)
     color: "transparent" // Make icon background transparent to avoid double opacity
     anchors.verticalCenter: parent.verticalCenter
 
     // iconPosition takes precedence, fallback to oppositeDirection
-    x: iconPosition ? (iconPosition === "right" ? (parent.width - width) : 0) : (oppositeDirection ? 0 : (parent.width - width))
+    x: root.iconPosition ? (root.iconPosition === "right" ? (parent.width - width) : 0) : (root.oppositeDirection ? 0 : (parent.width - width))
 
     NIcon {
       icon: root.icon
-      pointSize: iconSize
+      pointSize: root.iconSize
       applyUiScale: false
       color: root.iconFgColor
       // Center horizontally
@@ -196,7 +195,7 @@ Item {
       target: pill
       property: "width"
       from: 1
-      to: pillMaxWidth
+      to: root.pillMaxWidth
       duration: Style.animationNormal
       easing.type: Easing.OutCubic
     }
@@ -209,7 +208,7 @@ Item {
       easing.type: Easing.OutCubic
     }
     onStarted: {
-      showPill = true;
+      root.showPill = true;
     }
     onStopped: {
       delayedHideAnim.start();
@@ -236,7 +235,7 @@ Item {
     NumberAnimation {
       target: pill
       property: "width"
-      from: pillMaxWidth
+      from: root.pillMaxWidth
       to: 1
       duration: Style.animationNormal
       easing.type: Easing.InCubic
@@ -250,8 +249,8 @@ Item {
       easing.type: Easing.InCubic
     }
     onStopped: {
-      showPill = false;
-      shouldAnimateHide = false;
+      root.showPill = false;
+      root.shouldAnimateHide = false;
       root.hidden();
     }
   }
@@ -260,7 +259,7 @@ Item {
     id: showTimer
     interval: Style.pillDelay
     onTriggered: {
-      if (!showPill) {
+      if (!root.showPill) {
         showAnim.start();
       }
     }
@@ -272,20 +271,20 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
     cursorShape: root.clicked ? Qt.PointingHandCursor : Qt.ArrowCursor
     onEntered: {
-      hovered = true;
+      root.hovered = true;
       root.entered();
-      if (forceClose) {
+      if (root.forceClose) {
         return;
       }
-      if (!forceOpen) {
-        showDelayed();
+      if (!root.forceOpen) {
+        root.showDelayed();
       }
     }
     onExited: {
-      hovered = false;
+      root.hovered = false;
       root.exited();
-      if (!forceOpen && !forceClose) {
-        hide();
+      if (!root.forceOpen && !root.forceClose) {
+        root.hide();
       }
     }
     onClicked: mouse => {

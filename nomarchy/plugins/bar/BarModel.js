@@ -336,6 +336,35 @@ function entryJson(value) {
 // dropped keeps its entry there too, as it was, so it isn't handed empty
 // settings on its way out. Maps keyed by id have no prototype, so an id like
 // "constructor" is just an id.
+function keyCount(keys) { return Array.from(keys || []).length }
+function keyIndex(keys, key) { return Array.from(keys || []).indexOf(key) }
+function withValue(values, key, value) {
+  var next = ({})
+  for (var existing in values || {}) next[existing] = values[existing]
+  next[key] = value
+  return next
+}
+function layoutEntry(layout, key) { return layout && layout.entries ? layout.entries[key] || null : null }
+function metadataFirstParty(metadata) { return !!metadata && metadata.firstParty === true }
+function registryComponent(registry, name) {
+  var widgets = registry ? registry.widgets : null
+  var entry = widgets ? widgets[name] : null
+  return entry ? entry.component : null
+}
+function pluginShell(shell, key, moduleName, registered) {
+  if (registered && shell && typeof shell.pluginShellForId === "function") return shell.pluginShellForId(moduleName)
+  if (shell && typeof shell.pluginShellForBarEntry === "function") return shell.pluginShellForBarEntry(key, moduleName)
+  return null
+}
+function hasProperty(target, key) { return !!target && key in target }
+function setProperty(target, key, value) { if (hasProperty(target, key)) target[key] = value }
+function field(target, key) { return target ? target[key] : undefined }
+function mappedCenter(mark, target, vertical) {
+  if (!mark) return 0
+  var point = mark.mapToItem(target, mark.width / 2, mark.height / 2)
+  return vertical ? point.y : point.x
+}
+
 function layoutWidgets(layout, memo) {
   var source = isPlainObject(layout) ? layout : {}
   var state = memo || {}
@@ -399,7 +428,8 @@ function layoutWidgets(layout, memo) {
 // object for as long as it is shown, and a rebuilt layout signals only the
 // rows added, moved and removed.
 function sectionRows(keys, places, memo) {
-  var list = Array.isArray(keys) ? keys : []
+  // Array.from, not Array.isArray: a QML list<string> is a sequence, not an Array.
+  var list = keys ? Array.from(keys) : []
   var gaps = (Array.isArray(places) ? places : []).slice().sort(function(a, b) { return a - b })
   var state = memo || {}
   var cache = state.rows || Object.create(null)
@@ -708,6 +738,17 @@ if (typeof module !== "undefined") {
     dropRoom: dropRoom,
     sectionRows: sectionRows,
     layoutWidgets: layoutWidgets,
+    keyCount: keyCount,
+    keyIndex: keyIndex,
+    withValue: withValue,
+    layoutEntry: layoutEntry,
+    metadataFirstParty: metadataFirstParty,
+    registryComponent: registryComponent,
+    pluginShell: pluginShell,
+    hasProperty: hasProperty,
+    setProperty: setProperty,
+    field: field,
+    mappedCenter: mappedCenter,
     fadeShares: fadeShares,
     roomLengths: roomLengths,
     moveEntry: moveEntry,
@@ -723,6 +764,803 @@ if (typeof module !== "undefined") {
     expandPath: expandPath,
     customModuleSafeName: customModuleSafeName,
     customModuleType: customModuleType,
-    customModulePath: customModulePath
+    customModulePath: customModulePath,
+    pluginObjectRecord: pluginObjectRecord,
+    markPluginObject: markPluginObject,
+    unmarkPluginObject: unmarkPluginObject,
+    pluginOwnsBarObject: pluginOwnsBarObject,
+    pluginShellFor: pluginShellFor,
+    targetWindow: targetWindow,
+    sameScreen: sameScreen,
+    sameWindow: sameWindow,
+    targetTooltipHovered: targetTooltipHovered,
+    setShellBarPosition: setShellBarPosition,
+    isFullscreenEvent: isFullscreenEvent,
+    layoutSections: layoutSections,
+    layoutWidgetKeys: layoutWidgetKeys,
+    layoutWidgetEntries: layoutWidgetEntries,
+    colorHex: colorHex,
+    windowScreenPoint: windowScreenPoint,
+    nearestScreenEdge: nearestScreenEdge,
+    dragMove: dragMove,
+    moduleRemoveDistance: moduleRemoveDistance,
+    moduleTargetClickable: moduleTargetClickable,
+    moduleClickTargetAt: moduleClickTargetAt,
+    traySectionContains: traySectionContains,
+    slotTraySectionContains: slotTraySectionContains,
+    layoutSection: layoutSection,
+    panelNavigationSlots: panelNavigationSlots,
+    switchPanelFrom: switchPanelFrom,
+    slotScreenName: slotScreenName,
+    findPanelWidget: findPanelWidget,
+    debugBarGeometry: debugBarGeometry,
+    beginBarDrag: beginBarDrag,
+    startDragRoom: startDragRoom,
+    dropLandingItem: dropLandingItem,
+    updateBarSettle: updateBarSettle,
+    finishBarSettle: finishBarSettle,
+    writeLayout: writeLayout,
+    removeBarDrag: removeBarDrag,
+    commitBarRemoval: commitBarRemoval,
+    isPendingRemoval: isPendingRemoval,
+    moduleHostsTraySection: moduleHostsTraySection,
+    beginBarMove: beginBarMove,
+    thicknessFor: thicknessFor,
+    normalizeLayout: normalizeLayout,
+    configObject: configObject,
+    configPosition: configPosition,
+    configBackground: configBackground,
+    configLayout: configLayout,
+    panelAction: panelAction,
+    traySectionDropRectForSlot: traySectionDropRectForSlot,
+    dragShareKey: dragShareKey,
+    showTooltip: showTooltip,
+    dropNonTrayCandidates: dropNonTrayCandidates,
+    poofShown: poofShown,
+    poofSpanX: poofSpanX,
+    poofSpanY: poofSpanY,
+    poofSize: poofSize,
+    poofNoise: poofNoise,
+    poofX: poofX,
+    poofY: poofY,
+    poofWidth: poofWidth,
+    poofHeight: poofHeight,
+    poofImage: poofImage,
+    grabbedImageUrl: grabbedImageUrl,
+    panelIndicatorItem: panelIndicatorItem,
+    traySectionGeometry: traySectionGeometry,
+    traySectionNow: traySectionNow,
+    canReorder: canReorder,
+    holdTarget: holdTarget,
+    syncPluginBarApiObjects: syncPluginBarApiObjects,
+    centerBoxDropRect: centerBoxDropRect,
+    dragSourceItem: dragSourceItem,
+    dragGhostWidth: dragGhostWidth,
+    dragGhostHeight: dragGhostHeight,
+    traySectionDragActive: traySectionDragActive,
+    rectOrEmpty: rectOrEmpty,
+    syncPeekEdge: syncPeekEdge,
+    pointX: pointX,
+    pointY: pointY,
+    updateCommandModule: updateCommandModule,
+    listHasRows: listHasRows,
+    rowKey: rowKey,
+    rowPlace: rowPlace,
+    hostDragSource: hostDragSource,
+    isFirstParty: isFirstParty,
+    widgetWidth: widgetWidth,
+    widgetHeight: widgetHeight,
+    widgetWidthFromHost: widgetWidthFromHost,
+    widgetHeightFromHost: widgetHeightFromHost,
+    widgetParent: widgetParent,
+    injectWidgetProps: injectWidgetProps,
+    ownerFixedEdge: ownerFixedEdge,
+    rectLength: rectLength,
+    rectX: rectX,
+    rectY: rectY,
+    releaseWidgetSlot: releaseWidgetSlot,
+    removeWidgetHost: removeWidgetHost,
+    claimWidgetSlot: claimWidgetSlot,
+    addWidgetHost: addWidgetHost,
+    draggedWidgetWidth: draggedWidgetWidth,
+    draggedWidgetHeight: draggedWidgetHeight,
+    pluginBarApiFor: pluginBarApiFor,
+    draggedLength: draggedLength,
+    moveDragRoom: moveDragRoom,
+    drawnKeys: drawnKeys
   }
+}
+
+function mapToItemSafely(item, x, y) {
+  try { return item.mapToItem(null, x, y) } catch (e) { return null }
+}
+
+function traySectionDropRect(area, shown, reach, vertical) {
+  try {
+    var origin = area.mapToItem(null, shown.x, shown.y)
+    var section = { x: origin.x, y: origin.y, width: shown.width, height: shown.height }
+    var corner = area.mapToItem(null, 0, 0)
+    var tray = { x: corner.x, y: corner.y, width: area.width, height: area.height }
+    return sectionDropZone(section, reach, vertical, tray)
+  } catch (e) {
+    return null
+  }
+}
+
+function mutateShellConfig(shell, memo, expected, edit) {
+  memo.expected = expected
+  try {
+    shell.mutateShellConfig(edit)
+  } finally {
+    memo.expected = null
+  }
+}
+
+function copyPopoutCard(card, section) {
+  return card ? { screen: String(card.screen || ""), section: section,
+    x: Number(card.x) || 0, y: Number(card.y) || 0,
+    width: Number(card.width) || 0, height: Number(card.height) || 0 } : null
+}
+
+function popoutCardFor(card, section) {
+  if (!card || !card.section || card.section !== section) return null
+  return { screen: card.screen, x: card.x, y: card.y, width: card.width, height: card.height }
+}
+
+function dropRegion(target) {
+  return target ? (target.slot ? target.slot.region : target.region) : ""
+}
+
+function pluginObjectRecord(owners, target) {
+  return target ? (owners.get(target) || null) : null
+}
+
+function markPluginObject(owners, pluginId, target, role) {
+  if (!pluginId || !target) return false
+  var record = pluginObjectRecord(owners, target)
+  if (record && record.pluginId !== pluginId) return false
+  if (!record) {
+    record = { target: target, pluginId: pluginId, clickTarget: false, popout: false }
+    owners.set(target, record)
+  }
+  record[role] = true
+  return true
+}
+
+function unmarkPluginObject(owners, pluginId, target, role) {
+  var record = pluginObjectRecord(owners, target)
+  if (!record || record.pluginId !== pluginId) return
+  record[role] = false
+  if (!record.clickTarget && !record.popout) owners.delete(target)
+}
+
+function pluginOwnsBarObject(owners, pluginId, target) {
+  var record = target ? pluginObjectRecord(owners, target) : null
+  return !!record && record.pluginId === String(pluginId || "")
+}
+
+function pluginShellFor(shell, registered, moduleName, key) {
+  if (registered && shell && typeof shell.pluginShellForId === "function")
+    return shell.pluginShellForId(moduleName)
+  if (shell && typeof shell.pluginShellForBarEntry === "function")
+    return shell.pluginShellForBarEntry(key, moduleName)
+  return null
+}
+
+var windowResolver = null
+
+function setWindowResolver(resolver) {
+  windowResolver = resolver
+}
+
+function targetWindow(target) {
+  return target && windowResolver ? windowResolver(target) : null
+}
+
+function sameScreen(left, right) {
+  if (!left || !right) return false
+  if (left === right) return true
+  return !!left.name && !!right.name && left.name === right.name
+}
+
+function sameWindow(left, right) {
+  if (!left || !right) return false
+  if (left === right) return true
+  return sameScreen(left.screen, right.screen)
+}
+
+function targetTooltipHovered(target) {
+  return !!target && target.visible !== false && target.opacity !== 0 && target.tooltipHovered === true
+}
+
+function setShellBarPosition(shell, position) {
+  if (!shell || typeof shell.mutateShellConfig !== "function") return false
+  shell.mutateShellConfig(function(config) {
+    if (!isPlainObject(config.bar)) config.bar = {}
+    config.bar.position = position
+  })
+  return true
+}
+
+function isFullscreenEvent(event) {
+  return !!event && String(event.name) === "fullscreen"
+}
+
+function layoutSections(widgets) {
+  return widgets ? widgets.sections : {}
+}
+
+function layoutWidgetKeys(widgets) {
+  return widgets ? widgets.keys : []
+}
+
+function layoutWidgetEntries(widgets) {
+  return widgets ? widgets.entries : {}
+}
+
+function colorHex(value) {
+  function channel(number) {
+    var s = Math.round(Math.max(0, Math.min(1, number)) * 255).toString(16)
+    return s.length < 2 ? "0" + s : s
+  }
+  return "#" + channel(value.r) + channel(value.g) + channel(value.b)
+}
+
+function windowScreenPoint(scenePoint, window, position) {
+  var x = scenePoint ? scenePoint.x : 0
+  var y = scenePoint ? scenePoint.y : 0
+  if (!window || !window.screen) return { x: x, y: y }
+  if (position === "bottom") y += Math.max(0, window.screen.height - window.height)
+  else if (position === "right") x += Math.max(0, window.screen.width - window.width)
+  return { x: x, y: y }
+}
+
+function nearestScreenEdge(point, screen) {
+  var nx = screen.width > 0 ? Math.max(0, Math.min(1, point.x / screen.width)) : 0.5
+  var ny = screen.height > 0 ? Math.max(0, Math.min(1, point.y / screen.height)) : 0.5
+  var edge = "top"
+  var best = ny
+  if (1 - ny < best) { edge = "bottom"; best = 1 - ny }
+  if (nx < best) { edge = "left"; best = nx }
+  if (1 - nx < best) edge = "right"
+  return edge
+}
+
+function dragMove(room, source, sections, keys) {
+  if (!room || room.home || !source) return null
+  var list = sections || {}
+  var region = room.region
+  var section = list[region] || []
+  var fromSection = list[source.region] || []
+  var count = section.length
+  return {
+    key: source.widgetKey,
+    from: { region: source.region, index: fromSection.indexOf(source.widgetKey), id: entryId(source.entry) },
+    to: { region: region, index: room.index < count ? room.index : -1 },
+    keys: keys
+  }
+}
+
+function moduleRemoveDistance(screenPoint, screen, thickness, vertical, position) {
+  if (!screen) return 0
+  var x = screenPoint.x
+  var y = screenPoint.y
+  if (vertical) {
+    if (position === "right") x -= Math.max(0, screen.width - thickness)
+    return dragDistanceOutside({ x: x, y: y }, thickness, screen.height)
+  }
+  if (position === "bottom") y -= Math.max(0, screen.height - thickness)
+  return dragDistanceOutside({ x: x, y: y }, screen.width, thickness)
+}
+
+function moduleTargetClickable(target) {
+  return !!target && target.visible !== false && target.opacity !== 0
+    && target.interactive !== false && target.pressable !== false && target.concealed !== true
+    && typeof target.triggerPress === "function"
+}
+
+function moduleClickTargetAt(targets, slot, localX, localY, util) {
+  var list = targets || []
+  for (var i = list.length - 1; i >= 0; i--) {
+    var target = list[i]
+    if (moduleTargetClickable(target) && util.itemContainsPoint(target, slot, localX, localY)) return target
+  }
+  return slot && moduleTargetClickable(slot.activeItem) ? slot.activeItem : null
+}
+
+function traySectionContains(slot, area, x, y) {
+  if (!area || !area.visible || area.width <= 0 || area.height <= 0) return false
+  try {
+    var point = slot.mapToItem(area, x, y)
+    return point.x >= 0 && point.y >= 0 && point.x <= area.width && point.y <= area.height
+  } catch (error) {
+    return false
+  }
+}
+
+function slotTraySectionContains(slot, x, y) {
+  var area = slot && slot.hostsTraySection && slot.activeItem ? slot.activeItem.sectionHost : null
+  return traySectionContains(slot, area, x, y)
+}
+
+function layoutSection(sections, name) {
+  return sections && Array.isArray(sections[name]) ? sections[name] : []
+}
+
+function slotWindow(slot) {
+  if (!slot) return null
+  return targetWindow(slot.activeItem) || targetWindow(slot)
+}
+
+function panelNavigationSlots(root, region, window) {
+  var regions = navigationRegions(region)
+  var slots = []
+  for (var r = 0; r < regions.length; r++) {
+    var entries = root.layoutEntries(regions[r])
+    for (var i = 0; i < entries.length; i++) {
+      var id = entryId(entries[i])
+      for (var j = 0; j < root.moduleSlots.length; j++) {
+        var slot = root.moduleSlots[j]
+        if (!slot || slot.region !== regions[r] || slot.moduleName !== id) continue
+        if (window && !root.sameWindow(slotWindow(slot), window)) continue
+        var item = slot.activeItem
+        if (!item || item.visible !== true || slot.visible !== true || slot.width <= 0 || slot.height <= 0) continue
+        if (typeof item.open !== "function" || typeof item.close !== "function" || item.opened === undefined) continue
+        slots.push(slot)
+        break
+      }
+    }
+  }
+  return slots
+}
+
+function switchPanelFrom(root, owner, direction) {
+  if (!owner) return false
+  var currentSlot = null
+  for (var i = 0; i < root.moduleSlots.length; i++) {
+    var slot = root.moduleSlots[i]
+    if (slot && slot.activeItem === owner) { currentSlot = slot; break }
+  }
+  if (!currentSlot) return false
+  var slots = panelNavigationSlots(root, currentSlot.region, slotWindow(currentSlot))
+  if (slots.length < 2) return false
+  var currentIndex = slots.indexOf(currentSlot)
+  if (currentIndex < 0) return false
+  var step = direction < 0 ? -1 : 1
+  var nextSlot = slots[(currentIndex + step + slots.length) % slots.length]
+  if (!nextSlot || !nextSlot.activeItem || nextSlot.activeItem === owner) return false
+  nextSlot.activeItem.open()
+  return true
+}
+
+function slotScreenName(slot) {
+  var window = slotWindow(slot)
+  return window && window.screen ? String(window.screen.name || "") : ""
+}
+
+function findPanelWidget(root, pluginId) {
+  var id = String(pluginId || "")
+  if (!id) return null
+  var candidates = []
+  for (var i = 0; i < root.moduleSlots.length; i++) {
+    var slot = root.moduleSlots[i]
+    if (!slot || !slot.activeItem || slot.moduleName !== id) continue
+    var item = slot.activeItem
+    if (typeof item.open !== "function" || typeof item.close !== "function" || item.opened === undefined) continue
+    candidates.push({ slot: slot, screenName: slotScreenName(slot), opened: item.opened === true })
+  }
+  var chosen = pickPanelSlot(candidates, root.focusedScreenName())
+  return chosen ? chosen.activeItem : null
+}
+
+function debugBarGeometry(slots) {
+  var out = []
+  var list = slots || []
+  for (var i = 0; i < list.length; i++) {
+    var slot = list[i]
+    if (!slot || !slot.activeItem) continue
+    var point = { x: slot.x, y: slot.y }
+    point = mapToItemSafely(slot, 0, 0) || point
+    out.push({
+      id: slot.moduleName, section: slot.region,
+      x: Math.round(point.x), y: Math.round(point.y),
+      width: Math.round(slot.width), height: Math.round(slot.height),
+      visible: slot.visible === true && slot.width > 0 && slot.height > 0,
+      itemVisible: slot.activeItem.visible === true,
+      itemWidth: Math.round(slot.activeItem.implicitWidth || 0),
+      itemHeight: Math.round(slot.activeItem.implicitHeight || 0)
+    })
+  }
+  return out
+}
+
+function beginBarDrag(root, sourceSlot, pressX, pressY) {
+  root.commitBarRemoval()
+  var item = sourceSlot.activeItem
+  if (item && item.opened === true && typeof item.close === "function") item.close()
+  root.barDragWindow = targetWindow(sourceSlot.activeItem) || targetWindow(sourceSlot)
+  root.barDragScreen = root.barDragWindow ? root.barDragWindow.screen : null
+  root.barDragOffsetX = pressX
+  root.barDragOffsetY = pressY
+  root.captureBarDragGhost(sourceSlot)
+  root.barDragExtent = Math.ceil(root.vertical ? sourceSlot.widgetHeight : sourceSlot.widgetWidth)
+  root.startDragRoom(sourceSlot)
+  root.barDragSource = sourceSlot
+}
+
+function startDragRoom(root, sourceSlot) {
+  var sections = root.layoutSections
+  root.barDragKeys = JSON.stringify(sections)
+  root.barDragRoom = dropRoom(null, { key: sourceSlot.widgetKey, region: sourceSlot.region }, sections, root.drawnKeys(root.barDragWindow))
+  root.barDragHome = root.dragShareKey(root.barDragRoom)
+  var shares = {}
+  shares[root.barDragHome] = 1
+  root.barDragShares = shares
+}
+
+function dropLandingItem(root, sourceSlot, room) {
+  if (!sourceSlot) return null
+  if (!room || room.home) return sourceSlot.widgetRoom
+  var sourceWindow = slotWindow(sourceSlot) || root.barDragWindow
+  for (var i = 0; i < root.dragSpacers.length; i++) {
+    var spacer = root.dragSpacers[i]
+    if (spacer && spacer.region === room.region && spacer.place === room.index && sameWindow(spacer.window, sourceWindow)) return spacer
+  }
+  return null
+}
+
+function updateBarSettle(root) {
+  var settle = root.barSettle
+  if (!settle) return
+  var landing = dropLandingItem(root, settle.source, settle.room)
+  if (!landing) return
+  var point = mapToItemSafely(landing, landing.width / 2, landing.height / 2)
+  if (!point) return
+  var center = root.barDragScreenPoint(point)
+  var toX = center.x - root.barDragGhostWidth / 2 + root.barDragOffsetX
+  var toY = center.y - root.barDragGhostHeight / 2 + root.barDragOffsetY
+  root.barDragScreenX = settle.fromX + (toX - settle.fromX) * root.barSettleProgress
+  root.barDragScreenY = settle.fromY + (toY - settle.fromY) * root.barSettleProgress
+}
+
+function finishBarSettle(root) {
+  var settle = root.barSettle
+  if (!settle) return
+  root.barSettle = null
+  root.barSettleAnimation.stop()
+  root.landBarDrag(settle.move)
+}
+
+function writeLayout(shell, memo, expected, edit) {
+  if (!shell || typeof shell.mutateShellConfig !== "function") return
+  mutateShellConfig(shell, memo, expected, edit)
+}
+
+function removeBarDrag(root, sourceSlot) {
+  root.barRemoval = { key: sourceSlot.widgetKey, region: sourceSlot.region, id: entryId(sourceSlot.entry) }
+  root.playPoof()
+  root.clearBarDrag()
+  if (!root.barPoof) root.commitBarRemoval()
+}
+
+function commitBarRemoval(root, util) {
+  var removal = root.barRemoval
+  root.barRemoval = null
+  if (!removal) return
+  var expected = JSON.parse(JSON.stringify(root.layoutSections))
+  var list = expected[removal.region] || []
+  var index = list.indexOf(removal.key)
+  if (index < 0) return
+  list.splice(index, 1)
+  root.writeLayout(expected, function(config) {
+    removeEntry(config, { region: removal.region, index: index, id: removal.id }, function(entry) { return util.normalizeLayoutEntry(entry) })
+  })
+}
+
+function isPendingRemoval(removal, key) {
+  return !!removal && removal.key === key
+}
+
+function moduleHostsTraySection(slot) {
+  return !!slot && !!slot.hostsTraySection
+}
+
+function beginBarMove(root, window) {
+  root.barMoveWindow = window
+  root.barMoveScreen = window ? window.screen : null
+  root.barMoveCandidate = root.position
+  root.barMoveActive = true
+}
+
+function thicknessFor(root, screen, notchHeight) {
+  if (root.vertical || !screen) return root.barSize
+  return Math.max(root.barSize, notchFloor(root.displayCutouts, root.position, screen.name,
+    screen.width, screen.height, screen.devicePixelRatio, root.panelModeFor(screen), notchHeight))
+}
+
+function normalizeLayout(layout, fallback, util) {
+  return util.normalizeLayout(isPlainObject(layout) ? layout : (fallback ? fallback.layout : {}))
+}
+
+function configObject(config, fallback) {
+  return isPlainObject(config) ? config : fallback
+}
+
+function configPosition(config) {
+  return config ? config.position : undefined
+}
+
+function configBackground(config) {
+  return config && config.background || (config && config.transparent === true ? "none" : "opaque")
+}
+
+function configLayout(config) {
+  return config ? config.layout : undefined
+}
+
+function panelAction(root, pluginId, action) {
+  var item = findPanelWidget(root, pluginId)
+  if (action === "isOpen") return !!item && item.opened === true
+  if (!item || typeof item[action] !== "function") return false
+  item[action]()
+  return true
+}
+
+function traySectionDropRectForSlot(slot, window, root, vertical) {
+  var shown = slot ? slot.traySectionNow() : null
+  if (!shown || !window || !window.contentItem) return null
+  return traySectionDropRect(slot.widgetRoom, shown, root.thicknessFor(window.screen), vertical)
+}
+
+function dragShareKey(room) {
+  return room ? room.region + ":" + room.index : ""
+}
+
+function showTooltip(root, target, text, callLater) {
+  var warm = root.tooltipShown || root.tooltipWarmTimer.running
+  root.clearTooltip()
+  if (!root.targetTooltipHovered(target) || !text) {
+    root.tooltipRequest += 1
+    return
+  }
+  var request = root.tooltipRequest + 1
+  root.tooltipRequest = request
+  root.pendingTooltipTarget = target
+  root.pendingTooltipText = text
+  callLater(function() {
+    if (request !== root.tooltipRequest) return
+    if (!root.targetTooltipHovered(root.pendingTooltipTarget)) {
+      root.clearTooltip()
+      return
+    }
+    root.tooltipTarget = root.pendingTooltipTarget
+    root.tooltipText = root.pendingTooltipText
+    root.pendingTooltipTarget = null
+    root.pendingTooltipText = ""
+    if (warm) root.tooltipShown = true
+    else root.tooltipTimer.restart()
+  })
+}
+
+function dropNonTrayCandidates(candidates) {
+  var rows = candidates || []
+  return rows.filter(function(row) { return row.region !== "tray" })
+}
+
+function poofShown(spec, screen) {
+  return !!spec && sameScreen(spec.screen, screen)
+}
+
+function poofSpanX(spec, minimum) {
+  return Math.max(minimum, spec.width / 2)
+}
+
+function poofSpanY(spec, minimum) {
+  return Math.max(minimum, spec.height / 2)
+}
+
+function poofSize(spec, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, Math.min(spec.width, spec.height) * 1.1))
+}
+
+function poofNoise(index, spec) {
+  var value = Math.sin(index * 12.9898 + spec.seed * 78.233) * 43758.5453
+  return value - Math.floor(value)
+}
+
+function poofX(spec) { return Math.round(spec.x) }
+function poofY(spec) { return Math.round(spec.y) }
+function poofWidth(spec) { return spec.width }
+function poofHeight(spec) { return spec.height }
+function poofImage(spec) { return spec.image }
+
+function grabbedImageUrl(result) {
+  return result && result.url ? result.url : ""
+}
+
+function panelIndicatorItem(item) {
+  return item && "openPanelIndicatorItem" in item ? item.openPanelIndicatorItem : null
+}
+
+function traySectionGeometry(hosts, item, holder) {
+  var shown = hosts && item ? item.sectionShown : null
+  if (!shown) return null
+  return { x: holder.x + shown.x, y: holder.y + shown.y, width: shown.width, height: shown.height }
+}
+
+function traySectionNow(hosts, item, geometry, widgetArea) {
+  if (!hosts || !item) return null
+  if ("sectionShown" in item) return geometry
+  var area = item.sectionHost
+  if (!area) return null
+  var point = area.mapToItem(widgetArea, 0, 0)
+  return { x: point.x, y: point.y, width: area.width, height: area.height }
+}
+
+function canReorder(shell) {
+  return !!shell && typeof shell.mutateShellConfig === "function"
+}
+
+function holdTarget(previous, target, button, noButton) {
+  if (previous && previous !== target && "heldButtons" in previous) previous.heldButtons = noButton
+  var held = target && "heldButtons" in target ? target : null
+  if (held) held.heldButtons = button
+  return held
+}
+
+function listHasRows(rows) {
+  return !!rows && rows.length > 0
+}
+
+function rowKey(row) { return row ? String(row.key || "") : "" }
+function rowPlace(row) { return row ? Number(row.place) : 0 }
+function hostDragSource(owner) { return !!owner && !!owner.dragSource }
+function isFirstParty(metadata) { return !!metadata && metadata.firstParty === true }
+function widgetWidth(item, vertical, barSize) {
+  return item && item.visible ? (vertical ? barSize : item.implicitWidth) : 0
+}
+function widgetHeight(item) { return item && item.visible ? item.implicitHeight : 0 }
+function widgetWidthFromHost(host) { return host ? host.widgetWidth : 0 }
+function widgetHeightFromHost(host) { return host ? host.widgetHeight : 0 }
+function widgetParent(owner, pool) { return owner ? owner.widgetHolder : pool }
+function ownerFixedEdge(owner) { return owner ? owner.fixedEdge : "center" }
+function rectLength(rect, vertical) { return vertical ? rect.height : rect.width }
+function rectX(rect) { return rect.x }
+function rectY(rect) { return rect.y }
+
+function injectWidgetProps(root, host, target) {
+  if (!target) return
+  if ("fixedEdge" in target) target.fixedEdge = host.fixedEdge
+  if ("bar" in target) target.bar = host.firstParty
+    ? root : root.pluginBarApiFor(host.pluginApiId, host.moduleName, host.registered)
+  if ("moduleName" in target) target.moduleName = host.moduleName
+  if ("settings" in target) target.settings = host.moduleSettings
+}
+
+function releaseWidgetSlot(slots, hosts, slot) {
+  var key = slot.widgetKey
+  if (slots[key] !== slot) return
+  delete slots[key]
+  slot.host = null
+  if (hosts[key]) hosts[key].owner = null
+}
+
+function removeWidgetHost(hosts, slots, host) {
+  if (hosts[host.key] !== host) return
+  delete hosts[host.key]
+  var slot = slots[host.key]
+  if (slot) slot.host = null
+}
+
+function syncPluginBarApiObjects(root, api, layoutSnapshot) {
+  if (!api) return
+  api.activePopout = root.pluginOwnsBarObject(api.pluginId, root.activePopout)
+    ? root.activePopout : (root.activePopout ? api.foreignPopoutMarker : null)
+  api.clickTargets = root.pluginClickTargets(api.pluginId)
+  api.layoutConfig = layoutSnapshot !== undefined ? JSON.parse(layoutSnapshot) : root.publicLayoutConfig()
+}
+
+function centerBoxDropRect(box, vertical) {
+  if (!box) return null
+  var point = mapToItemSafely(box, 0, 0)
+  return point ? centerDropZone({ x: point.x, y: point.y, width: box.width, height: box.height }, box.crossSize, vertical) : null
+}
+
+function dragSourceItem(source) { return source ? source.activeItem : null }
+function dragGhostWidth(vertical, source, extent) { return vertical ? (source ? source.widgetWidth : 0) : extent }
+function dragGhostHeight(vertical, source, extent) { return vertical ? extent : (source ? source.widgetHeight : 0) }
+function traySectionDragActive(source) { return !!source && !source.hostsTraySection }
+function rectOrEmpty(rect) { return rect || { x: 0, y: 0, width: 0, height: 0 } }
+function syncPeekEdge(window, measured, held) { window.peekEdge = nextPeekEdge(window.peekEdge, measured, held) }
+function pointX(point) { return point ? point.x : 0 }
+function pointY(point) { return point ? point.y : 0 }
+
+function updateCommandModule(module, raw, util) {
+  var data = util.parseModuleJson(raw)
+  var klass = data.class || data.alt || ""
+  module.outputText = data.text || String(raw || "").trim()
+  module.outputTooltip = data.tooltip || String(module.setting("tooltip", ""))
+  module.outputActive = klass === "active" || (Array.isArray(klass) && klass.indexOf("active") !== -1)
+}
+
+function claimWidgetSlot(slots, hosts, slot) {
+  var key = slot.widgetKey
+  var last = slots[key]
+  if (last && last !== slot) last.host = null
+  slots[key] = slot
+  var host = hosts[key] || null
+  slot.host = host
+  if (host) host.owner = slot
+}
+
+function addWidgetHost(hosts, slots, host) {
+  hosts[host.key] = host
+  var slot = slots[host.key] || null
+  host.owner = slot
+  if (slot) slot.host = host
+}
+
+function draggedWidgetWidth(dragged) { return dragged ? dragged.widgetWidth : 0 }
+function draggedWidgetHeight(dragged) { return dragged ? dragged.widgetHeight : 0 }
+
+function pluginBarApiFor(root, component, pluginId, moduleName, registered) {
+  var key = String(pluginId || "")
+  if (!key) return null
+  var pluginShell = pluginShellFor(root.shell, registered, moduleName, key)
+  if (root.pluginBarApis[key]) {
+    root.pluginBarApis[key].shell = pluginShell
+    return root.pluginBarApis[key]
+  }
+  var api = component.createObject(null, {
+    pluginId: key,
+    moduleName: String(moduleName || ""),
+    shell: pluginShell,
+    _showTooltip: function(target, text) { root.showTooltip(target, text) },
+    _hideTooltip: function(target) { root.hideTooltip(target) },
+    _registerClickTarget: function(target) { root.registerPluginClickTarget(key, target) },
+    _unregisterClickTarget: function(target) { root.unregisterPluginClickTarget(key, target) },
+    _requestPopout: function(owner) { root.requestPluginPopout(key, owner) },
+    _releasePopout: function(owner) { root.releasePluginPopout(key, owner) },
+    _switchPanelFrom: function(owner, direction) { return root.switchPanelFrom(owner, direction) },
+    _notePopoutCard: function(card) { root.notePopoutCard(card) },
+    _popoutCardFor: function(owner) { return root.popoutCardFor(owner) },
+    _targetBelongsToWindow: function(target, window) { return root.targetBelongsToWindow(target, window) },
+    _moduleWidgets: function(requestedId) {
+      return String(requestedId || "") === String(moduleName || "") ? root.moduleWidgets(moduleName) : []
+    },
+    _run: function(command) { root.run(command) },
+    _setCenterHoverRevealSuppressed: function(value) { root.centerHoverRevealSuppressed = !!value }
+  })
+  if (!api) return null
+  root.bindPluginBarApi(api)
+  var next = {}
+  for (var id in root.pluginBarApis) next[id] = root.pluginBarApis[id]
+  next[key] = api
+  root.pluginBarApis = next
+  return api
+}
+
+function draggedLength(dragged, lengths, region, place) {
+  return dragged ? (lengths[region + ":" + place] || 0) : 0
+}
+
+function drawnKeys(slots, window) {
+  var drawn = {}
+  var list = slots || []
+  for (var i = 0; i < list.length; i++) {
+    var slot = list[i]
+    if (slot && slot.visible && slot.widgetWidth > 0 && slot.widgetHeight > 0 && sameWindow(slotWindow(slot), window)) drawn[slot.widgetKey] = true
+  }
+  return drawn
+}
+
+function moveDragRoom(root, drop) {
+  var source = root.barDragSource
+  if (!source) return
+  var next = dropRoom(drop, { key: source.widgetKey, region: source.region }, root.layoutSections, drawnKeys(root.moduleSlots, root.barDragWindow))
+  var last = root.barDragRoom
+  root.barDragRoom = next
+  if (next.home) root.barDragHome = dragShareKey(next)
+  if (!next || (last && dragShareKey(last) === dragShareKey(next))) return false
+  return true
 }

@@ -1,5 +1,8 @@
+pragma ComponentBehavior: Bound
+
+import "NReorderCheckboxesUtils.js" as ReorderUtils
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 
@@ -14,6 +17,8 @@ Item {
   property color dragHandleColor: Color.mOutline
   property int baseSize: Style.baseWidgetSize * 0.7
   property int spacing: Style.marginM
+  property int dragStartIndex: -1
+  property int dragTargetIndex: -1
 
   signal itemToggled(int index, bool enabled)
   signal itemsReordered(int fromIndex, int toIndex)
@@ -21,41 +26,15 @@ Item {
   signal dragPotentialEnded
 
   readonly property real itemHeight: root.baseSize
-  readonly property real contentHeight: root.model.length > 0 ? root.model.length * itemHeight + (root.model.length - 1) * root.spacing : 0
+  readonly property real contentHeight: ReorderUtils.length(root.model) > 0 ? ReorderUtils.length(root.model) * itemHeight + (ReorderUtils.length(root.model) - 1) * root.spacing : 0
   implicitHeight: contentHeight
 
-  function toggleItem(index) {
-    if (index < 0 || index >= root.model.length)
-      return;
-    var item = root.model[index];
-    if (item.required)
-      return;
-
-    // Create a new array to trigger binding update
-    var newModel = root.model.slice();
-    newModel[index] = Object.assign({}, item, {
-                                      "enabled": !item.enabled
-                                    });
-    root.model = newModel;
-
-    root.itemToggled(index, newModel[index].enabled);
+  function toggleItem(index: var): void {
+    ReorderUtils.toggleItem(root, index);
   }
 
-  function moveItem(fromIndex, toIndex) {
-    if (fromIndex === toIndex)
-      return;
-    if (fromIndex < 0 || fromIndex >= root.model.length)
-      return;
-    if (toIndex < 0 || toIndex >= root.model.length)
-      return;
-
-    // Create a new array with item moved
-    var newModel = root.model.slice();
-    var item = newModel.splice(fromIndex, 1)[0];
-    newModel.splice(toIndex, 0, item);
-    root.model = newModel;
-
-    root.itemsReordered(fromIndex, toIndex);
+  function moveItem(fromIndex: var, toIndex: var): void {
+    ReorderUtils.moveItem(root, fromIndex, toIndex);
   }
 
   Item {
@@ -76,15 +55,13 @@ Item {
         required property int index
         required property var modelData
 
-        property string text: modelData.text || ""
-        property bool itemEnabled: modelData.enabled || false
-        property bool required: modelData.required || false
-        readonly property bool isDisabled: (root.disabledIds || []).indexOf(modelData.id) !== -1
+        property string text: ReorderUtils.field(delegateItem.modelData, "text") || ""
+        property bool itemEnabled: ReorderUtils.field(delegateItem.modelData, "enabled") || false
+        property bool required: ReorderUtils.field(delegateItem.modelData, "required") || false
+        readonly property bool isDisabled: (root.disabledIds || []).indexOf(ReorderUtils.field(delegateItem.modelData, "id")) !== -1
         readonly property bool canDrag: !delegateItem.isDisabled
         property bool dragging: false
         property int dragStartY: 0
-        property int dragStartIndex: -1
-        property int dragTargetIndex: -1
         property int itemSpacing: root.spacing
 
         RowLayout {
@@ -92,7 +69,7 @@ Item {
 
           width: parent.width
           spacing: Style.marginS
-          opacity: isDisabled ? 0.5 : 1.0
+          opacity: delegateItem.isDisabled ? 0.5 : 1.0
 
           // Drag handle
           Rectangle {
@@ -138,8 +115,8 @@ Item {
                            if (!delegateItem.canDrag) {
                              return;
                            }
-                           delegateItem.dragStartIndex = delegateItem.index;
-                           delegateItem.dragTargetIndex = delegateItem.index;
+                           root.dragStartIndex = delegateItem.index;
+                           root.dragTargetIndex = delegateItem.index;
                            delegateItem.dragStartY = delegateItem.y;
                            delegateItem.dragging = true;
                            delegateItem.z = 999;
@@ -150,19 +127,20 @@ Item {
                          }
 
               onPositionChanged: mouse => {
+                var dy, newY, targetIndex;
                                    if (delegateItem.dragging) {
-                                     var dy = mouse.y - dragHandle.height / 2;
-                                     var newY = delegateItem.y + dy;
+                                     dy = mouse.y - dragHandle.height / 2;
+                                     newY = delegateItem.y + dy;
 
                                      // Constrain within bounds
                                      newY = Math.max(0, Math.min(newY, root.contentHeight - delegateItem.height));
                                      delegateItem.y = newY;
 
                                      // Calculate target index (but don't apply yet)
-                                     var targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + delegateItem.itemSpacing));
+                                     targetIndex = Math.floor((newY + delegateItem.height / 2) / (delegateItem.height + delegateItem.itemSpacing));
                                      targetIndex = Math.max(0, Math.min(targetIndex, repeater.count - 1));
 
-                                     delegateItem.dragTargetIndex = targetIndex;
+                                     root.dragTargetIndex = targetIndex;
                                    }
                                  }
 
@@ -172,13 +150,13 @@ Item {
                 root.dragPotentialEnded();
 
                 // Apply the model change now that drag is complete
-                if (delegateItem.dragStartIndex !== -1 && delegateItem.dragTargetIndex !== -1 && delegateItem.dragStartIndex !== delegateItem.dragTargetIndex) {
-                  root.moveItem(delegateItem.dragStartIndex, delegateItem.dragTargetIndex);
+                if (root.dragStartIndex !== -1 && root.dragTargetIndex !== -1 && root.dragStartIndex !== root.dragTargetIndex) {
+                  root.moveItem(root.dragStartIndex, root.dragTargetIndex);
                 }
 
                 delegateItem.dragging = false;
-                delegateItem.dragStartIndex = -1;
-                delegateItem.dragTargetIndex = -1;
+                root.dragStartIndex = -1;
+                root.dragTargetIndex = -1;
                 delegateItem.z = 0;
               }
 
@@ -188,8 +166,8 @@ Item {
                 root.dragPotentialEnded();
 
                 delegateItem.dragging = false;
-                delegateItem.dragStartIndex = -1;
-                delegateItem.dragTargetIndex = -1;
+                root.dragStartIndex = -1;
+                root.dragTargetIndex = -1;
                 delegateItem.z = 0;
               }
             }
@@ -261,25 +239,18 @@ Item {
 
         // Position binding for non-dragging state
         y: {
+          var currentIndex;
           if (delegateItem.dragging) {
             return delegateItem.y;
           }
 
           // Check if any item is being dragged
-          var draggedIndex = -1;
-          var targetIndex = -1;
-          for (var i = 0; i < repeater.count; i++) {
-            var item = repeater.itemAt(i);
-            if (item && item.dragging) {
-              draggedIndex = item.dragStartIndex;
-              targetIndex = item.dragTargetIndex;
-              break;
-            }
-          }
+          var draggedIndex = root.dragStartIndex;
+          var targetIndex = root.dragTargetIndex;
 
           // If an item is being dragged, adjust positions
           if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
-            var currentIndex = delegateItem.index;
+            currentIndex = delegateItem.index;
 
             if (draggedIndex < targetIndex) {
               // Dragging down: shift items up between draggedIndex and targetIndex

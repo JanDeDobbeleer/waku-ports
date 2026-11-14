@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls.Basic
 import Quickshell
 import Celeste.Config
 import qs.components
@@ -10,33 +9,38 @@ import qs.modules.bar.popouts as BarPopouts
 CustomMouseArea {
     id: root
 
-    required property ShellScreen screen
-    required property BarPopouts.Wrapper popouts
-    required property ScreenState screenState
-    required property Panels panels
-    required property Bar.BarWrapper bar
-    required property real borderThickness
-    required property bool fullscreen
+    required final property ShellScreen screen
+    required final property BarPopouts.Wrapper popouts
+    required final property ScreenState screenState
+    required final property Panels panels
+    required final property Bar.BarWrapper bar
+    required final property real barWidth
+    required final property real borderThickness
+    required final property bool fullscreen
     // True while a panel that closes when the user clicks elsewhere is open.
-    required property bool lightDismiss
+    required final property bool lightDismiss
 
     signal dismissRequested
+    signal barWheel(y: real, angleDelta: point)
+    signal barClicked(x: real, y: real)
+    signal barTrayCloseRequested
+    signal barPopoutCheckRequested(y: real)
 
-    property point dragStart
-    property bool dashboardShortcutActive
+    final property point dragStart
+    final property bool dashboardShortcutActive
 
     Timer {
         id: dashboardHoverTimer
 
         interval: Config.dashboard.hoverDelay
         onTriggered: {
-            if (!root.dashboardShortcutActive && Config.dashboard.showOnHover && root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY))
+            if (!root.dashboardShortcutActive && Config.dashboard.showOnHover && root.inTopPanel(root.panels.dashboard, root.panels.dashboard.offsetScale, root.mouseX, root.mouseY))
                 root.screenState.dashboard = true;
         }
     }
-    property bool osdShortcutActive
-    property bool utilitiesShortcutActive
-    property bool sidebarShortcutActive
+    final property bool osdShortcutActive
+    final property bool utilitiesShortcutActive
+    final property bool sidebarShortcutActive
 
     function withinPanelHeight(panel: Item, x: real, y: real): bool {
         const panelY = root.borderThickness + panel.y;
@@ -44,48 +48,46 @@ CustomMouseArea {
     }
 
     function withinPanelWidth(panel: Item, x: real, y: real): bool {
-        const panelX = bar.implicitWidth + panel.x;
+        const panelX = barWidth + panel.x;
         return x >= panelX - Config.border.rounding && x <= panelX + panel.width + Config.border.rounding;
     }
 
     function inLeftPanel(panel: Item, x: real, y: real): bool {
-        return x < bar.implicitWidth + panel.x + panel.width && withinPanelHeight(panel, x, y);
+        return x < barWidth + panel.x + panel.width && withinPanelHeight(panel, x, y);
     }
 
     function inRightPanel(panel: Item, x: real, y: real): bool {
-        return x > Math.min(width - Config.border.minThickness, bar.implicitWidth + panel.x) && withinPanelHeight(panel, x, y);
+        return x > Math.min(width - Config.border.minThickness, barWidth + panel.x) && withinPanelHeight(panel, x, y);
     }
 
-    function inTopPanel(panel: Item, x: real, y: real): bool {
-        const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
+    function inTopPanel(panel: Item, offsetScale: real, x: real, y: real): bool {
+        const panelHeight = panel.height * (1 - offsetScale);
         return y < Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) && withinPanelWidth(panel, x, y);
     }
 
-    function inBottomPanel(panel: Item, x: real, y: real, isCorner = false): bool {
-        const panelHeight = panel.height * (1 - (panel.offsetScale ?? 0)); // qmllint disable missing-property
+    function inBottomPanel(panel: Item, offsetScale: real, x: real, y: real, isCorner: bool): bool {
+        const panelHeight = panel.height * (1 - offsetScale);
         return y > height - Math.max(Config.border.minThickness, Config.border.thickness + panelHeight) - (isCorner ? Config.border.rounding : 0) && withinPanelWidth(panel, x, y);
     }
 
     // Port: whether the point is on a visible panel. A click anywhere else, off the bar, closes
     // the light-dismiss panels (the window has no compositor grab here; see ContentWindow).
     function onVisiblePanel(x: real, y: real): bool {
-        const list = [panels.dashboard, panels.launcher, panels.sessionWrapper, panels.sidebar, panels.utilities, panels.popoutsWrapper, panels.notifications, panels.osdWrapper];
-        for (let i = 0; i < list.length; i++) {
-            const p = list[i];
-            if (!p.visible || p.width <= 0 || p.height <= 0)
-                continue;
-            const left = bar.implicitWidth + p.x;
-            const top = borderThickness + p.y;
-            if (x >= left && x <= left + p.width && y >= top && y <= top + p.height)
-                return true;
-        }
-        return false;
+        return overPanel(panels.dashboard, x, y) || overPanel(panels.launcher, x, y) || overPanel(panels.sessionWrapper, x, y) || overPanel(panels.sidebar, x, y) || overPanel(panels.utilities, x, y) || overPanel(panels.popoutsWrapper, x, y) || overPanel(panels.notifications, x, y) || overPanel(panels.osdWrapper, x, y);
+    }
+
+    function overPanel(p: Item, x: real, y: real): bool {
+        if (!p.visible || p.width <= 0 || p.height <= 0)
+            return false;
+        const left = barWidth + p.x;
+        const top = borderThickness + p.y;
+        return x >= left && x <= left + p.width && y >= top && y <= top + p.height;
     }
 
     // A press at (x, y): closes the light-dismiss panels when it is off the bar and off the panels.
     // Returns whether it did (the press is then used up, not passed to anything).
     function dismissOnPress(x: real, y: real): bool {
-        if (!lightDismiss || x < bar.implicitWidth || onVisiblePanel(x, y))
+        if (!lightDismiss || x < barWidth || onVisiblePanel(x, y))
             return false;
         dismissRequested();
         return true;
@@ -94,8 +96,8 @@ CustomMouseArea {
     function onWheel(event: WheelEvent): void {
         if (fullscreen)
             return;
-        if (event.x < bar.implicitWidth) {
-            bar.handleWheel(event.y, event.angleDelta);
+        if (event.x < barWidth) {
+            barWheel(event.y, event.angleDelta);
         }
     }
 
@@ -110,8 +112,8 @@ CustomMouseArea {
     }
     // Port: a click on empty bar space opens the dashboard, like a click on the clock does.
     onClicked: event => {
-        if (event.button === Qt.LeftButton && event.x < bar.implicitWidth && bar.emptyAt(event.x, event.y))
-            bar.clickClock();
+        if (event.button === Qt.LeftButton && event.x < barWidth)
+            barClicked(event.x, event.y);
     }
     onContainsMouseChanged: {
         if (!containsMouse) {
@@ -127,9 +129,9 @@ CustomMouseArea {
             if (!utilitiesShortcutActive)
                 screenState.utilities = false;
 
-            if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
+            if (!popouts.currentName.startsWith("traymenu") || popouts.currentDepth <= 1) {
                 popouts.hasCurrent = false;
-                bar.closeTray();
+                barTrayCloseRequested();
             }
 
             if (Config.bar.showOnHover)
@@ -181,12 +183,12 @@ CustomMouseArea {
                 root.panels.osd.hovered = true;
             }
 
-            const showSidebar = pressed && dragStart.x > Math.min(width - Config.border.minThickness, bar.implicitWidth + panels.sidebar.x);
+            const showSidebar = pressed && dragStart.x > Math.min(width - Config.border.minThickness, barWidth + panels.sidebar.x);
 
             // Show sidebar on hover (top-right corner, bounded by notification panel height)
             if (Config.sidebar.showOnHover && Config.sidebar.enabled) {
                 const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
-                const showSidebarHover = x > Math.min(width - Config.border.minThickness, bar.implicitWidth + panels.sidebar.x) && y <= sidebarTriggerY;
+                const showSidebarHover = x > Math.min(width - Config.border.minThickness, barWidth + panels.sidebar.x) && y <= sidebarTriggerY;
                 if (showSidebarHover && !screenState.sidebar)
                     screenState.sidebar = true;
             }
@@ -232,7 +234,7 @@ CustomMouseArea {
             // Show/hide sidebar on hover
             if (Config.sidebar.showOnHover && Config.sidebar.enabled && !pressed) {
                 const sidebarTriggerY = Math.max(Config.sidebar.minHoverThreshold, panels.notifications.y + panels.notifications.height + borderThickness);
-                const showSidebarHover = x > Math.min(width - Config.border.minThickness, bar.implicitWidth + panels.sidebar.x) && y <= sidebarTriggerY;
+                const showSidebarHover = x > Math.min(width - Config.border.minThickness, barWidth + panels.sidebar.x) && y <= sidebarTriggerY;
                 if (showSidebarHover && !screenState.sidebar) {
                     screenState.sidebar = true;
                 } else if (!sidebarShortcutActive) {
@@ -252,9 +254,9 @@ CustomMouseArea {
 
         // Show launcher on hover, or show/hide on drag if hover is disabled
         if (Config.launcher.showOnHover) {
-            if (!screenState.launcher && inBottomPanel(panels.launcher, x, y))
+            if (!screenState.launcher && inBottomPanel(panels.launcher, panels.launcher.offsetScale, x, y, false))
                 screenState.launcher = true;
-        } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y) && withinPanelWidth(panels.launcher, x, y)) {
+        } else if (pressed && inBottomPanel(panels.launcher, panels.launcher.offsetScale, dragStart.x, dragStart.y, false) && withinPanelWidth(panels.launcher, x, y)) {
             if (dragY < -Config.launcher.dragThreshold)
                 screenState.launcher = true;
             else if (dragY > Config.launcher.dragThreshold)
@@ -262,7 +264,7 @@ CustomMouseArea {
         }
 
         // Show dashboard on hover
-        const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y);
+        const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, panels.dashboard.offsetScale, x, y);
 
         // Always update visibility based on hover if not in shortcut mode
         // Port: opening needs a dwell, so passing over the top edge (a window's own toolbar, for
@@ -280,7 +282,7 @@ CustomMouseArea {
         }
 
         // Show/hide dashboard on drag (for touchscreen devices)
-        if (pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
+        if (pressed && inTopPanel(panels.dashboard, panels.dashboard.offsetScale, dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
             if (dragY > Config.dashboard.dragThreshold)
                 screenState.dashboard = true;
             else if (dragY < -Config.dashboard.dragThreshold)
@@ -288,7 +290,7 @@ CustomMouseArea {
         }
 
         // Show utilities on hover
-        const showUtilities = inBottomPanel(panels.utilities, x, y, true);
+        const showUtilities = inBottomPanel(panels.utilities, panels.utilities.offsetScale, x, y, true);
 
         // Always update visibility based on hover if not in shortcut mode
         if (!utilitiesShortcutActive) {
@@ -299,11 +301,11 @@ CustomMouseArea {
         }
 
         // Show popouts on hover
-        if (x < bar.implicitWidth) {
-            bar.checkPopout(y);
-        } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inLeftPanel(panels.popoutsWrapper, x, y)) {
+        if (x < barWidth) {
+            barPopoutCheckRequested(y);
+        } else if ((!popouts.currentName.startsWith("traymenu") || popouts.currentDepth <= 1) && !inLeftPanel(panels.popoutsWrapper, x, y)) {
             popouts.hasCurrent = false;
-            bar.closeTray();
+            barTrayCloseRequested();
         }
     }
 
@@ -318,7 +320,7 @@ CustomMouseArea {
                 root.sidebarShortcutActive = false;
 
                 // Also hide dashboard and OSD if they're not being hovered
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.panels.dashboard.offsetScale, root.mouseX, root.mouseY);
                 const inOsdArea = root.inRightPanel(root.panels.osdWrapper, root.mouseX, root.mouseY);
 
                 if (!inDashboardArea) {
@@ -334,7 +336,7 @@ CustomMouseArea {
         function onDashboardChanged() {
             if (root.screenState.dashboard) {
                 // Dashboard became visible, immediately check if this should be shortcut mode
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.panels.dashboard.offsetScale, root.mouseX, root.mouseY);
                 if (!inDashboardArea) {
                     root.dashboardShortcutActive = true;
                 }
@@ -360,7 +362,7 @@ CustomMouseArea {
         function onUtilitiesChanged() {
             if (root.screenState.utilities) {
                 // Utilities became visible, immediately check if this should be shortcut mode
-                const inUtilitiesArea = root.inBottomPanel(root.panels.utilities, root.mouseX, root.mouseY);
+                const inUtilitiesArea = root.inBottomPanel(root.panels.utilities, root.panels.utilities.offsetScale, root.mouseX, root.mouseY, false);
                 if (!inUtilitiesArea) {
                     root.utilitiesShortcutActive = true;
                 }

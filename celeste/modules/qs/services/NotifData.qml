@@ -1,23 +1,22 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Quickshell.Services.Notifications
-import Celeste
 import Celeste.Config
 import Celeste.I18n
 import qs.services
+import "NotifDataHelpers.js" as NotifDataHelpers
 
 QtObject {
     id: notif
 
-    property bool popup
-    property bool closed
-    property var locks: new Set()
+    final property bool popup
+    final property bool closed
+    final property var locks: new Set()
 
-    property date time: new Date()
-    property int ageMins: 0
-    readonly property string timeStr: {
+    final property date time: new Date()
+    final property int ageMins: 0
+    readonly final property string timeStr: {
         if (ageMins < 1)
             return Tr.tr("now");
 
@@ -31,31 +30,32 @@ QtObject {
         return Tr.trCtx("%1m", "abbreviated notification age, minutes").arg(ageMins);
     }
 
-    readonly property Timer timeStrTimer: Timer {
+    readonly final property Timer timeStrTimer: Timer {
         running: !notif.closed
         repeat: true
         interval: 5000
         onTriggered: notif.updateTimeStr()
     }
 
-    property Notification notification
-    property string notificationId
-    property string summary
-    property string body
-    property string appIcon
-    property string appName
-    property string image
-    property var hints // Hints are not persisted across restarts
-    property real expireTimeout: GlobalConfig.notifs.defaultExpireTimeout
-    property int urgency: NotificationUrgency.Normal
-    property bool resident
-    property bool hasActionIcons
-    property list<var> actions
+    final property Notification notification
+    final property string notificationId
+    final property string summary
+    final property string body
+    final property string appIcon
+    final property string appName
+    final property string image
+    final property var hints // Hints are not persisted across restarts
+    final property real expireTimeout: GlobalConfig.notifs.defaultExpireTimeout
+    final property int urgency: NotificationUrgency.Normal
+    final property bool resident
+    final property bool hasActionIcons
+    final property var actions: []
+    final property int actionCount: NotifDataHelpers.count(actions)
 
     // waku gap: no fullscreen detection (upstream asks Hyprland).
-    readonly property bool hasFullscreen: false
+    readonly final property bool hasFullscreen: false
 
-    readonly property Timer timer: Timer {
+    readonly final property Timer timer: Timer {
         running: true
         interval: notif.expireTimeout > 0 ? notif.expireTimeout : notif.hasFullscreen ? GlobalConfig.notifs.fullscreenExpireTimeout : GlobalConfig.notifs.defaultExpireTimeout
         onTriggered: {
@@ -66,7 +66,7 @@ QtObject {
     }
 
     // waku: Notification has no expireTimeoutChanged, residentChanged, hasActionIconsChanged, actionsChanged or hintsChanged signals.
-    readonly property Connections conn: Connections {
+    readonly final property Connections conn: Connections {
         function onClosed(): void {
             notif.close();
         }
@@ -104,17 +104,17 @@ QtObject {
         ageMins = m;
 
         if (m < 1) {
-            timeStrTimer.interval = 5000;
+            NotifDataHelpers.setInterval(timeStrTimer, 5000);
         } else {
             const h = Math.floor(m / 60);
             const d = Math.floor(h / 24);
 
             if (d > 0)
-                timeStrTimer.interval = 3600000;
+                NotifDataHelpers.setInterval(timeStrTimer, 3600000);
             else if (h > 0)
-                timeStrTimer.interval = 300000;
+                NotifDataHelpers.setInterval(timeStrTimer, 300000);
             else
-                timeStrTimer.interval = m < 10 ? 30000 : 60000;
+                NotifDataHelpers.setInterval(timeStrTimer, m < 10 ? 30000 : 60000);
         }
     }
 
@@ -129,12 +129,7 @@ QtObject {
     }
 
     function close(): void {
-        closed = true;
-        if (locks.size === 0 && Notifs.list.includes(this)) {
-            Notifs.list = Notifs.list.filter(n => n !== this);
-            notification?.dismiss();
-            destroy();
-        }
+        NotifDataHelpers.close(notif, locks, Notifs, notification);
     }
 
     Component.onCompleted: {
@@ -153,10 +148,6 @@ QtObject {
         resident = notification.resident;
         hasActionIcons = notification.hasActionIcons;
 
-        actions = (notification.actions as Array).map(a => ({
-                    identifier: a.identifier,
-                    text: a.text,
-                    invoke: () => a.invoke()
-                }));
+        actions = NotifDataHelpers.actions(notification.actions);
     }
 }

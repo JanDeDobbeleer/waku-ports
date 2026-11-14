@@ -1,5 +1,4 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
@@ -87,13 +86,13 @@ RowLayout {
       onEntered: {
         if (!enabled)
           return;
-        hovering = true;
+        root.hovering = true;
         root.entered();
       }
       onExited: {
         if (!enabled)
           return;
-        hovering = false;
+        root.hovering = false;
         root.exited();
       }
       onClicked: {

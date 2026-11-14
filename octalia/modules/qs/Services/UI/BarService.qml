@@ -1,5 +1,7 @@
 pragma Singleton
 
+import "BarServiceUtils.js" as BarServiceUtils
+
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
@@ -45,44 +47,28 @@ Singleton {
   property var screenAutoHideState: ({})
 
   // Get or create auto-hide state for a screen
-  function getOrCreateAutoHideState(screenName) {
-    if (!screenAutoHideState[screenName]) {
-      screenAutoHideState[screenName] = {
-        "hovered": false,
-        "hidden": Settings.getBarDisplayModeForScreen(screenName) === "auto_hide"
-      };
-    }
-    return screenAutoHideState[screenName];
+  function getOrCreateAutoHideState(screenName: var): var {
+    return BarServiceUtils.getOrCreateAutoHideState(root, Settings, screenName);
   }
 
   // Set hover state for a screen
-  function setScreenHovered(screenName, hovered) {
-    var state = getOrCreateAutoHideState(screenName);
-    if (state.hovered !== hovered) {
-      state.hovered = hovered;
-      screenAutoHideState = Object.assign({}, screenAutoHideState);
-      barHoverStateChanged(screenName, hovered);
-    }
+  function setScreenHovered(screenName: var, hovered: var): void {
+    BarServiceUtils.setAutoHideState(root, Settings, screenName, "hovered", hovered);
   }
 
   // Set hidden state for a screen
-  function setScreenHidden(screenName, hidden) {
-    var state = getOrCreateAutoHideState(screenName);
-    if (state.hidden !== hidden) {
-      state.hidden = hidden;
-      screenAutoHideState = Object.assign({}, screenAutoHideState);
-      barAutoHideStateChanged(screenName, hidden);
-    }
+  function setScreenHidden(screenName: var, hidden: var): void {
+    BarServiceUtils.setAutoHideState(root, Settings, screenName, "hidden", hidden);
   }
 
   // Check if bar is hidden on a screen
-  function isBarHidden(screenName) {
+  function isBarHidden(screenName: var): var {
     var state = screenAutoHideState[screenName];
     return state ? state.hidden : false;
   }
 
   // Check if bar is hovered on a screen
-  function isBarHovered(screenName) {
+  function isBarHovered(screenName: var): var {
     var state = screenAutoHideState[screenName];
     return state ? state.hovered : false;
   }
@@ -91,10 +77,11 @@ Singleton {
   // state without touching isVisible (so hover-to-show still works).
   // For non-auto-hide screens, toggles the global isVisible flag.
   function toggleVisibility() {
+    var screenName;
     // Check if any auto-hide screen is currently visible
     var anyAutoHideVisible = false;
     var hasAutoHideScreens = false;
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         hasAutoHideScreens = true;
         if (!screenAutoHideState[screenName].hidden) {
@@ -106,7 +93,7 @@ Singleton {
 
     // Toggle auto-hide screens (per-screen hidden state only)
     if (hasAutoHideScreens) {
-      for (var screenName in screenAutoHideState) {
+      for (screenName in screenAutoHideState) {
         if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
           setScreenHidden(screenName, anyAutoHideVisible);
         }
@@ -123,8 +110,9 @@ Singleton {
   // Show bar. In auto-hide mode, un-hides on screens with auto-hide enabled.
   // The bar stays visible until the user hovers and moves away.
   function show() {
+    var screenName;
     // Show auto-hide screens
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, false);
       }
@@ -137,8 +125,9 @@ Singleton {
   // isVisible so hover-to-show still works. For non-auto-hide screens, sets
   // global visibility to false.
   function hide() {
+    var screenName;
     var hasAutoHideScreens = false;
-    for (var screenName in screenAutoHideState) {
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, true);
         hasAutoHideScreens = true;
@@ -155,7 +144,8 @@ Singleton {
   // Uses the same pattern as workspace switch: show, then emit unhover
   // to start the hide timer.
   function peek() {
-    for (var screenName in screenAutoHideState) {
+    var screenName;
+    for (screenName in screenAutoHideState) {
       if (Settings.getBarDisplayModeForScreen(screenName) === "auto_hide") {
         setScreenHidden(screenName, false);
         if (!isBarHovered(screenName)) {
@@ -183,17 +173,18 @@ Singleton {
   Connections {
     target: Settings.data.bar
     function onDisplayModeChanged() {
+      var displayMode;
       Logger.d("BarService", "Display mode changed to:", Settings.data.bar.displayMode);
 
       // Only affect screens without displayMode overrides
-      for (let screenName in screenAutoHideState) {
+      for (let screenName in root.screenAutoHideState) {
         if (!Settings.hasScreenOverride(screenName, "displayMode")) {
-          var displayMode = Settings.getBarDisplayModeForScreen(screenName);
+          displayMode = Settings.getBarDisplayModeForScreen(screenName);
           if (displayMode === "auto_hide") {
-            setScreenHidden(screenName, true);
+            root.setScreenHidden(screenName, true);
           } else {
-            if (screenAutoHideState[screenName].hidden) {
-              setScreenHidden(screenName, false);
+            if (root.screenAutoHideState[screenName].hidden) {
+              root.setScreenHidden(screenName, false);
             }
           }
         }
@@ -201,18 +192,19 @@ Singleton {
     }
 
     function onScreenOverridesChanged() {
+      var displayMode;
       Logger.d("BarService", "Screen overrides changed, re-evaluating auto-hide states");
 
       // Re-evaluate auto-hide state for all screens
-      for (let screenName in screenAutoHideState) {
-        var displayMode = Settings.getBarDisplayModeForScreen(screenName);
+      for (let screenName in root.screenAutoHideState) {
+        displayMode = Settings.getBarDisplayModeForScreen(screenName);
         if (displayMode === "auto_hide") {
-          if (!screenAutoHideState[screenName].hidden) {
-            setScreenHidden(screenName, true);
+          if (!root.screenAutoHideState[screenName].hidden) {
+            root.setScreenHidden(screenName, true);
           }
         } else {
-          if (screenAutoHideState[screenName].hidden) {
-            setScreenHidden(screenName, false);
+          if (root.screenAutoHideState[screenName].hidden) {
+            root.setScreenHidden(screenName, false);
           }
         }
       }
@@ -233,9 +225,9 @@ Singleton {
       var screen = root._pendingWorkspaceScreen;
       root._pendingWorkspaceScreen = "";
       if (screen) {
-        setScreenHidden(screen, false);
+        root.setScreenHidden(screen, false);
         if (!root.isBarHovered(screen)) {
-          barHoverStateChanged(screen, false);
+          root.barHoverStateChanged(screen, false);
         }
       }
     }
@@ -245,35 +237,12 @@ Singleton {
   Connections {
     target: CompositorService
     function onWorkspaceChanged() {
-      if (!Settings.data.bar.showOnWorkspaceSwitch)
-        return;
-      if (Settings.data.bar.displayMode !== "auto_hide")
-        return;
-
-      var ws = CompositorService.getCurrentWorkspace();
-      if (!ws || !ws.output) {
-        return;
-      }
-
-      // Only trigger if workspace actually changed
-      var currentWsId = ws.id;
-      if (currentWsId === root.lastWorkspaceId) {
-        return;
-      }
-      root.lastWorkspaceId = currentWsId;
-
-      var screenName = ws.output || "";
-      Logger.d("BarService", "Workspace switched to:", currentWsId, "on screen:", screenName);
-
-      // Debounce: rapid switches (e.g. external monitor ↔ laptop) cause overlapping
-      // bar load/unload; 80ms delay coalesces them and reduces QV4 incubation races
-      root._pendingWorkspaceScreen = screenName;
-      workspaceDebounceTimer.restart();
+      BarServiceUtils.onWorkspaceChanged(root, Settings, CompositorService, Logger, workspaceDebounceTimer);
     }
   }
 
   // Function for the Bar to call when it's ready
-  function registerBar(screenName) {
+  function registerBar(screenName: var): void {
     if (!readyBars[screenName]) {
       readyBars[screenName] = true;
       Logger.d("BarService", "Bar is ready on screen:", screenName);
@@ -282,12 +251,12 @@ Singleton {
   }
 
   // Function for the Dock to check if the bar is ready
-  function isBarReady(screenName) {
+  function isBarReady(screenName: var): var {
     return readyBars[screenName] || false;
   }
 
   // Register a widget instance
-  function registerWidget(screenName, section, widgetId, index, instance) {
+  function registerWidget(screenName: var, section: var, widgetId: var, index: var, instance: var): void {
     const key = [screenName, section, widgetId, index].join("|");
     widgetInstances[key] = {
       "key": key,
@@ -303,185 +272,59 @@ Singleton {
   }
 
   // Unregister a widget instance
-  function unregisterWidget(screenName, section, widgetId, index) {
+  function unregisterWidget(screenName: var, section: var, widgetId: var, index: var): void {
     const key = [screenName, section, widgetId, index].join("|");
-    delete widgetInstances[key];
+    BarServiceUtils.unregisterWidget(widgetInstances, key);
     Logger.d("BarService", "Unregistered widget:", key);
     root.activeWidgetsChanged();
   }
 
   // Lookup a specific widget instance (returns the actual QML instance)
-  function lookupWidget(widgetId, screenName = null, section = null, index = null) {
-    // If looking for a specific instance
-    if (screenName && section !== null) {
-      for (var key in widgetInstances) {
-        var widget = widgetInstances[key];
-        if (!widget)
-          continue;
-        if (widget.widgetId === widgetId && widget.screenName === screenName && widget.section === section) {
-          if (index === null) {
-            return widget.instance;
-          } else if (widget.index == index) {
-            return widget.instance;
-          }
-        }
-      }
-    }
+  function lookupWidget(widgetId: var, screenName: var): var {
+    return BarServiceUtils.lookupWidget(widgetInstances, widgetId, screenName, undefined, undefined);
+  }
 
-    // Return first match if no specific screen/section specified
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-      if (widget.widgetId === widgetId) {
-        if (!screenName || widget.screenName === screenName) {
-          if (section === null || widget.section === section) {
-            return widget.instance;
-          }
-        }
-      }
-    }
-
-    return undefined;
+  function lookupWidgetInSection(widgetId: var, screenName: var, section: var, index: var): var {
+    return BarServiceUtils.lookupWidget(widgetInstances, widgetId, screenName, section, index);
   }
 
   // Get all instances of a widget type
-  function getAllWidgetInstances(widgetId = null, screenName = null, section = null) {
-    var instances = [];
+  function getAllWidgetInstances(widgetId: var, screenName: var): var {
+    return BarServiceUtils.getAllWidgetInstances(widgetInstances, widgetId, screenName, undefined);
+  }
 
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-
-      var matches = true;
-      if (widgetId && widget.widgetId !== widgetId)
-        matches = false;
-      if (screenName && widget.screenName !== screenName)
-        matches = false;
-      if (section !== null && widget.section !== section)
-        matches = false;
-
-      if (matches) {
-        instances.push(widget.instance);
-      }
-    }
-
-    return instances;
+  function getAllWidgetInstancesInSection(widgetId: var, screenName: var, section: var): var {
+    return BarServiceUtils.getAllWidgetInstances(widgetInstances, widgetId, screenName, section);
   }
 
   // Get widget with full metadata
-  function getWidgetWithMetadata(widgetId, screenName = null, section = null) {
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-      if (widget.widgetId === widgetId) {
-        if (!screenName || widget.screenName === screenName) {
-          if (section === null || widget.section === section) {
-            return widget;
-          }
-        }
-      }
-    }
-    return undefined;
+  function getWidgetWithMetadata(widgetId: var, screenName: var, section: var): var {
+    return BarServiceUtils.getWidgetWithMetadata(widgetInstances, widgetId, screenName, section);
   }
 
   // Get all widgets in a specific section
-  function getWidgetsBySection(section, screenName = null) {
-    var widgetEntries = [];
-
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-      if (widget.section === section) {
-        if (!screenName || widget.screenName === screenName) {
-          widgetEntries.push(widget);
-        }
-      }
-    }
-
-    // Sort by index to maintain order
-    widgetEntries.sort(function (a, b) {
-      return (a.index || 0) - (b.index || 0);
-    });
-
-    // Return just the instances
-    return widgetEntries.map(function (w) {
-      return w.instance;
-    });
+  function getWidgetsBySection(section: var, screenName: var): var {
+    return BarServiceUtils.getWidgetsBySection(widgetInstances, section, screenName);
   }
 
   // Get all registered widgets (for debugging)
-  function getAllRegisteredWidgets() {
-    var result = [];
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-      result.push({
-                    "key": key,
-                    "widgetId": widget.widgetId,
-                    "section": widget.section,
-                    "screenName": widget.screenName,
-                    "index": widget.index
-                  });
-    }
-    return result;
+  function getAllRegisteredWidgets(): var {
+    return BarServiceUtils.getAllRegisteredWidgets(widgetInstances);
   }
 
   // Check if a widget type exists in a section
-  function hasWidget(widgetId, section = null, screenName = null) {
-    for (var key in widgetInstances) {
-      var widget = widgetInstances[key];
-      if (!widget)
-        continue;
-      if (widget.widgetId === widgetId) {
-        if (section === null || widget.section === section) {
-          if (!screenName || widget.screenName === screenName) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
+  function hasWidget(widgetId: var, section: var, screenName: var): bool {
+    return BarServiceUtils.hasWidget(widgetInstances, widgetId, section, screenName);
   }
 
   // Get pill direction for a widget instance
-  function getPillDirection(widgetInstance) {
-    try {
-      if (widgetInstance.section === "left") {
-        return false;
-      } else if (widgetInstance.section === "right") {
-        return true;
-      } else {
-        // middle section
-        if (widgetInstance.sectionWidgetIndex < widgetInstance.sectionWidgetsCount / 2) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-    } catch (e) {
-      Logger.e(e);
-    }
-    return true;
+  function getPillDirection(widgetInstance: var): bool {
+    return BarServiceUtils.getPillDirection(widgetInstance, Logger);
   }
 
   // Helper to close any existing dialogs in a popup menu window
-  function closeExistingDialogs(popupMenuWindow) {
-    if (!popupMenuWindow || !popupMenuWindow.dialogParent)
-      return;
-
-    var dialogParent = popupMenuWindow.dialogParent;
-    for (var i = dialogParent.children.length - 1; i >= 0; i--) {
-      var child = dialogParent.children[i];
-      if (child && typeof child.close === "function") {
-        child.close();
-      }
-    }
-    popupMenuWindow.hasDialog = false;
+  function closeExistingDialogs(popupMenuWindow: var): void {
+    BarServiceUtils.closeExistingDialogs(popupMenuWindow);
   }
 
   // Open widget settings dialog for a bar widget
@@ -491,7 +334,7 @@ Singleton {
   //   index: Widget index in section
   //   widgetId: Widget type id (e.g., "Volume")
   //   widgetData: Current widget settings object
-  function openWidgetSettings(screen, section, index, widgetId, widgetData) {
+  function openWidgetSettings(screen: var, section: var, index: var, widgetId: var, widgetData: var): void {
     // Get the popup menu window to use as parent (avoids clipping issues with bar height)
     var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
     if (!popupMenuWindow) {
@@ -507,63 +350,6 @@ Singleton {
     }
 
     var component = Qt.createComponent(ShellUrl.dir + "/modules/qs/Modules/Panels/Settings/Bar/BarWidgetSettingsDialog.qml");
-
-    function instantiateAndOpen() {
-      // Use dialogParent (Item) instead of window directly for proper Popup anchoring
-      var dialog = component.createObject(popupMenuWindow.dialogParent, {
-                                            "widgetIndex": index,
-                                            "widgetData": widgetData,
-                                            "widgetId": widgetId,
-                                            "sectionId": section,
-                                            "screen": screen
-                                          });
-
-      if (dialog) {
-        dialog.updateWidgetSettings.connect((sec, idx, settings) => {
-                                              var screenName = screen?.name || "";
-                                              if (Settings.hasScreenOverride(screenName, "widgets")) {
-                                                var overrideWidgets = Settings.getBarWidgetsForScreen(screenName);
-                                                if (overrideWidgets && overrideWidgets[sec] && idx < overrideWidgets[sec].length) {
-                                                  overrideWidgets[sec][idx] = Object.assign({}, overrideWidgets[sec][idx], settings);
-                                                  Settings.setScreenOverride(screenName, "widgets", overrideWidgets);
-                                                }
-                                              } else {
-                                                var widgets = Settings.data.bar.widgets[sec];
-                                                if (widgets && idx < widgets.length) {
-                                                  widgets[idx] = Object.assign({}, widgets[idx], settings);
-                                                  Settings.data.bar.widgets[sec] = widgets;
-                                                  Settings.saveImmediate();
-                                                }
-                                              }
-                                            });
-        // Enable keyboard focus for the popup menu window when dialog is open
-        popupMenuWindow.hasDialog = true;
-        // Close the popup menu window when dialog closes
-        dialog.closed.connect(() => {
-                                popupMenuWindow.hasDialog = false;
-                                popupMenuWindow.close();
-                                dialog.destroy();
-                              });
-        // Show the popup menu window and open the dialog
-        popupMenuWindow.open();
-        dialog.open();
-      } else {
-        Logger.e("BarService", "Failed to create widget settings dialog");
-      }
-    }
-
-    if (component.status === Component.Ready) {
-      instantiateAndOpen();
-    } else if (component.status === Component.Error) {
-      Logger.e("BarService", "Error loading widget settings dialog:", component.errorString());
-    } else {
-      component.statusChanged.connect(function () {
-        if (component.status === Component.Ready) {
-          instantiateAndOpen();
-        } else if (component.status === Component.Error) {
-          Logger.e("BarService", "Error loading widget settings dialog:", component.errorString());
-        }
-      });
-    }
+    BarServiceUtils.openWidgetSettings(component, popupMenuWindow, screen, section, index, widgetId, widgetData, Settings, Logger, Component.Ready, Component.Error);
   }
 }

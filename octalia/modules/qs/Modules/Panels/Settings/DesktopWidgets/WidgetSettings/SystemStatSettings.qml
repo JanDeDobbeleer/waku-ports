@@ -1,9 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.System
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -15,11 +15,11 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property string valueStatType: widgetData.statType !== undefined ? widgetData.statType : widgetMetadata.statType
-  property string valueDiskPath: widgetData.diskPath !== undefined ? widgetData.diskPath : widgetMetadata.diskPath
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
-  property string valueLayout: widgetData.layout !== undefined ? widgetData.layout : widgetMetadata.layout
+  property string valueStatType: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "statType")
+  property string valueDiskPath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "diskPath")
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
+  property string valueLayout: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "layout")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -35,7 +35,7 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.system-stat-stat-type-label")
     description: I18n.tr("panels.desktop-widgets.system-stat-stat-type-description")
-    currentKey: valueStatType
+    currentKey: root.valueStatType
     minimumWidth: 260 * Style.uiScaleRatio
     model: {
       let items = [
@@ -64,30 +64,24 @@ ColumnLayout {
       return items;
     }
     onSelected: key => {
-                  valueStatType = key;
-                  saveSettings();
+                  root.valueStatType = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.statType
+    defaultValue: SettingsValue.read(root.widgetMetadata, "statType")
   }
 
   NComboBox {
     Layout.fillWidth: true
-    visible: valueStatType === "Disk"
+    visible: root.valueStatType === "Disk"
     label: I18n.tr("bar.system-monitor.disk-path-label")
     description: I18n.tr("bar.system-monitor.disk-path-description")
-    model: {
-      const paths = Object.keys(SystemStatService.diskPercents).sort();
-      return paths.map(path => ({
-                                  key: path,
-                                  name: path
-                                }));
-    }
-    currentKey: valueDiskPath
+    model: SettingsValue.diskPathOptions(SystemStatService.diskPercents)
+    currentKey: root.valueDiskPath
     onSelected: key => {
-                  valueDiskPath = key;
-                  saveSettings();
+                  root.valueDiskPath = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.diskPath
+    defaultValue: SettingsValue.read(root.widgetMetadata, "diskPath")
   }
 
   NDivider {
@@ -98,25 +92,25 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.system-stat-show-background-label")
     description: I18n.tr("panels.desktop-widgets.system-stat-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
-                 saveSettings();
+                 root.valueShowBackground = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
     Layout.fillWidth: true
-    visible: valueShowBackground
+    visible: root.valueShowBackground
     label: I18n.tr("panels.desktop-widgets.system-stat-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.system-stat-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
-                 saveSettings();
+                 root.valueRoundedCorners = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 
   NDivider {
@@ -127,7 +121,7 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.system-stat-layout-label")
     description: I18n.tr("panels.desktop-widgets.system-stat-layout-description")
-    currentKey: valueLayout
+    currentKey: root.valueLayout
     minimumWidth: 260 * Style.uiScaleRatio
     model: [
       {
@@ -140,9 +134,9 @@ ColumnLayout {
       }
     ]
     onSelected: key => {
-                  valueLayout = key;
-                  saveSettings();
+                  root.valueLayout = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.layout
+    defaultValue: SettingsValue.read(root.widgetMetadata, "layout")
   }
 }

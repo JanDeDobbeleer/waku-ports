@@ -1,8 +1,9 @@
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
+import "../I18nModel.js" as I18nModel
 
 BarWidget {
   id: root
@@ -17,14 +18,14 @@ BarWidget {
   function clear() { updateAvailable = false }
 
   function runUpdate() {
-    if (root.bar) root.bar.run("nomarchy-launch-floating-terminal-with-presentation nomarchy-update")
+    if (root.bar) BarValues.run(root.bar, "nomarchy-launch-floating-terminal-with-presentation nomarchy-update")
   }
 
   visible: updateAvailable
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.system-update"
 
     function refresh(): void {
@@ -58,7 +59,7 @@ BarWidget {
     bar: root.bar
     text: "\uf021"
     slotSize: Style.bar.statusSlot
-    tooltipText: I18n.t("bar.pendingUpdates")
+    tooltipText: I18nModel.translate(I18n, "bar.pendingUpdates")
     onPressed: root.runUpdate()
   }
 }

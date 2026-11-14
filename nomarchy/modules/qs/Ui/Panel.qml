@@ -1,6 +1,5 @@
+import "BarValues.js" as BarValues
 import QtQuick
-import Quickshell.Io
-import qs.Commons
 import qs.Commons as Commons
 
 // Base item for plugin popup widgets. Many first-party plugins expose a bar
@@ -20,7 +19,7 @@ Item {
   property bool popoutSwitchClosing: false
 
   readonly property bool opened: panelController.open
-  readonly property color barForeground: bar ? bar.barForeground : Commons.Color.foreground
+  readonly property color barForeground: bar ? BarValues.barForeground(bar) : Commons.Color.foreground
 
   function open() { panelController.show() }
   function close() { panelController.hide() }
@@ -30,14 +29,13 @@ Item {
     Qt.callLater(function() { popoutSwitchClosing = false })
   }
   function toggle() { opened ? close() : open() }
-  function switchPanel(direction) {
-    if (bar && typeof bar.switchPanelFrom === "function") return bar.switchPanelFrom(root, direction)
-    return false
+  function switchPanel(direction: var): var {
+    return BarValues.switchPanel(bar, root, direction)
   }
 
   // Read a single value from this panel's inline shell.json entry, with a
   // fallback for missing/null values. Matches BarWidget.setting().
-  function setting(name, fallback) {
+  function setting(name: string, fallback: var): var {
     var value = settings ? settings[name] : undefined
     return value === undefined || value === null ? fallback : value
   }
@@ -46,7 +44,7 @@ Item {
     id: panelController
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     // A panel that answers its target itself leaves this one without one.
     target: root.manageIpc ? root.ipcTarget : ""
 

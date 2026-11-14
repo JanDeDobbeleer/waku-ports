@@ -1,10 +1,12 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
+
+import "BrightnessUtils.js" as BrightnessUtils
 
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.compat
 
 // Octalia's BrightnessService over the engine's ControlCenter: one brightness (0..100) of the display
 // source the engine picked (WinRT or DDC/CI), shared by every screen. Upstream's sysfs, ddcutil and Apple
@@ -18,10 +20,10 @@ Singleton {
   readonly property list<Monitor> monitors: variants.instances
   property bool appleDisplayPresent: false
   // The engine's sources, as the identifiers the settings tab shows and sends back.
-  readonly property list<var> availableBacklightDevices: (S.ControlCenter.brightnessSources || []).map(s => String(s.id ?? s.name ?? s))
+  readonly property list<var> availableBacklightDevices: BrightnessUtils.availableDevices(S.ControlCenter.brightnessSources)
 
   function getMonitorForScreen(screen: ShellScreen): var {
-    return monitors.find(m => m.modelData === screen);
+    return BrightnessUtils.getMonitorForScreen(monitors, screen);
   }
 
   // Signal emitted when a specific monitor's brightness changes, includes monitor context
@@ -33,11 +35,11 @@ Singleton {
 
   // Global helpers for IPC and shortcuts
   function increaseBrightness(): void {
-    monitors.forEach(m => m.increaseBrightness());
+    BrightnessUtils.increaseBrightness(monitors);
   }
 
   function decreaseBrightness(): void {
-    monitors.forEach(m => m.decreaseBrightness());
+    BrightnessUtils.decreaseBrightness(monitors);
   }
 
   function setBrightness(value: real): void {
@@ -49,24 +51,19 @@ Singleton {
     return [];
   }
 
-  function normalizeBacklightDevicePath(devicePath): string {
+  function normalizeBacklightDevicePath(devicePath: var): string {
     return devicePath === undefined || devicePath === null ? "" : String(devicePath).trim();
   }
 
-  function getBacklightDeviceName(devicePath): string {
-    const key = normalizeBacklightDevicePath(devicePath);
-    for (const s of (S.ControlCenter.brightnessSources || [])) {
-      if (String(s.id ?? s.name ?? s) === key)
-        return String(s.name ?? s.id ?? key);
-    }
-    return key;
+  function getBacklightDeviceName(devicePath: var): string {
+    return BrightnessUtils.getBacklightDeviceName(devicePath, root, S.ControlCenter);
   }
 
-  function getMappedBacklightDevice(outputName): string {
+  function getMappedBacklightDevice(outputName: var): string {
     return String(S.ControlCenter.brightnessSource || "");
   }
 
-  function setMappedBacklightDevice(outputName, devicePath): void {
+  function setMappedBacklightDevice(outputName: var, devicePath: var): void {
     S.ControlCenter.setBrightnessSource(normalizeBacklightDevicePath(devicePath));
   }
 

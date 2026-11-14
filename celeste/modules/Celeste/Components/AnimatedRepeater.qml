@@ -6,5 +6,5 @@ import QtQuick
 // in pure QML, and removed items disappear at once. Delegates that read them must be edited to
 // use a plain property (the callers are the bar workspace files, ported in a later package).
 Repeater {
-    property int removeDuration: 300
+    final property int removeDuration: 300
 }

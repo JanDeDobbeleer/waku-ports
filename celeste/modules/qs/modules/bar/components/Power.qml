@@ -6,7 +6,7 @@ import qs.services
 Item {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     implicitWidth: icon.implicitHeight + Tokens.padding.small
     implicitHeight: icon.implicitHeight
@@ -28,6 +28,6 @@ Item {
 
         text: "power_settings_new"
         color: Colours.palette.m3error
-        fontStyle: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+        fontStyle: Tokens.styled("icon", "small", { weight: Font.Bold })
     }
 }

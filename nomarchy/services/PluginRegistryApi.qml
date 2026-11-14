@@ -1,4 +1,5 @@
 import QtQuick
+import "PluginRegistryApiUtils.js" as PluginRegistryApiUtils
 
 // Read-only, self-scoped registry view for an installed third-party plugin.
 // The host updates manifest/enabled when it rescans; no host registry object is
@@ -17,16 +18,16 @@ QtObject {
     return out
   }
 
-  function isEnabled(id) {
+  function isEnabled(id: string): bool {
     return String(id || "") === pluginId && enabled
   }
 
-  function resolveEnabledId(id) {
+  function resolveEnabledId(id: string): string {
     return String(id || "") === pluginId ? pluginId : ""
   }
 
-  function entryPointUrl(candidate, kind) {
-    if (!candidate || String(candidate.id || "") !== pluginId) return ""
-    return _entryPointUrl ? _entryPointUrl(String(kind || "")) : ""
+  function entryPointUrl(candidate: var, kind: string): string {
+    if (!candidate || String(PluginRegistryApiUtils.field(candidate, "id") || "") !== pluginId) return ""
+    return _entryPointUrl ? PluginRegistryApiUtils.invoke(_entryPointUrl, [String(kind || "")], api) : ""
   }
 }

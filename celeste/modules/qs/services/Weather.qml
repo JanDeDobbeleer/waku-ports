@@ -12,27 +12,27 @@ import qs.compat
 Singleton {
     id: root
 
-    property string city
-    property string loc
-    property var cc
-    property list<var> forecast
-    property list<var> hourlyForecast
+    final property string city
+    final property string loc
+    final property var cc
+    final property list<var> forecast
+    final property list<var> hourlyForecast
 
-    property bool ipApiRequestPending: false
-    property double ipApiBlockedUntil: 0
-    property bool citiesLoaded: false
-    property string pendingCoords
+    final property bool ipApiRequestPending: false
+    final property double ipApiBlockedUntil: 0
+    final property bool citiesLoaded: false
+    final property string pendingCoords
 
-    readonly property string icon: cc ? Icons.getWeatherIcon(cc.weatherCode) : "cloud_alert"
-    readonly property string description: cc ? getWeatherCondition(cc.weatherCode) : Tr.tr("No weather")
-    readonly property string temp: formatTemp(cc?.tempC)
-    readonly property string feelsLike: formatTemp(cc?.feelsLikeC)
-    readonly property int humidity: cc?.humidity ?? 0
-    readonly property real windSpeed: cc?.windSpeed ?? 0
-    readonly property string sunrise: cc ? Tr.formatDateTime(new Date(cc.sunrise), Units.twelveHourClock ? "h:mm A" : "h:mm") : "--:--"
-    readonly property string sunset: cc ? Tr.formatDateTime(new Date(cc.sunset), Units.twelveHourClock ? "h:mm A" : "h:mm") : "--:--"
+    readonly final property string icon: cc ? Icons.getWeatherIcon(cc.weatherCode) : "cloud_alert"
+    readonly final property string description: cc ? getWeatherCondition(cc.weatherCode) : Tr.tr("No weather")
+    readonly final property string temp: formatTemp(cc?.tempC)
+    readonly final property string feelsLike: formatTemp(cc?.feelsLikeC)
+    readonly final property int humidity: cc?.humidity ?? 0
+    readonly final property real windSpeed: cc?.windSpeed ?? 0
+    readonly final property string sunrise: cc ? Tr.formatDateTime(new Date(cc.sunrise), Units.twelveHourClock ? "h:mm A" : "h:mm") : "--:--"
+    readonly final property string sunset: cc ? Tr.formatDateTime(new Date(cc.sunset), Units.twelveHourClock ? "h:mm A" : "h:mm") : "--:--"
 
-    readonly property var cachedCities: new Map()
+    readonly final property var cachedCities: new Map()
 
     function formatTemp(temp: var, compact = false): string {
         const unit = GlobalConfig.services.weatherUnits;

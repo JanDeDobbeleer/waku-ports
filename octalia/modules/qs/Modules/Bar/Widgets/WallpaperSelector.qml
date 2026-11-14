@@ -1,9 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
-import qs.Modules.Bar.Extras
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Services.UI
 import qs.Widgets
 
@@ -21,8 +19,9 @@ NIconButton {
   property var widgetMetadata: BarWidgetRegistry.widgetMetadata[widgetId] ?? {}
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -30,7 +29,7 @@ NIconButton {
     return {};
   }
 
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
 
   enabled: Settings.data.wallpaper.enabled
   baseSize: Style.getCapsuleHeightForScreen(screen?.name)
@@ -65,7 +64,7 @@ NIconButton {
                    if (action === "random-wallpaper") {
                      WallpaperService.setRandomWallpaper();
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -73,12 +72,12 @@ NIconButton {
   onClicked: {
     var wallpaperPanel = PanelService.getPanel("wallpaperPanel", screen);
     if (Settings.data.wallpaper.panelPosition === "follow_bar") {
-      wallpaperPanel?.toggle(this);
+      PanelService.invokePanel(wallpaperPanel, "toggle", [this]);
     } else {
-      wallpaperPanel?.toggle();
+      PanelService.invokePanel(wallpaperPanel, "toggle", []);
     }
   }
   onRightClicked: {
-    PanelService.showContextMenu(contextMenu, root, screen);
+    PanelService.showContextMenu(contextMenu, root, screen, null);
   }
 }

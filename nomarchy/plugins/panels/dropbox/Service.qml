@@ -44,12 +44,12 @@ Item {
   property string _controlOutput: ""
   property string _controlError: ""
 
-  function setting(name, fallback) {
+  function setting(name: string, fallback: var): var {
     var value = settings ? settings[name] : undefined
     return value === undefined || value === null ? fallback : value
   }
 
-  function intSetting(name, fallback, min, max) {
+  function intSetting(name: string, fallback: int, min: int, max: int): int {
     var n = parseInt(String(setting(name, fallback)), 10)
     if (!isFinite(n)) n = fallback
     if (n < min) n = min
@@ -66,7 +66,7 @@ Item {
     statusProcess.running = true
   }
 
-  function applyStatus(raw) {
+  function applyStatus(raw: string): void {
     var parsed = Model.parseStatus(raw)
     if (!parsed.ok) {
       lastError = I18n.t("dropbox.statusParseFailed")
@@ -88,7 +88,7 @@ Item {
     lastError = ""
   }
 
-  function elideStatus(text) {
+  function elideStatus(text: string): string {
     var value = String(text || "").replace(/\s+/g, " ").trim()
     return value.length > 140 ? value.substring(0, 137) + "…" : value
   }
@@ -116,7 +116,7 @@ Item {
     else resume()
   }
 
-  function runControl(command, desired) {
+  function runControl(command: var, desired: int): void {
     // No progress status here — the greyed icon and hero phrase already convey
     // the pause/resume; only surface a message if the command fails.
     if (!installed || controlProcess.running) return
@@ -127,18 +127,19 @@ Item {
     controlProcess.running = true
   }
 
-  function openFile(file) {
-    if (!file || !file.path) return
-    Quickshell.execDetached(["uwsm-app", "--", "nautilus", "--select", fileUri(String(file.path))])
+  function openFile(file: var): void {
+    var path = Model.field(file, "path")
+    if (!path) return
+    Quickshell.execDetached(["uwsm-app", "--", "nautilus", "--select", fileUri(String(path))])
   }
 
-  function fileUri(path) {
+  function fileUri(path: string): string {
     var parts = String(path || "").split("/")
-    for (var i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i])
+    for (let i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i])
     return "file://" + parts.join("/")
   }
 
-  function openAuthUrlFrom(text) {
+  function openAuthUrlFrom(text: var): bool {
     if (_loginUrlOpened) return true
     var match = String(text || "").match(/https?:\/\/\S+/)
     if (match && match[0]) {
@@ -151,7 +152,7 @@ Item {
     return false
   }
 
-  function handleLoginOutput(data, isError) {
+  function handleLoginOutput(data: string, isError: bool): void {
     var text = String(data || "")
     if (isError) _loginError += text + "\n"
     else _loginOutput += text + "\n"

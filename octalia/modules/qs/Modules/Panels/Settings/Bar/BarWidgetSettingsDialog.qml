@@ -1,10 +1,11 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Effects
 import QtQuick.Layouts
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../DesktopWidgets/DesktopWidgetSettingsDialog.js" as DialogData
+import "../SettingsValue.js" as SettingsValue
 
 // Widget Settings Dialog Component
 Popup {
@@ -18,7 +19,7 @@ Popup {
   property bool barIsVertical: false
   property var settingsCache: ({})
 
-  readonly property real maxHeight: (screen ? screen.height : (parent ? parent.height : 800)) * 0.8
+  readonly property real maxHeight: (screen ? SettingsValue.read(screen, "height") : (parent ? parent.height : 800)) * 0.8
 
   signal updateWidgetSettings(string section, int index, var settings)
 
@@ -64,7 +65,7 @@ Popup {
         Layout.preferredHeight: implicitHeight
 
         NText {
-          text: I18n.tr("system.widget-settings-title", {
+          text: I18n.trArgs("system.widget-settings-title", {
                           "widget": root.widgetId
                         })
           pointSize: Style.fontSizeL
@@ -75,7 +76,7 @@ Popup {
 
         NIconButton {
           icon: "close"
-          onClicked: saveAndClose()
+          onClicked: root.saveAndClose()
         }
       }
 
@@ -105,38 +106,10 @@ Popup {
             id: settingsLoader
             Layout.fillWidth: true
             onLoaded: {
-              // Try to focus the first focusable item in the loaded settings
-              if (item) {
-                Qt.callLater(() => {
-                               var firstInput = findFirstFocusable(item);
-                               if (firstInput) {
-                                 firstInput.forceActiveFocus();
-                               } else {
-                                 focusScope.forceActiveFocus();
-                               }
-                             });
-              }
+              if (item) DialogData.focusFirstFocusable(item, focusScope);
             }
 
-            function findFirstFocusable(item) {
-              if (!item)
-                return null;
-              // Check if this item can accept focus
-              if (item.focus !== undefined && item.focus === true)
-                return item;
-              // Check children
-              if (item.children) {
-                for (var i = 0; i < item.children.length; i++) {
-                  var child = item.children[i];
-                  if (child && child.focus !== undefined && child.focus === true)
-                    return child;
-                  var found = findFirstFocusable(child);
-                  if (found)
-                    return found;
-                }
-              }
-              return null;
-            }
+
           }
         }
       }
@@ -155,7 +128,7 @@ Popup {
   Connections {
     target: settingsLoader.item
     ignoreUnknownSignals: true
-    function onSettingsChanged(newSettings) {
+    function onSettingsChanged(newSettings: var): void {
       if (newSettings) {
         root.settingsCache = newSettings;
         saveTimer.start();
@@ -163,22 +136,19 @@ Popup {
     }
   }
 
-  function saveAndClose() {
-    if (settingsLoader.item && typeof settingsLoader.item.saveSettings === 'function') {
-      var newSettings = settingsLoader.item.saveSettings();
-      if (newSettings) {
-        root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
-      }
-    }
+  function saveAndClose(): void {
+    const newSettings = DialogData.saveSettings(settingsLoader.item);
+    if (newSettings) root.updateWidgetSettings(root.sectionId, root.widgetIndex, newSettings);
     root.close();
   }
 
-  function loadWidgetSettings() {
+  function loadWidgetSettings(): void {
+    var currentWidgetData, widgets;
     const source = BarWidgetRegistry.widgetSettingsMap[widgetId];
     if (source) {
-      var currentWidgetData = widgetData;
+      currentWidgetData = widgetData;
       if (sectionId && widgetIndex >= 0) {
-        var widgets = Settings.getBarWidgetsForScreen(screen?.name || "")[sectionId];
+        widgets = Settings.getBarWidgetsForScreen(SettingsValue.optionalRead(screen, "name") || "")[sectionId];
         if (widgets && widgetIndex < widgets.length) {
           currentWidgetData = widgets[widgetIndex];
         }

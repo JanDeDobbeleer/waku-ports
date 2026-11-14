@@ -1,9 +1,9 @@
 import QtQuick
-import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "ActiveWindowModel.js" as ActiveWindowModel
 
 BarWidget {
   id: root
@@ -11,15 +11,38 @@ BarWidget {
 
 
   readonly property var toplevel: ToplevelManager.activeToplevel
-  readonly property string title: toplevel ? (toplevel.title || toplevel.appId || "") : ""
+  property string currentTitle: ""
+  readonly property string title: currentTitle
+
+  function updateTitle(): void {
+    currentTitle = ActiveWindowModel.title(toplevel)
+  }
+
+  onToplevelChanged: updateTitle()
+  Component.onCompleted: updateTitle()
+
+  Connections {
+    target: root.toplevel
+    ignoreUnknownSignals: true
+    function onTitleChanged(): void { root.updateTitle() }
+    function onAppIdChanged(): void { root.updateTitle() }
+  }
   readonly property int maxLabelWidth: Number(setting("maxWidth", 280))
 
   visible: title !== "" && !vertical
-  implicitWidth: visible ? Math.min(maxLabelWidth, labelText.implicitWidth) + Style.spacing.controlPaddingX * 2 : 0
+  implicitWidth: visible ? Math.min(maxLabelWidth, naturalLabel.implicitWidth) + Style.spacing.controlPaddingX * 2 : 0
   implicitHeight: barSize
 
   Behavior on implicitWidth {
     NumberAnimation { duration: Style.duration(180); easing.type: Easing.OutCubic }
+  }
+
+  Text {
+    id: naturalLabel
+    visible: false
+    text: root.title
+    textFormat: Text.PlainText
+    font: labelText.font
   }
 
   Item {
@@ -35,8 +58,8 @@ BarWidget {
       anchors.left: parent.left
       width: parent.width
       text: root.title
-      color: root.bar ? root.bar.barForeground : Commons.Color.foreground
-      font.family: root.bar ? root.bar.fontFamily : Style.font.family
+      color: root.bar ? BarValues.barForeground(root.bar) : Commons.Color.foreground
+      font.family: root.bar ? BarValues.fontFamily(root.bar) : Style.font.family
       font.pixelSize: Style.font.body
       elide: Text.ElideRight
       opacity: 0.85
@@ -59,7 +82,7 @@ BarWidget {
         root.toplevel.activate()
       }
     }
-    onEntered: if (root.bar) root.bar.showTooltip(root, root.title)
-    onExited: if (root.bar) root.bar.hideTooltip(root)
+    onEntered: if (root.bar) BarValues.showTooltip(root.bar, root, root.title)
+    onExited: if (root.bar) BarValues.hideTooltip(root.bar, root)
   }
 }

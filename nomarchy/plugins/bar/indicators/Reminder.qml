@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Ui
+import "Dynamic.js" as Dynamic
 
 BarIndicator {
   id: root
@@ -15,18 +16,18 @@ BarIndicator {
   activeTooltipText: tooltip
   inactiveTooltipText: tooltip
 
-  function refresh() {
+  function refresh(): void {
     if (!jsonProc.running) jsonProc.running = true
   }
 
-  function openReminderFlow() {
+  function openReminderFlow(): void {
     Quickshell.execDetached(["nomarchy-reminder", "-i"])
   }
 
-  function update(raw) {
+  function update(raw: string): void {
     var data = extractData(raw)
-    reminderCount = Number(data.count || 0)
-    tooltip = String(data.tooltip || "")
+    reminderCount = Number(Dynamic.value(data, "count") || 0)
+    tooltip = String(Dynamic.value(data, "tooltip") || "")
   }
 
   Component.onCompleted: refresh()

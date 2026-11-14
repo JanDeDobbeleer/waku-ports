@@ -2,7 +2,7 @@ import QtQuick
 
 // One moving segment of a LinearIndicatorManager. Only the manager writes it.
 QtObject {
-    property real startFraction: 0
-    property real endFraction: 0
-    property int gapSize: 4
+    final property real startFraction: 0
+    final property real endFraction: 0
+    final property int gapSize: 4
 }

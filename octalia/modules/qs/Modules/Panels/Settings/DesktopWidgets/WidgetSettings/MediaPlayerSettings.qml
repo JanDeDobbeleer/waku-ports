@@ -1,8 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -13,13 +13,13 @@ ColumnLayout {
 
   signal settingsChanged(var settings)
 
-  property bool valueShowBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : widgetMetadata.showBackground
-  property string valueVisualizerType: widgetData.visualizerType ? widgetData.visualizerType : widgetMetadata.visualizerType
-  property string valueHideMode: widgetData.hideMode !== undefined ? widgetData.hideMode : widgetMetadata.hideMode
-  property bool valueShowButtons: widgetData.showButtons !== undefined ? widgetData.showButtons : widgetMetadata.showButtons
-  property bool valueShowAlbumArt: widgetData.showAlbumArt !== undefined ? widgetData.showAlbumArt : widgetMetadata.showAlbumArt
-  property bool valueShowVisualizer: widgetData.showVisualizer !== undefined ? widgetData.showVisualizer : widgetMetadata.showVisualizer
-  property bool valueRoundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : widgetMetadata.roundedCorners
+  property bool valueShowBackground: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showBackground")
+  property string valueVisualizerType: SettingsValue.truthyFallback(widgetData, widgetMetadata, "visualizerType")
+  property string valueHideMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideMode")
+  property bool valueShowButtons: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showButtons")
+  property bool valueShowAlbumArt: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showAlbumArt")
+  property bool valueShowVisualizer: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showVisualizer")
+  property bool valueRoundedCorners: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "roundedCorners")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -37,48 +37,48 @@ ColumnLayout {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-show-background-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-background-description")
-    checked: valueShowBackground
+    checked: root.valueShowBackground
     onToggled: checked => {
-                 valueShowBackground = checked;
-                 saveSettings();
+                 root.valueShowBackground = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showBackground
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showBackground")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.clock-rounded-corners-label")
     description: I18n.tr("panels.desktop-widgets.media-player-rounded-corners-description")
-    checked: valueRoundedCorners
+    checked: root.valueRoundedCorners
     onToggled: checked => {
-                 valueRoundedCorners = checked;
-                 saveSettings();
+                 root.valueRoundedCorners = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.roundedCorners
+    defaultValue: SettingsValue.read(root.widgetMetadata, "roundedCorners")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.media-player-show-album-art-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-album-art-description")
-    checked: valueShowAlbumArt
+    checked: root.valueShowAlbumArt
     onToggled: checked => {
-                 valueShowAlbumArt = checked;
-                 saveSettings();
+                 root.valueShowAlbumArt = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showAlbumArt
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showAlbumArt")
   }
 
   NToggle {
     Layout.fillWidth: true
     label: I18n.tr("panels.desktop-widgets.media-player-show-buttons-label")
     description: I18n.tr("panels.desktop-widgets.media-player-show-buttons-description")
-    checked: valueShowButtons
+    checked: root.valueShowButtons
     onToggled: checked => {
-                 valueShowButtons = checked;
-                 saveSettings();
+                 root.valueShowButtons = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.showButtons
+    defaultValue: SettingsValue.read(root.widgetMetadata, "showButtons")
   }
 
   NComboBox {
@@ -99,11 +99,11 @@ ColumnLayout {
         "name": I18n.tr("hide-modes.visible")
       }
     ]
-    currentKey: valueHideMode
+    currentKey: root.valueHideMode
     onSelected: key => {
-                  valueHideMode = key;
-                  saveSettings();
+                  root.valueHideMode = key;
+                  root.saveSettings();
                 }
-    defaultValue: widgetMetadata.hideMode
+    defaultValue: SettingsValue.read(root.widgetMetadata, "hideMode")
   }
 }

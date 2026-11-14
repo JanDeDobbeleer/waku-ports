@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import "WavyLineHelpers.js" as WavyLineHelpers
 
 // Port of celeste's C++ WavyLine (a QQuickPaintedItem) as a Shape with one polyline. The wave is
 // recomputed in JS whenever an input changes, so it is heavier than the C++ original.
@@ -11,20 +12,21 @@ Item {
         Arc
     }
 
-    property int lineWidth: 4
-    property real amplitudeMultiplier: 0
-    property int frequency: 6
-    property real startX: 0
-    property real fullLength: 0
-    property color color: "white"
-    property real waveProgress: 0
-    property int pathType: WavyLine.Linear
-    property real startAngle: 0
-    property real fullAngle: 360
-    property real radius: 0
-    property real value: 1
+    final property int lineWidth: 4
+    final property real amplitudeMultiplier: 0
+    final property int frequency: 6
+    final property real startX: 0
+    final property real fullLength: 0
+    final property color color: "white"
+    final property real waveProgress: 0
+    final property int pathType: WavyLine.Linear
+    final property real startAngle: 0
+    final property real fullAngle: 360
+    final property real radius: 0
+    final property real value: 1
 
-    readonly property var points: pathType === WavyLine.Arc ? arcPoints() : linearPoints()
+    readonly final property var points: pathType === WavyLine.Arc ? arcPoints() : linearPoints()
+    readonly final property int pointCount: WavyLineHelpers.length(points)
 
     function linearPoints(): var {
         const pts = [];
@@ -86,7 +88,7 @@ Item {
         ShapePath {
             fillColor: "transparent"
             strokeColor: root.color
-            strokeWidth: root.points.length > 1 ? root.lineWidth : -1
+            strokeWidth: root.pointCount > 1 ? root.lineWidth : -1
             capStyle: ShapePath.RoundCap
             joinStyle: ShapePath.RoundJoin
 

@@ -5,8 +5,8 @@ import qs.components
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property Item sidebarPanel
+    required final property ScreenState screenState
+    required final property Item sidebarPanel
     property alias osdPanel: content.osdPanel
     property alias sessionPanel: content.sessionPanel
     property alias utilitiesPanel: content.utilitiesPanel

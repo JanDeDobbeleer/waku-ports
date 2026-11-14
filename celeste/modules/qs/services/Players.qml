@@ -2,44 +2,30 @@ pragma Singleton
 
 import QtQml
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Mpris
 import Celeste
 import Celeste.Config
 import Celeste.I18n
 import qs.components.misc
 import qs.compat
+import "PlayersHelpers.js" as PlayersHelpers
 
 Singleton {
     id: root
 
-    readonly property list<MprisPlayer> list: Mpris.players.values
-    readonly property MprisPlayer active: props.manualActive ?? list.find(p => getIdentity(p) === GlobalConfig.services.defaultPlayer) ?? list[0] ?? null
+    readonly final property list<MprisPlayer> list: PlayersHelpers.players(Mpris.players)
+    readonly final property MprisPlayer active: PlayersHelpers.active(props.manualActive, list, GlobalConfig.services)
     property alias manualActive: props.manualActive
 
     // Dedup key for progressive metadata (e.g. mpv-mpris/yt-dlp player fills title then artist later).
-    property string lastNowPlayingKey: ""
+    final property string lastNowPlayingKey: ""
 
     function getIdentity(player: MprisPlayer): string {
-        if (!player)
-            return "";
-        const alias = GlobalConfig.services.playerAliases.values.find(a => a.from === player.identity);
-        return alias?.to ?? player.identity;
+        return PlayersHelpers.getIdentity(player, GlobalConfig.services);
     }
 
     function getArtUrl(player: MprisPlayer): string {
-        if (!player)
-            return "";
-        if (player.trackArtUrl)
-            return player.trackArtUrl;
-
-        const url = player.metadata["xesam:url"] ?? "";
-        if (url.startsWith("https://www.youtube.com/watch")) {
-            // Fallback for youtube
-            const id = url.match(/[?&]v=([\w-]{11})/)?.[1];
-            return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
-        }
-        return "";
+        return PlayersHelpers.getArtUrl(player);
     }
 
     // Quickshell only emits postTrackChanged when trackid/url/title change, so late
@@ -63,7 +49,7 @@ Singleton {
             return;
 
         lastNowPlayingKey = key;
-        Toaster.toast(Tr.tr("Now playing"), Tr.trCtx("%1 - %2", "track artist and title").arg(artist).arg(title), "music_note");
+        Toaster.toast(Tr.tr("Now playing"), Tr.trCtx("%1 - %2", "track artist and title").arg(artist).arg(title), "music_note", Toast.Info, 5000);
     }
 
     onActiveChanged: lastNowPlayingKey = ""
@@ -87,7 +73,7 @@ Singleton {
     PersistentProperties {
         id: props
 
-        property MprisPlayer manualActive
+        final property MprisPlayer manualActive
 
         reloadableId: "players"
     }
@@ -99,8 +85,7 @@ Singleton {
         description: "Toggle media playback"
         onPressed: {
             const active = root.active;
-            if (active && active.canTogglePlaying)
-                active.togglePlaying();
+            PlayersHelpers.invoke(active, "togglePlaying");
         }
     }
 
@@ -111,8 +96,7 @@ Singleton {
         description: "Previous track"
         onPressed: {
             const active = root.active;
-            if (active && active.canGoPrevious)
-                active.previous();
+            PlayersHelpers.invoke(active, "previous");
         }
     }
 
@@ -123,8 +107,7 @@ Singleton {
         description: "Next track"
         onPressed: {
             const active = root.active;
-            if (active && active.canGoNext)
-                active.next();
+            PlayersHelpers.invoke(active, "next");
         }
     }
 
@@ -133,51 +116,46 @@ Singleton {
         // qmllint enable unresolved-type
         name: "mediaStop"
         description: "Stop media playback"
-        onPressed: root.active?.stop()
+        onPressed: PlayersHelpers.invoke(root.active, "stop")
     }
 
     IpcHandler {
         function getActive(prop: string): string {
             const active = root.active;
-            return active ? active[prop] ?? "Invalid property" : "No active player";
+            return PlayersHelpers.getActiveProperty(active, prop);
         }
 
         function list(): string {
-            return root.list.map(p => root.getIdentity(p)).join("\n");
+            return PlayersHelpers.list(root.list, root);
         }
 
         function play(): void {
             const active = root.active;
-            if (active?.canPlay)
-                active.play();
+            PlayersHelpers.invoke(active, "play");
         }
 
         function pause(): void {
             const active = root.active;
-            if (active?.canPause)
-                active.pause();
+            PlayersHelpers.invoke(active, "pause");
         }
 
         function playPause(): void {
             const active = root.active;
-            if (active?.canTogglePlaying)
-                active.togglePlaying();
+            PlayersHelpers.invoke(active, "togglePlaying");
         }
 
         function previous(): void {
             const active = root.active;
-            if (active?.canGoPrevious)
-                active.previous();
+            PlayersHelpers.invoke(active, "previous");
         }
 
         function next(): void {
             const active = root.active;
-            if (active?.canGoNext)
-                active.next();
+            PlayersHelpers.invoke(active, "next");
         }
 
         function stop(): void {
-            root.active?.stop();
+            PlayersHelpers.invoke(root.active, "stop");
         }
 
         target: "mpris"

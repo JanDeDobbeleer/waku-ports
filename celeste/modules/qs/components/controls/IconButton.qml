@@ -6,8 +6,8 @@ import qs.services
 ButtonBase {
     id: root
 
-    property alias icon: label.text
-    readonly property alias label: label
+    property alias icon: labelItem.text
+    readonly property alias label: labelItem
 
     font: Tokens.font.icon.medium
     padding: type === IconButton.Text ? Tokens.padding.extraSmall / 2 : Tokens.padding.small
@@ -28,14 +28,14 @@ ButtonBase {
     implicitWidth: implicitHeight
     implicitHeight: {
         // Ensure even size so icon is centered properly
-        const h = label.implicitHeight + padding * 2;
+        const h = labelItem.implicitHeight + padding * 2;
         if (h % 2 !== 0)
             return h + 1;
         return h;
     }
 
     MaterialIcon {
-        id: label
+        id: labelItem
 
         anchors.centerIn: parent
         anchors.verticalCenterOffset: 1 // AHHHHHHH material symbols whyyyy

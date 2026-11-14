@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.Commons as Commons
+import "OverlayWindowUtils.js" as OverlayWindowUtils
 
 // Map a fresh fullscreen surface on each open. Keep its first frames
 // transparent until Qt receives the output's scale, so it opens sharp without
@@ -16,21 +17,15 @@ PanelWindow {
   property int shownKeyboardFocus: WlrKeyboardFocus.Exclusive
 
   property var targetScreen: null
-  readonly property var targetMonitor: {
-    var monitors = Hyprland.monitors.values
-    for (var i = 0; i < monitors.length; i++) {
-      if (targetScreen && monitors[i].name === targetScreen.name) return monitors[i]
-    }
-    // Windows port: Quickshell.Hyprland has no monitors, so the screen stands in for one.
-    return targetScreen ? { name: targetScreen.name, scale: targetScreen.devicePixelRatio } : null
-  }
+  readonly property var targetMonitor: OverlayWindowUtils.targetMonitor(Hyprland.monitors, targetScreen)
 
   // Wait for fullscreen geometry as well as scale so no smaller opening frame
   // is stretched across the output. Fractional scale uses units of 1/120;
   // compare in those units to tolerate floating point rounding.
   readonly property bool contentReady: shown && backingWindowVisible && !!targetScreen
-    && width === targetScreen.width && height === targetScreen.height
-    && !!targetMonitor && Math.round(devicePixelRatio * 120) === Math.round(targetMonitor.scale * 120)
+    && width === OverlayWindowUtils.number(targetScreen, "width")
+    && height === OverlayWindowUtils.number(targetScreen, "height")
+    && !!targetMonitor && Math.round(devicePixelRatio * 120) === Math.round(OverlayWindowUtils.number(targetMonitor, "scale") * 120)
   property bool contentRevealed: false
 
   // Closing keeps the window mapped for one more frame at opacity 0. A window
@@ -39,6 +34,31 @@ PanelWindow {
   // new content rendered, which showed as a flash of the dimmed desktop on open.
   // The transparent frame replaces it first.
   property bool closing: false
+
+  // Light dismiss: Hyprland keeps an exclusive overlay on top, Windows does not, so focus can
+  // move to another panel, menu or app and leave the overlay open behind it. Emitted when the
+  // shown overlay loses the focus it had; overlays dismiss on it as they do on Escape. The
+  // grace interval lets focus pass through "none active" while it moves within the shell.
+  signal focusLost()
+  property bool hadFocus: false
+  Item {
+    id: focusWatch
+    readonly property bool windowActive: Window.active
+    onWindowActiveChanged: {
+      if (windowActive) {
+        window.hadFocus = window.shown
+        focusLossTimer.stop()
+      } else if (window.shown && window.hadFocus) {
+        focusLossTimer.restart()
+      }
+    }
+  }
+  Timer {
+    id: focusLossTimer
+    interval: 80
+    onTriggered: if (window.shown && !focusWatch.windowActive) window.focusLost()
+  }
+
   Timer {
     id: closeTimer
     interval: 50
@@ -57,10 +77,10 @@ PanelWindow {
     })
   }
 
-  function focusedScreen() {
-    var monitor = Hyprland.focusedMonitor
+  function focusedScreen(): var {
+    var monitor = Hyprland.focusedMonitor as HyprlandMonitor
     var name = monitor ? String(monitor.name || "") : ""
-    for (var i = 0; i < Quickshell.screens.length; i++) {
+    for (let i = 0; i < Quickshell.screens.length; i++) {
       if (Quickshell.screens[i].name === name) return Quickshell.screens[i]
     }
     return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
@@ -69,6 +89,8 @@ PanelWindow {
   // Live monitor scaling does not emit a Hyprland monitor event, so its cached
   // scale can lag behind Qt. Refresh on opening and on scale changes while open.
   onShownChanged: {
+    hadFocus = false
+    focusLossTimer.stop()
     if (shown) {
       closeTimer.stop()
       closing = false

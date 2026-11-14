@@ -1,16 +1,19 @@
+pragma ComponentBehavior: Bound
+import "BarValues.js" as BarValues
 import QtQuick
 import qs.Commons
 import qs.Commons as Commons
+import "WidgetButtonUtils.js" as WidgetButtonUtils
 
 Item {
   id: root
 
   property var bar: null
   property string text: ""
-  property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  property string fontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   property real fontSize: Style.font.body
-  property color foreground: bar ? bar.barForeground : Commons.Color.foreground
-  property color activeColor: bar ? bar.urgent : Commons.Color.urgent
+  property color foreground: bar ? BarValues.barForeground(bar) : Commons.Color.foreground
+  property color activeColor: bar ? BarValues.urgent(bar) : Commons.Color.urgent
   property bool active: false
   property real horizontalMargin: 8.5
   property real verticalPadding: 6
@@ -41,7 +44,7 @@ Item {
   signal pressed(int button)
   signal wheelMoved(int delta)
 
-  function triggerPress(button) {
+  function triggerPress(button: int): void {
     if (root.bar) root.bar.hideTooltip(root)
     root.pressed(button)
   }
@@ -50,10 +53,10 @@ Item {
     if (root.bar) root.bar.hideTooltip(root)
   }
 
-  function syncClickRegistration() {
-    if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+  function syncClickRegistration(): void {
+    WidgetButtonUtils.call(registeredBar, "unregisterClickTarget", [root])
     registeredBar = root.bar
-    if (registeredBar && registeredBar.registerClickTarget) registeredBar.registerClickTarget(root)
+    WidgetButtonUtils.call(registeredBar, "registerClickTarget", [root])
   }
 
   onBarChanged: syncClickRegistration()
@@ -61,10 +64,10 @@ Item {
   onInteractiveChanged: if (!interactive) hideOwnTooltip()
   onConcealedChanged: if (concealed) hideOwnTooltip()
   Component.onCompleted: syncClickRegistration()
-  Component.onDestruction: if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+  Component.onDestruction: WidgetButtonUtils.call(registeredBar, "unregisterClickTarget", [root])
 
-  readonly property bool vertical: bar ? bar.vertical : false
-  readonly property int barSize: bar ? bar.barSize : Style.bar.sizeHorizontal
+  readonly property bool vertical: bar ? BarValues.vertical(bar) : false
+  readonly property int barSize: bar ? BarValues.barSize(bar) : Style.bar.sizeHorizontal
   readonly property real scaledHorizontalMargin: Style.spaceReal(horizontalMargin)
   readonly property real scaledVerticalPadding: Style.spaceReal(verticalPadding)
   readonly property bool tooltipHovered: visible && interactive && !concealed && mouseArea.containsMouse
@@ -72,14 +75,15 @@ Item {
   // text rather than with the slot it sits in. Zero on icon-only buttons.
   readonly property real labelWidth: label.visible ? label.implicitWidth : 0
   readonly property bool iconLabel: labelVisible && isIconGlyph(text)
-  readonly property real iconPaintedWidth: iconLabel && iconLoader.item ? iconLoader.item.paintedWidth : 0
-  readonly property real iconPaintedHeight: iconLabel && iconLoader.item ? iconLoader.item.paintedHeight : 0
-  readonly property real iconCenterErrorX: iconLabel && iconLoader.item
-    ? iconLoader.x + iconLoader.item.paintedCenterX - width / 2 : 0
-  readonly property real iconCenterErrorY: iconLabel && iconLoader.item
-    ? iconLoader.y + iconLoader.item.paintedCenterY - height / 2 : 0
+  readonly property OpticalGlyph iconGlyph: iconLoader.item as OpticalGlyph
+  readonly property real iconPaintedWidth: iconLabel && iconGlyph ? WidgetButtonUtils.field(iconGlyph, "paintedWidth") : 0
+  readonly property real iconPaintedHeight: iconLabel && iconGlyph ? WidgetButtonUtils.field(iconGlyph, "paintedHeight") : 0
+  readonly property real iconCenterErrorX: iconLabel && iconGlyph
+    ? iconLoader.x + WidgetButtonUtils.field(iconGlyph, "paintedCenterX") - width / 2 : 0
+  readonly property real iconCenterErrorY: iconLabel && iconGlyph
+    ? iconLoader.y + WidgetButtonUtils.field(iconGlyph, "paintedCenterY") - height / 2 : 0
 
-  function isIconGlyph(value) {
+  function isIconGlyph(value: var): bool {
     var text = String(value || "")
     if (!text) return false
     var code = text.codePointAt(0)
@@ -136,7 +140,7 @@ Item {
     verticalAlignment: Text.AlignVCenter
 
     Behavior on color {
-      enabled: !root.bar || root.bar.foregroundAnimationEnabled
+      enabled: !root.bar || BarValues.foregroundAnimationEnabled(root.bar)
       ColorAnimation { duration: Style.duration(160) }
     }
   }
@@ -177,15 +181,13 @@ Item {
       if (root.bar) {
         root.bar.showTooltip(root, root.tooltipText)
       }
-      if (root.maintainIndicatorReveal && root.revealHost && root.revealHost.setIndicatorItemHovered)
-        root.revealHost.setIndicatorItemHovered(true)
+      if (root.maintainIndicatorReveal) WidgetButtonUtils.call(root.revealHost, "setIndicatorItemHovered", [true])
     }
     onExited: {
       if (root.bar) {
         root.bar.hideTooltip(root)
       }
-      if (root.maintainIndicatorReveal && root.revealHost && root.revealHost.setIndicatorItemHovered)
-        root.revealHost.setIndicatorItemHovered(false)
+      if (root.maintainIndicatorReveal) WidgetButtonUtils.call(root.revealHost, "setIndicatorItemHovered", [false])
     }
     onClicked: function(mouse) { if (root.pressable) root.triggerPress(mouse.button) }
     onWheel: function(wheel) { root.wheelMoved(wheel.angleDelta.y) }

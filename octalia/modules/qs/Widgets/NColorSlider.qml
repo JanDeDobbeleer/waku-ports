@@ -174,16 +174,17 @@ Slider {
       implicitHeight: root.knobDiameter
       radius: Math.min(Style.iRadiusL, width / 2)
       color: {
+        var b, g, r, t;
         if (root.rainbowMode) {
           // Hue Logic: Map position (0.0 to 1.0) directly to Hue
           return Qt.hsva(1 - root.visualPosition, 1, 1, 1);
         } else {
           // Linear Interpolation for Standard Gradients
           // visualPosition 0.0 = Top, 1.0 = Bottom
-          var t = root.visualPosition;
-          var r = root.topColor.r * (1 - t) + root.bottomColor.r * t;
-          var g = root.topColor.g * (1 - t) + root.bottomColor.g * t;
-          var b = root.topColor.b * (1 - t) + root.bottomColor.b * t;
+          t = root.visualPosition;
+          r = root.topColor.r * (1 - t) + root.bottomColor.r * t;
+          g = root.topColor.g * (1 - t) + root.bottomColor.g * t;
+          b = root.topColor.b * (1 - t) + root.bottomColor.b * t;
           return Qt.rgba(r, g, b, 1);
         }
       }

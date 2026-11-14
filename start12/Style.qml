@@ -1,4 +1,5 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 import QtQuick
 
 // Design tokens of the Start12 look, measured from Stardock's published Start11 v3 screenshots

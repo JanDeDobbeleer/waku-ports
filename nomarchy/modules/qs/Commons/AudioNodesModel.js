@@ -1,6 +1,9 @@
 // Audio node rules the bar and the audio panel share. Plain functions, so the
 // tests load this file in Node.
 
+function sourceHasAudio(source) { return !!(source && source.audio) }
+function sourceId(source) { return source ? source.id : -1 }
+
 // The level meter the shell runs itself: Quickshell's peak monitor stream,
 // named after the shell or after its stream depending on the PipeWire version.
 // It is not an app using the input.

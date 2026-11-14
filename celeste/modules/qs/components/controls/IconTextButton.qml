@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Celeste.Config
 import qs.components
 import qs.services
+import "IconTextButtonHelpers.js" as IconTextButtonHelpers
 
 ButtonBase {
     id: root
@@ -51,11 +52,7 @@ ButtonBase {
             Layout.alignment: Qt.AlignVCenter
             color: root.onColour
             fill: root.internalChecked ? 1 : 0
-            fontStyle: {
-                const f = Qt.font(root.font);
-                f.pointSize = Math.round(root.font.pointSize * 1.2);
-                return f;
-            }
+            fontStyle: IconTextButtonHelpers.iconFont(root.font)
 
             Behavior on fill {
                 Anim {

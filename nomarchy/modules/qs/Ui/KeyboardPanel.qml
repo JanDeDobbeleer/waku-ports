@@ -1,8 +1,10 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
+import "BarValues.js" as BarValues
 
 // Layer-shell popup attached to a bar widget icon, designed for
 // click-driven AND keyboard-driven panels (e.g. SUPER+CTRL+W summon).
@@ -20,7 +22,7 @@ import qs.Commons as Commons
 // reach the dismissal surfaces below.
 //
 // API is a subset of Common.PopupCard: anchorItem, owner, bar, open,
-// padding, margin, contentWidth/Height, centerOnBar, default contentItem.
+// padding, margin, contentWidth/Height, centerOnBar, default cardContent.
 // Missing on purpose (for now): triggerMode ("hover"), containsMouse.
 //
 // Positioning: full-screen layer-shell with the card placed inside at
@@ -82,7 +84,7 @@ PanelWindow {
   // mapped and child items have completed layout.
   property Item focusTarget: null
 
-  default property alias contentItem: contentHolder.children
+  default property alias cardContent: contentHolder.children
 
   // Lazy content. A panel that sets `content` to a Component gets it built
   // the first time the panel opens instead of at shell startup, which is
@@ -96,32 +98,32 @@ PanelWindow {
   // declare children directly keep the old eager behaviour.
   property Component panelContent: null
   property bool contentRequested: false
-  readonly property Item loadedContent: contentLoader.item
-  readonly property real loadedContentHeight: contentLoader.item ? contentLoader.item.implicitHeight : 0
+  readonly property Item loadedContent: contentLoader.item as Item
+  readonly property real loadedContentHeight: BarValues.itemImplicitHeight(loadedContent)
 
   // Build the content without opening the panel, for callers that need to
   // reach it first.
-  function ensureContent() {
+  function ensureContent(): Item {
     if (content) contentRequested = true
-    return contentLoader.item
+    return contentLoader.item as Item
   }
 
   readonly property var coordinatorKey: owner || root
   readonly property var anchorWindow: anchorItem ? anchorItem.QsWindow.window : null
-  readonly property string barPos: bar ? bar.position : "top"
+  readonly property string barPos: bar ? BarValues.position(bar) : "top"
 
-  function close() {
+  function close(): void {
     if (owner && "close" in owner) owner.close()
     else root.open = false
   }
 
-  function beginFocusPrime() {
+  function beginFocusPrime(): void {
     if (open && backingWindowVisible) focusPrimeTimer.restart()
   }
 
   // --- screen + lifetime ---------------------------------------------------
 
-  screen: anchorWindow ? anchorWindow.screen : null
+  screen: anchorWindow ? BarValues.field(anchorWindow, "screen") : null
   visible: open || card.opacity > 0 || popoutSwitching
   color: "transparent"
   exclusionMode: ExclusionMode.Ignore
@@ -172,8 +174,8 @@ PanelWindow {
   // actually reactive — mapToItem on its own is a one-shot.
   TransformWatcher {
     id: anchorWatcher
-    a: anchorWindow ? anchorWindow.contentItem : null
-    b: anchorItem
+    a: root.anchorWindow ? BarValues.field(root.anchorWindow, "contentItem") : null
+    b: root.anchorItem
   }
 
   // Anchor item's position within the bar's content surface. For a
@@ -182,9 +184,9 @@ PanelWindow {
   // from vertical centering of the widget row), which is why `cardOrigin`
   // below uses `barThickness` for the perpendicular axis instead of this y.
   readonly property point anchorScreenPos: {
-    anchorWatcher.transform  // reactive dependency
+    const transform = anchorWatcher.transform
     if (!anchorItem || !anchorWindow) return Qt.point(0, 0)
-    return anchorItem.mapToItem(anchorWindow.contentItem, 0, 0)
+    return BarValues.mapToItem(anchorItem, BarValues.field(anchorWindow, "contentItem"), 0, 0)
   }
   readonly property real anchorW: anchorItem ? anchorItem.width : 0
   readonly property real anchorH: anchorItem ? anchorItem.height : 0
@@ -198,21 +200,21 @@ PanelWindow {
     : 0
   readonly property real verticalContentInset: padding * 2 + Border.top(borderSpec) + Border.bottom(borderSpec)
 
-  function fittedContentWidth(width, cap) {
+  function fittedContentWidth(width: var, cap: var): real {
     var desired = Math.max(1, Number(width) || 1)
     var maxWidth = root.availableCardWidth > 0 ? root.availableCardWidth : desired
     if (cap !== undefined && Number(cap) > 0) maxWidth = Math.min(maxWidth, Number(cap))
     return Math.round(Math.min(desired, maxWidth))
   }
 
-  function fittedContentHeight(implicitHeight, cap) {
+  function fittedContentHeight(implicitHeight: var, cap: var): real {
     var desired = Math.max(root.verticalContentInset, (Number(implicitHeight) || 0) + root.verticalContentInset)
     var maxHeight = root.availableCardHeight > 0 ? root.availableCardHeight : desired
     if (cap !== undefined && Number(cap) > 0) maxHeight = Math.min(maxHeight, Number(cap))
     return Math.round(Math.min(desired, maxHeight))
   }
 
-  function cappedContentHeight(height) {
+  function cappedContentHeight(height: var): real {
     var desired = Math.max(root.padding * 2, Number(height) || root.padding * 2)
     var maxHeight = root.availableCardHeight > 0 ? root.availableCardHeight : desired
     return Math.round(Math.min(desired, maxHeight))
@@ -232,11 +234,11 @@ PanelWindow {
   // still consistent with the bar content origin, so it's accurate for
   // centering the card under the icon.
   readonly property real barThickness: !bar ? 0
-    : (typeof bar.barSizeFor === "function" && screen ? bar.barSizeFor(screen.name) : bar.barSize)
+    : BarValues.sizeForScreen(bar, screen)
   // Bar window dimensions, only for mapping overlay coordinates into
   // bar-window content coordinates in barPoint() below.
-  readonly property real barW: anchorWindow ? anchorWindow.width : screenW
-  readonly property real barH: anchorWindow ? anchorWindow.height : 0
+  readonly property real barW: anchorWindow ? BarValues.field(anchorWindow, "width") : screenW
+  readonly property real barH: anchorWindow ? BarValues.field(anchorWindow, "height") : 0
   readonly property point cardOrigin: {
     if (!anchorItem || !bar) return Qt.point(margin, margin)
     var x = 0, y = 0
@@ -288,7 +290,7 @@ PanelWindow {
       focusPrimed = false
       beginFocusPrime()
       if (focusTarget) Qt.callLater(function() {
-        if (root.open && root.focusTarget) root.focusTarget.forceActiveFocus()
+        if (root.open && root.focusTarget) BarValues.forceActiveFocus(root.focusTarget)
       })
     } else {
       focusPrimeTimer.stop()
@@ -297,15 +299,15 @@ PanelWindow {
     if (!bar) return
     if (open) {
       popoutSwitchClosing = false
-      popoutSwitching = bar.activePopout && bar.activePopout !== coordinatorKey
+      popoutSwitching = BarValues.activePopout(bar) && BarValues.activePopout(bar) !== coordinatorKey
       if (popoutSwitching) morphFromLastCard()
-      bar.requestPopout(coordinatorKey)
+      BarValues.requestPopout(bar, coordinatorKey)
       publishCard()
       if (popoutSwitching) popoutSwitchTimer.restart()
     } else {
-      popoutSwitchClosing = !!(owner && owner.popoutSwitchClosing)
+      popoutSwitchClosing = !!(owner && BarValues.field(owner, "popoutSwitchClosing"))
       popoutSwitching = false
-      if (bar.activePopout === coordinatorKey) bar.releasePopout(coordinatorKey)
+      if (BarValues.activePopout(bar) === coordinatorKey) BarValues.releasePopout(bar, coordinatorKey)
       if (popoutSwitchClosing) closeSwitchTimer.restart()
     }
   }
@@ -338,23 +340,23 @@ PanelWindow {
   readonly property rect cardTarget: Qt.rect(cardOrigin.x, cardOrigin.y, contentWidth, drawnHeight)
   onCardTargetChanged: publishCard()
 
-  function publishCard() {
-    if (!open || !bar || !screen || typeof bar.notePopoutCard !== "function") return
-    bar.notePopoutCard({ screen: screen.name, x: cardTarget.x, y: cardTarget.y,
+  function publishCard(): void {
+    if (!open || !bar || !screen) return
+    BarValues.notePopoutCard(bar, { screen: screen.name, x: cardTarget.x, y: cardTarget.y,
                          width: cardTarget.width, height: cardTarget.height })
   }
 
   // Already true as `open` flips, before onOpenChanged marks the switch, so
   // the card never starts growing in on top of the morph. Only a takeover in
   // the same section morphs; across sections the card grows in as usual.
-  readonly property bool takingOver: !!bar && !!bar.activePopout && bar.activePopout !== coordinatorKey
-    && typeof bar.popoutCardFor === "function" && !!bar.popoutCardFor(coordinatorKey)
+  readonly property bool takingOver: !!bar && !!BarValues.activePopout(bar) && BarValues.activePopout(bar) !== coordinatorKey
+    && !!BarValues.popoutCardFor(bar, coordinatorKey)
 
   property rect morphFrom: Qt.rect(0, 0, 0, 0)
   property real morph: 1
 
-  function morphFromLastCard() {
-    var last = bar && typeof bar.popoutCardFor === "function" ? bar.popoutCardFor(coordinatorKey) : null
+  function morphFromLastCard(): void {
+    var last = BarValues.popoutCardFor(bar, coordinatorKey)
     if (!last || !screen || last.screen !== screen.name) return
     morphFrom = Qt.rect(last.x, last.y, last.width, last.height)
     morphRun.restart()
@@ -368,7 +370,7 @@ PanelWindow {
     easing.bezierCurve: Style.easeOut
   }
 
-  function morphed(from, to) {
+  function morphed(from: real, to: real): real {
     return morph >= 1 ? to : from + (to - from) * morph
   }
 
@@ -394,37 +396,37 @@ PanelWindow {
     property bool hoveringBar: false
     cursorShape: hoveringBar ? Qt.PointingHandCursor : Qt.ArrowCursor
 
-    function inBarRegion(px, py) {
+    function inBarRegion(px: real, py: real): bool {
       if (root.barPos === "bottom") return py >= root.screenH - root._barStripSize
       if (root.barPos === "left") return px <= root._barStripSize
       if (root.barPos === "right") return px >= root.screenW - root._barStripSize
       return py <= root._barStripSize
     }
 
-    function barPoint(px, py) {
+    function barPoint(px: real, py: real): point {
       if (root.barPos === "bottom") return Qt.point(px, py - (root.screenH - root.barH))
       if (root.barPos === "right") return Qt.point(px - (root.screenW - root.barW), py)
       return Qt.point(px, py)
     }
 
-    function pressTargetAt(px, py) {
-      if (!root.anchorWindow || !root.anchorWindow.contentItem || !root.bar || !root.bar.clickTargets) return null
+    function pressTargetAt(px: real, py: real): var {
+      if (!root.anchorWindow || !BarValues.field(root.anchorWindow, "contentItem") || !root.bar || !BarValues.clickTargets(root.bar)) return null
       var p = barPoint(px, py)
-      var targets = root.bar.clickTargets
-      for (var i = targets.length - 1; i >= 0; i--) {
-        var target = targets[i]
-        if (!target || !target.triggerPress || target.visible === false || target.opacity === 0 || !target.mapToItem) continue
-        if (root.bar.targetBelongsToWindow && !root.bar.targetBelongsToWindow(target, root.anchorWindow)) continue
-        if (Util.itemContainsPoint(target, root.anchorWindow.contentItem, p.x, p.y)) return target
+      var targets = BarValues.clickTargets(root.bar)
+      for (let i = targets.length - 1; i >= 0; i--) {
+        let target = targets[i]
+        if (!BarValues.targetPressable(target)) continue
+        if (!BarValues.targetBelongsToWindow(root.bar, target, root.anchorWindow)) continue
+        if (Util.itemContainsPoint(target, BarValues.field(root.anchorWindow, "contentItem"), p.x, p.y)) return target
       }
       return null
     }
 
-    function forwardBarClick(px, py, button) {
+    function forwardBarClick(px: real, py: real, button: int): bool {
       if (button !== Qt.LeftButton && button !== Qt.RightButton && button !== Qt.MiddleButton) return false
       var target = pressTargetAt(px, py)
       if (!target) return false
-      target.triggerPress(button)
+      BarValues.triggerPress(target, button)
       return true
     }
 
@@ -432,10 +434,10 @@ PanelWindow {
     // the pointer never sees itself held; it's told, for its press feedback,
     // the way the bar's own press handler tells it.
     property var heldTarget: null
-    function hold(target, button) {
-      if (heldTarget && heldTarget !== target && "heldButtons" in heldTarget) heldTarget.heldButtons = Qt.NoButton
-      heldTarget = target && "heldButtons" in target ? target : null
-      if (heldTarget) heldTarget.heldButtons = button
+    function hold(target: var, button: int): void {
+      if (heldTarget && heldTarget !== target) BarValues.setHeldButtons(heldTarget, Qt.NoButton)
+      heldTarget = BarValues.hasHeldButtons(target) ? target : null
+      if (heldTarget) BarValues.setHeldButtons(heldTarget, button)
     }
 
     // Every button still down, so a second button pressed or let go mid-hold
@@ -444,8 +446,8 @@ PanelWindow {
       hold(root.focusPrimed && inBarRegion(mouse.x, mouse.y) ? pressTargetAt(mouse.x, mouse.y) : null, mouse.buttons)
     }
     onReleased: function(mouse) { hold(mouse.buttons ? heldTarget : null, mouse.buttons) }
-    onCanceled: hold(null)
-    onEnabledChanged: if (!enabled) hold(null)
+    onCanceled: hold(null, Qt.NoButton)
+    onEnabledChanged: if (!enabled) hold(null, Qt.NoButton)
 
     onPositionChanged: function(mouse) { hoveringBar = inBarRegion(mouse.x, mouse.y) }
     onExited: hoveringBar = false
@@ -476,7 +478,7 @@ PanelWindow {
         screen: modelData
         // Compare by output name: the anchor screen must be known before any
         // twin maps, or a twin would cover the panel's own output.
-        visible: root.open && !!root.screen && modelData.name !== root.screen.name
+        visible: root.open && !!root.screen && BarValues.screenName(modelData) !== BarValues.screenName(root.screen)
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
 

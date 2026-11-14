@@ -1,7 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.Panels.Settings.Tabs
 import qs.Modules.Panels.Settings.Tabs.About
@@ -22,8 +21,6 @@ import qs.Modules.Panels.Settings.Tabs.SessionMenu
 import qs.Modules.Panels.Settings.Tabs.SystemMonitor
 import qs.Modules.Panels.Settings.Tabs.UserInterface
 import qs.Modules.Panels.Settings.Tabs.Wallpaper
-import qs.Services.Compositor
-import qs.Services.Power
 import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
@@ -617,7 +614,8 @@ Item {
   }
 
   function selectTabById(tabId) {
-    for (var i = 0; i < tabsModel.length; i++) {
+    var i;
+    for (i = 0; i < tabsModel.length; i++) {
       if (tabsModel[i].id === tabId) {
         currentTabIndex = i;
         return;

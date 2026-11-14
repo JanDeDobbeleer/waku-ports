@@ -12,11 +12,12 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "BluetoothHelpers.js" as BluetoothHelpers
 
 ColumnLayout {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
     width: Tokens.px(300)
     spacing: Tokens.spacing.small
@@ -25,7 +26,7 @@ ColumnLayout {
     Connections {
         function onErrorChanged(): void {
             if (S.Bluetooth.error)
-                Toaster.toast(Tr.tr("Bluetooth"), S.Bluetooth.error, "bluetooth_disabled", Toast.Error);
+                Toaster.toast(Tr.tr("Bluetooth"), S.Bluetooth.error, "bluetooth_disabled", Toast.Error, 5000);
         }
 
         target: S.Bluetooth
@@ -35,7 +36,7 @@ ColumnLayout {
         Layout.topMargin: Tokens.padding.medium
         Layout.rightMargin: Tokens.padding.extraSmall
         text: Tr.tr("Bluetooth")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        font: Tokens.styled("body", "medium", { weight: Font.Medium })
     }
 
     Toggle {
@@ -63,7 +64,7 @@ ColumnLayout {
         Layout.rightMargin: Tokens.padding.extraSmall
         text: {
             const devices = Bluetooth.devices.values;
-            const connected = devices.filter(d => d.connected).length;
+            const connected = BluetoothHelpers.connectedCount(devices);
             if (connected > 0)
                 // TRANSLATORS: %n = total paired devices, %1 = how many of them are connected
                 return Tr.trN("%n device available (%1 connected)", "%n devices available (%1 connected)", devices.length).arg(connected);
@@ -75,14 +76,14 @@ ColumnLayout {
 
     Repeater {
         model: ScriptModel {
-            values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name)).slice(0, 5)
+            values: BluetoothHelpers.sortedDevices(Bluetooth.devices.values)
         }
 
         RowLayout {
             id: device
 
-            required property BluetoothDevice modelData
-            readonly property bool loading: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
+            required final property BluetoothDevice modelData
+            readonly final property bool loading: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
 
             Layout.fillWidth: true
             Layout.rightMargin: Tokens.padding.extraSmall
@@ -120,7 +121,7 @@ ColumnLayout {
 
             MaterialIcon {
                 visible: device.modelData.state === BluetoothDeviceState.Connected
-                text: device.modelData.batteryAvailable ? Icons.getBatteryIcon(device.modelData.battery) : "battery_alert"
+                text: device.modelData.batteryAvailable ? Icons.getBatteryIcon(device.modelData.battery, false) : "battery_alert"
                 color: device.modelData.batteryAvailable && device.modelData.battery < 0.2 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
             }
 
@@ -172,7 +173,7 @@ ColumnLayout {
 
                     StateLayer {
                         radius: Tokens.rounding.full
-                        onClicked: device.modelData.forget()
+                        onClicked: BluetoothHelpers.forgetDevice(device.modelData)
                     }
 
                     MaterialIcon {
@@ -197,7 +198,7 @@ ColumnLayout {
     }
 
     component Toggle: RowLayout {
-        required property string label
+        required final property string label
         property alias checked: toggle.checked
         property alias toggle: toggle
 

@@ -10,11 +10,11 @@ import "BorderGeometry.js" as Geometry
 QtObject {
   id: root
 
-  function none() {
+  function none(): var {
     return flat("transparent", 0)
   }
 
-  function flat(color, width) {
+  function flat(color: var, width: var): var {
     return {
       color: color || "transparent",
       widths: Geometry.parseWidthSpec(width, 0),
@@ -22,49 +22,42 @@ QtObject {
     }
   }
 
-  function value(section, key) {
+  function value(section: string, key: string): var {
     var v = Commons.Color.shellValues[section + "." + key]
     return (v === undefined || v === null) ? "" : v
   }
 
-  function valueOr(section, keys) {
-    for (var i = 0; i < keys.length; i++) {
-      var v = value(section, keys[i])
+  function valueOr(section: string, keys: var): var {
+    for (let i = 0; i < Geometry.arrayLength(keys); i++) {
+      let v = value(section, keys[i])
       if (String(v).length > 0) return v
     }
     return ""
   }
 
-  function resolveValueRef(raw) {
+  function resolveValueRef(raw: var): string {
     var s = String(raw || "").replace(/^\s+|\s+$/g, "")
     var seen = {}
     while (s.match(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/) && !seen[s]) {
       seen[s] = true
-      var next = Commons.Color.shellValues[s]
+      let next = Commons.Color.shellValues[s]
       if (next === undefined || next === null || String(next).length === 0) break
       s = String(next).replace(/^\s+|\s+$/g, "")
     }
     return s
   }
 
-  function alpha(section, key, fallback) {
+  function alpha(section: string, key: string, fallback: real): real {
     var raw = value(section, key)
     if (String(raw).length === 0) return fallback
     var n = Number(raw)
     return isFinite(n) ? Geometry.clampAlpha(n) : fallback
   }
 
-  function cssColor(color, opacity) {
+  function cssColor(color: var, opacity: real): var {
     var a = opacity === undefined || opacity === null ? 1 : Geometry.clampAlpha(opacity)
-    if (color && typeof color === "object" && color.r !== undefined) {
-      if (typeof Qt !== "undefined" && Qt.rgba) {
-        return Qt.rgba(color.r, color.g, color.b, (color.a === undefined ? 1 : color.a) * a)
-      }
-      return "#"
-        + Geometry.padHex(color.r * 255)
-        + Geometry.padHex(color.g * 255)
-        + Geometry.padHex(color.b * 255)
-        + Geometry.padHex((color.a === undefined ? 1 : color.a) * a * 255)
+    if (color && typeof color === "object" && Geometry.field(color, "r") !== undefined) {
+      return Geometry.qmlHexColor(Geometry.padHex(Number(Geometry.field(color, "r")) * 255) + Geometry.padHex(Number(Geometry.field(color, "g")) * 255) + Geometry.padHex(Number(Geometry.field(color, "b")) * 255), (Geometry.field(color, "a") === undefined ? 1 : Number(Geometry.field(color, "a"))) * a * 255)
     }
 
     var s = String(color || "").replace(/^\s+|\s+$/g, "")
@@ -77,14 +70,14 @@ QtObject {
     return Geometry.canonicalColor(s, a)
   }
 
-  function resolvedGradient(raw, fallbackColor, opacity) {
+  function resolvedGradient(raw: var, fallbackColor: var, opacity: real): var {
     var s = String(raw || "").replace(/^\s+|\s+$/g, "")
     if (s.length === 0) return { colors: [], angle: 0, enabled: false }
 
     var parts = s.split(/\s+/)
     var colors = []
     var angle = 0
-    for (var i = 0; i < parts.length; i++) {
+    for (let i = 0; i < parts.length; i++) {
       if (parts[i].match(/^-?\d+(?:\.\d+)?deg$/)) angle = Number(parts[i].replace(/deg$/, ""))
       else colors.push(cssColor(parts[i], opacity))
     }
@@ -92,23 +85,14 @@ QtObject {
     return { colors: colors, angle: angle, enabled: colors.length > 1 }
   }
 
-  function sameColor(a, b) {
-    if (typeof Qt === "undefined" || !Qt.color) return String(a) === String(b)
-    var ca = typeof a === "string" ? Qt.color(a) : a
-    var cb = typeof b === "string" ? Qt.color(b) : b
-    if (!ca || !cb || ca.r === undefined || cb.r === undefined) return String(a) === String(b)
-    return Math.round(ca.r * 255) === Math.round(cb.r * 255)
-      && Math.round(ca.g * 255) === Math.round(cb.g * 255)
-      && Math.round(ca.b * 255) === Math.round(cb.b * 255)
-      && Math.round((ca.a === undefined ? 1 : ca.a) * 255) === Math.round((cb.a === undefined ? 1 : cb.a) * 255)
-  }
+  function sameColor(a: var, b: var): bool { return Geometry.sameColor(a, b) }
 
-  function localOrSurfaceSpec(section, token, localColor, defaultColor, fallbackWidth, alphaKey) {
+  function localOrSurfaceSpec(section: string, token: string, localColor: var, defaultColor: var, fallbackWidth: int): var {
     if (!sameColor(localColor, defaultColor)) return flat(localColor, fallbackWidth)
-    return surfaceSpec(section, token, localColor, fallbackWidth, alphaKey)
+    return surfaceSpec(section, token, localColor, fallbackWidth)
   }
 
-  function surfaceWidths(section, token, fallbackWidth) {
+  function surfaceWidths(section: string, token: string, fallbackWidth: int): var {
     var base = valueOr(section, token === "border" ? ["border-width"] : [token + "-width", "border-width"])
     var widths = Geometry.parseWidthSpec(base, fallbackWidth)
     return Geometry.withSideOverrides(
@@ -120,37 +104,37 @@ QtObject {
     )
   }
 
-  function borderValue(raw, fallbackColor, opacity, legacyGradientRaw) {
+  function borderValue(raw: var, fallbackColor: var, opacity: real, legacyGradientRaw: var): var {
     var fallback = cssColor(fallbackColor, opacity)
     var primaryRaw = String(raw || "").replace(/^\s+|\s+$/g, "")
     var primary = resolvedGradient(primaryRaw.length > 0 ? primaryRaw : fallbackColor, fallbackColor, opacity)
-    var color = primary.colors.length > 0 ? primary.colors[0] : fallback
-    var gradient = primary.enabled ? primary : { colors: [], angle: 0, enabled: false }
+    var color = Geometry.arrayLength(Geometry.field(primary, "colors")) > 0 ? Geometry.field(Geometry.field(primary, "colors"), 0) : fallback
+    var gradient = Geometry.field(primary, "enabled") ? primary : { colors: [], angle: 0, enabled: false }
 
     // Backward compatibility for existing configs written during the separate
     // border-gradient experiment. New configs put solid colors and gradients in
     // the same border token.
-    if (!gradient.enabled && String(legacyGradientRaw || "").replace(/^\s+|\s+$/g, "").length > 0) {
-      var legacy = resolvedGradient(legacyGradientRaw, color, opacity)
-      if (legacy.enabled) gradient = legacy
+    if (!Geometry.field(gradient, "enabled") && String(legacyGradientRaw || "").replace(/^\s+|\s+$/g, "").length > 0) {
+      let legacy = resolvedGradient(legacyGradientRaw, color, opacity)
+      if (Geometry.field(legacy, "enabled")) gradient = legacy
     }
 
     return { color: color, gradient: gradient }
   }
 
-  function surfaceSpec(section, token, fallbackColor, fallbackWidth, alphaKey) {
-    var opacity = alpha(section, alphaKey || token + "-alpha", 1.0)
+  function surfaceSpec(section: string, token: string, fallbackColor: var, fallbackWidth: int): var {
+    var opacity = alpha(section, token + "-alpha", 1.0)
     var legacyGradientRaw = valueOr(section, token === "border" ? ["border-gradient"] : [token + "-gradient", "border-gradient"])
     var resolved = borderValue(resolveValueRef(value(section, token)), fallbackColor, opacity, legacyGradientRaw)
 
     return {
-      color: resolved.color,
+      color: Geometry.field(resolved, "color"),
       widths: surfaceWidths(section, token, fallbackWidth),
-      gradient: resolved.gradient,
+      gradient: Geometry.field(resolved, "gradient"),
     }
   }
 
-  function hyprlandActiveSpec(fallbackColor, fallbackWidth) {
+  function hyprlandActiveSpec(fallbackColor: var, fallbackWidth: int): var {
     var raw = value("hyprland", "active-border")
     var opacity = alpha("hyprland", "active-border-alpha", 1.0)
 
@@ -164,39 +148,39 @@ QtObject {
 
     var resolved = borderValue(resolveValueRef(raw), fallbackColor, opacity, "")
     return {
-      color: resolved.color,
+      color: Geometry.field(resolved, "color"),
       widths: Geometry.parseWidthSpec(value("hyprland", "active-border-width"), fallbackWidth),
-      gradient: resolved.gradient,
+      gradient: Geometry.field(resolved, "gradient"),
     }
   }
 
-  function controlPrefix(state) {
+  function controlPrefix(state: string): string {
     if (state === "hover" || state === "hot") return "hover-cursor"
     return state || "normal"
   }
 
-  function controlColor(prefix, foreground, accent, urgent) {
+  function controlColor(prefix: string, foreground: var, accent: var, urgent: var): var {
     if (prefix === "focus") return Style.focusStateColor(foreground, accent, urgent)
     if (prefix === "hover-cursor") return Style.hoverStateColor(foreground, accent, urgent)
     if (prefix === "selected") return Style.selectedStateColor(foreground, accent, urgent)
     return Style.normalStateColor(foreground, accent, urgent)
   }
 
-  function controlAlpha(prefix) {
+  function controlAlpha(prefix: string): real {
     if (prefix === "focus") return Style.focusBorderAlpha
     if (prefix === "hover-cursor") return Style.hoverBorderAlpha
     if (prefix === "selected") return Style.selectedBorderAlpha
     return Style.normalBorderAlpha
   }
 
-  function controlFallbackWidth(prefix) {
+  function controlFallbackWidth(prefix: string): int {
     if (prefix === "focus") return Style.focusBorderWidth
     if (prefix === "hover-cursor") return Style.hoverBorderWidth
     if (prefix === "selected") return Style.selectedBorderWidth
     return Style.normalBorderWidth
   }
 
-  function controlWidths(state) {
+  function controlWidths(state: string): var {
     var prefix = controlPrefix(state)
     var fallbackWidth = controlFallbackWidth(prefix)
     var base = Style.styleOverrides[prefix + "-border-width"]
@@ -210,34 +194,34 @@ QtObject {
     )
   }
 
-  function controlHasWidth(state) {
+  function controlHasWidth(state: string): bool {
     return Geometry.maxWidth(controlWidths(state)) > 0
   }
 
-  function controlSpec(state, foreground, accent, urgent) {
+  function controlSpec(state: string, foreground: var, accent: var): var {
     var prefix = controlPrefix(state)
     var resolved = borderValue(
       Style.styleOverrides[prefix + "-border"],
-      controlColor(prefix, foreground, accent, urgent),
+      controlColor(prefix, foreground, accent, Commons.Color.urgent),
       controlAlpha(prefix),
       Style.styleOverrides[prefix + "-border-gradient"]
     )
 
-    return { color: resolved.color, widths: controlWidths(prefix), gradient: resolved.gradient }
+    return { color: Geometry.field(resolved, "color"), widths: controlWidths(prefix), gradient: Geometry.field(resolved, "gradient") }
   }
 
-  function withWidth(spec, width) {
+  function withWidth(spec: var, width: var): var {
     if (!spec) return flat("transparent", 0)
-    return { color: spec.color, gradient: spec.gradient, widths: Geometry.parseWidthSpec(width, 0) }
+    return Geometry.withWidth(spec, width)
   }
 
-  function isNone(spec) { return !spec || Geometry.maxWidth(spec.widths) <= 0 }
-  function needsOverlay(spec) { return Geometry.needsOverlay(spec) }
-  function canUseNative(spec) { return Geometry.canUseNative(spec) }
-  function top(spec) { return spec && spec.widths ? spec.widths.top : 0 }
-  function right(spec) { return spec && spec.widths ? spec.widths.right : 0 }
-  function bottom(spec) { return spec && spec.widths ? spec.widths.bottom : 0 }
-  function left(spec) { return spec && spec.widths ? spec.widths.left : 0 }
-  function uniformWidth(spec) { return spec && spec.widths ? spec.widths.top : 0 }
-  function color(spec) { return spec ? spec.color : "transparent" }
+  function isNone(spec: var): bool { return Geometry.isNone(spec) }
+  function needsOverlay(spec: var): bool { return Geometry.needsOverlay(spec) }
+  function canUseNative(spec: var): bool { return Geometry.canUseNative(spec) }
+  function top(spec: var): var { return Geometry.side(spec, "top") }
+  function right(spec: var): var { return Geometry.side(spec, "right") }
+  function bottom(spec: var): var { return Geometry.side(spec, "bottom") }
+  function left(spec: var): var { return Geometry.side(spec, "left") }
+  function uniformWidth(spec: var): var { return Geometry.side(spec, "top") }
+  function color(spec: var): var { return Geometry.specColor(spec) }
 }

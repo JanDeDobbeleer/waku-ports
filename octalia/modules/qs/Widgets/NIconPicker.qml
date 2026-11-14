@@ -1,7 +1,10 @@
+pragma ComponentBehavior: Bound
+
+import "NIconPickerUtils.js" as IconPickerUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import QtQuick.Window
 import qs.Commons
 import qs.Widgets
 
@@ -21,12 +24,7 @@ Popup {
 
   property string query: ""
   property var allIcons: Object.keys(Icons.icons)
-  property var filteredIcons: {
-    if (query === "")
-      return allIcons;
-    var q = query.toLowerCase();
-    return allIcons.filter(name => name.toLowerCase().includes(q));
-  }
+  property var filteredIcons: IconPickerUtils.filter(allIcons, query)
   readonly property int columns: 6
   readonly property int cellW: Math.floor(grid.width / columns)
   readonly property int cellH: Math.round(cellW * 0.7 + 36)
@@ -94,19 +92,21 @@ Popup {
       gradientColor: Color.mSurface
 
       delegate: Rectangle {
+        id: iconOption
+        required property string modelData
         width: grid.cellWidth
         height: grid.cellHeight
         radius: Style.iRadiusS
 
-        color: (root.selectedIcon === modelData) ? Qt.alpha(Color.mPrimary, 0.15) : "transparent"
-        border.color: (root.selectedIcon === modelData) ? Color.mPrimary : "transparent"
-        border.width: (root.selectedIcon === modelData) ? Style.borderS : 0
+        color: (root.selectedIcon === iconOption.modelData) ? Qt.alpha(Color.mPrimary, 0.15) : "transparent"
+        border.color: (root.selectedIcon === iconOption.modelData) ? Color.mPrimary : "transparent"
+        border.width: (root.selectedIcon === iconOption.modelData) ? Style.borderS : 0
 
         MouseArea {
           anchors.fill: parent
-          onClicked: root.selectedIcon = modelData
+          onClicked: root.selectedIcon = iconOption.modelData
           onDoubleClicked: {
-            root.selectedIcon = modelData;
+            root.selectedIcon = iconOption.modelData;
             root.iconSelected(root.selectedIcon);
             root.close();
           }
@@ -122,7 +122,7 @@ Popup {
           }
           NIcon {
             Layout.alignment: Qt.AlignHCenter
-            icon: modelData
+            icon: iconOption.modelData
             pointSize: 42
           }
           NText {
@@ -135,7 +135,7 @@ Popup {
             horizontalAlignment: Text.AlignHCenter
             color: Color.mOnSurfaceVariant
             pointSize: Style.fontSizeXS
-            text: modelData
+            text: iconOption.modelData
           }
           Item {
             Layout.fillHeight: true

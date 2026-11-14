@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 // A row of the right-hand column: a glyph and a label. `clicked` runs the action.

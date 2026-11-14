@@ -4,11 +4,12 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 
 Item {
     id: root
 
-    required property var currentItem
+    required final property var currentItem
 
     implicitWidth: content.implicitWidth + Tokens.padding.medium + content.anchors.rightMargin
     implicitHeight: currentItem ? content.implicitHeight + Tokens.padding.medium + content.anchors.bottomMargin : 0
@@ -19,9 +20,9 @@ Item {
         ShapePath {
             id: path
 
-            readonly property real rounding: Tokens.rounding.medium
-            readonly property bool flatten: root.implicitHeight < rounding * 2
-            readonly property real roundingY: flatten ? root.implicitHeight / 2 : rounding
+            readonly final property real rounding: Tokens.rounding.medium
+            readonly final property bool flatten: root.implicitHeight < rounding * 2
+            readonly final property real roundingY: flatten ? root.implicitHeight / 2 : rounding
 
             strokeWidth: -1
             fillColor: Colours.tPalette.m3surfaceContainer
@@ -82,9 +83,7 @@ Item {
 
             Connections {
                 function onCurrentItemChanged(): void {
-                    if (root.currentItem)
-                        // TRANSLATORS: %1 = name of the selected file
-                        content.text = Tr.trCtx('"%1" selected', "selected file").arg(root.currentItem.modelData.name);
+                    content.text = FileDialogHelpers.selectedName(root.currentItem, Tr);
                 }
 
                 target: root

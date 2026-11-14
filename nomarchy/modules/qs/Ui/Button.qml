@@ -79,7 +79,7 @@ BorderSurface {
 
   readonly property bool hot: mouseArea.containsMouse || hasCursor
   readonly property bool _showFocusRing: focusable && activeFocus
-  readonly property color _selectedColor: Style.selectedStateColor(root.foreground, root.accent)
+  readonly property color _selectedColor: Style.selectedStateColor(root.foreground, root.accent, Commons.Color.urgent)
   readonly property var _tooltipBorderSpec: Border.localOrSurfaceSpec("tooltip", "border", root.tooltipBorder, Commons.Color.tooltip.border, Math.max(1, Style.normalBorderWidth))
   readonly property var _focusBorderSpec: Border.controlSpec("focus", root.foreground, root.accent)
   readonly property var _hoverBorderSpec: Border.controlSpec("hover-cursor", root.foreground, root.accent)
@@ -120,11 +120,11 @@ BorderSurface {
     : bordered                 ? _normalBorderSpec
     : Border.none()
 
-  color: mouseArea.pressed ? Style.pressedFillFor(root.foreground, root.accent)
-    : _showFocusRing       ? Style.focusFillFor(root.foreground, root.accent)
-    : hot                  ? Style.hoverFillFor(root.foreground, root.accent)
-    : selected             ? Style.selectedFillFor(root.foreground, root.accent)
-    : active               ? Style.selectedFillFor(root.foreground, root.accent)
+  color: mouseArea.pressed ? Style.pressedFillFor(root.foreground, root.accent, Commons.Color.urgent)
+    : _showFocusRing       ? Style.focusFillFor(root.foreground, root.accent, Commons.Color.urgent)
+    : hot                  ? Style.hoverFillFor(root.foreground, root.accent, Commons.Color.urgent)
+    : selected             ? Style.selectedFillFor(root.foreground, root.accent, Commons.Color.urgent)
+    : active               ? Style.selectedFillFor(root.foreground, root.accent, Commons.Color.urgent)
     : background
 
   // Border follows the same state precedence as fill. Buttons stay

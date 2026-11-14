@@ -7,27 +7,28 @@ import Celeste.Components
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledSliderHelpers.js" as StyledSliderHelpers
 
 Slider {
     id: root
 
-    property bool wavy
-    property bool animateWave
-    property real waveFrequency: 6
-    property int waveDuration: 1000
-    property int radius: Tokens.rounding.medium
-    property bool interactionOnMove: true
-    readonly property bool dragging: mouse.pressed
+    final property bool wavy
+    final property bool animateWave
+    final property real waveFrequency: 6
+    final property int waveDuration: 1000
+    final property int radius: Tokens.rounding.medium
+    final property bool interactionOnMove: true
+    readonly final property bool dragging: mouse.pressed
 
-    property color fgColour: enabled ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3onSurface, 0.38)
-    property color bgColour: enabled ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3onSurface, 0.1)
+    final property color fgColour: enabled ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3onSurface, 0.38)
+    final property color bgColour: enabled ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3onSurface, 0.1)
 
-    property real pos: visualPosition
-    property real filledWidth
+    final property real pos: visualPosition
+    final property real filledWidth
 
     signal interaction(v: real)
 
-    Component.onCompleted: filledWidth = Qt.binding(() => (width - handle.implicitWidth - handle.anchors.leftMargin) * pos)
+    Component.onCompleted: filledWidth = StyledSliderHelpers.widthBinding(Qt, root, handleItem)
 
     implicitWidth: Tokens.px(200)
     implicitHeight: Tokens.px(12)
@@ -38,7 +39,7 @@ Slider {
         StyledRect {
             id: remaining
 
-            anchors.left: handle.right
+            anchors.left: handleItem.right
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
@@ -66,18 +67,14 @@ Slider {
         }
 
         StyledRect {
-            id: handle
+            id: handleItem
 
             anchors.left: filled.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Tokens.spacing.extraSmall
 
             implicitWidth: Tokens.px(4)
-            implicitHeight: {
-                const t = CUtils.clamp((parent.height - 12) / 16, 0, 1);
-                const lerp = (a, b) => a + (b - a) * t;
-                return parent.height * (mouse.pressed ? lerp(3.5, 1.5) : lerp(3, 1.2));
-            }
+            implicitHeight: StyledSliderHelpers.handleHeight(parent.height, mouse.pressed, CUtils)
 
             radius: Tokens.rounding.full
             color: root.fgColour
@@ -120,7 +117,7 @@ Slider {
                 lineWidth: root.height * 0.7
                 frequency: root.waveFrequency
                 startX: x
-                fullLength: root.width - handle.implicitWidth - handle.anchors.leftMargin
+                fullLength: root.width - handleItem.implicitWidth - handleItem.anchors.leftMargin
                 color: root.fgColour
 
                 implicitWidth: root.filledWidth
@@ -155,16 +152,16 @@ Slider {
     MouseArea {
         id: mouse
 
-        property real pressStartX
-        property real pressStartPos
-        property real dragMovement
+        final property real pressStartX
+        final property real pressStartPos
+        final property real dragMovement
 
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
 
         preventStealing: true
-        implicitHeight: handle.implicitHeight
+        implicitHeight: handleItem.implicitHeight
 
         onPressed: e => {
             widthBehavior.enabled = false;

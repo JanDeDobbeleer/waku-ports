@@ -7,7 +7,7 @@ import QtQuick
 QtObject {
     id: root
 
-    property var toasts: []
+    final property var toasts: []
 
     function toast(title: string, message: var, icon: var, type: var, timeout: var): void {
         const kind = type ?? Toast.Info;
@@ -48,7 +48,7 @@ QtObject {
         root.toasts = [t, ...root.toasts];
     }
 
-    property Component toastComponent: Component {
+    final property Component toastComponent: Component {
         Toast {}
     }
 }

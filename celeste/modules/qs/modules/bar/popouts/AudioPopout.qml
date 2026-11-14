@@ -13,7 +13,7 @@ import qs.services
 Item {
     id: root
 
-    required property PopoutState popouts
+    required final property PopoutState popouts
 
     implicitWidth: Tokens.sizes.bar.audioWidth
     implicitHeight: layout.implicitHeight + Tokens.padding.medium * 2
@@ -36,7 +36,7 @@ Item {
 
         StyledText {
             text: Tr.trCtx("Output device", "audio output device")
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         Repeater {
@@ -45,11 +45,11 @@ Item {
             StyledRadioButton {
                 id: control
 
-                required property PwNode modelData
+                required final property PwNode modelData
 
                 Layout.fillWidth: true
                 ButtonGroup.group: sinks
-                checked: Audio.sink?.id === modelData.id
+                checked: !!Audio.sink && Audio.sink === modelData
                 onClicked: Audio.setAudioSink(modelData)
                 text: modelData.description
             }
@@ -58,18 +58,18 @@ Item {
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
             text: Tr.trCtx("Input device", "audio input device")
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         Repeater {
             model: Audio.sources
 
             StyledRadioButton {
-                required property PwNode modelData
+                required final property PwNode modelData
 
                 Layout.fillWidth: true
                 ButtonGroup.group: sources
-                checked: Audio.source?.id === modelData.id
+                checked: !!Audio.source && Audio.source === modelData
                 onClicked: Audio.setAudioSource(modelData)
                 text: modelData.description
             }
@@ -78,24 +78,26 @@ Item {
         StyledText {
             Layout.topMargin: Tokens.spacing.medium
             text: Audio.muted ? Tr.tr("Volume (muted)") : Tr.tr("Volume (%1%)").arg(Math.round(Audio.volume * 100))
-            font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+            font: Tokens.styled("body", "medium", { weight: Font.Medium })
         }
 
         CustomMouseArea {
+            id: volumeArea
+
             Layout.fillWidth: true
             implicitHeight: Tokens.padding.medium * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
+                    Audio.incrementVolume(0);
                 else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
+                    Audio.decrementVolume(0);
             }
 
             StyledSlider {
                 anchors.left: parent.left
                 anchors.right: parent.right
-                implicitHeight: parent.implicitHeight
+                implicitHeight: volumeArea.implicitHeight
 
                 value: Audio.volume
                 onInteraction: value => Audio.setVolume(value)

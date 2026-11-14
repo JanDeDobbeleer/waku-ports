@@ -1,10 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
+import "DesktopWidgetHelpers.js" as DesktopWidgetHelpers
 import QtQuick.Effects
 import Quickshell
 import qs.Commons
-import qs.Services.Octalia
 import qs.Services.UI
-import qs.Widgets
 
 Item {
   id: root
@@ -22,9 +23,9 @@ Item {
   readonly property bool isScaling: internal.isScaling
 
   // All Desktop widgets have these settings, but fallback just in case
-  readonly property var _metadata: widgetData?.id ? DesktopWidgetRegistry.widgetMetadata[widgetData.id] : null
-  property bool showBackground: widgetData.showBackground !== undefined ? widgetData.showBackground : (_metadata?.showBackground ?? true)
-  property bool roundedCorners: widgetData.roundedCorners !== undefined ? widgetData.roundedCorners : (_metadata?.roundedCorners ?? true)
+  readonly property var _metadata: DesktopWidgetHelpers.optionalField(widgetData, "id") ? DesktopWidgetRegistry.widgetMetadata[DesktopWidgetHelpers.field(widgetData, "id")] : null
+  property bool showBackground: DesktopWidgetHelpers.field(widgetData, "showBackground") !== undefined ? DesktopWidgetHelpers.field(widgetData, "showBackground") : (DesktopWidgetHelpers.optionalField(_metadata, "showBackground") ?? true)
+  property bool roundedCorners: DesktopWidgetHelpers.field(widgetData, "roundedCorners") !== undefined ? DesktopWidgetHelpers.field(widgetData, "roundedCorners") : (DesktopWidgetHelpers.optionalField(_metadata, "roundedCorners") ?? true)
 
   property real widgetScale: 1.0
   property real minScale: 0.5
@@ -36,6 +37,7 @@ Item {
 
   // Grid size ensures lines pass through screen center on both axes
   readonly property int gridSize: {
+    var candidate, distance, divisor, offset, remainderX, remainderY;
     if (!screen)
       return 30;
     var baseSize = Math.round(screen.width * 0.015);
@@ -46,40 +48,31 @@ Item {
     var bestSize = baseSize;
     var bestDistance = Infinity;
 
-    for (var offset = -10; offset <= 10; offset++) {
-      var candidate = baseSize + offset;
+    for (offset = -10; offset <= 10; offset++) {
+      candidate = baseSize + offset;
       if (candidate < 20 || candidate > 60)
         continue;
 
-      var remainderX = centerX % candidate;
-      var remainderY = centerY % candidate;
+      remainderX = centerX % candidate;
+      remainderY = centerY % candidate;
 
       if (remainderX === 0 && remainderY === 0) {
         return candidate;
       }
 
-      var distance = Math.abs(remainderX) + Math.abs(remainderY);
+      distance = Math.abs(remainderX) + Math.abs(remainderY);
       if (distance < bestDistance) {
         bestDistance = distance;
         bestSize = candidate;
       }
     }
 
-    var gcd = function (a, b) {
-      while (b !== 0) {
-        var temp = b;
-        b = a % b;
-        a = temp;
-      }
-      return a;
-    };
-
-    var centerGcd = gcd(Math.round(centerX), Math.round(centerY));
+    var centerGcd = DesktopWidgetHelpers.gcd(Math.round(centerX), Math.round(centerY));
     if (centerGcd > 0) {
-      for (var divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
+      for (divisor = Math.floor(centerGcd / 60); divisor <= Math.ceil(centerGcd / 20); divisor++) {
         if (centerGcd % divisor !== 0)
           continue;
-        var candidate = centerGcd / divisor;
+        candidate = centerGcd / divisor;
         if (candidate >= 20 && candidate <= 60) {
           if (Math.abs(candidate - baseSize) < Math.abs(bestSize - baseSize)) {
             bestSize = candidate;
@@ -97,8 +90,8 @@ Item {
     property bool isScaling: false
     property real dragOffsetX: 0
     property real dragOffsetY: 0
-    property real baseX: (root.widgetData && root.widgetData.x !== undefined) ? root.widgetData.x : root.defaultX
-    property real baseY: (root.widgetData && root.widgetData.y !== undefined) ? root.widgetData.y : root.defaultY
+    property real baseX: (root.widgetData && DesktopWidgetHelpers.field(root.widgetData, "x") !== undefined) ? DesktopWidgetHelpers.field(root.widgetData, "x") : root.defaultX
+    property real baseY: (root.widgetData && DesktopWidgetHelpers.field(root.widgetData, "y") !== undefined) ? DesktopWidgetHelpers.field(root.widgetData, "y") : root.defaultY
     property real initialWidth: 0
     property real initialHeight: 0
     property point initialMousePos: Qt.point(0, 0)
@@ -108,14 +101,14 @@ Item {
     property string operationType: ""  // "drag" or "scale" or ""
   }
 
-  function snapToGrid(coord) {
+  function snapToGrid(coord: real): real {
     if (!Settings.data.desktopWidgets.gridSnap) {
       return coord;
     }
     return Math.round(coord / root.gridSize) * root.gridSize;
   }
 
-  function snapScaleToGrid(scale) {
+  function snapScaleToGrid(scale: real): real {
     if (!Settings.data.desktopWidgets.gridSnap || !Settings.data.desktopWidgets.gridSnapScale) {
       return scale;
     }
@@ -144,7 +137,7 @@ Item {
     return Math.max(minScale, Math.min(maxScale, snappedScale));
   }
 
-  function updateWidgetData(properties) {
+  function updateWidgetData(properties: var): void {
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -152,6 +145,7 @@ Item {
   }
 
   function removeWidget() {
+    var i, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -159,9 +153,9 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex >= 0 && widgetIndex < widgets.length) {
           widgets.splice(widgetIndex, 1);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
@@ -175,6 +169,7 @@ Item {
   }
 
   function raiseToTop() {
+    var i, widget, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -182,11 +177,11 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex < widgets.length && widgetIndex < widgets.length - 1) {
-          var widget = widgets.splice(widgetIndex, 1)[0];
+          widget = widgets.splice(widgetIndex, 1)[0];
           widgets.push(widget);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
                                                  "widgets": widgets
@@ -199,6 +194,7 @@ Item {
   }
 
   function lowerToBottom() {
+    var i, widget, widgets;
     if (widgetIndex < 0 || !screen || !screen.name) {
       return;
     }
@@ -206,11 +202,11 @@ Item {
     var monitorWidgets = Settings.data.desktopWidgets.monitorWidgets || [];
     var newMonitorWidgets = monitorWidgets.slice();
 
-    for (var i = 0; i < newMonitorWidgets.length; i++) {
+    for (i = 0; i < newMonitorWidgets.length; i++) {
       if (newMonitorWidgets[i].name === screen.name) {
-        var widgets = (newMonitorWidgets[i].widgets || []).slice();
+        widgets = (newMonitorWidgets[i].widgets || []).slice();
         if (widgetIndex < widgets.length && widgetIndex > 0) {
-          var widget = widgets.splice(widgetIndex, 1)[0];
+          widget = widgets.splice(widgetIndex, 1)[0];
           widgets.unshift(widget);
           newMonitorWidgets[i] = Object.assign({}, newMonitorWidgets[i], {
                                                  "widgets": widgets
@@ -223,10 +219,10 @@ Item {
   }
 
   function openWidgetSettings() {
-    DesktopWidgetRegistry.openWidgetSettings(screen, widgetIndex, widgetData.id, widgetData);
+    DesktopWidgetRegistry.openWidgetSettings(screen, widgetIndex, DesktopWidgetHelpers.field(widgetData, "id"), widgetData);
   }
 
-  function handleContextMenuAction(action) {
+  function handleContextMenuAction(action: string): bool {
     if (action === "widget-settings") {
       // Don't close - openWidgetSettings will use the popup window for the dialog
       root.openWidgetSettings();
@@ -264,17 +260,17 @@ Item {
 
   Component.onCompleted: {
     // Initialize scale from widgetData when component is first created
-    if (widgetData && widgetData.scale !== undefined) {
-      widgetScale = widgetData.scale;
+    if (widgetData && DesktopWidgetHelpers.field(widgetData, "scale") !== undefined) {
+      widgetScale = DesktopWidgetHelpers.field(widgetData, "scale");
     }
   }
 
   onWidgetDataChanged: {
     if (!internal.isDragging && !internal.isScaling) {
-      internal.baseX = (widgetData && widgetData.x !== undefined) ? widgetData.x : defaultX;
-      internal.baseY = (widgetData && widgetData.y !== undefined) ? widgetData.y : defaultY;
-      if (widgetData && widgetData.scale !== undefined) {
-        widgetScale = widgetData.scale;
+      internal.baseX = (widgetData && DesktopWidgetHelpers.field(widgetData, "x") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "x") : defaultX;
+      internal.baseY = (widgetData && DesktopWidgetHelpers.field(widgetData, "y") !== undefined) ? DesktopWidgetHelpers.field(widgetData, "y") : defaultY;
+      if (widgetData && DesktopWidgetHelpers.field(widgetData, "scale") !== undefined) {
+        widgetScale = DesktopWidgetHelpers.field(widgetData, "scale");
       } else if (widgetData) {
         // If widgetData exists but scale is not set, default to 1.0
         widgetScale = 1.0;
@@ -285,7 +281,7 @@ Item {
   Rectangle {
     id: decorationRect
     anchors.fill: parent
-    anchors.margins: -outlineMargin
+    anchors.margins: -root.outlineMargin
     color: DesktopWidgetRegistry.editMode ? Qt.rgba(Color.mPrimary.r, Color.mPrimary.g, Color.mPrimary.b, 0.1) : "transparent"
     border.color: (DesktopWidgetRegistry.editMode || internal.isDragging) ? (internal.isDragging ? Color.mOutline : Color.mPrimary) : "transparent"
     border.width: DesktopWidgetRegistry.editMode ? 3 : 0
@@ -326,9 +322,10 @@ Item {
 
   // Context menu model and handler - menu is created dynamically in PopupMenuWindow
   property var contextMenuModel: {
+    var widgetId;
     var hasSettings = false;
-    if (widgetData && widgetData.id) {
-      var widgetId = widgetData.id;
+    if (widgetData && DesktopWidgetHelpers.field(widgetData, "id")) {
+      widgetId = DesktopWidgetHelpers.field(widgetData, "id");
       hasSettings = DesktopWidgetRegistry.widgetSettingsMap[widgetId] !== undefined;
     }
 
@@ -389,23 +386,24 @@ Item {
                }
 
     onPositionChanged: mouse => {
+      var deltaX, deltaY, globalCurrentPos, globalPressPos, minVisibleX, minVisibleY, newX, newY, scaledHeight, scaledWidth;
                          if (internal.isDragging && pressed && internal.operationType === "drag") {
-                           var globalPressPos = mapToItem(root.parent, pressPos.x, pressPos.y);
-                           var globalCurrentPos = mapToItem(root.parent, mouse.x, mouse.y);
+                           globalPressPos = mapToItem(root.parent, pressPos.x, pressPos.y);
+                           globalCurrentPos = mapToItem(root.parent, mouse.x, mouse.y);
 
-                           var deltaX = globalCurrentPos.x - globalPressPos.x;
-                           var deltaY = globalCurrentPos.y - globalPressPos.y;
+                           deltaX = globalCurrentPos.x - globalPressPos.x;
+                           deltaY = globalCurrentPos.y - globalPressPos.y;
 
-                           var newX = internal.dragOffsetX + deltaX;
-                           var newY = internal.dragOffsetY + deltaY;
+                           newX = internal.dragOffsetX + deltaX;
+                           newY = internal.dragOffsetY + deltaY;
 
                            // Boundary clamping - allow widgets to go partially off-screen (75% can clip)
                            // This gives users more control over positioning while keeping widgets accessible
-                           var scaledWidth = root.width;
-                           var scaledHeight = root.height;
+                           scaledWidth = root.width;
+                           scaledHeight = root.height;
                            if (root.parent && scaledWidth > 0 && scaledHeight > 0) {
-                             var minVisibleX = scaledWidth * 0.25;
-                             var minVisibleY = scaledHeight * 0.25;
+                             minVisibleX = scaledWidth * 0.25;
+                             minVisibleY = scaledHeight * 0.25;
                              newX = Math.max(-scaledWidth + minVisibleX, Math.min(newX, root.parent.width - minVisibleX));
                              newY = Math.max(-scaledHeight + minVisibleY, Math.min(newY, root.parent.height - minVisibleY));
                            }
@@ -415,8 +413,8 @@ Item {
                              newY = root.snapToGrid(newY);
                              // Re-clamp after snapping
                              if (root.parent && scaledWidth > 0 && scaledHeight > 0) {
-                               var minVisibleX = scaledWidth * 0.25;
-                               var minVisibleY = scaledHeight * 0.25;
+                               minVisibleX = scaledWidth * 0.25;
+                               minVisibleY = scaledHeight * 0.25;
                                newX = Math.max(-scaledWidth + minVisibleX, Math.min(newX, root.parent.width - minVisibleX));
                                newY = Math.max(-scaledHeight + minVisibleY, Math.min(newY, root.parent.height - minVisibleY));
                              }
@@ -428,9 +426,10 @@ Item {
                        }
 
     onReleased: mouse => {
-                  if (internal.isDragging && internal.operationType === "drag" && widgetIndex >= 0 && screen && screen.name) {
-                    var roundedX = Math.round(internal.dragOffsetX);
-                    var roundedY = Math.round(internal.dragOffsetY);
+      var roundedX, roundedY;
+                  if (internal.isDragging && internal.operationType === "drag" && root.widgetIndex >= 0 && root.screen && root.screen.name) {
+                    roundedX = Math.round(internal.dragOffsetX);
+                    roundedY = Math.round(internal.dragOffsetY);
                     root.updateWidgetData({
                                             "x": roundedX,
                                             "y": roundedY
@@ -459,11 +458,12 @@ Item {
     hoverEnabled: true
 
     onPressed: mouse => {
+      var globalPos, popupMenuWindow;
                  if (mouse.button === Qt.RightButton) {
-                   var popupMenuWindow = PanelService.getPopupMenuWindow(root.screen);
+                   popupMenuWindow = PanelService.getPopupMenuWindow(root.screen);
                    if (popupMenuWindow) {
                      // Map click position to screen coordinates
-                     var globalPos = root.mapToItem(null, mouse.x, mouse.y);
+                     globalPos = root.mapToItem(null, mouse.x, mouse.y);
                      // Use dynamic context menu (created in PopupMenuWindow's Top layer)
                      // This ensures input events work correctly for desktop widgets (Bottom layer)
                      popupMenuWindow.showDynamicContextMenu(root.contextMenuModel, globalPos.x, globalPos.y, root.handleContextMenuAction);
@@ -527,20 +527,20 @@ Item {
 
       visible: DesktopWidgetRegistry.editMode && !internal.isDragging
       // Position handles at corners of decoration rectangle (which extends by outlineMargin)
-      x: modelData.xMult === 0 ? -outlineMargin : (root.width + outlineMargin - cornerHandleSize)
-      y: modelData.yMult === 0 ? -outlineMargin : (root.height + outlineMargin - cornerHandleSize)
-      width: cornerHandleSize
-      height: cornerHandleSize
+      x: DesktopWidgetHelpers.field(modelData, "xMult") === 0 ? -root.outlineMargin : (root.width + root.outlineMargin - root.cornerHandleSize)
+      y: DesktopWidgetHelpers.field(modelData, "yMult") === 0 ? -root.outlineMargin : (root.height + root.outlineMargin - root.cornerHandleSize)
+      width: root.cornerHandleSize
+      height: root.cornerHandleSize
       z: 2000
 
       onPaint: {
         var ctx = getContext("2d");
         ctx.reset();
-        ctx.fillStyle = colorHandle;
+        ctx.fillStyle = root.colorHandle;
         ctx.beginPath();
-        ctx.moveTo(modelData.points[0][0] * cornerHandleSize, modelData.points[0][1] * cornerHandleSize);
-        ctx.lineTo(modelData.points[1][0] * cornerHandleSize, modelData.points[1][1] * cornerHandleSize);
-        ctx.lineTo(modelData.points[2][0] * cornerHandleSize, modelData.points[2][1] * cornerHandleSize);
+        ctx.moveTo(DesktopWidgetHelpers.pointCoordinate(modelData, 0, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 0, 1) * root.cornerHandleSize);
+        ctx.lineTo(DesktopWidgetHelpers.pointCoordinate(modelData, 1, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 1, 1) * root.cornerHandleSize);
+        ctx.lineTo(DesktopWidgetHelpers.pointCoordinate(modelData, 2, 0) * root.cornerHandleSize, DesktopWidgetHelpers.pointCoordinate(modelData, 2, 1) * root.cornerHandleSize);
         ctx.closePath();
         ctx.fill();
       }
@@ -565,7 +565,7 @@ Item {
         id: scaleMouseArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        cursorShape: cornerHandle.modelData.cursor
+        cursorShape: DesktopWidgetHelpers.field(cornerHandle.modelData, "cursor")
         property point pressPos: Qt.point(0, 0)
 
         onPressed: mouse => {
@@ -582,19 +582,20 @@ Item {
                    }
 
         onPositionChanged: mouse => {
+          var currentPos, deltaX, deltaY, diagonalDelta, newScale, scaleDelta, sensitivity;
                              if (internal.isScaling && pressed && internal.operationType === "scale") {
-                               var currentPos = mapToItem(root.parent, mouse.x, mouse.y);
-                               var deltaX = currentPos.x - pressPos.x;
-                               var deltaY = currentPos.y - pressPos.y;
+                               currentPos = mapToItem(root.parent, mouse.x, mouse.y);
+                               deltaX = currentPos.x - pressPos.x;
+                               deltaY = currentPos.y - pressPos.y;
 
                                // Project delta onto the diagonal direction for this corner
                                // xDir/yDir indicate which direction increases scale
-                               var diagonalDelta = (deltaX * cornerHandle.modelData.xDir + deltaY * cornerHandle.modelData.yDir) / Math.sqrt(2);
+                               diagonalDelta = (deltaX * DesktopWidgetHelpers.field(cornerHandle.modelData, "xDir") + deltaY * DesktopWidgetHelpers.field(cornerHandle.modelData, "yDir")) / Math.sqrt(2);
 
                                // Scale sensitivity: pixels of drag per 1.0 scale change
-                               var sensitivity = 150;
-                               var scaleDelta = diagonalDelta / sensitivity;
-                               var newScale = Math.max(root.minScale, Math.min(root.maxScale, internal.initialScale + scaleDelta));
+                               sensitivity = 150;
+                               scaleDelta = diagonalDelta / sensitivity;
+                               newScale = Math.max(root.minScale, Math.min(root.maxScale, internal.initialScale + scaleDelta));
 
                                newScale = root.snapScaleToGrid(newScale);
 

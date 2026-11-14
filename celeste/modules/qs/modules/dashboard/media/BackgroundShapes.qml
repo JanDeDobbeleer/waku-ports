@@ -5,21 +5,22 @@ import Celeste.Config
 import M3Shapes
 import qs.components
 import qs.services
+import "BackgroundShapesHelpers.js" as BackgroundShapesHelpers
 
 Item {
     id: root
 
-    readonly property list<int> shapePool: [MaterialShape.Circle, MaterialShape.Cookie4Sided, MaterialShape.Cookie6Sided, MaterialShape.Cookie7Sided, MaterialShape.Cookie9Sided, MaterialShape.Cookie12Sided, MaterialShape.Sunny, MaterialShape.VerySunny, MaterialShape.SoftBurst, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.Arch, MaterialShape.Arrow, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Fan, MaterialShape.Oval]
+    readonly final property list<int> shapePool: [MaterialShape.Circle, MaterialShape.Cookie4Sided, MaterialShape.Cookie6Sided, MaterialShape.Cookie7Sided, MaterialShape.Cookie9Sided, MaterialShape.Cookie12Sided, MaterialShape.Sunny, MaterialShape.VerySunny, MaterialShape.SoftBurst, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.Arch, MaterialShape.Arrow, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Fan, MaterialShape.Oval]
 
-    property int count: 14
-    property real minSize: Tokens.px(36)
-    property real maxSize: Tokens.px(124)
-    property real minSpeed: 4
-    property real maxSpeed: 18
-    property real minRotSpeed: -12
-    property real maxRotSpeed: 12
-    property list<real> lightOpacities: [0.34, 0.34, 0.08, 0.2]
-    property list<real> darkOpacities: [0.16, 0.16, 0.04, 0.16]
+    final property int count: 14
+    final property real minSize: Tokens.px(36)
+    final property real maxSize: Tokens.px(124)
+    final property real minSpeed: 4
+    final property real maxSpeed: 18
+    final property real minRotSpeed: -12
+    final property real maxRotSpeed: 12
+    final property list<real> lightOpacities: [0.34, 0.34, 0.08, 0.2]
+    final property list<real> darkOpacities: [0.16, 0.16, 0.04, 0.16]
 
     function rand(min: real, max: real): real {
         return min + Math.random() * (max - min);
@@ -49,7 +50,7 @@ Item {
 
                 s.x += s.vx * dt;
                 s.y += s.vy * dt;
-                s.rotation += s.vr * dt;
+                BackgroundShapesHelpers.addRotation(s, dt);
 
                 if (s.x + s.width < 0)
                     s.x = root.width;
@@ -67,12 +68,12 @@ Item {
     component DriftingShape: MaterialShape {
         id: shapeItem
 
-        required property int index
+        required final property int index
 
-        property real vx: root.signedRand(root.minSpeed, root.maxSpeed)
-        property real vy: root.signedRand(root.minSpeed, root.maxSpeed)
-        property real vr: root.rand(root.minRotSpeed, root.maxRotSpeed)
-        readonly property int colourIdx: Math.floor(Math.random() * 4)
+        final property real vx: root.signedRand(root.minSpeed, root.maxSpeed)
+        final property real vy: root.signedRand(root.minSpeed, root.maxSpeed)
+        final property real vr: root.rand(root.minRotSpeed, root.maxRotSpeed)
+        readonly final property int colourIdx: Math.floor(Math.random() * 4)
 
         implicitSize: root.minSize + (index / root.count) * (root.maxSize - root.minSize)
         shape: root.shapePool[Math.floor(Math.random() * root.shapePool.length)]

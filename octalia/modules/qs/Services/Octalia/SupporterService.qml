@@ -2,8 +2,6 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import qs.Commons
-import qs.compat
 
 // The port fetches no supporter list. The names stay so the About tab loads.
 Singleton {
@@ -31,7 +29,7 @@ Singleton {
   function saveData() {
   }
 
-  function getAvatarPath(username) {
+  function getAvatarPath(username: var): string {
     return "";
   }
 

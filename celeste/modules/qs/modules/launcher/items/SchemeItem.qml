@@ -3,12 +3,13 @@ import Celeste.Config
 import qs.components
 import qs.services
 import qs.modules.launcher.services
+import "SchemeItemHelpers.js" as SchemeItemHelpers
 
 Item {
     id: root
 
-    required property var modelData
-    required property var list
+    required final property var modelData
+    required final property var list
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
 
@@ -19,7 +20,7 @@ Item {
         objectName: "rowClick"
 
         radius: Tokens.rounding.large
-        onClicked: root.modelData?.onClicked(root.list)
+        onClicked: SchemeItemHelpers.select(root.modelData, root.list)
     }
 
     Item {
@@ -34,9 +35,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             border.width: 1
-            border.color: Qt.alpha(root.modelData?.colours?.outline ?? "transparent", 0.5)
+            border.color: Qt.alpha(SchemeItemHelpers.colour(root.modelData, "outline"), 0.5)
 
-            color: root.modelData?.colours?.surface ?? "transparent"
+            color: SchemeItemHelpers.colour(root.modelData, "surface")
             radius: Tokens.rounding.full
             implicitWidth: parent.height * 0.8
             implicitHeight: parent.height * 0.8
@@ -46,7 +47,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
 
-                implicitWidth: parent.implicitWidth / 2
+                implicitWidth: preview.implicitWidth / 2
                 clip: true
 
                 StyledRect {
@@ -55,7 +56,7 @@ Item {
                     anchors.right: parent.right
 
                     implicitWidth: preview.implicitWidth
-                    color: root.modelData?.colours?.primary ?? "transparent"
+                    color: SchemeItemHelpers.colour(root.modelData, "primary")
                     radius: Tokens.rounding.full
                 }
             }
@@ -70,12 +71,12 @@ Item {
             spacing: 0
 
             StyledText {
-                text: root.modelData?.flavour ?? ""
+                text: SchemeItemHelpers.flavour(root.modelData)
                 font: Tokens.font.body.medium
             }
 
             StyledText {
-                text: root.modelData?.name ?? ""
+                text: SchemeItemHelpers.name(root.modelData)
                 font: Tokens.font.body.small
                 color: Colours.palette.m3outline
 
@@ -92,7 +93,7 @@ Item {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
 
-            active: `${root.modelData?.name} ${root.modelData?.flavour}` === Schemes.currentScheme
+            active: SchemeItemHelpers.isCurrent(root.modelData, Schemes.currentScheme)
 
             sourceComponent: MaterialIcon {
                 text: "check"

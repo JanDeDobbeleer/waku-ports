@@ -1,9 +1,10 @@
 pragma Singleton
+import "ThemeIconsUtils.js" as ThemeIconsUtils
 
 import QtQuick 6.10
 import Quickshell
 import qs.Commons
-import qs.compat
+import qs.Services.System
 
 Singleton {
   id: root
@@ -50,105 +51,39 @@ Singleton {
 
   Connections {
     target: DesktopEntries.applications
-    function onValuesChanged() {
-      refreshEntries();
+    function onValuesChanged(): var {
+      root.refreshEntries();
     }
   }
 
-  function refreshEntries() {
-    if (typeof DesktopEntries === 'undefined')
-      return;
-
-    const values = Array.from(DesktopEntries.applications.values);
-    if (values) {
-      entryList = values.sort((a, b) => a.name.localeCompare(b.name));
-      updatePreppedData();
-    }
+  function refreshEntries(): void {
+    ThemeIconsUtils.refreshEntries(root, DesktopEntries);
   }
 
-  function updatePreppedData() {
-    if (typeof FuzzySort === 'undefined')
-      return;
-
-    const list = Array.from(entryList);
-    preppedNames = list.map(a => ({
-                                    name: FuzzySort.prepare(`${a.name} `),
-                                    entry: a
-                                  }));
-    preppedIcons = list.map(a => ({
-                                    name: FuzzySort.prepare(`${a.icon} `),
-                                    entry: a
-                                  }));
-    preppedIds = list.map(a => ({
-                                  name: FuzzySort.prepare(`${a.id} `),
-                                  entry: a
-                                }));
+  function updatePreppedData(): void {
+    ThemeIconsUtils.updatePreppedData(root, FuzzySort);
   }
 
-  function iconForAppId(appId, fallbackName) {
-    const fallback = fallbackName || "application-x-executable";
-    if (!appId)
-      return iconFromName(fallback, fallback);
-
-    const entry = findAppEntry(appId);
-    if (entry) {
-      return iconFromName(entry.icon, fallback);
-    }
-
-    return iconFromName(appId, fallback);
+  function iconForAppId(appId: var, fallbackName: var): var {
+    return ThemeIconsUtils.iconForAppId(appId, fallbackName, root);
   }
 
   // Robust lookup strategy
-  function findAppEntry(str) {
-    if (!str || str.length === 0)
-      return null;
-
-    let result = null;
-
-    if (result = checkHeuristic(str))
-      return result;
-    if (result = checkSubstitutions(str))
-      return result;
-    if (result = checkRegex(str))
-      return result;
-    if (result = checkSimpleTransforms(str))
-      return result;
-    if (result = checkFuzzySearch(str))
-      return result;
-    if (result = checkCleanMatch(str))
-      return result;
-
-    return null;
+  function findAppEntry(str: var): var {
+    return ThemeIconsUtils.findAppEntry(str, root);
   }
 
-  function iconFromName(iconName, fallbackName) {
-    const fallback = fallbackName || "application-x-executable";
-    try {
-      if (iconName && typeof Quickshell !== 'undefined' && Quickshell.iconPath) {
-        const p = Quickshell.iconPath(iconName, fallback);
-        if (p && p !== "")
-          return p;
-      }
-    } catch (e) {}
-
-    try {
-      return Quickshell.iconPath ? (Quickshell.iconPath(fallback, true) || "") : "";
-    } catch (e2) {
-      return "";
-    }
+  function iconFromName(iconName: var, fallbackName: var): var {
+    return ThemeIconsUtils.iconFromName(iconName, fallbackName, Quickshell);
   }
 
-  function distroLogoPath() {
-    try {
-      return (typeof OSInfo !== 'undefined' && OSInfo.distroIconPath) ? OSInfo.distroIconPath : "";
-    } catch (e) {
-      return "";
-    }
+  function distroLogoPath(): var {
+    return HostService.osLogo;
   }
 
   // --- Lookup Helpers ---
 
-  function checkHeuristic(str) {
+  function checkHeuristic(str: var): var {
     if (typeof DesktopEntries !== 'undefined' && DesktopEntries.heuristicLookup) {
       const entry = DesktopEntries.heuristicLookup(str);
       if (entry)
@@ -157,7 +92,7 @@ Singleton {
     return null;
   }
 
-  function checkSubstitutions(str) {
+  function checkSubstitutions(str: var): var {
     let effectiveStr = substitutions[str];
     if (!effectiveStr)
       effectiveStr = substitutions[str.toLowerCase()];
@@ -168,24 +103,17 @@ Singleton {
     return null;
   }
 
-  function checkRegex(str) {
-    for (let i = 0; i < regexSubstitutions.length; i++) {
-      const sub = regexSubstitutions[i];
-      const replaced = str.replace(sub.regex, sub.replace);
-      if (replaced !== str) {
-        return findAppEntry(replaced);
-      }
-    }
-    return null;
+  function checkRegex(str: var): var {
+    return ThemeIconsUtils.checkRegex(str, root);
   }
 
-  function checkSimpleTransforms(str) {
+  function checkSimpleTransforms(str: var): var {
     if (typeof DesktopEntries === 'undefined' || !DesktopEntries.byId)
       return null;
 
     const lower = str.toLowerCase();
 
-    const variants = [str, lower, getFromReverseDomain(str), getFromReverseDomain(str)?.toLowerCase(), normalizeWithHyphens(str), str.replace(/_/g, '-').toLowerCase(), str.replace(/-/g, '_').toLowerCase()];
+    const variants = [str, lower, getFromReverseDomain(str), getFromReverseDomain(str).toLowerCase(), normalizeWithHyphens(str), str.replace(/_/g, '-').toLowerCase(), str.replace(/-/g, '_').toLowerCase()];
 
     for (let i = 0; i < variants.length; i++) {
       const variant = variants[i];
@@ -198,93 +126,36 @@ Singleton {
     return null;
   }
 
-  function checkFuzzySearch(str) {
-    if (typeof FuzzySort === 'undefined')
-      return null;
-
-    // Check filenames (IDs) first
-    if (preppedIds.length > 0) {
-      let results = fuzzyQuery(str, preppedIds);
-      if (results.length === 0) {
-        const underscored = str.replace(/-/g, '_').toLowerCase();
-        if (underscored !== str)
-          results = fuzzyQuery(underscored, preppedIds);
-      }
-      if (results.length > 0)
-        return results[0];
-    }
-
-    // Then icons
-    if (preppedIcons.length > 0) {
-      const results = fuzzyQuery(str, preppedIcons);
-      if (results.length > 0)
-        return results[0];
-    }
-
-    // Then names
-    if (preppedNames.length > 0) {
-      const results = fuzzyQuery(str, preppedNames);
-      if (results.length > 0)
-        return results[0];
-    }
-
-    return null;
+  function checkFuzzySearch(str: var): var {
+    return ThemeIconsUtils.checkFuzzySearch(str, root, FuzzySort);
   }
 
-  function checkCleanMatch(str) {
-    if (!str || str.length <= 3)
-      return null;
-    if (typeof DesktopEntries === 'undefined' || !DesktopEntries.byId)
-      return null;
-
-    // Aggressive fallback: strip all separators
-    const cleanStr = str.toLowerCase().replace(/[\.\-_]/g, '');
-    const list = Array.from(entryList);
-
-    for (let i = 0; i < list.length; i++) {
-      const entry = list[i];
-      const cleanId = (entry.id || "").toLowerCase().replace(/[\.\-_]/g, '');
-      if (cleanId.includes(cleanStr) || cleanStr.includes(cleanId)) {
-        return entry;
-      }
-    }
-    return null;
+  function checkCleanMatch(str: var): var {
+    return ThemeIconsUtils.checkCleanMatch(str, root, DesktopEntries);
   }
 
-  function fuzzyQuery(search, preppedData) {
-    if (!search || !preppedData || preppedData.length === 0)
-      return [];
-    return FuzzySort.go(search, preppedData, {
-                          all: true,
-                          key: "name"
-                        }).map(r => r.obj.entry);
+  function fuzzyQuery(search: var, preppedData: var): var {
+    return ThemeIconsUtils.fuzzyQuery(search, preppedData, FuzzySort);
   }
 
-  function iconExists(iconName) {
-    if (!iconName || iconName.length === 0)
-      return false;
-    if (iconName.startsWith("/"))
-      return true;
-
-    const path = Quickshell.iconPath(iconName, true);
-    return path && path.length > 0 && !path.includes("image-missing");
+  function iconExists(iconName: var): var {
+    return ThemeIconsUtils.iconExists(iconName, Quickshell);
   }
 
-  function getFromReverseDomain(str) {
+  function getFromReverseDomain(str: var): string {
     if (!str)
       return "";
     return str.split('.').slice(-1)[0];
   }
 
-  function normalizeWithHyphens(str) {
+  function normalizeWithHyphens(str: var): var {
     if (!str)
       return "";
     return str.toLowerCase().replace(/\s+/g, "-");
   }
 
   // Deprecated shim
-  function guessIcon(str) {
-    const entry = findAppEntry(str);
-    return entry ? entry.icon : "image-missing";
+  function guessIcon(str: var): var {
+    return ThemeIconsUtils.guessIcon(str, root);
   }
 }

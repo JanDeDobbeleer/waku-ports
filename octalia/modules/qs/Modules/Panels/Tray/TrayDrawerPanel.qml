@@ -1,13 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Layouts
-import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.UI
-import qs.Widgets
 import qs.compat
+import "./TrayDrawerUtils.js" as TrayDrawerUtils
 
 // A compact grid panel listing all tray items, opened from the Tray widget
 SmartPanel {
@@ -17,6 +17,7 @@ SmartPanel {
   exclusiveKeyboard: false
 
   // Widget info for menu functionality (set by Tray widget when opening)
+  property int settingsVersion: 0
   property string widgetSection: ""
   property int widgetIndex: -1
 
@@ -32,7 +33,7 @@ SmartPanel {
   // Filtered items - computed in panelContent where isPinned is available
   property var trayValues: []
 
-  readonly property int itemCount: trayValues.length
+  readonly property int itemCount: TrayDrawerUtils.arrayLength(trayValues)
   readonly property int columns: Math.max(1, Math.min(maxColumns, itemCount))
   readonly property int rows: Math.max(1, Math.ceil(itemCount / Math.max(1, columns)))
 
@@ -41,27 +42,20 @@ SmartPanel {
 
   // Auto-close drawer when all items are pinned (drawer becomes empty)
   onTrayValuesChanged: {
-    if (visible && trayValues.length === 0) {
+    if (visible && itemCount === 0) {
       close();
     }
   }
 
   // Force refresh panelContent settings when drawer opens
-  onOpened: {
-    if (panelContent && panelContent.settingsVersion !== undefined) {
-      panelContent.settingsVersion++;
-    }
-  }
+  onOpened: root.settingsVersion++
 
   panelContent: Item {
     id: panelContent
 
-    // Settings state (lazy-loaded with panelContent)
-    property int settingsVersion: 0
-
     readonly property var widgetSettings: {
       // Reference settingsVersion to force recalculation when it changes
-      void (settingsVersion);
+      void (root.settingsVersion);
       if (root.widgetSection === "" || root.widgetIndex < 0)
         return {};
       var widgets = Settings.getBarWidgetsForScreen(root.screen?.name)[root.widgetSection];
@@ -73,24 +67,25 @@ SmartPanel {
       return settings;
     }
 
-    readonly property var pinnedList: widgetSettings.pinned || []
-    readonly property bool hidePassive: widgetSettings.hidePassive !== undefined ? widgetSettings.hidePassive : true
+    readonly property var pinnedList: TrayDrawerUtils.field(widgetSettings, "pinned") || []
+    readonly property bool hidePassive: TrayDrawerUtils.fieldOrDefault(widgetSettings, "hidePassive", true)
 
     // Filter tray items - this runs in panelContent context where isPinned is available
     function updateFilteredItems() {
+      var i, item;
       var filtered = [];
-      for (var i = 0; i < root.trayValuesAll.length; i++) {
-        var item = root.trayValuesAll[i];
+      for (i = 0; i < TrayDrawerUtils.arrayLength(root.trayValuesAll); i++) {
+        item = root.trayValuesAll[i];
         if (!item)
           continue;
 
         // Filter out passive items if hidePassive is enabled
-        if (hidePassive && item.status !== undefined && (item.status === SystemTray.Passive || item.status === 0)) {
+        if (hidePassive && TrayDrawerUtils.isPassive(TrayDrawerUtils.field(item, "status"), SystemTray)) {
           continue;
         }
 
         // Filter out pinned items
-        if (isPinned(item)) {
+        if (TrayDrawerUtils.isPinned(item, pinnedList)) {
           continue;
         }
 
@@ -111,41 +106,15 @@ SmartPanel {
       }
     }
 
-    // Helper functions (lazy-loaded with panelContent)
-    function wildCardMatch(str, rule) {
-      if (!str || !rule)
-        return false;
-      const placeholder = '\uE000';
-      let processedRule = rule.replace(/\*/g, placeholder);
-      let escaped = processedRule.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-      let pattern = '^' + escaped.replace(new RegExp(placeholder, 'g'), '.*') + '$';
-      try {
-        return new RegExp(pattern, 'i').test(str);
-      } catch (e) {
-        return false;
-      }
-    }
-
-    function isPinned(item) {
-      if (!pinnedList || pinnedList.length === 0)
-        return false;
-      const title = item?.tooltipTitle || item?.name || item?.id || "";
-      for (var i = 0; i < pinnedList.length; i++) {
-        if (wildCardMatch(title, pinnedList[i]))
-          return true;
-      }
-      return false;
-    }
-
     // Popup menu state (lazy-loaded with panelContent)
     property int popupMenuUpdateTrigger: 0
 
     readonly property var popupMenuWindow: {
       void (popupMenuUpdateTrigger);
-      return PanelService.getPopupMenuWindow(screen);
+      return PanelService.getPopupMenuWindow(root.screen);
     }
 
-    readonly property var trayMenu: popupMenuWindow ? popupMenuWindow.trayMenuLoader : null
+    readonly property var trayMenu: TrayDrawerUtils.trayMenuLoader(popupMenuWindow)
 
     // Dynamic content sizing
     property real contentPreferredWidth: (root.columns * root.cellSize) + ((root.columns - 1) * root.innerSpacing) + (2 * root.outerPadding)
@@ -154,15 +123,15 @@ SmartPanel {
     // Connections (lazy-loaded with panelContent)
     Connections {
       target: Settings
-      function onSettingsSaved() {
-        panelContent.settingsVersion++;
+      function onSettingsSaved(): void {
+        root.settingsVersion++;
       }
     }
 
     Connections {
       target: PanelService
-      function onPopupMenuWindowRegistered(registeredScreen) {
-        if (registeredScreen === screen) {
+      function onPopupMenuWindowRegistered(registeredScreen: var): void {
+        if (registeredScreen === root.screen) {
           panelContent.popupMenuUpdateTrigger++;
         }
       }
@@ -182,6 +151,8 @@ SmartPanel {
         model: root.trayValues
 
         delegate: Item {
+          id: trayEntry
+          required property var modelData
           width: root.cellSize
           height: root.cellSize
 
@@ -191,20 +162,10 @@ SmartPanel {
             asynchronous: true
             backer.fillMode: Image.PreserveAspectFit
             source: {
-              let icon = modelData?.icon || "";
-              if (!icon)
-                return "";
-              if (icon.includes("?path=")) {
-                const chunks = icon.split("?path=");
-                const name = chunks[0];
-                const path = chunks[1];
-                const fileName = name.substring(name.lastIndexOf("/") + 1);
-                return `file://${path}/${fileName}`;
-              }
-              return icon;
+              return TrayDrawerUtils.iconSource(trayEntry.modelData);
             }
 
-            layer.enabled: panelContent.widgetSettings.colorizeIcons !== false
+            layer.enabled: TrayDrawerUtils.fieldOrDefault(panelContent.widgetSettings, "colorizeIcons", true) !== false
             layer.effect: ShaderEffect {
               property color targetColor: Settings.data.colorSchemes.darkMode ? Color.mOnSurface : Color.mSurfaceVariant
               property real colorizeMode: 1.0
@@ -218,64 +179,36 @@ SmartPanel {
               acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
               onClicked: mouse => {
-                           if (!modelData)
+                           if (!trayEntry.modelData)
                            return;
                            if (mouse.button === Qt.LeftButton) {
-                             if (!modelData.onlyMenu) {
-                               modelData.activate();
-                             }
-                             if ((PanelService.openedPanel !== null) && !PanelService.openedPanel.isClosing) {
-                               PanelService.openedPanel.close();
-                             }
+                             if (!TrayDrawerUtils.field(trayEntry.modelData, "onlyMenu"))
+                               TrayDrawerUtils.activate(trayEntry.modelData);
+                             TrayDrawerUtils.closeOpenedPanel(PanelService.openedPanel);
                            } else if (mouse.button === Qt.MiddleButton) {
-                             modelData.secondaryActivate && modelData.secondaryActivate();
-                             if ((PanelService.openedPanel !== null) && !PanelService.openedPanel.isClosing) {
-                               PanelService.openedPanel.close();
-                             }
+                             TrayDrawerUtils.secondaryActivate(trayEntry.modelData);
+                             TrayDrawerUtils.closeOpenedPanel(PanelService.openedPanel);
                            } else if (mouse.button === Qt.RightButton) {
-                             if (panelContent.popupMenuWindow && panelContent.popupMenuWindow.visible) {
-                               panelContent.popupMenuWindow.close();
+                             if (TrayDrawerUtils.popupVisible(panelContent.popupMenuWindow)) {
+                               TrayDrawerUtils.closePopup(panelContent.popupMenuWindow);
                                return;
                              }
 
-                             if (modelData.hasMenu && modelData.menu && panelContent.trayMenu && panelContent.trayMenu.item) {
-                               const barPosition = Settings.getBarPositionForScreen(root.screen?.name);
-                               // Increased spacing for better alignment with other context menus
-                               let menuX, menuY;
-
-                               if (barPosition === "left") {
-                                 menuX = trayIcon.width + Style.marginL;
-                                 menuY = 0;
-                               } else if (barPosition === "right") {
-                                 menuX = -panelContent.trayMenu.item.width - Style.marginL;
-                                 menuY = 0;
-                               } else if (barPosition === "bottom") {
-                                 // For bottom bar: let TrayMenu handle positioning by passing anchorY >= 0
-                                 // TrayMenu will position above the anchor item
-                                 menuX = (trayIcon.width / 2) - (panelContent.trayMenu.item.width / 2);
-                                 menuY = trayIcon.height + Style.marginL;
-                               } else {
-                                 // For top bar: position menu below the icon with more spacing
-                                 menuX = (trayIcon.width / 2) - (panelContent.trayMenu.item.width / 2);
-                                 menuY = trayIcon.height + Style.marginL;
-                               }
-
-                               PanelService.showTrayMenu(root.screen, modelData, panelContent.trayMenu.item, trayIcon, menuX, menuY, root.widgetSection, root.widgetIndex);
+                             if (TrayDrawerUtils.hasMenu(trayEntry.modelData) && panelContent.trayMenu) {
+                               TrayDrawerUtils.showTrayMenu(PanelService, root.screen, trayEntry.modelData, panelContent.trayMenu, trayIcon, Settings.getBarPositionForScreen(root.screen?.name), Style.marginL, root.widgetSection, root.widgetIndex);
                              }
                            }
                          }
 
               onWheel: wheel => {
                          if (wheel.angleDelta.y > 0)
-                         modelData?.scrollUp();
+                           TrayDrawerUtils.scroll(trayEntry.modelData, true);
                          else if (wheel.angleDelta.y < 0)
-                         modelData?.scrollDown();
+                           TrayDrawerUtils.scroll(trayEntry.modelData, false);
                        }
 
               onEntered: {
-                if (panelContent.popupMenuWindow) {
-                  panelContent.popupMenuWindow.close();
-                }
+                TrayDrawerUtils.closePopup(panelContent.popupMenuWindow)
               }
             }
           }

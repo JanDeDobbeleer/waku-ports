@@ -8,7 +8,7 @@ import Celeste.Config
 import qs.components
 import qs.components.effects
 import qs.services
-import qs.modules.drawers
+import "MenuHelpers.js" as MenuHelpers
 
 MouseArea {
     id: root
@@ -20,17 +20,17 @@ MouseArea {
         Right
     }
 
-    required property Item attachTo
-    property int attachSideX: Menu.Right
-    property int attachSideY: Menu.Bottom
-    property int thisSideX: Menu.Right
-    property int thisSideY: Menu.Top
-    property real marginX
-    property real marginY
+    required final property Item attachTo
+    final property int attachSideX: Menu.Right
+    final property int attachSideY: Menu.Bottom
+    final property int thisSideX: Menu.Right
+    final property int thisSideY: Menu.Top
+    final property real marginX
+    final property real marginY
 
-    property list<MenuItem> items
-    property MenuItem active: items[0] ?? null
-    property bool expanded
+    final property list<MenuItem> items
+    final property MenuItem active: items[0] ?? null
+    final property bool expanded
 
     // Port: untyped. A MenuItem-typed argument cannot take a component derived from MenuItem
     // (the drive menu's DiskItem); the call fails and the handler never runs.
@@ -40,8 +40,7 @@ MouseArea {
     // instead of the interaction wrapper. Its items' hover then took the hover from the wrapper,
     // which read it as the mouse leaving and closed the dashboard. Duck-typed lookup instead.
     parent: {
-        const win = QsWindow.window; // qmllint disable missing-property
-        return win?.interactionWrapper ?? win?.contentItem ?? null;
+        return MenuHelpers.parentItem(QsWindow.window);
     }
     anchors.fill: parent
 
@@ -74,19 +73,11 @@ MouseArea {
 
         x: {
             CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
-            const item = root.attachTo;
-            let off = root.attachSideX === Menu.Left ? 0 : item.width;
-            if (root.thisSideX === Menu.Right)
-                off -= width;
-            return item.mapToItem(root.parent, off, 0).x + root.marginX;
+            return MenuHelpers.positionX(root.attachTo, root.parent, root.attachSideX, root.thisSideX, Menu.Left, Menu.Right, width, root.marginX);
         }
         y: {
             CUtils.dependency(watcher.transform); // mapToItem is not reactive so this forces updates
-            const item = root.attachTo;
-            let off = root.attachSideY === Menu.Top ? 0 : item.height;
-            if (root.thisSideY === Menu.Bottom)
-                off -= height;
-            return item.mapToItem(root.parent, 0, off).y + root.marginY;
+            return MenuHelpers.positionY(root.attachTo, root.parent, root.attachSideY, root.thisSideY, Menu.Top, Menu.Bottom, height, root.marginY);
         }
 
         radius: Tokens.rounding.large
@@ -127,11 +118,11 @@ MouseArea {
                     model: root.items
 
                     StyledRect {
-                        id: item
+                        id: menuItem
 
-                        required property int index
-                        required property MenuItem modelData
-                        readonly property bool active: modelData === root?.active
+                        required final property int index
+                        required final property MenuItem modelData
+                        readonly final property bool active: modelData === root?.active
 
                         Layout.fillWidth: true
                         implicitWidth: menuOptionRow.implicitWidth + Tokens.padding.medium * 2
@@ -155,12 +146,12 @@ MouseArea {
                             bottomLeftRadius: parent.bottomLeftRadius
                             bottomRightRadius: parent.bottomRightRadius
 
-                            color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                            color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
                             disabled: !root.expanded
                             onClicked: {
-                                root.itemSelected(item.modelData);
-                                root.active = item.modelData;
-                                item.modelData.clicked();
+                                root.itemSelected(menuItem.modelData);
+                                root.active = menuItem.modelData;
+                                MenuHelpers.click(menuItem.modelData);
                                 root.expanded = false;
                             }
                         }
@@ -174,26 +165,26 @@ MouseArea {
 
                             MaterialIcon {
                                 Layout.alignment: Qt.AlignVCenter
-                                text: item.modelData?.icon ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                text: menuItem.modelData?.icon ?? ""
+                                color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
                             }
 
                             StyledText {
                                 Layout.alignment: Qt.AlignVCenter
                                 Layout.fillWidth: true
-                                text: item.modelData?.text ?? ""
-                                color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
+                                text: menuItem.modelData?.text ?? ""
+                                color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurface
                             }
 
                             Loader {
                                 asynchronous: true
                                 Layout.alignment: Qt.AlignVCenter
-                                active: item.modelData?.trailingIcon.length > 0
+                                active: menuItem.modelData?.trailingIcon.length > 0
                                 visible: active
 
                                 sourceComponent: MaterialIcon {
-                                    text: item.modelData.trailingIcon
-                                    color: item.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
+                                    text: menuItem.modelData.trailingIcon
+                                    color: menuItem.active ? Colours.palette.m3onTertiaryContainer : Colours.palette.m3onSurfaceVariant
                                 }
                             }
                         }

@@ -1,9 +1,11 @@
+pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
-import Quickshell.Io
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
+import "." as Local
 import "Model.js" as Model
+import "ClockBarWidgetUtils.js" as ClockBarWidgetUtils
 
 // Date/time label for the bar, and the host for the calendar popup.
 //
@@ -13,6 +15,8 @@ import "Model.js" as Model
 BarWidget {
   id: root
   moduleName: "nomarchy.clock"
+
+  readonly property Local.Panel loadedPanel: panelLoader.item as Local.Panel
 
   property date displayDate: clock.date
 
@@ -35,9 +39,9 @@ BarWidget {
   readonly property string displayText: formatted(displayDate)
   readonly property var verticalLines: displayText.split("\n")
 
-  function refresh() {
+  function refresh(): void {
     displayDate = new Date()
-    if (panelLoader.item && panelLoader.item.refresh) panelLoader.item.refresh()
+    ClockBarWidgetUtils.call(root.loadedPanel, "refresh", [])
   }
 
   function cycleFormat() {
@@ -46,14 +50,14 @@ BarWidget {
     if (next === "" || next === current) return
 
     var entry = { id: root.moduleName }
-    for (var key in root.settings) if (key !== "id") entry[key] = root.settings[key]
+    for (let key in root.settings) if (key !== "id") entry[key] = root.settings[key]
     entry[vertical ? "verticalFormat" : "format"] = next
 
     // Applied locally first so the label changes on the click itself; the
     // shell.json write comes back through the bar as the same value.
     root.settings = entry
-    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
-      root.bar.shell.updateEntryInline(root.moduleName, entry)
+    if (BarValues.hasUpdateEntryInline(root.bar))
+      BarValues.updateEntryInline(root.bar, root.moduleName, entry)
   }
 
   // Day and month names follow the Nomarchy language, not the system locale,
@@ -62,31 +66,31 @@ BarWidget {
 
   // The ISO week goes in as a literal, so its digits are localized here the
   // way Qt localizes the rest of the format.
-  function formatted(date) {
+  function formatted(date: date): string {
     var week = Model.isoWeekLiteral(date.getFullYear(), date.getMonth(), date.getDate())
-    week = week.split("").map(function(digit) { return I18n.formatNumber(digit) }).join("")
+    week = week.split("").map(function(digit: string): string { return I18n.formatNumber(digit) }).join("")
     return date.toLocaleString(root.formatLocale, activeFormat.replace(/ww/g, week))
   }
 
   // ---- Calendar popup. Shape contract for shell.summon/hide/toggle
   //      routing: Bar.findPanelWidget requires open/close/opened on the
   //      bar-widget root.
-  readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false
+  readonly property bool opened: root.loadedPanel ? ClockBarWidgetUtils.field(root.loadedPanel, "opened") === true : false
 
-  function open() {
-    if (panelLoader.item) panelLoader.item.open()
+  function open(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "open", [])
   }
 
-  function close() {
-    if (panelLoader.item) panelLoader.item.close()
+  function close(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "close", [])
   }
 
-  function togglePanel() {
-    if (panelLoader.item) panelLoader.item.toggle()
+  function togglePanel(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "toggle", [])
   }
 
-  function toggleWeekStart() {
-    if (panelLoader.item) panelLoader.item.toggleWeekStart()
+  function toggleWeekStart(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "toggleWeekStart", [])
   }
 
   // The clock fills more slot than it paints a mark for, at both
@@ -100,16 +104,16 @@ BarWidget {
   // Forwarded so this widget can stand in for the panel as the bar's popout
   // identity: Bar.requestPopout prefers closeForPopoutSwitch over close, and
   // KeyboardPanel reads popoutSwitchClosing back off its owner.
-  readonly property bool popoutSwitchClosing: panelLoader.item ? panelLoader.item.popoutSwitchClosing === true : false
+  readonly property bool popoutSwitchClosing: root.loadedPanel ? ClockBarWidgetUtils.field(root.loadedPanel, "popoutSwitchClosing") === true : false
 
-  function closeForPopoutSwitch() {
-    if (panelLoader.item) panelLoader.item.closeForPopoutSwitch()
+  function closeForPopoutSwitch(): void {
+    ClockBarWidgetUtils.call(root.loadedPanel, "closeForPopoutSwitch", [])
   }
 
   function injectPanel() {
-    var target = panelLoader.item
+    var target = root.loadedPanel
     if (!target) return
-    if ("bar" in target) target.bar = root.bar
+    if (ClockBarWidgetUtils.hasProperty(target, "bar")) ClockBarWidgetUtils.setProperty(target, "bar", root.bar)
     if ("settings" in target) target.settings = root.settings
     if ("anchorItem" in target) target.anchorItem = button
     if ("hostWidget" in target) target.hostWidget = root
@@ -121,7 +125,7 @@ BarWidget {
   onBarChanged: injectPanel()
   onSettingsChanged: injectPanel()
 
-  WallClock {
+  Local.WallClock {
     id: clock
     step: root.showsSeconds ? 1000 : 60000
     onDateChanged: root.displayDate = date
@@ -138,7 +142,7 @@ BarWidget {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.clock"
 
     function refresh(): void { root.broadcast("refresh") }
@@ -157,8 +161,8 @@ BarWidget {
     bar: root.bar
     text: root.vertical ? "" : root.displayText
     labelVisible: !root.vertical
-    hasVisualContent: root.vertical ? root.verticalLines.length > 0 : text !== ""
-    fixedHeight: root.vertical ? root.verticalLines.length * Style.bar.iconSlot : -1
+    hasVisualContent: root.vertical ? ClockBarWidgetUtils.arrayLength(root.verticalLines) > 0 : text !== ""
+    fixedHeight: root.vertical ? ClockBarWidgetUtils.arrayLength(root.verticalLines) * Style.bar.iconSlot : -1
     horizontalMargin: 8.75
     verticalPadding: 8.75
     tooltipText: I18n.t("clock.toggleFormat")
@@ -168,7 +172,7 @@ BarWidget {
 
     onPressed: function(b) {
       if (b === Qt.RightButton) root.cycleFormat()
-      else if (b === Qt.MiddleButton) { if (root.bar) root.bar.run("nomarchy-menu-timezone") }
+      else if (b === Qt.MiddleButton) { if (root.bar) BarValues.run(root.bar, "nomarchy-menu-timezone") }
       else root.togglePanel()
     }
 

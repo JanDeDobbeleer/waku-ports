@@ -7,11 +7,12 @@ import Celeste.I18n
 import qs.components
 import qs.components.filedialog
 import qs.services
+import "FileDialogHelpers.js" as FileDialogHelpers
 
 StyledRect {
     id: root
 
-    required property var dialog
+    required final property var dialog
 
     implicitWidth: Sizes.sidebarWidth
     implicitHeight: inner.implicitHeight + Tokens.padding.medium * 2
@@ -33,7 +34,7 @@ StyledRect {
             Layout.bottomMargin: Tokens.spacing.medium
             text: Tr.trCtx("Files", "file dialog sidebar heading")
             color: Colours.palette.m3onSurface
-            font: Tokens.font.body.builders.large.weight(Font.Bold).build()
+            font: Tokens.styled("body", "large", { weight: Font.Bold })
         }
 
         Repeater {
@@ -42,8 +43,8 @@ StyledRect {
             StyledRect {
                 id: place
 
-                required property string modelData
-                readonly property bool selected: modelData === root.dialog.cwd[root.dialog.cwd.length - 1]
+                required final property string modelData
+                readonly final property bool selected: FileDialogHelpers.isLocationSelected(root.dialog, modelData)
 
                 Layout.fillWidth: true
                 implicitHeight: placeInner.implicitHeight + Tokens.padding.medium * 2
@@ -54,10 +55,7 @@ StyledRect {
                 StateLayer {
                     color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                     onClicked: {
-                        if (place.modelData === "Home")
-                            root.dialog.cwd = ["Home"];
-                        else
-                            root.dialog.cwd = ["Home", place.modelData];
+                        FileDialogHelpers.selectLocation(root.dialog, place.modelData);
                     }
                 }
 

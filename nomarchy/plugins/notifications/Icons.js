@@ -53,3 +53,11 @@ function isSymbolic(source) {
   var text = String(source || "").split("?")[0]
   return /-symbolic$/.test(text) || text.indexOf("/symbolic/") >= 0 || /-symbolic\.[A-Za-z]+$/.test(text)
 }
+
+function firstOf(names, look) {
+  for (var i = 0; i < names.length; i++) {
+    var found = look(names[i])
+    if (found) return found
+  }
+  return ""
+}

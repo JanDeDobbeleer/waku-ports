@@ -1,11 +1,10 @@
 pragma Singleton
 
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import Celeste
 import Celeste.Config
-import waku.services as S
+import "NetworkUsageHelpers.js" as NetworkUsageHelpers
 
 // Port of celeste's NetworkUsage. waku's Network source has no throughput, so this polls
 // `netstat -e` (interface byte counters, summed over all interfaces) while referenced. Speeds are
@@ -14,41 +13,41 @@ QtObject {
     id: root
 
     // Reference count driven by ServiceRef. The waku source polls only while something holds a ref.
-    property int refs: 0
+    final property int refs: 0
     function ref(): void {
         refs++;
     }
     function unref(): void {
         refs = Math.max(0, refs - 1);
     }
-    readonly property int historyLength: 30
-    property real downloadSpeed: 0
-    property real uploadSpeed: 0
-    property real downloadTotal: 0
-    property real uploadTotal: 0
-    readonly property CircularBuffer downloadBuffer: CircularBuffer {
+    readonly final property int historyLength: 30
+    final property real downloadSpeed: 0
+    final property real uploadSpeed: 0
+    final property real downloadTotal: 0
+    final property real uploadTotal: 0
+    readonly final property CircularBuffer downloadBuffer: CircularBuffer {
         capacity: root.historyLength + 1
     }
-    readonly property CircularBuffer uploadBuffer: CircularBuffer {
+    readonly final property CircularBuffer uploadBuffer: CircularBuffer {
         capacity: root.historyLength + 1
     }
 
-    property real _lastRx: -1
-    property real _lastTx: -1
-    property double _lastTime: 0
+    final property real _lastRx: -1
+    final property real _lastTx: -1
+    final property double _lastTime: 0
 
-    readonly property var timer: Timer {
+    readonly final property Timer timer: Timer {
         running: root.refs > 0
         repeat: true
         triggeredOnStart: true
         interval: GlobalConfig.dashboard.resourceUpdateInterval
         onTriggered: {
-            if (!proc.running)
-                proc.running = true;
+            if (!root.proc.running)
+                root.proc.running = true;
         }
     }
 
-    readonly property var proc: Process {
+    readonly final property Process proc: Process {
         command: ["netstat", "-e"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -65,8 +64,8 @@ QtObject {
                     root.uploadSpeed = Math.max(0, tx - root._lastTx) / dt;
                     root.downloadTotal += Math.max(0, rx - root._lastRx);
                     root.uploadTotal += Math.max(0, tx - root._lastTx);
-                    root.downloadBuffer.push(root.downloadSpeed);
-                    root.uploadBuffer.push(root.uploadSpeed);
+                    NetworkUsageHelpers.push(root.downloadBuffer, root.downloadSpeed);
+                    NetworkUsageHelpers.push(root.uploadBuffer, root.uploadSpeed);
                 }
                 root._lastRx = rx;
                 root._lastTx = tx;

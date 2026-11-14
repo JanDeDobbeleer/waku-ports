@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 /*
 * Octalia – made by https://github.com/noctalia-dev
 * Licensed under the MIT License.
@@ -9,6 +11,8 @@
 //@ pragma Env QT_FFMPEG_ENCODING_HW_DEVICE_TYPES=vaapi,vdpau
 
 // Qt & Quickshell Core
+import "ShellUtils.js" as ShellUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
@@ -18,7 +22,6 @@ import qs.Commons
 
 // Modules
 import qs.Modules.Background
-import qs.Modules.Bar
 import qs.Modules.DesktopWidgets
 import qs.Modules.Dock
 import qs.Modules.MainScreen
@@ -29,10 +32,8 @@ import qs.Modules.Panels.Launcher
 import qs.Modules.Panels.Settings
 import qs.Modules.Toast
 import qs.Services.Control
-import qs.Services.Hardware
 import qs.Services.Keyboard
 import qs.Services.Location
-import qs.Services.Networking
 import qs.Services.Octalia
 import qs.Services.Power
 import qs.Services.System
@@ -72,14 +73,14 @@ ShellRoot {
   Connections {
     target: I18n ? I18n : null
     function onTranslationsLoaded() {
-      i18nLoaded = true;
+      shellRoot.i18nLoaded = true;
     }
   }
 
   Connections {
     target: Settings ? Settings : null
     function onSettingsLoaded() {
-      settingsLoaded = true;
+      shellRoot.settingsLoaded = true;
     }
   }
 
@@ -87,13 +88,13 @@ ShellRoot {
     target: ShellState ? ShellState : null
     function onIsLoadedChanged() {
       if (ShellState.isLoaded) {
-        shellStateLoaded = true;
+        shellRoot.shellStateLoaded = true;
       }
     }
   }
 
   Loader {
-    active: i18nLoaded && settingsLoaded && shellStateLoaded
+    active: shellRoot.i18nLoaded && shellRoot.settingsLoaded && shellRoot.shellStateLoaded
 
     sourceComponent: Item {
       Component.onCompleted: {
@@ -109,7 +110,7 @@ ShellRoot {
         // Defer non-critical services to unblock first frame
         Qt.callLater(function () {
           LocationService.init();
-          NightLightService.apply();
+          NightLightService.apply(undefined);
           IdleInhibitorService.init();
           IdleService.init();
           PowerProfileService.init();
@@ -168,7 +169,7 @@ ShellRoot {
       HooksService.init();
       FontService.init();
       UpdateService.init();
-      showWizardOrChangelog();
+      shellRoot.showWizardOrChangelog();
     }
   }
 
@@ -178,7 +179,7 @@ ShellRoot {
     running: false
     interval: 500
     property string pendingWizardType: "" // "setup", "telemetry", or ""
-    onTriggered: showWizardOrChangelog()
+    onTriggered: shellRoot.showWizardOrChangelog()
   }
 
 
@@ -217,20 +218,20 @@ ShellRoot {
     wizardRetryTimer.pendingWizardType = "";
 
     if (wizardType === "telemetry") {
-      setupPanel.telemetryOnlyMode = true;
+      ShellUtils.setTelemetryOnlyMode(setupPanel, true);
 
       // Connect to completion signal to show changelog afterward
       if (telemetryWizardConnection) {
-        setupPanel.telemetryWizardCompleted.disconnect(telemetryWizardConnection);
+        ShellUtils.disconnectTelemetryCompleted(setupPanel, telemetryWizardConnection);
       }
       telemetryWizardConnection = function () {
         UpdateService.showLatestChangelog();
       };
-      setupPanel.telemetryWizardCompleted.connect(telemetryWizardConnection);
+      ShellUtils.connectTelemetryCompleted(setupPanel, telemetryWizardConnection);
     } else {
-      setupPanel.telemetryOnlyMode = false;
+      ShellUtils.setTelemetryOnlyMode(setupPanel, false);
     }
 
-    setupPanel.open();
+    PanelService.invokePanel(setupPanel, "open", []);
   }
 }

@@ -1,9 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import qs.Commons
 import qs.Modules.OSD
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -33,16 +35,17 @@ ColumnLayout {
       }
     ]
     delegate: NCheckbox {
-      required property var modelData
+      required property int type
+      required property string key
       Layout.fillWidth: true
-      label: I18n.tr("panels.osd." + modelData.key + "-label")
-      description: I18n.tr("panels.osd." + modelData.key + "-description")
-      checked: (Settings.data.osd.enabledTypes || []).includes(modelData.type)
+      label: I18n.tr("panels.osd." + key + "-label")
+      description: I18n.tr("panels.osd." + key + "-description")
+      checked: (Settings.data.osd.enabledTypes || []).includes(type)
       onToggled: checked => {
                    if (checked) {
-                     Settings.data.osd.enabledTypes = root.addType(Settings.data.osd.enabledTypes, modelData.type);
+                     Settings.data.osd.enabledTypes = SettingsValue.invoke(root, "addType", Settings.data.osd.enabledTypes, type);
                    } else {
-                     Settings.data.osd.enabledTypes = root.removeType(Settings.data.osd.enabledTypes, modelData.type);
+                     Settings.data.osd.enabledTypes = SettingsValue.invoke(root, "removeType", Settings.data.osd.enabledTypes, type);
                    }
                  }
     }

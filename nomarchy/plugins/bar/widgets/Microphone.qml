@@ -1,32 +1,33 @@
 import QtQuick
-import Quickshell
 import Quickshell.Services.Pipewire
 import qs.Ui
 import qs.Commons
+import "MicrophoneModel.js" as MicrophoneModel
 
 BarWidget {
   id: root
   moduleName: "nomarchy.microphone"
 
 
-  readonly property var source: Pipewire.defaultAudioSource
+  readonly property PwNode source: Pipewire.defaultAudioSource
   // A virtual source is untyped in Quickshell, so it has no PwNode.audio; its
   // volume and mute go through wpctl (UntypedInput).
   readonly property bool viaWpctl: UntypedInput.active
   readonly property bool muted: viaWpctl ? (!UntypedInput.known || UntypedInput.muted) : (source && source.audio ? source.audio.muted : true)
   readonly property real volume: viaWpctl ? UntypedInput.volume : (source && source.audio ? source.audio.volume : 0)
+  readonly property var translate: I18n
   readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
   readonly property var nodeNames: {
     var names = []
-    for (var i = 0; i < nodes.length; i++)
+    for (let i = 0; i < MicrophoneModel.length(nodes); i++)
       if (nodes[i] && nodes[i].name) names.push(String(nodes[i].name))
     return names
   }
 
   readonly property var activeStreams: {
     var list = []
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i]
+    for (let i = 0; i < MicrophoneModel.length(nodes); i++) {
+      let node = nodes[i]
       if (!node || !node.isStream || node.isSink !== false || node.audio?.muted) continue
       // The shell's own level meters, and a platform's audio processing that
       // records all the time, are not an app using the microphone.
@@ -36,7 +37,7 @@ BarWidget {
     return list
   }
 
-  readonly property bool inUse: activeStreams.length > 0 && !muted
+  readonly property bool inUse: MicrophoneModel.length(activeStreams) > 0 && !muted
 
   visible: source !== null
   implicitWidth: button.implicitWidth
@@ -57,9 +58,9 @@ BarWidget {
     bar: root.bar
     text: root.muted ? "󰍭" : "󰍬"
     active: root.inUse
-    tooltipText: root.muted ? I18n.t("bar.microphoneMuted") : (root.inUse ? I18n.t("bar.microphoneInUse") : I18n.t("bar.microphoneLive"))
+    tooltipText: root.muted ? MicrophoneModel.translate(root.translate, "bar.microphoneMuted") : (root.inUse ? MicrophoneModel.translate(root.translate, "bar.microphoneInUse") : MicrophoneModel.translate(root.translate, "bar.microphoneLive"))
     onPressed: function(b) {
-      if (b === Qt.MiddleButton) root.bar.run("nomarchy-shell shell toggle nomarchy.audio")
+      if (b === Qt.MiddleButton) BarValues.run(root.bar, "nomarchy-shell shell toggle nomarchy.audio")
       else root.toggleMute()
     }
     onWheelMoved: function(delta) {

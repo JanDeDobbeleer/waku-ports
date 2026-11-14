@@ -2,8 +2,6 @@ pragma Singleton
 
 import QtQuick 6.10
 import Quickshell
-import qs.Commons
-import qs.compat
 
 // Upstream probes for nmcli, bluetoothctl, wlsunset, python and others with `command -v`. None of
 // them is used here (the adapters read the engine's services), so every probe is false and no
@@ -28,6 +26,6 @@ Singleton {
     checksCompleted();
   }
 
-  function checkProgram(programProperty) {
+  function checkProgram(programProperty: var) {
   }
 }

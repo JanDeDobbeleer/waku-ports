@@ -11,7 +11,7 @@ import qs.utils
 StyledRect {
     id: root
 
-    readonly property color accent: Colours.palette.m3tertiary
+    readonly final property color accent: Colours.palette.m3tertiary
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.medium
@@ -37,7 +37,7 @@ StyledRect {
                 text: "memory_alt"
                 fill: 1
                 color: root.accent
-                fontStyle: Tokens.font.icon.builders.medium.weight(Font.DemiBold).build() // DemiBold to fix fill issues
+                fontStyle: Tokens.styled("icon", "medium", { weight: Font.DemiBold }) // DemiBold to fix fill issues
             }
 
             StyledText {
@@ -70,7 +70,7 @@ StyledRect {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: Strings.percentOne(Memory.percentage)
-                    font: Tokens.font.title.builders.large.width(90).build()
+                    font: Tokens.styled("title", "large", { width: 90 })
                     color: root.accent
                 }
 

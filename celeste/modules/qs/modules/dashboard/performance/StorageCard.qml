@@ -8,12 +8,13 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.utils
+import "StorageCardHelpers.js" as StorageCardHelpers
 
 StyledRect {
     id: root
 
-    readonly property color accent: Colours.palette.m3secondary
-    readonly property real percentage: Storage.primaryDisk?.perc ?? 0
+    readonly final property color accent: Colours.palette.m3secondary
+    readonly final property real percentage: StorageCardHelpers.percentage(Storage.primaryDisk)
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Tokens.rounding.extraExtraLarge
@@ -67,7 +68,7 @@ StyledRect {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: Strings.percentOne(root.percentage)
-                        font: Tokens.font.title.builders.large.width(90).build()
+                        font: Tokens.styled("title", "large", { width: 90 })
                         color: root.accent
                     }
 
@@ -90,7 +91,7 @@ StyledRect {
                 }
 
                 StyledText {
-                    text: Storage.primaryDisk ? Units.formatKibUsage(Storage.primaryDisk.used, Storage.primaryDisk.total) : Tr.tr("No disks detected")
+                    text: StorageCardHelpers.usageText(Storage.primaryDisk, Units, Tr)
                     font: Tokens.font.body.large
                     color: root.accent
                 }
@@ -101,15 +102,15 @@ StyledRect {
             Layout.alignment: Qt.AlignHCenter
 
             type: SplitButton.Tonal
-            disabled: !Storage.disks.length
+            disabled: !StorageCardHelpers.hasDisks(Storage.disks)
             fallbackIcon: "storage"
             fallbackText: Tr.tr("No disks")
             menuOnTop: true
             minLeftWidth: row.implicitWidth * 0.6
 
             menuItems: disks.instances
-            active: menuItems.find(m => m.modelData.mount === Storage.primaryDisk?.mount) ?? menuItems[0] ?? null
-            menu.onItemSelected: item => Storage.manualPrimaryDisk = item.modelData
+            active: StorageCardHelpers.activeItem(menuItems, Storage.primaryDisk)
+            menu.onItemSelected: item => StorageCardHelpers.selectDisk(Storage, item)
 
             Variants {
                 id: disks
@@ -122,10 +123,10 @@ StyledRect {
     }
 
     component DiskItem: MenuItem {
-        required property var modelData
+        required final property var modelData
 
-        icon: modelData.mount === Storage.primaryDisk?.mount ? "check" : ""
-        text: modelData.mount
+        icon: StorageCardHelpers.diskIcon(modelData, Storage.primaryDisk)
+        text: StorageCardHelpers.mount(modelData)
         activeIcon: "storage"
     }
 }

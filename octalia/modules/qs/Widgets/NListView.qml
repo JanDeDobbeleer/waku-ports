@@ -1,6 +1,7 @@
+import "NViewUtils.js" as ViewUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Templates as T
 import qs.Commons
 
 Item {
@@ -76,11 +77,11 @@ Item {
   property int smoothWheelAnimationDuration: Style.animationNormal
   property real _wheelTargetY: 0
 
-  function clampScrollY(value) {
+  function clampScrollY(value: real): real {
     return Math.max(0, Math.min(value, listView.contentHeight - listView.height));
   }
 
-  function applyWheelScroll(delta) {
+  function applyWheelScroll(delta: real) {
     if (!root.contentOverflows)
       return;
 
@@ -100,7 +101,7 @@ Item {
     wheelScrollAnimation.restart();
   }
 
-  function animateToContentY(targetY) {
+  function animateToContentY(targetY: real) {
     const clampedY = root.clampScrollY(targetY);
 
     if (!Settings.data.general.smoothScrollEnabled || Settings.data.general.animationDisabled || listView.dragging || listView.flicking) {
@@ -115,7 +116,7 @@ Item {
   }
 
   // Forward ListView methods
-  function positionViewAtIndex(index, mode) {
+  function positionViewAtIndex(index: int, mode: int) {
     const shouldAnimate = mode === ListView.Contain;
     if (!shouldAnimate) {
       listView.positionViewAtIndex(index, mode);
@@ -153,7 +154,7 @@ Item {
     listView.cancelFlick();
   }
 
-  function flick(xVelocity, yVelocity) {
+  function flick(xVelocity: real, yVelocity: real) {
     listView.flick(xVelocity, yVelocity);
   }
 
@@ -165,15 +166,15 @@ Item {
     listView.decrementCurrentIndex();
   }
 
-  function indexAt(x, y) {
+  function indexAt(x: real, y: real): int {
     return listView.indexAt(x, y);
   }
 
-  function itemAt(x, y) {
+  function itemAt(x: real, y: real): Item {
     return listView.itemAt(x, y);
   }
 
-  function itemAtIndex(index) {
+  function itemAtIndex(index: var): Item {
     return listView.itemAtIndex(index);
   }
 
@@ -295,8 +296,9 @@ Item {
     }
 
     ScrollBar.vertical: ScrollBar {
+      id: verticalScrollBar
       parent: root
-      x: root.mirrored ? 0 : root.width - width
+      x: ViewUtils.mirrored(root) ? 0 : root.width - width
       y: 0
       height: root.height
       policy: root.verticalPolicy
@@ -306,8 +308,8 @@ Item {
         implicitWidth: root.handleWidth
         implicitHeight: 100
         radius: root.handleRadius
-        color: parent.pressed ? root.handlePressedColor : parent.hovered ? root.handleHoverColor : root.handleColor
-        opacity: parent.policy === ScrollBar.AlwaysOn ? 1.0 : root.verticalScrollBarActive ? ((root.showScrollbarWhenScrollable || parent.active) ? 1.0 : 0.0) : 0.0
+        color: verticalScrollBar.pressed ? root.handlePressedColor : verticalScrollBar.hovered ? root.handleHoverColor : root.handleColor
+        opacity: verticalScrollBar.policy === ScrollBar.AlwaysOn ? 1.0 : root.verticalScrollBarActive ? ((root.showScrollbarWhenScrollable || verticalScrollBar.active) ? 1.0 : 0.0) : 0.0
 
         Behavior on opacity {
           NumberAnimation {
@@ -326,7 +328,7 @@ Item {
         implicitWidth: root.handleWidth
         implicitHeight: 100
         color: root.trackColor
-        opacity: parent.policy === ScrollBar.AlwaysOn ? 0.3 : root.verticalScrollBarActive ? ((root.showScrollbarWhenScrollable || parent.active) ? 0.3 : 0.0) : 0.0
+        opacity: verticalScrollBar.policy === ScrollBar.AlwaysOn ? 0.3 : root.verticalScrollBarActive ? ((root.showScrollbarWhenScrollable || verticalScrollBar.active) ? 0.3 : 0.0) : 0.0
         radius: root.handleRadius / 2
 
         Behavior on opacity {

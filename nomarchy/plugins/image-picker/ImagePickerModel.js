@@ -23,14 +23,14 @@ function parseThemeNames(text) {
 // shadow can even list twice, once per preview extension), so only themes
 // with no stock twin can be deleted from the picker.
 function canDeleteTheme(name, extraNames, stockNames) {
-  if (!name || !Array.isArray(extraNames) || extraNames.indexOf(name) === -1) return false
-  return !Array.isArray(stockNames) || stockNames.indexOf(name) === -1
+  if (!name || !(extraNames && typeof extraNames.length === "number") || extraNames.indexOf(name) === -1) return false
+  return !(stockNames && typeof stockNames.length === "number") || stockNames.indexOf(name) === -1
 }
 
 // Where selection lands when the selected image goes away: the previous
 // match in list order, or the next one when the first match is deleted.
 function replacementSelectionPath(images, selectedIndex, filterText) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   if (selectedIndex < 0 || selectedIndex >= values.length) return ""
   for (var i = selectedIndex - 1; i >= 0; i--) {
     if (itemMatches(values, i, filterText)) return values[i].filePath
@@ -69,7 +69,7 @@ function loadRows(rows) {
 }
 
 function itemMatches(images, index, filterText) {
-  if (!Array.isArray(images) || index < 0 || index >= images.length) return false
+  if (!(images && typeof images.length === "number") || index < 0 || index >= images.length) return false
   var needle = String(filterText || "").toLowerCase()
   if (!needle) return true
 
@@ -79,7 +79,7 @@ function itemMatches(images, index, filterText) {
 }
 
 function firstMatchingIndex(images, filterText) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   for (var i = 0; i < values.length; i++) {
     if (itemMatches(values, i, filterText)) return i
   }
@@ -104,7 +104,7 @@ function selectedFilteredPosition(images, selectedIndex, filterText) {
 }
 
 function indexForSelectedImage(images, selectedImage) {
-  var values = Array.isArray(images) ? images : []
+  var values = images && typeof images.length === "number" ? images : []
   for (var i = 0; i < values.length; i++) {
     if (values[i].filePath === selectedImage) return i
   }
@@ -156,8 +156,26 @@ function syncWindow(model, items) {
   }
 }
 
+function allPreviewsSettled(cards) {
+  for (let i = 0; i < cards.count; i++) {
+    let item = cards.itemAt(i)
+    if (!item || !item.previewSettled) return false
+  }
+  return true
+}
+
+function selectedPreviewReady(cards) {
+  for (let i = 0; i < cards.count; i++) {
+    let item = cards.itemAt(i)
+    if (item && item.selected && item.previewReady) return true
+  }
+  return false
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    allPreviewsSettled: allPreviewsSettled,
+    selectedPreviewReady: selectedPreviewReady,
     nameForPath: nameForPath,
     labelForPath: labelForPath,
     parseThemeNames: parseThemeNames,
@@ -174,4 +192,48 @@ if (typeof module !== "undefined") {
     visibleWindow: visibleWindow,
     syncWindow: syncWindow
   }
+}
+function payloadObject(payload) {
+  try { return payload ? JSON.parse(payload) || {} : {} }
+  catch (error) { return {} }
+}
+
+function payloadSource(payload) { return String(payloadObject(payload).source || "") }
+function payloadString(payload, key, fallback) {
+  var value = payloadObject(payload)[key]
+  return String(value || fallback || "")
+}
+function payloadBoolean(payload, key) {
+  var value = payloadObject(payload)[key]
+  return value === true || value === "true"
+}
+
+function filePathAt(images, index) {
+  var values = Array.from(images || [])
+  var image = values[index]
+  return image ? String(image.filePath || "") : ""
+}
+
+function pathField(image, key) {
+  return image ? String(image[key] || "") : ""
+}
+
+function sequenceLength(values) { return Array.from(values || []).length }
+
+function normalizedLines(text) {
+  return String(text || "").split("\n").map(function(line) { return line.trim().replace(/\\/g, "/") })
+    .filter(function(line) { return line.length > 0 }).sort()
+}
+
+function prewarmOrder(paths, current) {
+  var values = Array.from(paths || [])
+  var count = values.length
+  if (count === 0) return []
+  var start = Math.max(0, values.indexOf(current))
+  var order = [values[start]]
+  for (var distance = 1; order.length < count; distance++) {
+    if (order.length < count) order.push(values[(start + distance) % count])
+    if (order.length < count && 2 * distance < count) order.push(values[(start - distance + count) % count])
+  }
+  return order
 }

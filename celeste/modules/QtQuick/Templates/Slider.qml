@@ -11,19 +11,19 @@ Control {
         SnapOnRelease
     }
 
-    property real from: 0
-    property real to: 1
-    property real value: 0
-    property real stepSize: 0
-    property int snapMode: Slider.NoSnap
-    property int orientation: Qt.Horizontal
-    property bool live: true
-    property Item handle
-    readonly property bool horizontal: orientation === Qt.Horizontal
-    readonly property bool vertical: orientation === Qt.Vertical
-    readonly property real position: to !== from ? Math.max(0, Math.min(1, (value - from) / (to - from))) : 0
-    readonly property real visualPosition: vertical ? 1 - position : (mirrored ? 1 - position : position)
-    readonly property bool pressed: area.pressed
+    final property real from: 0
+    final property real to: 1
+    final property real value: 0
+    final property real stepSize: 0
+    final property int snapMode: Slider.NoSnap
+    final property int orientation: Qt.Horizontal
+    final property bool live: true
+    final property Item handle
+    readonly final property bool horizontal: orientation === Qt.Horizontal
+    readonly final property bool vertical: orientation === Qt.Vertical
+    readonly final property real position: to !== from ? Math.max(0, Math.min(1, (value - from) / (to - from))) : 0
+    readonly final property real visualPosition: vertical ? 1 - position : (mirrored ? 1 - position : position)
+    readonly final property bool pressed: area.pressed
 
     signal moved
 

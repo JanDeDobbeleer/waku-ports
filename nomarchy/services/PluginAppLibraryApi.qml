@@ -1,9 +1,12 @@
 import QtQuick
+import "PluginAppLibraryApiUtils.js" as PluginAppLibraryApiUtils
 
 // Detached application-library capability for third-party menus. Callbacks
 // expose the supported app-list operations without retaining AppLibrary or its
 // ShellRoot parent in the plugin-visible object graph.
 QtObject {
+  id: api
+
   required property string ownerPluginId
 
   signal appsChanged()
@@ -16,31 +19,31 @@ QtObject {
   property var _launch: null
   property var _remove: null
 
-  function entryName(entry) {
-    return _entryName ? _entryName(entry) : ""
+  function entryName(entry: var): string {
+    return _entryName ? PluginAppLibraryApiUtils.invoke(_entryName, [entry], api) : ""
   }
 
-  function entrySubtext(entry) {
-    return _entrySubtext ? _entrySubtext(entry) : ""
+  function entrySubtext(entry: var): string {
+    return _entrySubtext ? PluginAppLibraryApiUtils.invoke(_entrySubtext, [entry], api) : ""
   }
 
-  function sortedEntries(query) {
-    return _sortedEntries ? _sortedEntries(String(query || "")) : []
+  function sortedEntries(query: string): var {
+    return _sortedEntries ? PluginAppLibraryApiUtils.invoke(_sortedEntries, [String(query || "")], api) : []
   }
 
-  function iconSource(icon) {
-    return _iconSource ? _iconSource(icon) : ""
+  function iconSource(icon: var): string {
+    return _iconSource ? PluginAppLibraryApiUtils.invoke(_iconSource, [icon], api) : ""
   }
 
-  function refreshIcons() {
-    if (_refreshIcons) _refreshIcons()
+  function refreshIcons(): void {
+    PluginAppLibraryApiUtils.invoke(_refreshIcons, [], api)
   }
 
-  function launch(desktopId, name) {
-    if (_launch) _launch(String(desktopId || ""), String(name || ""))
+  function launch(desktopId: string, name: string): void {
+    PluginAppLibraryApiUtils.invoke(_launch, [String(desktopId || ""), String(name || "")], api)
   }
 
-  function remove(desktopId, name) {
-    if (_remove) _remove(String(desktopId || ""), String(name || ""))
+  function remove(desktopId: string, name: string): void {
+    PluginAppLibraryApiUtils.invoke(_remove, [String(desktopId || ""), String(name || "")], api)
   }
 }

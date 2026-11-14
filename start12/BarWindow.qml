@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku
 import waku.widgets
@@ -9,7 +11,8 @@ import waku.widgets
 PanelWindow {
     id: bar
 
-    required property var startMenu
+    property bool startMenuOpen: false
+    signal startClicked
 
     name: "taskbar"
     anchors {
@@ -75,7 +78,7 @@ PanelWindow {
                 width: 40
                 height: 40
                 radius: 6
-                color: logoMouse.pressed ? Style.pressed : logoMouse.containsMouse || bar.startMenu.visible ? Style.hover : "transparent"
+                color: logoMouse.pressed ? Style.pressed : logoMouse.containsMouse || bar.startMenuOpen ? Style.hover : "transparent"
 
                 WindowsLogo {
                     anchors.centerIn: parent
@@ -85,7 +88,7 @@ PanelWindow {
                     id: logoMouse
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: bar.startMenu.toggle()
+                    onClicked: bar.startClicked()
                 }
             }
             Rectangle {

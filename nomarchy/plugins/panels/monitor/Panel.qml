@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
@@ -6,10 +7,13 @@ import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 import "Model.js" as Model
-import qs.compat
+import "Dynamic.js" as Dynamic
 
 Panel {
   id: root
+
+  readonly property color contentForeground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
+  readonly property string contentFontFamily: bar ? BarValues.fontFamily(bar) : Style.font.family
   moduleName: "nomarchy.monitor"
   ipcTarget: "nomarchy.monitor"
   manageIpc: false
@@ -69,26 +73,26 @@ Panel {
   // in brightnessLevels, so a slider moving doesn't rebuild the picker.
   readonly property var segments: {
     var list = []
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
-      if (!display || !display.name || !display.enabled || !(display.width > 0)) continue
+    for (let i = 0; i < Dynamic.value(displays, "length"); i++) {
+      let display = displays[i]
+      if (!display || !Dynamic.value(display, "name") || !Dynamic.value(display, "enabled") || !(Dynamic.value(display, "width") > 0)) continue
       // Matched here, on the plain arrays: once they're handed through a QML
       // property they're no longer ones Array.isArray accepts.
-      var scales = Model.availableScales(scalePresets, display.width, display.height)
-      var resolutions = Model.resolutionOptions(display.availableModes, display.width, display.height)
+      let scales = Model.availableScales(scalePresets, Dynamic.value(display, "width"), Dynamic.value(display, "height"))
+      let resolutions = Model.resolutionOptions(Dynamic.value(display, "availableModes"), Dynamic.value(display, "width"), Dynamic.value(display, "height"))
       list.push({
-        name: display.name,
+        name: Dynamic.value(display, "name"),
         title: Model.displayTitle(display, Commons.I18n.t("monitor.builtInDisplay")),
-        builtIn: /^(eDP|LVDS|DSI)-/.test(display.name),
-        focused: !!display.focused,
-        width: display.width,
-        height: display.height,
-        current: display.width + "x" + display.height,
+        builtIn: /^(eDP|LVDS|DSI)-/.test(Dynamic.value(display, "name")),
+        focused: !!Dynamic.value(display, "focused"),
+        width: Dynamic.value(display, "width"),
+        height: Dynamic.value(display, "height"),
+        current: Dynamic.value(display, "width") + "x" + Dynamic.value(display, "height"),
         scales: scales,
-        scaleIndex: Model.matchingScaleIndex(scales, display.scale, display.width, display.height),
-        resolutions: resolutions.length > 1 ? resolutions : [],
-        refreshes: Model.refreshOptions(display.availableModes, display.width, display.height),
-        refreshRate: Number(display.refreshRate) || 0
+        scaleIndex: Model.matchingScaleIndex(scales, Dynamic.value(display, "scale"), Dynamic.value(display, "width"), Dynamic.value(display, "height")),
+        resolutions: Dynamic.value(resolutions, "length") > 1 ? resolutions : [],
+        refreshes: Model.refreshOptions(Dynamic.value(display, "availableModes"), Dynamic.value(display, "width"), Dynamic.value(display, "height")),
+        refreshRate: Number(Dynamic.value(display, "refreshRate")) || 0
       })
     }
     return list
@@ -97,14 +101,14 @@ Panel {
   // The shown display: the one picked, else the focused one, else the first.
   readonly property var current: {
     var fallback = null
-    for (var i = 0; i < segments.length; i++) {
+    for (let i = 0; i < Dynamic.value(segments, "length"); i++) {
       if (segments[i].name === selectedName) return segments[i]
       if (segments[i].focused && !fallback) fallback = segments[i]
     }
-    return fallback || (segments.length > 0 ? segments[0] : null)
+    return fallback || (Dynamic.value(segments, "length") > 0 ? segments[0] : null)
   }
   readonly property int currentIndex: segments.indexOf(current)
-  readonly property int currentBrightness: current ? brightnessOf(current.name) : -1
+  readonly property int currentBrightness: current ? brightnessOf(Dynamic.value(current, "name")) : -1
 
   // The displays that are on and not mirroring another, where they sit.
   // Switching to Mirror reloads Hyprland, and a read can come back from
@@ -117,17 +121,17 @@ Panel {
   readonly property var layoutDisplays: {
     if (pendingMirror !== "on") return displays
     var internal = ""
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
-      if (display && display.enabled && /^(eDP|LVDS|DSI)-/.test(display.name)) { internal = display.name; break }
+    for (let i = 0; i < Dynamic.value(displays, "length"); i++) {
+      let display = displays[i]
+      if (display && Dynamic.value(display, "enabled") && /^(eDP|LVDS|DSI)-/.test(Dynamic.value(display, "name"))) { internal = Dynamic.value(display, "name"); break }
     }
     if (!internal) return displays
     var list = []
-    for (var j = 0; j < displays.length; j++) {
-      var entry = displays[j]
-      if (entry && entry.enabled && !/^(eDP|LVDS|DSI)-/.test(entry.name)) {
-        var copy = {}
-        for (var key in entry) copy[key] = entry[key]
+    for (let j = 0; j < Dynamic.value(displays, "length"); j++) {
+      let entry = displays[j]
+      if (entry && Dynamic.value(entry, "enabled") && !/^(eDP|LVDS|DSI)-/.test(Dynamic.value(entry, "name"))) {
+        let copy = {}
+        for (let key in entry) copy[key] = entry[key]
         copy.mirrorOf = internal
         entry = copy
       }
@@ -138,10 +142,10 @@ Panel {
 
   readonly property var layoutRects: {
     var list = []
-    for (var i = 0; i < layoutDisplays.length; i++) {
-      var display = layoutDisplays[i]
-      if (!display || !display.enabled || !(display.width > 0)) continue
-      if (display.mirrorOf && display.mirrorOf !== "none") continue
+    for (let i = 0; i < Dynamic.value(layoutDisplays, "length"); i++) {
+      let display = layoutDisplays[i]
+      if (!display || !Dynamic.value(display, "enabled") || !(Dynamic.value(display, "width") > 0)) continue
+      if (Dynamic.value(display, "mirrorOf") && Dynamic.value(display, "mirrorOf") !== "none") continue
       list.push(Model.logicalRect(display))
     }
     return list
@@ -151,27 +155,27 @@ Panel {
   // With one box in the map, a lone display or a mirrored stack, there's
   // nothing to move it against: no dragging, hover or keyboard stop, and no
   // accent marking the shown display. Right-clicking it still rotates it.
-  readonly property bool layoutMovable: layoutRects.length > 1
+  readonly property bool layoutMovable: Dynamic.value(layoutRects, "length") > 1
   // The section shows when there's something to arrange or to mirror onto,
   // not for a lone display; r still rotates that one.
   readonly property bool layoutShown: layoutMovable || mirrorAvailable
 
   readonly property var mirroredBy: {
     var map = {}
-    for (var i = 0; i < layoutDisplays.length; i++) {
-      var display = layoutDisplays[i]
-      if (!display || !display.enabled || !display.mirrorOf || display.mirrorOf === "none") continue
-      if (!map[display.mirrorOf]) map[display.mirrorOf] = []
-      map[display.mirrorOf].push(display.name)
+    for (let i = 0; i < Dynamic.value(layoutDisplays, "length"); i++) {
+      let display = layoutDisplays[i]
+      if (!display || !Dynamic.value(display, "enabled") || !Dynamic.value(display, "mirrorOf") || Dynamic.value(display, "mirrorOf") === "none") continue
+      if (!map[Dynamic.value(display, "mirrorOf")]) map[Dynamic.value(display, "mirrorOf")] = []
+      map[Dynamic.value(display, "mirrorOf")].push(Dynamic.value(display, "name"))
     }
     return map
   }
 
   // Some display is showing another's picture, or is about to.
   readonly property bool mirroredNow: {
-    for (var i = 0; i < displays.length; i++) {
-      var display = displays[i]
-      if (display && display.enabled && display.mirrorOf && display.mirrorOf !== "none") return true
+    for (let i = 0; i < Dynamic.value(displays, "length"); i++) {
+      let display = displays[i]
+      if (display && Dynamic.value(display, "enabled") && Dynamic.value(display, "mirrorOf") && Dynamic.value(display, "mirrorOf") !== "none") return true
     }
     return false
   }
@@ -181,31 +185,31 @@ Panel {
   // shut in clamshell, and an external one. A mirror set up in
   // the user's own monitors.lua is theirs to undo, so Extend isn't offered.
   readonly property bool mirrorAvailable: internalEnabled && externalMonitor !== "" && (!mirrorEnabled || mirrorManaged || pendingMirror !== "")
-  readonly property var mirrorModes: ["mirror", "extend"]
+  readonly property list<string> mirrorModes: ["mirror", "extend"]
 
-  function displayGlyph(entry) {
-    return entry && entry.builtIn ? "󰌢" : "󰍹"
+  function displayGlyph(entry: var): string {
+    return entry && Dynamic.value(entry, "builtIn") ? "󰌢" : "󰍹"
   }
 
   // A lone slider, held at the -1 sentinel.
-  function isSliderSection(section) {
+  function isSliderSection(section: string): bool {
     return section === "textsize" || section === "brightness"
   }
 
   // A display's brightness percent, or -1 when it can't be controlled.
-  function brightnessOf(name) {
+  function brightnessOf(name: string): real {
     var level = brightnessLevels[name]
     return level === undefined || level === null ? -1 : level
   }
 
-  function pointAt(section, index) {
+  function pointAt(section: string, index: int): void {
     if (root.reflowingText) return
     root.cursorActive = true
     root.focusSection = section
     root.selectedIndex = index
   }
 
-  function selectDisplay(name) {
+  function selectDisplay(name: string): void {
     root.selectedName = name
   }
 
@@ -226,35 +230,35 @@ Panel {
   // While true, hover is not allowed to hijack the keyboard focus section —
   // otherwise h/l on the text-size slider can jump focus to another row.
   property bool reflowingText: false
-  function markReflowing() {
+  function markReflowing(): void {
     root.reflowingText = true
     reflowSettle.restart()
   }
 
-  readonly property var visibleSections: {
+  readonly property list<string> visibleSections: {
     var list = []
-    if (segments.length > 1) list.push("displays")
+    if (Dynamic.value(segments, "length") > 1) list.push("displays")
     if (currentBrightness >= 0) list.push("brightness")
     list.push("textsize")
-    if (current && current.scales.length > 0) list.push("scale")
-    if (current && current.resolutions.length > 0) list.push("resolution")
-    if (current && current.refreshes.length > 0) list.push("refresh")
+    if (current && Dynamic.value(Dynamic.value(current, "scales"), "length") > 0) list.push("scale")
+    if (current && Dynamic.value(Dynamic.value(current, "resolutions"), "length") > 0) list.push("resolution")
+    if (current && Dynamic.value(Dynamic.value(current, "refreshes"), "length") > 0) list.push("refresh")
     if (mirrorAvailable) list.push("mirror")
     if (layoutMovable) list.push("layout")
     return list
   }
 
-  function sectionCount(section) {
-    if (section === "displays") return segments.length
-    if (section === "scale") return current ? current.scales.length : 0
-    if (section === "resolution") return current ? current.resolutions.length : 0
-    if (section === "refresh") return current ? current.refreshes.length : 0
-    if (section === "mirror") return mirrorModes.length
+  function sectionCount(section: string): int {
+    if (section === "displays") return Dynamic.value(segments, "length")
+    if (section === "scale") return current ? Dynamic.value(Dynamic.value(current, "scales"), "length") : 0
+    if (section === "resolution") return current ? Dynamic.value(Dynamic.value(current, "resolutions"), "length") : 0
+    if (section === "refresh") return current ? Dynamic.value(Dynamic.value(current, "refreshes"), "length") : 0
+    if (section === "mirror") return Dynamic.value(mirrorModes, "length")
     if (section === "layout") return 1
     return 0  // sliders: only the sentinel at -1
   }
 
-  function sectionFirstIndex(section) {
+  function sectionFirstIndex(section: string): int {
     if (isSliderSection(section)) return -1
     if (section === "displays") return Math.max(0, currentIndex)
     // The other choice, so arriving shows as it turns bold, and Enter switches.
@@ -264,19 +268,19 @@ Panel {
 
   // Where the keyboard lands on open: the shown display's brightness, else its
   // scale, else the first row there is.
-  function landingSection() {
+  function landingSection(): string {
     var sections = visibleSections
     var preferred = ["brightness", "scale"]
-    for (var i = 0; i < preferred.length; i++)
+    for (let i = 0; i < Dynamic.value(preferred, "length"); i++)
       if (sections.indexOf(preferred[i]) >= 0) return preferred[i]
-    return sections.length > 0 ? sections[0] : ""
+    return Dynamic.value(sections, "length") > 0 ? sections[0] : ""
   }
 
-  function moveCursor(delta) {
+  function moveCursor(delta: int): void {
     var sections = visibleSections
-    if (!sections || sections.length === 0) return
+    if (!sections || Dynamic.value(sections, "length") === 0) return
     var sIdx = sections.indexOf(focusSection)
-    var next = sIdx < 0 ? 0 : Math.max(0, Math.min(sections.length - 1, sIdx + delta))
+    var next = sIdx < 0 ? 0 : Math.max(0, Math.min(Dynamic.value(sections, "length") - 1, sIdx + delta))
     if (next === sIdx) return
     focusSection = sections[next]
     selectedIndex = sectionFirstIndex(focusSection)
@@ -284,13 +288,13 @@ Panel {
 
   // h/l: a slider moves, the picker shows the next display and a row of pills
   // walks its pills. The layout takes ctrl+h/l instead, like ctrl+j/k.
-  function moveCursorH(delta) {
+  function moveCursorH(delta: int): void {
     if (focusSection === "brightness") {
-      if (current) adjustBrightness(current.name, delta * 5)
+      if (current) adjustBrightness(Dynamic.value(current, "name"), delta * 5)
     } else if (focusSection === "textsize") {
       adjustTextSize(delta)
     } else if (focusSection === "displays") {
-      var next = Math.max(0, Math.min(segments.length - 1, currentIndex + delta))
+      let next = Math.max(0, Math.min(Dynamic.value(segments, "length") - 1, currentIndex + delta))
       selectDisplay(segments[next].name)
       selectedIndex = next
     } else if (focusSection === "scale" || focusSection === "resolution" || focusSection === "refresh" || focusSection === "mirror") {
@@ -298,24 +302,24 @@ Panel {
     }
   }
 
-  function activateCursor() {
-    if (focusSection === "mirror" && selectedIndex >= 0 && selectedIndex < mirrorModes.length) {
+  function activateCursor(): void {
+    if (focusSection === "mirror" && selectedIndex >= 0 && selectedIndex < Dynamic.value(mirrorModes, "length")) {
       setMirror(mirrorModes[selectedIndex] === "mirror")
       return
     }
     if (!current) return
-    if (focusSection === "scale" && selectedIndex >= 0 && selectedIndex < current.scales.length)
-      setScale(current.name, current.scales[selectedIndex])
-    else if (focusSection === "resolution" && selectedIndex >= 0 && selectedIndex < current.resolutions.length)
-      setResolution(current.name, current.resolutions[selectedIndex])
-    else if (focusSection === "refresh" && selectedIndex >= 0 && selectedIndex < current.refreshes.length)
-      setResolution(current.name, current.current + "@" + current.refreshes[selectedIndex].rate)
+    if (focusSection === "scale" && selectedIndex >= 0 && selectedIndex < Dynamic.value(Dynamic.value(current, "scales"), "length"))
+      setScale(Dynamic.value(current, "name"), Dynamic.value(current, "scales")[selectedIndex])
+    else if (focusSection === "resolution" && selectedIndex >= 0 && selectedIndex < Dynamic.value(Dynamic.value(current, "resolutions"), "length"))
+      setResolution(Dynamic.value(current, "name"), Dynamic.value(current, "resolutions")[selectedIndex])
+    else if (focusSection === "refresh" && selectedIndex >= 0 && selectedIndex < Dynamic.value(Dynamic.value(current, "refreshes"), "length"))
+      setResolution(Dynamic.value(current, "name"), Dynamic.value(current, "current") + "@" + Dynamic.value(current, "refreshes")[selectedIndex].rate)
     // The picker, sliders and layout: moving is the action.
   }
 
-  function clampCursor() {
+  function clampCursor(): void {
     var sections = visibleSections
-    if (!sections || !sections.length) return
+    if (!sections || !Dynamic.value(sections, "length")) return
     if (sections.indexOf(focusSection) < 0) {
       focusSection = sections[0]
       selectedIndex = sectionFirstIndex(focusSection)
@@ -329,32 +333,32 @@ Panel {
 
   // Keep the keyboard-focused row inside the viewport when the panel grows
   // taller than its allotted height. Mirrors audio's ensureCursorVisible helper.
-  function ensureCursorVisible(item) {
-    var scrollArea = panel.loadedContent ? panel.loadedContent.scrollArea : null
+  function ensureCursorVisible(item: Item): void {
+    var scrollArea = PanelContent.scrollArea(panel.loadedContent)
     if (!item || !scrollArea) return
     var flick = scrollArea.contentItem
     if (!flick || flick.contentY === undefined) return
-    var pt = item.mapToItem(flick.contentItem || flick, 0, 0)
-    var top = pt.y
-    var bottom = top + (item.height || 0)
+    var pt = Dynamic.call(item, "mapToItem", [flick.contentItem || flick, 0, 0])
+    var top = Dynamic.value(pt, "y")
+    var bottom = top + (Dynamic.value(item, "height") || 0)
     var viewTop = flick.contentY
-    var viewBottom = viewTop + flick.height
+    var viewBottom = viewTop + Dynamic.value(flick, "height")
     var margin = 6
     // Never past either end: the last row sits flush with the bottom when the
     // panel fits, and a margin there would push the hero off the top.
-    var maxY = Math.max(0, flick.contentHeight - flick.height)
+    var maxY = Math.max(0, flick.contentHeight - Dynamic.value(flick, "height"))
     if (top < viewTop + margin) flick.contentY = Math.max(0, top - margin)
     else if (bottom > viewBottom - margin)
-      flick.contentY = Math.min(maxY, bottom + margin - flick.height)
+      flick.contentY = Math.min(maxY, bottom + margin - Dynamic.value(flick, "height"))
   }
 
-  function brightnessIpc(percent) {
+  function brightnessIpc(percent: var): string {
     var value = Number(percent)
     root.setBrightness(value)
     return "got " + root.pendingBrightnessPercent
   }
 
-  function stateIpc() {
+  function stateIpc(): string {
     return JSON.stringify({
       brightness: root.brightnessPercent,
       brightnessAvailable: root.brightnessAvailable,
@@ -364,37 +368,37 @@ Panel {
     })
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "nomarchy.monitor"
 
     function brightness(percent: string): string { return root.brightnessIpc(percent) }
     function state(): string { return root.stateIpc() }
-    function open() { root.open() }
-    function close() { root.close() }
-    function toggle() { root.toggle() }
-    function show() { root.open() }
-    function hide() { root.close() }
+    function open(): void { root.open() }
+    function close(): void { root.close() }
+    function toggle(): void { root.toggle() }
+    function show(): void { root.open() }
+    function hide(): void { root.close() }
   }
 
-  function refresh() {
+  function refresh(): void {
     if (!stateProc.running) stateProc.running = true
   }
 
   // The focused display's brightness, for the bar icon's wheel and IPC.
-  function setBrightness(value) {
+  function setBrightness(value: var): void {
     setDisplayBrightness(root.focusedMonitor, value)
   }
 
   // Show a level right away, before the set behind it lands.
-  function showBrightness(name, percent) {
+  function showBrightness(name: string, percent: real): void {
     var levels = {}
-    for (var key in brightnessLevels) levels[key] = brightnessLevels[key]
+    for (let key in brightnessLevels) levels[key] = brightnessLevels[key]
     levels[name] = percent
     root.brightnessLevels = levels
     if (name === root.focusedMonitor) root.brightnessPercent = percent
   }
 
-  function setDisplayBrightness(name, value) {
+  function setDisplayBrightness(name: string, value: var): void {
     var percent = Model.clampBrightness(value)
     showBrightness(name, percent)
     root.pendingBrightnessMonitor = name
@@ -410,7 +414,7 @@ Panel {
     setBrightnessProc.running = true
   }
 
-  function previewBrightness(name, value) {
+  function previewBrightness(name: string, value: var): void {
     var percent = Model.clampBrightness(value)
     showBrightness(name, percent)
     root.pendingBrightnessMonitor = name
@@ -418,46 +422,46 @@ Panel {
     brightnessDebounce.restart()
   }
 
-  function adjustBrightness(name, delta) {
+  function adjustBrightness(name: string, delta: real): void {
     var level = brightnessOf(name)
     if (level < 0) return
     setDisplayBrightness(name, level + delta)
   }
 
-  function showBrightnessOsd(percent) {
-    if (!bar || !bar.shell) return
-    bar.shell.summon("nomarchy.osd", JSON.stringify({
+  function showBrightnessOsd(percent: real): void {
+    if (!BarValues.hasShell(bar)) return
+    BarValues.summon(bar, "nomarchy.osd", JSON.stringify({
       icon: "brightness",
       value: percent
     }))
   }
 
-  function normalizeScale(scale) {
+  function normalizeScale(scale: var): string {
     return Model.normalizeScale(scale)
   }
 
   // Playful mood-name for a given brightness percent. Bands intentionally
   // span ~10–20 points so casual tweaks change the label, while small
   // nudges within one band don't.
-  function brightnessName(percent) {
-    return Model.brightnessName(percent, Commons.I18n.t)
+  function brightnessName(percent: real): string {
+    return Model.brightnessName(percent, Commons.I18n.translator())
   }
 
   // Brightness is taken from every poll, so a level set elsewhere replaces one
   // shown here. The list itself is only taken when something besides
   // brightness changed: a new one rebuilds the picker and the layout, which
   // would drop a hover or a drag in progress on each poll.
-  function updateDisplays(displaysJson) {
+  function updateDisplays(displaysJson: string): void {
     var parsed = Model.parseDisplays(displaysJson)
     var levels = {}
-    for (var i = 0; i < parsed.displays.length; i++) {
-      var display = parsed.displays[i]
-      if (display && display.enabled && typeof display.brightness === "number")
-        levels[display.name] = display.brightness
+    for (let i = 0; i < Dynamic.value(parsed.displays, "length"); i++) {
+      let display = parsed.displays[i]
+      if (display && Dynamic.value(display, "enabled") && typeof Dynamic.value(display, "brightness") === "number")
+        levels[Dynamic.value(display, "name")] = Dynamic.value(display, "brightness")
     }
     root.brightnessLevels = levels
 
-    var shape = JSON.stringify(parsed.displays, function(key, value) { return key === "brightness" ? undefined : value })
+    var shape = JSON.stringify(parsed.displays, function(key: string, value: var): var { return key === "brightness" ? undefined : value })
     if (shape === root.displaysJson) return
     root.displaysJson = shape
     root.displays = parsed.displays
@@ -471,14 +475,14 @@ Panel {
   // from a state read that started after everything before it landed.
   property var queuedActions: []
   property bool awaitingFreshState: false
-  readonly property bool actionBusy: actionProc.running || queuedActions.length > 0 || awaitingFreshState
+  readonly property bool actionBusy: actionProc.running || Dynamic.value(queuedActions, "length") > 0 || awaitingFreshState
   // Finished commands, and how many had finished when the running state read
   // started, so a read already under way when a command ended isn't fresh.
   property int actionsDone: 0
   property int readAfterActions: 0
   property bool rereadState: false
 
-  function runAction(command) {
+  function runAction(command: var): void {
     if (actionBusy) {
       queuedActions = queuedActions.concat([{ command: command }])
       return
@@ -487,9 +491,9 @@ Panel {
     actionProc.running = true
   }
 
-  function runNextAction() {
+  function runNextAction(): void {
     if (actionProc.running || awaitingFreshState) return
-    if (queuedActions.length === 0) {
+    if (Dynamic.value(queuedActions, "length") === 0) {
       // A read already under way started before this command landed.
       if (stateProc.running) rereadState = true
       else refresh()
@@ -509,7 +513,7 @@ Panel {
   }
 
   // The queued move at the front, worked out now the state is fresh.
-  function placeQueuedLayout() {
+  function placeQueuedLayout(): void {
     awaitingFreshState = false
     var next = queuedActions[0]
     queuedActions = queuedActions.slice(1)
@@ -523,22 +527,22 @@ Panel {
     }
   }
 
-  function setScale(name, scale) {
+  function setScale(name: string, scale: var): void {
     runAction(["nomarchy-hyprland-monitor-scaling", "--monitor", name, scale])
   }
 
-  function setResolution(name, resolution) {
+  function setResolution(name: string, resolution: string): void {
     runAction(["nomarchy-hyprland-monitor-resolution", "--monitor", name, resolution])
   }
 
-  function setMirror(enabled) {
+  function setMirror(enabled: bool): void {
     if (enabled === mirrorEnabled) return
     pendingMirror = enabled ? "on" : "off"
     mirrorSettle.restart()
     runAction(["nomarchy-hyprland-monitor-internal-mirror", enabled ? "on" : "off"])
   }
 
-  function setRotation(name, degrees) {
+  function setRotation(name: string, degrees: int): void {
     runAction(["nomarchy-hyprland-monitor-rotate", "--monitor", name, String(degrees)])
   }
 
@@ -550,43 +554,42 @@ Panel {
   property real rotateMenuX: 0
   property real rotateMenuY: 0
   readonly property int rotateMenuTransform: {
-    for (var i = 0; i < displays.length; i++)
+    for (let i = 0; i < Dynamic.value(displays, "length"); i++)
       if (displays[i] && displays[i].name === rotateMenuName) return Number(displays[i].transform) || 0
     return 0
   }
 
   // Opens where `item` was clicked, at (x, y) within it, in panel coordinates.
-  function openRotateMenu(name, item, x, y) {
-    var spot = item.mapToItem(panel.loadedContent, x, y)
+  function openRotateMenu(name: string, item: Item, x: real, y: real): void {
+    var spot = Dynamic.call(item, "mapToItem", [panel.loadedContent, x, y])
     rotateMenuName = name
-    rotateMenuX = spot.x
-    rotateMenuY = spot.y
+    rotateMenuX = Dynamic.value(spot, "x")
+    rotateMenuY = Dynamic.value(spot, "y")
     rotateMenuIndex = rotateMenuTransform % 4
   }
 
   // r: the shown display's rotate menu, opened over the middle of the map.
-  function openRotateMenuForShown() {
+  function openRotateMenuForShown(): void {
     var content = panel.loadedContent
     if (!current || !content) return
-    var map = content.layoutMap
+    var map = PanelContent.layoutMap(content)
     // A lone display has no map, so the menu opens near the top instead.
-    if (map && map.visible) openRotateMenu(current.name, map, map.width / 2, map.height / 2)
-    else openRotateMenu(current.name, content, content.width / 2, Style.space(60))
+    if (map && map.visible) openRotateMenu(Dynamic.value(current, "name"), map, Dynamic.value(map, "width") / 2, Dynamic.value(map, "height") / 2)
+    else openRotateMenu(Dynamic.value(current, "name"), content, Dynamic.value(content, "width") / 2, Style.space(60))
   }
 
-  function applyRotateMenu() {
+  function applyRotateMenu(): void {
     setRotation(rotateMenuName, rotateMenuIndex * 90)
     closeRotateMenu()
   }
 
   // ctrl+h/j/k/l on the layout: the shown display to that side of the rest.
-  function placeShown(side) {
+  function placeShown(side: string): void {
     if (!current || !layoutMovable) return
-    var name = current.name
-    applyLayout(function() { return Model.placeDisplay(layoutRects, name, side) })
+    applyLayout(function(): var { return Model.placeDisplay(layoutRects, Dynamic.value(current, "name"), side) })
   }
 
-  function closeRotateMenu() {
+  function closeRotateMenu(): void {
     rotateMenuName = ""
   }
 
@@ -598,17 +601,17 @@ Panel {
   // Apply the arrangement `place` works out from layoutRects, unless it
   // leaves everything where it was. Behind another command it waits its turn
   // and is worked out again then, from the sizes that command left.
-  function applyLayout(place) {
-    var rects = place()
+  function applyLayout(place: var): void {
+    var rects = Dynamic.callFunction(place)
     if (!rects || Model.sameLayout(rects, Model.normalizeLayout(Model.copyRects(layoutRects)))) return
     pendingRects = rects
     if (actionBusy) queuedActions = queuedActions.concat([{ layout: place }])
     else runAction(layoutCommand(rects))
   }
 
-  function layoutCommand(rects) {
+  function layoutCommand(rects: var): var {
     var args = ["nomarchy-hyprland-monitor-layout"]
-    for (var i = 0; i < rects.length; i++)
+    for (let i = 0; i < Dynamic.value(rects, "length"); i++)
       args.push(rects[i].name + "=" + rects[i].x + "x" + rects[i].y)
     return args
   }
@@ -616,11 +619,11 @@ Panel {
   // ---- Text size (shell base font + GTK text-scaling, via one CLI) ----
   // One size for the whole session: the shell font, GTK and the terminals each
   // take a single value, so unlike the rows around it it isn't per display.
-  function nearestTextStop(px) {
+  function nearestTextStop(px: real): int {
     var best = 0
     var bestDist = 1e9
-    for (var i = 0; i < textSizeStops.length; i++) {
-      var d = Math.abs(textSizeStops[i] - px)
+    for (let i = 0; i < Dynamic.value(textSizeStops, "length"); i++) {
+      let d = Math.abs(textSizeStops[i] - px)
       if (d < bestDist) { bestDist = d; best = i }
     }
     return best
@@ -628,25 +631,25 @@ Panel {
 
   // Effective stop index: the pending choice while a change is in flight,
   // otherwise whatever Style's live base-size rounds to.
-  function currentTextIndex() {
+  function currentTextIndex(): int {
     return textSizePreviewIndex >= 0 ? textSizePreviewIndex : nearestTextStop(Style.font.baseSize)
   }
 
   // px shown in the header: the pending stop if any, else the true base-size
   // (which may be an off-notch value set from the CLI).
-  function displayedTextPx() {
+  function displayedTextPx(): real {
     return textSizePreviewIndex >= 0 ? textSizeStops[textSizePreviewIndex] : Style.font.baseSize
   }
 
-  function setTextSize(px) {
+  function setTextSize(px: real): void {
     textScaleProc.command = ["nomarchy-display-text-size", String(px)]
     if (!textScaleProc.running) textScaleProc.running = true
   }
 
-  function adjustTextSize(deltaSteps) {
+  function adjustTextSize(deltaSteps: int): void {
     var idx = currentTextIndex() + deltaSteps
     if (idx < 0) idx = 0
-    if (idx > textSizeStops.length - 1) idx = textSizeStops.length - 1
+    if (idx > Dynamic.value(textSizeStops, "length") - 1) idx = Dynamic.value(textSizeStops, "length") - 1
     markReflowing()
     textSizePreviewIndex = idx
     setTextSize(textSizeStops[idx])
@@ -810,14 +813,14 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: Quickshell.screens.length > 1 ? "󰍺" : "󰍹"
+    text: Dynamic.value(Quickshell.screens, "length") > 1 ? "󰍺" : "󰍹"
     onPressed: function(b) { root.toggle() }
     onWheelMoved: function(delta) {
       if (!root.brightnessAvailable) return
       var wheel = Util.wheelSteps(root.wheelAccumulator, delta)
-      root.wheelAccumulator = wheel.remainder
-      if (wheel.steps === 0) return
-      root.setBrightness(root.brightnessPercent + wheel.steps * 5)
+      root.wheelAccumulator = Dynamic.value(wheel, "remainder")
+      if (Dynamic.value(wheel, "steps") === 0) return
+      root.setBrightness(root.brightnessPercent + Dynamic.value(wheel, "steps") * 5)
       root.showBrightnessOsd(root.brightnessPercent)
     }
   }
@@ -829,7 +832,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: panel.loadedContent
-    contentWidth: panel.fittedContentWidth(Style.space(380))
+    contentWidth: panel.fittedContentWidth(Style.space(380), undefined)
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(860))
 
     panelContent: PanelKeyCatcher {
@@ -875,7 +878,7 @@ Panel {
         Binding {
           target: scrollArea.contentItem
           property: "interactive"
-          value: panelColumn.implicitHeight > scrollArea.height
+          value: panelColumn.implicitHeight > Dynamic.value(scrollArea, "height")
         }
 
         Column {
@@ -887,20 +890,20 @@ Panel {
           // thin track centered in it. Rows of pills and the layout map are
           // padded by the room around that track, so every section shows the
           // same gap above and below what's drawn.
-          readonly property real sliderInset: Math.round((textSizeRow.height - textSizeSlider.trackHeight) / 2)
+          readonly property real sliderInset: Math.round((Dynamic.value(textSizeRow, "height") - textSizeSlider.trackHeight) / 2)
 
           // ---------- Hero: the shown display, and the picker ----------
           Item {
-            width: parent.width
+            width: Dynamic.value(parent, "width")
             implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight, picker.implicitHeight)
 
             Text {
               id: heroIcon
               textFormat: Text.PlainText
-              text: root.displayGlyph(root.current)
-              color: root.bar.foreground
-              font.family: root.bar.fontFamily
-              font.pixelSize: Style.font.display
+              text: root.displayGlyph(Dynamic.value(root, "current"))
+              color: root.contentForeground
+              font.family: root.contentFontFamily
+              font.pixelSize: Dynamic.value(Style.font, "display")
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
             }
@@ -915,14 +918,14 @@ Panel {
               spacing: Style.space(2)
 
               Text {
-                text: root.current ? root.current.title : Commons.I18n.t("monitor.display")
+                text: Dynamic.value(root, "current") ? Dynamic.value(root.current, "title") : Commons.I18n.t("monitor.display")
                 textFormat: Text.PlainText
-                color: root.bar.foreground
-                font.family: root.bar.fontFamily
-                font.pixelSize: Style.font.title
+                color: root.contentForeground
+                font.family: root.contentFontFamily
+                font.pixelSize: Dynamic.value(Style.font, "title")
                 font.bold: true
                 elide: Text.ElideRight
-                width: parent.width
+                width: Dynamic.value(parent, "width")
               }
 
               // The shown display's mood.
@@ -932,13 +935,13 @@ Panel {
                 text: root.currentBrightness >= 0
                   ? root.brightnessName(root.currentBrightness).toUpperCase()
                   : Commons.I18n.t("monitor.fixedBrightness")
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(root.contentForeground, 1.4)
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 font.letterSpacing: 1.2
                 elide: Text.ElideRight
-                width: parent.width
+                width: Dynamic.value(parent, "width")
               }
             }
 
@@ -947,7 +950,7 @@ Panel {
             // hovered or picked, and no box either way.
             Row {
               id: picker
-              visible: root.segments.length > 1
+              visible: Dynamic.value(root.segments, "length") > 1
               spacing: Style.space(14)
               anchors.right: parent.right
               anchors.rightMargin: Style.space(6)
@@ -968,8 +971,8 @@ Panel {
 
                   text: root.displayGlyph(modelData)
                   textFormat: Text.PlainText
-                  color: current ? Commons.Color.accent : (hot ? root.bar.foreground : Qt.darker(root.bar.foreground, 1.55))
-                  font.family: root.bar.fontFamily
+                  color: current ? Commons.Color.accent : (hot ? root.contentForeground : Qt.darker(root.contentForeground, 1.55))
+                  font.family: root.contentFontFamily
                   font.pixelSize: Style.font.icon
 
                   MouseArea {
@@ -978,13 +981,13 @@ Panel {
                     anchors.margins: -Style.space(6)
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.selectDisplay(pick.modelData.name)
-                    onContainsMouseChanged: if (containsMouse) root.pointAt("displays", pick.index)
+                    onClicked: root.selectDisplay(Dynamic.value(pick.modelData, "name"))
+                    onContainsMouseChanged: if (containsMouse) root.pointAt("displays", Dynamic.value(pick, "index"))
                   }
 
                   PanelToolTip {
                     visible: pickMouse.containsMouse
-                    text: pick.modelData.title + " · " + pick.modelData.name
+                    text: Dynamic.value(pick.modelData, "title") + " · " + Dynamic.value(pick.modelData, "name")
                   }
                 }
               }
@@ -994,23 +997,23 @@ Panel {
           // ---------- Brightness ----------
           PanelSeparator {
             visible: root.currentBrightness >= 0
-            foreground: root.bar.foreground
+            foreground: root.contentForeground
           }
 
           Column {
             visible: root.currentBrightness >= 0
-            width: parent.width
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6)
 
             Item {
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               implicitHeight: Math.max(brightnessHeader.implicitHeight, brightnessPercent.implicitHeight)
 
               PanelSectionHeader {
                 id: brightnessHeader
                 text: Commons.I18n.t("monitor.brightness")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -1019,8 +1022,8 @@ Panel {
                 id: brightnessPercent
                 textFormat: Text.PlainText
                 text: Commons.I18n.formatNumber(Math.round(brightnessSlider.dragging ? brightnessSlider.liveValue : root.currentBrightness)) + "%"
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(root.contentForeground, 1.4)
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -1031,11 +1034,11 @@ Panel {
 
             CursorSurface {
               id: brightnessRow
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               height: brightnessSlider.implicitHeight + Style.spacing.controlGap
               hasCursor: root.cursorActive && root.focusSection === "brightness" && root.selectedIndex === -1
               onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(brightnessRow)
-              foreground: root.bar.foreground
+              foreground: root.contentForeground
               outline: true
 
               PanelSlider {
@@ -1049,10 +1052,10 @@ Panel {
                 step: 1
                 value: Math.max(1, root.currentBrightness)
                 integer: true
-                onMoved: function(v) { if (root.current) root.previewBrightness(root.current.name, v) }
+                onMoved: function(v) { if (Dynamic.value(root, "current")) root.previewBrightness(Dynamic.value(Dynamic.value(root, "current"), "name"), v) }
                 onReleased: function(v) {
                   brightnessDebounce.stop()
-                  if (root.current) root.setDisplayBrightness(root.current.name, v)
+                  if (Dynamic.value(root, "current")) root.setDisplayBrightness(Dynamic.value(Dynamic.value(root, "current"), "name"), v)
                 }
               }
 
@@ -1064,22 +1067,22 @@ Panel {
 
           // ---------- Text size ----------
           PanelSeparator {
-            foreground: root.bar.foreground
+            foreground: root.contentForeground
           }
 
           Column {
-            width: parent.width
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6)
 
             Item {
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               implicitHeight: Math.max(textSizeHeader.implicitHeight, textSizePx.implicitHeight)
 
               PanelSectionHeader {
                 id: textSizeHeader
                 text: Commons.I18n.t("monitor.textSize")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -1090,8 +1093,8 @@ Panel {
                 text: Commons.I18n.formatNumber(textSizeSlider.dragging
                        ? root.textSizeStops[Math.round(textSizeSlider.liveValue)]
                        : root.displayedTextPx()) + "px"
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                color: Qt.darker(root.contentForeground, 1.4)
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -1102,11 +1105,11 @@ Panel {
 
             CursorSurface {
               id: textSizeRow
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               height: textSizeSlider.implicitHeight + Style.spacing.controlGap
               hasCursor: root.cursorActive && root.focusSection === "textsize" && root.selectedIndex === -1
               onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(textSizeRow)
-              foreground: root.bar.foreground
+              foreground: root.contentForeground
               outline: true
 
               PanelSlider {
@@ -1116,10 +1119,10 @@ Panel {
                 anchors.leftMargin: Style.space(6)
                 anchors.rightMargin: Style.space(6)
                 minimum: 0
-                maximum: root.textSizeStops.length - 1
+                maximum: Dynamic.value(root.textSizeStops, "length") - 1
                 step: 1
                 integer: true
-                tickCount: root.textSizeStops.length
+                tickCount: Dynamic.value(root.textSizeStops, "length")
                 value: root.currentTextIndex()
                 onReleased: function(v) { root.setTextSize(root.textSizeStops[Math.round(v)]) }
               }
@@ -1132,32 +1135,32 @@ Panel {
 
           // ---------- Scale ----------
           PanelSeparator {
-            visible: root.current !== null && root.current.scales.length > 0
-            foreground: root.bar.foreground
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "scales"), "length") > 0
+            foreground: root.contentForeground
           }
 
           Column {
-            visible: root.current !== null && root.current.scales.length > 0
-            width: parent.width
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "scales"), "length") > 0
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6) + panelColumn.sliderInset
             bottomPadding: panelColumn.sliderInset
 
             PanelSectionHeader {
               text: Commons.I18n.t("monitor.scale")
-              foreground: root.bar.foreground
-              fontFamily: root.bar.fontFamily
+              foreground: root.contentForeground
+              fontFamily: root.contentFontFamily
             }
 
             Grid {
               id: scaleGrid
-              width: parent.width
-              columns: Math.max(1, root.current ? root.current.scales.length : 1)
+              width: Dynamic.value(parent, "width")
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "scales"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: root.current ? root.current.scales : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "scales") : []
 
                 ScalePill {
                   required property string modelData
@@ -1173,26 +1176,26 @@ Panel {
 
           // ---------- Resolution ----------
           PanelSeparator {
-            visible: root.current !== null && root.current.resolutions.length > 0
-            foreground: root.bar.foreground
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "resolutions"), "length") > 0
+            foreground: root.contentForeground
           }
 
           // The pills only carry short names, so the exact mode sits by the header.
           Column {
-            visible: root.current !== null && root.current.resolutions.length > 0
-            width: parent.width
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "resolutions"), "length") > 0
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6) + panelColumn.sliderInset
             bottomPadding: panelColumn.sliderInset
 
             Item {
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               implicitHeight: Math.max(resolutionHeader.implicitHeight, resolutionCurrent.implicitHeight)
 
               PanelSectionHeader {
                 id: resolutionHeader
                 text: Commons.I18n.t("monitor.resolution")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -1200,9 +1203,9 @@ Panel {
               Text {
                 id: resolutionCurrent
                 textFormat: Text.PlainText
-                text: root.current ? root.current.current.replace("x", "×") : ""
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                text: Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root, "current"), "current").replace("x", "×") : ""
+                color: Qt.darker(root.contentForeground, 1.4)
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -1213,14 +1216,14 @@ Panel {
 
             Grid {
               id: resolutionGrid
-              width: parent.width
-              columns: Math.max(1, root.current ? root.current.resolutions.length : 1)
+              width: Dynamic.value(parent, "width")
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "resolutions"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: root.current ? root.current.resolutions : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "resolutions") : []
 
                 ResolutionPill {
                   required property string modelData
@@ -1236,25 +1239,25 @@ Panel {
 
           // ---------- Refresh rate ----------
           PanelSeparator {
-            visible: root.current !== null && root.current.refreshes.length > 0
-            foreground: root.bar.foreground
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "refreshes"), "length") > 0
+            foreground: root.contentForeground
           }
 
           Column {
-            visible: root.current !== null && root.current.refreshes.length > 0
-            width: parent.width
+            visible: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(Dynamic.value(root, "current"), "refreshes"), "length") > 0
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6) + panelColumn.sliderInset
             bottomPadding: panelColumn.sliderInset
 
             Item {
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               implicitHeight: Math.max(refreshHeader.implicitHeight, refreshCurrent.implicitHeight)
 
               PanelSectionHeader {
                 id: refreshHeader
                 text: Commons.I18n.t("monitor.refreshRate")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -1262,9 +1265,9 @@ Panel {
               Text {
                 id: refreshCurrent
                 textFormat: Text.PlainText
-                text: root.current ? Commons.I18n.formatNumber(Math.round(root.current.refreshRate)) + " Hz" : ""
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
+                text: Dynamic.value(root, "current") ? Commons.I18n.formatNumber(Math.round(Dynamic.value(Dynamic.value(root, "current"), "refreshRate"))) + " Hz" : ""
+                color: Qt.darker(root.contentForeground, 1.4)
+                font.family: root.contentFontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
                 anchors.right: parent.right
@@ -1275,14 +1278,14 @@ Panel {
 
             Grid {
               id: refreshGrid
-              width: parent.width
-              columns: Math.max(1, root.current ? root.current.refreshes.length : 1)
+              width: Dynamic.value(parent, "width")
+              columns: Math.max(1, Dynamic.value(root, "current") ? Dynamic.value(Dynamic.value(root.current, "refreshes"), "length") : 1)
               spacing: Style.spacing.xs
 
               readonly property real cellWidth: (width - spacing * (columns - 1)) / columns
 
               Repeater {
-                model: root.current ? root.current.refreshes : []
+                model: Dynamic.value(root, "current") ? Dynamic.value(root.current, "refreshes") : []
 
                 RefreshPill {
                   required property var modelData
@@ -1299,23 +1302,23 @@ Panel {
           // ---------- Layout ----------
           PanelSeparator {
             visible: root.layoutShown
-            foreground: root.bar.foreground
+            foreground: root.contentForeground
           }
 
           Column {
             visible: root.layoutShown
-            width: parent.width
+            width: Dynamic.value(parent, "width")
             spacing: Style.space(6)
 
             Item {
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               implicitHeight: Math.max(layoutHeader.implicitHeight, mirrorRow.visible ? mirrorRow.implicitHeight : 0)
 
               PanelSectionHeader {
                 id: layoutHeader
                 text: Commons.I18n.t("monitor.layout")
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
+                foreground: root.contentForeground
+                fontFamily: root.contentFontFamily
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
               }
@@ -1338,7 +1341,7 @@ Panel {
             Item {
               id: layoutRow
               readonly property bool hasCursor: root.layoutMovable && root.cursorActive && root.focusSection === "layout"
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               height: layoutMap.implicitHeight + panelColumn.sliderInset * 2
               onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(layoutRow)
 
@@ -1370,13 +1373,13 @@ Panel {
             Text {
               readonly property bool shown: layoutHover.hovered || (root.cursorActive &&
                 (root.focusSection === "layout" || (!root.layoutMovable && root.focusSection === "mirror")))
-              width: parent.width
+              width: Dynamic.value(parent, "width")
               horizontalAlignment: Text.AlignHCenter
               wrapMode: Text.WordWrap
               textFormat: Text.PlainText
               text: root.layoutMovable ? Commons.I18n.t("monitor.layoutHint") : Commons.I18n.t("monitor.rotateHint")
-              color: Qt.darker(root.bar.foreground, 1.55)
-              font.family: root.bar.fontFamily
+              color: Qt.darker(root.contentForeground, 1.55)
+              font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               opacity: shown ? 1 : 0
             }
@@ -1399,8 +1402,8 @@ Panel {
         visible: root.rotateMenuName !== ""
         width: Math.max(Style.space(140), rotateColumn.implicitWidth) + padding * 2
         height: rotateColumn.implicitHeight + padding * 2
-        x: Math.max(0, Math.min(root.rotateMenuX, parent.width - width))
-        y: Math.max(0, Math.min(root.rotateMenuY, parent.height - height))
+        x: Math.max(0, Math.min(root.rotateMenuX, Dynamic.value(parent, "width") - width))
+        y: Math.max(0, Math.min(root.rotateMenuY, Dynamic.value(parent, "height") - height))
         radius: Style.cornerRadius
         color: Commons.Color.popups.background
         borderSpec: Border.surfaceSpec("popups", "border", Commons.Color.popups.border, Style.normalBorderWidth)
@@ -1410,7 +1413,7 @@ Panel {
           id: rotateColumn
           x: rotateMenu.contentLeftInset
           y: rotateMenu.contentTopInset
-          width: rotateMenu.width - rotateMenu.contentLeftInset - rotateMenu.contentRightInset
+          width: Dynamic.value(rotateMenu, "width") - rotateMenu.contentLeftInset - rotateMenu.contentRightInset
 
           Repeater {
             model: [
@@ -1421,6 +1424,7 @@ Panel {
             ]
 
             delegate: PopupMenuRow {
+              id: rotationRow
               required property var modelData
               required property int index
 
@@ -1428,7 +1432,7 @@ Panel {
               checked: root.rotateMenuTransform === modelData[0] / 90
               // Hover and the keyboard share one lit row.
               highlighted: root.rotateMenuIndex === index
-              HoverHandler { onHoveredChanged: if (hovered) root.rotateMenuIndex = index }
+              HoverHandler { onHoveredChanged: if (hovered) root.rotateMenuIndex = Dynamic.value(rotationRow, "index") }
               onTriggered: {
                 root.setRotation(root.rotateMenuName, modelData[0])
                 root.closeRotateMenu()
@@ -1445,19 +1449,19 @@ Panel {
     required property string scaleValue
     required property int scaleIndex
 
-    text: root.current ? Commons.I18n.formatNumber(Model.cleanScale(scaleValue, root.current.width, root.current.height)) + "x" : ""
+    text: Dynamic.value(root, "current") ? Commons.I18n.formatNumber(Model.cleanScale(scaleValue, Dynamic.value(Dynamic.value(root, "current"), "width"), Dynamic.value(Dynamic.value(root, "current"), "height"))) + "x" : ""
     fontSize: Style.font.caption
-    foreground: root.bar.foreground
-    fontFamily: root.bar.fontFamily
+    foreground: root.contentForeground
+    fontFamily: root.contentFontFamily
     horizontalPadding: Style.spacing.sm
     verticalPadding: Style.spacing.controlPaddingY
     bordered: true
 
-    active: root.current !== null && root.current.scaleIndex === scaleIndex
+    active: Dynamic.value(root, "current") !== null && Dynamic.value(root, "current").scaleIndex === scaleIndex
     hasCursor: root.cursorActive && root.focusSection === "scale" && root.selectedIndex === scaleIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(pill)
 
-    onClicked: if (root.current) root.setScale(root.current.name, scaleValue)
+    onClicked: if (Dynamic.value(root, "current")) root.setScale(Dynamic.value(Dynamic.value(root, "current"), "name"), scaleValue)
     onHovered: function(isHovered) { if (isHovered) root.pointAt("scale", pill.scaleIndex) }
   }
 
@@ -1468,17 +1472,17 @@ Panel {
 
     text: Model.resolutionLabel(resolution)
     fontSize: Style.font.caption
-    foreground: root.bar.foreground
-    fontFamily: root.bar.fontFamily
+    foreground: root.contentForeground
+    fontFamily: root.contentFontFamily
     horizontalPadding: Style.spacing.sm
     verticalPadding: Style.spacing.controlPaddingY
     bordered: true
 
-    active: root.current !== null && root.current.current === resolution
+    active: Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(root, "current"), "current") === resolution
     hasCursor: root.cursorActive && root.focusSection === "resolution" && root.selectedIndex === resolutionIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(resolutionPill)
 
-    onClicked: if (root.current) root.setResolution(root.current.name, resolution)
+    onClicked: if (Dynamic.value(root, "current")) root.setResolution(Dynamic.value(Dynamic.value(root, "current"), "name"), resolution)
     onHovered: function(isHovered) { if (isHovered) root.pointAt("resolution", resolutionPill.resolutionIndex) }
   }
 
@@ -1488,19 +1492,19 @@ Panel {
     required property var option
     required property int refreshIndex
 
-    text: Commons.I18n.formatNumber(Number(option.label))
+    text: Commons.I18n.formatNumber(Number(Dynamic.value(option, "label")))
     fontSize: Style.font.caption
-    foreground: root.bar.foreground
-    fontFamily: root.bar.fontFamily
+    foreground: root.contentForeground
+    fontFamily: root.contentFontFamily
     horizontalPadding: Style.spacing.sm
     verticalPadding: Style.spacing.controlPaddingY
     bordered: true
 
-    active: root.current !== null && Math.round(root.current.refreshRate) === Number(option.label)
+    active: Dynamic.value(root, "current") !== null && Math.round(Dynamic.value(Dynamic.value(root, "current"), "refreshRate")) === Number(Dynamic.value(option, "label"))
     hasCursor: root.cursorActive && root.focusSection === "refresh" && root.selectedIndex === refreshIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(refreshPill)
 
-    onClicked: if (root.current) root.setResolution(root.current.name, root.current.current + "@" + option.rate)
+    onClicked: if (Dynamic.value(root, "current")) root.setResolution(Dynamic.value(Dynamic.value(root, "current"), "name"), Dynamic.value(Dynamic.value(root, "current"), "current") + "@" + Dynamic.value(option, "rate"))
     onHovered: function(isHovered) { if (isHovered) root.pointAt("refresh", refreshPill.refreshIndex) }
   }
 
@@ -1520,8 +1524,8 @@ Panel {
 
     text: mode === "mirror" ? Commons.I18n.t("monitor.mirror") : Commons.I18n.t("monitor.extend")
     textFormat: Text.PlainText
-    color: current ? Commons.Color.accent : (hot ? root.bar.foreground : Qt.darker(root.bar.foreground, 1.55))
-    font.family: root.bar.fontFamily
+    color: current ? Commons.Color.accent : (hot ? root.contentForeground : Qt.darker(root.contentForeground, 1.55))
+    font.family: root.contentFontFamily
     font.pixelSize: Style.font.caption
     font.bold: current || hot
     font.underline: current && picked
@@ -1548,36 +1552,36 @@ Panel {
     readonly property var bounds: {
       var rects = root.shownRects
       var b = { x: 0, y: 0, w: 1, h: 1 }
-      if (rects.length === 0) return b
+      if (Dynamic.value(rects, "length") === 0) return b
       var right = -Infinity
       var bottom = -Infinity
       b.x = Infinity
       b.y = Infinity
-      for (var i = 0; i < rects.length; i++) {
-        b.x = Math.min(b.x, rects[i].x)
-        b.y = Math.min(b.y, rects[i].y)
+      for (let i = 0; i < Dynamic.value(rects, "length"); i++) {
+        b.x = Math.min(Dynamic.value(b, "x"), rects[i].x)
+        b.y = Math.min(Dynamic.value(b, "y"), rects[i].y)
         right = Math.max(right, rects[i].x + rects[i].w)
         bottom = Math.max(bottom, rects[i].y + rects[i].h)
       }
-      b.w = Math.max(1, right - b.x)
-      b.h = Math.max(1, bottom - b.y)
+      b.w = Math.max(1, right - Dynamic.value(b, "x"))
+      b.h = Math.max(1, bottom - Dynamic.value(b, "y"))
       return b
     }
     // Room either side for a display dragged past the arrangement's edge, and
     // no taller than a slider row or two.
-    readonly property real ratio: Math.min(width * 0.8 / bounds.w, Style.space(100) / bounds.h)
+    readonly property real ratio: Math.min(width * 0.8 / Dynamic.value(bounds, "w"), Style.space(100) / Dynamic.value(bounds, "h"))
     // A display that others mirror is drawn as a stack: one card behind it,
     // up and to the right, per display showing the same picture.
     readonly property real stackStep: Style.space(6)
     readonly property int stackDepth: {
       var depth = 0
-      for (var i = 0; i < root.shownRects.length; i++)
+      for (let i = 0; i < Dynamic.value(root.shownRects, "length"); i++)
         depth = Math.max(depth, (root.mirroredBy[root.shownRects[i].name] || []).length)
       return depth
     }
-    implicitHeight: bounds.h * ratio + stackDepth * stackStep
-    readonly property real offsetX: (width - bounds.w * ratio - stackDepth * stackStep) / 2
-    readonly property real offsetY: (height - bounds.h * ratio + stackDepth * stackStep) / 2
+    implicitHeight: Dynamic.value(bounds, "h") * ratio + stackDepth * stackStep
+    readonly property real offsetX: (width - Dynamic.value(bounds, "w") * ratio - stackDepth * stackStep) / 2
+    readonly property real offsetY: (height - Dynamic.value(bounds, "h") * ratio + stackDepth * stackStep) / 2
 
     Repeater {
       model: root.shownRects
@@ -1586,66 +1590,66 @@ Panel {
         id: screenRect
         required property var modelData
 
-        readonly property bool isCurrent: root.layoutMovable && root.current !== null && root.current.name === modelData.name
+        readonly property bool isCurrent: root.layoutMovable && Dynamic.value(root, "current") !== null && Dynamic.value(Dynamic.value(root, "current"), "name") === Dynamic.value(modelData, "name")
         property real dragX: 0
         property real dragY: 0
         property real pressX: 0
         property real pressY: 0
         readonly property bool dragging: dragX !== 0 || dragY !== 0
 
-        x: map.offsetX + (modelData.x - map.bounds.x) * map.ratio + dragX
-        y: map.offsetY + (modelData.y - map.bounds.y) * map.ratio + dragY
-        width: Math.max(4, modelData.w * map.ratio - 2)
-        height: Math.max(4, modelData.h * map.ratio - 2)
+        x: map.offsetX + (Dynamic.value(modelData, "x") - Dynamic.value(map.bounds, "x")) * map.ratio + dragX
+        y: map.offsetY + (Dynamic.value(modelData, "y") - Dynamic.value(map.bounds, "y")) * map.ratio + dragY
+        width: Math.max(4, Dynamic.value(modelData, "w") * map.ratio - 2)
+        height: Math.max(4, Dynamic.value(modelData, "h") * map.ratio - 2)
         z: dragging ? 1 : 0
         radius: Style.cornerRadius > 0 ? Style.space(3) : 0
         color: isCurrent
-          ? Style.selectedFillFor(root.bar.foreground, Commons.Color.accent)
-          : Style.hoverFillFor(root.bar.foreground, Commons.Color.accent)
+          ? Style.selectedFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
+          : Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
         border.width: isCurrent && map.hasCursor ? 2 : 1
-        border.color: isCurrent ? Commons.Color.accent : Qt.darker(root.bar.foreground, 1.6)
+        border.color: isCurrent ? Commons.Color.accent : Qt.darker(root.contentForeground, 1.6)
 
         // The fill is translucent, so back it with the panel's own surface
         // to keep the cards behind from showing through.
         Rectangle {
           anchors.fill: parent
           z: -1
-          radius: parent.radius
+          radius: screenRect.radius
           color: Commons.Color.popups.background
         }
 
         // The displays mirroring this one, stacked behind it.
         Repeater {
-          model: root.mirroredBy[screenRect.modelData.name] || []
+          model: root.mirroredBy[Dynamic.value(screenRect.modelData, "name")] || []
 
           Rectangle {
             required property int index
             x: (index + 1) * map.stackStep
             y: -(index + 1) * map.stackStep
             z: -2 - index
-            width: screenRect.width
-            height: screenRect.height
+            width: Dynamic.value(screenRect, "width")
+            height: Dynamic.value(screenRect, "height")
             radius: screenRect.radius
             color: Commons.Color.popups.background
             border.width: 1
-            border.color: Qt.darker(root.bar.foreground, 1.6)
+            border.color: Qt.darker(root.contentForeground, 1.6)
 
             Rectangle {
               anchors.fill: parent
-              radius: parent.radius
-              color: Style.hoverFillFor(root.bar.foreground, Commons.Color.accent)
+              radius: screenRect.radius
+              color: Style.hoverFillFor(root.contentForeground, Commons.Color.accent, Commons.Color.urgent)
             }
           }
         }
 
         Text {
           anchors.centerIn: parent
-          width: parent.width - Style.space(6)
+          width: Dynamic.value(parent, "width") - Style.space(6)
           horizontalAlignment: Text.AlignHCenter
           textFormat: Text.PlainText
-          text: [screenRect.modelData.name].concat(root.mirroredBy[screenRect.modelData.name] || []).join(" + ")
-          color: root.bar.foreground
-          font.family: root.bar.fontFamily
+          text: [Dynamic.value(screenRect.modelData, "name")].concat(root.mirroredBy[Dynamic.value(screenRect.modelData, "name")] || []).join(" + ")
+          color: root.contentForeground
+          font.family: root.contentFontFamily
           font.pixelSize: Style.font.caption
           font.bold: screenRect.isCurrent
           elide: Text.ElideRight
@@ -1662,32 +1666,27 @@ Panel {
           onPressed: function(mouse) {
             // A right click opens the rotate menu where it was made, within the panel.
             if (mouse.button === Qt.RightButton) {
-              root.openRotateMenu(screenRect.modelData.name, screenRect, mouse.x, mouse.y)
+              root.openRotateMenu(Dynamic.value(screenRect.modelData, "name"), screenRect, Dynamic.value(mouse, "x"), Dynamic.value(mouse, "y"))
               return
             }
-            var point = mapToItem(map, mouse.x, mouse.y)
-            screenRect.pressX = point.x
-            screenRect.pressY = point.y
+            var point = mapToItem(map, Dynamic.value(mouse, "x"), Dynamic.value(mouse, "y"))
+            screenRect.pressX = Dynamic.value(point, "x")
+            screenRect.pressY = Dynamic.value(point, "y")
           }
           onPositionChanged: function(mouse) {
             if (!canDrag || !(pressedButtons & Qt.LeftButton)) return
-            var point = mapToItem(map, mouse.x, mouse.y)
-            screenRect.dragX = point.x - screenRect.pressX
-            screenRect.dragY = point.y - screenRect.pressY
+            var point = mapToItem(map, Dynamic.value(mouse, "x"), Dynamic.value(mouse, "y"))
+            screenRect.dragX = Dynamic.value(point, "x") - screenRect.pressX
+            screenRect.dragY = Dynamic.value(point, "y") - screenRect.pressY
           }
           onReleased: function(mouse) {
             if (mouse.button === Qt.RightButton) return
-            var name = screenRect.modelData.name
-            var moved = Math.abs(screenRect.dragX) + Math.abs(screenRect.dragY) > 3
-            // Back into layout space; snap within about 8 map pixels.
-            var x = map.bounds.x + (screenRect.x - map.offsetX) / map.ratio
-            var y = map.bounds.y + (screenRect.y - map.offsetY) / map.ratio
             // Reset first: applying the move redraws the map, this box included.
-            screenRect.dragX = 0
-            screenRect.dragY = 0
-            var snap = Style.space(8) / map.ratio
-            if (moved) root.applyLayout(function() { return Model.dropDisplay(root.layoutRects, name, x, y, snap) })
-            else root.selectDisplay(name)
+            Dynamic.finishDisplayDrag(root.layoutRects, screenRect, map, Style.space(8),
+              function(rects: var, name: string, x: real, y: real, snap: real): void {
+                root.applyLayout(function(): var { return Model.dropDisplay(rects, name, x, y, snap) })
+              },
+              function(name: string): void { root.selectDisplay(name) })
           }
           onCanceled: {
             screenRect.dragX = 0

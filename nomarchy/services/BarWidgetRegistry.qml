@@ -1,4 +1,5 @@
 import QtQuick
+import "WidgetRegistryData.js" as Data
 
 // Instance, not a singleton — instantiated once by shell.qml and injected into
 // plugins that need to read or extend the widget catalogue. Relative-path
@@ -13,37 +14,31 @@ QtObject {
 
   signal changed()
 
-  function register(id, component, metadata) {
-    var key = String(id)
+  function register(id: var, component: var, metadata: var): void {
+    let key = String(id)
     if (!key) return
-    var next = {}
-    for (var k in widgets) next[k] = widgets[k]
-    next[key] = { component: component, metadata: metadata || {} }
-    widgets = next
+    widgets = Data.register(widgets, key, component, metadata)
     revision++
     changed()
   }
 
-  function unregister(id) {
-    var key = String(id)
-    if (!widgets[key]) return
-    var next = {}
-    for (var k in widgets) if (k !== key) next[k] = widgets[k]
-    widgets = next
+  function unregister(id: var): void {
+    let key = String(id)
+    if (!Data.contains(widgets, key)) return
+    widgets = Data.unregister(widgets, key)
     revision++
     changed()
   }
 
-  function metadataFor(id) {
-    var entry = widgets[String(id)]
-    return entry ? entry.metadata : null
+  function metadataFor(id: var): var {
+    return Data.metadataFor(widgets, id)
   }
 
-  function availableIds() {
-    return Object.keys(widgets)
+  function availableIds(): var {
+    return Data.availableIds(widgets)
   }
 
-  function has(id) {
-    return widgets[String(id)] !== undefined
+  function has(id: var): bool {
+    return Data.has(widgets, id)
   }
 }

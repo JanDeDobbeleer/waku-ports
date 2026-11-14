@@ -1,7 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import "../Settings/Tabs/Connections" as WifiPrefs
 import qs.Commons
 import qs.Modules.MainScreen
@@ -11,6 +12,7 @@ import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
+import "./NetworkPanelUtils.js" as NetworkPanelUtils
 
 SmartPanel {
   id: root
@@ -47,7 +49,7 @@ SmartPanel {
   }
 
   // Effectively visible tracking
-  readonly property bool effectivelyVisible: root.visible && Window.window && Window.window.visible
+  readonly property bool effectivelyVisible: root.visible && NetworkPanelUtils.isWindowVisible(Window.window)
 
   onEffectivelyVisibleChanged: {
     if (effectivelyVisible) {
@@ -108,10 +110,10 @@ SmartPanel {
           RowLayout {
             NIcon {
               id: modeIcon
-              icon: panelViewMode === "wifi" ? (NetworkService.wifiEnabled ? "wifi" : "wifi-off") : (NetworkService.ethernetAvailable ? (NetworkService.ethernetConnected ? "ethernet" : "ethernet") : "ethernet-off")
+              icon: root.panelViewMode === "wifi" ? (NetworkService.wifiEnabled ? "wifi" : "wifi-off") : (NetworkService.ethernetAvailable ? (NetworkService.ethernetConnected ? "ethernet" : "ethernet") : "ethernet-off")
               pointSize: Style.fontSizeXXL
               color: {
-                if (panelViewMode === "wifi") {
+                if (root.panelViewMode === "wifi") {
                   return NetworkService.wifiEnabled ? Color.mPrimary : Color.mOnSurfaceVariant;
                 } else {
                   return NetworkService.ethernetConnected ? Color.mPrimary : Color.mOnSurfaceVariant;
@@ -121,25 +123,25 @@ SmartPanel {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                  if (panelViewMode === "wifi") {
+                  if (root.panelViewMode === "wifi") {
                     if (NetworkService.ethernetAvailable) {
-                      panelViewMode = "ethernet";
+                      root.panelViewMode = "ethernet";
                     }
                   } else {
-                    panelViewMode = "wifi";
+                    root.panelViewMode = "wifi";
                   }
                 }
               }
             }
 
             NLabel {
-              label: panelViewMode === "wifi" ? I18n.tr("common.wifi") : I18n.tr("common.ethernet")
+              label: root.panelViewMode === "wifi" ? I18n.tr("common.wifi") : I18n.tr("common.ethernet")
               Layout.fillWidth: true
             }
 
             NToggle {
               id: wifiSwitch
-              visible: panelViewMode === "wifi"
+              visible: root.panelViewMode === "wifi"
               checked: NetworkService.wifiEnabled
               enabled: !NetworkService.airplaneModeEnabled && NetworkService.wifiAvailable
               onToggled: checked => NetworkService.setWifiEnabled(checked)
@@ -149,7 +151,7 @@ SmartPanel {
             NIconButton {
               icon: "settings"
               baseSize: Style.baseWidgetSize * 0.8
-              onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 0, screen)
+              onClicked: SettingsPanelService.openToTab(SettingsPanel.Tab.Connections, 0, root.screen)
             }
 
             NIconButton {
@@ -196,7 +198,7 @@ SmartPanel {
 
         // Error message
         Rectangle {
-          visible: panelViewMode === "wifi" && NetworkService.lastError.length > 0
+          visible: root.panelViewMode === "wifi" && NetworkService.lastError.length > 0
           Layout.fillWidth: true
           Layout.preferredHeight: errorRow.implicitHeight + Style.margin2M
           color: Qt.alpha(Color.mError, 0.1)
@@ -250,7 +252,7 @@ SmartPanel {
             // Wi‑Fi disabled state
             NBox {
               id: disabledBox
-              visible: panelViewMode === "wifi" && !NetworkService.wifiEnabled
+              visible: root.panelViewMode === "wifi" && !NetworkService.wifiEnabled
               Layout.fillWidth: true
               Layout.preferredHeight: disabledColumn.implicitHeight + Style.margin2M
 
@@ -296,7 +298,7 @@ SmartPanel {
             // Scanning state (show when no networks and we haven't had any yet)
             NBox {
               id: scanningBox
-              visible: panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length === 0 && NetworkService.scanningActive
+              visible: root.panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length === 0 && NetworkService.scanningActive
               Layout.fillWidth: true
               Layout.preferredHeight: scanningColumn.implicitHeight + Style.margin2M
 
@@ -333,7 +335,7 @@ SmartPanel {
             // Empty state when no networks (only show after we've had networks before, meaning a real empty result)
             NBox {
               id: emptyBox
-              visible: panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length === 0 && !NetworkService.scanningActive
+              visible: root.panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length === 0 && !NetworkService.scanningActive
               Layout.fillWidth: true
               Layout.preferredHeight: emptyColumn.implicitHeight + Style.margin2M
 
@@ -370,8 +372,8 @@ SmartPanel {
             // Networks list container (Wi‑Fi)
             ColumnLayout {
               id: networksList
-              visible: panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length > 0
-              width: parent.width
+              visible: root.panelViewMode === "wifi" && NetworkService.wifiEnabled && Object.keys(NetworkService.networks).length > 0
+              Layout.fillWidth: true
               spacing: Style.marginM
 
               WifiPrefs.WifiSubTab {
@@ -382,7 +384,7 @@ SmartPanel {
             // Ethernet view
             NBox {
               id: ethernetSection
-              visible: panelViewMode === "ethernet"
+              visible: root.panelViewMode === "ethernet"
               Layout.fillWidth: true
               Layout.preferredHeight: ethernetColumn.implicitHeight + Style.margin2M
 
@@ -395,7 +397,7 @@ SmartPanel {
                 // Section label
                 NLabel {
                   label: I18n.tr("wifi.panel.available-interfaces")
-                  visible: (NetworkService.ethernetInterfaces && NetworkService.ethernetInterfaces.length > 0)
+                  visible: (NetworkService.ethernetInterfaces && NetworkPanelUtils.arrayLength(NetworkService.ethernetInterfaces) > 0)
                 }
 
                 // Empty state when no Ethernet devices
@@ -405,7 +407,7 @@ SmartPanel {
                   Layout.fillWidth: true
                   Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
                   Layout.preferredHeight: emptyEthColumn.implicitHeight + Style.margin2M
-                  visible: !(NetworkService.ethernetInterfaces && NetworkService.ethernetInterfaces.length > 0)
+                  visible: !(NetworkService.ethernetInterfaces && NetworkPanelUtils.arrayLength(NetworkService.ethernetInterfaces) > 0)
                   spacing: Style.marginL
 
                   Item {
@@ -434,20 +436,21 @@ SmartPanel {
                 // Interfaces list
                 ColumnLayout {
                   id: ethIfacesList
-                  visible: NetworkService.ethernetInterfaces && NetworkService.ethernetInterfaces.length > 0
-                  width: parent.width
+                  visible: NetworkService.ethernetInterfaces && NetworkPanelUtils.arrayLength(NetworkService.ethernetInterfaces) > 0
+                  Layout.fillWidth: true
                   spacing: Style.marginXS
 
                   Repeater {
                     model: NetworkService.ethernetInterfaces || []
                     delegate: NBox {
+                      required property var modelData
                       id: ethItem
 
-                      function getContentColors(defaultColors = [Color.mSurface, Color.mOnSurface]) {
-                        if (modelData.connected) {
+                      function getContentColors(): var {
+                        if (NetworkPanelUtils.field(ethItem.modelData, "connected")) {
                           return [Color.mPrimary, Color.mOnPrimary];
                         }
-                        return defaultColors;
+                        return [Color.mSurface, Color.mOnSurface];
                       }
 
                       Layout.fillWidth: true
@@ -486,9 +489,9 @@ SmartPanel {
                             spacing: 2
 
                             NText {
-                              text: modelData.connectionName || modelData.ifname
+                              text: NetworkPanelUtils.field(ethItem.modelData, "connectionName") || NetworkPanelUtils.field(ethItem.modelData, "ifname")
                               pointSize: Style.fontSizeM
-                              font.weight: modelData.connected ? Style.fontWeightBold : Style.fontWeightMedium
+                              font.weight: NetworkPanelUtils.field(ethItem.modelData, "connected") ? Style.fontWeightBold : Style.fontWeightMedium
                               color: ethItem.getContentColors()[1]
                               elide: Text.ElideRight
                               Layout.fillWidth: true
@@ -499,7 +502,7 @@ SmartPanel {
 
                               NText {
                                 text: {
-                                  if (modelData.connected) {
+                                  if (NetworkPanelUtils.field(ethItem.modelData, "connected")) {
                                     switch (NetworkService.networkConnectivity) {
                                     case "full":
                                       return I18n.tr("common.connected");
@@ -520,7 +523,7 @@ SmartPanel {
 
                               // Network speed indicators (visible when connected and speed > 0)
                               RowLayout {
-                                visible: (modelData.connected && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
+                                visible: (NetworkPanelUtils.field(ethItem.modelData, "connected") && NetworkService.networkConnectivity === "full") && (SystemStatService.rxSpeed > 0 || SystemStatService.txSpeed > 0)
                                 spacing: 2
                                 Layout.leftMargin: Style.marginXS
                                 Layout.fillWidth: false
@@ -542,8 +545,8 @@ SmartPanel {
 
                                 Item {
                                   visible: SystemStatService.rxSpeed > 0 && SystemStatService.txSpeed > 0
-                                  width: Style.marginXS
-                                  height: 1
+                                  Layout.preferredWidth: Style.marginXS
+                                  Layout.preferredHeight: 1
                                 }
 
                                 NIcon {
@@ -575,15 +578,14 @@ SmartPanel {
                             enabled: true
                             visible: NetworkService.ethernetConnected
                             onClicked: {
-                              if (NetworkService.activeEthernetIf === modelData.ifname && ethernetInfoExpanded) {
-                                ethernetInfoExpanded = false;
+                              if (NetworkService.activeEthernetIf === NetworkPanelUtils.field(ethItem.modelData, "ifname") && root.ethernetInfoExpanded) {
+                                root.ethernetInfoExpanded = false;
                                 return;
                               }
-                              if (NetworkService.activeEthernetIf !== modelData.ifname) {
-                                NetworkService.activeEthernetIf = modelData.ifname;
+                              if (NetworkService.activeEthernetIf !== NetworkPanelUtils.field(ethItem.modelData, "ifname")) {
                                 NetworkService.activeEthernetDetailsTimestamp = 0;
                               }
-                              ethernetInfoExpanded = true;
+                              root.ethernetInfoExpanded = true;
                               NetworkService.refreshActiveEthernetDetails();
                             }
                           }
@@ -593,15 +595,14 @@ SmartPanel {
                         TapHandler {
                           target: ethHeaderRow
                           onTapped: {
-                            if (NetworkService.activeEthernetIf === modelData.ifname && ethernetInfoExpanded) {
-                              ethernetInfoExpanded = false;
+                            if (NetworkService.activeEthernetIf === NetworkPanelUtils.field(ethItem.modelData, "ifname") && root.ethernetInfoExpanded) {
+                              root.ethernetInfoExpanded = false;
                               return;
                             }
-                            if (NetworkService.activeEthernetIf !== modelData.ifname) {
-                              NetworkService.activeEthernetIf = modelData.ifname;
+                            if (NetworkService.activeEthernetIf !== NetworkPanelUtils.field(ethItem.modelData, "ifname")) {
                               NetworkService.activeEthernetDetailsTimestamp = 0;
                             }
-                            ethernetInfoExpanded = true;
+                            root.ethernetInfoExpanded = true;
                             NetworkService.refreshActiveEthernetDetails();
                           }
                         }
@@ -609,7 +610,7 @@ SmartPanel {
                         // Inline Ethernet details
                         Rectangle {
                           id: ethInfoInline
-                          visible: ethernetInfoExpanded && NetworkService.activeEthernetIf === modelData.ifname
+                          visible: root.ethernetInfoExpanded && NetworkService.activeEthernetIf === NetworkPanelUtils.field(ethItem.modelData, "ifname")
                           Layout.fillWidth: true
                           color: Color.mSurfaceVariant
                           radius: Style.radiusXS
@@ -624,11 +625,11 @@ SmartPanel {
                             anchors.top: parent.top
                             anchors.right: parent.right
                             anchors.margins: Style.marginS
-                            icon: ethernetDetailsGrid ? "layout-list" : "layout-grid"
+                            icon: root.ethernetDetailsGrid ? "layout-list" : "layout-grid"
                             baseSize: Style.baseWidgetSize * 0.65
                             onClicked: {
-                              ethernetDetailsGrid = !ethernetDetailsGrid;
-                              Settings.data.network.wifiDetailsViewMode = ethernetDetailsGrid ? "grid" : "list";
+                              root.ethernetDetailsGrid = !root.ethernetDetailsGrid;
+                              Settings.data.network.wifiDetailsViewMode = root.ethernetDetailsGrid ? "grid" : "list";
                             }
                             z: 1
                           }
@@ -638,18 +639,11 @@ SmartPanel {
                             anchors.fill: parent
                             anchors.margins: Style.marginS
                             anchors.rightMargin: Style.baseWidgetSize
-                            flow: ethernetDetailsGrid ? GridLayout.TopToBottom : GridLayout.LeftToRight
-                            rows: ethernetDetailsGrid ? 3 : 6
-                            columns: ethernetDetailsGrid ? 2 : 1
+                            flow: root.ethernetDetailsGrid ? GridLayout.TopToBottom : GridLayout.LeftToRight
+                            rows: root.ethernetDetailsGrid ? 3 : 6
+                            columns: root.ethernetDetailsGrid ? 2 : 1
                             columnSpacing: Style.marginM
                             rowSpacing: Style.marginXS
-                            onColumnsChanged: {
-                              if (ethInfoGrid.forceLayout) {
-                                Qt.callLater(function () {
-                                  ethInfoGrid.forceLayout();
-                                });
-                              }
-                            }
 
                             // --- Item 1: Interface ---
                             RowLayout {
@@ -663,25 +657,25 @@ SmartPanel {
                                 Layout.alignment: Qt.AlignVCenter
                               }
                               NText {
-                                text: (NetworkService.activeEthernetDetails.ifname && NetworkService.activeEthernetDetails.ifname.length > 0) ? NetworkService.activeEthernetDetails.ifname : (NetworkService.activeEthernetIf || "-")
+                                text: NetworkPanelUtils.interfaceName(NetworkService.activeEthernetDetails, NetworkService.activeEthernetIf, "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
 
                                 // Click-to-copy Ethernet interface name
                                 MouseArea {
                                   anchors.fill: parent
                                   // Guard against undefined by normalizing to empty strings
-                                  enabled: ((NetworkService.activeEthernetDetails.ifname || "").length > 0) || ((NetworkService.activeEthernetIf || "").length > 0)
+                                  enabled: NetworkPanelUtils.hasInterfaceName(NetworkService.activeEthernetDetails, NetworkService.activeEthernetIf)
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
                                   onClicked: {
-                                    const value = (NetworkService.activeEthernetDetails.ifname && NetworkService.activeEthernetDetails.ifname.length > 0) ? NetworkService.activeEthernetDetails.ifname : (NetworkService.activeEthernetIf || "");
+                                    const value = NetworkPanelUtils.interfaceName(NetworkService.activeEthernetDetails, NetworkService.activeEthernetIf, "");
                                     if (value.length > 0) {
                                       Os.copy(value);
                                       ToastService.showNotice(I18n.tr("common.ethernet"), I18n.tr("common.copied-to-clipboard"), "ethernet");
@@ -703,23 +697,23 @@ SmartPanel {
                                 Layout.alignment: Qt.AlignVCenter
                               }
                               NText {
-                                text: NetworkService.activeEthernetDetails.hwAddr || "-"
+                                text: NetworkPanelUtils.textField(NetworkService.activeEthernetDetails, "hwAddr", "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
 
                                 MouseArea {
                                   anchors.fill: parent
-                                  enabled: (NetworkService.activeEthernetDetails.hwAddr || "").length > 0
+                                  enabled: NetworkPanelUtils.hasTextField(NetworkService.activeEthernetDetails, "hwAddr")
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
                                   onClicked: {
-                                    const value = NetworkService.activeEthernetDetails.hwAddr || "";
+                                    const value = NetworkPanelUtils.textField(NetworkService.activeEthernetDetails, "hwAddr", "");
                                     if (value.length > 0) {
                                       Os.copy(value);
                                       ToastService.showNotice(I18n.tr("common.ethernet"), I18n.tr("common.copied-to-clipboard"), "ethernet");
@@ -741,14 +735,14 @@ SmartPanel {
                                 Layout.alignment: Qt.AlignVCenter
                               }
                               NText {
-                                text: (NetworkService.activeEthernetDetails.speed && NetworkService.activeEthernetDetails.speed.length > 0) ? NetworkService.activeEthernetDetails.speed : "-"
+                                text: NetworkPanelUtils.textField(NetworkService.activeEthernetDetails, "speed", "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
                               }
                             }
@@ -770,24 +764,24 @@ SmartPanel {
                                 }
                               }
                               NText {
-                                text: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.ipv4 || "-") : ((NetworkService.activeEthernetDetails.ipv6 || []).join(", ") || "-")
+                                text: NetworkPanelUtils.versionFieldText(NetworkService.activeEthernetDetails, root.ipVersion, "ipv4", "ipv6", "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
 
                                 // Click-to-copy Ethernet IP address
                                 MouseArea {
                                   anchors.fill: parent
-                                  enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.ipv4 || "").length > 0 : (NetworkService.activeEthernetDetails.ipv6 || []).length > 0
+                                  enabled: NetworkPanelUtils.hasVersionField(NetworkService.activeEthernetDetails, root.ipVersion, "ipv4", "ipv6")
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
                                   onClicked: {
-                                    const value = root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.ipv4 || "") : ((NetworkService.activeEthernetDetails.ipv6 || []).join(", ") || "");
+                                    const value = NetworkPanelUtils.versionFieldText(NetworkService.activeEthernetDetails, root.ipVersion, "ipv4", "ipv6", "");
                                     if (value.length > 0) {
                                       Os.copy(value);
                                       ToastService.showNotice(I18n.tr("common.ethernet"), I18n.tr("common.copied-to-clipboard"), "ethernet");
@@ -814,24 +808,24 @@ SmartPanel {
                                 }
                               }
                               NText {
-                                text: root.ipVersion === 4 ? ((NetworkService.activeEthernetDetails.dns4 || []).join(", ") || "-") : ((NetworkService.activeEthernetDetails.dns6 || []).join(", ") || "-")
+                                text: NetworkPanelUtils.versionListText(NetworkService.activeEthernetDetails, root.ipVersion, "dns4", "dns6", "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
 
                                 // Click-to-copy Ethernet DNS
                                 MouseArea {
                                   anchors.fill: parent
-                                  enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.dns4 || []).length > 0 : (NetworkService.activeEthernetDetails.dns6 || []).length > 0
+                                  enabled: NetworkPanelUtils.hasVersionList(NetworkService.activeEthernetDetails, root.ipVersion, "dns4", "dns6")
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
                                   onClicked: {
-                                    const value = root.ipVersion === 4 ? ((NetworkService.activeEthernetDetails.dns4 || []).join(", ") || "") : ((NetworkService.activeEthernetDetails.dns6 || []).join(", ") || "");
+                                    const value = NetworkPanelUtils.versionListText(NetworkService.activeEthernetDetails, root.ipVersion, "dns4", "dns6", "");
                                     if (value.length > 0) {
                                       Os.copy(value);
                                       ToastService.showNotice(I18n.tr("common.ethernet"), I18n.tr("common.copied-to-clipboard"), "ethernet");
@@ -858,24 +852,24 @@ SmartPanel {
                                 }
                               }
                               NText {
-                                text: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.gateway4 || "-") : ((NetworkService.activeEthernetDetails.gateway6 || []).join(", ") || "-")
+                                text: NetworkPanelUtils.versionFieldText(NetworkService.activeEthernetDetails, root.ipVersion, "gateway4", "gateway6", "-")
                                 pointSize: Style.fontSizeXS
                                 color: Color.mOnSurface
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
-                                wrapMode: ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
-                                elide: ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
-                                maximumLineCount: ethernetDetailsGrid ? 1 : 6
+                                wrapMode: root.ethernetDetailsGrid ? Text.NoWrap : Text.WrapAtWordBoundaryOrAnywhere
+                                elide: root.ethernetDetailsGrid ? Text.ElideRight : Text.ElideNone
+                                maximumLineCount: root.ethernetDetailsGrid ? 1 : 6
                                 clip: true
 
                                 // Click-to-copy Ethernet Gateway
                                 MouseArea {
                                   anchors.fill: parent
-                                  enabled: root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.gateway4 || "").length > 0 : (NetworkService.activeEthernetDetails.gateway6 || []).length > 0
+                                  enabled: NetworkPanelUtils.hasVersionField(NetworkService.activeEthernetDetails, root.ipVersion, "gateway4", "gateway6")
                                   hoverEnabled: true
                                   cursorShape: Qt.PointingHandCursor
                                   onClicked: {
-                                    const value = root.ipVersion === 4 ? (NetworkService.activeEthernetDetails.gateway4 || "") : ((NetworkService.activeEthernetDetails.gateway6 || []).join(", ") || "");
+                                    const value = NetworkPanelUtils.versionFieldText(NetworkService.activeEthernetDetails, root.ipVersion, "gateway4", "gateway6", "");
                                     if (value.length > 0) {
                                       Os.copy(value);
                                       ToastService.showNotice(I18n.tr("common.ethernet"), I18n.tr("common.copied-to-clipboard"), "ethernet");

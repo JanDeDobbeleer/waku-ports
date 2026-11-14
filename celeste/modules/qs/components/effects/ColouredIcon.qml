@@ -7,7 +7,7 @@ import Celeste.Images
 IconImage {
     id: root
 
-    required property color colour
+    required final property color colour
 
     asynchronous: true
 

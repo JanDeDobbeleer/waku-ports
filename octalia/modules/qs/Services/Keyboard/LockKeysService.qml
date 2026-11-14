@@ -1,23 +1,24 @@
 pragma Singleton
 
+import "LockKeysUtils.js" as LockKeysUtils
+
 import QtQuick 6.10
 import Quickshell
 import waku.services as S
 import qs.Commons
-import qs.compat
 
 Singleton {
   id: root
 
   // Component registration - only poll when something needs lock key state
-  function registerComponent(componentId) {
+  function registerComponent(componentId: var): void {
     root._registered[componentId] = true;
     root._registered = Object.assign({}, root._registered);
     Logger.d("LockKeys", "Component registered:", componentId, "- total:", root._registeredCount);
   }
 
-  function unregisterComponent(componentId) {
-    delete root._registered[componentId];
+  function unregisterComponent(componentId: var): void {
+    LockKeysUtils.unregister(root._registered, componentId);
     root._registered = Object.assign({}, root._registered);
     Logger.d("LockKeys", "Component unregistered:", componentId, "- total:", root._registeredCount);
   }
@@ -36,7 +37,7 @@ Singleton {
 
   // The engine's DesktopState reads the toggle state of the lock keys (GetKeyState) and polls only
   // while something is connected to it, so the connection is held only while a consumer registered.
-  function _sync(emit) {
+  function _sync(emit: var): void {
     const caps = S.DesktopState.capsLock;
     const num = S.DesktopState.numLock;
     const scroll = S.DesktopState.scrollLock;

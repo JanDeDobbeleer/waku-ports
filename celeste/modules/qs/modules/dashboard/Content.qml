@@ -8,15 +8,16 @@ import Celeste.Config
 import Celeste.I18n
 import qs.components
 import qs.components.filedialog
+import "DashboardContentHelpers.js" as DashboardContentHelpers
 
 Item {
     id: root
 
-    required property ScreenState screenState
-    required property FileDialog facePicker
-    property string faceOverride
+    required final property ScreenState screenState
+    required final property FileDialog facePicker
+    final property string faceOverride
 
-    readonly property var dashboardTabs: {
+    readonly final property var dashboardTabs: {
         const allTabs = [
             {
                 component: dashComponent,
@@ -50,11 +51,11 @@ Item {
                 enabled: Config.dashboard.showUtilities
             }
         ];
-        return allTabs.filter(tab => tab.enabled);
+        return DashboardContentHelpers.enabledTabs(allTabs);
     }
 
-    readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
-    readonly property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
+    readonly final property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
+    readonly final property real nonAnimHeight: tabs.implicitHeight + tabs.anchors.topMargin + view.implicitHeight + viewWrapper.anchors.margins * 2
 
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
@@ -95,8 +96,8 @@ Item {
         Flickable {
             id: view
 
-            readonly property int currentIndex: root.screenState.dashboardTab
-            readonly property Item currentItem: {
+            readonly final property int currentIndex: root.screenState.dashboardTab
+            readonly final property Item currentItem: {
                 CUtils.dependency(repeater.count); // Trigger update on count change
                 return repeater.itemAt(currentIndex);
             }
@@ -105,8 +106,8 @@ Item {
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: currentItem?.implicitWidth ?? 0
-            implicitHeight: currentItem?.implicitHeight ?? 0
+            implicitWidth: DashboardContentHelpers.itemWidth(currentItem)
+            implicitHeight: DashboardContentHelpers.itemHeight(currentItem)
 
             contentX: currentItem?.x ?? 0
             contentWidth: row.implicitWidth
@@ -117,9 +118,9 @@ Item {
                     return;
 
                 const x = contentX - currentItem.x;
-                if (x > currentItem.implicitWidth / 2)
+                if (x > DashboardContentHelpers.itemWidth(currentItem) / 2)
                     root.screenState.dashboardTab = Math.min(root.screenState.dashboardTab + 1, tabs.count - 1);
-                else if (x < -currentItem.implicitWidth / 2)
+                else if (x < -DashboardContentHelpers.itemWidth(currentItem) / 2)
                     root.screenState.dashboardTab = Math.max(root.screenState.dashboardTab - 1, 0);
             }
 
@@ -128,12 +129,12 @@ Item {
                     return;
 
                 const x = contentX - currentItem.x;
-                if (x > currentItem.implicitWidth / 10)
+                if (x > DashboardContentHelpers.itemWidth(currentItem) / 10)
                     root.screenState.dashboardTab = Math.min(root.screenState.dashboardTab + 1, tabs.count - 1);
-                else if (x < -currentItem.implicitWidth / 10)
+                else if (x < -DashboardContentHelpers.itemWidth(currentItem) / 10)
                     root.screenState.dashboardTab = Math.max(root.screenState.dashboardTab - 1, 0);
                 else
-                    contentX = Qt.binding(() => currentItem?.x ?? 0);
+                    contentX = DashboardContentHelpers.contentXBinding(Qt, view);
             }
 
             RowLayout {
@@ -149,8 +150,8 @@ Item {
                     delegate: Loader {
                         id: paneLoader
 
-                        required property int index
-                        required property var modelData
+                        required final property int index
+                        required final property var modelData
 
                         // Port: `active` is updated from handlers, not bound. A binding that reads the
                         // pane geometry and the flickable content width makes Qt report a loop
@@ -167,7 +168,7 @@ Item {
 
                         Layout.alignment: Qt.AlignTop
 
-                        sourceComponent: modelData.component
+                        sourceComponent: DashboardContentHelpers.component(modelData)
 
                         onImplicitWidthChanged: Qt.callLater(updateActive)
                         onXChanged: Qt.callLater(updateActive)

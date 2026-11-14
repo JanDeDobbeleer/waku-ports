@@ -1,5 +1,8 @@
+pragma ComponentBehavior: Bound
+
+import "SpectrumWidgetUtils.js" as SpectrumWidgetUtils
+
 import QtQuick 6.10
-import Quickshell
 import qs.Commons
 import qs.compat
 
@@ -16,7 +19,7 @@ Item {
   property bool showMinimumSignal: false
   property real minimumSignalValue: 0.01 // Default to 1% of height
 
-  readonly property int valuesCount: (values && values.length !== undefined) ? values.length : 0
+  readonly property int valuesCount: SpectrumWidgetUtils.length(values)
   readonly property bool hasData: valuesCount >= 2
 
   // Data texture: one pixel per value, R channel = amplitude

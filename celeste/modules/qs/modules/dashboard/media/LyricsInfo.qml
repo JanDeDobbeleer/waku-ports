@@ -7,12 +7,13 @@ import Celeste.I18n
 import Celeste.Services
 import qs.components
 import qs.services
+import "LyricsInfoHelpers.js" as LyricsHelpers
 
 Item {
     id: root
 
-    property bool open
-    readonly property real padding: Tokens.padding.large
+    final property bool open
+    readonly final property real padding: Tokens.padding.large
 
     implicitWidth: btn.implicitWidth * 0.9
     implicitHeight: btn.implicitHeight * 0.9
@@ -21,7 +22,7 @@ Item {
         id: blobGroup
 
         color: Colours.palette.m3surfaceContainerHighest
-        smoothing: root.Tokens.rounding.medium
+        smoothing: Tokens.rounding.medium
         cornerFill: false
 
         Behavior on color {
@@ -60,8 +61,8 @@ Item {
             when: root.open
 
             PropertyChanges {
-                rect.anchors.rightMargin: root.width - root.Tokens.spacing.small
-                rect.anchors.topMargin: -root.Tokens.padding.medium
+                rect.anchors.rightMargin: root.width - Tokens.spacing.small
+                rect.anchors.topMargin: -Tokens.padding.medium
                 rect.implicitWidth: Math.max(layout.implicitWidth, placeholder.implicitWidth) + root.padding * 2
                 rect.implicitHeight: Math.max(layout.implicitHeight, placeholder.implicitHeight) + root.padding * 2
                 content.opacity: 1
@@ -74,7 +75,7 @@ Item {
             }
             Anim {
                 properties: "topMargin,implicitHeight"
-                easing: root.Tokens.anim.expressiveFastSpatial
+                easing: Tokens.anim.expressiveFastSpatial
             }
             Anim {
                 property: "opacity"
@@ -151,7 +152,7 @@ Item {
 
                 StyledText {
                     // TRANSLATORS: %1 = lyrics backend name, e.g. LRCLIB
-                    text: Tr.tr("Backend: %1").arg(CUtils.enumToString(Lyrics, "backend"))
+                    text: Tr.tr("Backend: %1").arg(CUtils.enumToString(Lyrics, "backend", Lyrics.backend))
                     color: Colours.palette.m3onSurfaceVariant
                     animate: true
                 }
@@ -159,7 +160,7 @@ Item {
                 StyledText {
                     Layout.maximumWidth: Tokens.sizes.dashboard.mediaTabWidth / 2
                     // TRANSLATORS: %1/%2/%3 = matched track title, artist and album
-                    text: Tr.tr("Selected candidate: %1 | %2 | %3").arg(Lyrics.selectedCandidate.title).arg(Lyrics.selectedCandidate.artist).arg(Lyrics.selectedCandidate.album)
+                    text: Tr.tr("Selected candidate: %1 | %2 | %3").arg(LyricsHelpers.candidateField(Lyrics.selectedCandidate, "title")).arg(LyricsHelpers.candidateField(Lyrics.selectedCandidate, "artist")).arg(LyricsHelpers.candidateField(Lyrics.selectedCandidate, "album"))
                     color: Colours.palette.m3onSurfaceVariant
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     animate: true

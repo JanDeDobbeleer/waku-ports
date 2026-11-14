@@ -2,10 +2,11 @@ pragma Singleton
 
 import QtQuick
 import Celeste.Config
+import "UnitsHelpers.js" as UnitsHelpers
 
 QtObject {
     // Whether to show a 12-hour clock, guessing from the locale when Auto
-    readonly property bool twelveHourClock: {
+    readonly final property bool twelveHourClock: {
         const format = GlobalConfig.services.clockFormat;
         if (format === ClockFormat.Auto)
             return Qt.locale().timeFormat(Locale.ShortFormat).toLowerCase().includes("a");
@@ -31,7 +32,7 @@ QtObject {
     }
 
     // Formats an already converted temperature with the given TemperatureUnit's suffix
-    function formatTemp(value: var, unitIn: int, compact = false): string {
+    function formatTemp(value: var, unitIn: int, compact: bool): string {
         const unit = resolveTempUnit(unitIn);
         if (compact)
             return Number(unit) === TemperatureUnit.Kelvin ? String(value) : Tr.trCtx("%1°", "temperature").arg(value);
@@ -46,7 +47,7 @@ QtObject {
     // Converts and formats a sensor temperature given in Celsius
     function formatSensorTemp(celsius: real): string {
         const unit = GlobalConfig.services.sensorUnits;
-        return formatTemp(Math.round(toTemperature(celsius, unit)), unit);
+        return formatTemp(Math.round(toTemperature(celsius, unit)), unit, false);
     }
 
     // Formats an already scaled value with the given data unit suffix
@@ -74,38 +75,18 @@ QtObject {
         return (formats[unit] ?? ("%1 " + unit)).arg(value);
     }
 
-    function _scaleBytes(bytes: real, refBytes: real): var {
-        const binary = Number(GlobalConfig.services.dataUnits) === DataUnit.Binary;
-        const units = binary ? ["B", "KiB", "MiB", "GiB", "TiB"] : ["B", "KB", "MB", "GB", "TB"];
-        const k = binary ? 1024 : 1000;
-
-        let value = isFinite(bytes) && bytes > 0 ? bytes : 0;
-        let ref = isFinite(refBytes) && refBytes > 0 ? refBytes : 0;
-        let i = 0;
-        while (ref >= k && i < units.length - 1) {
-            value /= k;
-            ref /= k;
-            i++;
-        }
-
-        return {
-            value,
-            unit: units[i]
-        };
+    // Scales and formats a raw byte count
+    function formatBytes(bytes: real): string {
+        return UnitsHelpers.formatBytes(bytes, false, Number(GlobalConfig.services.dataUnits) === DataUnit.Binary, Tr);
     }
 
-    // Scales and formats a raw byte count
-    function formatBytes(bytes: real, rate = false): string {
-        const s = _scaleBytes(bytes, bytes);
-        return withDataUnit(s.value.toFixed(s.value < 10 && s.unit !== "B" ? 1 : 0), s.unit + (rate ? "/s" : ""));
+    function formatBytesWithRate(bytes: real, rate: bool): string {
+        return UnitsHelpers.formatBytes(bytes, rate, Number(GlobalConfig.services.dataUnits) === DataUnit.Binary, Tr);
     }
 
     // Formats a used/total pair given in KiB, both scaled to the total's magnitude
     function formatKibUsage(usedKib: real, totalKib: real): string {
-        const refBytes = totalKib * 1024;
-        const used = _scaleBytes(usedKib * 1024, refBytes);
-        const total = _scaleBytes(refBytes, refBytes);
-        // TRANSLATORS: %1 = used amount, %2 = total amount with unit
-        return Tr.trCtx("%1 / %2", "used / total amount").arg(+used.value.toFixed(1)).arg(withDataUnit(+total.value.toFixed(1), total.unit));
+        return UnitsHelpers.formatKibUsage(usedKib, totalKib, Number(GlobalConfig.services.dataUnits) === DataUnit.Binary, Tr);
     }
+
 }

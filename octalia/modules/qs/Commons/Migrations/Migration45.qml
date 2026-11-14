@@ -1,18 +1,11 @@
+import "Migrations.js" as Migrations
 import QtQuick 6.10
 
 QtObject {
   /**
   * Migration 45: Migrate 'floating' bar setting to 'barType'
   */
-  function migrate(adapter, logger, rawJson) {
-    logger.i("Migration45", "Migrating bar settings...");
-
-    if (rawJson?.bar?.floating) {
-      adapter.bar.barType = "floating";
-    } else {
-      adapter.bar.barType = "simple";
-    }
-
-    return true;
+  function migrate(adapter: var, logger: var, rawJson: var): bool {
+    return Migrations.migrate45(adapter, logger, rawJson);
   }
 }

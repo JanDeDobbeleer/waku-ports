@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 import Celeste.Config
 import Celeste.I18n
 import qs.components
@@ -12,18 +11,19 @@ import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.utils
+import "NotifDockHelpers.js" as NotifDockHelpers
 
 Item {
     id: root
 
-    required property Props props
-    required property ScreenState screenState
-    readonly property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
+    required final property Props props
+    required final property ScreenState screenState
+    readonly final property int notifCount: NotifDockHelpers.count(Notifs.list)
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.medium
 
-    Component.onCompleted: Notifs.list.forEach(n => n.popup = false)
+    Component.onCompleted: NotifDockHelpers.disablePopups(Notifs.list)
 
     Item {
         id: title
@@ -117,7 +117,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: Tr.tr("All up to date!")
                     color: Colours.palette.m3outlineVariant
-                    font: Tokens.font.headline.builders.small.width(90).build()
+                    font: Tokens.styled("headline", "small", { width: 90 })
                 }
             }
 
@@ -137,10 +137,6 @@ Item {
             contentWidth: width
             contentHeight: notifList.implicitHeight
 
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: view
-            }
-
             NotifDockList {
                 id: notifList
 
@@ -148,6 +144,14 @@ Item {
                 screenState: root.screenState
                 container: view
             }
+        }
+
+        // waku: the attached ScrollBar.vertical does not exist in pure QML; place the bar by hand.
+        StyledScrollBar {
+            flickable: view
+            anchors.top: view.top
+            anchors.bottom: view.bottom
+            anchors.right: view.right
         }
     }
 
@@ -157,24 +161,7 @@ Item {
         repeat: true
         triggeredOnStart: true
         interval: Math.max(15, Math.min(80, 69.8 - 12.3 * Math.log(Notifs.notClosed.length)))
-        onTriggered: {
-            const first = Notifs.notClosed[0];
-            if (!first) {
-                stop();
-                return;
-            }
-
-            const appName = first.appName;
-            let cleared = 0;
-            for (const n of Notifs.notClosed.filter(n => n.appName === appName)) {
-                n.close();
-                cleared++;
-                if (cleared > 30) {
-                    interval = 5;
-                    return;
-                }
-            }
-        }
+        onTriggered: NotifDockHelpers.clearNext(Notifs.notClosed, clearTimer)
     }
 
     Loader {
@@ -196,9 +183,9 @@ Item {
 
             Elevation {
                 anchors.fill: parent
-                radius: parent.radius
+                radius: clearBtn.radius
                 z: -1
-                level: clearBtn.stateLayer.containsMouse ? 4 : 3
+                level: clearBtn.hovered ? 4 : 3
             }
         }
 

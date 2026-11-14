@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
+
+import "SystemStatsPanelUtils.js" as StatsUtils
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
 import qs.Modules.MainScreen
 import qs.Services.System
@@ -23,11 +25,8 @@ SmartPanel {
 
     // Get diskPath from bar's SystemMonitor widget if available, otherwise use "/"
     readonly property string diskPath: {
-      const sysMonWidget = BarService.lookupWidget("SystemMonitor");
-      if (sysMonWidget && sysMonWidget.diskPath) {
-        return sysMonWidget.diskPath;
-      }
-      return "/";
+      const sysMonWidget = BarService.lookupWidget("SystemMonitor", undefined);
+      return StatsUtils.diskPath(sysMonWidget);
     }
 
     ColumnLayout {

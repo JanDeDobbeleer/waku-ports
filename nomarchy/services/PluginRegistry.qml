@@ -50,7 +50,7 @@ QtObject {
       return null
     }
     var required = ["id", "name", "version", "kinds", "entryPoints"]
-    for (var i = 0; i < required.length; i++) {
+    for (let i = 0; i < required.length; i++) {
       if (manifest[required[i]] === undefined) {
         console.warn("PluginRegistry: missing required field '" + required[i] + "' at " + sourcePath)
         return null
@@ -71,7 +71,7 @@ QtObject {
     }
     if (manifest.barWidget !== undefined && Util.isPlainObject(manifest.barWidget)
         && manifest.barWidget.defaultSection !== undefined) {
-      var defaultSection = String(manifest.barWidget.defaultSection)
+      let defaultSection = String(manifest.barWidget.defaultSection)
       if (Util.barSections.indexOf(defaultSection) === -1) {
         console.warn("PluginRegistry: invalid barWidget.defaultSection at " + sourcePath)
         return null
@@ -79,7 +79,7 @@ QtObject {
     }
     // Every entry point must be a relative path inside the plugin's source
     // directory. Reject the whole manifest if an entry point escapes it.
-    for (var key in manifest.entryPoints) {
+    for (let key in manifest.entryPoints) {
       if (!isSafeEntryPoint(manifest.entryPoints[key])) {
         console.warn("PluginRegistry: unsafe entryPoint '" + key + "'='"
           + manifest.entryPoints[key] + "' at " + sourcePath)
@@ -94,22 +94,22 @@ QtObject {
     var metadata = Util.isPlainObject(manifest.nomarchy) ? manifest.nomarchy : null
     var declared = metadata && Array.isArray(metadata.capabilities) ? metadata.capabilities : []
     var out = []
-    for (var i = 0; i < declared.length; i++) {
-      var capability = String(declared[i] || "")
+    for (let i = 0; i < declared.length; i++) {
+      let capability = String(declared[i] || "")
       if (capability && out.indexOf(capability) === -1) out.push(capability)
     }
     return out
   }
 
   function stampHostCapabilities(firstParty, thirdParty) {
-    for (var firstPartyId in firstParty)
+    for (let firstPartyId in firstParty)
       firstParty[firstPartyId].__hostCapabilities = trustedCapabilities(firstParty[firstPartyId])
 
-    for (var thirdPartyId in thirdParty) {
-      var manifest = thirdParty[thirdPartyId]
-      var metadata = manifest && Util.isPlainObject(manifest.nomarchy) ? manifest.nomarchy : null
-      var clonedFrom = metadata ? String(metadata.clonedFrom || "") : ""
-      var source = clonedFrom ? firstParty[clonedFrom] : null
+    for (let thirdPartyId in thirdParty) {
+      let manifest = thirdParty[thirdPartyId]
+      let metadata = manifest && Util.isPlainObject(manifest.nomarchy) ? manifest.nomarchy : null
+      let clonedFrom = metadata ? String(metadata.clonedFrom || "") : ""
+      let source = clonedFrom ? firstParty[clonedFrom] : null
       manifest.__hostCapabilities = source && Array.isArray(source.__hostCapabilities)
         ? source.__hostCapabilities.slice() : []
     }
@@ -151,7 +151,7 @@ QtObject {
     var config = shellConfigProvider ? shellConfigProvider() : null
     if (manifest) {
       if (Array.isArray(manifest.kinds) && manifest.kinds.indexOf("bar") !== -1) {
-        var selectedBar = ""
+        let selectedBar = ""
         if (Util.isPlainObject(config) && Util.isPlainObject(config.bar))
           selectedBar = Util.canonicalWidgetId(String(config.bar.id || ""))
         if (!selectedBar) selectedBar = "nomarchy.bar"
@@ -172,9 +172,9 @@ QtObject {
     var key = Util.canonicalWidgetId(String(id || ""))
     // Callers keep using the built-in id after cloning; the enabled local
     // manifest is the implementation that should receive the call.
-    for (var candidate in installedPlugins) {
-      var manifest = installedPlugins[candidate]
-      var metadata = manifest && Util.isPlainObject(manifest.nomarchy) ? manifest.nomarchy : null
+    for (let candidate in installedPlugins) {
+      let manifest = installedPlugins[candidate]
+      let metadata = manifest && Util.isPlainObject(manifest.nomarchy) ? manifest.nomarchy : null
       if (metadata && String(metadata.clonedFrom || "") === key && isEnabled(candidate))
         return candidate
     }
@@ -209,11 +209,11 @@ QtObject {
         || !Util.isPlainObject(config.bar.layout)) return { found: false }
     var key = Util.canonicalWidgetId(String(id))
     var sections = Util.barSections
-    for (var s = 0; s < sections.length; s++) {
+    for (let s = 0; s < sections.length; s++) {
       if (section && sections[s] !== section) continue
-      var entries = config.bar.layout[sections[s]]
+      let entries = config.bar.layout[sections[s]]
       if (!Array.isArray(entries)) continue
-      for (var i = 0; i < entries.length; i++) {
+      for (let i = 0; i < entries.length; i++) {
         if (barEntryId(entries[i]) === key)
           return { found: true, kind: "bar", section: sections[s], index: i }
       }
@@ -235,15 +235,15 @@ QtObject {
     if (!Util.isPlainObject(config)) return { found: false }
     var key = Util.canonicalWidgetId(String(id))
     if (Util.isPlainObject(config.bar)) {
-      var selectedBar = Util.canonicalWidgetId(String(config.bar.id || ""))
+      let selectedBar = Util.canonicalWidgetId(String(config.bar.id || ""))
       if (selectedBar === key) return { found: true, kind: "bar-option" }
     }
     if (Util.isPlainObject(config.bar) && Util.isPlainObject(config.bar.layout)) {
-      var barLocation = findBarLocation(config, key, "")
+      let barLocation = findBarLocation(config, key, "")
       if (barLocation.found) return barLocation
     }
     if (Array.isArray(config.plugins)) {
-      for (var j = 0; j < config.plugins.length; j++) {
+      for (let j = 0; j < config.plugins.length; j++) {
         if (config.plugins[j] && Util.canonicalWidgetId(config.plugins[j].id) === key) return { found: true, kind: "plugin", index: j }
       }
     }
@@ -267,7 +267,7 @@ QtObject {
     if (tray && section === "tray") return trayError
     var relativeId = String(target.before || target.after || "")
     if (relativeId) {
-      var relative = findRelativeBarLocation(config, relativeId, section && target.section ? section : "")
+      let relative = findRelativeBarLocation(config, relativeId, section && target.section ? section : "")
       if (!relative.found) return { error: "could not find target widget " + relativeId }
       if (tray && relative.section === "tray") return trayError
       return {
@@ -278,7 +278,7 @@ QtObject {
 
     if (!Array.isArray(config.bar.layout[section])) config.bar.layout[section] = []
     if (target.index !== undefined && target.index !== null) {
-      var requested = Math.max(0, Math.floor(Number(target.index)))
+      let requested = Math.max(0, Math.floor(Number(target.index)))
       return { section: section, index: Math.min(requested, config.bar.layout[section].length) }
     }
 
@@ -297,10 +297,10 @@ QtObject {
     var key = Util.canonicalWidgetId(String(id))
     var source
     if (placement.fromIndex !== undefined && placement.fromIndex !== null) {
-      var fromSection = String(placement.fromSection || "")
+      let fromSection = String(placement.fromSection || "")
       if (!fromSection) return "from-index requires from-section"
-      var entries = config.bar.layout[fromSection]
-      var fromIndex = Math.floor(Number(placement.fromIndex))
+      let entries = config.bar.layout[fromSection]
+      let fromIndex = Math.floor(Number(placement.fromIndex))
       if (!Array.isArray(entries) || fromIndex < 0 || fromIndex >= entries.length)
         return "no widget at " + fromSection + "[" + fromIndex + "]"
       if (barEntryId(entries[fromIndex]) !== key)
@@ -371,8 +371,8 @@ QtObject {
           error = "index requires section"
           return
         }
-        var entries = config.bar.layout[section]
-        var numericIndex = Math.floor(Number(index))
+        let entries = config.bar.layout[section]
+        let numericIndex = Math.floor(Number(index))
         if (!Array.isArray(entries) || numericIndex < 0 || numericIndex >= entries.length) {
           error = "no widget at " + section + "[" + numericIndex + "]"
           return
@@ -406,7 +406,7 @@ QtObject {
     if (!Util.isPlainObject(config.bar)) config.bar = { layout: {} }
     if (!Util.isPlainObject(config.bar.layout)) config.bar.layout = {}
     var sections = Util.barSections
-    for (var i = 0; i < sections.length; i++) {
+    for (let i = 0; i < sections.length; i++) {
       if (!Array.isArray(config.bar.layout[sections[i]])) config.bar.layout[sections[i]] = []
     }
     if (!Array.isArray(config.plugins)) config.plugins = []
@@ -443,9 +443,9 @@ QtObject {
   }
 
   function activeCloneFor(config, sourceId) {
-    for (var candidate in installedPlugins) {
-      var candidateManifest = installedPlugins[candidate]
-      var candidateMetadata = candidateManifest && Util.isPlainObject(candidateManifest.nomarchy)
+    for (let candidate in installedPlugins) {
+      let candidateManifest = installedPlugins[candidate]
+      let candidateMetadata = candidateManifest && Util.isPlainObject(candidateManifest.nomarchy)
         ? candidateManifest.nomarchy : null
       if (!candidateMetadata || String(candidateMetadata.clonedFrom || "") !== sourceId) continue
       if (Array.isArray(candidateManifest.kinds) && candidateManifest.kinds.indexOf("bar") !== -1) {
@@ -465,20 +465,20 @@ QtObject {
       if (sourceId === "nomarchy.bar") delete config.bar.id
       else config.bar.id = sourceId
     } else {
-      var cloneLocation = findEntryLocation(config, cloneId)
+      let cloneLocation = findEntryLocation(config, cloneId)
       if (cloneLocation.kind === "bar") {
-        var cloneEntry = config.bar.layout[cloneLocation.section][cloneLocation.index]
-        var sections = Util.barSections
-        for (var s = 0; s < sections.length; s++) {
+        let cloneEntry = config.bar.layout[cloneLocation.section][cloneLocation.index]
+        let sections = Util.barSections
+        for (let s = 0; s < sections.length; s++) {
           if (!Array.isArray(config.bar.layout[sections[s]])) continue
-          for (var i = config.bar.layout[sections[s]].length - 1; i >= 0; i--) {
+          for (let i = config.bar.layout[sections[s]].length - 1; i >= 0; i--) {
             if (barEntryId(config.bar.layout[sections[s]][i]) === sourceId)
               config.bar.layout[sections[s]].splice(i, 1)
           }
         }
         cloneLocation = findBarLocation(config, cloneId, "")
         if (cloneLocation.found) {
-          var restoredEntry = Util.isPlainObject(cloneEntry) ? Util.cloneJson(cloneEntry) : {}
+          let restoredEntry = Util.isPlainObject(cloneEntry) ? Util.cloneJson(cloneEntry) : {}
           restoredEntry.id = sourceId
           config.bar.layout[cloneLocation.section][cloneLocation.index] = restoredEntry
         }
@@ -518,7 +518,7 @@ QtObject {
       // A placement that cannot be honoured is refused before anything
       // changes: a missing neighbour, or the tray asked into its own drawer.
       if (value && isBarWidget && placement && Object.keys(placement).length) {
-        var requested = barTarget(config, placement, defaultBarWidgetSection(manifest), key)
+        let requested = barTarget(config, placement, defaultBarWidgetSection(manifest), key)
         if (requested.error) {
           lastEnableError = requested.error
           return
@@ -526,7 +526,7 @@ QtObject {
       }
 
       if (value && manifest && manifest.__isFirstParty) {
-        var activeClone = activeCloneFor(config, key)
+        let activeClone = activeCloneFor(config, key)
         if (activeClone) {
           restoreCloneSource(config, activeClone, key)
           removeDisabled(config, key)
@@ -555,18 +555,18 @@ QtObject {
 
       if (value) {
         removeDisabled(config, key)
-        var entry = { id: key }
-        var insertedWithPlacement = false
+        let entry = { id: key }
+        let insertedWithPlacement = false
         if (!onBar && isBarWidget) {
-          var sourceLocation = clonedFrom ? findEntryLocation(config, clonedFrom) : { found: false }
+          let sourceLocation = clonedFrom ? findEntryLocation(config, clonedFrom) : { found: false }
           if (sourceLocation.kind === "bar") {
-            var sourceEntry = config.bar.layout[sourceLocation.section][sourceLocation.index]
-            var replacement = Util.isPlainObject(sourceEntry) ? Util.cloneJson(sourceEntry) : entry
+            let sourceEntry = config.bar.layout[sourceLocation.section][sourceLocation.index]
+            let replacement = Util.isPlainObject(sourceEntry) ? Util.cloneJson(sourceEntry) : entry
             replacement.id = key
             config.bar.layout[sourceLocation.section][sourceLocation.index] = replacement
           } else {
-            var section = defaultBarWidgetSection(manifest)
-            var target = barTarget(config, placement || {}, section, key)
+            let section = defaultBarWidgetSection(manifest)
+            let target = barTarget(config, placement || {}, section, key)
             config.bar.layout[target.section].splice(target.index, 0, entry)
             insertedWithPlacement = true
           }
@@ -617,10 +617,10 @@ QtObject {
       if (!currentSource) return
       var raw = currentJson.join("\n").trim()
       try {
-        var manifest = JSON.parse(raw)
+        let manifest = JSON.parse(raw)
         manifest.__sourceDir = currentSource
         manifest.__isFirstParty = (currentKind === "firstparty")
-        var validated = validateManifest(manifest, currentSource + "/manifest.json")
+        let validated = validateManifest(manifest, currentSource + "/manifest.json")
         if (validated) {
           if (currentKind === "firstparty") firstParty[validated.id] = validated
           else thirdParty[validated.id] = validated
@@ -633,9 +633,9 @@ QtObject {
       currentJson = []
     }
 
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i]
-      var startMatch = line.match(/^===([a-z]+)::(.+)===$/)
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i]
+      let startMatch = line.match(/^===([a-z]+)::(.+)===$/)
       if (startMatch) {
         flush()
         currentKind = startMatch[1]
@@ -654,11 +654,11 @@ QtObject {
     stampHostCapabilities(firstParty, thirdParty)
 
     var merged = {}
-    for (var fk in firstParty) merged[fk] = firstParty[fk]
+    for (let fk in firstParty) merged[fk] = firstParty[fk]
     // Third-party plugins never shadow first-party ids. The whole
     // `nomarchy.*` namespace is reserved for built-ins, including bar widgets
     // registered outside the manifest-based plugin registry.
-    for (var tk in thirdParty) {
+    for (let tk in thirdParty) {
       if (firstParty[tk] || String(tk).indexOf("nomarchy.") === 0) {
         console.warn("PluginRegistry: plugin " + tk
           + " rejected: id is reserved for first-party Nomarchy plugins")

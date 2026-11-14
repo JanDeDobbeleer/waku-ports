@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
@@ -6,6 +7,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "SpeedTestOverlayUtils.js" as SpeedTestOverlayUtils
 
 // Centered speed test overlay shared by the network and disk speed tests. No
 // card: like the Tucson's floating cluster, the two dials sit directly on a
@@ -44,20 +46,14 @@ PanelWindow {
 
   readonly property bool failed: error !== ""
 
-  function resetScale() {
+  function resetScale(): void {
     fullScale = scaleStops[0]
   }
 
-  function expandScale(value) {
+  function expandScale(value: real): void {
     // Either reading ranges the entire cluster upward. Keeping this latch on
     // the overlay ensures both dials always describe the same scale.
-    for (var i = 0; i < scaleStops.length; i++) {
-      if (value <= scaleStops[i] * 0.92) {
-        if (scaleStops[i] > fullScale) fullScale = scaleStops[i]
-        return
-      }
-    }
-    fullScale = scaleStops[scaleStops.length - 1]
+    fullScale = SpeedTestOverlayUtils.expandedScale(scaleStops, value, fullScale)
   }
 
   onRunningChanged: if (running) resetScale()
@@ -330,6 +326,7 @@ PanelWindow {
       model: dial.tickCount
 
       Item {
+        id: tick
         required property int index
         readonly property bool major: index % 5 === 0
 
@@ -338,11 +335,11 @@ PanelWindow {
 
         Rectangle {
           anchors.horizontalCenter: parent.horizontalCenter
-          y: dial.arcWidth * 2 + (parent.major ? 0 : Style.space(2))
-          width: parent.major ? Math.max(2, Style.space(2)) : 1
-          height: parent.major ? Style.space(10) : Style.space(6)
+          y: dial.arcWidth * 2 + (tick.major ? 0 : Style.space(2))
+          width: tick.major ? Math.max(2, Style.space(2)) : 1
+          height: tick.major ? Style.space(10) : Style.space(6)
           radius: width / 2
-          color: parent.major ? dial.majorTickColor : dial.minorTickColor
+          color: tick.major ? dial.majorTickColor : dial.minorTickColor
         }
       }
     }
@@ -378,7 +375,7 @@ PanelWindow {
         textFormat: Text.PlainText
         anchors.horizontalCenter: parent.horizontalCenter
         // Written in the interface language's decimal separator and digits.
-        text: Commons.I18n.formatNumber(dial.reading, dial.reading < 10 ? 1 : 0)
+        text: Commons.I18n.formatNumberWithDecimals(dial.reading, dial.reading < 10 ? 1 : 0)
         color: root.onScrim
         font.family: root.fontFamily
         font.pixelSize: Style.font.display

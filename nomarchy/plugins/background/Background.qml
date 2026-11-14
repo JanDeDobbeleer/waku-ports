@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -7,6 +8,7 @@ import QtQuick.Shapes
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "BackgroundModel.js" as BackgroundModel
 
 Item {
   id: root
@@ -48,18 +50,15 @@ Item {
   property real revealProgress: 1
   readonly property bool ready: {
     if (isVideo(displayedBackground)) return true
-    if (backgrounds.instances.length === 0) return false
-    for (var panel of backgrounds.instances) {
-      if (!panel.backgroundReady) return false
-    }
-    return true
+    if (BackgroundModel.length(backgrounds.instances) === 0) return false
+    return BackgroundModel.allReady(backgrounds.instances)
   }
 
-  function isVideo(path) {
+  function isVideo(path: string): bool {
     return Util.isVideoPath(path)
   }
 
-  function imageUrl(path) {
+  function imageUrl(path: string): string {
     return Util.fileUrl(path)
   }
 
@@ -77,7 +76,7 @@ Item {
   property string failedBackground: ""
   property int recoverVersion: -1
 
-  function recoverBackground(failedPath) {
+  function recoverBackground(failedPath: string): void {
     if (!failedPath || failedPath !== displayedBackground) return
     failedBackground = failedPath
     if (recoverProc.running) return
@@ -85,7 +84,7 @@ Item {
     recoverProc.running = true
   }
 
-  function finishRecovery(path) {
+  function finishRecovery(path: string): void {
     path = String(path || "").trim()
     var failedPath = failedBackground
     failedBackground = ""
@@ -97,12 +96,12 @@ Item {
     setBackground(path, true)
   }
 
-  function setBackground(path, instant) {
+  function setBackground(path: string, instant: bool): void {
     if (instant) reloadVersion += 1
     transitionBackground("", path, path, instant, instant)
   }
 
-  function transitionBackground(fromPath, path, finalPath, instant, force) {
+  function transitionBackground(fromPath: string, path: string, finalPath: string, instant: bool, force: bool): void {
     path = String(path || "").trim()
     finalPath = String(finalPath || path).trim()
     fromPath = String(fromPath || "").trim()
@@ -145,7 +144,7 @@ Item {
     revealProgress = 0
   }
 
-  function setPendingTheme(colorsB64, shellB64) {
+  function setPendingTheme(colorsB64: string, shellB64: string): void {
     pendingColorsRaw = Util.decodeBase64(colorsB64)
     pendingShellRaw = Util.decodeBase64(shellB64)
     pendingThemeVersion = backgroundVersion
@@ -167,7 +166,7 @@ Item {
     pendingShellRaw = ""
   }
 
-  function transitionBackgroundWithTheme(fromPath, path, finalPath, colorsB64, shellB64) {
+  function transitionBackgroundWithTheme(fromPath: string, path: string, finalPath: string, colorsB64: string, shellB64: string): void {
     transitionBackground(fromPath, path, finalPath, false, true)
     setPendingTheme(colorsB64, shellB64)
     if (!incomingBackground || revealProgress >= 1) applyPendingTheme()
@@ -177,28 +176,24 @@ Item {
   // decoded its incoming frame. A screen that cannot decode in time, or at
   // all, does not hold the others past a short grace; it joins the running
   // reveal once its frame is ready.
-  function startReveal(panel) {
+  function startReveal(panel: PanelWindow): void {
     if (!incomingBackground) return
     if (revealStartedVersion === backgroundVersion) {
-      panel.maskReady = true
+      BackgroundModel.setMaskReady(panel)
       return
     }
-    for (var other of backgrounds.instances) {
-      if (!other.incomingReady()) {
-        revealGraceTimer.start()
-        return
-      }
+    if (!BackgroundModel.allIncomingReady(backgrounds.instances)) {
+      revealGraceTimer.start()
+      return
     }
     beginReveal()
   }
 
-  function beginReveal() {
+  function beginReveal(): void {
     if (!incomingBackground || revealStartedVersion === backgroundVersion) return
     revealGraceTimer.stop()
     revealStartedVersion = backgroundVersion
-    for (var panel of backgrounds.instances) {
-      if (panel.incomingReady()) panel.maskReady = true
-    }
+    BackgroundModel.markIncomingReady(backgrounds.instances)
     applyPendingTheme()
     revealAnimation.restart()
   }
@@ -217,7 +212,7 @@ Item {
 
   onReadyChanged: maybeFinishTransition()
 
-  function prepareBackground(path) {
+  function prepareBackground(path: string): void {
     path = String(path || "").trim()
     // Only a still that is not already on screen is worth decoding ahead.
     if (!path || isVideo(path) || path === lastTransitionPath || path === displayedBackground) return
@@ -226,14 +221,14 @@ Item {
     preparedBackgroundTimer.restart()
   }
 
-  function requestNativeSize(path) {
+  function requestNativeSize(path: string): void {
     if (!path || isVideo(path) || nativeSizes[path] !== undefined || sizeQueue.indexOf(path) !== -1) return
     sizeQueue = sizeQueue.concat([path])
     probeNextSize()
   }
 
-  function probeNextSize() {
-    if (sizeProbe.running || sizeQueue.length === 0) return
+  function probeNextSize(): void {
+    if (sizeProbe.running || BackgroundModel.length(sizeQueue) === 0) return
     sizeProbe.path = sizeQueue[0]
     sizeProbe.command = ["magick", "identify", "-ping", "-format", "%w %h", sizeProbe.path]
     sizeProbe.running = true
@@ -241,10 +236,10 @@ Item {
 
   // Each theme switch names fresh snapshot paths, so keep only the sizes of
   // the wallpapers still in play.
-  function pruneNativeSizes() {
+  function pruneNativeSizes(): void {
     var kept = {}
     var paths = [displayedBackground, incomingBackground, oldBackground, preparedBackground]
-    for (var i = 0; i < paths.length; i++) {
+    for (let i = 0; i < paths.length; i++) {
       if (paths[i] && nativeSizes[paths[i]] !== undefined) kept[paths[i]] = nativeSizes[paths[i]]
     }
     nativeSizes = kept
@@ -282,7 +277,7 @@ Item {
       // An unreadable header records 0x0, which decodes at screen size.
       known[path] = { width: width > 0 ? width : 0, height: height > 0 ? height : 0 }
       root.nativeSizes = known
-      root.sizeQueue = root.sizeQueue.filter(function(queued) { return queued !== sizeProbe.path })
+      root.sizeQueue = root.sizeQueue.filter(function(queued: string): bool { return queued !== sizeProbe.path })
       root.probeNextSize()
     }
   }
@@ -310,7 +305,7 @@ Item {
     }
   }
 
-  ShellIpc {
+  Commons.ShellIpc {
     target: "background"
 
     function refresh(): void {
@@ -411,7 +406,7 @@ Item {
       property bool maskReady: false
       // A function, not a binding: onStatusChanged can run before a binding
       // on the same status has caught up.
-      function incomingReady() {
+      function incomingReady(): bool {
         return root.incomingBackground !== "" && incomingFrame.status === Image.Ready
       }
       property int readyFrames: 0
@@ -435,7 +430,7 @@ Item {
       readonly property int decodeWidth: sized ? Math.ceil(width * screen.devicePixelRatio) : 0
       readonly property int decodeHeight: sized ? Math.ceil(height * screen.devicePixelRatio) : 0
 
-      function decodeSize(path) {
+      function decodeSize(path: string): size {
         if (!sized || !path) return Qt.size(0, 0)
         var nativeSz = root.nativeSizes[path]
         if (nativeSz === undefined) return Qt.size(0, 0)

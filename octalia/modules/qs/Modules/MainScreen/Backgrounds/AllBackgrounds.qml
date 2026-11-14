@@ -1,5 +1,6 @@
 import QtQuick 6.10
 import QtQuick.Shapes
+import "BackgroundHelpers.js" as BackgroundHelpers
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
@@ -58,7 +59,7 @@ Item {
           bar: root.bar
           shapeContainer: unifiedBackgroundsShape
           windowRoot: root.windowRoot
-          backgroundColor: panelBackgroundColor
+          backgroundColor: root.panelBackgroundColor
         }
 
         /**
@@ -71,10 +72,10 @@ Item {
           assignedPanel: {
             var p = PanelService.backgroundSlotAssignments[0];
             // Only render if this panel belongs to this screen
-            return (p && p.screen === root.windowRoot.screen) ? p : null;
+            return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
           }
           shapeContainer: unifiedBackgroundsShape
-          defaultBackgroundColor: panelBackgroundColor
+          defaultBackgroundColor: root.panelBackgroundColor
         }
 
         // Slot 1: Closing panel (during transitions)
@@ -82,10 +83,10 @@ Item {
           assignedPanel: {
             var p = PanelService.backgroundSlotAssignments[1];
             // Only render if this panel belongs to this screen
-            return (p && p.screen === root.windowRoot.screen) ? p : null;
+            return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
           }
           shapeContainer: unifiedBackgroundsShape
-          defaultBackgroundColor: panelBackgroundColor
+          defaultBackgroundColor: root.panelBackgroundColor
         }
       }
 
@@ -125,10 +126,10 @@ Item {
             assignedPanel: {
               var p = PanelService.backgroundSlotAssignments[0];
               // Only render if this panel belongs to this screen
-              return (p && p.screen === root.windowRoot.screen) ? p : null;
+              return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
             }
             shapeContainer: panelBackgroundsShape
-            defaultBackgroundColor: panelBackgroundColor
+            defaultBackgroundColor: root.panelBackgroundColor
           }
 
           // Slot 1: Closing panel (during transitions)
@@ -136,10 +137,10 @@ Item {
             assignedPanel: {
               var p = PanelService.backgroundSlotAssignments[1];
               // Only render if this panel belongs to this screen
-              return (p && p.screen === root.windowRoot.screen) ? p : null;
+              return (p && p.screen === BackgroundHelpers.field(root.windowRoot, "screen")) ? p : null;
             }
             shapeContainer: panelBackgroundsShape
-            defaultBackgroundColor: panelBackgroundColor
+            defaultBackgroundColor: root.panelBackgroundColor
           }
         }
 
@@ -168,7 +169,7 @@ Item {
             bar: root.bar
             shapeContainer: barBackgroundShape
             windowRoot: root.windowRoot
-            backgroundColor: panelBackgroundColor
+            backgroundColor: root.panelBackgroundColor
           }
         }
 

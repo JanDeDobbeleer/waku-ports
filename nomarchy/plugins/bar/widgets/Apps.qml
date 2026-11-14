@@ -1,11 +1,12 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import waku as W
 import waku.services as S
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "AppsModel.js" as AppsModel
 
 // Windows port: the running applications, one icon per program, right of the workspaces. The rows
 // are the engine's `TaskbarModel` (every window the taskbar lists, on every virtual desktop),
@@ -21,88 +22,79 @@ BarWidget {
   readonly property real gap: Style.space(2)
   // Past this many programs the list stops growing: the rest show as "+N".
   readonly property int maxVisible: Number(setting("maxVisible", 12))
-  readonly property color ink: root.bar ? root.bar.barForeground : Commons.Color.foreground
-  readonly property string family: root.bar ? root.bar.fontFamily : Style.font.family
+  readonly property color ink: root.bar ? BarValues.barForeground(root.bar) : Commons.Color.foreground
+  readonly property string family: root.bar ? BarValues.fontFamily(root.bar) : Style.font.family
   // The attached Window is only available on an Item, so it is read here and handed to the model.
   readonly property var hostWindow: Window.window
 
   // [{ key, exe, iconUrl, windows: [{ index, title, active, minimized }] }]
   property var groups: []
   // The programs in the order they first showed up, kept while rows come and go.
-  property var known: []
+  property list<var> known: []
 
-  function rebuild() {
+  function rebuild(): var {
     var byExe = {}
     var order = []
-    for (var i = 0; i < rows.count; i++) {
-      var o = rows.objectAt(i)
+    for (let i = 0; i < rows.count; i++) {
+      let o = rows.objectAt(i) as TaskbarRow
       if (!o || o.key.indexOf("w:") !== 0) continue
-      var exe = o.exe
+      let exe = o.exe
       if (!byExe[exe]) {
         byExe[exe] = { key: exe, exe: exe, iconUrl: o.iconUrl, windows: [] }
         order.push(exe)
       }
-      var g = byExe[exe]
+      let g = byExe[exe]
       if (!g.iconUrl) g.iconUrl = o.iconUrl
       g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized })
     }
     var kept = []
     var seen = {}
-    for (var k = 0; k < root.known.length; k++) {
+    for (let k = 0; k < root.known.length; k++) {
       if (byExe[root.known[k]]) { kept.push(root.known[k]); seen[root.known[k]] = true }
     }
-    for (var n = 0; n < order.length; n++) if (!seen[order[n]]) kept.push(order[n])
+    for (let n = 0; n < order.length; n++) if (!seen[order[n]]) kept.push(order[n])
     root.known = kept
     var out = []
-    for (var m = 0; m < kept.length; m++) out.push(byExe[kept[m]])
+    for (let m = 0; m < kept.length; m++) out.push(byExe[kept[m]])
     root.groups = out
   }
 
   // Raise a program: the window after the focused one, else the first (the last for `last`). The
   // only window of a program that already has focus is left alone, as a click on a taskbar button
   // would minimize it.
-  function clickGroup(g, last) {
-    if (!g || g.windows.length === 0) return
-    var target = g.windows[last ? g.windows.length - 1 : 0]
-    var focusedAt = -1
-    for (var i = 0; i < g.windows.length; i++) if (g.windows[i].active) focusedAt = i
-    if (focusedAt >= 0 && g.windows.length === 1) return
-    if (focusedAt >= 0 && !last) target = g.windows[(focusedAt + 1) % g.windows.length]
-    taskbar.activate(target.index)
+  function clickGroup(g: var, last: bool): void {
+    let index = AppsModel.activationIndex(g, last)
+    if (index >= 0) taskbar.activate(index)
   }
 
   // The preview card of a program with several windows: opens on hover, stays while the pointer is
   // on the tile or the card, and lists the windows by title. `hoverItem` is the tile it hangs from.
   property var hoverGroup: null
   property Item hoverItem: null
-  readonly property bool previewOpen: hoverGroup !== null && hoverItem !== null && hoverGroup.windows.length > 1
+  readonly property bool previewOpen: AppsModel.isPreviewOpen(hoverGroup, hoverItem)
 
-  function hoverEnter(group, item) {
+  function hoverEnter(group: var, item: var): var {
     closeTimer.stop()
     root.hoverGroup = group
     root.hoverItem = item
   }
-  function hoverLeave() { closeTimer.restart() }
+  function hoverLeave(): var { closeTimer.restart() }
   // PopupCard.close() calls this on its owner.
-  function close() {
+  function close(): var {
     closeTimer.stop()
     root.hoverGroup = null
     root.hoverItem = null
   }
 
   // The group as it is now: the preview follows windows opening, closing and changing title.
-  readonly property var previewGroup: {
-    if (!hoverGroup) return null
-    for (var i = 0; i < groups.length; i++) if (groups[i].key === hoverGroup.key) return groups[i]
-    return null
-  }
+  readonly property var previewGroup: AppsModel.findGroup(groups, hoverGroup)
 
   // Where the card opens: just below the bar strip, under the hovered tile. Without a rect the engine
   // anchors to the whole thickness of the bar's window, which spans the screen, and the card would
   // open at the bottom of it. The rect runs from the tile's top to the bottom of the strip.
   readonly property rect previewRect: {
     if (!hoverItem) return Qt.rect(0, 0, 0, 0)
-    var top = hoverItem.mapToItem(root, 0, 0).y
+    var top = AppsModel.previewRectY(hoverItem, root)
     return Qt.rect(0, 0, hoverItem.width, Math.max(1, root.height - top))
   }
 
@@ -112,10 +104,10 @@ BarWidget {
     onTriggered: if (!preview.containsMouse) root.close()
   }
 
-  readonly property var shown: groups.length > maxVisible ? groups.slice(0, maxVisible) : groups
-  readonly property int hidden: Math.max(0, groups.length - shown.length)
+  readonly property var shown: AppsModel.shown(groups, maxVisible)
+  readonly property int hidden: Math.max(0, AppsModel.length(groups) - AppsModel.length(shown))
 
-  visible: !vertical && groups.length > 0
+  visible: !vertical && AppsModel.length(groups) > 0
   implicitWidth: visible ? row.implicitWidth + Style.space(8) : 0
   implicitHeight: barSize
 
@@ -128,23 +120,25 @@ BarWidget {
     window: root.hostWindow
   }
 
+  component TaskbarRow: QtObject {
+    final required property string title
+    final required property bool active
+    final required property bool minimized
+    final required property string key
+    final required property string iconUrl
+    final required property string uniqueId
+    final readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
+
+    onActiveChanged: Qt.callLater(root.rebuild)
+    onMinimizedChanged: Qt.callLater(root.rebuild)
+    onTitleChanged: Qt.callLater(root.rebuild)
+    onIconUrlChanged: Qt.callLater(root.rebuild)
+  }
+
   Instantiator {
     id: rows
     model: taskbar
-    delegate: QtObject {
-      required property string title
-      required property bool active
-      required property bool minimized
-      required property string key
-      required property string iconUrl
-      required property string uniqueId
-      readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
-
-      onActiveChanged: Qt.callLater(root.rebuild)
-      onMinimizedChanged: Qt.callLater(root.rebuild)
-      onTitleChanged: Qt.callLater(root.rebuild)
-      onIconUrlChanged: Qt.callLater(root.rebuild)
-    }
+    delegate: TaskbarRow {}
     onObjectAdded: Qt.callLater(root.rebuild)
     onObjectRemoved: Qt.callLater(root.rebuild)
   }
@@ -163,9 +157,9 @@ BarWidget {
         id: app
         required property var modelData
 
-        readonly property bool focused: modelData.windows.some(function(w) { return w.active })
-        readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(function(w) { return w.minimized })
-        readonly property int count: modelData.windows.length
+        readonly property bool focused: AppsModel.hasActive(modelData)
+        readonly property bool allMinimized: AppsModel.allMinimized(modelData)
+        readonly property int count: AppsModel.length(AppsModel.windows(modelData))
         readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
 
         width: root.cell
@@ -185,7 +179,7 @@ BarWidget {
           width: Math.round(root.cell * 0.68)
           height: width
           visible: app.hasImage
-          source: app.modelData.iconUrl
+          source: AppsModel.field(app.modelData, "iconUrl")
           sourceSize: Qt.size(width * 2, height * 2)
           fillMode: Image.PreserveAspectFit
           asynchronous: true
@@ -198,7 +192,7 @@ BarWidget {
           anchors.centerIn: parent
           visible: !app.hasImage
           textFormat: Text.PlainText
-          text: app.modelData.exe.length > 0 ? app.modelData.exe.charAt(0).toUpperCase() : "?"
+          text: AppsModel.textForApp(app.modelData)
           color: root.ink
           font.family: root.family
           font.pixelSize: Style.font.body
@@ -247,7 +241,7 @@ BarWidget {
           hoverEnabled: true
           acceptedButtons: Qt.LeftButton | Qt.MiddleButton
           cursorShape: Qt.PointingHandCursor
-          onClicked: function(mouse) { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
+          onClicked: function(mouse: MouseEvent): var { root.close(); root.clickGroup(app.modelData, mouse.button === Qt.MiddleButton) }
           onEntered: root.hoverEnter(app.modelData, app)
           onExited: root.hoverLeave()
         }
@@ -280,7 +274,7 @@ BarWidget {
     anchorItem: root.hoverItem ? root.hoverItem : root
     anchor.rect: root.previewRect
     owner: root
-    bar: root.bar
+    hostBar: root.bar
     triggerMode: "hover"
     open: root.previewOpen && root.previewGroup !== null
 
@@ -288,26 +282,26 @@ BarWidget {
     readonly property real boxH: Style.space(150)
     readonly property real cardPad: Style.space(6)
     readonly property real cardW: boxW + cardPad * 2
-    readonly property real gap: Style.space(8)
-    readonly property int count: root.previewGroup ? root.previewGroup.windows.length : 0
+    readonly property real tileGap: Style.space(8)
+    readonly property int count: AppsModel.length(AppsModel.windows(root.previewGroup))
     // A single strip while it fits in 60% of the screen, then a wrapping grid.
     readonly property real maxW: Math.max(cardW, (preview.screenW > 0 ? preview.screenW : 1920) * 0.6 - preview.padding * 2)
     readonly property int cols: count <= 0 ? 1
-      : (count * cardW + (count - 1) * gap <= maxW ? count : Math.max(1, Math.floor((maxW + gap) / (cardW + gap))))
+      : (count * cardW + (count - 1) * tileGap <= maxW ? count : Math.max(1, Math.floor((maxW + tileGap) / (cardW + tileGap))))
 
     // The card pads and borders the content on both sides; the height already counts them.
-    contentWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec))
-    contentHeight: preview.fittedContentHeight(grid.implicitHeight)
+    cardWidth: preview.fittedContentWidth(grid.implicitWidth + preview.padding * 2 + Border.left(preview.borderSpec) + Border.right(preview.borderSpec), undefined)
+    cardHeight: preview.fittedContentHeight(grid.implicitHeight, undefined)
 
     GridLayout {
       id: grid
       anchors.fill: parent
       columns: preview.cols
-      columnSpacing: preview.gap
-      rowSpacing: preview.gap
+      columnSpacing: preview.tileGap
+      rowSpacing: preview.tileGap
 
       Repeater {
-        model: root.previewGroup ? root.previewGroup.windows : []
+        model: AppsModel.windows(root.previewGroup)
 
         delegate: Item {
           id: card
@@ -322,9 +316,9 @@ BarWidget {
           Rectangle {
             anchors.fill: parent
             radius: 0
-            color: card.modelData.active ? Style.selectedFillFor(root.ink, Commons.Color.accent)
-              : (cardArea.containsMouse ? Style.hoverFillFor(root.ink, Commons.Color.accent)
-              : Style.normalFillFor(root.ink, Commons.Color.accent))
+            color: AppsModel.field(card.modelData, "active") ? Style.selectedFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent)
+              : (cardArea.containsMouse ? Style.hoverFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent)
+              : Style.normalFillFor(root.ink, Commons.Color.accent, Commons.Color.urgent))
           }
 
           ColumnLayout {
@@ -348,11 +342,11 @@ BarWidget {
 
               Image {
                 anchors.centerIn: parent
-                visible: card.modelData.minimized || !thumb.available
-                opacity: card.modelData.minimized ? 0.55 : 1
+                visible: AppsModel.field(card.modelData, "minimized") || !thumb.available
+                opacity: AppsModel.field(card.modelData, "minimized") ? 0.55 : 1
                 width: Style.space(48)
                 height: width
-                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                source: AppsModel.field(root.previewGroup, "iconUrl")
                 sourceSize: Qt.size(width * 2, height * 2)
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
@@ -370,9 +364,9 @@ BarWidget {
                 y: (box.height - height) / 2
                 width: Math.min(availW, availH * ratio)
                 height: width / ratio
-                visible: !card.modelData.minimized
-                hwnd: card.modelData.minimized ? 0 : card.modelData.hwnd
-                active: root.previewSettled && card.modelData.hwnd !== 0 && !card.modelData.minimized
+                visible: !AppsModel.field(card.modelData, "minimized")
+                hwnd: AppsModel.field(card.modelData, "minimized") ? 0 : AppsModel.field(card.modelData, "hwnd")
+                active: root.previewSettled && AppsModel.field(card.modelData, "hwnd") !== 0 && !AppsModel.field(card.modelData, "minimized")
                 fit: W.WindowThumbnail.PreserveAspectFit
               }
             }
@@ -384,7 +378,7 @@ BarWidget {
               Image {
                 Layout.preferredWidth: Style.space(16)
                 Layout.preferredHeight: Style.space(16)
-                source: root.previewGroup ? root.previewGroup.iconUrl : ""
+                source: AppsModel.field(root.previewGroup, "iconUrl")
                 sourceSize: Qt.size(width * 2, height * 2)
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
@@ -394,13 +388,13 @@ BarWidget {
               Text {
                 Layout.fillWidth: true
                 textFormat: Text.PlainText
-                text: card.modelData.title !== "" ? card.modelData.title : (root.previewGroup ? root.previewGroup.exe : "")
+                text: AppsModel.stringField(card.modelData, "title") !== "" ? AppsModel.stringField(card.modelData, "title") : AppsModel.stringField(root.previewGroup, "exe")
                 elide: Text.ElideRight
                 maximumLineCount: 1
                 color: Commons.Color.popups.text
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
-                font.bold: card.modelData.active
+                font.bold: AppsModel.field(card.modelData, "active")
               }
             }
           }
@@ -411,7 +405,7 @@ BarWidget {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-              taskbar.activate(card.modelData.index)
+              taskbar.activate(AppsModel.field(card.modelData, "index"))
               root.close()
             }
           }

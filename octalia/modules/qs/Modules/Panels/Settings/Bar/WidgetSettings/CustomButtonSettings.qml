@@ -1,9 +1,9 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Window
 import qs.Commons
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -17,19 +17,19 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Bar orientation (per-screen)
-  property bool barIsVertical: (Settings.getBarPositionForScreen(screen?.name) === "left" || Settings.getBarPositionForScreen(screen?.name) === "right")
+  property bool barIsVertical: (Settings.getBarPositionForScreen(SettingsValue.optionalRead(screen, "name")) === "left" || Settings.getBarPositionForScreen(SettingsValue.optionalRead(screen, "name")) === "right")
 
-  property string valueIcon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
-  property string valueIconPosition: widgetData.iconPosition !== undefined ? widgetData.iconPosition : widgetMetadata.iconPosition
-  property bool valueTextStream: widgetData.textStream !== undefined ? widgetData.textStream : widgetMetadata.textStream
-  property bool valueParseJson: widgetData.parseJson !== undefined ? widgetData.parseJson : widgetMetadata.parseJson
-  property int valueMaxTextLengthHorizontal: widgetData?.maxTextLength?.horizontal ?? widgetMetadata?.maxTextLength?.horizontal
-  property int valueMaxTextLengthVertical: widgetData?.maxTextLength?.vertical ?? widgetMetadata?.maxTextLength?.vertical
-  property string valueHideMode: (widgetData.hideMode !== undefined) ? widgetData.hideMode : widgetMetadata.hideMode
-  property bool valueShowIcon: (widgetData.showIcon !== undefined) ? widgetData.showIcon : widgetMetadata.showIcon
-  property string valueColorizeSystemIcon: widgetData.colorizeSystemIcon !== undefined ? widgetData.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
-  property string valueColorizeSystemText: widgetData.colorizeSystemText !== undefined ? widgetData.colorizeSystemText : widgetMetadata.colorizeSystemText
-  property string valueIpcIdentifier: widgetData.ipcIdentifier !== undefined ? widgetData.ipcIdentifier : widgetMetadata.ipcIdentifier
+  property string valueIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "icon")
+  property string valueIconPosition: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "iconPosition")
+  property bool valueTextStream: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "textStream")
+  property bool valueParseJson: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "parseJson")
+  property int valueMaxTextLengthHorizontal: SettingsValue.nestedNullishFallback(widgetData, widgetMetadata, "maxTextLength", "horizontal")
+  property int valueMaxTextLengthVertical: SettingsValue.nestedNullishFallback(widgetData, widgetMetadata, "maxTextLength", "vertical")
+  property string valueHideMode: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "hideMode")
+  property bool valueShowIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "showIcon")
+  property string valueColorizeSystemIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeSystemIcon")
+  property string valueColorizeSystemText: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeSystemText")
+  property string valueIpcIdentifier: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "ipcIdentifier")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -109,22 +109,22 @@ ColumnLayout {
           label: I18n.tr("bar.custom-button.left-click-label")
           description: I18n.tr("bar.custom-button.left-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
-          text: widgetData?.leftClickExec || widgetMetadata.leftClickExec
-          onTextChanged: saveSettings()
-          defaultValue: widgetMetadata.leftClickExec
+          text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "leftClickExec")
+          onTextChanged: root.saveSettings()
+          defaultValue: SettingsValue.read(root.widgetMetadata, "leftClickExec")
         }
 
         NToggle {
           id: leftClickUpdateText
-          enabled: !valueTextStream
+          enabled: !root.valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          checked: widgetData?.leftClickUpdateText ?? widgetMetadata.leftClickUpdateText
+          checked: SettingsValue.nullishFallback(root.widgetData, root.widgetMetadata, "leftClickUpdateText")
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
-          defaultValue: widgetMetadata.leftClickUpdateText
+          defaultValue: SettingsValue.read(root.widgetMetadata, "leftClickUpdateText")
         }
       }
 
@@ -137,22 +137,22 @@ ColumnLayout {
           label: I18n.tr("bar.custom-button.right-click-label")
           description: I18n.tr("bar.custom-button.right-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
-          text: widgetData?.rightClickExec || widgetMetadata.rightClickExec
-          onTextChanged: saveSettings()
-          defaultValue: widgetMetadata.rightClickExec
+          text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "rightClickExec")
+          onTextChanged: root.saveSettings()
+          defaultValue: SettingsValue.read(root.widgetMetadata, "rightClickExec")
         }
 
         NToggle {
           id: rightClickUpdateText
-          enabled: !valueTextStream
+          enabled: !root.valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          checked: widgetData?.rightClickUpdateText ?? widgetMetadata.rightClickUpdateText
+          checked: SettingsValue.nullishFallback(root.widgetData, root.widgetMetadata, "rightClickUpdateText")
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
-          defaultValue: widgetMetadata.rightClickUpdateText
+          defaultValue: SettingsValue.read(root.widgetMetadata, "rightClickUpdateText")
         }
       }
 
@@ -165,22 +165,22 @@ ColumnLayout {
           label: I18n.tr("bar.custom-button.middle-click-label")
           description: I18n.tr("bar.custom-button.middle-click-description")
           placeholderText: I18n.tr("placeholders.enter-command")
-          text: widgetData?.middleClickExec || widgetMetadata.middleClickExec
-          onTextChanged: saveSettings()
-          defaultValue: widgetMetadata.middleClickExec
+          text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "middleClickExec")
+          onTextChanged: root.saveSettings()
+          defaultValue: SettingsValue.read(root.widgetMetadata, "middleClickExec")
         }
 
         NToggle {
           id: middleClickUpdateText
-          enabled: !valueTextStream
+          enabled: !root.valueTextStream
           Layout.alignment: Qt.AlignRight | Qt.AlignBottom
           Layout.bottomMargin: Style.marginS
-          checked: widgetData?.middleClickUpdateText ?? widgetMetadata.middleClickUpdateText
+          checked: SettingsValue.nullishFallback(root.widgetData, root.widgetMetadata, "middleClickUpdateText")
           onToggled: isChecked => {
                        checked = isChecked;
-                       saveSettings();
+                       root.saveSettings();
                      }
-          defaultValue: widgetMetadata.middleClickUpdateText
+          defaultValue: SettingsValue.read(root.widgetMetadata, "middleClickUpdateText")
         }
       }
 
@@ -189,13 +189,13 @@ ColumnLayout {
         Layout.fillWidth: true
         label: I18n.tr("bar.custom-button.wheel-mode-separate-label")
         description: I18n.tr("bar.custom-button.wheel-mode-separate-description")
-        property bool internalChecked: (widgetData?.wheelMode || widgetMetadata?.wheelMode) === "separate"
+        property bool internalChecked: (SettingsValue.truthyOptionalFallback(root.widgetData, root.widgetMetadata, "wheelMode")) === "separate"
         checked: internalChecked
         onToggled: checked => {
                      internalChecked = checked;
-                     saveSettings();
+                     root.saveSettings();
                    }
-        defaultValue: widgetMetadata.wheelMode === "separate"
+        defaultValue: SettingsValue.read(root.widgetMetadata, "wheelMode") === "separate"
       }
 
       ColumnLayout {
@@ -212,22 +212,22 @@ ColumnLayout {
             label: I18n.tr("bar.custom-button.wheel-label")
             description: I18n.tr("bar.custom-button.wheel-description")
             placeholderText: I18n.tr("placeholders.enter-command")
-            text: widgetData?.wheelExec || widgetMetadata?.wheelExec
-            onTextChanged: saveSettings()
-            defaultValue: widgetMetadata.wheelExec
+            text: SettingsValue.truthyOptionalFallback(root.widgetData, root.widgetMetadata, "wheelExec")
+            onTextChanged: root.saveSettings()
+            defaultValue: SettingsValue.read(root.widgetMetadata, "wheelExec")
           }
 
           NToggle {
             id: wheelUpdateText
-            enabled: !valueTextStream
+            enabled: !root.valueTextStream
             Layout.alignment: Qt.AlignRight | Qt.AlignBottom
             Layout.bottomMargin: Style.marginS
-            checked: widgetData?.wheelUpdateText ?? widgetMetadata?.wheelUpdateText
+            checked: SettingsValue.nullishOptionalFallback(root.widgetData, root.widgetMetadata, "wheelUpdateText")
             onToggled: isChecked => {
                          checked = isChecked;
-                         saveSettings();
+                         root.saveSettings();
                        }
-            defaultValue: widgetMetadata.wheelUpdateText
+            defaultValue: SettingsValue.read(root.widgetMetadata, "wheelUpdateText")
           }
         }
 
@@ -245,22 +245,22 @@ ColumnLayout {
               label: I18n.tr("bar.custom-button.wheel-up-label")
               description: I18n.tr("bar.custom-button.wheel-up-description")
               placeholderText: I18n.tr("placeholders.enter-command")
-              text: widgetData?.wheelUpExec || widgetMetadata?.wheelUpExec
-              onTextChanged: saveSettings()
-              defaultValue: widgetMetadata.wheelUpExec
+              text: SettingsValue.truthyOptionalFallback(root.widgetData, root.widgetMetadata, "wheelUpExec")
+              onTextChanged: root.saveSettings()
+              defaultValue: SettingsValue.read(root.widgetMetadata, "wheelUpExec")
             }
 
             NToggle {
               id: wheelUpUpdateText
-              enabled: !valueTextStream
+              enabled: !root.valueTextStream
               Layout.alignment: Qt.AlignRight | Qt.AlignBottom
               Layout.bottomMargin: Style.marginS
-              checked: widgetData?.wheelUpUpdateText ?? widgetMetadata?.wheelUpUpdateText
+              checked: SettingsValue.nullishOptionalFallback(root.widgetData, root.widgetMetadata, "wheelUpUpdateText")
               onToggled: isChecked => {
                            checked = isChecked;
-                           saveSettings();
+                           root.saveSettings();
                          }
-              defaultValue: widgetMetadata.wheelUpUpdateText
+              defaultValue: SettingsValue.read(root.widgetMetadata, "wheelUpUpdateText")
             }
           }
 
@@ -273,22 +273,22 @@ ColumnLayout {
               label: I18n.tr("bar.custom-button.wheel-down-label")
               description: I18n.tr("bar.custom-button.wheel-down-description")
               placeholderText: I18n.tr("placeholders.enter-command")
-              text: widgetData?.wheelDownExec || widgetMetadata?.wheelDownExec
-              onTextChanged: saveSettings()
-              defaultValue: widgetMetadata.wheelDownExec
+              text: SettingsValue.truthyOptionalFallback(root.widgetData, root.widgetMetadata, "wheelDownExec")
+              onTextChanged: root.saveSettings()
+              defaultValue: SettingsValue.read(root.widgetMetadata, "wheelDownExec")
             }
 
             NToggle {
               id: wheelDownUpdateText
-              enabled: !valueTextStream
+              enabled: !root.valueTextStream
               Layout.alignment: Qt.AlignRight | Qt.AlignBottom
               Layout.bottomMargin: Style.marginS
-              checked: widgetData?.wheelDownUpdateText ?? widgetMetadata?.wheelDownUpdateText
+              checked: SettingsValue.nullishOptionalFallback(root.widgetData, root.widgetMetadata, "wheelDownUpdateText")
               onToggled: isChecked => {
                            checked = isChecked;
-                           saveSettings();
+                           root.saveSettings();
                          }
-              defaultValue: widgetMetadata.wheelDownUpdateText
+              defaultValue: SettingsValue.read(root.widgetMetadata, "wheelDownUpdateText")
             }
           }
         }
@@ -303,18 +303,18 @@ ColumnLayout {
         id: showIconToggle
         label: I18n.tr("bar.custom-button.show-icon-label")
         description: I18n.tr("bar.custom-button.show-icon-description")
-        checked: valueShowIcon
+        checked: root.valueShowIcon
         onToggled: checked => {
-                     valueShowIcon = checked;
-                     saveSettings();
+                     root.valueShowIcon = checked;
+                     root.saveSettings();
                    }
         visible: textCommandInput.text !== ""
-        defaultValue: widgetMetadata.showIcon
+        defaultValue: SettingsValue.read(root.widgetMetadata, "showIcon")
       }
 
       RowLayout {
         spacing: Style.marginM
-        visible: valueShowIcon
+        visible: root.valueShowIcon
 
         NLabel {
           label: I18n.tr("common.icon")
@@ -323,9 +323,9 @@ ColumnLayout {
 
         NIcon {
           Layout.alignment: Qt.AlignVCenter
-          icon: valueIcon
+          icon: root.valueIcon
           pointSize: Style.fontSizeXL
-          visible: valueIcon !== ""
+          visible: root.valueIcon !== ""
         }
 
         NButton {
@@ -336,19 +336,19 @@ ColumnLayout {
 
       NIconPicker {
         id: iconPicker
-        initialIcon: valueIcon
+        initialIcon: root.valueIcon
         onIconSelected: function (iconName) {
-          valueIcon = iconName;
-          saveSettings();
+          root.valueIcon = iconName;
+          root.saveSettings();
         }
       }
 
       NComboBox {
         id: iconPositionComboBox
-        visible: valueShowIcon
+        visible: root.valueShowIcon
         label: I18n.tr("bar.custom-button.icon-position-label")
         description: I18n.tr("bar.custom-button.icon-position-description")
-        model: barIsVertical ? [
+        model: root.barIsVertical ? [
                                  {
                                    name: I18n.tr("bar.custom-button.icon-position-top"),
                                    key: "left"
@@ -367,23 +367,23 @@ ColumnLayout {
                                    key: "right"
                                  }
                                ]
-        currentKey: valueIconPosition
+        currentKey: root.valueIconPosition
         onSelected: key => {
-                      valueIconPosition = key;
-                      saveSettings();
+                      root.valueIconPosition = key;
+                      root.saveSettings();
                     }
-        defaultValue: widgetMetadata.iconPosition
+        defaultValue: SettingsValue.read(root.widgetMetadata, "iconPosition")
       }
 
       NColorChoice {
         label: I18n.tr("common.select-icon-color")
         description: I18n.tr("bar.custom-button.icon-color-selection-description")
-        currentKey: valueColorizeSystemIcon
+        currentKey: root.valueColorizeSystemIcon
         onSelected: key => {
-                      valueColorizeSystemIcon = key;
-                      saveSettings();
+                      root.valueColorizeSystemIcon = key;
+                      root.saveSettings();
                     }
-        defaultValue: widgetMetadata.colorizeSystemIcon
+        defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeSystemIcon")
       }
 
       NTextInput {
@@ -391,12 +391,12 @@ ColumnLayout {
         label: I18n.tr("bar.custom-button.ipc-identifier-label")
         description: I18n.tr("bar.custom-button.ipc-identifier-description")
         placeholderText: I18n.tr("placeholders.enter-ipc-identifier")
-        text: valueIpcIdentifier
+        text: root.valueIpcIdentifier
         onTextChanged: {
-          valueIpcIdentifier = text;
-          saveSettings();
+          root.valueIpcIdentifier = text;
+          root.saveSettings();
         }
-        defaultValue: widgetMetadata.ipcIdentifier
+        defaultValue: SettingsValue.read(root.widgetMetadata, "ipcIdentifier")
       }
     }
 
@@ -407,12 +407,12 @@ ColumnLayout {
       NColorChoice {
         label: I18n.tr("common.select-text-color")
         description: I18n.tr("bar.custom-button.text-color-selection-description")
-        currentKey: valueColorizeSystemText
+        currentKey: root.valueColorizeSystemText
         onSelected: key => {
-                      valueColorizeSystemText = key;
-                      saveSettings();
+                      root.valueColorizeSystemText = key;
+                      root.saveSettings();
                     }
-        defaultValue: widgetMetadata.colorizeSystemText
+        defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeSystemText")
       }
 
       NSpinBox {
@@ -420,12 +420,12 @@ ColumnLayout {
         description: I18n.tr("bar.custom-button.max-text-length-horizontal-description")
         from: 0
         to: 100
-        value: valueMaxTextLengthHorizontal
+        value: root.valueMaxTextLengthHorizontal
         onValueChanged: {
-          valueMaxTextLengthHorizontal = value;
-          saveSettings();
+          root.valueMaxTextLengthHorizontal = value;
+          root.saveSettings();
         }
-        defaultValue: widgetMetadata.maxTextLength.horizontal
+        defaultValue: SettingsValue.readNested(root.widgetMetadata, "maxTextLength", "horizontal")
       }
 
       NSpinBox {
@@ -433,71 +433,71 @@ ColumnLayout {
         description: I18n.tr("bar.custom-button.max-text-length-vertical-description")
         from: 0
         to: 100
-        value: valueMaxTextLengthVertical
+        value: root.valueMaxTextLengthVertical
         onValueChanged: {
-          valueMaxTextLengthVertical = value;
-          saveSettings();
+          root.valueMaxTextLengthVertical = value;
+          root.saveSettings();
         }
-        defaultValue: widgetMetadata.maxTextLength.vertical
+        defaultValue: SettingsValue.readNested(root.widgetMetadata, "maxTextLength", "vertical")
       }
 
       NToggle {
         id: textStreamInput
         label: I18n.tr("bar.custom-button.text-stream-label")
         description: I18n.tr("bar.custom-button.text-stream-description")
-        checked: valueTextStream
+        checked: root.valueTextStream
         onToggled: checked => {
-                     valueTextStream = checked;
-                     saveSettings();
+                     root.valueTextStream = checked;
+                     root.saveSettings();
                    }
-        defaultValue: widgetMetadata.textStream
+        defaultValue: SettingsValue.read(root.widgetMetadata, "textStream")
       }
 
       NToggle {
         id: parseJsonInput
         label: I18n.tr("bar.custom-button.parse-json-label")
         description: I18n.tr("bar.custom-button.parse-json-description")
-        checked: valueParseJson
+        checked: root.valueParseJson
         onToggled: checked => {
-                     valueParseJson = checked;
-                     saveSettings();
+                     root.valueParseJson = checked;
+                     root.saveSettings();
                    }
-        defaultValue: widgetMetadata.parseJson
+        defaultValue: SettingsValue.read(root.widgetMetadata, "parseJson")
       }
 
       NTextInput {
         id: textCommandInput
         Layout.fillWidth: true
         label: I18n.tr("bar.custom-button.display-command-output-label")
-        description: valueTextStream ? I18n.tr("bar.custom-button.display-command-output-stream-description") : I18n.tr("bar.custom-button.display-command-output-description")
+        description: root.valueTextStream ? I18n.tr("bar.custom-button.display-command-output-stream-description") : I18n.tr("bar.custom-button.display-command-output-description")
         placeholderText: I18n.tr("placeholders.command-example")
-        text: widgetData?.textCommand || widgetMetadata.textCommand
-        onTextChanged: saveSettings()
-        defaultValue: widgetMetadata.textCommand
+        text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "textCommand")
+        onTextChanged: root.saveSettings()
+        defaultValue: SettingsValue.read(root.widgetMetadata, "textCommand")
       }
 
       NTextInput {
         id: textCollapseInput
         Layout.fillWidth: true
-        visible: valueTextStream
+        visible: root.valueTextStream
         label: I18n.tr("bar.custom-button.collapse-condition-label")
         description: I18n.tr("bar.custom-button.collapse-condition-description")
         placeholderText: I18n.tr("placeholders.enter-text-to-collapse")
-        text: widgetData?.textCollapse || widgetMetadata.textCollapse
-        onTextChanged: saveSettings()
-        defaultValue: widgetMetadata.textCollapse
+        text: SettingsValue.truthyFallback(root.widgetData, root.widgetMetadata, "textCollapse")
+        onTextChanged: root.saveSettings()
+        defaultValue: SettingsValue.read(root.widgetMetadata, "textCollapse")
       }
 
       NTextInput {
         id: textIntervalInput
         Layout.fillWidth: true
-        visible: !valueTextStream
+        visible: !root.valueTextStream
         label: I18n.tr("bar.custom-button.refresh-interval-label")
         description: I18n.tr("bar.custom-button.refresh-interval-description")
-        placeholderText: String(widgetMetadata.textIntervalMs)
-        text: widgetData && widgetData.textIntervalMs !== undefined ? String(widgetData.textIntervalMs) : ""
-        onTextChanged: saveSettings()
-        defaultValue: String(widgetMetadata.textIntervalMs)
+        placeholderText: String(SettingsValue.read(root.widgetMetadata, "textIntervalMs"))
+        text: SettingsValue.stringWhenDefined(root.widgetData, "textIntervalMs")
+        onTextChanged: root.saveSettings()
+        defaultValue: String(SettingsValue.read(root.widgetMetadata, "textIntervalMs"))
       }
 
       NComboBox {
@@ -518,13 +518,13 @@ ColumnLayout {
             key: "maxTransparent"
           }
         ]
-        currentKey: valueHideMode
+        currentKey: root.valueHideMode
         onSelected: key => {
-                      valueHideMode = key;
-                      saveSettings();
+                      root.valueHideMode = key;
+                      root.saveSettings();
                     }
-        visible: textCommandInput.text !== "" && valueTextStream == true
-        defaultValue: widgetMetadata.hideMode
+        visible: textCommandInput.text !== "" && root.valueTextStream == true
+        defaultValue: SettingsValue.read(root.widgetMetadata, "hideMode")
       }
     }
   }

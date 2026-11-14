@@ -1,3 +1,7 @@
+pragma ComponentBehavior: Bound
+
+import "NSearchableComboBoxUtils.js" as ComboUtils
+
 import QtQuick 6.10
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -13,7 +17,7 @@ RowLayout {
   property bool selectOnNavigation: true
   property string label: ""
   property string description: ""
-  property ListModel model: {}
+  property ListModel model: null
   property string currentKey: ""
   property string placeholder: ""
   property string searchPlaceholder: I18n.tr("placeholders.search")
@@ -34,38 +38,25 @@ RowLayout {
   property ListModel filteredModel: ListModel {}
   property string searchText: ""
 
-  function findIndexByKey(key) {
-    if (!root.model)
-      return -1;
-    for (var i = 0; i < root.model.count; i++) {
-      if (root.model.get(i).key === key) {
-        return i;
-      }
-    }
-    return -1;
+  function findIndexByKey(key: var): int {
+    return ComboUtils.findIndexByKey(root.model, key);
   }
 
   // The active model used for the popup list (source model or filtered results)
-  readonly property var activeModel: isFiltered ? filteredModel : root.model
+  readonly property ListModel activeModel: isFiltered ? filteredModel : root.model
 
-  function findIndexInActiveModel(key) {
-    if (!activeModel || activeModel.count === undefined)
-      return -1;
-    for (var i = 0; i < activeModel.count; i++) {
-      if (activeModel.get(i).key === key) {
-        return i;
-      }
-    }
-    return -1;
+  function findIndexInActiveModel(key: var): int {
+    return ComboUtils.findIndexInActiveModel(activeModel, key);
   }
 
   // Whether we're using filtered results or the source model directly
   property bool isFiltered: false
 
   function filterModel() {
+    var fuzzyResults, i, item, j, searchLower;
     // Check if model exists and has items
-    if (!root.model || root.model.count === undefined || root.model.count === 0) {
-      filteredModel.clear();
+    if (!root.model || ComboUtils.modelCount(root.model) === undefined || ComboUtils.modelCount(root.model) === 0) {
+      ComboUtils.clearModel(filteredModel);
       isFiltered = false;
       return;
     }
@@ -73,39 +64,39 @@ RowLayout {
     var query = searchText.trim();
     if (query === "") {
       // No search text - use source model directly, don't copy
-      filteredModel.clear();
+      ComboUtils.clearModel(filteredModel);
       isFiltered = false;
       return;
     }
 
     // We have search text - need to filter
     isFiltered = true;
-    filteredModel.clear();
+    ComboUtils.clearModel(filteredModel);
 
     // Convert ListModel to array for fuzzy search
     var items = [];
-    for (var i = 0; i < root.model.count; i++) {
-      items.push(root.model.get(i));
+    for (i = 0; i < ComboUtils.modelCount(root.model); i++) {
+      items.push(ComboUtils.getItem(root.model, i));
     }
 
     // Use fuzzy search if available, fallback to simple search
     if (typeof FuzzySort !== 'undefined') {
-      var fuzzyResults = FuzzySort.go(query, items, {
+      fuzzyResults = FuzzySort.go(query, items, {
                                         "key": "name",
                                         "limit": 50
                                       });
 
       // Add results in order of relevance
-      for (var j = 0; j < fuzzyResults.length; j++) {
-        filteredModel.append(fuzzyResults[j].obj);
+      for (j = 0; j < fuzzyResults.length; j++) {
+        ComboUtils.appendItem(filteredModel, fuzzyResults[j].obj);
       }
     } else {
       // Fallback to simple search
-      var searchLower = query.toLowerCase();
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        if (item.name.toLowerCase().includes(searchLower)) {
-          filteredModel.append(item);
+      searchLower = query.toLowerCase();
+      for (i = 0; i < items.length; i++) {
+        item = items[i];
+        if (ComboUtils.modelName(item).toLowerCase().includes(searchLower)) {
+          ComboUtils.appendItem(filteredModel, item);
         }
       }
     }
@@ -136,10 +127,10 @@ RowLayout {
     implicitWidth: Layout.minimumWidth
     model: root.activeModel
     textRole: "name"
-    currentIndex: findIndexInActiveModel(currentKey)
+    currentIndex: root.findIndexInActiveModel(root.currentKey)
     onActivated: {
-      if (combo.currentIndex >= 0 && root.activeModel && combo.currentIndex < root.activeModel.count) {
-        root.selected(root.activeModel.get(combo.currentIndex).key);
+      if (combo.currentIndex >= 0 && root.activeModel && combo.currentIndex < ComboUtils.modelCount(root.activeModel)) {
+        root.selected(ComboUtils.modelKey(root.activeModel, combo.currentIndex));
       }
     }
 
@@ -167,10 +158,10 @@ RowLayout {
 
       // Look up current selection directly in source model by key
       readonly property int sourceIndex: root.findIndexByKey(root.currentKey)
-      readonly property bool hasSelection: root.model && sourceIndex >= 0 && sourceIndex < root.model.count
+      readonly property bool hasSelection: root.model && sourceIndex >= 0 && sourceIndex < ComboUtils.modelCount(root.model)
 
       color: hasSelection ? Color.mOnSurface : Color.mOnSurfaceVariant
-      text: hasSelection ? root.model.get(sourceIndex).name : root.placeholder
+      text: hasSelection ? ComboUtils.modelItemName(root.model, sourceIndex) : root.placeholder
     }
 
     indicator: NIcon {
@@ -202,13 +193,13 @@ RowLayout {
           Keys.onPressed: event => {
                             if (Keybinds.checkKey(event, 'enter', Settings)) {
                               selectHighlighted();
-                              combo.popup.close();
+                              ComboUtils.closePopup(combo.popup);
                               event.accepted = true;
                               return;
                             }
 
                             if (Keybinds.checkKey(event, 'escape', Settings)) {
-                              combo.popup.close();
+                              ComboUtils.closePopup(combo.popup);
                               event.accepted = true;
                               return;
                             }
@@ -235,8 +226,9 @@ RowLayout {
                           }
 
           function selectHighlighted() {
-            if (listView.currentIndex >= 0 && listView.model && listView.currentIndex < listView.model.count) {
-              var selectedKey = listView.model.get(listView.currentIndex).key;
+            var selectedKey;
+            if (listView.currentIndex >= 0 && listView.model && listView.currentIndex < ComboUtils.modelCount(listView.model)) {
+              selectedKey = ComboUtils.modelKey(listView.model, listView.currentIndex);
               root.selected(selectedKey);
             }
           }
@@ -262,24 +254,26 @@ RowLayout {
             id: defaultDelegate
             ItemDelegate {
               id: delegateRoot
+              required property var model
+              required property int index
               width: listView.availableWidth
               leftPadding: Style.marginM
               rightPadding: Style.marginM
               topPadding: Style.marginS
               bottomPadding: Style.marginS
               hoverEnabled: true
-              highlighted: ListView.view.currentIndex === index
+              highlighted: listView.currentIndex === delegateRoot.index
 
               onHoveredChanged: {
                 if (hovered) {
-                  ListView.view.currentIndex = index;
+                  listView.currentIndex = delegateRoot.index;
                 }
               }
 
               onClicked: {
-                var selectedKey = listView.model.get(index).key;
+                var selectedKey = ComboUtils.modelKey(listView.model, delegateRoot.index);
                 root.selected(selectedKey);
-                combo.popup.close();
+                ComboUtils.closePopup(combo.popup);
               }
 
               contentItem: RowLayout {
@@ -287,9 +281,9 @@ RowLayout {
                 spacing: Style.marginM
 
                 NText {
-                  text: name
+                  text: ComboUtils.modelName(delegateRoot.model)
                   pointSize: Style.fontSizeM
-                  color: highlighted ? Color.mOnHover : Color.mOnSurface
+                  color: delegateRoot.highlighted ? Color.mOnHover : Color.mOnSurface
                   verticalAlignment: Text.AlignVCenter
                   elide: Text.ElideRight
                   Layout.fillWidth: true
@@ -301,52 +295,26 @@ RowLayout {
 
                   // Generic badge renderer
                   Repeater {
-                    model: {
-                      if (typeof badges === 'undefined' || badges === null)
-                        return 0;
-                      // Handle both arrays and ListModels
-                      if (typeof badges.length !== 'undefined')
-                        return badges.length;
-                      if (typeof badges.count !== 'undefined')
-                        return badges.count;
-                      return 0;
-                    }
+                    model: ComboUtils.badgeCount(delegateRoot.model)
 
                     delegate: NIcon {
+                      id: badgeIcon
                       required property int index
-                      readonly property var badgeData: {
-                        if (typeof badges === 'undefined' || badges === null)
-                          return null;
-                        // Handle both arrays and ListModels
-                        if (typeof badges.length !== 'undefined')
-                          return badges[index];
-                        if (typeof badges.get !== 'undefined')
-                          return badges.get(index);
-                        return null;
-                      }
+                      readonly property var badgeData: ComboUtils.badgeData(delegateRoot.model, badgeIcon.index)
 
-                      icon: badgeData && badgeData.icon ? badgeData.icon : ""
-                      pointSize: {
-                        if (!badgeData || !badgeData.size)
-                          return Style.fontSizeXS;
-                        if (badgeData.size === "xsmall")
-                          return Style.fontSizeXXS;
-                        else if (badgeData.size === "medium")
-                          return Style.fontSizeM;
-                        else
-                          return Style.fontSizeXS;
-                      }
-                      color: highlighted ? Color.mOnHover : (badgeData && badgeData.color ? badgeData.color : Color.mOnSurface)
+                      icon: ComboUtils.badgeIcon(badgeData)
+                      pointSize: ComboUtils.badgeSize(badgeData, Style)
+                      color: delegateRoot.highlighted ? Color.mOnHover : (ComboUtils.badgeColor(badgeData, Color.mOnSurface))
                       Layout.preferredWidth: Math.round(Style.baseWidgetSize * 0.6)
                       Layout.preferredHeight: Math.round(Style.baseWidgetSize * 0.6)
-                      visible: badgeData && badgeData.icon !== undefined && badgeData.icon !== ""
+                      visible: ComboUtils.badgeVisible(badgeData)
                     }
                   }
                 }
               }
               background: Rectangle {
                 anchors.fill: parent
-                color: highlighted ? Color.mHover : "transparent"
+                color: delegateRoot.highlighted ? Color.mHover : "transparent"
                 radius: Style.iRadiusS
               }
             }
@@ -376,12 +344,12 @@ RowLayout {
       function onVisibleChanged() {
         if (combo.popup.visible) {
           // Ensure the model is filtered when popup opens
-          filterModel();
+          root.filterModel();
           listView.currentIndex = Math.max(0, root.findIndexInActiveModel(root.currentKey));
           // Small delay to ensure the popup is fully rendered
           Qt.callLater(() => {
                          if (searchInput && searchInput.inputItem) {
-                           searchInput.inputItem.forceActiveFocus();
+                           ComboUtils.focusItem(searchInput.inputItem);
                          }
                        });
         } else {

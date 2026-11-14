@@ -5,6 +5,7 @@ import QtQuick.Shapes
 import Celeste.Config
 import qs.components
 import qs.services
+import "StyledTextFieldHelpers.js" as StyledTextFieldHelpers
 
 TextFieldBase {
     id: root
@@ -14,36 +15,36 @@ TextFieldBase {
         Filled
     }
 
-    property int type: StyledTextField.Outlined
+    final property int type: StyledTextField.Outlined
 
-    property int smallFontSize: Tokens.font.label.small.pointSize
-    readonly property real smallFontScale: smallFontSize / font.pointSize
+    final property int smallFontSize: Tokens.font.label.small.pointSize
+    readonly final property real smallFontScale: smallFontSize / font.pointSize
 
-    property int verticalPadding: Tokens.padding.large
-    property int horizontalPadding: Tokens.padding.large
     property int radius: Tokens.rounding.small
-    readonly property int clampedRadius: Math.min(horizontalPadding, Math.min(width, height) / 2, radius)
+    readonly final property int clampedRadius: Math.min(fieldHorizontalPadding, Math.min(width, height) / 2, radius)
 
-    property string leadingIcon
-    property string trailingIcon
-    readonly property int leadingOffset: leadingIcon ? leadingIconLoader.width + leadingIconLoader.anchors.leftMargin : 0
-    readonly property int trailingOffset: trailingIcon ? trailingIconLoader.width + trailingIconLoader.anchors.rightMargin : 0
+    final property int fieldVerticalPadding: Tokens.padding.large
+    final property int fieldHorizontalPadding: Tokens.padding.large
+    final property string leadingIcon
+    final property string trailingIcon
+    readonly final property int leadingOffset: leadingIcon ? leadingIconLoader.width + leadingIconLoader.anchors.leftMargin : 0
+    readonly final property int trailingOffset: trailingIcon ? trailingIconLoader.width + trailingIconLoader.anchors.rightMargin : 0
 
-    property string supportingText
-    property string errorText
-    property bool isError
-    property bool emptyIsValid: true
-    property var validate // Regex or function
-    readonly property bool valid: !validate || (!text && emptyIsValid) || (validate instanceof RegExp ? validate.test(text) : !!validate(text))
-    readonly property string effectiveSupportingText: isError && errorText ? errorText : supportingText
-    readonly property int supportingTextOffset: effectiveSupportingText ? supportingTextLoader.height + Tokens.spacing.extraSmall : 0
+    final property string supportingText
+    final property string errorText
+    final property bool isError
+    final property bool emptyIsValid: true
+    final property var validate // Regex or function
+    readonly final property bool valid: StyledTextFieldHelpers.isValid(validate, text, emptyIsValid)
+    readonly final property string effectiveSupportingText: isError && errorText ? errorText : supportingText
+    readonly final property int supportingTextOffset: effectiveSupportingText ? supportingTextLoader.height + Tokens.spacing.extraSmall : 0
 
-    readonly property int filledOffset: type === StyledTextField.Filled ? Tokens.spacing.small : 0
+    readonly final property int filledOffset: type === StyledTextField.Filled ? Tokens.spacing.small : 0
 
-    leftPadding: horizontalPadding + leadingOffset
-    rightPadding: horizontalPadding + trailingOffset
-    topPadding: verticalPadding + filledOffset
-    bottomPadding: verticalPadding + supportingTextOffset - filledOffset
+    leftPadding: fieldHorizontalPadding + leadingOffset
+    rightPadding: fieldHorizontalPadding + trailingOffset
+    topPadding: fieldVerticalPadding + filledOffset
+    bottomPadding: fieldVerticalPadding + supportingTextOffset - filledOffset
 
     onPressed: {
         if (!stateLayer.disabled)
@@ -108,7 +109,7 @@ TextFieldBase {
 
                     PropertyChanges {
                         placeholder.scale: root.smallFontScale
-                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.horizontalPadding + -Tokens.spacing.extraSmall
+                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.fieldHorizontalPadding + -Tokens.spacing.extraSmall
                     }
                     AnchorChanges {
                         target: placeholder
@@ -121,7 +122,7 @@ TextFieldBase {
 
                     PropertyChanges {
                         placeholder.scale: root.smallFontScale
-                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.horizontalPadding + root.leadingOffset
+                        placeholder.anchors.leftMargin: -(1 - root.smallFontScale) * placeholder.width / 2 + root.fieldHorizontalPadding + root.leadingOffset
                     }
                     AnchorChanges {
                         target: placeholder
@@ -154,7 +155,7 @@ TextFieldBase {
             sourceComponent: MaterialIcon {
                 text: root.leadingIcon
                 color: Colours.palette.m3onSurfaceVariant
-                fontStyle: Tokens.font.icon.builders.medium.scale(0.9).build()
+                fontStyle: Tokens.styled("icon", "medium", { scale: 0.9 })
             }
         }
 
@@ -169,7 +170,7 @@ TextFieldBase {
             sourceComponent: MaterialIcon {
                 text: root.trailingIcon
                 color: Colours.palette.m3onSurfaceVariant
-                fontStyle: Tokens.font.icon.builders.medium.scale(0.9).build()
+                fontStyle: Tokens.styled("icon", "medium", { scale: 0.9 })
             }
         }
     }
@@ -179,7 +180,7 @@ TextFieldBase {
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        anchors.leftMargin: root.horizontalPadding
+        anchors.leftMargin: root.fieldHorizontalPadding
         active: root.effectiveSupportingText
 
         sourceComponent: StyledText {
@@ -205,16 +206,16 @@ TextFieldBase {
             ShapePath {
                 id: path
 
-                readonly property real outlineGap: placeholder.width * root.smallFontScale + Tokens.spacing.extraSmall * 2
-                property real outlineGapScale: root.activeFocus || root.text ? 1 : 0
-                readonly property real inset: strokeWidth / 2
+                readonly final property real outlineGap: placeholder.width * root.smallFontScale + Tokens.spacing.extraSmall * 2
+                final property real outlineGapScale: root.activeFocus || root.text ? 1 : 0
+                readonly final property real inset: strokeWidth / 2
 
                 strokeWidth: root.activeFocus ? 2 : 1
                 strokeColor: root.isError ? Colours.palette.m3error : (root.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline)
                 fillColor: "transparent"
                 capStyle: ShapePath.RoundCap
 
-                startX: path.inset + root.horizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2 + path.outlineGap * path.outlineGapScale
+                startX: path.inset + root.fieldHorizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2 + path.outlineGap * path.outlineGapScale
 
                 PathLine {
                     x: bg.width - path.inset - root.clampedRadius
@@ -256,7 +257,7 @@ TextFieldBase {
                     radiusY: root.clampedRadius
                 }
                 PathLine {
-                    x: path.inset + root.horizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2
+                    x: path.inset + root.fieldHorizontalPadding - root.clampedRadius + path.outlineGap * (1 - path.outlineGapScale) / 2
                 }
 
                 Behavior on outlineGapScale {

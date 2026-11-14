@@ -1,11 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.Compositor
 import qs.Services.Hardware
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -18,61 +20,37 @@ ColumnLayout {
     Repeater {
       model: Quickshell.screens || []
       delegate: NBox {
+        id: monitorSettings
+        required property ShellScreen modelData
         Layout.fillWidth: true
         implicitHeight: Math.round(contentCol.implicitHeight + Style.margin2L)
         color: Color.mSurface
 
-        property var brightnessMonitor: BrightnessService.getMonitorForScreen(modelData)
+        property var brightnessMonitor: BrightnessService.getMonitorForScreen(monitorSettings.modelData)
         property real localBrightness: 0.5
         property bool localBrightnessChanging: false
-        readonly property string automaticOptionLabel: {
-          var baseLabel = I18n.tr("panels.display.monitors-backlight-device-auto-option");
-          var autoDevicePath = (BrightnessService.availableBacklightDevices && BrightnessService.availableBacklightDevices.length > 0) ? BrightnessService.availableBacklightDevices[0] : "";
-          if (autoDevicePath === "")
-            return baseLabel;
-
-          var autoDeviceName = BrightnessService.getBacklightDeviceName(autoDevicePath) || autoDevicePath;
-          return baseLabel + "(" + autoDeviceName + ")";
-        }
-        readonly property var backlightDeviceOptions: {
-          var options = [
-                {
-                  "key": "",
-                  "name": automaticOptionLabel
-                }
-              ];
-
-          var devices = BrightnessService.availableBacklightDevices || [];
-          for (var i = 0; i < devices.length; i++) {
-            var devicePath = devices[i];
-            var deviceName = BrightnessService.getBacklightDeviceName(devicePath) || devicePath;
-            options.push({
-                           "key": devicePath,
-                           "name": deviceName
-                         });
-          }
-          return options;
-        }
+        readonly property string automaticOptionLabel: SettingsValue.automaticBacklightLabel(I18n.tr("panels.display.monitors-backlight-device-auto-option"), BrightnessService.availableBacklightDevices, BrightnessService)
+        readonly property var backlightDeviceOptions: SettingsValue.backlightDeviceOptions(BrightnessService.availableBacklightDevices, BrightnessService, automaticOptionLabel)
 
         onBrightnessMonitorChanged: {
           if (brightnessMonitor && !localBrightnessChanging)
-            localBrightness = brightnessMonitor.brightness || 0.5;
+            localBrightness = SettingsValue.read(brightnessMonitor, "brightness") || 0.5;
         }
 
         Connections {
           target: BrightnessService
-          function onMonitorBrightnessChanged(monitor, newBrightness) {
-            if (monitor === brightnessMonitor && !localBrightnessChanging) {
-              localBrightness = newBrightness;
+          function onMonitorBrightnessChanged(monitor: var, newBrightness: real): void {
+            if (monitor === monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
+              monitorSettings.localBrightness = newBrightness;
             }
           }
         }
         Connections {
-          target: brightnessMonitor
+          target: monitorSettings.brightnessMonitor
           ignoreUnknownSignals: true
           function onBrightnessUpdated() {
-            if (brightnessMonitor && !localBrightnessChanging) {
-              localBrightness = brightnessMonitor.brightness || 0;
+            if (monitorSettings.brightnessMonitor && !monitorSettings.localBrightnessChanging) {
+              monitorSettings.localBrightness = SettingsValue.read(monitorSettings.brightnessMonitor, "brightness") || 0;
             }
           }
         }
@@ -81,8 +59,8 @@ ColumnLayout {
           interval: 120
           repeat: false
           onTriggered: {
-            if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable && Math.abs(localBrightness - brightnessMonitor.brightness) >= 0.005) {
-              brightnessMonitor.setBrightness(localBrightness);
+            if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") && Math.abs(monitorSettings.localBrightness - SettingsValue.read(monitorSettings.brightnessMonitor, "brightness")) >= 0.005) {
+              SettingsValue.invoke(monitorSettings.brightnessMonitor, "setBrightness", monitorSettings.localBrightness);
             }
           }
         }
@@ -99,7 +77,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBottom
 
             NText {
-              text: modelData.name || "Unknown"
+              text: monitorSettings.modelData.name || "Unknown"
               pointSize: Style.fontSizeL
               font.weight: Style.fontWeightSemiBold
               Layout.alignment: Qt.AlignBottom
@@ -108,14 +86,14 @@ ColumnLayout {
             NText {
               Layout.fillWidth: true
               readonly property real compositorScale: {
-                const info = CompositorService.displayScales[modelData.name];
+                const info = CompositorService.displayScales[monitorSettings.modelData.name];
                 return (info && info.scale) ? info.scale : 1.0;
               }
               text: {
-                I18n.tr("system.monitor-description", {
-                          "model": modelData.model,
-                          "width": modelData.width * compositorScale,
-                          "height": modelData.height * compositorScale,
+                I18n.trArgs("system.monitor-description", {
+                          "model": monitorSettings.modelData.model,
+                          "width": monitorSettings.modelData.width * compositorScale,
+                          "height": monitorSettings.modelData.height * compositorScale,
                           "scale": compositorScale
                         });
               }
@@ -130,7 +108,7 @@ ColumnLayout {
           ColumnLayout {
             spacing: Style.marginS
             Layout.fillWidth: true
-            visible: brightnessMonitor !== undefined && brightnessMonitor !== null
+            visible: monitorSettings.brightnessMonitor !== undefined && monitorSettings.brightnessMonitor !== null
 
             RowLayout {
               Layout.fillWidth: true
@@ -146,23 +124,23 @@ ColumnLayout {
                 id: brightnessSlider
                 from: 0
                 to: 1
-                value: localBrightness
+                value: monitorSettings.localBrightness
                 stepSize: 0.01
-                enabled: brightnessMonitor ? brightnessMonitor.brightnessControlAvailable : false
+                enabled: monitorSettings.brightnessMonitor ? SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") : false
                 onMoved: value => {
-                           if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
-                             localBrightness = value;
+                           if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable")) {
+                             monitorSettings.localBrightness = value;
                              debounceTimer.restart();
                            }
                          }
                 onPressedChanged: (pressed, value) => {
-                                    localBrightnessChanging = pressed;
-                                    if (brightnessMonitor && brightnessMonitor.brightnessControlAvailable) {
+                                    monitorSettings.localBrightnessChanging = pressed;
+                                    if (monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable")) {
                                       if (pressed) {
-                                        localBrightness = value;
+                                        monitorSettings.localBrightness = value;
                                         debounceTimer.restart();
                                       } else {
-                                        localBrightness = value;
+                                        monitorSettings.localBrightness = value;
                                         debounceTimer.restart();
                                       }
                                     }
@@ -171,27 +149,27 @@ ColumnLayout {
               }
 
               NText {
-                text: brightnessMonitor ? Math.round(localBrightness * 100) + "%" : "N/A"
+                text: monitorSettings.brightnessMonitor ? Math.round(monitorSettings.localBrightness * 100) + "%" : "N/A"
                 Layout.preferredWidth: 55
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignVCenter
-                opacity: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                opacity: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") ? 0.5 : 1.0
               }
 
               Item {
                 Layout.preferredWidth: 30
                 Layout.fillHeight: true
                 NIcon {
-                  icon: brightnessMonitor && brightnessMonitor.method == "internal" ? "device-laptop" : "device-desktop"
+                  icon: monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "method") == "internal" ? "device-laptop" : "device-desktop"
                   anchors.right: parent.right
                   anchors.verticalCenter: parent.verticalCenter
-                  opacity: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable ? 0.5 : 1.0
+                  opacity: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") ? 0.5 : 1.0
                 }
               }
             }
 
             NText {
-              visible: brightnessMonitor && !brightnessMonitor.brightnessControlAvailable && !(brightnessMonitor.method === "internal" && brightnessMonitor.initInProgress)
+              visible: monitorSettings.brightnessMonitor && !SettingsValue.read(monitorSettings.brightnessMonitor, "brightnessControlAvailable") && !(SettingsValue.read(monitorSettings.brightnessMonitor, "method") === "internal" && SettingsValue.read(monitorSettings.brightnessMonitor, "initInProgress"))
               text: I18n.tr("panels.display.monitors-brightness-unavailable-generic")
               pointSize: Style.fontSizeXS
               color: Color.mOnSurfaceVariant
@@ -201,12 +179,12 @@ ColumnLayout {
 
             NComboBox {
               Layout.fillWidth: true
-              visible: brightnessMonitor && brightnessMonitor.method === "internal"
+              visible: monitorSettings.brightnessMonitor && SettingsValue.read(monitorSettings.brightnessMonitor, "method") === "internal"
               label: I18n.tr("panels.display.monitors-backlight-device-label")
               description: I18n.tr("panels.display.monitors-backlight-device-description")
-              model: backlightDeviceOptions
-              currentKey: BrightnessService.getMappedBacklightDevice(modelData.name) || ""
-              onSelected: key => BrightnessService.setMappedBacklightDevice(modelData.name, key)
+              model: monitorSettings.backlightDeviceOptions
+              currentKey: BrightnessService.getMappedBacklightDevice(monitorSettings.modelData.name) || ""
+              onSelected: key => BrightnessService.setMappedBacklightDevice(monitorSettings.modelData.name, key)
             }
           }
         }

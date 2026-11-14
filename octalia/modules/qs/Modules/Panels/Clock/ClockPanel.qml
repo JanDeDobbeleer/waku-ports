@@ -1,14 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Wayland
 import qs.Commons
-import qs.Modules.Cards
 import qs.Modules.MainScreen
-import qs.Services.Location
-import qs.Services.UI
-import qs.Widgets
+import "ClockPanelUtils.js" as ClockPanelUtils
 
 SmartPanel {
   id: root
@@ -30,47 +24,17 @@ SmartPanel {
       // All clock panel cards
       Repeater {
         model: Settings.data.calendar.cards
-        Loader {
-          active: modelData.enabled && (modelData.id !== "weather-card" || Settings.data.location.weatherEnabled)
+        delegate: Loader {
+          required property var modelData
+          readonly property bool cardEnabled: ClockPanelUtils.cardEnabled(modelData, Settings.data.location.weatherEnabled)
+          active: cardEnabled
           visible: active
           Layout.fillWidth: true
-          sourceComponent: {
-            switch (modelData.id) {
-            case "calendar-header-card":
-              return calendarHeaderCard;
-            case "calendar-month-card":
-              return calendarMonthCard;
-            case "weather-card":
-              return weatherCard;
-            default:
-              return null;
-            }
-          }
+          source: ClockPanelUtils.sourceForCard(modelData)
+          onLoaded: ClockPanelUtils.configureItem(modelData, item)
         }
       }
     }
   }
 
-  Component {
-    id: calendarHeaderCard
-    CalendarHeaderCard {
-      Layout.fillWidth: true
-    }
-  }
-
-  Component {
-    id: calendarMonthCard
-    CalendarMonthCard {
-      Layout.fillWidth: true
-    }
-  }
-
-  Component {
-    id: weatherCard
-    WeatherCard {
-      Layout.fillWidth: true
-      forecastDays: 5
-      showLocation: false
-    }
-  }
 }

@@ -1,8 +1,11 @@
 import QtQuick
+import "PluginFirstPartyServiceApiUtils.js" as PluginFirstPartyServiceApiUtils
 
 // Narrow proxy for the non-authentication first-party services used by the
 // built-in bar. It intentionally has no generic property or method forwarding.
 QtObject {
+  id: api
+
   required property string ownerPluginId
   required property string serviceId
 
@@ -22,32 +25,33 @@ QtObject {
   property var _selectPlayer: null
   property var _refresh: null
 
-  function setIdleEnabled(value) {
-    if (serviceId === "nomarchy.idle" && _setIdleEnabled) _setIdleEnabled(!!value)
+  function setIdleEnabled(value: bool): void {
+    if (serviceId === "nomarchy.idle") PluginFirstPartyServiceApiUtils.invoke(_setIdleEnabled, [!!value], api)
   }
 
-  function setNightlight(value) {
-    if (serviceId === "nomarchy.nightlight" && _setNightlight) _setNightlight(!!value)
+  function setNightlight(value: bool): void {
+    if (serviceId === "nomarchy.nightlight") PluginFirstPartyServiceApiUtils.invoke(_setNightlight, [!!value], api)
   }
 
-  function setDoNotDisturb(value) {
-    if (serviceId === "nomarchy.notifications" && _setDoNotDisturb) _setDoNotDisturb(!!value)
+  function setDoNotDisturb(value: bool): void {
+    if (serviceId === "nomarchy.notifications") PluginFirstPartyServiceApiUtils.invoke(_setDoNotDisturb, [!!value], api)
   }
 
-  function runAction(action, showFeedback, playerId) {
-    if (serviceId === "nomarchy.media" && _runAction)
-      _runAction(String(action || ""), !!showFeedback, String(playerId || ""))
+  function runAction(action: string, showFeedback: bool, playerId: string): void {
+    if (serviceId === "nomarchy.media")
+      PluginFirstPartyServiceApiUtils.invoke(_runAction, [String(action || ""), !!showFeedback, String(playerId || "")], api)
   }
 
-  function playerKey(player) {
-    return serviceId === "nomarchy.media" && _playerKey ? _playerKey(player) : ""
+  function playerKey(player: var): string {
+    return serviceId === "nomarchy.media" && _playerKey
+      ? PluginFirstPartyServiceApiUtils.invoke(_playerKey, [player], api) : ""
   }
 
-  function selectPlayer(playerId) {
-    if (serviceId === "nomarchy.media" && _selectPlayer) _selectPlayer(String(playerId || ""))
+  function selectPlayer(playerId: string): void {
+    if (serviceId === "nomarchy.media") PluginFirstPartyServiceApiUtils.invoke(_selectPlayer, [String(playerId || "")], api)
   }
 
-  function refresh() {
-    if (serviceId === "nomarchy.remote-session" && _refresh) _refresh()
+  function refresh(): void {
+    if (serviceId === "nomarchy.remote-session") PluginFirstPartyServiceApiUtils.invoke(_refresh, [], api)
   }
 }

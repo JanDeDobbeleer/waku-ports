@@ -1,9 +1,6 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
-import Quickshell
 import qs.Commons
-import qs.Services.System
 import qs.Services.UI
 import qs.Widgets
 import qs.compat
@@ -22,7 +19,7 @@ ColumnLayout {
   signal updateWidgetSettingsInSection(string section, int index, var settings)
   signal moveWidgetBetweenSections(string fromSection, int index, string toSection)
 
-  function getSectionIcons() {
+  function getSectionIcons(): var {
     return {
       "left": "arrow-bar-to-up",
       "right": "arrow-bar-to-down"

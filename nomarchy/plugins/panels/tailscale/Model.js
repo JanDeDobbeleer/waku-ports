@@ -1,3 +1,34 @@
+function field(object, key) {
+  return object ? object[key] : undefined
+}
+
+function arrayLength(value) {
+  return value ? value.length : 0
+}
+
+function setField(object, key, value) {
+  if (object) object[key] = value
+}
+
+function callMethod(object, name, args) {
+  return object[name].apply(object, args || [])
+}
+
+function mapToItemX(item, target, x, y) {
+  return item.mapToItem(target, x, y).x
+}
+
+function mapToItemY(item, target, x, y) {
+  return item.mapToItem(target, x, y).y
+}
+
+function recentRegions(settings) {
+  var regions = settings && settings.recentMullvadRegions
+  if (Array.isArray(regions)) return regions
+  var countries = settings && settings.recentMullvadCountries
+  return Array.isArray(countries) ? countries : []
+}
+
 function filterIPv4(ips) {
   var result = []
   if (!ips || typeof ips.length !== "number") return result
@@ -308,8 +339,23 @@ function parseAccounts(raw, tr) {
   }
 }
 
+function copyOptionsFor(peer) {
+  var options = []
+  if (!peer) return options
+  var name = String(peer.DisplayName || peer.HostName || "")
+  var dns = String(peer.DNSName || "")
+  var ipv6 = peer.TailscaleIPv6 && peer.TailscaleIPv6.length > 0 ? String(peer.TailscaleIPv6[0] || "") : ""
+  var ip = peer.TailscaleIPs && peer.TailscaleIPs.length > 0 ? String(peer.TailscaleIPs[0]) : ""
+  if (name !== "") options.push({ kind: "name", label: name })
+  if (dns !== "") options.push({ kind: "dns", label: dns })
+  if (ipv6 !== "") options.push({ kind: "ipv6", label: ipv6 })
+  if (ip !== "") options.push({ kind: "ip", label: ip })
+  return options
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    copyOptionsFor: copyOptionsFor,
     filterIPv4: filterIPv4,
     filterIPv6: filterIPv6,
     cleanDnsName: cleanDnsName,

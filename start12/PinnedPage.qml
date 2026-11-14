@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import waku.services as S
 
@@ -5,14 +7,21 @@ import waku.services as S
 Item {
     id: root
 
-    signal launch(var entry)
-    signal context(var entry, var point)
+    signal launch(entry: S.DesktopEntry)
+    signal context(entry: S.DesktopEntry, point: point)
     signal showAll
 
     // Re-evaluated when the pin list or the catalogue changes.
-    readonly property var entries: {
-        S.AppsService.count;
-        return Pins.ids.map(id => S.AppsService.byId(id)).filter(e => e);
+    readonly property list<S.DesktopEntry> entries: {
+        const found = [];
+        if (S.AppsService.count === 0)
+            return found;
+        for (let i = 0; i < Pins.ids.length; ++i) {
+            const entry = S.AppsService.byId(Pins.ids[i]);
+            if (entry)
+                found.push(entry);
+        }
+        return found;
     }
 
     Text {
@@ -77,7 +86,7 @@ Item {
 
         delegate: Item {
             id: cell
-            required property var modelData
+            required property S.DesktopEntry modelData
             width: grid.cellWidth
             height: grid.cellHeight
 

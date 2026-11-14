@@ -1,11 +1,11 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Celeste.Config
 import qs.components
 import qs.services
 import qs.utils
+import "AppsData.js" as AD
 
 // Port: the running-applications list. It replaces upstream's rotated active-window label (the
 // bar entry keeps the id "activeWindow", so the layout and the config stay as they were) and
@@ -26,64 +26,50 @@ import qs.utils
 Item {
     id: root
 
-    required property var bar
+    required final property var bar
 
-    readonly property var all: Hypr.appGroups
-    readonly property string focusedAddress: Hypr.focusedHwnd
+    readonly final property var all: Hypr.appGroups
+    readonly final property string focusedAddress: Hypr.focusedHwnd
 
-    readonly property real fullCell: Tokens.sizes.bar.innerWidth
-    readonly property real minCell: Math.round(fullCell * 0.7)
-    readonly property real gap: Tokens.spacing.extraSmall
+    readonly final property real fullCell: Tokens.sizes.bar.innerWidth
+    readonly final property real minCell: Math.round(fullCell * 0.7)
+    readonly final property real gap: Tokens.spacing.extraSmall
 
     // Height left for this entry: the bar minus the other entries, their spacing and some room
     // for the two spacers.
-    readonly property real avail: {
-        const others = bar.children.filter(c => c.entryId && c.entryId !== "activeWindow" && c.entryId !== "spacer");
-        const otherHeight = others.reduce((acc, curr) => acc + (curr.item?.nonAnimHeight ?? curr.height), 0);
-        return Math.max(0, bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2 - fullCell * 2);
+    readonly final property real avail: {
+        return AD.avail(bar, fullCell);
     }
-    readonly property int count: all.length
-    readonly property real cell: count > 0 ? Math.max(minCell, Math.min(fullCell, (avail + gap) / count - gap)) : fullCell
-    readonly property int capacity: Math.max(1, Math.floor((avail + gap) / (cell + gap)))
-    readonly property bool overflow: count > capacity
-    readonly property var shown: {
-        if (!overflow)
-            return all;
-        const keep = Math.max(1, capacity - 1);
-        const out = all.slice(0, keep);
-        const f = all.find(g => g.windows.some(t => t.address === focusedAddress));
-        if (f && !out.includes(f))
-            out[keep - 1] = f;
-        return out;
-    }
+    readonly final property int count: AD.length(all)
+    readonly final property real cell: count > 0 ? Math.max(minCell, Math.min(fullCell, (avail + gap) / count - gap)) : fullCell
+    readonly final property int capacity: Math.max(1, Math.floor((avail + gap) / (cell + gap)))
+    readonly final property bool overflow: count > capacity
+    readonly final property var shown: AD.shown(all, overflow, capacity, focusedAddress)
 
     // The click handler of every icon (the test IPC calls it too). Returns what happened.
     function clickApp(i: int): string {
-        const g = shown[i];
+        const g = groupAt(i);
         return g ? Hypr.clickGroup(g) : "none";
     }
 
     // Index in `shown` of the group with the focused window, or -1.
     function focusedIndex(): int {
-        return shown.findIndex(g => g.windows.some(t => t.address === focusedAddress));
+        return AD.focusedIndex(shown, focusedAddress);
     }
 
     // The icon of the group with this key, or null.
-    function appForKey(key: string): var {
-        for (let i = 0; i < column.children.length; i++) {
-            const c = column.children[i];
-            if (c.isApp && c.modelData?.key === key)
-                return c;
-        }
-        return null;
+    function groupAt(i: int): HyprGroup {
+        return AD.groupAt(shown, i);
+    }
+
+    function appForKey(key: string): Item {
+        return AD.appForKey(column.children, key);
     }
 
     // The icon under local y, or null.
-    function appAt(y: real): var {
-        const c = column.childAt(width / 2, y);
-        return c?.isApp ? c : null;
+    function appAt(y: real): Item {
+        return AD.appAt(column, width / 2, y);
     }
-
     Component.onCompleted: Hypr.barWindow = Window.window
 
     implicitWidth: Tokens.sizes.bar.innerWidth
@@ -96,25 +82,25 @@ Item {
         spacing: root.gap
 
         Repeater {
-            model: root.shown.length
+            model: AD.length(root.shown)
 
             delegate: Item {
                 id: app
 
-                required property int index
-                readonly property var modelData: root.shown[index]
+                required final property int index
+                readonly final property HyprGroup modelData: root.groupAt(index)
 
-                readonly property bool isApp: true
-                readonly property int windowCount: modelData.windows.length
-                readonly property bool focused: modelData.windows.some(t => t.address === root.focusedAddress)
-                readonly property bool onActiveWs: modelData.windows.some(t => t.wsActive !== false && !t.minimized)
+                readonly final property bool isApp: true
+                readonly final property int windowCount: AD.windowCount(modelData)
+                readonly final property bool focused: AD.winFocused(modelData, root.focusedAddress)
+                readonly final property bool onActiveWs: AD.onActiveWs(modelData)
                 // Every window of the application is minimized: dimmed, with a dash below the icon.
-                readonly property bool allMinimized: modelData.windows.length > 0 && modelData.windows.every(t => t.minimized)
-                readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
-                readonly property string progressState: modelData.progressState ?? "none"
-                readonly property real progress: modelData.progress ?? 0
-                readonly property bool hasProgress: progressState !== "none"
-                readonly property bool busy: modelData.windows.some(t => t.progressState === "indeterminate")
+                readonly final property bool allMinimized: AD.allMinimized(modelData)
+                readonly final property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
+                readonly final property string progressState: modelData.progressState
+                readonly final property real progress: modelData.progress
+                readonly final property bool hasProgress: progressState !== "none"
+                readonly final property bool busy: AD.busy(modelData)
 
                 width: root.fullCell
                 height: root.cell
@@ -152,7 +138,7 @@ Item {
                     width: Math.round(root.cell * 0.6)
                     height: width
                     visible: app.hasImage
-                    source: app.modelData.icon ?? ""
+                    source: app.modelData.icon
                     sourceSize: Qt.size(width * 2, height * 2)
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
@@ -176,7 +162,7 @@ Item {
                 Rectangle {
                     id: progressDot
 
-                    readonly property bool steady: app.progressState === "error" || app.progressState === "paused"
+                    readonly final property bool steady: app.progressState === "error" || app.progressState === "paused"
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
@@ -265,7 +251,7 @@ Item {
                         // The hover flyout has done its job once an app is chosen. Switching to
                         // a window on another desktop can swallow the hover exit that would
                         // otherwise close it.
-                        root.bar.popouts.hasCurrent = false;
+                        AD.closePopout(root.bar);
                         root.clickApp(app.index);
                     }
                 }
@@ -274,7 +260,7 @@ Item {
 
         // "+N": the windows that do not fit.
         Item {
-            readonly property bool isApp: false
+            readonly final property bool isApp: false
 
             visible: root.overflow
             width: root.fullCell
@@ -282,7 +268,7 @@ Item {
 
             StyledText {
                 anchors.centerIn: parent
-                text: "+" + (root.count - root.shown.length)
+                text: "+" + (root.count - AD.length(root.shown))
                 color: Colours.palette.m3onSurfaceVariant
             }
         }

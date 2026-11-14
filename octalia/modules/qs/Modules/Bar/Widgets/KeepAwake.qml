@@ -1,7 +1,7 @@
 import QtQuick 6.10
-import QtQuick.Layouts
 import Quickshell
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
 import qs.Services.Power
 import qs.Services.UI
@@ -22,8 +22,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -33,8 +34,8 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   implicitWidth: pill.width
   implicitHeight: pill.height
@@ -55,7 +56,7 @@ Item {
                    PanelService.closeContextMenu(screen);
 
                    if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -71,7 +72,7 @@ Item {
     icon: IdleInhibitorService.isInhibited ? "keep-awake-on" : "keep-awake-off"
     onClicked: IdleInhibitorService.manualToggle()
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
     forceOpen: IdleInhibitorService.timeout !== null
     forceClose: IdleInhibitorService.timeout == null

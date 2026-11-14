@@ -1,14 +1,11 @@
 import QtQuick 6.10
 import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Widgets
 import qs.Commons
 import qs.Modules.Panels.Settings
 import qs.Services.UI
 import qs.Widgets
-import qs.compat
 
 PopupWindow {
   id: root
@@ -267,7 +264,7 @@ PopupWindow {
                           action.execute();
                         }
                         if (Settings.data.dock.dockType === "attached") {
-                          const panel = PanelService.getPanel("staticDockPanel", root.screen, false);
+                          const panel = PanelService.getPanelWithFallback("staticDockPanel", root.screen, false);
                           if (panel)
                             panel.close();
                         }
@@ -534,8 +531,9 @@ PopupWindow {
   }
 
   function handleLauncherSettings() {
+    var panel;
     if (targetScreen) {
-      var panel = PanelService.getPanel("settingsPanel", targetScreen);
+      panel = PanelService.getPanel("settingsPanel", targetScreen);
       panel.requestedTab = SettingsPanel.Tab.Launcher;
       panel.toggle();
     }
@@ -543,8 +541,9 @@ PopupWindow {
   }
 
   function handleDockSettings() {
+    var panel;
     if (targetScreen) {
-      var panel = PanelService.getPanel("settingsPanel", targetScreen);
+      panel = PanelService.getPanel("settingsPanel", targetScreen);
       panel.requestedTab = SettingsPanel.Tab.Dock;
       panel.toggle();
     }

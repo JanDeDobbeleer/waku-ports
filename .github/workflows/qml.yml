@@ -1,0 +1,79 @@
+name: qml
+
+# Runs tools/check.ps1 on every port: qmllint with every category (qmlsc compiler included), a load of
+# every component plus a smoke run of the real shell on the pinned waku engine, and the perf budgets
+# in tools/perf-budget.json. Findings show up as annotations on the pull request.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qml-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.port }}
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        port: [celeste, nomarchy, octalia, start12]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # check.ps1 keeps its logs in the temp folder; point it where the artifact step can find it.
+      # The runner context is not available in job-level env, so set it here.
+      - name: Use the runner temp folder
+        shell: pwsh
+        run: |
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+
+      - name: Read pins
+        id: pin
+        shell: pwsh
+        run: |
+          $pin = Get-Content tools/waku.json -Raw | ConvertFrom-Json
+          "qt=$($pin.qt)" >> $env:GITHUB_OUTPUT
+          "waku=$(./tools/fetch-waku.ps1 -Resolve)" >> $env:GITHUB_OUTPUT
+
+      # aqtinstall 3.3.0 cannot install Qt 6.11+ (the repository layout changed). Use the commit
+      # waku pins in .github/requirements-ci.txt until a release ships miurahr/aqtinstall#1000.
+      - name: Install Qt
+        uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
+        with:
+          version: ${{ steps.pin.outputs.qt }}
+          arch: win64_msvc2022_64
+          aqtsource: git+https://github.com/miurahr/aqtinstall@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7
+          cache: true
+
+      - name: Cache waku
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/waku
+          key: waku-${{ steps.pin.outputs.waku }}-x64
+
+      - name: Fetch waku
+        shell: pwsh
+        run: ./tools/fetch-waku.ps1 -Version ${{ steps.pin.outputs.waku }} -Arch x64
+
+      - name: Check ${{ matrix.port }}
+        shell: pwsh
+        run: |
+          $env:QT_BIN = Join-Path $env:QT_ROOT_DIR 'bin'
+          ./tools/check.ps1 -Port ${{ matrix.port }}
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: check-${{ matrix.port }}
+          path: ${{ runner.temp }}/waku-ports-check
+          if-no-files-found: ignore

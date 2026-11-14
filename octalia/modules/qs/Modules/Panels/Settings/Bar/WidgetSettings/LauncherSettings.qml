@@ -1,10 +1,10 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import qs.Commons
 import qs.Services.UI
 import qs.Widgets
+import "../../SettingsValue.js" as SettingsValue
 
 ColumnLayout {
   id: root
@@ -18,12 +18,12 @@ ColumnLayout {
   signal settingsChanged(var settings)
 
   // Local state
-  property string valueIcon: widgetData.icon !== undefined ? widgetData.icon : widgetMetadata.icon
+  property string valueIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "icon")
   // No distro logo on Windows (HostService.osLogo is empty).
   readonly property bool valueUseDistroLogo: false
-  property string valueCustomIconPath: widgetData.customIconPath !== undefined ? widgetData.customIconPath : widgetMetadata.customIconPath
-  property bool valueEnableColorization: widgetData.enableColorization !== undefined ? widgetData.enableColorization : widgetMetadata.enableColorization
-  property string valueColorizeSystemIcon: widgetData.colorizeSystemIcon !== undefined ? widgetData.colorizeSystemIcon : widgetMetadata.colorizeSystemIcon
+  property string valueCustomIconPath: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "customIconPath")
+  property bool valueEnableColorization: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "enableColorization")
+  property string valueColorizeSystemIcon: SettingsValue.undefinedFallback(widgetData, widgetMetadata, "colorizeSystemIcon")
 
   function saveSettings() {
     var settings = Object.assign({}, widgetData || {});
@@ -38,24 +38,24 @@ ColumnLayout {
   NToggle {
     label: I18n.tr("bar.custom-button.enable-colorization-label")
     description: I18n.tr("bar.control-center.enable-colorization-description")
-    checked: valueEnableColorization
+    checked: root.valueEnableColorization
     onToggled: checked => {
-                 valueEnableColorization = checked;
-                 saveSettings();
+                 root.valueEnableColorization = checked;
+                 root.saveSettings();
                }
-    defaultValue: widgetMetadata.enableColorization
+    defaultValue: SettingsValue.read(root.widgetMetadata, "enableColorization")
   }
 
   NColorChoice {
-    visible: valueEnableColorization
+    visible: root.valueEnableColorization
     label: I18n.tr("common.select-icon-color")
     description: I18n.tr("bar.control-center.color-selection-description")
-    currentKey: valueColorizeSystemIcon
+    currentKey: root.valueColorizeSystemIcon
     onSelected: function (key) {
-      valueColorizeSystemIcon = key;
-      saveSettings();
+      root.valueColorizeSystemIcon = key;
+      root.saveSettings();
     }
-    defaultValue: widgetMetadata.colorizeSystemIcon
+    defaultValue: SettingsValue.read(root.widgetMetadata, "colorizeSystemIcon")
   }
 
   RowLayout {
@@ -71,28 +71,28 @@ ColumnLayout {
       Layout.preferredHeight: Style.fontSizeXL * 2
       Layout.alignment: Qt.AlignVCenter
       radius: Math.min(Style.radiusL, Layout.preferredWidth / 2)
-      imagePath: valueCustomIconPath
-      visible: valueCustomIconPath !== "" && !valueUseDistroLogo
+      imagePath: root.valueCustomIconPath
+      visible: root.valueCustomIconPath !== "" && !root.valueUseDistroLogo
     }
 
     NIcon {
       Layout.alignment: Qt.AlignVCenter
-      icon: valueIcon
+      icon: root.valueIcon
       pointSize: Style.fontSizeXXL * 1.5
-      visible: valueIcon !== "" && valueCustomIconPath === "" && !valueUseDistroLogo
+      visible: root.valueIcon !== "" && root.valueCustomIconPath === "" && !root.valueUseDistroLogo
     }
   }
 
   RowLayout {
     spacing: Style.marginM
     NButton {
-      enabled: !valueUseDistroLogo
+      enabled: !root.valueUseDistroLogo
       text: I18n.tr("bar.control-center.browse-library")
       onClicked: iconPicker.open()
     }
 
     NButton {
-      enabled: !valueUseDistroLogo
+      enabled: !root.valueUseDistroLogo
       text: I18n.tr("bar.control-center.browse-file")
       onClicked: imagePicker.openFilePicker()
     }
@@ -100,11 +100,11 @@ ColumnLayout {
 
   NIconPicker {
     id: iconPicker
-    initialIcon: valueIcon
+    initialIcon: root.valueIcon
     onIconSelected: iconName => {
-                      valueIcon = iconName;
-                      valueCustomIconPath = "";
-                      saveSettings();
+                      root.valueIcon = iconName;
+                      root.valueCustomIconPath = "";
+                      root.saveSettings();
                     }
   }
 
@@ -114,11 +114,6 @@ ColumnLayout {
     selectionMode: "files"
     nameFilters: ImageCacheService.basicImageFilters.concat(["*.svg"])
     initialPath: Quickshell.env("USERPROFILE") || Quickshell.env("HOME")
-    onAccepted: paths => {
-                  if (paths.length > 0) {
-                    valueCustomIconPath = paths[0];
-                    saveSettings();
-                  }
-                }
+    onAccepted: paths => SettingsValue.acceptFirstFile(root, paths)
   }
 }

@@ -13,7 +13,7 @@ import qs.utils
 Column {
     id: root
 
-    required property ScreenState screenState
+    required final property ScreenState screenState
 
     padding: Tokens.padding.large
     rightPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
@@ -84,7 +84,7 @@ Column {
     component SessionButton: IconButton {
         id: button
 
-        required property list<string> command
+        required final property list<string> command
 
         function exec(): void {
             // Real Windows actions through ControlCenter; sign out, restart and shutdown need a second press.
@@ -97,7 +97,7 @@ Column {
         inactiveColour: activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
         inactiveOnColour: activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
         radius: pressed ? Tokens.rounding.medium : activeFocus ? Tokens.rounding.extraLarge : Tokens.rounding.largeIncreased
-        font: Tokens.font.icon.builders.large.scale(1.3).build()
+        font: Tokens.styled("icon", "large", { scale: 1.3 })
         onClicked: exec()
 
         Keys.onEnterPressed: exec()

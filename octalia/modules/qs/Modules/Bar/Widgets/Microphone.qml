@@ -1,11 +1,8 @@
 import QtQuick 6.10
-import QtQuick.Controls.Basic
 import Quickshell
-import Quickshell.Io
-import Quickshell.Services.Pipewire
 import qs.Commons
+import "../BarWidgetHelpers.js" as BarWidgetHelpers
 import qs.Modules.Bar.Extras
-import qs.Modules.Panels.Settings
 import qs.Services.Media
 import qs.Services.UI
 import qs.Widgets
@@ -25,8 +22,9 @@ Item {
   // Explicit screenName property ensures reactive binding when screen changes
   readonly property string screenName: screen ? screen.name : ""
   property var widgetSettings: {
+    var widgets;
     if (section && sectionWidgetIndex >= 0 && screenName) {
-      var widgets = Settings.getBarWidgetsForScreen(screenName)[section];
+      widgets = Settings.getBarWidgetsForScreen(screenName)[section];
       if (widgets && sectionWidgetIndex < widgets.length) {
         return widgets[sectionWidgetIndex];
       }
@@ -36,10 +34,10 @@ Item {
 
   readonly property string barPosition: Settings.getBarPositionForScreen(screenName)
   readonly property bool isBarVertical: barPosition === "left" || barPosition === "right"
-  readonly property string displayMode: (widgetSettings.displayMode !== undefined) ? widgetSettings.displayMode : widgetMetadata.displayMode
-  readonly property string middleClickCommand: (widgetSettings.middleClickCommand !== undefined) ? widgetSettings.middleClickCommand : widgetMetadata.middleClickCommand
-  readonly property string iconColorKey: widgetSettings.iconColor !== undefined ? widgetSettings.iconColor : widgetMetadata.iconColor
-  readonly property string textColorKey: widgetSettings.textColor !== undefined ? widgetSettings.textColor : widgetMetadata.textColor
+  readonly property string displayMode: (BarWidgetHelpers.readProperty(widgetSettings, "displayMode") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "displayMode") : BarWidgetHelpers.readProperty(widgetMetadata, "displayMode")
+  readonly property string middleClickCommand: (BarWidgetHelpers.readProperty(widgetSettings, "middleClickCommand") !== undefined) ? BarWidgetHelpers.readProperty(widgetSettings, "middleClickCommand") : BarWidgetHelpers.readProperty(widgetMetadata, "middleClickCommand")
+  readonly property string iconColorKey: BarWidgetHelpers.readProperty(widgetSettings, "iconColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "iconColor") : BarWidgetHelpers.readProperty(widgetMetadata, "iconColor")
+  readonly property string textColorKey: BarWidgetHelpers.readProperty(widgetSettings, "textColor") !== undefined ? BarWidgetHelpers.readProperty(widgetSettings, "textColor") : BarWidgetHelpers.readProperty(widgetMetadata, "textColor")
 
   // Used to avoid opening the pill on Quickshell startup
   property bool firstInputVolumeReceived: false
@@ -50,12 +48,12 @@ Item {
 
   // Connection used to open the pill when input volume changes
   Connections {
-    target: AudioService.source?.audio ? AudioService.source?.audio : null
+    target: BarWidgetHelpers.optionalProperty(AudioService.source, "audio") ? BarWidgetHelpers.optionalProperty(AudioService.source, "audio") : null
     function onVolumeChanged() {
       // Logger.i("Bar:Microphone", "onInputVolumeChanged")
-      if (!firstInputVolumeReceived) {
+      if (!root.firstInputVolumeReceived) {
         // Ignore the first volume change
-        firstInputVolumeReceived = true;
+        root.firstInputVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -65,12 +63,12 @@ Item {
 
   // Connection used to open the pill when input mute state changes
   Connections {
-    target: AudioService.source?.audio ? AudioService.source?.audio : null
+    target: BarWidgetHelpers.optionalProperty(AudioService.source, "audio") ? BarWidgetHelpers.optionalProperty(AudioService.source, "audio") : null
     function onMutedChanged() {
       // Logger.i("Bar:Microphone", "onInputMutedChanged")
-      if (!firstInputVolumeReceived) {
+      if (!root.firstInputVolumeReceived) {
         // Ignore the first mute change
-        firstInputVolumeReceived = true;
+        root.firstInputVolumeReceived = true;
       } else {
         pill.show();
         externalHideTimer.restart();
@@ -115,9 +113,9 @@ Item {
                    if (action === "toggle-mute") {
                      AudioService.setInputMuted(!AudioService.inputMuted);
                    } else if (action === "custom-command") {
-                     Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+                     Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
                    } else if (action === "widget-settings") {
-                     BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
+                     BarService.openWidgetSettings(screen, root.section, root.sectionWidgetIndex, root.widgetId, root.widgetSettings);
                    }
                  }
   }
@@ -137,27 +135,27 @@ Item {
       return Math.round(displayVolume * 100);
     }
     suffix: "%"
-    forceOpen: displayMode === "alwaysShow"
-    forceClose: displayMode === "alwaysHide"
+    forceOpen: root.displayMode === "alwaysShow"
+    forceClose: root.displayMode === "alwaysHide"
 
     onWheel: function (delta) {
-      wheelAccumulator += delta;
-      if (wheelAccumulator >= 120) {
-        wheelAccumulator = 0;
+      root.wheelAccumulator += delta;
+      if (root.wheelAccumulator >= 120) {
+        root.wheelAccumulator = 0;
         AudioService.setInputVolume(AudioService.inputVolume + AudioService.stepVolume);
-      } else if (wheelAccumulator <= -120) {
-        wheelAccumulator = 0;
+      } else if (root.wheelAccumulator <= -120) {
+        root.wheelAccumulator = 0;
         AudioService.setInputVolume(AudioService.inputVolume - AudioService.stepVolume);
       }
     }
     onClicked: {
-      PanelService.getPanel("audioPanel", screen)?.toggle(this);
+      PanelService.invokePanel(PanelService.getPanel("audioPanel", screen), "toggle", [this]);
     }
     onRightClicked: {
-      PanelService.showContextMenu(contextMenu, pill, screen);
+      PanelService.showContextMenu(contextMenu, pill, screen, null);
     }
     onMiddleClicked: {
-      Quickshell.execDetached(["cmd", "/c", middleClickCommand]);
+      Quickshell.execDetached(["cmd", "/c", root.middleClickCommand]);
     }
   }
 }

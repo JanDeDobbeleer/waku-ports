@@ -10,7 +10,7 @@ import qs.services
 StyledRect {
     id: root
 
-    readonly property real nonAnimHeight: layout.implicitHeight + (RuntimeState.inhibitIdle ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Tokens.padding.extraLargeIncreased
+    readonly final property real nonAnimHeight: layout.implicitHeight + (RuntimeState.inhibitIdle ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Tokens.padding.extraLargeIncreased
 
     implicitHeight: nonAnimHeight
 
@@ -83,7 +83,7 @@ StyledRect {
         opacity: RuntimeState.inhibitIdle ? 1 : 0
         scale: RuntimeState.inhibitIdle ? 1 : 0.5
 
-        Component.onCompleted: active = Qt.binding(() => opacity > 0)
+        active: opacity > 0
 
         sourceComponent: StyledRect {
             implicitWidth: activeText.implicitWidth + Tokens.padding.medium * 2
@@ -99,7 +99,7 @@ StyledRect {
                 // TRANSLATORS: %1 = a clock time, e.g. 14:30
                 text: Tr.tr("Active since %1").arg(Tr.formatDateTime(new Date(RuntimeState.inhibitingIdleSince), Units.twelveHourClock ? "hh:mm a" : "hh:mm"))
                 color: Colours.palette.m3onPrimary
-                font: Tokens.font.body.builders.small.size(Math.round(Tokens.font.body.small.pointSize * 0.9)).build()
+                font: Tokens.styled("body", "small", { size: Math.round(Tokens.font.body.small.pointSize * 0.9) })
             }
         }
 

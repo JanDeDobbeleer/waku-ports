@@ -19,7 +19,7 @@ QtObject {
     // Port: the profile picture chosen in the dashboard (a file path, empty for the Windows account picture).
     property alias faceImage: adapter.faceImage
 
-    property FileView file: FileView {
+    final property FileView file: FileView {
         path: Quickshell.shellPath("state/persistent.json")
         watchChanges: true
         printErrors: false
@@ -29,13 +29,13 @@ QtObject {
         adapter: JsonAdapter {
             id: adapter
 
-            property bool wallpaperPlaying: true
-            property bool doNotDisturb: false
-            property string colourScheme: "dynamic" // dynamic or material
-            property string colourSeed: "wallpaper" // wallpaper, or a key of Colours.seeds
-            property string colourVariant: "tonalspot"
-            property string colourMode: "dark" // dark or light
-            property string faceImage: ""
+            final property bool wallpaperPlaying: true
+            final property bool doNotDisturb: false
+            final property string colourScheme: "dynamic" // dynamic or material
+            final property string colourSeed: "wallpaper" // wallpaper, or a key of Colours.seeds
+            final property string colourVariant: "tonalspot"
+            final property string colourMode: "dark" // dark or light
+            final property string faceImage: ""
         }
     }
 }

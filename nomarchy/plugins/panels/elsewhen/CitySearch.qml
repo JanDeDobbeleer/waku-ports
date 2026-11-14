@@ -19,14 +19,14 @@ Column {
   property int placeLimit: 4
   // Query -> the geocoder's places for it, [] until they land; read inside a
   // binding, so its dependencies track.
-  property var placesFor: function(text) { return [] }
-  property var placesPending: function(text) { return false }
+  property var placesFor: function(text: string): var { return [] }
+  property var placesPending: function(text: string): bool { return false }
   // Rows already on the list, which the places leave out.
   property var existing: []
   // False when the search is opened by something other than its own button.
   property bool showButton: true
   // Zone id -> offset text; read inside a binding, so its dependencies track.
-  property var offsetLabel: function(zoneId) { return "" }
+  property var offsetLabel: function(zoneId: string): string { return "" }
   property bool loading: false
   property string buttonText: Commons.I18n.t("elsewhen.addCity")
   property string placeholderText: Commons.I18n.t("elsewhen.searchCities")
@@ -47,9 +47,9 @@ Column {
   readonly property var matches: {
     if (!active) return []
     var offline = Model.searchZones(options, query, limit)
-    return Model.mergePlaces(offline, placesFor(query), existing, limit + placeLimit)
+    return Model.mergePlaces(offline, Model.callFunction(placesFor, [query]), existing, limit + placeLimit)
   }
-  readonly property bool searching: active && placesPending(query)
+  readonly property bool searching: active && Model.callFunction(placesPending, [query])
   // An index, not the match itself: the list is rebuilt on every keystroke.
   property int selectedIndex: 0
 
@@ -58,29 +58,29 @@ Column {
   signal dismissed()
 
   onQueryChanged: selectedIndex = 0
-  onMatchesChanged: if (selectedIndex >= matches.length) selectedIndex = 0
+  onMatchesChanged: if (selectedIndex >= Model.itemCount(matches)) selectedIndex = 0
 
-  function start() {
+  function start(): void {
     selectedIndex = 0
     active = true
     Qt.callLater(function() { field.text = ""; field.forceActiveFocus() })
   }
 
   // The hidden field would keep the keyboard, so the host takes it back on dismissed.
-  function stop() {
+  function stop(): void {
     active = false
     field.text = ""
     dismissed()
   }
 
-  function pick(match) {
-    picked(match.label, match.value, match.lat === undefined ? null
-      : { lat: match.lat, lon: match.lon, region: match.region || "" })
+  function pick(match: var): void {
+    picked(Model.value(match, "label"), Model.value(match, "value"), Model.value(match, "lat") === undefined ? null
+      : { lat: Model.value(match, "lat"), lon: Model.value(match, "lon"), region: Model.value(match, "region") || "" })
     stop()
   }
 
-  function pickSelected() {
-    if (matches.length > 0) pick(matches[Util.clamp(selectedIndex, 0, matches.length - 1)])
+  function pickSelected(): void {
+    if (Model.itemCount(matches) > 0) pick(matches[Util.clamp(selectedIndex, 0, Model.itemCount(matches) - 1)])
   }
 
   spacing: Style.spacing.md
@@ -108,8 +108,8 @@ Column {
     Keys.onEscapePressed: search.stop()
     Keys.onReturnPressed: search.pickSelected()
     Keys.onEnterPressed: search.pickSelected()
-    Keys.onUpPressed: search.selectedIndex = Model.moveSelection(search.selectedIndex, -1, search.matches.length)
-    Keys.onDownPressed: search.selectedIndex = Model.moveSelection(search.selectedIndex, 1, search.matches.length)
+    Keys.onUpPressed: search.selectedIndex = Model.moveSelection(search.selectedIndex, -1, Model.itemCount(search.matches))
+    Keys.onDownPressed: search.selectedIndex = Model.moveSelection(search.selectedIndex, 1, Model.itemCount(search.matches))
   }
 
   CityMatches {
