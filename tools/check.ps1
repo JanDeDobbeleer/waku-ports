@@ -173,6 +173,10 @@ function Get-Problems($records, [string]$portDir) {
 # A problem in the engine's own QML (the waku and Quickshell modules compiled into waku.exe) is not
 # the port's to fix. It is reported as a notice for the engine and does not fail the run.
 function Test-EngineProblem($rec, [string]$port) {
+  # The OS notification backend can be unavailable on headless CI runners.
+  if ($rec.msg -match '^Notification access is turned off \(status \d+\s*\), the notification list will be empty$') {
+    return $true
+  }
   if ($rec.msg -match 'image://windowicon/') { return $true }
   if ($rec.msg -match 'file:///') { return $false }
   if ($rec.msg -match 'qrc:/qt/qml/(waku|Quickshell)/') { return $true }
