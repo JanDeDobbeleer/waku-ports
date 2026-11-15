@@ -1612,7 +1612,6 @@ Item {
           window: barWindow
           pool: horizontalPool
           anchors.left: parent.left
-          anchors.leftMargin: Style.space(8)
           anchors.verticalCenter: parent.verticalCenter
         }
 
@@ -2512,6 +2511,7 @@ Item {
     // the poof has played.
     readonly property bool removalPending: root.isPendingRemoval(widgetKey)
     readonly property bool panelOpen: root.activePopout === slot.activeItem
+      && BarModel.field(slot.activeItem, "showPanelIndicator") !== false
     // Modules bigger than the mark they want (a text label in a padded slot,
     // a multi-line stack on a vertical bar) can say how long the open-panel
     // dot should be along the bar, so it tracks what the module paints
