@@ -4,12 +4,18 @@ import Quickshell
 import Celeste.Config
 import Celeste.Models
 import qs.utils
+import waku.services as S
 import "AppsHelpers.js" as AppsHelpers
 
 Searcher {
     id: root
 
-    function launch(entry: DesktopEntry): void {
+    function launch(entry: var): void {
+        const uri = AppsHelpers.settingsUri(entry);
+        if (uri !== "") {
+            S.Shell.open(uri);
+            return;
+        }
         AppsHelpers.launch(appDb, entry);
     }
 

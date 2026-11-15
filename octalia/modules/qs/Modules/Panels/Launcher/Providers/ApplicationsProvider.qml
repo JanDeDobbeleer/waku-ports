@@ -39,6 +39,47 @@ Item {
                                  "WebBrowser": "world"
                                })
 
+  property var windowsSettings: [
+    { "name": "Settings", "uri": "ms-settings:", "keywords": ["windows settings", "all settings"] },
+    { "name": "Apps & features", "uri": "ms-settings:appsfeatures", "keywords": ["apps", "installed apps", "add remove programs", "add or remove programs", "programs and features", "uninstall"] },
+    { "name": "Network & Internet", "uri": "ms-settings:network", "keywords": ["network", "wifi", "internet"] },
+    { "name": "Bluetooth & Devices", "uri": "ms-settings:bluetooth", "keywords": ["bluetooth", "devices"] },
+    { "name": "Sound", "uri": "ms-settings:sound", "keywords": ["audio", "volume"] },
+    { "name": "Notifications", "uri": "ms-settings:notifications", "keywords": ["notifications", "alerts"] },
+    { "name": "Power & Battery", "uri": "ms-settings:powersleep", "keywords": ["power", "battery", "sleep"] },
+    { "name": "Windows Update", "uri": "ms-settings:windowsupdate", "keywords": ["update", "updates"] },
+    { "name": "Accounts", "uri": "ms-settings:yourinfo", "keywords": ["account", "profile", "your info"] },
+    { "name": "Privacy & Security", "uri": "ms-settings:privacy", "keywords": ["privacy", "security"] }
+  ]
+
+  function getWindowsSettingsResults(query) {
+    const terms = String(query || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/);
+    if (!terms[0])
+      return [];
+
+    const results = [];
+    for (const page of windowsSettings) {
+      const text = [page.name, "Windows Settings", page.keywords.join(" ")].join(" ")
+                     .toLowerCase().replace(/[^a-z0-9]+/g, " ");
+      if (!terms.every(term => text.includes(term)))
+        continue;
+
+      results.push({
+                     "name": page.name,
+                     "description": "Windows Settings",
+                     "icon": "settings",
+                     "isImage": false,
+                     "_score": 100000,
+                     "provider": root,
+                     "onActivate": function () {
+                       launcher.closeImmediately();
+                       Qt.callLater(() => Qt.openUrlExternally(page.uri));
+                     }
+                   });
+    }
+    return results;
+  }
+
   function getCategoryName(category) {
     const names = {
       "all": I18n.tr("launcher.categories.all"),
@@ -417,7 +458,8 @@ Item {
   }
 
   function getResults(query) {
-    if (!entries || entries.length === 0)
+    const windowsSettingsResults = getWindowsSettingsResults(query);
+    if ((!entries || entries.length === 0) && windowsSettingsResults.length === 0)
       return [];
 
     // Set category mode based on whether there's a query
@@ -476,11 +518,11 @@ Item {
         else
           nonPinned.push(r);
       }
-      return pinned.concat(nonPinned).map(result => createResultEntry(result.obj, result.score));
+      return windowsSettingsResults.concat(pinned.concat(nonPinned).map(result => createResultEntry(result.obj, result.score)));
     } else {
       // Fallback to simple search
       const searchTerm = query.toLowerCase();
-      return filteredEntries.filter(app => {
+      const appResults = filteredEntries.filter(app => {
                                       const name = (app.name || "").toLowerCase();
                                       const comment = (app.comment || "").toLowerCase();
                                       const generic = (app.genericName || "").toLowerCase();
@@ -511,6 +553,7 @@ Item {
 
                                               return aName.localeCompare(bName);
                                             }).slice(0, 20).map(app => createResultEntry(app));
+      return windowsSettingsResults.concat(appResults);
     }
   }
 

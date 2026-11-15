@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "MenuModel.js" as MenuModel
+import "WindowsSettings.js" as WindowsSettings
 import "../bar/I18nModel.js" as I18nModel
 
 Item {
@@ -403,6 +404,8 @@ Item {
         order: 0
       })
     }
+
+    appRows = appRows.concat(WindowsSettings.appRows())
 
     var merged = MenuModel.mergeAppRows(root.items, root.itemOrder, appRows)
     root.items = merged.items
