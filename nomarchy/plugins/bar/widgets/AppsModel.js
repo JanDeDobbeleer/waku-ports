@@ -13,7 +13,7 @@ function activationIndex(group, last) {
 function windows(group) { return group && Array.isArray(group.windows) ? group.windows : [] }
 function length(value) { return value && typeof value.length === "number" ? value.length : 0 }
 function shown(groups, maxVisible) { var list = Array.from(groups || []); return list.length > maxVisible ? list.slice(0, maxVisible) : list }
-function isPreviewOpen(group, item) { return !!group && !!item && windows(group).length > 1 }
+function isPreviewOpen(group, item) { return !!group && !!item && windows(group).length > 0 }
 function findGroup(groups, target) {
   if (!target || !Array.isArray(groups)) return null
   for (let i = 0; i < groups.length; i++) if (groups[i].key === target.key) return groups[i]

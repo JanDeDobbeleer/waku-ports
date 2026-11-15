@@ -17,8 +17,9 @@ import "AppsModel.js" as AppsModel
 BarWidget {
   id: root
   moduleName: "nomarchy.apps"
+  readonly property bool showPanelIndicator: false
 
-  readonly property real cell: Style.space(22)
+  readonly property real cell: Style.space(25)
   readonly property real gap: Style.space(2)
   // Past this many programs the list stops growing: the rest show as "+N".
   readonly property int maxVisible: Number(setting("maxVisible", 12))
@@ -67,11 +68,11 @@ BarWidget {
     if (index >= 0) taskbar.activate(index)
   }
 
-  // The preview card of a program with several windows: opens on hover, stays while the pointer is
+  // The preview card of a program: opens on hover, stays while the pointer is
   // on the tile or the card, and lists the windows by title. `hoverItem` is the tile it hangs from.
   property var hoverGroup: null
   property Item hoverItem: null
-  readonly property bool previewOpen: AppsModel.isPreviewOpen(hoverGroup, hoverItem)
+  readonly property bool previewOpen: AppsModel.isPreviewOpen(previewGroup, hoverItem)
 
   function hoverEnter(group: var, item: var): var {
     closeTimer.stop()
@@ -169,7 +170,7 @@ BarWidget {
         Rectangle {
           anchors.fill: parent
           radius: Style.cornerRadius
-          color: app.focused ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.18)
+          color: app.focused ? Qt.rgba(Commons.Color.accent.r, Commons.Color.accent.g, Commons.Color.accent.b, 0.3)
             : (area.containsMouse ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.08) : "transparent")
         }
 
@@ -199,7 +200,7 @@ BarWidget {
           font.bold: true
         }
 
-        // The minimized mark: a short dash under the icon.
+        // A short dash marks a group whose windows are all minimized.
         Rectangle {
           visible: app.allMinimized
           anchors.horizontalCenter: parent.horizontalCenter

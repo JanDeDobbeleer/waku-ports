@@ -340,7 +340,7 @@ QtObject {
   final readonly property FontTokens font: FontTokens {}
 
   component BarTokens: QtObject {
-    final readonly property int sizeHorizontal: root.barToken("size-horizontal", 26)
+    final readonly property int sizeHorizontal: root.barToken("size-horizontal", 31)
     final readonly property int sizeVertical:   root.barToken("size-vertical",   28)
     // Calibrated notch cutout height in logical px, for panels whose real
     // cutout differs from the derived default (see BarModel.notchHeight).
@@ -350,9 +350,9 @@ QtObject {
       return (isFinite(v) && v > 0) ? Math.round(v) : 0
     }
     final readonly property int iconSlot:       root.barToken("icon-slot",       27)
-    final readonly property int iconCanvas:     root.barToken("icon-canvas",     16)
+    final readonly property int iconCanvas:     root.barToken("icon-canvas",     18)
     final readonly property int iconFont:       root.barToken("icon-font",       13)
-    final readonly property int iconSize:       Math.min(iconCanvas, root.barToken("icon-size", 12))
+    final readonly property int iconSize:       Math.min(iconCanvas, root.barToken("icon-size", 15))
     final readonly property int statusSlot:     root.barToken("status-slot",     21)
   }
 
