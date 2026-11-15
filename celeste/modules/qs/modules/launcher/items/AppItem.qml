@@ -6,11 +6,12 @@ import qs.components
 import qs.services
 import qs.utils
 import qs.modules.launcher.services
+import "../AppListHelpers.js" as AppListHelpers
 
 Item {
     id: root
 
-    required final property DesktopEntry modelData
+    required final property var modelData
     required final property ScreenState screenState
 
     implicitHeight: Tokens.sizes.launcher.itemHeight
@@ -38,7 +39,7 @@ Item {
             id: icon
 
             asynchronous: true
-            source: Quickshell.iconPath(root.modelData?.icon, "image-missing")
+            source: Quickshell.iconPath(AppListHelpers.stringField(root.modelData, "icon"), "image-missing")
             implicitSize: parent.height * 0.8
 
             anchors.verticalCenter: parent.verticalCenter
@@ -55,14 +56,14 @@ Item {
             StyledText {
                 id: name
 
-                text: root.modelData?.name ?? ""
+                text: AppListHelpers.stringField(root.modelData, "name")
                 font: Tokens.font.body.medium
             }
 
             StyledText {
                 id: comment
 
-                text: (root.modelData?.comment || root.modelData?.genericName || root.modelData?.name) ?? ""
+                text: AppListHelpers.stringField(root.modelData, "comment") || AppListHelpers.stringField(root.modelData, "genericName") || AppListHelpers.stringField(root.modelData, "name")
                 font: Tokens.font.body.small
                 color: Colours.palette.m3outline
 
@@ -79,7 +80,7 @@ Item {
             asynchronous: true
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
-            active: root.modelData && Strings.testRegexList(GlobalConfig.launcher.favouriteApps, root.modelData.id)
+            active: AppListHelpers.isFavourite(root.modelData, GlobalConfig.launcher.favouriteApps, Strings)
 
             sourceComponent: MaterialIcon {
                 text: "favorite"

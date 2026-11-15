@@ -1,5 +1,9 @@
 .pragma library
 
+function settingsUri(entry) {
+    return entry && entry.settingsUri ? String(entry.settingsUri) : "";
+}
+
 function launch(appDb, entry) {
     appDb.incrementFrequency(entry.id);
     entry.execute();

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import waku
 import waku.services as S
+import "AppRowHelpers.js" as AppRowHelpers
 
 // The Start menu, Pro style: the user and a search box on top, pinned apps and a widgets page on the
 // left (two pages, paged with the dots), folders, Settings, Run and power on the right.
@@ -45,8 +46,12 @@ PanelWindow {
         visible = false;
     }
 
-    function launch(entry: S.DesktopEntry): void {
-        S.AppsService.launch(entry.id);
+    function launch(entry: var): void {
+        const uri = AppRowHelpers.settingsUri(entry);
+        if (uri !== "")
+            S.Shell.open(uri);
+        else
+            S.AppsService.launch(AppRowHelpers.appId(entry));
         close();
     }
 

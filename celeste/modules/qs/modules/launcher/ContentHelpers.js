@@ -53,7 +53,9 @@ function keyPressed(event, currentList, showWallpapers, text, actionPrefix, vimK
         const entry = item ? item.modelData : null;
         if (entry) {
             let started = true;
-            if (event.modifiers & controlModifier)
+            if (entry.settingsUri)
+                apps.launch(entry);
+            else if (event.modifiers & controlModifier)
                 started = apps.launchAdmin(entry);
             else
                 apps.launchNew(entry);

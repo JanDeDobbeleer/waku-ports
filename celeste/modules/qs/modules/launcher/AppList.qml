@@ -54,7 +54,7 @@ StyledListView {
         case "variant":
             return M3Variants.query(text);
         default:
-            return Apps.search(text);
+            return AppListHelpers.windowsSettingsResults(text).concat(Apps.search(text));
         }
     }
 
