@@ -44,7 +44,13 @@ call nomarchy.network close
 call nomarchy.power open
 call nomarchy.power close
 call nomarchy.clock open
+call shell isOpen nomarchy.clock => ^open$
+call nomarchy.clock toggle
+call shell isOpen nomarchy.clock => ^closed$
+call nomarchy.clock toggle
+call shell isOpen nomarchy.clock => ^open$
 call nomarchy.clock close
+call shell isOpen nomarchy.clock => ^closed$
 call nomarchy.weather open
 call nomarchy.weather close
 call shell toggle nomarchy.dev-gallery {}
