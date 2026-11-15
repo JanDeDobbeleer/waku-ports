@@ -134,7 +134,7 @@ BarWidget {
   Loader {
     id: panelLoader
     active: true
-    source: Qt.resolvedUrl("Panel.qml")
+    sourceComponent: Component { Local.Panel {} }
     visible: false
     onLoaded: {
       root.injectPanel()
