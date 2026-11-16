@@ -67,9 +67,21 @@ function shownSpan(clipStart, clipLength, start, length) {
 
 function sectionShown(item) { return item ? item.sectionShown : null }
 
+function moveSelection(index, dx, dy, columns, count) {
+  if (count <= 0) return -1
+  return Math.max(0, Math.min(count - 1, index + dx + dy * Math.max(1, columns)))
+}
+
+function popupWidth(count, extent, padding, leftBorder, rightBorder) {
+  var columns = count > 0 ? Math.min(count, 6) : 6
+  return Math.ceil(columns * extent + padding * 2 + leftBorder + rightBorder)
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     shownSpan: shownSpan,
+    moveSelection: moveSelection,
+    popupWidth: popupWidth,
     itemNamed: itemNamed,
     entryId: entryId,
     layoutHasWidget: layoutHasWidget,

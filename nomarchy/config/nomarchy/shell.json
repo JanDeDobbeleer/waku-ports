@@ -1,8 +1,8 @@
 {
   "version": 1,
   "idle": {
-    "screensaver": 150,
-    "lock": 300
+    "screensaver": 0,
+    "lock": 0
   },
   "bar": {
     "position": "top",
@@ -22,7 +22,11 @@
           "id": "nomarchy.apps"
         }
       ],
-      "centerBegin": [],
+      "centerBegin": [
+        {
+          "id": "nomarchy.media"
+        }
+      ],
       "center": [
         {
           "id": "nomarchy.clock",
@@ -39,6 +43,15 @@
       "right": [
         {
           "id": "nomarchy.tray"
+        },
+        {
+          "id": "nomarchy.sysmon"
+        },
+        {
+          "id": "nomarchy.notification-center"
+        },
+        {
+          "id": "nomarchy.controls"
         },
         {
           "id": "nomarchy.bluetooth"
@@ -65,7 +78,6 @@
     "nomarchy.dropbox",
     "nomarchy.elsewhen",
     "nomarchy.emojis",
-    "nomarchy.idle",
     "nomarchy.indicators",
     "nomarchy.keyboard-layout",
     "nomarchy.monitor",

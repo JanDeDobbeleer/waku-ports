@@ -34,7 +34,8 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $pin = Get-Content (Join-Path $PSScriptRoot 'waku.json') -Raw | ConvertFrom-Json
 $ci = $env:GITHUB_ACTIONS -eq 'true'
-$work = Join-Path ([IO.Path]::GetTempPath()) 'waku-ports-check'
+$runId = [guid]::NewGuid().ToString('N').Substring(0, 8)
+$work = Join-Path ([IO.Path]::GetTempPath()) "waku-ports-check\run-$PID-$runId"
 New-Item -ItemType Directory -Force $work | Out-Null
 $results = New-Object System.Collections.ArrayList
 $failed = $false
@@ -424,7 +425,7 @@ if ($File) {
     foreach ($p in $Port) { $byPort[$p] = Get-PortFiles $p }
     Invoke-Lint $byPort $waku $qtBin
   }
-  # Shell runs share the work folder and the desktop (hotkeys, the taskbar zone), so concurrent checks
+  # Shell runs share the desktop (hotkeys, the taskbar zone), so concurrent checks
   # (parallel agent sessions, hooks) take turns here. Lint runs need no turn.
   $runs = [Threading.Mutex]::new($false, 'Local\waku-ports-check-runs')
   if (('runtime' -in $Step -or 'perf' -in $Step) -and $Port) {

@@ -15,8 +15,14 @@ BarWidget {
   moduleName: "nomarchy.tray"
 
   property bool expanded: false
+  property bool trayPopupOpen: false
   property bool managePopupOpen: false
   property bool trayMenuOpen: false
+  property bool popoutSwitchClosing: false
+  property Item trayTrigger: null
+  property int traySelection: 0
+  property bool trayCursorActive: false
+  readonly property bool opened: trayPopupOpen
   property var activeTrayItem: null
   property var activeTrayAnchor: null
   readonly property color foreground: bar ? BarValues.foreground(bar) : Commons.Color.foreground
@@ -27,12 +33,11 @@ BarWidget {
   readonly property list<var> drawerItems: bucket("drawer")
   readonly property list<var> allItems: bucket("all")
   readonly property int drawerCount: drawerItems.length
+  onDrawerCountChanged: traySelection = Math.max(0, Math.min(traySelection, drawerCount - 1))
   readonly property int trayItemExtent: Style.bar.iconSlot
   readonly property int trayItemGap: 0
   readonly property int trayJoinGap: 0
-  // Bar widgets dragged into the tray section sit in the drawer after the
-  // app icons. The bar draws them into sectionHost, and outlines it while a
-  // widget is dragged, as it does the center box.
+  // The separate tray section retains its bar-widget drag and drop behavior.
   property Item sectionHost: null
   // The part of the tray section the drawer shows, in the tray ({ x, y,
   // width, height }), or null while it shows none of it. It moves with the
@@ -41,22 +46,18 @@ BarWidget {
   readonly property var sectionShown: TrayModel.sectionShown(trayContent.item)
   readonly property int sectionCount: BarValues.traySectionCount(bar)
   readonly property real sectionExtent: TrayModel.sectionExtent(sectionHost, vertical)
-  readonly property bool hasDrawer: allItems.length > 0 || sectionCount > 0 || barDragging
-  readonly property int drawerExtent: drawerCount * trayItemExtent + Math.max(0, drawerCount - 1) * trayItemGap + sectionExtent
+  readonly property int drawerExtent: sectionExtent
   // A widget being dragged along the bar opens the drawer, to show where it
   // can go, and so does any panel open from the tray or the tray section.
   readonly property bool barDragging: !!bar && BarValues.traySectionDragActive(bar) === true
   readonly property bool holdOpen: trayMenuOpen || managePopupOpen || barDragging || (!!bar && BarValues.traySectionPopoutOpen(bar) === true)
   // The mark under the bar sits under the icon whose menu is open.
-  readonly property Item openPanelIndicatorItem: trayMenuOpen ? activeTrayAnchor : null
+  readonly property Item openPanelIndicatorItem: trayPopupOpen ? trayTrigger : (trayMenuOpen ? activeTrayAnchor : null)
   // Match Waybar's group/tray-expander drawer transition-duration.
   readonly property int animationDuration: 600
   property real revealProgress: expanded || holdOpen ? 1 : 0
   readonly property real revealExtent: drawerExtent * revealProgress
-  // The pinned icons sit against the tray's fixed edge with the chevron past
-  // them. Opening, the drawer grows the tray between the two and pushes the
-  // chevron out of the way, while the pointer that opened it stays over the
-  // drawer. A centered tray keeps the end-fixed arrangement.
+  // Pinned icons remain on the bar; unpinned system icons use the flyout.
   readonly property bool fixedAtStart: fixedEdge === "start"
   // The edge the tray section's widgets grow from: the one the pinned icons
   // keep to, beside which the section opens.
@@ -119,8 +120,45 @@ BarWidget {
   }
 
   function close(): var {
+    trayPopupOpen = false
     managePopupOpen = false
     trayMenuOpen = false
+  }
+
+  function open(): void {
+    managePopupOpen = false
+    trayMenuOpen = false
+    traySelection = 0
+    trayCursorActive = false
+    trayPopupOpen = true
+  }
+
+  function closeForPopoutSwitch(): void {
+    popoutSwitchClosing = true
+    close()
+    Qt.callLater(function() { root.popoutSwitchClosing = false })
+  }
+
+  function toggleTray(): void {
+    if (trayPopupOpen) close()
+    else open()
+  }
+
+  function toggleManage(): void {
+    var shouldOpen = !managePopupOpen
+    close()
+    managePopupOpen = shouldOpen
+  }
+
+  function activateTraySelection(): void {
+    if (!trayCursorActive || traySelection < 0 || traySelection >= drawerCount) return
+    var item = drawerItems[traySelection]
+    if (TrayModel.field(item, "onlyMenu")) {
+      trayPopupOpen = false
+      openTrayMenu(item, trayTrigger || root, null)
+    } else {
+      TrayModel.activate(item, "activate")
+    }
   }
 
   function openTrayMenu(item: var, anchorItem: Item, mouse: var): void {
@@ -198,7 +236,6 @@ BarWidget {
     persistTrayState(p, h)
   }
 
-  visible: pinnedItems.length > 0 || hasDrawer
   clip: false
   implicitWidth: root.vertical ? root.barSize : trayContent.implicitWidth
   implicitHeight: root.vertical ? trayContent.implicitHeight : root.barSize
@@ -244,7 +281,7 @@ BarWidget {
     Item {
       id: horizontalTrayRoot
 
-      readonly property int chevronWidth: root.hasDrawer ? expandIcon.implicitWidth : 0
+      readonly property int chevronWidth: expandIcon.implicitWidth
       readonly property var sectionShown: root.shownSection(drawerArea.x + trayClip.x, trayClip.width, drawerArea.x + trayClip.x + drawerContent.x + section.x, section.width)
 
       implicitWidth: pinnedRow.implicitWidth + chevronWidth + root.revealExtent
@@ -255,10 +292,8 @@ BarWidget {
         x: root.fixedAtStart ? pinnedRow.implicitWidth : 0
         width: horizontalTrayRoot.chevronWidth + root.revealExtent
         height: root.barSize
-        visible: root.hasDrawer
-
         HoverHandler {
-          onHoveredChanged: root.expanded = hovered
+          onHoveredChanged: root.expanded = hovered && root.sectionCount > 0
         }
 
         BarIconButton {
@@ -267,14 +302,17 @@ BarWidget {
           width: implicitWidth
           height: implicitHeight
           x: root.fixedAtStart ? root.revealExtent : 0
-          text: root.fixedAtStart ? "\uf054" : "\uf053"
+          text: "\uf078"
+          tooltipText: I18nModel.translate(Commons.I18n, "tray.title")
+          Component.onCompleted: root.trayTrigger = expandIcon
+          Component.onDestruction: if (root.trayTrigger === expandIcon) root.trayTrigger = null
           onPressed: function(button: int): var {
-            if (button === Qt.RightButton) root.managePopupOpen = !root.managePopupOpen
+            if (button === Qt.RightButton) root.toggleManage()
+            else root.toggleTray()
           }
         }
 
-        // The icons and the tray section travel out with the chevron from
-        // beside the pinned icons, the section nearest them.
+        // The optional bar-widget section still expands for drag and drop.
         Item {
           id: trayClip
           x: root.fixedAtStart ? 0 : expandIcon.width
@@ -289,24 +327,8 @@ BarWidget {
             width: root.drawerExtent
             height: root.barSize
 
-            Row {
-              id: trayIcons
-              x: root.fixedAtStart ? root.sectionExtent : 0
-              anchors.verticalCenter: parent.verticalCenter
-              spacing: root.trayItemGap
-              layer.enabled: true
-
-              Repeater {
-                model: root.drawerItems
-                TrayItem {}
-              }
-            }
-
-            // Placed by hand: a Row leaves a child with no width where it
-            // was, and an empty section has none.
             SectionArea {
               id: section
-              x: root.fixedAtStart ? 0 : trayIcons.width
               anchors.verticalCenter: parent.verticalCenter
             }
           }
@@ -334,7 +356,7 @@ BarWidget {
     Item {
       id: verticalTrayRoot
 
-      readonly property int chevronHeight: root.hasDrawer ? expandIcon.implicitHeight : 0
+      readonly property int chevronHeight: expandIcon.implicitHeight
       readonly property var sectionShown: root.shownSection(drawerArea.y + trayClip.y, trayClip.height, drawerArea.y + trayClip.y + drawerContent.y + section.y, section.height)
 
       implicitWidth: root.barSize
@@ -345,10 +367,8 @@ BarWidget {
         y: root.fixedAtStart ? pinnedCol.implicitHeight : 0
         width: root.barSize
         height: verticalTrayRoot.chevronHeight + root.revealExtent
-        visible: root.hasDrawer
-
         HoverHandler {
-          onHoveredChanged: root.expanded = hovered
+          onHoveredChanged: root.expanded = hovered && root.sectionCount > 0
         }
 
         BarIconButton {
@@ -357,15 +377,17 @@ BarWidget {
           width: implicitWidth
           height: implicitHeight
           y: root.fixedAtStart ? root.revealExtent : 0
-          text: root.fixedAtStart ? "\uf054" : "\uf053"
-          textRotation: 90
+          text: "\uf078"
+          tooltipText: I18nModel.translate(Commons.I18n, "tray.title")
+          Component.onCompleted: root.trayTrigger = expandIcon
+          Component.onDestruction: if (root.trayTrigger === expandIcon) root.trayTrigger = null
           onPressed: function(button: int): var {
-            if (button === Qt.RightButton) root.managePopupOpen = !root.managePopupOpen
+            if (button === Qt.RightButton) root.toggleManage()
+            else root.toggleTray()
           }
         }
 
-        // The icons and the tray section travel out with the chevron from
-        // beside the pinned icons, the section nearest them.
+        // The optional bar-widget section still expands for drag and drop.
         Item {
           id: trayClip
           y: root.fixedAtStart ? 0 : expandIcon.height
@@ -380,24 +402,8 @@ BarWidget {
             width: root.barSize
             height: root.drawerExtent
 
-            Column {
-              id: trayIcons
-              y: root.fixedAtStart ? root.sectionExtent : 0
-              anchors.horizontalCenter: parent.horizontalCenter
-              spacing: root.trayItemGap
-              layer.enabled: true
-
-              Repeater {
-                model: root.drawerItems
-                TrayItem {}
-              }
-            }
-
-            // Placed by hand: a Column leaves a child with no height where it
-            // was, and an empty section has none.
             SectionArea {
               id: section
-              y: root.fixedAtStart ? 0 : trayIcons.height
               anchors.horizontalCenter: parent.horizontalCenter
             }
           }
@@ -414,6 +420,75 @@ BarWidget {
         Repeater {
           model: root.pinnedItems
           TrayItem {}
+        }
+      }
+    }
+  }
+
+  KeyboardPanel {
+    id: trayPopup
+    anchorItem: root.trayTrigger || root
+    owner: root
+    bar: root.bar
+    open: root.trayPopupOpen
+    focusTarget: trayPopup.loadedContent
+    contentWidth: trayPopup.fittedContentWidth(
+      TrayModel.popupWidth(root.drawerCount, root.trayItemExtent, trayPopup.padding,
+        Border.left(trayPopup.borderSpec), Border.right(trayPopup.borderSpec)), undefined)
+    contentHeight: trayPopup.fittedContentHeight(trayPopup.loadedContentHeight, Style.space(360))
+
+    panelContent: Component {
+      PanelKeyCatcher {
+        id: trayKeys
+        anchors.fill: parent
+        implicitHeight: root.drawerCount > 0 ? trayFlow.implicitHeight : emptyTray.implicitHeight
+        onCloseRequested: root.close()
+        onTabRequested: function(direction) { BarValues.switchPanel(root.bar, root, direction) }
+        onActivateRequested: root.activateTraySelection()
+        onMoveRequested: function(dx, dy) {
+          if (root.drawerCount === 0) return
+          if (!root.trayCursorActive) root.trayCursorActive = true
+          else root.traySelection = TrayModel.moveSelection(root.traySelection, dx, dy, trayFlow.columns, root.drawerCount)
+          var top = Math.floor(root.traySelection / trayFlow.columns) * root.trayItemExtent
+          if (top < trayFlick.contentY) trayFlick.contentY = top
+          else if (top + root.trayItemExtent > trayFlick.contentY + trayFlick.height)
+            trayFlick.contentY = Math.max(0, top + root.trayItemExtent - trayFlick.height)
+        }
+
+        Flickable {
+          id: trayFlick
+          anchors.fill: parent
+          contentWidth: width
+          contentHeight: trayKeys.implicitHeight
+          clip: true
+          boundsBehavior: Flickable.StopAtBounds
+
+          Flow {
+            id: trayFlow
+            width: parent.width
+            readonly property int columns: Math.max(1, Math.floor(width / root.trayItemExtent))
+
+            Repeater {
+              model: root.drawerItems
+              TrayItem {
+                required property int index
+                inFlyout: true
+                itemIndex: index
+              }
+            }
+
+            Text {
+              id: emptyTray
+              width: parent.width
+              visible: root.drawerCount === 0
+              text: I18nModel.translate(Commons.I18n, root.allItems.length === 0 ? "tray.empty" : "tray.help")
+              textFormat: Text.PlainText
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+            }
+          }
         }
       }
     }
@@ -828,13 +903,22 @@ BarWidget {
     id: trayItemRoot
 
     required property var modelData
+    property bool inFlyout: false
+    property int itemIndex: -1
 
     visible: TrayModel.isActive(modelData, Status.Passive)
     implicitWidth: visible ? root.trayItemExtent : 0
     implicitHeight: visible ? root.trayItemExtent : 0
 
     function displayMenu(mouse: var): var {
-      root.openTrayMenu(trayItemRoot.modelData, trayItemRoot, mouse)
+      if (inFlyout) root.trayPopupOpen = false
+      root.openTrayMenu(trayItemRoot.modelData, inFlyout ? root : trayItemRoot, mouse)
+    }
+
+    CursorSurface {
+      anchors.fill: parent
+      foreground: root.foreground
+      hasCursor: trayItemRoot.inFlyout && root.trayCursorActive && root.traySelection === trayItemRoot.itemIndex
     }
 
     TrayIcon {
@@ -851,8 +935,13 @@ BarWidget {
       acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
-      onEntered: if (root.bar) BarValues.showTooltip(root.bar, trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
-      onExited: if (root.bar) BarValues.hideTooltip(root.bar, trayItemRoot)
+      onEntered: {
+        if (trayItemRoot.inFlyout) {
+          root.traySelection = trayItemRoot.itemIndex
+          root.trayCursorActive = true
+        } else if (root.bar) BarValues.showTooltip(root.bar, trayItemRoot, root.trayTooltip(trayItemRoot.modelData))
+      }
+      onExited: if (root.bar && !trayItemRoot.inFlyout) BarValues.hideTooltip(root.bar, trayItemRoot)
       onPressed: function(mouse: MouseEvent): var {
         if (mouse.button === Qt.RightButton) {
           trayItemRoot.displayMenu(mouse)
@@ -872,6 +961,26 @@ BarWidget {
       }
       onWheel: function(wheel: WheelEvent): var {
         TrayModel.scroll(trayItemRoot.modelData, wheel.angleDelta.y, false)
+      }
+    }
+
+    ToolTip {
+      id: itemTooltip
+      visible: trayItemRoot.inFlyout && mouseArea.containsMouse && text !== ""
+      delay: 500
+      text: root.trayTooltip(trayItemRoot.modelData)
+      padding: Style.space(7)
+      contentItem: Text {
+        text: itemTooltip.text
+        textFormat: Text.PlainText
+        color: Commons.Color.tooltip.text
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.body
+      }
+      background: BorderSurface {
+        color: Commons.Color.tooltip.background
+        borderSpec: Border.surfaceSpec("tooltip", "border", Commons.Color.tooltip.border, 1)
+        radius: Style.cornerRadius
       }
     }
 

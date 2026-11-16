@@ -85,7 +85,7 @@ Singleton {
                 ipApiRequestPending = false;
 
                 if (!recordIpApiRateLimit(metadata))
-                    console.warn(lc, `ip-api request failed: ${error}`);
+                    console.info(lc, `ip-api request failed: ${error}`);
             });
         }
     }
@@ -206,7 +206,7 @@ Singleton {
             console.warn(lc, "No locality in nominatim response");
             city = Tr.trCtx("Unknown city", "weather location unavailable");
         }, error => {
-            console.warn(lc, `Nominatim request failed: ${error}`);
+            console.info(lc, `Nominatim request failed: ${error}`);
             city = Tr.trCtx("Unknown city", "weather location unavailable");
         }, nominatimHeaders);
     }
@@ -225,7 +225,7 @@ Singleton {
                 loc = "";
                 reload();
             }
-        });
+        }, error => console.info(lc, `Geocoding request failed: ${error}`));
     }
 
     function fetchWeatherData(): void {
@@ -278,7 +278,7 @@ Singleton {
                 });
             }
             root.hourlyForecast = hourlyList;
-        });
+        }, error => console.info(lc, `Forecast request failed: ${error}`));
     }
 
     function getWeatherUrl(): string {

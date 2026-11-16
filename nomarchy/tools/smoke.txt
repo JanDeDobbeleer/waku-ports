@@ -1,7 +1,7 @@
 # Commands tools\check.ps1 runs against the shell during the runtime step (see check.ps1 for the
 # syntax). They switch on the off-by-default plugins that work on Windows and open every menu and
 # panel, so the code behind each one runs and logs. Only UI: nothing here changes the machine. The
-# plugins the README lists as dropped (they run Linux commands) stay off, as do idle, night light
+# plugins the README lists as dropped (they run Linux commands) stay off, as do night light
 # and remote session.
 call shell setPluginEnabled nomarchy.active-window true => ok
 call shell setPluginEnabled nomarchy.media true => ok
@@ -10,6 +10,8 @@ call shell setPluginEnabled nomarchy.spacer true => ok
 sleep 3
 call shell call nomarchy.menu open {"menu":"root"}
 call shell call nomarchy.menu open {"menu":"apps"}
+call shell call nomarchy.menu setFilter 2+2
+call shell call nomarchy.menu debugRows 1 => ^4
 call shell call nomarchy.menu open {"menu":"appearance"}
 call shell call nomarchy.menu open {"menu":"appearance.theme"}
 sleep 1
@@ -43,6 +45,30 @@ call nomarchy.network open
 call nomarchy.network close
 call nomarchy.power open
 call nomarchy.power close
+call nomarchy.controls open
+call shell isOpen nomarchy.controls => ^open$
+call idle status => "enabled":true
+call nomarchy.controls close
+call nomarchy.notification-center open
+call shell isOpen nomarchy.notification-center => ^open$
+call nomarchy.notification-center close
+call nomarchy.media open
+call shell isOpen nomarchy.media => ^open$
+call nomarchy.media close
+call shell debugBarGeometry => "id":"nomarchy.sysmon".{0,100}"visible":true
+call nomarchy.sysmon open
+call shell isOpen nomarchy.sysmon => ^open$
+call nomarchy.sysmon close
+call shell isOpen nomarchy.sysmon => ^closed$
+call shell debugBarGeometry => "id":"nomarchy.tray".{0,100}"visible":true
+call shell summon nomarchy.tray {} => ok
+call shell isOpen nomarchy.tray => ^open$
+call shell summon nomarchy.controls {} => ok
+call shell isOpen nomarchy.tray => ^closed$
+call shell summon nomarchy.tray {} => ok
+call shell isOpen nomarchy.controls => ^closed$
+call shell hide nomarchy.tray
+call shell isOpen nomarchy.tray => ^closed$
 call nomarchy.clock open
 call shell isOpen nomarchy.clock => ^open$
 call nomarchy.clock toggle

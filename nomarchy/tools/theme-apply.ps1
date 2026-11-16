@@ -3,7 +3,7 @@
 #   .\tools\theme-apply.ps1 tokyo-night
 #   .\tools\theme-apply.ps1 -Prepare           copies every theme's preview for the picker, no theme change
 # Works in Windows PowerShell 5.1 (the shell runs it) and PowerShell 7.
-param([string]$Theme = '', [switch]$Prepare)
+param([string]$Theme = '', [switch]$Prepare, [string]$PaletteB64 = '', [string]$ExpectedTheme = '')
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $home_ = Join-Path $root 'state\home'
@@ -24,8 +24,26 @@ if ($Prepare -and -not $Theme) { return }
 
 # theme.name holds the folder name (tokyo-night): the picker matches it against its rows
 $idFile = Join-Path $current 'theme.name'
+if ($ExpectedTheme) {
+  $currentTheme = if (Test-Path $idFile) { (Get-Content $idFile -Raw).Trim() } else { '' }
+  if ("@$currentTheme" -ne $ExpectedTheme) { return }
+}
 if (-not $Theme) { $Theme = if (Test-Path $idFile) { (Get-Content $idFile -Raw).Trim() } else { 'catppuccin' } }
-$colorsPath = Join-Path $root "themes\$Theme\colors.toml"
+$wallpaperColors = Join-Path $current 'wallpaper-colors.toml'
+if ($Theme -eq 'wallpaper' -and $PaletteB64) {
+  $palette = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($PaletteB64)) | ConvertFrom-Json
+  $keys = 'mode','accent','selection','muted','background','dark_background','darker_background','lighter_background',
+    'foreground','dark_foreground','light_foreground','bright_foreground','red','yellow','orange','green','cyan','blue',
+    'magenta','brown','bright_red','bright_yellow','bright_green','bright_cyan','bright_blue','bright_magenta'
+  $lines = foreach ($key in $keys) {
+    $value = [string]$palette.$key
+    if (($key -eq 'mode' -and $value -notin @('dark', 'light')) -or
+        ($key -ne 'mode' -and $value -notmatch '^#[0-9a-fA-F]{6}$')) { throw "invalid wallpaper color: $key" }
+    "$key = `"$value`""
+  }
+  [IO.File]::WriteAllText($wallpaperColors, ($lines -join "`n") + "`n", $utf8)
+}
+$colorsPath = if ($Theme -eq 'wallpaper') { $wallpaperColors } else { Join-Path $root "themes\$Theme\colors.toml" }
 if (-not (Test-Path $colorsPath)) { throw "no such theme: $Theme" }
 
 $colors = @{}

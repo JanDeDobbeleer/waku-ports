@@ -8,6 +8,7 @@ import qs.Commons as Commons
 import qs.Ui
 import "MenuModel.js" as MenuModel
 import "WindowsSettings.js" as WindowsSettings
+import "WindowsSearch.js" as WindowsSearch
 import "../bar/I18nModel.js" as I18nModel
 
 Item {
@@ -110,8 +111,11 @@ Item {
   property bool rowsLoaded: false
   property string activeMenu: "root"
   property string filterText: ""
-  // Resets of filterText reach the search line; its edits come back through setFilter.
-  onFilterTextChanged: if (filterInput.text !== filterText) filterInput.text = filterText
+  // The search line exists only while the menu is open; it binds to filterText
+  // and reports its edits back through setFilter.
+  function focusFilter(): void {
+    filterLoader.forceActiveFocus()
+  }
   property int selectedIndex: 0
   property bool cursorActive: false
   property int requestSerial: 0
@@ -185,6 +189,11 @@ Item {
   function runAction(action: var): var {
     var command = String(action || "")
     if (!command) return
+
+    if (command === "nomarchy-wallpaper-theme") {
+      WindowsSearch.activateWallpaperTheme(root.shell)
+      return
+    }
 
     var summon = MenuModel.summonAction(command)
     if (summon && root.shell && root.shell.summon(summon.id, summon.payload)) return
@@ -661,6 +670,17 @@ Item {
     MenuModel.rebuildDisplay(root, displayModel, Qt.callLater)
   }
 
+  function searchWindows(query: string): var {
+    return WindowsSearch.results(query, ToplevelManager.toplevels.values || [],
+      Commons.I18n.t("controls.copyResult"), Commons.I18n.t("controls.openWindow"))
+  }
+
+  property string pendingWindow: ""
+  function activatePendingWindow(): void {
+    WindowsSearch.activateWindow(ToplevelManager.toplevels.values || [], root.pendingWindow)
+    root.pendingWindow = ""
+  }
+
   // Contain alone parks the cursor row flush with the viewport edge, hiding
   // the neighbor entirely and losing the fold affordance. Keep the next
   // hidden row peeking past the cursor in the direction of travel.
@@ -765,6 +785,13 @@ Item {
       opened = false
       filterText = ""
       if (root.appLibrary) root.appLibrary.launch(appId, label)
+    } else if (row.kind === "calculator") {
+      Quickshell.clipboardText = row.action
+      root.cancel()
+    } else if (row.kind === "window") {
+      root.pendingWindow = String(row.action)
+      root.cancel()
+      Qt.callLater(root.activatePendingWindow)
     } else {
       root.applySelected(row.itemId, row.action)
     }
@@ -784,7 +811,7 @@ Item {
     root.deleteTarget = null
     deleteConfirm.selectedIndex = 1
     root.disarmPointer()
-    Qt.callLater(function(): var { filterInput.forceActiveFocus() })
+    Qt.callLater(root.focusFilter)
   }
 
   function confirmDelete(): void {
@@ -834,7 +861,7 @@ Item {
     // their icons. Refresh here even when the desktop entry list did not change.
     if (root.appLibrary) root.appLibrary.refreshIcons()
 
-    Qt.callLater(function(): var { filterInput.forceActiveFocus() })
+    Qt.callLater(root.focusFilter)
   }
 
   function openDmenu(payload: var): void {
@@ -1130,7 +1157,7 @@ Item {
         anchors.fill: parent
         z: root.deleteConfirmOpen ? 20 : 0
 
-        // Focus is on filterInput, which forwards every key here first.
+        // Focus is on the search line, which forwards every key here first.
         Keys.onPressed: function(event: KeyEvent): var {
           if (root.deleteConfirmOpen) {
             // Swallow the rest too, or it would type into the search line behind the dialog.
@@ -1208,31 +1235,39 @@ Item {
           radius: root.cornerRadius
           color: "transparent"
 
-          FilterInput {
-            id: filterInput
+          // Only while open: a live text input re-reads the clipboard on every
+          // copy anywhere, and Qt warns whenever another process holds it.
+          Loader {
+            id: filterLoader
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            keyHandler: keyCatcher
-            // Input-method commits bypass key handling, so the dialog has to refuse them here.
-            readOnly: root.deleteConfirmOpen
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.heading
-            onTextChanged: if (text !== root.filterText) root.setFilter(text)
-          }
+            active: root.opened
+            onLoaded: root.focusFilter()
+            sourceComponent: FilterInput {
+              id: filterField
+              keyHandler: keyCatcher
+              // Input-method commits bypass key handling, so the dialog has to refuse them here.
+              readOnly: root.deleteConfirmOpen
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.heading
+              text: root.filterText
+              onTextChanged: if (filterField.text !== root.filterText) root.setFilter(filterField.text)
 
-          Text {
-            textFormat: Text.PlainText
-            anchors.fill: filterInput
-            verticalAlignment: Text.AlignVCenter
-            visible: !root.filterText && !filterInput.preeditText
-            text: root.dmenuActive ? (root.dmenuPrompt + "…") : (MenuModel.itemTitleOrLabel(root.items, root.activeMenu) + "…")
-            color: root.foreground
-            opacity: 0.58
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.heading
-            elide: Text.ElideRight
+              Text {
+                textFormat: Text.PlainText
+                anchors.fill: filterField
+                verticalAlignment: Text.AlignVCenter
+                visible: !root.filterText && !filterField.preeditText
+                text: root.dmenuActive ? (root.dmenuPrompt + "…") : (MenuModel.itemTitleOrLabel(root.items, root.activeMenu) + "…")
+                color: root.foreground
+                opacity: 0.58
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.heading
+                elide: Text.ElideRight
+              }
+            }
           }
 
         }

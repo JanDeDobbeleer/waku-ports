@@ -83,14 +83,17 @@ function batteryIcon(device, onBattery, states) {
   var d = device || {}
   if (!d.isPresent) return ""
 
-  var chargingIcons = ["󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"]
-  var defaultIcons = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
-  var index = Math.max(0, Math.min(9, Math.floor(d.percentage * 10)))
+  // Line-style glyphs: the filled Material set outweighs the bar text.
+  var chargingIcons = ["󱊤", "󱊥", "󱊦"]
+  var defaultIcons = ["󰂎", "󱊡", "󱊢", "󱊣"]
+  var level = Math.max(0, Math.min(1, d.percentage))
+  var index = level < 0.1 ? 0 : level < 0.35 ? 1 : level < 0.7 ? 2 : 3
+  var chargingIndex = Math.max(0, index - 1)
   var threshold = chargeThresholdActive(d, onBattery, states)
 
   if (threshold) return defaultIcons[index]
-  if (d.state === states.FullyCharged) return "󰂅"
-  if (!onBattery) return chargingIcons[index]
+  if (d.state === states.FullyCharged) return "󱊦"
+  if (!onBattery) return chargingIcons[chargingIndex]
   return defaultIcons[index]
 }
 

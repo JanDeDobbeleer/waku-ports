@@ -825,9 +825,39 @@ Item {
     if (at >= 0) toasts.remove(at)
     delete heights[key]
     delete fresh[key]
-    // A placeholder (the empty-history notice) was never recorded.
-    if (key.indexOf("placeholder") !== 0) storeClose(key, reason)
+    // A placeholder (the empty-history notice) was never recorded, and a card
+    // the notification center forgot leaves no history row.
+    if (forgetOnClose[key]) {
+      delete forgetOnClose[key]
+      storeDrop(key)
+    } else if (key.indexOf("placeholder") !== 0) storeClose(key, reason)
     layoutRevision += 1
+  }
+
+  // ------------------------------------------------------------- notification center
+  property var forgetOnClose: ({})
+
+  function forgetEntry(key) {
+    if (liveKeys[key]) {
+      forgetOnClose[key] = true
+      closeToast(key, "dismissed", true)
+      return
+    }
+    var kept = historyEntries.filter(function(entry) { return entry.key !== key })
+    if (kept.length === historyEntries.length) return
+    historyEntries = kept
+    saveSoon("history")
+  }
+
+  function clearHistory() {
+    for (let key in liveKeys) forgetOnClose[key] = true
+    clearAll("dismissed", true)
+    historyEntries = []
+    saveSoon("history")
+  }
+
+  function activateEntry(key) {
+    if (liveKeys[key]) activate(key, true)
   }
 
   // Over a snapshot of the keys, never over the model's count: closeToast marks

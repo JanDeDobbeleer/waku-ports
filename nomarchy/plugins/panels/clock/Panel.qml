@@ -254,8 +254,7 @@ Panel {
 
     component LazyContent: PanelKeyCatcher {
       id: keyCatcher
-      final property alias bornField: bornField
-      final property alias expectancyField: expectancyField
+      readonly property QtObject lifeEditor: lifeLoader.item
       implicitHeight: calendarColumn.implicitHeight
       anchors.fill: parent
       blocked: root.editingLife
@@ -372,57 +371,14 @@ Panel {
                 onDoubleTapped: root.startEditingLife()
               }
 
-              Row {
-                visible: root.editingLife
+              // Only while editing: a live text field re-reads the clipboard
+              // every time it changes anywhere on the desktop.
+              Loader {
+                id: lifeLoader
+                active: root.editingLife
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: Style.space(10)
-
-                Text {
-                  anchors.verticalCenter: parent.verticalCenter
-                  text: Commons.I18n.t("clock.born")
-                  textFormat: Text.PlainText
-                  color: Qt.darker(root.contentForeground, 1.5)
-                  font.family: root.contentFontFamily
-                  font.pixelSize: Style.font.bodySmall
-                  font.letterSpacing: 1
-                }
-
-                TextField {
-                  id: bornField
-                  width: Style.space(70)
-                  anchors.verticalCenter: parent.verticalCenter
-                  placeholderText: Commons.I18n.t("clock.year")
-                  foreground: root.contentForeground
-                  font.family: root.contentFontFamily
-                  inputMethodHints: Qt.ImhDigitsOnly
-
-                  Keys.onPressed: function(event) { root.handleLifeKey(event, expectancyField) }
-                }
-
-                Text {
-                  anchors.verticalCenter: parent.verticalCenter
-                  anchors.verticalCenterOffset: 0
-                  leftPadding: Style.space(6)
-                  text: Commons.I18n.t("clock.liveTo")
-                  textFormat: Text.PlainText
-                  color: Qt.darker(root.contentForeground, 1.5)
-                  font.family: root.contentFontFamily
-                  font.pixelSize: Style.font.bodySmall
-                  font.letterSpacing: 1
-                }
-
-                TextField {
-                  id: expectancyField
-                  width: Style.space(60)
-                  anchors.verticalCenter: parent.verticalCenter
-                  placeholderText: "90"
-                  foreground: root.contentForeground
-                  font.family: root.contentFontFamily
-                  inputMethodHints: Qt.ImhDigitsOnly
-
-                  Keys.onPressed: function(event) { root.handleLifeKey(event, bornField) }
-                }
+                sourceComponent: Component { LifeEditor {} }
               }
 
               Text {
@@ -780,6 +736,58 @@ Panel {
           }
         }
       }
+    }
+  }
+
+  component LifeEditor: Row {
+    readonly property alias bornField: bornField
+    readonly property alias expectancyField: expectancyField
+    spacing: Style.space(10)
+
+    Text {
+      anchors.verticalCenter: parent.verticalCenter
+      text: Commons.I18n.t("clock.born")
+      textFormat: Text.PlainText
+      color: Qt.darker(root.contentForeground, 1.5)
+      font.family: root.contentFontFamily
+      font.pixelSize: Style.font.bodySmall
+      font.letterSpacing: 1
+    }
+
+    TextField {
+      id: bornField
+      width: Style.space(70)
+      anchors.verticalCenter: parent.verticalCenter
+      placeholderText: Commons.I18n.t("clock.year")
+      foreground: root.contentForeground
+      font.family: root.contentFontFamily
+      inputMethodHints: Qt.ImhDigitsOnly
+
+      Keys.onPressed: function(event) { root.handleLifeKey(event, expectancyField) }
+    }
+
+    Text {
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.verticalCenterOffset: 0
+      leftPadding: Style.space(6)
+      text: Commons.I18n.t("clock.liveTo")
+      textFormat: Text.PlainText
+      color: Qt.darker(root.contentForeground, 1.5)
+      font.family: root.contentFontFamily
+      font.pixelSize: Style.font.bodySmall
+      font.letterSpacing: 1
+    }
+
+    TextField {
+      id: expectancyField
+      width: Style.space(60)
+      anchors.verticalCenter: parent.verticalCenter
+      placeholderText: "90"
+      foreground: root.contentForeground
+      font.family: root.contentFontFamily
+      inputMethodHints: Qt.ImhDigitsOnly
+
+      Keys.onPressed: function(event) { root.handleLifeKey(event, bornField) }
     }
   }
 }

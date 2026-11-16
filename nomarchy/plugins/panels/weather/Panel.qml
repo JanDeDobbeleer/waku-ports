@@ -208,7 +208,9 @@ Panel {
       + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day"
       + "&forecast_days=4"
       + "&timezone=auto"
-    dailyForecastProc.command = ["curl", "-fsS", "--max-time", "5", url]
+    // Open-Meteo's firewall answers 403 to curl's default User-Agent on some
+    // networks (VPN exits), so name the client.
+    dailyForecastProc.command = ["curl", "-fsS", "--max-time", "5", "-A", "nomarchy", url]
     dailyForecastProc.running = true
   }
 
@@ -308,7 +310,7 @@ Panel {
 
   function startGeocode(): void {
     geocodeActiveQuery = geocodePendingQuery
-    geocodeProc.command = ["curl", "-fsS", "--max-time", "5",
+    geocodeProc.command = ["curl", "-fsS", "--max-time", "5", "-A", "nomarchy",
       "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(geocodeActiveQuery) + "&count=5&language=en&format=json"]
     geocodeProc.running = true
   }

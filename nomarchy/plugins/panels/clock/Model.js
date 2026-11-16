@@ -330,16 +330,22 @@ function hasField(value, key) { return !!value && key in value }
 function setField(value, key, fieldValue) { if (value) value[key] = fieldValue }
 function showController(controller) { controller.show() }
 function hideController(controller) { controller.hide() }
+// The fields live in the life editor, which is loaded only while editing.
+function lifeField(content, key) {
+  var editor = content ? content.lifeEditor : null
+  return editor ? editor[key] : null
+}
 function initializeLifeFields(content, birthYear, expectancy) {
-  var born = content.bornField
-  var expected = content.expectancyField
+  var born = lifeField(content, "bornField")
+  var expected = lifeField(content, "expectancyField")
+  if (!born || !expected) return
   born.text = birthYear > 0 ? String(birthYear) : ""
   expected.text = String(expectancy)
   born.selectAll()
   born.forceActiveFocus()
 }
 function lifeFieldText(content, key) {
-  var field = content ? content[key] : null
+  var field = lifeField(content, key)
   return field ? field.text : ""
 }
 function selectAndFocus(field) {
