@@ -481,16 +481,11 @@ Panel {
   }
 
   function outputIcon(volume: var): string {
-    // Match the old Waybar pulseaudio glyph set. The Material Design speaker
-    // icons render visually smaller in JetBrainsMono Nerd Font.
-    if (!sink || !Dynamic.value(sink, "audio")) return ""
+    // Codicon outline speakers: the filled glyphs outweigh the bar text.
+    if (!sink || !Dynamic.value(sink, "audio")) return ""
     if (isHeadphones(sink)) return "󰋋"
-    if (outputMuted) return ""
     var v = volume === undefined ? outputVolume : volume
-    if (v >= 0.67) return ""
-    if (v >= 0.34) return ""
-    if (v > 0) return ""
-    return ""
+    return outputMuted || v <= 0 ? "" : ""
   }
 
   function inputIcon(): string {

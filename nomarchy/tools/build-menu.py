@@ -46,6 +46,8 @@ ENTRIES = [
      {"aliases": ["theme", "themes"]}),
     ("appearance.background", "Background", None, summon("nomarchy.image-picker", '{"source":"wallpapers"}'),
      {"aliases": ["background", "wallpaper"]}),
+    ("appearance.wallpaper-colors", "Wallpaper colors", "\U000f03d8", "nomarchy-wallpaper-theme",
+     {"aliases": ["wallpaper theme", "dynamic colors"]}),
     ("trigger", "Trigger", "\U000f0e9e", None, {}),
     ("trigger.emoji", "Emoji", "\U000f0785", WINKEYS + "emoji 400", {"aliases": ["emoji"]}),
     ("trigger.clipboard", "Clipboard history", "\U000f0147", WINKEYS + "clipboard 400", {"aliases": ["clipboard"]}),

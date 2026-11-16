@@ -1316,8 +1316,8 @@ function dragShareKey(room) {
   return room ? room.region + ":" + room.index : ""
 }
 
-function showTooltip(root, target, text, callLater) {
-  var warm = root.tooltipShown || root.tooltipWarmTimer.running
+function showTooltip(root, target, text, callLater, warmTimer, delayTimer) {
+  var warm = root.tooltipShown || warmTimer.running
   root.clearTooltip()
   if (!root.targetTooltipHovered(target) || !text) {
     root.tooltipRequest += 1
@@ -1338,7 +1338,7 @@ function showTooltip(root, target, text, callLater) {
     root.pendingTooltipTarget = null
     root.pendingTooltipText = ""
     if (warm) root.tooltipShown = true
-    else root.tooltipTimer.restart()
+    else delayTimer.restart()
   })
 }
 

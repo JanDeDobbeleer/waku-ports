@@ -219,6 +219,11 @@ Item {
   // With both timeouts at 0 the monitor stops reporting, so nothing else would end a running cycle.
   onIdleTimersEnabledChanged: if (!idleTimersEnabled) cancelIdleCycle("idle-timers-disabled")
 
+  // Stay awake also holds Windows awake; waku maps this to SetThreadExecutionState.
+  IdleInhibitor {
+    enabled: root.stayAwake
+  }
+
   IdleMonitor {
     id: idleMonitor
     enabled: root.idleEnabled && root.idleTimersEnabled

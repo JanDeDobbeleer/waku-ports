@@ -17,7 +17,6 @@ import "AppsModel.js" as AppsModel
 BarWidget {
   id: root
   moduleName: "nomarchy.apps"
-  readonly property bool showPanelIndicator: false
 
   readonly property real cell: Style.space(25)
   readonly property real gap: Style.space(2)
@@ -73,6 +72,8 @@ BarWidget {
   property var hoverGroup: null
   property Item hoverItem: null
   readonly property bool previewOpen: AppsModel.isPreviewOpen(previewGroup, hoverItem)
+  // The bar's open-panel mark sits under the tile whose preview is open, not under the whole list.
+  readonly property Item openPanelIndicatorItem: previewOpen ? hoverItem : null
 
   function hoverEnter(group: var, item: var): var {
     closeTimer.stop()

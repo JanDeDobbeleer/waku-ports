@@ -56,6 +56,11 @@ function updateEntryInline(bar, id, entry) { return bar.shell.updateEntryInline(
 function summon(bar, id, payload) { return bar.shell.summon(id, payload) }
 function toggle(bar, id, payload) { return bar.shell.toggle(id, payload) }
 function firstPartyServiceFor(bar, id) { return bar?.shell?.firstPartyServiceFor(id) }
+function stayAwake(bar) { return firstPartyServiceFor(bar, "nomarchy.idle")?.stayAwake === true }
+function setStayAwake(bar, value) {
+  const idle = firstPartyServiceFor(bar, "nomarchy.idle")
+  if (idle) idle.setIdleEnabled(!value)
+}
 
 function background(bar) { return bar.background }
 function foregroundAnimationEnabled(bar) { return bar.foregroundAnimationEnabled }

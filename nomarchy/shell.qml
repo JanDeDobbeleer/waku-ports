@@ -29,6 +29,7 @@ ShellRoot {
   property BarWidgetRegistry barWidgetRegistry: BarWidgetRegistry { }
   property AppLibrary appLibrary: AppLibrary { }
   property BrightnessKeys brightnessKeys: BrightnessKeys { host: shell }
+  property WallpaperTheme wallpaperTheme: WallpaperTheme {}
   property BackgroundIntro bootIntro: BackgroundIntro { host: shell }
   property BackgroundSwitch backgroundSwitch: BackgroundSwitch { intro: shell.bootIntro }
 
@@ -60,7 +61,7 @@ ShellRoot {
         centerBegin: [],
         center: [{ id: "nomarchy.clock", format: "dddd HH:mm" }],
         centerEnd: [],
-        right: [{ id: "nomarchy.audio" }]
+        right: [{ id: "nomarchy.tray" }, { id: "nomarchy.controls" }, { id: "nomarchy.audio" }]
       }
     },
     plugins: []
@@ -1829,6 +1830,10 @@ ShellRoot {
 
     function themeIntroCoverStatus(token: string): string {
       return shell.bootIntro.themeCoverStatus(token)
+    }
+
+    function wallpaperTheme(): string {
+      return shell.wallpaperTheme.request(true)
     }
 
     function ping(): string {

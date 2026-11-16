@@ -581,7 +581,7 @@ Panel {
     if (q === "" || placeCache[q] !== undefined) return
     if (placeProc.running) return
     placeProc.query = q
-    placeProc.command = ["curl", "-fsS", "--max-time", "8", Model.geocodeUrl(q)]
+    placeProc.command = ["curl", "-fsS", "--max-time", "8", "-A", "nomarchy", Model.geocodeUrl(q)]
     placeProc.running = true
   }
 
@@ -635,7 +635,8 @@ Panel {
     weatherProc.keys = Model.staleWeatherKeys(factsRequest, weather, Date.now(), function(key: string): var { return root.coordsFor(key) })
     if (Dynamic.value(weatherProc, "keys").length === 0) { publishFacts(); return }
     weatherProc.points = Model.coordinatesForKeys(Dynamic.value(weatherProc, "keys"), function(key: string): var { return root.coordsFor(key) })
-    weatherProc.command = ["curl", "-fsS", "--max-time", "8", Model.forecastUrl(Dynamic.value(weatherProc, "points"))]
+    // A named client: Open-Meteo answers 403 to curl's default User-Agent on some networks.
+    weatherProc.command = ["curl", "-fsS", "--max-time", "8", "-A", "nomarchy", Model.forecastUrl(Dynamic.value(weatherProc, "points"))]
     weatherProc.running = true
   }
 

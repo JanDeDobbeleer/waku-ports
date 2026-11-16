@@ -31,19 +31,29 @@ uses its own home, `state\home`, not your user profile.
 
 | Part | How it works on Windows |
 |---|---|
-| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program), clock, weather, tray, bluetooth, network, audio, power |
+| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program), media (only while something plays), clock, weather, system monitor, tray, notification center, quick controls, Bluetooth, network, audio, power. Click the tray chevron for its flyout; right-click it to pin or hide icons |
 | Menu | Apps, Appearance (Theme, Background), Trigger (Emoji, Clipboard), Setup (Audio, Bluetooth, Network, Power, Windows Settings), About, System (Lock, Sleep, Sign out, Restart, Shut down) |
-| Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons |
-| Theme switcher | 21 Nomarchy themes (`themes\`); `tools\theme-apply.ps1 <name>` rewrites the files the shell watches, so colours change live |
+| Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons. Search also finds open windows and calculates arithmetic; select a calculation to copy its result |
+| Quick controls | a bar panel with a brightness slider, a Windows dark-mode toggle, a stay-awake toggle that keeps Windows from sleeping or turning off the display, and shortcuts to Windows' Project and Cast flyouts, airplane mode, the volume mixer, Device Manager and Windows Settings |
+| System monitor | a bar icon whose panel graphs the last two minutes of CPU, memory and GPU load, sampled every two seconds by the engine's `Cpu`, `Memory` and `Gpu` services, with frequency, temperature, memory and VRAM use, and the drives' free space. Hover for current load; right-click opens Task Manager |
+| Notification center | the bell next to the tray: the last 24 hours of notifications, Do Not Disturb (also on right-click), dismiss one or clear all |
+| Media | the Windows media sessions (GSMTC) through the engine's `Mpris`. Click for cover art, a seek bar, previous/play/next, shuffle and repeat, and the source list; middle-click plays or pauses, the wheel skips |
+| Theme switcher | Nomarchy themes (`themes\`); `tools\theme-apply.ps1 <name>` rewrites the files the shell watches, so colours change live. Style > Wallpaper colors generates a theme from the current wallpaper and updates it when the wallpaper or Windows light/dark mode changes |
 | Background switcher | the images of the current wallpaper's folder (or `NOMARCHY_WALLPAPER_DIR`); a choice calls the engine's `Wallpapers.setWallpaper`, the service Celeste's port uses. It also sets the lock screen picture unless the service is told not to |
 | Emoji, clipboard | Windows' own panels, opened by `tools\winkeys.ps1` (clipboard history must be on in Windows settings) |
 | Wi-Fi | the engine's `Network` service behind `qs.compat.Networking`: networks, signal, saved-network connect, radio switch. A new network or password opens Windows' Wi-Fi settings; disconnect and forget use `netsh` |
 | Audio, Bluetooth, battery | the engine's Pipewire, Bluetooth and UPower modules; the power panel's profiles are the Windows power modes (`PowerProfiles`) |
 
+Brightness controls use waku's selected Windows brightness source. They are unavailable when the
+engine cannot control a display; per-monitor brightness is not supported. If you already have a
+custom `state\home\.config\nomarchy\shell.json`, add `{"id":"nomarchy.controls"}` after the tray in its bar layout
+to show Quick controls, and remove "nomarchy.idle" from disabledPlugins (with idle.screensaver and idle.lock
+set to 0) for its stay-awake toggle. User configuration replaces the default rather than merging with it.
+
 Dropped (they run `nomarchy-*`, `hyprctl`, `timedatectl` or other Linux commands): the indicators, world
 clock, system-update, keyboard-layout, agents, monitor, Tailscale, Dropbox, Wi-Fi QR, speed-test, the
 Linux emoji/clipboard/reminders overlays, the low-battery warning (Windows shows its own), night light,
-remote session, idle, lock screen, polkit prompt
+remote session, lock screen, polkit prompt
 and the Unix-socket IPC. Switched off by default: the background layer (Windows or another shell draws the
 wallpaper) and the dock.
 

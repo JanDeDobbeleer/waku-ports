@@ -1288,7 +1288,7 @@ Item {
   }
 
   function showTooltip(target: var, text: var): void {
-    BarModel.showTooltip(root, target, text, Qt.callLater)
+    BarModel.showTooltip(root, target, text, Qt.callLater, tooltipWarmTimer, tooltipTimer)
   }
 
   function hideTooltip(target: var): var {

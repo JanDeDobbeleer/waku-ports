@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "nomarchy.controls",
+  "name": "Quick controls",
+  "version": "1.0.0",
+  "description": "Windows controls and system resources",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Quick controls",
+    "description": "Brightness, system resources and settings",
+    "category": "System",
+    "allowMultiple": false
+  }
+}

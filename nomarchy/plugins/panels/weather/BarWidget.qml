@@ -60,7 +60,9 @@ BarWidget {
   Loader {
     id: panelLoader
     active: true
-    source: Qt.resolvedUrl("Panel.qml")
+    // A component, not a source URL: an item loaded from a URL fails the
+    // `as Local.Panel` cast above, which hides the widget.
+    sourceComponent: Component { Local.Panel {} }
     visible: false
     onLoaded: {
       root.injectPanel()
@@ -73,10 +75,9 @@ BarWidget {
     anchors.left: parent.left
     anchors.right: parent.right
     height: parent.height
-    // Windows port: the cloud glyph is centred in its slot but the clock text beside it sits lower
-    // (its baseline, not its box, is centred), so the icon read about 3 px high.
+    // OpticalGlyph centres each condition glyph by its ink bounds; a fixed
+    // offset suits only one glyph shape and pushes taller ones off-centre.
     anchors.verticalCenter: parent.verticalCenter
-    anchors.verticalCenterOffset: Style.space(2)
     bar: root.bar
     text: root.loadedPanel ? Model.field(root.loadedPanel, "label") : ""
     slotSize: Style.bar.statusSlot

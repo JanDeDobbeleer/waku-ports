@@ -883,7 +883,7 @@ function rebuildDisplay(root, displayModel, callLater) {
     if (root.searchDivider) {
       for (var d = 0; d < drilldownRows.length; d++) drilldownRows[d].section = "drilldown"
     }
-    rows = currentRows.concat(drilldownRows)
+    rows = (active === "root" || active === "apps" ? root.searchWindows(query) : []).concat(currentRows, drilldownRows)
   } else {
     for (var j = 0; j < root.itemOrder.length; j++) {
       var child = item(root.items, root.itemOrder[j])
@@ -935,7 +935,7 @@ function openDmenu(root, payload, selectionProc, i18n, callLater) {
   root.disarmPointer()
   root.opened = true
   root.rebuildDisplay()
-  callLater(function() { root.filterInput.forceActiveFocus() })
+  callLater(function() { root.focusFilter() })
 }
 
 function openRoute(root, initialMenu) {
