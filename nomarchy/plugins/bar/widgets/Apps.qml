@@ -12,7 +12,8 @@ import "AppsModel.js" as AppsModel
 // are the engine's `TaskbarModel` (every window the taskbar lists, on every virtual desktop),
 // grouped by executable in the order they first appeared. The program with the foreground window
 // sits on a highlighted tile, one whose windows are all minimized is dimmed with a dash under the
-// icon, and a program with several windows has a count badge. A click raises the window after the
+// icon, a program with several windows has a count badge, and one reporting taskbar progress has a
+// thin line along the tile's bottom edge. A click raises the window after the
 // focused one (or the first), restoring a minimized window; a middle click raises the last one.
 BarWidget {
   id: root
@@ -45,7 +46,7 @@ BarWidget {
       }
       let g = byExe[exe]
       if (!g.iconUrl) g.iconUrl = o.iconUrl
-      g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized })
+      g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized, progressState: o.progressState, progress: o.progress })
     }
     var kept = []
     var seen = {}
@@ -129,12 +130,16 @@ BarWidget {
     final required property string key
     final required property string iconUrl
     final required property string uniqueId
+    final required property string progressState
+    final required property real progress
     final readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
 
     onActiveChanged: Qt.callLater(root.rebuild)
     onMinimizedChanged: Qt.callLater(root.rebuild)
     onTitleChanged: Qt.callLater(root.rebuild)
     onIconUrlChanged: Qt.callLater(root.rebuild)
+    onProgressStateChanged: Qt.callLater(root.rebuild)
+    onProgressChanged: Qt.callLater(root.rebuild)
   }
 
   Instantiator {
@@ -163,10 +168,13 @@ BarWidget {
         readonly property bool allMinimized: AppsModel.allMinimized(modelData)
         readonly property int count: AppsModel.length(AppsModel.windows(modelData))
         readonly property bool hasImage: image.source.toString() !== "" && image.status !== Image.Error
+        readonly property string progressState: AppsModel.progressState(modelData)
+        readonly property real progress: AppsModel.progressValue(modelData)
+        readonly property bool hasProgress: progressState !== "none"
 
         width: root.cell
         height: root.cell
-        opacity: allMinimized && !focused ? 0.5 : 1
+        opacity: allMinimized && !focused && !hasProgress ? 0.5 : 1
 
         Rectangle {
           anchors.fill: parent
@@ -203,7 +211,7 @@ BarWidget {
 
         // A short dash marks a group whose windows are all minimized.
         Rectangle {
-          visible: app.allMinimized
+          visible: app.allMinimized && !app.hasProgress
           anchors.horizontalCenter: parent.horizontalCenter
           anchors.bottom: parent.bottom
           anchors.bottomMargin: 1
@@ -211,6 +219,54 @@ BarWidget {
           height: 2
           radius: 1
           color: root.ink
+        }
+
+        // Taskbar progress: a 2px line along the tile's bottom edge on a faint track. It fills to the
+        // value, sweeps a short segment while indeterminate, and takes the urgent colour on error and
+        // a dimmed one while paused.
+        Item {
+          id: progressTrack
+          visible: app.hasProgress
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
+          height: 2
+          clip: true
+
+          readonly property color fill: app.progressState === "error" ? Commons.Color.urgent
+            : app.progressState === "paused" ? Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.55)
+            : Commons.Color.accent
+          readonly property bool sweeping: app.progressState === "indeterminate"
+
+          Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.18)
+          }
+
+          Rectangle {
+            visible: !progressTrack.sweeping
+            width: Math.round(progressTrack.width * app.progress)
+            height: parent.height
+            color: progressTrack.fill
+            Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+          }
+
+          Rectangle {
+            id: sweep
+            visible: progressTrack.sweeping
+            width: Math.round(progressTrack.width * 0.4)
+            height: parent.height
+            color: progressTrack.fill
+
+            NumberAnimation on x {
+              running: progressTrack.visible && progressTrack.sweeping
+              loops: Animation.Infinite
+              from: -sweep.width
+              to: progressTrack.width
+              duration: 1100
+              easing.type: Easing.InOutSine
+            }
+          }
         }
 
         // The window count, at the icon's top-right corner.

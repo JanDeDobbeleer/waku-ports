@@ -31,7 +31,7 @@ uses its own home, `state\home`, not your user profile.
 
 | Part | How it works on Windows |
 |---|---|
-| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program), media (only while something plays), clock, weather, system monitor, tray, notification center, quick controls, Bluetooth, network, audio, power. Click the tray chevron for its flyout; right-click it to pin or hide icons |
+| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program, with a thin line under the icon for taskbar progress), media (only while something plays), clock, weather, system monitor, tray, notification center, quick controls, Bluetooth, network, audio, power. Click the tray chevron for its flyout; right-click it to pin or hide icons |
 | Menu | Apps, Appearance (Theme, Background), Trigger (Emoji, Clipboard), Setup (Audio, Bluetooth, Network, Power, Windows Settings), About, System (Lock, Sleep, Sign out, Restart, Shut down) |
 | Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons. Search also finds open windows and calculates arithmetic; select a calculation to copy its result |
 | Quick controls | a bar panel with a brightness slider, a Windows dark-mode toggle, a stay-awake toggle that keeps Windows from sleeping or turning off the display, and shortcuts to Windows' Project and Cast flyouts, airplane mode, Device Manager and Windows Settings |

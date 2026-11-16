@@ -10,7 +10,8 @@ function activationIndex(group, last) {
   return target.index
 }
 
-function windows(group) { return group && Array.isArray(group.windows) ? group.windows : [] }
+// A Repeater hands each group over as a converted object whose `windows` is array-like, not an Array.
+function windows(group) { var list = group ? group.windows : null; return list && typeof list.length === "number" ? Array.from(list) : [] }
 function length(value) { return value && typeof value.length === "number" ? value.length : 0 }
 function shown(groups, maxVisible) { var list = Array.from(groups || []); return list.length > maxVisible ? list.slice(0, maxVisible) : list }
 function isPreviewOpen(group, item) { return !!group && !!item && windows(group).length > 0 }
@@ -25,3 +26,21 @@ function field(object, name) { return object ? object[name] : undefined }
 function stringField(object, name) { var value = field(object, name); return value == null ? "" : String(value) }
 function textForApp(group) { var exe = stringField(group, "exe"); return exe.length > 0 ? exe.charAt(0).toUpperCase() : "?" }
 function previewRectY(item, root) { return item.mapToItem(root, 0, 0).y }
+
+// The progress a program shows on its tile: the most pressing state among its windows (error, then
+// paused, normal, indeterminate) and, within a state, the least advanced value.
+function groupProgress(group) {
+  var priority = { error: 0, paused: 1, normal: 2, indeterminate: 3, none: 4 }
+  var state = "none"
+  var value = 0
+  var list = windows(group)
+  for (let i = 0; i < list.length; i++) {
+    let next = list[i].progressState || "none"
+    let p = next in priority ? priority[next] : 4
+    let v = Number(list[i].progress) || 0
+    if (p < priority[state] || (p === priority[state] && v < value)) { state = next; value = v }
+  }
+  return { state: state, value: Math.max(0, Math.min(1, value)) }
+}
+function progressState(group) { return groupProgress(group).state }
+function progressValue(group) { return groupProgress(group).value }
