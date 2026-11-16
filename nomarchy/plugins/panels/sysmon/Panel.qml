@@ -74,7 +74,8 @@ Panel {
   // two minutes of history rather than an empty graph.
   S.Cpu { id: cpu; historySize: 60 }
   S.Memory { id: memory; historySize: 60 }
-  S.Gpu { id: gpu; historySize: 60 }
+  // GPU counters are the costly sample on Windows, so they run only while the flyout shows.
+  S.Gpu { id: gpu; historySize: 60; active: root.opened }
 
   BarIconButton {
     id: button
@@ -82,7 +83,7 @@ Panel {
     bar: root.bar
     text: ""
     tooltipText: root.opened ? "" : Commons.I18n.t("sysmon.tooltip")
-      .arg(root.cpuText).arg(root.memoryText).arg(root.hasGpu ? root.gpuText : "–")
+      .arg(root.cpuText).arg(root.memoryText)
     onPressed: function(b) {
       if (b === Qt.RightButton) root.openTaskManager()
       else root.toggle()

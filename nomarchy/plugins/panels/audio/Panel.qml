@@ -254,6 +254,7 @@ Panel {
     if (section === "output") return Dynamic.value(displayAudioSinks, "length")
     if (section === "input") return Dynamic.value(displayAudioSources, "length")
     if (section === "streams") return Dynamic.value(displayAudioStreams, "length")
+    if (section === "mixer") return 1
     return 0
   }
 
@@ -261,7 +262,7 @@ Panel {
     if (section === "output") return true
     if (section === "input") return Dynamic.value(displayAudioSources, "length") > 0 || !!source
     if (section === "streams") return Dynamic.value(displayAudioStreams, "length") > 0
-    return false
+    return section === "mixer"
   }
 
   function sectionHasSlider(section: string): bool {
@@ -277,6 +278,7 @@ Panel {
     if (sectionVisible("output")) list.push("output")
     if (sectionVisible("input")) list.push("input")
     if (sectionVisible("streams")) list.push("streams")
+    list.push("mixer")
     return list
   }
 
@@ -357,6 +359,7 @@ Panel {
   // Enter/Space: activate whatever the cursor is on.
   function activateCursor(): void {
     if (focusSection === "header") { toggleAllMuted(); return }
+    if (focusSection === "mixer") { openMixer(); return }
     if (focusSection === "output") {
       if (selectedIndex === -1) { toggleOutputMute(); return }
       let sink = nodeFor(displayAudioSinks[selectedIndex])
@@ -373,6 +376,12 @@ Panel {
       let st = nodeFor(displayAudioStreams[selectedIndex])
       if (st && Dynamic.value(st, "audio")) Dynamic.set(Dynamic.value(st, "audio"), "muted", !Dynamic.value(Dynamic.value(st, "audio"), "muted"))
     }
+  }
+
+  // Windows' per-app volume page, which also picks each app's output device.
+  function openMixer(): void {
+    root.close()
+    Quickshell.execDetached(["explorer.exe", "ms-settings:apps-volume"])
   }
 
   onOpenedChanged: {
@@ -1087,6 +1096,19 @@ Panel {
                 rowIndex: index
               }
             }
+          }
+
+          PanelSeparator { foreground: root.contentForeground }
+
+          Button {
+            width: panelColumn.width
+            text: Commons.I18n.t("audio.mixer")
+            foreground: root.contentForeground
+            fontFamily: root.contentFontFamily
+            leftAlign: true
+            bordered: true
+            hasCursor: root.cursorActive && root.focusSection === "mixer"
+            onClicked: root.openMixer()
           }
         }
       }

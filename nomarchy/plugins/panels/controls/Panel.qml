@@ -45,7 +45,7 @@ Panel {
     }
     // Windows' own flyouts and pages; each one has no other entry in the shell.
     var targets = ["ms-settings-displays-topology:", "ms-settings-connectabledevices:devicediscovery",
-      "ms-settings:network-airplanemode", "ms-settings:apps-volume", "devmgmt.msc", "ms-settings:"]
+      "ms-settings:network-airplanemode", "devmgmt.msc", "ms-settings:"]
     if (index >= 3 && index < 3 + targets.length) {
       root.close()
       const target = targets[index - 3]
@@ -86,7 +86,7 @@ Panel {
       anchors.fill: parent
       implicitHeight: column.implicitHeight
       onMoveRequested: function(dx, dy) {
-        if (dy !== 0) root.selectedIndex = Math.max(0, Math.min(8, root.selectedIndex + dy))
+        if (dy !== 0) root.selectedIndex = Math.max(0, Math.min(7, root.selectedIndex + dy))
         else if (dx !== 0 && root.selectedIndex === 0) root.adjustBrightness(dx * 5)
       }
       onActivateRequested: root.activate(root.selectedIndex)
@@ -174,7 +174,7 @@ Panel {
 
         Repeater {
           model: [Commons.I18n.t("controls.project"), Commons.I18n.t("controls.cast"),
-            Commons.I18n.t("controls.airplane"), Commons.I18n.t("controls.mixer"),
+            Commons.I18n.t("controls.airplane"),
             Commons.I18n.t("controls.deviceManager"), Commons.I18n.t("controls.windowsSettings")]
           Button {
             required property string modelData
