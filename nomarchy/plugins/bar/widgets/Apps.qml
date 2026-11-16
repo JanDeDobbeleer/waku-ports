@@ -274,8 +274,9 @@ BarWidget {
           visible: app.count > 1
           anchors.right: parent.right
           anchors.top: parent.top
-          anchors.rightMargin: -2
-          anchors.topMargin: -2
+          // The bar sits at the screen edge, so the badge stays inside the tile vertically.
+          anchors.rightMargin: -3
+          anchors.topMargin: 2
           width: Math.max(height, badge.implicitWidth + 6)
           height: badge.implicitHeight + 1
           radius: height / 2
