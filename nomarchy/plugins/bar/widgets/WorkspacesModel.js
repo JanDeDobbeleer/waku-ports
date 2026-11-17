@@ -45,5 +45,5 @@ function scroll(root, delta, wheel) {
 function count(values) { return values ? values.length : 0 }
 function label(slot) { return slot.active ? "\uf0c8" : String(slot.number) }
 function opacity(slot) { return slot.active || slot.occupied ? 1 : 0.5 }
-function canFocus(slot) { return !!slot.exists && !slot.active }
+function canFocus(slot) { return !slot.active }
 function number(slot) { return slot.number }

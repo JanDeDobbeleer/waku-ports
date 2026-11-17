@@ -65,6 +65,23 @@ target.hovered = false
 showTooltip(target, "Not hovered")
 assert.equal(tooltip.tooltipTarget, null)
 
+const workspaces = load("plugins/bar/widgets/WorkspacesModel.js")
+const slots = workspaces.slots({
+  workspaces: [{}, {}, {}, { active: true }]
+}, 5)
+assert.equal(workspaces.canFocus(slots[4]), true, "clicking a placeholder must allow desktop creation")
+assert.equal(workspaces.canFocus(slots[0]), true, "existing inactive desktops remain clickable")
+assert.equal(workspaces.canFocus(slots[3]), false, "clicking the active desktop remains a no-op")
+const focusedWorkspaces = []
+const workspaceRoot = {
+  slots, wheelAccumulator: 0,
+  focusWorkspace(number) { focusedWorkspaces.push(number) }
+}
+workspaces.scroll(workspaceRoot, -120, { steps: -1, remainder: 0 })
+assert.deepEqual(focusedWorkspaces, [], "scrolling must not create a desktop")
+workspaces.scroll(workspaceRoot, 120, { steps: 1, remainder: 0 })
+assert.deepEqual(focusedWorkspaces, [3], "scrolling still focuses an existing desktop")
+
 const tray = load("plugins/bar/widgets/TrayModel.js")
 const items = [
   { id: "pinned", status: 1 }, { id: "flyout", status: 1 },
@@ -100,4 +117,4 @@ assert.equal(theme.palette({ valid: true, dark: false, colors }, true), "")
 assert.equal(JSON.parse(theme.palette({ valid: true, dark: true, colors }, true)).accent, "#aabbcc")
 colors.primary = "invalid"
 assert.equal(theme.palette({ valid: true, dark: true, colors }, true), "")
-console.log("Nomarchy Windows search, tooltip, tray and palette tests passed")
+console.log("Nomarchy Windows search, tooltip, workspaces, tray and palette tests passed")
