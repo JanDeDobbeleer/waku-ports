@@ -9,7 +9,7 @@ import "WorkspacesModel.js" as WorkspacesModel
 
 // Windows port of the workspaces widget: the Windows virtual desktops, through the
 // engine's `Workspaces` service (the Hyprland version read hyprctl and a per-monitor block of ten).
-// The active workspace shows a filled square, the others their number; one with no windows is dimmed.
+// The active workspace number uses the bar's themed foreground; one with no windows is dimmed.
 BarWidget {
   id: root
   moduleName: "nomarchy.workspaces"
@@ -64,6 +64,8 @@ BarWidget {
 
         bar: root.bar
         text: WorkspacesModel.label(modelData)
+        active: WorkspacesModel.isActive(modelData)
+        activeColor: foreground
         opacity: WorkspacesModel.opacity(modelData)
         horizontalMargin: 6
         verticalPadding: 6
