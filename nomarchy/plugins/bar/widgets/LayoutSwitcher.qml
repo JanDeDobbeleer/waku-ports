@@ -1,5 +1,6 @@
 import QtQuick
 import waku.services as S
+import qs.Commons
 import qs.Ui
 import "LayoutSwitcherModel.js" as LayoutSwitcherModel
 
@@ -33,6 +34,9 @@ BarWidget {
     bar: root.bar
     text: root.layoutIcon
     fontFamily: "Material Symbols Rounded"
+    labelVisible: false
+    fixedWidth: root.vertical ? root.barSize : Style.bar.iconSlot
+    fixedHeight: root.vertical ? Style.bar.iconSlot : root.barSize
     dimmed: !root.available
     pressable: root.available
     tooltipText: !S.Tiling.active ? "Layout: tiling is paused or off"
@@ -42,6 +46,17 @@ BarWidget {
       if (!root.available) return
       if (button === Qt.LeftButton) S.Tiling.cycleLayout(1)
       else if (button === Qt.RightButton) S.Tiling.cycleLayout(-1)
+    }
+
+    // Material Symbols are centered in their font cell, not their reported tight-ink bounds.
+    Text {
+      anchors.centerIn: parent
+      text: root.layoutIcon
+      font.family: button.fontFamily
+      font.pixelSize: Style.bar.iconCanvas
+      color: button.foreground
+      scale: button.pressScale
+      renderType: Text.QtRendering
     }
   }
 }
