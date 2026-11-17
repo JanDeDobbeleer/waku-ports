@@ -1,8 +1,8 @@
 .pragma library
 
-function label(names, layoutName) {
-  var info = names[layoutName] || { label: layoutName }
-  return String(info.label)
+function icon(names, layoutName) {
+  var info = names[layoutName]
+  return info ? String(info.icon) : "\ue871"
 }
 
 function title(names, layoutName) {
