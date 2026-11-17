@@ -94,6 +94,25 @@ assert.deepEqual(focusedWorkspaces, [], "scrolling must not create a desktop")
 workspaces.scroll(workspaceRoot, 120, { steps: 1, remainder: 0 })
 assert.deepEqual(focusedWorkspaces, [3], "scrolling still focuses an existing desktop")
 
+const workspaceActions = []
+const clickRoot = {
+  canRemoveWorkspace: true,
+  focusWorkspace(number) { workspaceActions.push(["focus", number]) },
+  removeWorkspace(number) { workspaceActions.push(["remove", number]) }
+}
+workspaces.press(clickRoot, slots[1], 2, 1, 2)
+workspaces.press(clickRoot, slots[3], 2, 1, 2)
+assert.deepEqual(workspaceActions, [["remove", 2], ["remove", 4]], "right-click removes the chosen inactive or active desktop")
+workspaces.press(clickRoot, slots[4], 2, 1, 2)
+clickRoot.canRemoveWorkspace = false
+workspaces.press(clickRoot, slots[1], 2, 1, 2)
+workspaces.press(clickRoot, slots[1], 4, 1, 2)
+workspaces.press(clickRoot, slots[3], 1, 1, 2)
+assert.equal(workspaceActions.length, 2, "spare slots, unsupported removal, middle-clicks and active left-clicks do nothing")
+workspaces.press(clickRoot, slots[1], 1, 1, 2)
+workspaces.press(clickRoot, slots[4], 1, 1, 2)
+assert.deepEqual(workspaceActions.slice(2), [["focus", 2], ["focus", 5]], "left-click still switches or creates desktops")
+
 const tray = load("plugins/bar/widgets/TrayModel.js")
 const items = [
   { id: "pinned", status: 1 }, { id: "flyout", status: 1 },

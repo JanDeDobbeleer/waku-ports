@@ -31,6 +31,13 @@ function slots(monitor, minimumSlots) {
   return out
 }
 
+function press(root, slot, button, leftButton, rightButton) {
+  if (button === leftButton && canFocus(slot))
+    root.focusWorkspace(slot.number)
+  else if (button === rightButton && root.canRemoveWorkspace && slot.exists)
+    root.removeWorkspace(slot.number)
+}
+
 function scroll(root, delta, wheel) {
   root.wheelAccumulator = wheel.remainder
   if (wheel.steps === 0) return
