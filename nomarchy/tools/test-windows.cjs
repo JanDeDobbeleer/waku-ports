@@ -65,6 +65,54 @@ target.hovered = false
 showTooltip(target, "Not hovered")
 assert.equal(tooltip.tooltipTarget, null)
 
+const workspaces = load("plugins/bar/widgets/WorkspacesModel.js")
+for (const desktopCount of [0, 4, 5, 6, 9]) {
+  const desktopSlots = workspaces.slots({
+    workspaces: Array.from({ length: desktopCount }, (_, index) => ({
+      active: index === desktopCount - 1
+    }))
+  }, 5)
+  assert.equal(desktopSlots.length, Math.max(5, desktopCount + 1), "keep a spare slot beyond the last desktop")
+  const spare = desktopSlots[desktopCount]
+  assert.equal(spare.number, desktopCount + 1)
+  assert.equal(spare.exists, false)
+  assert.equal(workspaces.canFocus(spare), true, "the spare slot must allow desktop creation")
+}
+const slots = workspaces.slots({
+  workspaces: [{}, {}, {}, { active: true }]
+}, 5)
+assert.equal(workspaces.canFocus(slots[4]), true, "clicking a placeholder must allow desktop creation")
+assert.equal(workspaces.canFocus(slots[0]), true, "existing inactive desktops remain clickable")
+assert.equal(workspaces.canFocus(slots[3]), false, "clicking the active desktop remains a no-op")
+const focusedWorkspaces = []
+const workspaceRoot = {
+  slots, wheelAccumulator: 0,
+  focusWorkspace(number) { focusedWorkspaces.push(number) }
+}
+workspaces.scroll(workspaceRoot, -120, { steps: -1, remainder: 0 })
+assert.deepEqual(focusedWorkspaces, [], "scrolling must not create a desktop")
+workspaces.scroll(workspaceRoot, 120, { steps: 1, remainder: 0 })
+assert.deepEqual(focusedWorkspaces, [3], "scrolling still focuses an existing desktop")
+
+const workspaceActions = []
+const clickRoot = {
+  canRemoveWorkspace: true,
+  focusWorkspace(number) { workspaceActions.push(["focus", number]) },
+  removeWorkspace(number) { workspaceActions.push(["remove", number]) }
+}
+workspaces.press(clickRoot, slots[1], 2, 1, 2)
+workspaces.press(clickRoot, slots[3], 2, 1, 2)
+assert.deepEqual(workspaceActions, [["remove", 2], ["remove", 4]], "right-click removes the chosen inactive or active desktop")
+workspaces.press(clickRoot, slots[4], 2, 1, 2)
+clickRoot.canRemoveWorkspace = false
+workspaces.press(clickRoot, slots[1], 2, 1, 2)
+workspaces.press(clickRoot, slots[1], 4, 1, 2)
+workspaces.press(clickRoot, slots[3], 1, 1, 2)
+assert.equal(workspaceActions.length, 2, "spare slots, unsupported removal, middle-clicks and active left-clicks do nothing")
+workspaces.press(clickRoot, slots[1], 1, 1, 2)
+workspaces.press(clickRoot, slots[4], 1, 1, 2)
+assert.deepEqual(workspaceActions.slice(2), [["focus", 2], ["focus", 5]], "left-click still switches or creates desktops")
+
 const tray = load("plugins/bar/widgets/TrayModel.js")
 const items = [
   { id: "pinned", status: 1 }, { id: "flyout", status: 1 },
@@ -100,4 +148,4 @@ assert.equal(theme.palette({ valid: true, dark: false, colors }, true), "")
 assert.equal(JSON.parse(theme.palette({ valid: true, dark: true, colors }, true)).accent, "#aabbcc")
 colors.primary = "invalid"
 assert.equal(theme.palette({ valid: true, dark: true, colors }, true), "")
-console.log("Nomarchy Windows search, tooltip, tray and palette tests passed")
+console.log("Nomarchy Windows search, tooltip, workspaces, tray and palette tests passed")

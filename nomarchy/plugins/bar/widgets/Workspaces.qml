@@ -14,7 +14,7 @@ BarWidget {
   id: root
   moduleName: "nomarchy.workspaces"
 
-  // At least this many buttons, so the bar looks the same before the desktops are known.
+  // Keep this minimum and always offer a spare button after the last desktop.
   readonly property int minimumSlots: 5
 
   readonly property string screenName: WorkspacesModel.screenName(root.QsWindow.window)
@@ -26,8 +26,14 @@ BarWidget {
   // [{ number, active, occupied, exists }]
   readonly property var slots: WorkspacesModel.slots(root.monitor, root.minimumSlots)
 
+  readonly property bool canRemoveWorkspace: S.Workspaces.provider === "windows" && S.Workspaces.canRemove
+
   function focusWorkspace(number: var): var {
     S.Workspaces.focus(0, String(number - 1))
+  }
+
+  function removeWorkspace(number: int): void {
+    S.Workspaces.remove(0, String(number - 1))
   }
 
   // A wheel notch moves one entry along the row, and a touchpad adds up its smaller deltas.
@@ -63,8 +69,8 @@ BarWidget {
         verticalPadding: 6
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
-        onPressed: function(): var {
-          if (WorkspacesModel.canFocus(modelData)) root.focusWorkspace(WorkspacesModel.number(modelData))
+        onPressed: function(button: int): void {
+          WorkspacesModel.press(root, modelData, button, Qt.LeftButton, Qt.RightButton)
         }
         onWheelMoved: function(delta: int): var { root.scrollWorkspaces(delta) }
       }

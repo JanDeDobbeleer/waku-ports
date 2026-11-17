@@ -26,9 +26,16 @@ function slots(monitor, minimumSlots) {
       exists: true
     })
   }
-  for (var n = out.length + 1; n <= minimumSlots; n++)
+  for (var n = out.length + 1; n <= Math.max(minimumSlots, list.length + 1); n++)
     out.push({ number: n, active: false, occupied: false, exists: false })
   return out
+}
+
+function press(root, slot, button, leftButton, rightButton) {
+  if (button === leftButton && canFocus(slot))
+    root.focusWorkspace(slot.number)
+  else if (button === rightButton && root.canRemoveWorkspace && slot.exists)
+    root.removeWorkspace(slot.number)
 }
 
 function scroll(root, delta, wheel) {
@@ -45,5 +52,5 @@ function scroll(root, delta, wheel) {
 function count(values) { return values ? values.length : 0 }
 function label(slot) { return slot.active ? "\uf0c8" : String(slot.number) }
 function opacity(slot) { return slot.active || slot.occupied ? 1 : 0.5 }
-function canFocus(slot) { return !!slot.exists && !slot.active }
+function canFocus(slot) { return !slot.active }
 function number(slot) { return slot.number }

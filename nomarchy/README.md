@@ -53,6 +53,9 @@ set to 0) for its stay-awake toggle. User configuration replaces the default rat
 Add `{"id":"nomarchy.layout-switcher"}` after `nomarchy.workspaces` in a custom bar layout to show
 the layout switcher.
 
+Left-click a workspace number to switch to it, or the spare number to create a desktop. Right-click
+an existing desktop's indicator to remove that desktop, as in Celeste.
+
 Dropped (they run `nomarchy-*`, `hyprctl`, `timedatectl` or other Linux commands): the indicators, world
 clock, system-update, keyboard-layout, agents, monitor, Tailscale, Dropbox, Wi-Fi QR, speed-test, the
 Linux emoji/clipboard/reminders overlays, the low-battery warning (Windows shows its own), night light,
