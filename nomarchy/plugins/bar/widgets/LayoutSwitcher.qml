@@ -1,44 +1,47 @@
 import QtQuick
 import waku.services as S
-import qs.Commons
 import qs.Ui
 import "LayoutSwitcherModel.js" as LayoutSwitcherModel
 
 // Windows port: the layout of waku's built-in tiler for the focused workspace (each desktop and
-// monitor keeps its own). Left click: next layout. Right click: previous. Hidden while the tiler
-// is off.
+// monitor keeps its own). Left click: next layout. Right click: previous.
 BarWidget {
   id: root
   moduleName: "nomarchy.layout-switcher"
 
   readonly property var names: ({
-    "mainStack": { "label": "Main", "title": "Main and stack" },
-    "mainStackTop": { "label": "Top", "title": "Main on top" },
-    "columns": { "label": "Cols", "title": "Columns" },
-    "rows": { "label": "Rows", "title": "Rows" },
-    "bsp": { "label": "BSP", "title": "Binary split" },
-    "grid": { "label": "Grid", "title": "Grid" },
-    "centerMain": { "label": "Ctr", "title": "Centered main" }
+    "mainStack": { "icon": "\uf114", "title": "Main and stack" },
+    "mainStackTop": { "icon": "\ue8e9", "title": "Main on top" },
+    "columns": { "icon": "\ue8ec", "title": "Columns" },
+    "rows": { "icon": "\uf101", "title": "Rows" },
+    "bsp": { "icon": "\ue8f1", "title": "Binary split" },
+    "grid": { "icon": "\ue9b0", "title": "Grid" },
+    "centerMain": { "icon": "\ue8f3", "title": "Centered main" }
   })
 
   readonly property string layoutName: S.Tiling.currentLayout
-  readonly property string layoutLabel: LayoutSwitcherModel.label(names, layoutName)
+  readonly property bool available: S.Tiling.active && layoutName !== ""
+  readonly property string layoutIcon: LayoutSwitcherModel.icon(names, layoutName)
   readonly property string layoutTitle: LayoutSwitcherModel.title(names, layoutName)
 
-  visible: S.Tiling.active && layoutName !== ""
-  implicitWidth: visible ? button.implicitWidth : 0
-  implicitHeight: visible ? button.implicitHeight : 0
+  implicitWidth: button.implicitWidth
+  implicitHeight: button.implicitHeight
 
   WidgetButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.layoutLabel
-    fontSize: Style.font.caption
-    horizontalMargin: 6
-    tooltipText: "Layout: " + root.layoutTitle + " (click: next, right click: previous)"
+    text: root.layoutIcon
+    fontFamily: "Material Symbols Rounded"
+    dimmed: !root.available
+    pressable: root.available
+    tooltipText: !S.Tiling.active ? "Layout: tiling is paused or off"
+      : !root.available ? "Layout: no focused workspace"
+      : "Layout: " + root.layoutTitle + " (click: next, right click: previous)"
     onPressed: function(button) {
-      S.Tiling.cycleLayout(button === Qt.RightButton ? -1 : 1)
+      if (!root.available) return
+      if (button === Qt.LeftButton) S.Tiling.cycleLayout(1)
+      else if (button === Qt.RightButton) S.Tiling.cycleLayout(-1)
     }
   }
 }

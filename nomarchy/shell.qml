@@ -57,7 +57,7 @@ ShellRoot {
       position: "top",
       background: "opaque",
       layout: {
-        left: [{ id: "nomarchy.menu" }, { id: "nomarchy.workspaces" }, { id: "nomarchy.apps" }],
+        left: [{ id: "nomarchy.menu" }, { id: "nomarchy.workspaces" }, { id: "nomarchy.layout-switcher" }, { id: "nomarchy.apps" }],
         centerBegin: [],
         center: [{ id: "nomarchy.clock", format: "dddd HH:mm" }],
         centerEnd: [],

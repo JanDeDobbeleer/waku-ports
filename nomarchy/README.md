@@ -20,7 +20,7 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 | Ctrl+Alt+V | Windows clipboard history (Win+V) |
 
 Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), and the
-**CaskaydiaMono Nerd Font**. Install it for your user, without admin rights:
+**CaskaydiaMono Nerd Font** and **Material Symbols Rounded**. Install them for your user, without admin rights:
 
     .\tools\install-fonts.ps1
 
@@ -31,7 +31,8 @@ uses its own home, `state\home`, not your user profile.
 
 | Part | How it works on Windows |
 |---|---|
-| Bar | menu, workspaces (Windows virtual desktops), running apps (one icon per program, with a thin line under the icon for taskbar progress), media (only while something plays), clock, weather, system monitor, tray, notification center, quick controls, Bluetooth, network, audio, power. Click the tray chevron for its flyout; right-click it to pin or hide icons |
+| Bar | menu, workspaces (Windows virtual desktops), layout switcher, running apps (one icon per program, with a thin line under the icon for taskbar progress), media (only while something plays), clock, weather, system monitor, tray, notification center, quick controls, Bluetooth, network, audio, power. Click the tray chevron for its flyout; right-click it to pin or hide icons |
+| Layout switcher | the focused workspace's waku tiler layout, next to the workspaces, using the same icons as Celeste. Left-click for the next layout, right-click for the previous one; stays visible but dimmed when tiling is unavailable |
 | Menu | Apps, Appearance (Theme, Background), Trigger (Emoji, Clipboard), Setup (Audio, Bluetooth, Network, Power, Windows Settings), About, System (Lock, Sleep, Sign out, Restart, Shut down) |
 | Apps | the Start menu through the engine's `AppsService`: Win32, UWP and shortcuts, with icons. Search also finds open windows and calculates arithmetic; select a calculation to copy its result |
 | Quick controls | a bar panel with a brightness slider, a Windows dark-mode toggle, a stay-awake toggle that keeps Windows from sleeping or turning off the display, and shortcuts to Windows' Project and Cast flyouts, airplane mode, Device Manager and Windows Settings |
@@ -49,6 +50,8 @@ engine cannot control a display; per-monitor brightness is not supported. If you
 custom `state\home\.config\nomarchy\shell.json`, add `{"id":"nomarchy.controls"}` after the tray in its bar layout
 to show Quick controls, and remove "nomarchy.idle" from disabledPlugins (with idle.screensaver and idle.lock
 set to 0) for its stay-awake toggle. User configuration replaces the default rather than merging with it.
+Add `{"id":"nomarchy.layout-switcher"}` after `nomarchy.workspaces` in a custom bar layout to show
+the layout switcher.
 
 Dropped (they run `nomarchy-*`, `hyprctl`, `timedatectl` or other Linux commands): the indicators, world
 clock, system-update, keyboard-layout, agents, monitor, Tailscale, Dropbox, Wi-Fi QR, speed-test, the
