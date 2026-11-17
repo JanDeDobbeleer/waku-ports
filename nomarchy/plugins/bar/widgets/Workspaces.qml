@@ -4,12 +4,13 @@ import QtQuick.Layouts
 import Quickshell
 import waku.services as S
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "WorkspacesModel.js" as WorkspacesModel
 
 // Windows port of the workspaces widget: the Windows virtual desktops, through the
 // engine's `Workspaces` service (the Hyprland version read hyprctl and a per-monitor block of ten).
-// The active workspace number uses the bar's themed foreground; one with no windows is dimmed.
+// The active workspace number sits on a themed square; one with no windows is dimmed.
 BarWidget {
   id: root
   moduleName: "nomarchy.workspaces"
@@ -60,17 +61,26 @@ BarWidget {
       model: root.slots
 
       WidgetButton {
+        id: workspaceButton
         required property var modelData
 
         bar: root.bar
         text: WorkspacesModel.label(modelData)
         active: WorkspacesModel.isActive(modelData)
-        activeColor: foreground
+        activeColor: Commons.Color.background
         opacity: WorkspacesModel.opacity(modelData)
         horizontalMargin: 6
         verticalPadding: 6
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
+        Rectangle {
+          anchors.centerIn: parent
+          width: Style.bar.iconSize
+          height: width
+          color: workspaceButton.foreground
+          visible: WorkspacesModel.isActive(workspaceButton.modelData)
+          z: -1
+        }
         onPressed: function(button: int): void {
           WorkspacesModel.press(root, modelData, button, Qt.LeftButton, Qt.RightButton)
         }
