@@ -14,7 +14,7 @@ BarWidget {
   id: root
   moduleName: "nomarchy.workspaces"
 
-  // At least this many buttons, so the bar looks the same before the desktops are known.
+  // Keep this minimum and always offer a spare button after the last desktop.
   readonly property int minimumSlots: 5
 
   readonly property string screenName: WorkspacesModel.screenName(root.QsWindow.window)

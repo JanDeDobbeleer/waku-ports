@@ -26,7 +26,7 @@ function slots(monitor, minimumSlots) {
       exists: true
     })
   }
-  for (var n = out.length + 1; n <= minimumSlots; n++)
+  for (var n = out.length + 1; n <= Math.max(minimumSlots, list.length + 1); n++)
     out.push({ number: n, active: false, occupied: false, exists: false })
   return out
 }

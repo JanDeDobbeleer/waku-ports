@@ -66,6 +66,18 @@ showTooltip(target, "Not hovered")
 assert.equal(tooltip.tooltipTarget, null)
 
 const workspaces = load("plugins/bar/widgets/WorkspacesModel.js")
+for (const desktopCount of [0, 4, 5, 6, 9]) {
+  const desktopSlots = workspaces.slots({
+    workspaces: Array.from({ length: desktopCount }, (_, index) => ({
+      active: index === desktopCount - 1
+    }))
+  }, 5)
+  assert.equal(desktopSlots.length, Math.max(5, desktopCount + 1), "keep a spare slot beyond the last desktop")
+  const spare = desktopSlots[desktopCount]
+  assert.equal(spare.number, desktopCount + 1)
+  assert.equal(spare.exists, false)
+  assert.equal(workspaces.canFocus(spare), true, "the spare slot must allow desktop creation")
+}
 const slots = workspaces.slots({
   workspaces: [{}, {}, {}, { active: true }]
 }, 5)
