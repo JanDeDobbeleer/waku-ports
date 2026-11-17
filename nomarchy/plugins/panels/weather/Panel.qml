@@ -578,14 +578,22 @@ Panel {
 
       // ---- Hero row: big icon + temp on the left; location and stats stacked on the right.
       Item {
+        id: hero
+        readonly property real leftMargin: Style.space(16)
+        readonly property real rightMargin: Style.space(20)
+        readonly property real gap: Style.space(16)
+        readonly property bool stacked: leftMargin + heroLeft.width * heroLeft.scale + gap
+          + heroRight.width + rightMargin > width
         width: parent.width
-        height: Math.max(heroLeft.height, heroRight.height)
+        height: stacked ? heroLeft.height * heroLeft.scale + gap + heroRight.height
+          : Math.max(heroLeft.height * heroLeft.scale, heroRight.height)
 
         Row {
           id: heroLeft
-          anchors.left: parent.left
-          anchors.leftMargin: Style.space(16)
-          anchors.verticalCenter: parent.verticalCenter
+          x: hero.leftMargin
+          y: hero.stacked ? 0 : (hero.height - height * scale) / 2
+          transformOrigin: Item.TopLeft
+          scale: width > 0 ? Math.min(1, Math.max(0, hero.width - hero.leftMargin - hero.rightMargin) / width) : 1
           spacing: Style.space(16)
 
           Text {
@@ -634,13 +642,15 @@ Panel {
 
         Column {
           id: heroRight
-          width: weatherStats.implicitWidth
-          anchors.right: parent.right
-          anchors.rightMargin: Style.space(20)
-          anchors.verticalCenter: parent.verticalCenter
+          width: Math.min(Math.max(0, hero.width - hero.leftMargin - hero.rightMargin),
+            Math.max(weatherStats.implicitWidth, locationRow.visible ? locationMarker.implicitWidth + locationRow.spacing + locationLabel.implicitWidth : 0,
+              locationEditor.visible ? locationEditor.implicitWidth : 0))
+          x: hero.stacked ? hero.leftMargin : hero.width - hero.rightMargin - width
+          y: hero.stacked ? heroLeft.height * heroLeft.scale + hero.gap : (hero.height - height) / 2
           spacing: Style.space(12)
 
           Row {
+            id: locationRow
             visible: !root.editingLocation && root.reportLocation !== ""
             spacing: Style.space(6)
 
@@ -652,6 +662,7 @@ Panel {
             }
 
             Text {
+              id: locationMarker
               text: ""  // nf-fa-map_marker
               color: Qt.darker(root.contentForeground, 1.4)
               font.family: root.contentFontFamily
@@ -659,8 +670,11 @@ Panel {
               anchors.verticalCenter: parent.verticalCenter
             }
             Text {
+              id: locationLabel
               textFormat: Text.PlainText
               text: (root.reportLocation || "").toUpperCase()
+              width: Math.min(implicitWidth, Math.max(0, heroRight.width - locationMarker.width - locationRow.spacing))
+              elide: Text.ElideRight
               color: Qt.darker(root.contentForeground, 1.4)
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.body
@@ -670,6 +684,7 @@ Panel {
           }
 
           Row {
+            id: locationEditor
             visible: root.editingLocation
             spacing: Style.space(6)
 
