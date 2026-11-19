@@ -9,24 +9,14 @@ import qs.Commons
 import qs.Commons as Commons
 import "BackgroundIntroUtils.js" as IntroUtils
 
-// Keep startup and theme covers alive across background service handoffs.
+// Keep theme covers alive across background service handoffs.
 Item {
   id: root
 
   property var host: null
-  property bool cover: true
-  readonly property bool sessionConsumed: String(sessionMarker.text() || "").trim() === (Quickshell.env("NOMARCHY_SESSION_ID") || (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || ""))
-  property bool startupSettled: sessionConsumed
-  // Windows port: no start-up cover. It was a black full-screen layer until the bar appeared.
-  property bool startupPending: false
-  property bool startupMediaReady: false
-  property real startupOpacity: startupPending ? 1 : 0
-  readonly property bool desktopReady: IntroUtils.desktopReady(host)
-  property bool checked: false
   property string themeToken: ""
   property string transitionToken: ""
-  readonly property string startupBackgroundPath: (Quickshell.env("NOMARCHY_STARTUP_BACKGROUND") || "")
-  property string themeBackground: sessionConsumed && !Util.isVideoPath(startupBackgroundPath) ? startupBackgroundPath : ""
+  property string themeBackground: ""
   property var themeNativeSize: null
   property string themeColors: ""
   property string themeShell: ""
@@ -42,40 +32,15 @@ Item {
   // animation started in that frame begins already advanced by its length,
   // about 40% of the fade. The reveal starts two frames later instead.
   property int revealDelayFrames: 0
-  readonly property bool revealing: revealDelayFrames > 0 || themeFade.running || themeCutReveal.running || startupFade.running
+  readonly property bool revealing: revealDelayFrames > 0 || themeFade.running || themeCutReveal.running
   // The outgoing frame reached, or failed to reach, the screen.
   signal coverPresented()
   readonly property var backgroundService: IntroUtils.backgroundService(host)
   readonly property bool backgroundActive: !!backgroundService && !IntroUtils.field(backgroundService, "suspended")
   readonly property bool backgroundReady: backgroundActive && IntroUtils.field(backgroundService, "ready") !== false
 
-  function restoreStartupCursor(): void {
-    // Windows port: Hyprland hides the cursor during the start-up intro; there is nothing to restore.
-  }
-
-  function finishStartup(): void {
-    if (!cover || !startupSettled) return
-    if (!IntroUtils.canFinishStartup(host, backgroundReady)) return
-    cover = false
-    if (!themeToken) themeBackground = ""
-    startupMediaReady = true
-    revealStartup()
-  }
-
-  function revealStartup(): void {
-    if (!startupPending || startupFade.running || !startupMediaReady || !desktopReady) return
-    if (!startupCovers.instances.length || !IntroUtils.readyFrames(startupCovers.instances)) return
-    startupFade.start()
-  }
-
-  onDesktopReadyChanged: revealStartup()
   onBackgroundReadyChanged: {
-    finishStartup()
     if (themeFinishing && backgroundReady) revealTheme()
-  }
-  Connections {
-    target: IntroUtils.pluginRegistry(root.host)
-    function onPluginsChanged() { root.finishStartup() }
   }
 
   function prepareTheme(fromPath: string, token: string, colors: string, shell: string): void {
@@ -99,7 +64,7 @@ Item {
   }
 
   function revealTheme(): void {
-    if (!themeToken && !cover) return
+    if (!themeToken) return
     themeFinishing = false
     framePoll.stop()
     themeFallback.stop()
@@ -109,18 +74,10 @@ Item {
       Commons.Color.loadShell(Util.decodeBase64(themeShell))
       Style.scheduleRefresh()
     }
-    cover = false
     themeToken = ""
     themeColors = ""
     themeShell = ""
-    if (startupPending) {
-      // The login reveal starts on moving video, without showing its final still.
-      themeBackground = ""
-      startupMediaReady = true
-      revealStartup()
-    } else {
-      revealDelayFrames = 2
-    }
+    revealDelayFrames = 2
   }
 
   // OWE hands the desktop back to the shell when an intro ends or is cut
@@ -154,29 +111,6 @@ Item {
     themeBackground = ""
     themeColors = ""
     themeShell = ""
-  }
-
-  NumberAnimation {
-    id: startupFade
-    target: root
-    property: "startupOpacity"
-    to: 0
-    duration: Style.duration(420)
-    easing.type: Easing.OutCubic
-    onStarted: root.restoreStartupCursor()
-    onFinished: root.startupPending = false
-  }
-
-  // A missing wallpaper or failed plugin must not leave applications hidden.
-  Timer {
-    interval: 10000
-    running: root.startupPending
-    onTriggered: {
-      root.cover = false
-      if (!root.themeToken) root.themeBackground = ""
-      root.startupMediaReady = true
-      startupFade.start()
-    }
   }
 
   NumberAnimation {
@@ -229,7 +163,7 @@ Item {
     interval: 16
     repeat: true
     onTriggered: {
-      if (!root.cover && !root.themeToken) stop()
+      if (!root.themeToken) stop()
       else if (!frameStatus.running) frameStatus.running = true
     }
   }
@@ -241,82 +175,15 @@ Item {
     onStarted: token = root.themeToken
     stdout: StdioCollector { id: frameStatusOut }
     onExited: function(exitCode) {
-      if (exitCode !== 0 || token !== root.themeToken || (!token && !root.cover)) return
+      if (exitCode !== 0 || token !== root.themeToken || !token) return
       if (IntroUtils.readyVideo(frameStatusOut.text)) root.revealTheme()
     }
   }
 
-  // A shell restart shares this compositor session; a new login does not.
-  FileView {
-    id: sessionMarker
-    path: (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/background-intro.session-id"
-    blockLoading: true
-    watchChanges: false
-    printErrors: false
-  }
-
-  Process {
-    id: startupBackground
-    command: ["readlink", "-e", (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/current/background"]
-    stdout: StdioCollector { id: startupBackgroundOut }
-    onExited: function(exitCode) {
-      var path = String(startupBackgroundOut.text || "").trim()
-      if (exitCode === 0 && root.cover && !root.startupPending && !root.themeToken && !Util.isVideoPath(path))
-        root.themeBackground = path
-    }
-  }
-
-  Component.onCompleted: {
-    checked = true
-    if (sessionConsumed) restoreStartupCursor()
-    if (!startupBackgroundPath && !startupPending) startupBackground.running = true
-    introProc.running = true
-  }
-
-  Component.onDestruction: if (startupPending) restoreStartupCursor()
-
   onBackgroundActiveChanged: {
-    if (!backgroundActive && checked) {
-      if (cover || themeToken) {
-        framePoll.start()
-        if (!frameStatus.running) frameStatus.running = true
-      }
-    }
-  }
-
-  // Cover the bar as well as the wallpaper on a new login. Shell restarts
-  // retain the current desktop and never map this startup cover.
-  Variants {
-    id: startupCovers
-    model: Quickshell.screens
-
-    PanelWindow {
-      id: startupCover
-      required property var modelData
-      property int readyFrames: 0
-      screen: modelData
-      visible: root.startupPending
-      color: "transparent"
-      mask: Region {}
-      anchors { top: true; bottom: true; left: true; right: true }
-      exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.layer: WlrLayer.Overlay
-      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-      WlrLayershell.namespace: "nomarchy-background"
-
-      Rectangle {
-        anchors.fill: parent
-        color: "black"
-        opacity: root.startupOpacity
-      }
-
-      FrameAnimation {
-        running: root.startupPending && root.desktopReady && startupCover.readyFrames < 2
-        onTriggered: {
-          startupCover.readyFrames += 1
-          if (startupCover.readyFrames === 2) root.revealStartup()
-        }
-      }
+    if (!backgroundActive && themeToken) {
+      framePoll.start()
+      if (!frameStatus.running) frameStatus.running = true
     }
   }
 
@@ -333,9 +200,7 @@ Item {
       onCoverReadyChanged: root.coverPresented()
       onCoverFailedChanged: root.coverPresented()
       screen: modelData
-      visible: (!root.startupPending && root.cover) || root.themeBackground !== ""
-      // Keep the window transparent throughout the fade. Paint the startup
-      // color inside it so changing the window format cannot flash black.
+      visible: root.themeBackground !== ""
       color: "transparent"
       mask: Region {}
       anchors { top: true; bottom: true; left: true; right: true }
@@ -343,12 +208,6 @@ Item {
       WlrLayershell.layer: WlrLayer.Bottom
       WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
       WlrLayershell.namespace: "nomarchy-background"
-
-      Rectangle {
-        anchors.fill: parent
-        visible: root.cover
-        color: Commons.Color.background
-      }
 
       Image {
         id: outgoingFrame
@@ -414,12 +273,4 @@ Item {
     }
   }
 
-  Process {
-    id: introProc
-    command: ["cmd.exe", "/c", "rem"]
-    onExited: {
-      root.startupSettled = true
-      root.finishStartup()
-    }
-  }
 }
