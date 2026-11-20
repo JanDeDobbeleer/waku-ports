@@ -29,8 +29,6 @@
   "bluetooth.device": "Tæki",
   "bluetooth.disconnect": "Aftengja",
   "bluetooth.disconnecting": "Aftengist…",
-  "bluetooth.forget": "Gleyma",
-  "bluetooth.forgetting": "Gleymir…",
   "bluetooth.noAdapter": "Ekkert millistykki",
   "bluetooth.noBluetoothAdapter": "Ekkert Bluetooth-millistykki",
   "bluetooth.pair": "Para",

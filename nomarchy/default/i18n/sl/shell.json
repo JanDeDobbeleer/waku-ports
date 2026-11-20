@@ -29,8 +29,6 @@
   "bluetooth.device": "Naprava",
   "bluetooth.disconnect": "Prekini povezavo",
   "bluetooth.disconnecting": "Prekinjanje…",
-  "bluetooth.forget": "Pozabi",
-  "bluetooth.forgetting": "Pozabljanje…",
   "bluetooth.noAdapter": "Ni vmesnika",
   "bluetooth.noBluetoothAdapter": "Ni vmesnika Bluetooth",
   "bluetooth.pair": "Seznani",

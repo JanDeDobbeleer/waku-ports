@@ -29,8 +29,6 @@
   "bluetooth.device": "Enhet",
   "bluetooth.disconnect": "Koble fra",
   "bluetooth.disconnecting": "Kobler fra…",
-  "bluetooth.forget": "Glem",
-  "bluetooth.forgetting": "Glemmer…",
   "bluetooth.noAdapter": "Ingen adapter",
   "bluetooth.noBluetoothAdapter": "Ingen Bluetooth-adapter",
   "bluetooth.pair": "Par",

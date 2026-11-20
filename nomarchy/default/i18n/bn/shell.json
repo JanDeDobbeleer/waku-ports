@@ -29,8 +29,6 @@
   "bluetooth.device": "ডিভাইস",
   "bluetooth.disconnect": "বিচ্ছিন্ন করুন",
   "bluetooth.disconnecting": "বিচ্ছিন্ন হচ্ছে…",
-  "bluetooth.forget": "ভুলে যান",
-  "bluetooth.forgetting": "ভুলে যাচ্ছে…",
   "bluetooth.noAdapter": "কোনো অ্যাডাপ্টার নেই",
   "bluetooth.noBluetoothAdapter": "কোনো Bluetooth অ্যাডাপ্টার নেই",
   "bluetooth.pair": "জোড়া বাঁধুন",

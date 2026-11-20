@@ -29,8 +29,6 @@
   "bluetooth.device": "சாதனம்",
   "bluetooth.disconnect": "துண்டி",
   "bluetooth.disconnecting": "துண்டிக்கிறது…",
-  "bluetooth.forget": "மறந்துவிடு",
-  "bluetooth.forgetting": "மறக்கிறது…",
   "bluetooth.noAdapter": "அடாப்டர் இல்லை",
   "bluetooth.noBluetoothAdapter": "Bluetooth அடாப்டர் இல்லை",
   "bluetooth.pair": "இணை சேர்",

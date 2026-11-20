@@ -29,8 +29,6 @@
   "bluetooth.device": "Įrenginys",
   "bluetooth.disconnect": "Atjungti",
   "bluetooth.disconnecting": "Atjungiamasi…",
-  "bluetooth.forget": "Pamiršti",
-  "bluetooth.forgetting": "Pamirštama…",
   "bluetooth.noAdapter": "Nėra adapterio",
   "bluetooth.noBluetoothAdapter": "Nėra Bluetooth adapterio",
   "bluetooth.pair": "Suporuoti",

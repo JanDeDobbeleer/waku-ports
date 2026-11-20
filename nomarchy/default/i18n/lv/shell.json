@@ -29,8 +29,6 @@
   "bluetooth.device": "Ierīce",
   "bluetooth.disconnect": "Atvienot",
   "bluetooth.disconnecting": "Atvienojas…",
-  "bluetooth.forget": "Aizmirst",
-  "bluetooth.forgetting": "Aizmirst…",
   "bluetooth.noAdapter": "Nav adaptera",
   "bluetooth.noBluetoothAdapter": "Nav Bluetooth adaptera",
   "bluetooth.pair": "Sapārot",

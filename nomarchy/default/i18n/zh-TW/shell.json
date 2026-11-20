@@ -29,8 +29,6 @@
   "bluetooth.device": "裝置",
   "bluetooth.disconnect": "中斷連線",
   "bluetooth.disconnecting": "中斷連線中…",
-  "bluetooth.forget": "忘記",
-  "bluetooth.forgetting": "忘記中…",
   "bluetooth.noAdapter": "無介面卡",
   "bluetooth.noBluetoothAdapter": "無藍牙介面卡",
   "bluetooth.pair": "配對",

@@ -29,8 +29,6 @@
   "bluetooth.device": "デバイス",
   "bluetooth.disconnect": "切断",
   "bluetooth.disconnecting": "切断中…",
-  "bluetooth.forget": "登録解除",
-  "bluetooth.forgetting": "登録解除中…",
   "bluetooth.noAdapter": "アダプターなし",
   "bluetooth.noBluetoothAdapter": "Bluetooth アダプターなし",
   "bluetooth.pair": "ペアリング",

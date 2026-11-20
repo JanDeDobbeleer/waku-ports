@@ -29,8 +29,6 @@
   "bluetooth.device": "Kifaa",
   "bluetooth.disconnect": "Tenganisha",
   "bluetooth.disconnecting": "Kutenganisha…",
-  "bluetooth.forget": "Sahau",
-  "bluetooth.forgetting": "Kusahau…",
   "bluetooth.noAdapter": "Hakuna adapita",
   "bluetooth.noBluetoothAdapter": "Hakuna adapita ya Bluetooth",
   "bluetooth.pair": "Oanisha",

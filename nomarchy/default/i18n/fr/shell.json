@@ -29,8 +29,6 @@
   "bluetooth.device": "Appareil",
   "bluetooth.disconnect": "Déconnecter",
   "bluetooth.disconnecting": "Déconnexion…",
-  "bluetooth.forget": "Oublier",
-  "bluetooth.forgetting": "Oubli…",
   "bluetooth.noAdapter": "Aucun adaptateur",
   "bluetooth.noBluetoothAdapter": "Aucun adaptateur Bluetooth",
   "bluetooth.pair": "Appairer",

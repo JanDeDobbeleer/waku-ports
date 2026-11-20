@@ -29,8 +29,6 @@
   "bluetooth.device": "Peranti",
   "bluetooth.disconnect": "Putuskan",
   "bluetooth.disconnecting": "Memutuskan…",
-  "bluetooth.forget": "Lupakan",
-  "bluetooth.forgetting": "Melupakan…",
   "bluetooth.noAdapter": "Tiada penyesuai",
   "bluetooth.noBluetoothAdapter": "Tiada penyesuai Bluetooth",
   "bluetooth.pair": "Pasangkan",

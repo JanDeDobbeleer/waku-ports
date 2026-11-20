@@ -29,8 +29,6 @@
   "bluetooth.device": "Устройство",
   "bluetooth.disconnect": "Отключить",
   "bluetooth.disconnecting": "Отключение…",
-  "bluetooth.forget": "Забыть",
-  "bluetooth.forgetting": "Забываем…",
   "bluetooth.noAdapter": "Нет адаптера",
   "bluetooth.noBluetoothAdapter": "Нет адаптера Bluetooth",
   "bluetooth.pair": "Сопрячь",

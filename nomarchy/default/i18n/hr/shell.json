@@ -29,8 +29,6 @@
   "bluetooth.device": "Uređaj",
   "bluetooth.disconnect": "Odspoji",
   "bluetooth.disconnecting": "Odspajanje…",
-  "bluetooth.forget": "Zaboravi",
-  "bluetooth.forgetting": "Zaboravljanje…",
   "bluetooth.noAdapter": "Nema adaptera",
   "bluetooth.noBluetoothAdapter": "Nema Bluetooth adaptera",
   "bluetooth.pair": "Upari",

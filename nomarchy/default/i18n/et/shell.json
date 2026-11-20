@@ -29,8 +29,6 @@
   "bluetooth.device": "Seade",
   "bluetooth.disconnect": "Ühenda lahti",
   "bluetooth.disconnecting": "Katkestatakse…",
-  "bluetooth.forget": "Unusta",
-  "bluetooth.forgetting": "Unustatakse…",
   "bluetooth.noAdapter": "Adapter puudub",
   "bluetooth.noBluetoothAdapter": "Bluetoothi adapter puudub",
   "bluetooth.pair": "Seo",

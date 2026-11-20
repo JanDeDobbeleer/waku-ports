@@ -29,8 +29,6 @@
   "bluetooth.device": "උපාංගය",
   "bluetooth.disconnect": "විසන්ධි කරන්න",
   "bluetooth.disconnecting": "විසන්ධි වෙනවා…",
-  "bluetooth.forget": "අමතක කරන්න",
-  "bluetooth.forgetting": "අමතක කරනවා…",
   "bluetooth.noAdapter": "ඇඩප්ටරයක් නැත",
   "bluetooth.noBluetoothAdapter": "Bluetooth ඇඩප්ටරයක් නැත",
   "bluetooth.pair": "යුගල කරන්න",

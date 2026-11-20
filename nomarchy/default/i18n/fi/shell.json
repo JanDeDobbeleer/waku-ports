@@ -29,8 +29,6 @@
   "bluetooth.device": "Laite",
   "bluetooth.disconnect": "Katkaise yhteys",
   "bluetooth.disconnecting": "Yhteyttä katkaistaan…",
-  "bluetooth.forget": "Unohda",
-  "bluetooth.forgetting": "Unohdetaan…",
   "bluetooth.noAdapter": "Ei sovitinta",
   "bluetooth.noBluetoothAdapter": "Ei Bluetooth-sovitinta",
   "bluetooth.pair": "Muodosta laitepari",

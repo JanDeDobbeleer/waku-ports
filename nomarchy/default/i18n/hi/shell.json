@@ -29,8 +29,6 @@
   "bluetooth.device": "डिवाइस",
   "bluetooth.disconnect": "डिस्कनेक्ट करें",
   "bluetooth.disconnecting": "डिस्कनेक्ट हो रहा है…",
-  "bluetooth.forget": "भूल जाएँ",
-  "bluetooth.forgetting": "भुलाया जा रहा है…",
   "bluetooth.noAdapter": "कोई एडेप्टर नहीं",
   "bluetooth.noBluetoothAdapter": "कोई Bluetooth एडेप्टर नहीं",
   "bluetooth.pair": "जोड़ें",

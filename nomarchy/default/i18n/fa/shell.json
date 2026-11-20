@@ -29,8 +29,6 @@
   "bluetooth.device": "دستگاه",
   "bluetooth.disconnect": "قطع اتصال",
   "bluetooth.disconnecting": "در حال قطع اتصال…",
-  "bluetooth.forget": "فراموش کردن",
-  "bluetooth.forgetting": "در حال فراموش کردن…",
   "bluetooth.noAdapter": "بدون آداپتور",
   "bluetooth.noBluetoothAdapter": "بدون آداپتور Bluetooth",
   "bluetooth.pair": "جفت‌سازی",

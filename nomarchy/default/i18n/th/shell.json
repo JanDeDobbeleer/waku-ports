@@ -29,8 +29,6 @@
   "bluetooth.device": "อุปกรณ์",
   "bluetooth.disconnect": "ตัดการเชื่อมต่อ",
   "bluetooth.disconnecting": "กำลังตัดการเชื่อมต่อ…",
-  "bluetooth.forget": "ลืม",
-  "bluetooth.forgetting": "กำลังลืม…",
   "bluetooth.noAdapter": "ไม่มีอะแดปเตอร์",
   "bluetooth.noBluetoothAdapter": "ไม่มีอะแดปเตอร์ Bluetooth",
   "bluetooth.pair": "จับคู่",

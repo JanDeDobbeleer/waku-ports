@@ -29,8 +29,6 @@
   "bluetooth.device": "جهاز",
   "bluetooth.disconnect": "قطع الاتصال",
   "bluetooth.disconnecting": "جارٍ قطع الاتصال…",
-  "bluetooth.forget": "نسيان",
-  "bluetooth.forgetting": "جارٍ النسيان…",
   "bluetooth.noAdapter": "لا محوّل",
   "bluetooth.noBluetoothAdapter": "لا محوّل Bluetooth",
   "bluetooth.pair": "إقران",
