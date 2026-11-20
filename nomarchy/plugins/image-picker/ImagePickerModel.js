@@ -59,8 +59,11 @@ function loadRows(rows) {
     if (!path) continue
 
     var fileName = path.split("/").pop()
-    if (seen[fileName]) continue
-    seen[fileName] = true
+    // Images in different folders with one name show once, except theme previews: every one of
+    // them is themes/<name>/preview.png.
+    var key = /\/themes\/[^/]+\/preview\.[^/.]+$/.test(path) ? path : fileName
+    if (seen[key]) continue
+    seen[key] = true
 
     images.push({
       filePath: path,
