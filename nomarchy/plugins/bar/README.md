@@ -5,10 +5,10 @@ shipped as a first-party plugin of [`nomarchy-shell`](../../README.md), the
 long-running shell host. The bar is mounted at startup and lives inside
 the shell for its whole session.
 
-- `manifest.json` declares the plugin (`id: nomarchy.bar`, `kind: bar`) and points at `Bar.qml` as the entry point.
+- `services/PluginManifests.js` declares the plugin (`id: nomarchy.bar`, `kind: bar`) and points at `Bar.qml` as the entry point.
 - `Bar.qml` is Nomarchy-owned bar engine code, loaded by the nomarchy-shell host. Users should not edit it directly.
-- `widgets/` holds simple first-party bar widgets with sibling manifests.
-- Feature plugins such as `../panels/audio/`, `../panels/network/`, `../panels/power/`, and `../agents/` provide richer popup bar plugins.
+- `widgets/` holds the simple bar widgets; each has an entry in `PluginManifests.js`.
+- Feature plugins such as `../panels/audio/`, `../panels/network/` and `../panels/power/` provide richer popup bar plugins.
 - The bar receives its config from the host shell as a `barConfig` property; the host loads it from `~/.config/nomarchy/shell.json` (or `config/nomarchy/shell.json` when the user has no file).
 - `nomarchy bar position` updates only the user shell.json file.
 
@@ -60,21 +60,15 @@ Example `shell.json` (bar subtree only shown):
 | `nomarchy.workspaces` | Hyprland workspace switcher; the focused workspace shows its layout | left = focus workspace, or cycle the focused one's layout |
 | `nomarchy.clock` | Date/time label + popup with a month grid, ISO week numbers, and month stepping | left = popup · right = cycle label format · middle = timezone selector |
 | `nomarchy.media` | MPRIS now-playing — scrolling track + artist, cover-art popup | left = play/pause · middle = next · scroll = prev/next · right = popup |
-| `nomarchy.indicators` | Manual state indicators | left = indicator action |
-| `nomarchy.system-update` | Available update indicator | left = update |
 | `nomarchy.tray` | System tray | hover = reveal drawer · right on chevron = manage |
 | `nomarchy.weather` | Weather icon + popup with forecast | left = popup · right = full notification |
 | `nomarchy.microphone` | Mic icon + scroll volume | left = mute toggle · middle = audio panel · scroll = source volume |
 
 | `nomarchy.audio` | Volume icon + popup with master slider, output-device picker, per-app mixer | left = popup · right = mute · middle = popup · scroll = volume |
-| `nomarchy.network` | Wi-Fi/Ethernet icon + popup with Wi-Fi scan, signal, connect, DNS provider selection | left = popup |
-| `nomarchy.tailscale` | Tailscale status, connection switcher, machine browser, and copy actions | left = popup · right = toggle · middle = refresh |
-| `nomarchy.agents` | AI coding agent limits with pace, today, last week, and all-time model breakdown | left = panel · right = launch agent · middle = next subscription |
+| `nomarchy.network` | Wi-Fi/Ethernet icon + popup with Wi-Fi scan, signal, connect | left = popup |
 | `nomarchy.power` | Battery/AC icon + popup with battery stats, power profiles, and system info | left = popup · right = toggle percentage |
 | `nomarchy.bluetooth` | Bluetooth icon + popup with device list, connect/disconnect, battery | left = popup · right = toggle radio |
-| `nomarchy.monitor` | Brightness and laptop display controls | left = popup |
 
-The `nomarchy.indicators` widget loads individual bar indicators from `indicators/`. Omit `items` (or set it to an empty array) to show all indicators in the default order, or set `items` to a subset such as `["Dnd", "Reminder", "NightLight"]`. Set `alwaysShow` to `true` to keep inactive indicators visible instead of revealing them only on hover. Multiple `nomarchy.indicators` instances are allowed, so different sections can show different subsets.
 
 ## Orientation
 
@@ -178,12 +172,8 @@ Widgets receive `bar` (the shell root), `moduleName` (string), and `settings` (o
 - `bar.showTooltip(target, text)` / `bar.hideTooltip(target)` — shared tooltip popup
 - `bar.requestPopout(owner)` / `bar.releasePopout(owner)` — one-popup-at-a-time coordinator
 
-First-party bar widgets are manifest-backed just like third-party widgets.
-Simple widgets carry sibling manifests such as `widgets/Workspaces.manifest.json`;
-richer popup plugins live in feature directories such as `../panels/audio/`,
-`../panels/network/`, and `../agents/`; and feature plugins such as
-`nomarchy.menu` and `nomarchy.media` declare their bar-widget entry points in their own
-`manifest.json`. Bar layout ids are namespaced, e.g. `nomarchy.audio`,
+Bar widgets are declared in `services/PluginManifests.js`. Simple widgets live in `widgets/`;
+richer popup plugins live in feature directories such as `../panels/audio/` and
+`../panels/network/`; and feature plugins such as `nomarchy.menu` and `nomarchy.media` declare their
+bar-widget entry points in their own entry. Bar layout ids are namespaced, e.g. `nomarchy.audio`,
 `nomarchy.network`, and `nomarchy.clock`.
-
-Third-party widgets ship as separate plugins under `~/.config/nomarchy/plugins/<plugin-id>/` with their own `manifest.json` declaring `kinds: ["bar-widget"]` and a `barWidget` entry point. See the [shell reference](../../../docs/nomarchy-shell.md#plugin-manifest) for the manifest schema. Rescan, enable, and place third-party plugins with `nomarchy-shell shell rescanPlugins`, `nomarchy plugin enable`, and `nomarchy bar move`.

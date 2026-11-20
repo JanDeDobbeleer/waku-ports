@@ -1,7 +1,6 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import "AudioNodesModel.js" as Model
 
 // Which PipeWire nodes the audio panel and the microphone widget leave out:
@@ -12,10 +11,8 @@ import "AudioNodesModel.js" as Model
 Singleton {
   id: root
 
-  // Read synchronously at startup (the FileView blocks loading), then kept
-  // current by its load handlers below. Binding this to the missing flag
-  // the handlers write — as it was — loops on every shell start.
-  property var hints: Model.parsePlatformAudio(hintsFile.text())
+  // Windows has no platform audio hints file: nothing is hidden by it.
+  property var hints: Model.parsePlatformAudio("")
 
   // Whether the platform's hints hide a node, given the names of every node
   // now in the graph (for a "replaced" node).
@@ -25,26 +22,5 @@ Singleton {
 
   function isShellLevelMeter(name: var): bool {
     return Model.isShellLevelMeter(name)
-  }
-
-  FileView {
-    id: hintsFile
-
-    // A file that went away hints nothing, whatever text() still holds.
-    property bool missing: false
-
-    path: "/usr/share/nomarchy-platform/audio.json"
-    blockLoading: true
-    watchChanges: true
-    printErrors: false
-    onLoaded: {
-      missing = false
-      root.hints = Model.parsePlatformAudio(text())
-    }
-    onLoadFailed: {
-      missing = true
-      root.hints = Model.parsePlatformAudio("")
-    }
-    onFileChanged: reload()
   }
 }

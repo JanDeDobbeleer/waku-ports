@@ -627,36 +627,8 @@ Item {
   readonly property bool vertical: position === "left" || position === "right"
   readonly property int barSize: vertical ? Style.bar.sizeVertical : Style.bar.sizeHorizontal
 
-  // Display cutouts (a camera notch) the platform's own package describes in
-  // the fixed platform root, which no environment variable moves. Most machines
-  // have none. It is read as the shell starts (blockLoading), so a bar surface
-  // knows before it maps whether its screen may have one. See
-  // BarModel.parseCutouts.
-  // Read synchronously at startup (the FileView blocks loading, so the bar
-  // knows before it maps whether its screen may have a cutout), then kept
-  // current by its load handlers below. Binding this to the missing flag
-  // the handlers write — as it was — loops on every shell start.
-  property var displayCutouts: BarModel.parseCutouts(displayCutoutsFile.text())
-  FileView {
-    id: displayCutoutsFile
-
-    // A file that went away describes nothing, whatever text() still holds.
-    property bool missing: false
-
-    path: "/usr/share/nomarchy-platform/display-cutouts.json"
-    blockLoading: true
-    watchChanges: true
-    printErrors: false
-    onLoaded: {
-      missing = false
-      root.displayCutouts = BarModel.parseCutouts(text())
-    }
-    onLoadFailed: {
-      missing = true
-      root.displayCutouts = []
-    }
-    onFileChanged: reload()
-  }
+  // Display cutouts (a camera notch) come from a Linux platform package; Windows reports none.
+  readonly property var displayCutouts: []
 
   // The physical mode Hyprland reports for a screen, as hyprctl monitors does.
   // Qt's whole-number devicePixelRatio can't rebuild it at a fractional scale.
