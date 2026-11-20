@@ -29,8 +29,6 @@
   "bluetooth.device": "Thiết bị",
   "bluetooth.disconnect": "Ngắt kết nối",
   "bluetooth.disconnecting": "Đang ngắt kết nối…",
-  "bluetooth.forget": "Quên",
-  "bluetooth.forgetting": "Đang quên…",
   "bluetooth.noAdapter": "Không có adapter",
   "bluetooth.noBluetoothAdapter": "Không có adapter Bluetooth",
   "bluetooth.pair": "Ghép nối",

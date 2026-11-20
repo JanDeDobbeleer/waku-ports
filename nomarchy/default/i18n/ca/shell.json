@@ -29,8 +29,6 @@
   "bluetooth.device": "Dispositiu",
   "bluetooth.disconnect": "Desconnecta",
   "bluetooth.disconnecting": "Desconnectant…",
-  "bluetooth.forget": "Oblida",
-  "bluetooth.forgetting": "Oblidant…",
   "bluetooth.noAdapter": "Sense adaptador",
   "bluetooth.noBluetoothAdapter": "Sense adaptador Bluetooth",
   "bluetooth.pair": "Aparella",

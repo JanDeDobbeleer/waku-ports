@@ -29,8 +29,6 @@
   "bluetooth.device": "Συσκευή",
   "bluetooth.disconnect": "Αποσύνδεση",
   "bluetooth.disconnecting": "Αποσυνδέεται…",
-  "bluetooth.forget": "Αφαίρεση",
-  "bluetooth.forgetting": "Αφαιρείται…",
   "bluetooth.noAdapter": "Κανένας προσαρμογέας",
   "bluetooth.noBluetoothAdapter": "Κανένας προσαρμογέας Bluetooth",
   "bluetooth.pair": "Ζευγάρωμα",

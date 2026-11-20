@@ -29,8 +29,6 @@
   "bluetooth.device": "设备",
   "bluetooth.disconnect": "断开",
   "bluetooth.disconnecting": "正在断开…",
-  "bluetooth.forget": "忘记",
-  "bluetooth.forgetting": "正在忘记…",
   "bluetooth.noAdapter": "无适配器",
   "bluetooth.noBluetoothAdapter": "无 Bluetooth 适配器",
   "bluetooth.pair": "配对",

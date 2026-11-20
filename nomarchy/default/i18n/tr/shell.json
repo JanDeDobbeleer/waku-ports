@@ -29,8 +29,6 @@
   "bluetooth.device": "Cihaz",
   "bluetooth.disconnect": "Bağlantıyı Kes",
   "bluetooth.disconnecting": "Bağlantı kesiliyor…",
-  "bluetooth.forget": "Unut",
-  "bluetooth.forgetting": "Unutuluyor…",
   "bluetooth.noAdapter": "Adaptör yok",
   "bluetooth.noBluetoothAdapter": "Bluetooth adaptörü yok",
   "bluetooth.pair": "Eşleştir",

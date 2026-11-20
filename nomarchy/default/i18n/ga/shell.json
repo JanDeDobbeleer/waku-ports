@@ -29,8 +29,6 @@
   "bluetooth.device": "Gléas",
   "bluetooth.disconnect": "Dícheangail",
   "bluetooth.disconnecting": "Ag dícheangal…",
-  "bluetooth.forget": "Dearmad",
-  "bluetooth.forgetting": "Ag déanamh dearmaid…",
   "bluetooth.noAdapter": "Gan oiriúntóir",
   "bluetooth.noBluetoothAdapter": "Gan oiriúntóir Bluetooth",
   "bluetooth.pair": "Péireáil",

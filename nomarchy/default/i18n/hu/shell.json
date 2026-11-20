@@ -29,8 +29,6 @@
   "bluetooth.device": "Eszköz",
   "bluetooth.disconnect": "Levállítás",
   "bluetooth.disconnecting": "Levállítás…",
-  "bluetooth.forget": "Elfelejtés",
-  "bluetooth.forgetting": "Elfelejtés…",
   "bluetooth.noAdapter": "Nincs adapter",
   "bluetooth.noBluetoothAdapter": "Nincs Bluetooth-adapter",
   "bluetooth.pair": "Párosítás",

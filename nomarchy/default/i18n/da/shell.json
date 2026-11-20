@@ -29,8 +29,6 @@
   "bluetooth.device": "Enhed",
   "bluetooth.disconnect": "Afbryd",
   "bluetooth.disconnecting": "Afbryder…",
-  "bluetooth.forget": "Glem",
-  "bluetooth.forgetting": "Glemmer…",
   "bluetooth.noAdapter": "Ingen adapter",
   "bluetooth.noBluetoothAdapter": "Ingen Bluetooth-adapter",
   "bluetooth.pair": "Par",

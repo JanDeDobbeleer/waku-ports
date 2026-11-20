@@ -21,7 +21,7 @@ Panel {
   // permits — needed for the toggleBluetooth method below.
   manageIpc: false
 
-  // Address -> "connecting" | "forgetting". Rows show connecting and
+  // Address -> "connecting". Rows show connecting and
   // disconnecting from device.state; "connecting" only marks a connect that owes
   // the audio output switch. Cleared when the engine reports an error.
   property var pendingActions: ({})
@@ -34,6 +34,8 @@ Panel {
   // Discovering property also reflects sessions other clients hold, which are
   // never this panel's to stop.
   property bool owesDiscoveryStop: false
+  // A scan is queued: set when the panel opens and by the Scan button, cleared when it starts.
+  property bool scanWanted: false
   readonly property var devices: Model.values(Bluetooth.devices)
   readonly property var pipewireNodes: Model.values(Pipewire.nodes)
   property var pendingAudioOutputDevice: null
@@ -96,7 +98,6 @@ Panel {
   // guaranteeing one highlight on screen.
   property string focusSection: "connected"
   property int selectedIndex: 0
-  property bool actionFocused: false
   property bool cursorActive: false
 
   // Stable identity for the focused device. Devices move between sections as
@@ -127,12 +128,13 @@ Panel {
   function sectionVisible(section: string): bool {
     if (section === "connected") return Model.arrayLength(connectedDevices) > 0
     if (section === "known") return Model.arrayLength(knownDevices) > 0
-    if (section === "discovered") return adapter && adapter.discovering && Model.arrayLength(discoveredDevices) > 0
+    if (section === "discovered") return Model.arrayLength(discoveredDevices) > 0
     return false
   }
 
+  // The adapter keeps the nearby devices of the last scan, so they stay listed after it ends.
   readonly property list<string> visibleSections: {
-    return Model.visibleSections(deviceGroups, adapter && adapter.discovering)
+    return Model.visibleSections(deviceGroups, true)
   }
 
   function devicesForSection(section: string): var {
@@ -266,9 +268,9 @@ Panel {
   function runDeviceAction(device: var, action: string, pending: string): void {
     if (!device || !Model.field(device, "address")) return
     setPendingAction(Model.field(device, "address"), pending)
-    // The engine's BluetoothDevice has connect/disconnect/pair/forget; anything else goes to Windows.
+    // The engine's BluetoothDevice has connect/disconnect/pair; anything else goes to Windows.
     if (Model.hasMethod(device, action)) Model.invoke(device, action)
-    else Quickshell.execDetached(["explorer.exe", "ms-settings:bluetooth"])
+    else openWindowsSettings()
   }
 
   function connectDevice(device: var): void {
@@ -282,11 +284,6 @@ Panel {
     if (!Model.field(device, "connected")) return
     if (Model.hasMethod(device, "disconnect")) Model.invoke(device, "disconnect")
     else Model.setField(device, "connected", false)
-  }
-
-  function forgetDevice(device: var): void {
-    if (!device || !Model.field(device, "address")) return
-    runDeviceAction(device, "forget", "forgetting")
   }
 
   function syncPendingActions(): void {
@@ -306,9 +303,8 @@ Panel {
       }
 
       let finishedConnecting = action === "connecting" && found && Model.field(found, "connected")
-      if (finishedConnecting
-          || (action === "forgetting" && (!found || (!Model.field(found, "paired") && !Model.field(found, "bonded") && !Model.field(found, "trusted"))))) {
-        if (finishedConnecting) scheduleAudioOutputSwitch(found)
+      if (finishedConnecting) {
+        scheduleAudioOutputSwitch(found)
         Model.removeKey(next, address)
         changed = true
       }
@@ -323,32 +319,30 @@ Panel {
     var sections = visibleSections
     if (focusSection === "header") {
       if (delta > 0 && sections && Model.arrayLength(sections) > 0) {
-        focusSection = sections[0]; selectedIndex = 0; actionFocused = false
+        focusSection = sections[0]; selectedIndex = 0
       }
       return
     }
-    if (!sections || Model.arrayLength(sections) === 0) { focusSection = "header"; actionFocused = false; return }
+    if (!sections || Model.arrayLength(sections) === 0) { focusSection = "header"; return }
     var sIdx = sections.indexOf(focusSection)
-    if (sIdx < 0) { focusSection = sections[0]; selectedIndex = 0; actionFocused = false; return }
+    if (sIdx < 0) { focusSection = sections[0]; selectedIndex = 0; return }
 
     var idx = selectedIndex
     var max = sectionCount(focusSection) - 1
 
     if (delta > 0) {
-      if (idx < max) { selectedIndex = idx + 1; actionFocused = false; return }
+      if (idx < max) { selectedIndex = idx + 1; return }
       if (sIdx < Model.arrayLength(sections) - 1) {
         focusSection = sections[sIdx + 1]
         selectedIndex = 0
-        actionFocused = false
       }
     } else {
-      if (idx > 0) { selectedIndex = idx - 1; actionFocused = false; return }
+      if (idx > 0) { selectedIndex = idx - 1; return }
       if (sIdx > 0) {
         focusSection = sections[sIdx - 1]
         selectedIndex = sectionCount(focusSection) - 1
-        actionFocused = false
       } else {
-        focusSection = "header"; actionFocused = false
+        focusSection = "header"
       }
     }
   }
@@ -356,25 +350,11 @@ Panel {
   function setHeaderCursor(): void {
     cursorActive = true
     focusSection = "header"
-    actionFocused = false
-  }
-
-  function moveCursorH(delta: int): void {
-    if (!cursorActive) { cursorActive = true; return }
-    if (focusSection !== "known" && focusSection !== "connected") return
-    var dev = deviceAt(focusSection, selectedIndex)
-    if (!dev || !Model.field(dev, "address")) return
-    if (delta > 0) actionFocused = true
-    else if (delta < 0) actionFocused = false
   }
 
   function activateCursor(): void {
     if (focusSection === "header") {
       toggleBluetooth()
-      return
-    }
-    if (actionFocused) {
-      deleteSelected()
       return
     }
 
@@ -392,17 +372,19 @@ Panel {
     }
   }
 
-  // 'x' forgets remembered devices. For connected devices this first
-  // disconnects, then removes the BlueZ pairing record via nomarchy-bluetooth-device.
-  function deleteSelected(): void {
-    if (focusSection !== "known" && focusSection !== "connected") return
-    var dev = deviceAt(focusSection, selectedIndex)
-    if (!dev) return
-    forgetDevice(dev)
+  // Starts one scan. Windows runs a short inquiry and reports the nearby devices.
+  function rescan(): void {
+    if (adapter === null || !adapter.enabled || adapter.discovering) return
+    scanWanted = true
+  }
+
+  function openWindowsSettings(): void {
+    Quickshell.execDetached(["explorer.exe", "ms-settings:bluetooth"])
   }
 
   onOpenedChanged: {
     if (opened) {
+      scanWanted = true
       // Adopt a discovery session that is already running — a popout handoff
       // from another monitor, or one leaked by an instance that could not
       // finish its own stop — so this close settles it either way.
@@ -411,8 +393,7 @@ Panel {
       else if (Model.arrayLength(knownDevices) > 0) { focusSection = "known"; selectedIndex = 0 }
       else if (Model.arrayLength(discoveredDevices) > 0) { focusSection = "discovered"; selectedIndex = 0 }
       else { focusSection = "header" }
-      actionFocused = false
-      cursorActive = false
+        cursorActive = false
     }
   }
 
@@ -499,16 +480,16 @@ Panel {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  // BlueZ rejects StartDiscovery while the adapter is still powering up, and
-  // discovery can also time out on its own. While the panel is open, keep
-  // nudging it back on so an enabled adapter is always scanning.
+  // One scan per request: when the panel opens and on the Scan button. A request waits here
+  // until the adapter is enabled and idle; the scan is not repeated by itself.
   Timer {
     id: discoveryRetry
     interval: 1000
     repeat: true
     triggeredOnStart: true
-    running: root.opened && root.adapter !== null && root.adapter.enabled && !root.adapter.discovering
+    running: root.scanWanted && root.opened && root.adapter !== null && root.adapter.enabled && !root.adapter.discovering
     onTriggered: {
+      root.scanWanted = false
       root.owesDiscoveryStop = true
       root.adapter.discovering = true
     }
@@ -686,14 +667,14 @@ Panel {
       onMoveRequested: function(dx, dy) {
         if (!root.cursorActive) { root.cursorActive = true; return }
         if (dy !== 0) root.moveCursor(dy)
-        else if (dx !== 0) root.moveCursorH(dx)
       }
       onActivateRequested: if (root.cursorActive) root.activateCursor()
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
-      onDeleteRequested: if (root.cursorActive) root.deleteSelected()
       onTextKey: function(t) {
         if (t === "b" || t === "B") root.toggleBluetooth()
+        else if (t === "r" || t === "R") root.rescan()
+        else if (t === "s" || t === "S") root.openWindowsSettings()
       }
 
       Column {
@@ -889,7 +870,66 @@ Panel {
           wrapMode: Text.WordWrap
           width: parent.width
         }
+
+        PanelSeparator {
+          foreground: root.contentForeground
+        }
+
+        // Footer: rescan for nearby devices, and the Windows page for everything else.
+        Row {
+          id: footerRow
+          width: parent.width
+          spacing: Style.space(10)
+
+          FooterLink {
+            width: (footerRow.width - footerRow.spacing) / 2
+            label: root.adapter && root.adapter.discovering ? Commons.I18n.t("bluetooth.scanning") : Commons.I18n.t("bluetooth.scan")
+            enabled: !!root.adapter && root.adapter.enabled && !root.adapter.discovering
+            onActivated: root.rescan()
+          }
+
+          FooterLink {
+            width: (footerRow.width - footerRow.spacing) / 2
+            label: Commons.I18n.t("bluetooth.windowsSettings")
+            onActivated: root.openWindowsSettings()
+          }
+        }
       }
+    }
+  }
+
+  // A text link in the panel footer.
+  component FooterLink: CursorSurface {
+    id: link
+    property string label: ""
+    signal activated()
+
+    foreground: root.contentForeground
+    fill: root.hoverFill
+    implicitHeight: linkText.implicitHeight + Style.spacing.rowPaddingX
+    opacity: enabled ? 1.0 : 0.5
+    hasCursor: linkMouse.containsMouse
+
+    MouseArea {
+      id: linkMouse
+      anchors.fill: parent
+      enabled: link.enabled
+      hoverEnabled: true
+      cursorShape: Qt.PointingHandCursor
+      onClicked: link.activated()
+    }
+
+    Text {
+      id: linkText
+      anchors.centerIn: parent
+      width: parent.width - Style.space(16)
+      horizontalAlignment: Text.AlignHCenter
+      textFormat: Text.PlainText
+      text: link.label
+      color: root.contentForeground
+      font.family: root.contentFontFamily
+      font.pixelSize: Style.font.bodySmall
+      elide: Text.ElideRight
     }
   }
 
@@ -913,10 +953,8 @@ Panel {
     }
 
     readonly property bool rowSelected: root.cursorActive && root.focusSection === sectionName && root.selectedIndex === rowIndex
-    readonly property bool forgetAvailable: (sectionName === "known" || sectionName === "connected") && !isDiscovered
-    readonly property bool showForgetButton: forgetAvailable && (rowMouse.containsMouse || rowSelected)
 
-    hasCursor: rowSelected && !root.actionFocused
+    hasCursor: rowSelected
     current: isConnected
     foreground: root.contentForeground
     fill: root.hoverFill
@@ -924,7 +962,6 @@ Panel {
 
     readonly property string statusText: {
       if (!dev) return ""
-      if (action === "forgetting") return Commons.I18n.t("bluetooth.forgetting")
       if (devState === 2) return Commons.I18n.t("bluetooth.disconnecting")
       if (isConnected) {
         if (Model.field(dev, "batteryAvailable")) return Commons.I18n.formatNumber(Math.round(Model.field(dev, "battery") * 100)) + "%"
@@ -954,7 +991,6 @@ Panel {
         root.cursorActive = true
         root.focusSection = row.sectionName
         root.selectedIndex = row.rowIndex
-        root.actionFocused = false
       }
 
       onClicked: function(mouse) {
@@ -962,7 +998,6 @@ Panel {
         if (!dev) return
         if (mouse.button === Qt.RightButton) {
           if (row.isConnected) root.disconnectDevice(dev)
-          else if (!row.isDiscovered) root.forgetDevice(dev)
           return
         }
         if (row.isConnected) root.disconnectDevice(dev)
@@ -971,7 +1006,7 @@ Panel {
     }
 
     PanelToolTip {
-      visible: row.actionTooltip !== "" && rowMouse.containsMouse && !root.actionFocused
+      visible: row.actionTooltip !== "" && rowMouse.containsMouse
       text: row.actionTooltip
       fontFamily: root.contentFontFamily
     }
@@ -983,7 +1018,7 @@ Panel {
       anchors.verticalCenter: parent.verticalCenter
       anchors.leftMargin: Style.space(10)
       anchors.rightMargin: Style.space(10)
-      implicitHeight: Math.max(deviceIcon.implicitHeight, info.implicitHeight, forgetBtn.implicitHeight)
+      implicitHeight: Math.max(deviceIcon.implicitHeight, info.implicitHeight)
 
       Text {
         id: deviceIcon
@@ -1001,8 +1036,7 @@ Panel {
         spacing: Style.space(1)
         anchors.left: deviceIcon.right
         anchors.leftMargin: Style.space(10)
-        anchors.right: forgetBtn.visible ? forgetBtn.left : parent.right
-        anchors.rightMargin: forgetBtn.visible ? Style.space(8) : 0
+        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
@@ -1023,34 +1057,6 @@ Panel {
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
           width: parent.width
-        }
-      }
-
-      PanelActionButton {
-        id: forgetBtn
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        visible: row.showForgetButton
-        iconText: "󰅙"
-        tooltipText: Commons.I18n.t("bluetooth.forget")
-        foreground: root.contentForeground
-        hoverColor: root.contentForeground
-        fontFamily: root.contentFontFamily
-        hasCursor: row.rowSelected && root.actionFocused
-        onHovered: function(isHovered) {
-          if (!isHovered) {
-            if (rowMouse.containsMouse) root.actionFocused = false
-            return
-          }
-          root.cursorActive = true
-          root.focusSection = row.sectionName
-          root.selectedIndex = row.rowIndex
-          root.actionFocused = true
-        }
-        onClicked: {
-          var dev = root.deviceFor(row)
-          if (!dev) return
-          root.forgetDevice(dev)
         }
       }
     }

@@ -29,8 +29,6 @@
   "bluetooth.device": "Dispozitiv",
   "bluetooth.disconnect": "Deconectează",
   "bluetooth.disconnecting": "Se deconectează…",
-  "bluetooth.forget": "Uită",
-  "bluetooth.forgetting": "Se uită…",
   "bluetooth.noAdapter": "Niciun adaptor",
   "bluetooth.noBluetoothAdapter": "Niciun adaptor Bluetooth",
   "bluetooth.pair": "Împerechează",

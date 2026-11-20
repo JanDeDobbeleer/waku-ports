@@ -29,8 +29,6 @@
   "bluetooth.device": "آلہ",
   "bluetooth.disconnect": "منقطع کریں",
   "bluetooth.disconnecting": "منقطع ہو رہا ہے…",
-  "bluetooth.forget": "بھلا دیں",
-  "bluetooth.forgetting": "بھلایا جا رہا ہے…",
   "bluetooth.noAdapter": "کوئی اڈاپٹر نہیں",
   "bluetooth.noBluetoothAdapter": "کوئی Bluetooth اڈاپٹر نہیں",
   "bluetooth.pair": "جوڑیں",

@@ -29,8 +29,6 @@
   "bluetooth.device": "Qurilma",
   "bluetooth.disconnect": "Uzish",
   "bluetooth.disconnecting": "Uzilmoqda…",
-  "bluetooth.forget": "Unutish",
-  "bluetooth.forgetting": "Unutilmoqda…",
   "bluetooth.noAdapter": "Adapter yoʻq",
   "bluetooth.noBluetoothAdapter": "Bluetooth adapteri yoʻq",
   "bluetooth.pair": "Juftlash",

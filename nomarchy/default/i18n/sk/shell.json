@@ -29,8 +29,6 @@
   "bluetooth.device": "Zariadenie",
   "bluetooth.disconnect": "Odpojiť",
   "bluetooth.disconnecting": "Odpája sa…",
-  "bluetooth.forget": "Zabudnúť",
-  "bluetooth.forgetting": "Zabúda sa…",
   "bluetooth.noAdapter": "Žiadny adaptér",
   "bluetooth.noBluetoothAdapter": "Žiadny adaptér Bluetooth",
   "bluetooth.pair": "Spárovať",

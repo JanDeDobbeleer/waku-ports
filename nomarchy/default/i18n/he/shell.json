@@ -29,8 +29,6 @@
   "bluetooth.device": "מכשיר",
   "bluetooth.disconnect": "התנתק",
   "bluetooth.disconnecting": "מתנתק…",
-  "bluetooth.forget": "שכח",
-  "bluetooth.forgetting": "שוכח…",
   "bluetooth.noAdapter": "אין מתאם",
   "bluetooth.noBluetoothAdapter": "אין מתאם Bluetooth",
   "bluetooth.pair": "הצמד",

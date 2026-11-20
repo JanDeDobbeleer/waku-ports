@@ -29,8 +29,6 @@
   "bluetooth.device": "기기",
   "bluetooth.disconnect": "연결 해제",
   "bluetooth.disconnecting": "연결 해제 중…",
-  "bluetooth.forget": "지우기",
-  "bluetooth.forgetting": "지우는 중…",
   "bluetooth.noAdapter": "어댑터 없음",
   "bluetooth.noBluetoothAdapter": "Bluetooth 어댑터 없음",
   "bluetooth.pair": "페어링",

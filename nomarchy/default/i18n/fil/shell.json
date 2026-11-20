@@ -29,8 +29,6 @@
   "bluetooth.device": "Device",
   "bluetooth.disconnect": "Idiskonekta",
   "bluetooth.disconnecting": "Dinidiskonekta…",
-  "bluetooth.forget": "Kalimutan",
-  "bluetooth.forgetting": "Kinakalimutan…",
   "bluetooth.noAdapter": "Walang adapter",
   "bluetooth.noBluetoothAdapter": "Walang Bluetooth adapter",
   "bluetooth.pair": "Ipares",
