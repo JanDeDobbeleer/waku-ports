@@ -1,6 +1,4 @@
 import QtQuick
-import Quickshell
-import Quickshell.Io
 import qs.Commons
 import "PluginManifests.js" as Manifests
 
@@ -22,6 +20,7 @@ QtObject {
   property var installedPlugins: ({})
   property int registryRevision: 0
   property bool scanning: false
+  property bool loaded: false
   property string lastEnableError: ""
 
   signal pluginsChanged()
@@ -613,6 +612,7 @@ QtObject {
     }
     stampHostCapabilities(found, {})
     installedPlugins = found
+    loaded = true
     registryRevision++
     pluginsChanged()
     scanFinished()

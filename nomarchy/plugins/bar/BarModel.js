@@ -352,9 +352,7 @@ function registryComponent(registry, name) {
   return entry ? entry.component : null
 }
 function pluginShell(shell, key, moduleName, registered) {
-  if (registered && shell && typeof shell.pluginShellForId === "function") return shell.pluginShellForId(moduleName)
-  if (shell && typeof shell.pluginShellForBarEntry === "function") return shell.pluginShellForBarEntry(key, moduleName)
-  return null
+  return shell || null
 }
 function hasProperty(target, key) { return !!target && key in target }
 function setProperty(target, key, value) { if (hasProperty(target, key)) target[key] = value }
@@ -940,11 +938,7 @@ function pluginOwnsBarObject(owners, pluginId, target) {
 }
 
 function pluginShellFor(shell, registered, moduleName, key) {
-  if (registered && shell && typeof shell.pluginShellForId === "function")
-    return shell.pluginShellForId(moduleName)
-  if (shell && typeof shell.pluginShellForBarEntry === "function")
-    return shell.pluginShellForBarEntry(key, moduleName)
-  return null
+  return shell || null
 }
 
 var windowResolver = null
