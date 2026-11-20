@@ -79,8 +79,6 @@ call nomarchy.clock close
 call shell isOpen nomarchy.clock => ^closed$
 call nomarchy.weather open
 call nomarchy.weather close
-call shell toggle nomarchy.dev-gallery {}
-call shell toggle nomarchy.dev-gallery {}
 call osd show {"kind":"volume","value":0.5}
 call osd close
 call notifications showHistory

@@ -1,9 +1,5 @@
 {
   "version": 1,
-  "idle": {
-    "screensaver": 0,
-    "lock": 0
-  },
   "bar": {
     "position": "top",
     "background": "opaque",
@@ -69,24 +65,5 @@
     }
   },
   "plugins": [],
-  "disabledPlugins": [
-    "nomarchy.agents",
-    "nomarchy.background",
-    "nomarchy.battery",
-    "nomarchy.clipboard",
-    "nomarchy.disk-speedtest",
-    "nomarchy.dropbox",
-    "nomarchy.elsewhen",
-    "nomarchy.emojis",
-    "nomarchy.indicators",
-    "nomarchy.keyboard-layout",
-    "nomarchy.monitor",
-    "nomarchy.nightlight",
-    "nomarchy.reminders",
-    "nomarchy.remote-session",
-    "nomarchy.speedtest",
-    "nomarchy.system-update",
-    "nomarchy.tailscale",
-    "nomarchy.wifiqr"
-  ]
+  "disabledPlugins": []
 }

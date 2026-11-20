@@ -351,10 +351,16 @@ function registryComponent(registry, name) {
   var entry = widgets ? widgets[name] : null
   return entry ? entry.component : null
 }
+// Saves the bar's background look ("none", "glassy" or "opaque") in shell.json.
+function setBarBackground(shell, look) {
+  if (!shell) return
+  shell.mutateShellConfig(function(config) {
+    if (!config.bar || typeof config.bar !== "object") config.bar = {}
+    config.bar.background = look
+  })
+}
 function pluginShell(shell, key, moduleName, registered) {
-  if (registered && shell && typeof shell.pluginShellForId === "function") return shell.pluginShellForId(moduleName)
-  if (shell && typeof shell.pluginShellForBarEntry === "function") return shell.pluginShellForBarEntry(key, moduleName)
-  return null
+  return shell || null
 }
 function hasProperty(target, key) { return !!target && key in target }
 function setProperty(target, key, value) { if (hasProperty(target, key)) target[key] = value }
@@ -940,11 +946,7 @@ function pluginOwnsBarObject(owners, pluginId, target) {
 }
 
 function pluginShellFor(shell, registered, moduleName, key) {
-  if (registered && shell && typeof shell.pluginShellForId === "function")
-    return shell.pluginShellForId(moduleName)
-  if (shell && typeof shell.pluginShellForBarEntry === "function")
-    return shell.pluginShellForBarEntry(key, moduleName)
-  return null
+  return shell || null
 }
 
 var windowResolver = null

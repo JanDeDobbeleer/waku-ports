@@ -11,15 +11,6 @@ param(
   [string]$Bin = $(if ($env:WAKU_BIN) { $env:WAKU_BIN } else { Join-Path $PSScriptRoot '..\..\bin' })
 )
 $ErrorActionPreference = 'Stop'
-$env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH # Git's bash and find first: the shell runs bash scripts
-# Nomarchy reads its config and cache dirs from these; keep them inside the port. HOME is only read
-# (default wallpaper and video folders).
-$portRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$env:NOMARCHY_CONFIG_DIR = Join-Path $portRoot 'state\config'
-$env:NOMARCHY_CACHE_DIR = Join-Path $portRoot 'state\cache'
-$env:HOME = Join-Path $portRoot 'state\home'
-$env:NOMARCHY_PATH = $portRoot
-New-Item -ItemType Directory -Force $env:NOMARCHY_CONFIG_DIR, $env:NOMARCHY_CACHE_DIR | Out-Null
 $env:QT_FORCE_STDERR_LOGGING = '1' # Qt writes qml: messages to stderr only with this
 $port = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $logs = Join-Path $port 'logs'

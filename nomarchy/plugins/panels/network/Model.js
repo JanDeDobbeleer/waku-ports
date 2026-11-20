@@ -51,20 +51,9 @@ function connectedSignalStrength(networkStrength, activeApSignal) {
   return activeApSignal > 0 ? activeApSignal : strength
 }
 
-// Reads `nmcli -t -f IN-USE,SIGNAL device wifi list` output, where the in-use
-// access point is the row marked "*".
-function parseActiveApSignal(raw) {
-  var lines = String(raw || "").split(/\r?\n/)
-  for (var i = 0; i < lines.length; i++) {
-    var match = /^\*:(\d+)$/.exec(lines[i].trim())
-    if (match) return parseInt(match[1], 10)
-  }
-  return -1
-}
-
 // A known plain-HTTP endpoint lets the network redirect the browser to its
 // login page. Never execute or automatically open an untrusted Location header.
-var captivePortalUrl = "http://ping.omacom.io/nm-check.txt"
+var captivePortalUrl = "http://www.msftconnecttest.com/redirect"
 
 function connectivityState(kind, connectivity, states, checksEnabled) {
   if (kind === "disconnected") return "none"
@@ -106,58 +95,11 @@ function formatHeaderFreq(mhz, fmt) {
   return f(ghz, ghz % 1 === 0 ? 0 : 1) + "ghz"
 }
 
-// Wi-Fi band state belongs in the selector section, not beside the hero name.
-// Ethernet has no equivalent selector, so keep its negotiated link speed here.
+// Ethernet carries its negotiated link speed beside the hero name.
 function headerDetail(info, fmt) {
   var value = info || {}
   if (value.type === "ethernet") return formatHeaderSpeed(value.speed || "", fmt)
   return ""
-}
-
-function bandLabel(band, tr, fmt) {
-  var t = typeof tr === "function" ? tr : function(key, english) { return english }
-  if (band === "auto") return t("network.bandAuto", "Auto")
-  if (!band) return ""
-  // The band stays the script's "2.4" everywhere else; only the label is
-  // written in the language's digits.
-  var number = Number(band)
-  return (isFinite(number) ? formatter(fmt)(number) : band) + "ghz"
-}
-
-// Under Automatic the pills are hidden, so the header carries the live band
-// instead -- "WI-FI BAND: 2.4GHZ". Once a band is pinned the pills are on
-// screen and say it themselves, so the header drops back to a plain label.
-function bandSectionTitle(selected, current, tr, fmt) {
-  var t = typeof tr === "function" ? tr : function(key, english) { return english }
-  if (selected !== "auto") return t("network.wifiBand", "WI-FI BAND")
-
-  var label = bandLabel(current, tr, fmt)
-  if (label === "") return t("network.wifiBand", "WI-FI BAND")
-
-  return t("network.wifiBandCurrent", "WI-FI BAND: %1").replace("%1", label.toUpperCase())
-}
-
-function bandTooltip(band, tr, fmt) {
-  var t = typeof tr === "function" ? tr : function(key, english) { return english }
-  if (band === "auto") return t("network.bandAutoTooltip", "Let Wi-Fi pick the band")
-  if (!band) return ""
-  return t("network.stayOnBand", "Stay on %1").replace("%1", bandLabel(band, tr, fmt))
-}
-
-function parseBandStatus(raw) {
-  var next = parseKeyValue(raw)
-  var tokens = String(next.available || "").split(" ")
-  var available = []
-
-  for (var i = 0; i < tokens.length; i++) {
-    if (tokens[i] !== "") available.push(tokens[i])
-  }
-
-  return {
-    band: next.band || "",
-    selected: next.selected || "auto",
-    available: available
-  }
 }
 
 function decodeIwSsid(value) {
@@ -399,19 +341,6 @@ function canForgetNetwork(network) {
   return !!(network && network.known && !network.connected)
 }
 
-// The password arrives on stdin and reaches nmcli through the scriptable
-// `connection edit` editor -- argv is world-readable in /proc, so the secret
-// must never be an argument (printf is a bash builtin, so no process spawns
-// with it either).
-var enterpriseConnectScript =
-  "u=$(uuidgen); IFS= read -r pw;" +
-  " nmcli connection add type wifi con-name \"$1\" ssid \"$1\" connection.uuid \"$u\"" +
-  " wifi-sec.key-mgmt wpa-eap 802-1x.eap peap 802-1x.phase2-auth mschapv2" +
-  " 802-1x.identity \"$2\" 802-1x.auth-timeout 8 >/dev/null" +
-  " && printf 'set 802-1x.password %s\\nsave\\nquit\\n' \"$pw\" | nmcli connection edit uuid \"$u\" >/dev/null" +
-  " && nmcli connection up uuid \"$u\"" +
-  " || { nmcli connection delete uuid \"$u\" >/dev/null 2>&1; false; }"
-
 function networkFailureReason(reason, needsCredentials, reasons, tr) {
   var t = typeof tr === "function" ? tr : function(key, english) { return english }
   var r = reasons || {}
@@ -441,16 +370,11 @@ if (typeof module !== "undefined") {
     wifiIconFor: wifiIconFor,
     connectionIcon: connectionIcon,
     connectedSignalStrength: connectedSignalStrength,
-    parseActiveApSignal: parseActiveApSignal,
     connectivityState: connectivityState,
     captivePortalUrl: captivePortalUrl,
     formatHeaderSpeed: formatHeaderSpeed,
     formatHeaderFreq: formatHeaderFreq,
     headerDetail: headerDetail,
-    bandLabel: bandLabel,
-    bandSectionTitle: bandSectionTitle,
-    bandTooltip: bandTooltip,
-    parseBandStatus: parseBandStatus,
     decodeIwSsid: decodeIwSsid,
     parseKeyValue: parseKeyValue,
     throughputState: throughputState,
@@ -466,7 +390,6 @@ if (typeof module !== "undefined") {
     wifiSectionTitle: wifiSectionTitle,
     requiresCredentials: requiresCredentials,
     canForgetNetwork: canForgetNetwork,
-    enterpriseConnectScript: enterpriseConnectScript,
     networkFailureReason: networkFailureReason,
     shouldRepromptPassphrase: shouldRepromptPassphrase
   }

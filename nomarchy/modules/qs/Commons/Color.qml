@@ -13,9 +13,14 @@ import "BorderGeometry.js" as Geometry
 QtObject {
   id: root
 
-  readonly property string home: (Quickshell.env("HOME") || "")
+  readonly property string home: Paths.home
   readonly property string stateHome: home + "/.local/state"
-  readonly property string currentThemePath: stateHome + "/nomarchy/current/theme"
+  // The saved theme's folder name. A named theme is read from the files shipped in themes/<name>/;
+  // only the wallpaper theme is computed at run time, into current/theme.
+  property string themeName: "catppuccin"
+  readonly property string currentThemePath: themeName === "wallpaper"
+    ? stateHome + "/nomarchy/current/theme"
+    : Quickshell.shellDir + "/themes/" + themeName
 
   property color foreground: "#cacccc"
   property color background: "#101315"
@@ -232,12 +237,21 @@ QtObject {
     mergeShell()
   }
 
-  // Startup load only. Runtime theme switches push the payload explicitly
-  // through shell IPC.
+  property FileView themeNameFile: FileView {
+    id: themeNameFile
+    path: root.stateHome + "/nomarchy/current/theme.name"
+    watchChanges: true
+    onFileChanged: reload()
+    printErrors: false
+    onLoaded: root.themeName = String(text() || "").trim() || "catppuccin"
+    onLoadFailed: root.themeName = "catppuccin"
+  }
+
+  // Reloaded when the theme name changes (the path moves) or the file is rewritten.
   property FileView colorsFile: FileView {
     id: colorsFile
     path: root.currentThemePath + "/colors.toml"
-    // Windows port: tools	heme-apply.ps1 rewrites the files; reload when they change.
+    // The wallpaper theme rewrites these files; reload when they change.
     watchChanges: true
     onFileChanged: reload()
     printErrors: false

@@ -15,8 +15,8 @@ import "BarModel.js" as BarModel
 Item {
   id: root
 
-  // The nomarchy-shell host injects nomarchyPath from NOMARCHY_PATH.
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  // The port folder; the shell host also injects it.
+  property string nomarchyPath: Quickshell.shellDir
   // Injected by the host shell so bar slots can resolve enabled widgets.
   property var barWidgetRegistry: fallbackBarWidgetRegistry
   property int barWidgetRegistryRevision: 0
@@ -49,7 +49,7 @@ Item {
   // killing the entire shell. Hidden panels stay mapped but park off-screen
   // without an exclusion zone; updated by the FileView watcher further down.
   property bool barHidden: false
-  property string home: (Quickshell.env("HOME") || "")
+  property string home: Paths.home
   property string stateHome: home + "/.local/state"
   property string nomarchyConfigDir: home + "/.config/nomarchy"
   property var fallbackBarConfig: ({
@@ -66,7 +66,6 @@ Item {
   property bool glassy: false
   // The look the blur behind the bar was last synced for. A background set by
   // editing shell.json skips the CLI, so the bar syncs Hyprland's blur itself.
-  property string glassSyncedLook: ""
   // One bar surface exists per monitor and each reports into this count, so a
   // pointer crossing from one monitor's bar to another's stays counted however
   // the enter and leave interleave. A single shared bool would be left false by
@@ -628,36 +627,8 @@ Item {
   readonly property bool vertical: position === "left" || position === "right"
   readonly property int barSize: vertical ? Style.bar.sizeVertical : Style.bar.sizeHorizontal
 
-  // Display cutouts (a camera notch) the platform's own package describes in
-  // the fixed platform root, which no environment variable moves. Most machines
-  // have none. It is read as the shell starts (blockLoading), so a bar surface
-  // knows before it maps whether its screen may have one. See
-  // BarModel.parseCutouts.
-  // Read synchronously at startup (the FileView blocks loading, so the bar
-  // knows before it maps whether its screen may have a cutout), then kept
-  // current by its load handlers below. Binding this to the missing flag
-  // the handlers write — as it was — loops on every shell start.
-  property var displayCutouts: BarModel.parseCutouts(displayCutoutsFile.text())
-  FileView {
-    id: displayCutoutsFile
-
-    // A file that went away describes nothing, whatever text() still holds.
-    property bool missing: false
-
-    path: "/usr/share/nomarchy-platform/display-cutouts.json"
-    blockLoading: true
-    watchChanges: true
-    printErrors: false
-    onLoaded: {
-      missing = false
-      root.displayCutouts = BarModel.parseCutouts(text())
-    }
-    onLoadFailed: {
-      missing = true
-      root.displayCutouts = []
-    }
-    onFileChanged: reload()
-  }
+  // Display cutouts (a camera notch) come from a Linux platform package; Windows reports none.
+  readonly property var displayCutouts: []
 
   // The physical mode Hyprland reports for a screen, as hyprctl monitors does.
   // Qt's whole-number devicePixelRatio can't rebuild it at a fractional scale.
@@ -714,10 +685,6 @@ Item {
     // background, so a glassy one stays glassy until then rather than
     // flashing opaque. Once clear, transparent wins over a stale glassy.
     if (look !== "none") glassy = look === "glassy"
-    if (look !== glassSyncedLook) {
-      glassSyncedLook = look
-      Util.execDetached("nomarchy-bar sync-glass")
-    }
 
     // Each widget keeps its key while it stays in the layout, wherever it
     // moves and whatever its settings, so a config write builds just the
@@ -892,13 +859,15 @@ Item {
   function run(command: var): void {
     if (!command) return
 
-    Util.execDetached(command)
+    Quickshell.execDetached(["cmd.exe", "/c", String(command)])
   }
 
-  // Steps the bar background from clear to glassy to opaque and around. Through
-  // nomarchy-bar, which keeps Hyprland's blur behind a glassy bar in step.
+  // Steps the bar background from clear to glassy to opaque and around, saved in shell.json.
   function cycleBackground(): var {
-    Util.execDetached("nomarchy-bar background cycle")
+    var order = ["none", "glassy", "opaque"]
+    var look = BarModel.configBackground(BarModel.configObject(barConfig, fallbackBarConfig))
+    var next = order[(order.indexOf(look) + 1) % order.length]
+    BarModel.setBarBackground(shell, next)
   }
 
   function moduleDropAtScene(scenePoint: var, sourceSlot: var): var {
@@ -1231,17 +1200,15 @@ Item {
     transparentForegroundTimer.restart()
   }
 
+  // A clear bar has nothing behind it to sample on Windows, so its text keeps the theme color.
   function refreshTransparentForeground(): var {
-    if (!requestedTransparent || transparentForegroundProc.running) return
+    if (!requestedTransparent) return
 
-    transparentForegroundProc.command = [
-      "nomarchy-bar-text-color",
-      root.position,
-      String(root.barSize),
-      colorHex(root.themeForeground),
-      colorHex(root.themeContrastForeground)
-    ]
-    transparentForegroundProc.running = true
+    foregroundAnimationEnabled = false
+    transparentForeground = themeForeground
+    useTransparentForeground = true
+    transparent = true
+    restoreForegroundAnimation()
   }
 
   onRequestedTransparentChanged: scheduleTransparentForegroundRefresh()
@@ -1256,31 +1223,10 @@ Item {
     onTriggered: root.refreshTransparentForeground()
   }
 
-  Process {
-    id: transparentForegroundProc
-    stdout: SplitParser {
-      onRead: function(line: string): var {
-        var value = String(line || "").trim()
-        if (!/^#[0-9A-Fa-f]{6}$/.test(value)) return
-
-        root.foregroundAnimationEnabled = false
-        root.transparentForeground = value
-        if (root.requestedTransparent) {
-          root.useTransparentForeground = true
-          root.transparent = true
-        }
-        root.restoreForegroundAnimation()
-      }
-    }
-  }
-
-  // FileView also fires for any change in its path's parent directory, so watch
-  // a path inside current/: every plugin writes to ~/.local/state/nomarchy.
-  FileView {
-    path: root.stateHome + "/nomarchy/current/theme"
-    watchChanges: true
-    printErrors: false
-    onFileChanged: root.scheduleTransparentForegroundRefresh()
+  Connections {
+    target: Commons.Color
+    function onThemeNameChanged() { root.scheduleTransparentForegroundRefresh() }
+    function onShellValuesChanged() { root.scheduleTransparentForegroundRefresh() }
   }
 
   function runProcess(process: Process): void {
@@ -1323,19 +1269,19 @@ Item {
   }
 
   // Presence of the `bar-off` flag = bar hidden. Watching the parent toggles
-  // directory because FileView can't observe a file that doesn't exist yet,
-  // and the flag is created/removed by `nomarchy-toggle-bar`.
-  Process {
-    id: barHiddenProbe
-    running: true
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "[[ -f $HOME/.local/state/nomarchy/toggles/bar-off ]] && echo yes || echo no"]
-    stdout: SplitParser { onRead: function(line: string): var { root.barHidden = String(line).trim() === "yes" } }
+  // directory because FileView can't observe a file that doesn't exist yet.
+  FileView {
+    id: barHiddenFlag
+    path: root.stateHome + "/nomarchy/toggles/bar-off"
+    printErrors: false
+    onLoaded: root.barHidden = true
+    onLoadFailed: root.barHidden = false
   }
   FileView {
-    path: root.home + "/.local/state/nomarchy/toggles"
+    path: root.stateHome + "/nomarchy/toggles"
     watchChanges: true
     printErrors: false
-    onFileChanged: barHiddenProbe.running = true
+    onFileChanged: barHiddenFlag.reload()
   }
 
   // The directory watch can permanently stop delivering events after flag
@@ -1345,11 +1291,8 @@ Item {
   Commons.ShellIpc {
     target: "nomarchy.bar"
 
-    // Start rather than restart: a probe already in flight was launched by the
-    // directory watch after the flag flipped, so its answer is current, and
-    // killing it here can swallow the result entirely.
     function syncHidden(): void {
-      barHiddenProbe.running = true
+      barHiddenFlag.reload()
     }
   }
 
@@ -2841,7 +2784,7 @@ Item {
 
     Process {
       id: customProc
-      command: ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", String(customRoot.setting("exec", ""))]
+      command: ["cmd.exe", "/c", String(customRoot.setting("exec", ""))]
       stdout: StdioCollector {
         waitForEnd: true
         onStreamFinished: customRoot.update(text)

@@ -4,8 +4,7 @@
 param([int]$Seconds = 12, [string]$Prefix = 'win', [string[]]$Call, [string]$Bin = (Join-Path $PSScriptRoot '..\bin'))
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$env:HOME = Join-Path $root 'state\home'; $env:NOMARCHY_PATH = $root
-$env:QT_FORCE_STDERR_LOGGING = '1'; $env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH # Git's bash and find first: the shell runs bash scripts
+$env:QT_FORCE_STDERR_LOGGING = '1'
 Add-Type -AssemblyName System.Drawing
 Add-Type -TypeDefinition @'
 using System; using System.Collections.Generic; using System.Runtime.InteropServices;

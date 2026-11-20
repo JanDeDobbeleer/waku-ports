@@ -40,10 +40,10 @@ The launcher runs your installed engine (`$env:WAKU_EXE`, else `waku.exe` on `PA
 is hidden while it runs, windows are tiled and the key daemon starts when the port has a `keys.conf`. `stop.ps1` asks each
 waku to quit through its own `wakuc`, so the engine puts the taskbar back.
 
-What belongs to a port stays in the port: `<port>\tools\env.ps1` sets its environment variables and runs any
-pre-start step (Nomarchy applies its theme, Octalia points its config at `state\`), and may set `$PortFlags`
-(extra waku arguments). To add a port, add its folder, an `env.ps1`, and its name to the `ValidateSet` in
-`start.ps1`.
+What belongs to a port stays in the port. A port may have a `<port>\tools\env.ps1`, which sets its environment
+variables, runs any pre-start step (Octalia points its config at `state\`), and may set `$PortFlags` (extra waku
+arguments). Nomarchy needs none: it reads everything from its own folder. To add a port, add its folder and its name
+to the `ValidateSet` in `start.ps1`.
 
 ## Tiling and keys
 

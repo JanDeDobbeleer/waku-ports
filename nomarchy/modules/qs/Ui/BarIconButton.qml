@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import qs.Commons
 
 WidgetButton {
@@ -12,7 +11,7 @@ WidgetButton {
   readonly property real visualIconSize: Style.bar.iconSize
   readonly property real canvasSize: Math.max(visualIconSize, opticalSize)
   property string labelText: ""
-  property bool debugOpticalBounds: (Quickshell.env("NOMARCHY_DEBUG_BAR_ICONS") || "") === "1"
+  property bool debugOpticalBounds: false
   // A label shifts the icon within the centered group.
   readonly property real opticalCenterErrorX:
     content.x + opticalCanvas.x + (glyph.visible ? glyph.paintedCenterX : customIcon.width / 2 + customIcon.centerErrorX) - root.width / 2

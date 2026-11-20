@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Basic
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import qs.Ui
@@ -134,73 +133,11 @@ Panel {
   property var displayAudioSources: []
   property var displayAudioStreams: []
 
-  // A DSP sink -- a speaker tuning, or EasyEffects -- can be the selected output
-  // without being where loudness lives: changing its volume alters the level going
-  // *into* the processing, so the slider would move while the speakers did not,
-  // and on a chain with a limiter it would change the tone as well.
-  //
-  // nomarchy-audio-output-sink resolves the *current* default output through any
-  // such sink to the physical one, which is the same definition the volume keys
-  // and the output switcher use. Resolving the default (rather than "whatever a
-  // tuning fronts") is what keeps this correct when headphones or HDMI are
-  // selected while a tuning still exists.
-  property string volumeSinkName: ""
+  // The default output is the volume sink.
+  readonly property PwNode volumeSink: sink
 
   // Carry sub-notch touchpad deltas between wheel events.
   property real wheelAccumulator: 0
-
-  readonly property PwNode volumeSink: {
-    if (volumeSinkName === "" || !sink) return sink
-    if (volumeSinkName === String(Dynamic.value(sink, "name"))) return sink
-    for (let i = 0; i < Dynamic.value(nodes, "length"); i++) {
-      let n = nodes[i]
-      if (n && n.isSink && !n.isStream && String(Dynamic.value(n, "name")) === volumeSinkName && Dynamic.value(n, "audio"))
-        return n as PwNode
-    }
-    return sink
-  }
-
-  // Re-resolve whenever the selected output changes, and when nodes or links
-  // come and go: a tuning being applied or removed underneath us, or a DSP sink
-  // rerouted to another output, shows up as exactly that.
-  onSinkChanged: resolveVolumeSink()
-  onNodesChanged: volumeSinkResolveTimer.restart()
-
-  Connections {
-    target: Pipewire.linkGroups
-    function onValuesChanged() { volumeSinkResolveTimer.restart() }
-  }
-
-  property bool volumeSinkStale: false
-  // Bumped by every resolve, so a script read still running from before cannot
-  // overwrite a newer answer, the hardware fast path's included.
-  property int volumeSinkGeneration: 0
-  property int volumeSinkRequest: -1
-
-  function resolveVolumeSink(): void {
-    volumeSinkGeneration++
-    // A hardware output is its own volume sink, as nomarchy-audio-output-sink
-    // reports without looking further, so only a DSP sink needs the script.
-    if (!sink || String(Dynamic.value(sink, "name")) !== "") {
-      volumeSinkName = sink ? String(Dynamic.value(sink, "name")) : ""
-      return
-    }
-    if (volumeSinkProc.running) {
-      volumeSinkStale = true
-      return
-    }
-    volumeSinkRequest = volumeSinkGeneration
-    volumeSinkProc.running = true
-  }
-
-  // An idle EasyEffects is resolved through its configured output device, which
-  // changes without touching the Pipewire graph.
-  FileView {
-    path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/easyeffects/db/easyeffectsrc"
-    watchChanges: true
-    printErrors: false
-    onFileChanged: volumeSinkResolveTimer.restart()
-  }
 
   readonly property real outputVolume: volumeSink && Dynamic.value(volumeSink, "audio") ? Dynamic.value(Dynamic.value(volumeSink, "audio"), "volume") : 0
   readonly property bool outputMuted: volumeSink && Dynamic.value(volumeSink, "audio") ? Dynamic.value(Dynamic.value(volumeSink, "audio"), "muted") : false
@@ -557,26 +494,11 @@ Panel {
   function setDefaultSink(node: var): void {
     if (!node) return
     Pipewire.preferredDefaultAudioSink = node
-    if (Dynamic.value(node, "id") !== undefined && Dynamic.value(node, "name")) {
-      Quickshell.execDetached([
-        "nomarchy-audio-output-set-default",
-        String(Dynamic.value(node, "id")),
-        String(Dynamic.value(node, "name"))
-      ])
-    }
   }
 
   function setDefaultSource(node: var): void {
     if (!node) return
-    // Quickshell refuses an untyped node; the command below still selects it.
     if (Dynamic.value(node, "audio")) Pipewire.preferredDefaultAudioSource = node
-    if (Dynamic.value(node, "id") !== undefined && Dynamic.value(node, "name")) {
-      Quickshell.execDetached([
-        "nomarchy-audio-input-set-default",
-        String(Dynamic.value(node, "id")),
-        String(Dynamic.value(node, "name"))
-      ])
-    }
   }
 
   function sinkAvailable(node: var): bool {
@@ -679,35 +601,6 @@ Panel {
   // Windows reports no per-port availability (Linux reads it from the ALSA
   // jacks), so sinkAvailability and sourceAvailability stay empty and every
   // device counts as available.
-
-  Process {
-    id: volumeSinkProc
-    command: ["nomarchy-audio-output-sink"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        if (root.volumeSinkRequest === root.volumeSinkGeneration) root.volumeSinkName = String(text).trim()
-      }
-    }
-    onExited: {
-      if (!root.volumeSinkStale) return
-      root.volumeSinkStale = false
-      // Deferred: the process still reports running while it signals exit.
-      Qt.callLater(root.resolveVolumeSink)
-    }
-  }
-
-  // Runs whether or not the panel is open: the bar shows and scrolls the output
-  // volume too, so an unresolved sink there would read and change the virtual
-  // tuning sink instead of the speakers. Streams starting and stopping also
-  // change the graph, so a burst of changes resolves once.
-  Timer {
-    id: volumeSinkResolveTimer
-    interval: 500
-    onTriggered: root.resolveVolumeSink()
-  }
-
-  Component.onCompleted: root.resolveVolumeSink()
 
   Timer {
     id: audioModelRefreshTimer

@@ -1,40 +1,22 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import qs.Commons
 import waku.services
 import "AppSearch.js" as AppSearch
 
-// Shared desktop-application library: the sorted entry list with hidden-entry
-// filtering, the icon fallback index, launch feedback, and entry removal.
-// Injected as shell.appLibrary; the menu's Apps submenu is the consumer.
+// Shared application library: the engine's Start-menu list, filtered by the hide list in
+// default/nomarchy/launcher.hides. Injected as shell.appLibrary; the menu's Apps submenu is the
+// consumer.
 Item {
   id: root
 
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  property string nomarchyPath: Quickshell.shellDir
 
   property var configuredHiddenEntryIds: ({})
-  property var desktopHiddenEntryIds: ({})
 
-  // Maps an icon name to a file on disk (e.g. "omacut" -> ".../apps/omacut.svg").
-  // Used as a fallback for icons that Qt's themed lookup misses because they were
-  // installed after this process started (its icon cache never re-scans). Refreshed
-  // whenever the app list changes, so newly installed apps get their icon live.
-  property var iconIndex: ({})
-  property var pendingIconIndex: ({})
-
-  property int launchSerial: 0
-  property int launchToplevelCount: 0
-  property var launchActiveToplevel: null
-  // True while the launch OSD is on screen. It outlives the launch that opened
-  // it: the OSD shows with duration 0, so only closeLaunchFeedback() takes it
-  // down.
-  property bool launchOsdOpen: false
-  property string launchOsdMessage: ""
-
-  // Emitted whenever the visible application set may have changed: desktop
-  // entries appeared or vanished, or the hidden-entry filters reloaded.
+  // Emitted whenever the visible application set may have changed: apps appeared or vanished,
+  // or the hide list reloaded.
   signal appsChanged()
 
   function entryName(entry: var): string {
@@ -47,7 +29,7 @@ Item {
 
   function isHiddenEntry(entry: var): bool {
     var id = String(AppSearch.entryId(entry) || "")
-    return root.configuredHiddenEntryIds[id] === true || root.desktopHiddenEntryIds[id] === true
+    return root.configuredHiddenEntryIds[id] === true
   }
 
   function sortedEntries(query: string): var {
@@ -59,57 +41,22 @@ Item {
     var value = String(icon || "")
     if (value.length === 0) return Quickshell.iconPath("application-x-executable", true)
     if (value.indexOf("file://") === 0 || value.indexOf("image://") === 0) return value
-    if (value.charAt(0) === "/") return Util.fileUrl(value)
-    // Prefer the context-limited app/device index. An unconstrained themed
-    // lookup can resolve an app name such as "zoom" to an action icon instead.
-    var found = root.iconIndex[value]
-    if (found) return Util.fileUrl(found)
+    if (value.charAt(0) === "/" || /^[A-Za-z]:[\\/]/.test(value)) return Util.fileUrl(value)
     var themed = Quickshell.iconPath(value, true)
     if (themed.length > 0) return themed
     return Quickshell.iconPath("application-x-executable", true)
   }
 
-  // The shell may start before first-install packages have finished placing
-  // their icons; consumers call this when they open so icons appear live.
+  // Consumers call this when they open; the engine keeps its own icons current.
   function refreshIcons(): void {
-    if (!iconIndexScan.running) iconIndexScan.running = true
   }
 
+  // The engine's entry starts itself: an exe, a UWP app or a shortcut.
   function launch(desktopId: string, name: string): void {
     var id = String(desktopId || "")
     if (!id) return
-    root.beginLaunchFeedback(name)
-    // Windows port: the engine's DesktopEntry knows how to start itself (exe, UWP, shortcut).
-    var winEntry = DesktopEntries.byId(id)
-    if (winEntry && typeof winEntry.execute === "function") {
-      winEntry.execute()
-      return
-    }
-    // A terminal app goes through Nomarchy's TUI launcher, which names its
-    // terminal window after the command (org.nomarchy.nvim), so the dock and
-    // titlebars can tell Neovim from the terminal it runs in.
-    var command = root.terminalCommand(DesktopEntries.byId(id))
-    if (AppSearch.arrayLength(command) > 0) {
-      Util.execDetached("nomarchy-launch-tui " + command.map(function(word: var): string { return Util.shellQuote(word) }).join(" "))
-      return
-    }
-    // Start gtk-launch inside a scope under app-graphical.slice so apps do not
-    // inherit wayland-wm@.service. Keeping gtk-launch as the desktop-entry
-    // resolver supports IDs with spaces and entries that UWSM rejects.
-    // Keep the .desktop suffix or ids like org.telegram.desktop won't resolve.
-    Util.execDetached("uwsm-app -- gtk-launch " + Util.shellQuote(id + ".desktop"))
-  }
-
-  // The command a terminal entry runs, without the field codes it leaves for a
-  // launcher to fill in; empty for an entry that is not run in a terminal.
-  function terminalCommand(entry: var): var {
-    return AppSearch.terminalCommand(entry)
-  }
-
-  function remove(desktopId: string, name: string): void {
-    var id = String(desktopId || "")
-    if (!id) return
-    Util.execDetached(Util.shellQuote(root.nomarchyPath + "/bin/nomarchy-remove-launcher-entry") + " " + Util.shellQuote(id) + " " + Util.shellQuote(String(name || id)))
+    var entry = DesktopEntries.byId(id)
+    if (entry && typeof entry.execute === "function") entry.execute()
   }
 
   function normalizeDesktopId(id: string): string {
@@ -129,115 +76,6 @@ Item {
     root.appsChanged()
   }
 
-  function loadDesktopHiddenEntries(rawText: string): void {
-    var next = ({})
-    var lines = String(rawText || "").split(/\n/)
-    for (let i = 0; i < lines.length; i++) {
-      let id = root.normalizeDesktopId(lines[i])
-      if (id.length > 0) next[id] = true
-    }
-    root.desktopHiddenEntryIds = next
-    root.appsChanged()
-  }
-
-  function iconIndexScanCommand(): string {
-    // List app/device icons across the XDG icon dirs and /usr/share/pixmaps as
-    // "<path>" lines. Some desktop entries, such as Print Settings, use device
-    // icons like "printer" instead of app icons. SVGs are emitted before PNGs
-    // so the parser, which keeps the first hit per name, prefers scalable icons.
-    return [
-      'dirs="$HOME/.icons $HOME/.local/share/icons";',
-      'IFS=":"; for d in ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do dirs="$dirs $d/icons"; done; unset IFS;',
-      '{',
-      '  for base in $dirs; do',
-      '    [[ -d $base ]] && find "$base" \\( -path "*/apps/*" -o -path "*/devices/*" \\) \\( -name "*.svg" -o -name "*.png" \\) 2>/dev/null;',
-      '  done;',
-      '  find /usr/share/pixmaps -maxdepth 1 \\( -name "*.svg" -o -name "*.png" \\) 2>/dev/null;',
-      '} | awk \'/\\.svg$/ { print; next } { png[++n] = $0 } END { for (i = 1; i <= n; i++) print png[i] }\''
-    ].join(' ')
-  }
-
-  function indexIconLine(path: string): void {
-    var value = String(path || "").trim()
-    if (value.length === 0) return
-    var slash = value.lastIndexOf("/")
-    var file = slash >= 0 ? value.slice(slash + 1) : value
-    var dot = file.lastIndexOf(".")
-    var name = dot > 0 ? file.slice(0, dot) : file
-    if (name.length > 0 && root.pendingIconIndex[name] === undefined)
-      root.pendingIconIndex[name] = value
-  }
-
-  function hiddenEntryScanCommand(): string {
-    var desktop = [(Quickshell.env("XDG_CURRENT_DESKTOP") || ""), (Quickshell.env("XDG_SESSION_DESKTOP") || ""), (Quickshell.env("DESKTOP_SESSION") || "")].filter(function(v: var): bool { return String(v || "").length > 0 }).join(":")
-    var script = root.nomarchyPath + "/services/hidden-entries.sh"
-    return Util.shellQuote(script) + " " + Util.shellQuote(desktop)
-  }
-
-  function toplevelCount(): int {
-    return AppSearch.safeCount(ToplevelManager.toplevels.values)
-  }
-
-  function beginLaunchFeedback(name: string): void {
-    root.launchSerial++
-    root.launchToplevelCount = root.toplevelCount()
-    root.launchActiveToplevel = ToplevelManager.activeToplevel
-    root.launchOsdMessage = name ? I18n.t("appLibrary.launching").arg(String(name)) : I18n.t("appLibrary.launchingApp")
-    launchDelay.restart()
-    launchTimeout.restart()
-  }
-
-  function closeLaunchFeedback(serial: int): void {
-    if (serial !== root.launchSerial) return
-    launchDelay.stop()
-    launchTimeout.stop()
-    if (root.launchOsdOpen) {
-      Quickshell.execDetached(["nomarchy-shell", "osd", "close"])
-      root.launchOsdOpen = false
-    }
-  }
-
-  function maybeFinishLaunchFeedback(): void {
-    if (!launchDelay.running && !launchTimeout.running && !root.launchOsdOpen) return
-    if (root.toplevelCount() <= root.launchToplevelCount && ToplevelManager.activeToplevel === root.launchActiveToplevel) return
-    root.closeLaunchFeedback(root.launchSerial)
-  }
-
-  QtObject {
-    id: hiddenEntryOutput
-    property string text: ""
-  }
-
-  // Both scans must run in non-login shells. A login shell sources the user's
-  // profile, and tools like mise touch ~/.local/share on activation — a
-  // directory the desktop-entry watcher monitors — so every scan would
-  // trigger the next one, pinning a core at idle.
-  Process {
-    id: hiddenEntryScan
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", root.hiddenEntryScanCommand()]
-    stdout: SplitParser { onRead: function(line) { hiddenEntryOutput.text += line + "\n" } }
-    onStarted: hiddenEntryOutput.text = ""
-    onExited: root.loadDesktopHiddenEntries(hiddenEntryOutput.text)
-  }
-
-  Process {
-    id: iconIndexScan
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", root.iconIndexScanCommand()]
-    stdout: SplitParser { onRead: function(line) { root.indexIconLine(line) } }
-    onStarted: root.pendingIconIndex = ({})
-    // Swapping the property re-evaluates every iconSource() binding, so
-    // newly found icons appear without rebuilding the list.
-    onExited: root.iconIndex = root.pendingIconIndex
-  }
-
-  // Coalesces bursts of app-list changes (a package install touches many
-  // entries) into a single rescan.
-  Timer {
-    id: iconIndexDebounce
-    interval: 750
-    onTriggered: if (!iconIndexScan.running) iconIndexScan.running = true
-  }
-
   FileView {
     path: root.nomarchyPath + "/default/nomarchy/launcher.hides"
     watchChanges: true
@@ -248,43 +86,10 @@ Item {
   }
 
   Connections {
-    target: ToplevelManager.toplevels
-    function onValuesChanged() { root.maybeFinishLaunchFeedback() }
-  }
-
-  Connections {
-    target: ToplevelManager
-    function onActiveToplevelChanged() { root.maybeFinishLaunchFeedback() }
-  }
-
-  Timer {
-    id: launchDelay
-    interval: 2000
-    onTriggered: {
-      if (root.toplevelCount() > root.launchToplevelCount || ToplevelManager.activeToplevel !== root.launchActiveToplevel) return
-      root.launchOsdOpen = true
-      Quickshell.execDetached(["nomarchy-shell", "osd", "show", JSON.stringify({ icon: "󱓞", message: root.launchOsdMessage, duration: 0 })])
-    }
-  }
-
-  Timer {
-    id: launchTimeout
-    interval: 15000
-    onTriggered: root.closeLaunchFeedback(root.launchSerial)
-  }
-
-  Connections {
     target: DesktopEntries.applications
-    function onValuesChanged() {
-      hiddenEntryScan.running = true
-      iconIndexDebounce.restart()
-      root.appsChanged()
-    }
+    function onValuesChanged() { root.appsChanged() }
   }
 
-  Component.onCompleted: {
-    // Windows port: the Start-menu scan starts only on request; the hidden-entry and icon-index
-    // scans read XDG folders that do not exist here.
-    AppsService.refresh()
-  }
+  // The Start-menu scan starts only on request.
+  Component.onCompleted: AppsService.refresh()
 }

@@ -381,6 +381,10 @@ function localizedDayName(dateString, locale, format) {
 }
 
 
+function writeText(receiver, text) {
+  if (receiver && typeof receiver.setText === "function") receiver.setText(text)
+}
+
 function invoke(receiver, method) {
   if (receiver && typeof receiver[method] === "function") receiver[method]()
 }
