@@ -2,7 +2,6 @@
 
 // Generated from the plugin manifests; the manifests themselves are gone. `dir` is relative to plugins/.
 var manifests = [
-  {"dir":"background","manifest":{"schemaVersion":1,"id":"nomarchy.background","name":"Background","version":"1.0.0","author":"Nomarchy","description":"Desktop background renderer with click handling and transitions","kinds":["service"],"entryPoints":{"service":"Background.qml"}}},
   {"dir":"bar","manifest":{"schemaVersion":1,"id":"nomarchy.bar","name":"Bar","version":"1.0.0","author":"Nomarchy","description":"Status bar with widgets","kinds":["bar"],"entryPoints":{"bar":"Bar.qml"}}},
   {"dir":"bar/widgets","manifest":{"schemaVersion":1,"id":"nomarchy.active-window","name":"Active window","version":"1.0.0","author":"Nomarchy","description":"Title of the focused window","kinds":["bar-widget"],"entryPoints":{"barWidget":"ActiveWindow.qml"},"barWidget":{"displayName":"Active window","description":"Title of the focused window","category":"Compositor","allowMultiple":false,"defaultSection":"left"}}},
   {"dir":"bar/widgets","manifest":{"schemaVersion":1,"id":"nomarchy.apps","name":"Apps","version":"1.0.0","author":"Nomarchy","description":"Running applications, one icon per program","kinds":["bar-widget"],"entryPoints":{"barWidget":"Apps.qml"},"barWidget":{"displayName":"Apps","description":"Running applications, one icon per program","category":"Compositor","allowMultiple":false}}},

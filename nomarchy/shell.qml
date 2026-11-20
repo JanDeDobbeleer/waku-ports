@@ -30,8 +30,6 @@ ShellRoot {
   property AppLibrary appLibrary: AppLibrary { }
   property BrightnessKeys brightnessKeys: BrightnessKeys { host: shell }
   property WallpaperTheme wallpaperTheme: WallpaperTheme {}
-  property BackgroundIntro bootIntro: BackgroundIntro { host: shell }
-  property BackgroundSwitch backgroundSwitch: BackgroundSwitch { intro: shell.bootIntro }
 
   property string home: Paths.home
 
@@ -1150,64 +1148,11 @@ ShellRoot {
   Commons.ShellIpc {
     target: "shell"
 
-    function prepareThemeIntro(fromPath: string, token: string, colorsB64: string, shellB64: string): void {
-      shell.bootIntro.prepareTheme(fromPath, token, colorsB64, shellB64)
-    }
-
-    // A theme switch whose cover is up hands the rest over: the still, the
-    // intro if there is one, the reveal and Hyprland's reload.
-    function playThemeIntro(token: string, stillPath: string, introPath: string, prepared: string): string {
-      return shell.backgroundSwitch.play(token, stillPath, introPath, prepared)
-    }
-
-    // nomarchy-theme-bg-set's change, with the intro it found or none.
-    function switchBackground(path: string, introPath: string): string {
-      return shell.backgroundSwitch.switchTo(path, introPath)
-    }
-
-    // What the latest background selection names, ahead of the link while
-    // its change is still queued or setting up.
-    function selectedBackground(): string {
-      return shell.backgroundSwitch.selected()
-    }
-
-    // A cover is up or revealing, so the screen does not yet show a frame a
-    // new switch could capture as its own outgoing cover.
-    function themeIntroBusy(): string {
-      return shell.backgroundSwitch.busy ? "pending" : "ready"
-    }
-
-    function themeIntroStatus(token: string): string {
-      return shell.bootIntro.themeStatus(token)
-    }
-
-    function themeIntroCoverStatus(token: string): string {
-      return shell.bootIntro.themeCoverStatus(token)
-    }
-
     function wallpaperTheme(): string {
       return shell.wallpaperTheme.request(true)
     }
 
     function ping(): string {
-      return "ok"
-    }
-
-    function applyTheme(colorsB64: string, shellB64: string): string {
-      if (shell.bootIntro) shell.bootIntro.cancelTheme()
-      var background = shell.firstPartyServiceFor("nomarchy.background")
-      if (background && typeof background.setPendingTheme === "function" && typeof background.applyPendingTheme === "function") {
-        background.setPendingTheme(colorsB64, shellB64)
-        background.applyPendingTheme()
-        return "ok"
-      }
-      var colorsRaw = ""
-      var shellRaw = ""
-      try { colorsRaw = Qt.atob(String(colorsB64 || "")) } catch (e) { colorsRaw = "" }
-      try { shellRaw = Qt.atob(String(shellB64 || "")) } catch (e2) { shellRaw = "" }
-      Commons.Color.loadColors(colorsRaw)
-      Commons.Color.loadShell(shellRaw)
-      Style.scheduleRefresh()
       return "ok"
     }
 
