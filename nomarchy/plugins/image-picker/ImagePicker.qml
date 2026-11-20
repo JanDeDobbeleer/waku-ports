@@ -46,14 +46,9 @@ Item {
   property string themeRows: ""
   property bool themeMode: false
   property bool wallpaperMode: false
-  readonly property string gitFind: "C:/Program Files/Git/usr/bin/find.exe"
   readonly property string home: Paths.home.replace(/\\/g, "/")
   readonly property string portPath: String(root.nomarchyPath).replace(/\\/g, "/")
   property bool themeOpenPending: false
-  property bool awaitingDeleteRefresh: false
-  property string pendingDeleteTheme: ""
-  property string deleteSelectionPath: ""
-  property bool deleteConfirmOpen: false
   // Bound to the central [image-picker] section in shell.toml via Commons.Color.qml.
   // `dimColor` tints unselected slices and text outlines against the desktop
   // behind the picker; it intentionally tracks the foundational background,
@@ -73,17 +68,13 @@ Item {
   readonly property int previewRadius: Math.max(1, Math.min(16, Math.ceil((panel.width - expandedWidth) / (2 * (sliceWidth + sliceSpacing))) + 1))
   onPreviewRadiusChanged: updateVisibleItems()
 
-  onOpenedChanged: if (!opened) { layoutSettled = false; renderedFrames = 0; deleteConfirmOpen = false; pendingDeleteTheme = ""; deleteSelectionPath = ""; awaitingDeleteRefresh = false }
+  onOpenedChanged: if (!opened) { layoutSettled = false; renderedFrames = 0 }
 
   PreviewHold {
     id: previewHold
     active: root.opened
     // The selected preview decodes first again on the next open.
     onHeldChanged: if (!held) root.neighborImagesEnabled = false
-  }
-
-  function scriptPath(name: var): var {
-    return nomarchyPath + "/plugins/image-picker/" + name
   }
 
   function focusPicker(): var {
@@ -182,13 +173,17 @@ Item {
     }
   }
 
+  // A request is finished by creating its done file.
   function releaseNextDoneFile(): var {
-    if (releaseProc.running || doneFilesToRelease.length === 0) return
-
-    var path = doneFilesToRelease.shift()
-    releaseProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", ": > " + Util.shellQuote(path)]
-    releaseProc.running = true
+    while (doneFilesToRelease.length > 0) {
+      releaseFile.path = doneFilesToRelease.shift()
+      releaseFile.setText("")
+    }
   }
+
+  FileView { id: releaseFile; printErrors: false }
+  FileView { id: selectionFile_; printErrors: false }
+  FileView { id: doneApplyFile; printErrors: false }
 
   function finishDoneFile(path: var): var {
     if (!path) return
@@ -197,7 +192,6 @@ Item {
   }
 
   function applySelected(): var {
-    if (themeMode && (deleteThemeProc.running || awaitingDeleteRefresh)) return
     var path = currentPath()
 
     if (themeMode) {
@@ -226,8 +220,12 @@ Item {
     selectionFile = ""
     doneFile = ""
 
-    applyProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "printf '%s\\n' " + Util.shellQuote(path) + " > " + Util.shellQuote(activeSelectionFile) + "; : > " + Util.shellQuote(activeDoneFile)]
-    applyProc.running = true
+    // The selection first, then the done file: a reader waits for the done file.
+    selectionFile_.path = activeSelectionFile
+    selectionFile_.setText(String(path) + "\n")
+    doneApplyFile.path = activeDoneFile
+    doneApplyFile.setText("")
+    if (root.applySerial === root.requestSerial) root.opened = false
   }
 
   function cancel(): var {
@@ -281,10 +279,6 @@ Item {
   }
 
   function openSelector(nextImageDirs: var, nextImageRows: var, nextSelectedImage: var, nextSelectionFile: var, nextDoneFile: var, nextShowLabels: var, nextFilterable: var): var {
-    deleteConfirmOpen = false
-    pendingDeleteTheme = ""
-    deleteSelectionPath = ""
-    awaitingDeleteRefresh = false
     if (requestActive && doneFile && doneFile !== nextDoneFile)
       finishDoneFile(doneFile)
 
@@ -339,29 +333,7 @@ Item {
   property list<var> imageArray: []
   readonly property var matchingImageIndices: ImagePickerModel.matchingIndices(imageArray, filterText)
   onMatchingImageIndicesChanged: updateVisibleItems()
-  onSelectedIndexChanged: {
-    updateVisibleItems()
-    introPrepareTimer.restart()
-  }
-  onThemeModeChanged: if (themeMode) introPrepareTimer.restart()
-
-  Timer {
-    id: introPrepareTimer
-    interval: 75
-    onTriggered: {
-      if (false) { // Windows port: nomarchy-theme-bg-boot-intro does not exist
-        introPrepare.theme = root.nameForPath(root.currentPath())
-        introPrepare.command = ["nomarchy-theme-bg-boot-intro", "--prepare-theme", root.nameForPath(root.currentPath())]
-        introPrepare.running = true
-      }
-    }
-  }
-
-  Process {
-    id: introPrepare
-    property string theme: ""
-    onExited: if (root.opened && root.themeMode && theme !== root.nameForPath(root.currentPath())) introPrepareTimer.restart()
-  }
+  onSelectedIndexChanged: updateVisibleItems()
 
   function updateVisibleItems(): var {
     ImagePickerModel.syncWindow(visibleImages, ImagePickerModel.visibleWindow(matchingImageIndices, selectedIndex, previewRadius))
@@ -459,8 +431,8 @@ Item {
 
   function scanWallpapers(): var {
     if (wallpaperRowsProc.running) return
-    wallpaperRowsProc.command = [root.gitFind, root.wallpaperDir(), "-maxdepth", "2", "-type", "f", "(",
-      "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", "-o", "-iname", "*.bmp", ")"]
+    wallpaperRowsProc.command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+      root.portPath + "/tools/list-images.ps1", root.wallpaperDir().replace(/\//g, "\\")]
     wallpaperRowsProc.running = true
   }
 
@@ -513,35 +485,6 @@ Item {
     return nameForPath(currentPath())
   }
 
-  function canDeleteSelectedTheme(): bool {
-    return false // Windows port: nomarchy-theme-remove does not exist
-  }
-
-  function requestDeleteSelectedTheme(): var {
-    if (!canDeleteSelectedTheme()) return
-    pendingDeleteTheme = selectedThemeName()
-    deleteConfirm.selectedIndex = 1
-    deleteConfirmOpen = true
-  }
-
-  function cancelDeleteTheme(): var {
-    deleteConfirmOpen = false
-    pendingDeleteTheme = ""
-  }
-
-  // Removal itself is nomarchy-theme-remove's job (including its guards and
-  // notification); the picker only refreshes its rows once it finishes.
-  function confirmDeleteTheme(): var {
-    var name = pendingDeleteTheme
-    deleteConfirmOpen = false
-    pendingDeleteTheme = ""
-    if (!name || deleteThemeProc.running) return
-    // Keep the user's place in the list once the deleted theme is gone.
-    if (name === selectedThemeName()) deleteSelectionPath = ImagePickerModel.replacementSelectionPath(imageArray, selectedIndex, filterText)
-    deleteThemeProc.command = ["nomarchy-theme-remove", name]
-    deleteThemeProc.running = true
-  }
-
   function updateThemeRows(rows: var): var {
     var changed = rows !== themeRows
     themeRows = rows
@@ -550,12 +493,9 @@ Item {
       themeOpenPending = false
       if (rows) openThemeRows()
     } else if (changed && rows && themeMode && opened) {
-      // A theme was added or removed since the rows were last read. Keep the
-      // user's place in the carousel rather than jumping back to the current;
-      // a just-deleted selection lands on the theme before it.
-      selectedImage = deleteSelectionPath || currentPath() || currentThemePreview()
-      deleteSelectionPath = ""
-      awaitingDeleteRefresh = false
+      // The list changed since the rows were last read. Keep the user's place in the carousel
+      // rather than jumping back to the current theme.
+      selectedImage = currentPath() || currentThemePreview()
       imageRows = rows
       loadRows(rows, false)
     }
@@ -565,15 +505,6 @@ Item {
     id: themeNameFile
     path: root.stateHome + "/nomarchy/current/theme.name"
     printErrors: false
-  }
-
-  Process {
-    id: deleteThemeProc
-    onExited: function(exitCode: int): var {
-      if (exitCode === 0) root.awaitingDeleteRefresh = true
-      else root.deleteSelectionPath = ""
-      root.refreshThemeRows()
-    }
   }
 
   Component.onCompleted: refreshThemeRows()
@@ -588,7 +519,8 @@ Item {
     loadImagesProc.activeSerial = serial
     loadImagesProc.queuedSerial = 0
     loadImagesProc.queuedDirs = ""
-    loadImagesProc.command = [root.scriptPath("list.sh"), dirs]
+    loadImagesProc.command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+      root.portPath + "/tools/list-images.ps1", String(dirs).split("\n")[0].replace(/\//g, "\\")]
     loadImagesProc.running = true
   }
 
@@ -609,7 +541,7 @@ Item {
       waitForEnd: true
       onStreamFinished: {
         if (loadImagesProc.activeSerial === root.requestSerial)
-          root.loadRows(String(text || ""), true)
+          root.loadRows(ImagePickerModel.normalizedLines(text).join("\n"), true)
       }
     }
     onExited: {
@@ -692,19 +624,6 @@ Item {
     }
   }
 
-  Process {
-    id: applyProc
-    onExited: {
-      if (root.applySerial === root.requestSerial)
-        root.opened = false
-    }
-  }
-
-  Process {
-    id: releaseProc
-    onExited: root.releaseNextDoneFile()
-  }
-
   OverlayWindow {
     id: panel
     shown: root.opened
@@ -763,10 +682,6 @@ Item {
 
           Keys.priority: Keys.BeforeItem
           Keys.onPressed: function(event: KeyEvent): var {
-            if (root.deleteConfirmOpen) {
-              if (deleteConfirm.handleKey(event)) event.accepted = true
-              return
-            }
             // Nothing is visible before the reveal: only let the user back
             // out, never filter into a dead end or apply an unseen pick.
             if (!root.layoutSettled) {
@@ -785,9 +700,6 @@ Item {
               event.accepted = true
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
               root.applySelected()
-              event.accepted = true
-            } else if (event.key === Qt.Key_Delete && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
-              root.requestDeleteSelectedTheme()
               event.accepted = true
             } else if (root.filterable && Util.editsFilter(event, root.filterText)) {
               root.updateFilter(Util.editedFilter(event, root.filterText))
@@ -964,21 +876,6 @@ Item {
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
         }
-    }
-
-    // Unlike the picker itself, the confirmation keeps the faded backdrop:
-    // a destructive choice should take over the screen.
-    ConfirmDialog {
-      id: deleteConfirm
-      anchors.fill: parent
-      opened: root.deleteConfirmOpen
-      z: 10
-      message: I18nModel.translate(Commons.I18n, "imagePicker.deleteTheme").arg(root.pendingDeleteTheme ? root.labelForPath(root.pendingDeleteTheme) : "")
-      confirmText: I18nModel.translate(Commons.I18n, "common.delete")
-      background: root.dimColor
-      foreground: root.foreground
-      onCanceled: root.cancelDeleteTheme()
-      onConfirmed: root.confirmDeleteTheme()
     }
   }
 }

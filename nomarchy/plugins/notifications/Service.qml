@@ -1104,8 +1104,7 @@ Item {
     var row = at >= 0 ? toasts.get(at) : null
     var argv = Security.parseExecArgv(row ? row.execArgv : "")
     if (argv) {
-      // Detached through bash positional parameters, never a shell string, and
-      // outliving the shell, which installer toasts restart on their first act.
+      // Detached as an argument vector, never a shell string, and outliving the shell, which installer toasts restart on their first act.
       Util.execArgv(argv)
       closeToast(key, "activated", instant)
       return
@@ -1120,7 +1119,6 @@ Item {
       else if (Markup.hostname(row.source))
         Security.openExternalUrl("https://" + Markup.hostname(row.source) + "/")
       else if (String(row.link || "")) Security.openExternalUrl(String(row.link))
-      else if (String(row.app || "")) Util.execArgv(["nomarchy-hyprland-focus-app", String(row.app)])
     }
     closeToast(key, "activated", instant)
   }
@@ -1341,24 +1339,8 @@ Item {
     onLoadFailed: service.loadQuiet("")
   }
 
-  // Once at startup: the private directory and its files. Older layouts'
-  // leftovers are removed by a migration.
-  Process {
-    id: storePrepare
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c",
-      "umask 077\n" +
-      "dir=$1\n" +
-      "mkdir -p -- \"$dir\" && chmod 700 -- \"$dir\" || exit 1\n" +
-      "for name in live.json history.json quiet.json; do\n" +
-      "  file=$dir/$name\n" +
-      "  if [[ -L $file ]]; then rm -f -- \"$file\"; fi\n" +
-      "  if [[ -f $file ]]; then chmod 600 -- \"$file\"; elif [[ ! -e $file ]]; then : >\"$file\"; fi\n" +
-      "done\n",
-      "nomarchy-notifications-state", service.stateDir]
-    onExited: function(code) { service.storeReady = code === 0 }
-  }
-
-  Component.onCompleted: storePrepare.running = true
+  // The state folder and its files are created by the first write: FileView makes missing parents.
+  Component.onCompleted: service.storeReady = true
   // A reload or a clean exit inside the save delay still writes.
   Component.onDestruction: flushStore()
 

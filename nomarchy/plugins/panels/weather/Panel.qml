@@ -72,8 +72,8 @@ Panel {
   property var report: null
   property var dailyForecastReport: null
 
-  // Configured location, read from the weather.json state file (owned by
-  // nomarchy-weather-location). The watch makes hand edits take effect live.
+  // Configured location, read from the weather.json state file. The watch makes hand edits take
+  // effect live.
   property var configuredLocationState: ({ name: "", latitude: null, longitude: null })
   readonly property string configuredLocation: String(Model.field(configuredLocationState, "name") || "")
 
@@ -284,14 +284,15 @@ Panel {
     if (savingLocation && savingLocationQueryStarted) cancelEditingLocation()
   }
 
+  // The location is weather.json in the state folder; an empty name clears it.
   function persistLocation(name: string, latitude: var, longitude: var): void {
-    if (name && latitude !== null && longitude !== null)
-      locationSaveProc.command = ["nomarchy-weather-location", "--set", name, latitude + "," + longitude]
-    else if (name)
-      locationSaveProc.command = ["nomarchy-weather-location", "--set", name]
-    else
-      locationSaveProc.command = ["nomarchy-weather-location", "--clear"]
-    locationSaveProc.running = true
+    var data = { name: name || "" }
+    if (name && latitude !== null && longitude !== null) {
+      data.latitude = latitude
+      data.longitude = longitude
+    }
+    root.locationFile.setText(JSON.stringify(data) + "\n")
+    root.locationSaved()
   }
 
   // Debounced geocoding. Only one curl runs at a time; if the query moved on
@@ -472,22 +473,18 @@ Panel {
     onTriggered: root.requestGeocode()
   }
 
-  Process {
-    id: locationSaveProc
-    onExited: function(exitCode) {
-      if (exitCode !== 0 || !root.savingLocation) return
-
-      // FileView handles changed locations. Explicitly refresh here too so
-      // saving the already-active location cannot strand the spinner.
-      Model.invoke(root.locationFile, "reload")
-      if (!root.savingLocationQueryStarted) {
-        root.savingLocationQueryStarted = true
-        root.forecastRetries = 0
-        root.dailyForecastRetries = 0
-        forecastProc.running = false
-        dailyForecastProc.running = false
-        Qt.callLater(root.refresh)
-      }
+  // After the file is written: refresh explicitly so saving the already-active location cannot
+  // strand the spinner.
+  function locationSaved(): void {
+    if (!root.savingLocation) return
+    Model.invoke(root.locationFile, "reload")
+    if (!root.savingLocationQueryStarted) {
+      root.savingLocationQueryStarted = true
+      root.forecastRetries = 0
+      root.dailyForecastRetries = 0
+      forecastProc.running = false
+      dailyForecastProc.running = false
+      Qt.callLater(root.refresh)
     }
   }
 

@@ -178,13 +178,18 @@ Item {
     root.selectionFile = ""
     root.doneFile = ""
 
-    if (selection === null || selection === undefined) {
-      resultProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", ": > " + Util.shellQuote(activeDoneFile)]
-    } else {
-      resultProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "printf '%s\\n' " + Util.shellQuote(selection) + " > " + Util.shellQuote(activeSelectionFile) + "; : > " + Util.shellQuote(activeDoneFile)]
+    // The selection first, then the done file: a reader waits for the done file.
+    if (selection !== null && selection !== undefined) {
+      selectionResultFile.path = activeSelectionFile
+      selectionResultFile.setText(String(selection) + "\n")
     }
-    resultProc.running = true
+    doneResultFile.path = activeDoneFile
+    doneResultFile.setText("")
+    if (root.applySerial === root.requestSerial) root.opened = false
   }
+
+  FileView { id: selectionResultFile; printErrors: false }
+  FileView { id: doneResultFile; printErrors: false }
 
   function runAction(action: var): var {
     var command = String(action || "")
@@ -199,7 +204,7 @@ Item {
     if (summon && root.shell && root.shell.summon(summon.id, summon.payload)) return
 
     // Menu actions name the port folder as $NOMARCHY_PATH; the shell no longer exports it.
-    Util.execDetached(command.split("$NOMARCHY_PATH").join(root.nomarchyPath.replace(/\\/g, "/")))
+    Quickshell.execDetached(["cmd.exe", "/c", command.split("$NOMARCHY_PATH").join(root.nomarchyPath.replace(/\\/g, "/"))])
   }
 
   // Menu rows only surface their detail while a search is narrowing them;
@@ -331,48 +336,8 @@ Item {
     }
   }
 
-  // Each known provider is a tiny bash one-liner that enumerates a list and
-  // emits one tab-delimited row per item: `label\tvalue\tcurrent`. The shell
-  // turns those into menu items children of `menuId`. A `volatile` provider
-  // re-runs every time its submenu is entered, so a font installed since the
-  // shell started shows up without restarting it.
-  readonly property var providers: ({
-    "fonts": {
-      script: "current=$(nomarchy-font-current 2>/dev/null); nomarchy-font-list 2>/dev/null | while read -r f; do [[ -z $f ]] && continue; printf '%s\\t%s\\t%s\\n' \"$f\" \"$f\" \"$current\"; done",
-      icon: "",
-      volatile: true,
-      actionFor: function(value: var): var { return "nomarchy-font-set " + Util.shellQuote(value) }
-    },
-    "power-profiles": {
-      script: "current=$(powerprofilesctl get 2>/dev/null); nomarchy-powerprofiles-list 2>/dev/null | while read -r p; do [[ -z $p ]] && continue; printf '%s\\t%s\\t%s\\n' \"$p\" \"$p\" \"$current\"; done",
-      icon: "\udb81\udc0b",
-      // Profile names are powerprofilesctl ids; only the label is translated,
-      // and the id stays searchable through searchTerms.
-      labelFor: function(value: var): var {
-        if (value === "power-saver") return I18nModel.translate(Commons.I18n, "menu.powerProfilePowerSaver")
-        if (value === "balanced") return I18nModel.translate(Commons.I18n, "menu.powerProfileBalanced")
-        if (value === "performance") return I18nModel.translate(Commons.I18n, "menu.powerProfilePerformance")
-        return value
-      },
-      actionFor: function(value: var): var { return "nomarchy-powerprofiles-set autodetect " + Util.shellQuote(value) }
-    },
-    // Kernel names are package names, the same in every language.
-    "kernels": {
-      script: "current=$(nomarchy-kernel get 2>/dev/null); nomarchy-kernel list 2>/dev/null | while read -r k; do [[ -z $k ]] && continue; printf '%s\\t%s\\t%s\\n' \"$k\" \"$k\" \"$current\"; done",
-      icon: "\uf17c",
-      volatile: true,
-      actionFor: function(value: var): var { return "nomarchy-kernel set " + Util.shellQuote(value) }
-    },
-    // Rows carry a fourth field (the English name) so searching "danish"
-    // finds the row labeled with its native name; mergeProviderRows turns
-    // it into an alias.
-    "languages": {
-      script: "current=$(nomarchy-language 2>/dev/null); nomarchy-language list 2>/dev/null | while IFS=$'\\t' read -r name code english; do [[ -z $code ]] && continue; printf '%s\\t%s\\t%s\\t%s\\n' \"$name\" \"$code\" \"$current\" \"$english\"; done",
-      icon: "\uf1ab",
-      volatile: true,
-      actionFor: function(value: var): var { return "nomarchy-language " + Util.shellQuote(value) }
-    }
-  })
+  // The apps list is the only provider; it is built in QML (mergeAppRows).
+  readonly property var providers: ({})
 
   function slugify(value: var): string {
     return MenuModel.slugify(value)
@@ -958,14 +923,6 @@ Item {
     }
   }
 
-  Process {
-    id: resultProc
-    onExited: {
-      if (root.applySerial === root.requestSerial)
-        root.opened = false
-    }
-  }
-
   PointerMoveGate {
     id: pointerGate
     referenceItem: card
@@ -1026,85 +983,19 @@ Item {
 
   // ---------------------------------------------------------------- guards
   //
-  // `when:` (visibility) and `checked:` (✓ marker) are bash expressions the
-  // shell wasn't allowed to evaluate before the perf rewrite. Now the shell
-  // batches them into one bash subprocess per (re)load so the open path
-  // never has to wait on them.
+  // The Windows menu has no `when:`, `checked:` or `disabled:` rows, so there is nothing to
+  // evaluate; the results stay empty and every row shows.
 
-  property var whenResults: ({})       // id → true|false (allow visibility)
-  property var checkedResults: ({})    // id → true|false (show ✓)
-  property var disabledResults: ({})   // id → true|false (dim, skip cursor)
-  property bool guardsPending: false
+  property var whenResults: ({})
+  property var checkedResults: ({})
+  property var disabledResults: ({})
 
   function evaluateGuards(): var {
-    // Process ignores a command change while it is running, and `collected`
-    // belongs to the run in flight, so a second evaluation cannot overwrite
-    // the first: it would throw away the lines already read and never start.
-    // The surviving tail then lands as the whole answer, and every id lost
-    // with it goes back to showing, since a `when:` only hides on an explicit
-    // false. Wait for the run in flight and evaluate once it lands instead.
-    if (guardProc.running) {
-      root.guardsPending = true
-      return
-    }
-    root.guardsPending = false
-
-    var script = MenuModel.guardScript(root.items)
-    if (!script) {
-      root.whenResults = ({})
-      root.checkedResults = ({})
-      root.disabledResults = ({})
-      return
-    }
-    guardProc.collected = ""
-    guardProc.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", script]
-    guardProc.running = true
+    root.whenResults = ({})
+    root.checkedResults = ({})
+    root.disabledResults = ({})
   }
 
-  Process {
-    id: guardProc
-    property string collected: ""
-    stdout: SplitParser {
-      onRead: function(data: string): var { guardProc.collected += data + "\n" }
-    }
-    onExited: function(exitCode: int, exitStatus: QsProcess.ExitStatus): var {
-      // A batch that was killed rather than finished has only told us about
-      // the rows it reached, and a row whose `when:` went unanswered shows.
-      // Keep the last complete set rather than let a half-read one through.
-      // A signal leaves the exit code at 0, so the status is what tells us.
-      if (exitCode !== 0 || exitStatus !== 0) {
-        if (root.guardsPending) Qt.callLater(function(): var { root.evaluateGuards() })
-        return
-      }
-
-      var nextWhen = ({})
-      var nextChecked = ({})
-      var nextDisabled = ({})
-      var lines = guardProc.collected.split("\n")
-      for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim()
-        if (!line) continue
-        let colon = line.lastIndexOf(":")
-        if (colon < 0) continue
-        let value = line.substring(colon + 1) === "1"
-        let rest = line.substring(0, colon)
-        let tagAt = rest.lastIndexOf(":")
-        if (tagAt < 0) continue
-        let id = rest.substring(0, tagAt)
-        let tag = rest.substring(tagAt + 1)
-        if (tag === "w") nextWhen[id] = value
-        else if (tag === "c") nextChecked[id] = value
-        else if (tag === "d") nextDisabled[id] = value
-      }
-      root.whenResults = nextWhen
-      root.checkedResults = nextChecked
-      root.disabledResults = nextDisabled
-      if (root.opened) root.rebuildDisplay()
-      // Run the evaluation that had to stand aside. Deferred by a turn so the
-      // process is settled before its command is set again.
-      if (root.guardsPending) Qt.callLater(function(): var { root.evaluateGuards() })
-    }
-  }
   OverlayWindow {
     id: panel
     shown: root.opened && root.rowsLoaded

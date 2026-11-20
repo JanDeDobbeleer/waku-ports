@@ -60,7 +60,7 @@ BarWidget {
     active: root.inUse
     tooltipText: root.muted ? MicrophoneModel.translate(root.translate, "bar.microphoneMuted") : (root.inUse ? MicrophoneModel.translate(root.translate, "bar.microphoneInUse") : MicrophoneModel.translate(root.translate, "bar.microphoneLive"))
     onPressed: function(b) {
-      if (b === Qt.MiddleButton) BarValues.run(root.bar, "nomarchy-shell shell toggle nomarchy.audio")
+      if (b === Qt.MiddleButton) { if (root.bar && root.bar.shell) root.bar.shell.toggle("nomarchy.audio", "{}") }
       else root.toggleMute()
     }
     onWheelMoved: function(delta) {

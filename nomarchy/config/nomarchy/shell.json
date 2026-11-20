@@ -1,9 +1,5 @@
 {
   "version": 1,
-  "idle": {
-    "screensaver": 0,
-    "lock": 0
-  },
   "bar": {
     "position": "top",
     "background": "opaque",

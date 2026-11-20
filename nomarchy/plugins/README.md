@@ -102,8 +102,8 @@ The menu definition lives outside the shell host code:
 - user extensions: `~/.config/nomarchy/extensions/nomarchy-menu.jsonc`
 
 The shell parses both JSONC files at startup (with `watchChanges: true`
-so edits take effect without a restart), evaluates `when:` / `checked:`
-bash expressions in a single batched subprocess, and executes the
+so edits take effect without a restart), has no `when:` / `checked:` guards,
+and executes the
 selected `action:` string directly via `Quickshell.execDetached`. The
 long-running shell process keeps the parsed menu in memory, so the
 keybind → IPC → visible path costs ~30ms cold.

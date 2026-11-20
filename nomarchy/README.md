@@ -19,7 +19,7 @@ derived from the upstream `shell/` directory (see `LICENSE`). The default theme 
 | Ctrl+Alt+E | Windows emoji picker (Win+.) |
 | Ctrl+Alt+V | Windows clipboard history (Win+V) |
 
-Needs Git for Windows (`C:\Program Files\Git`; the shell runs bash scripts), and the
+Needs the
 **CaskaydiaMono Nerd Font** and **Material Symbols Rounded**. Install them for your user, without admin rights:
 
     .\tools\install-fonts.ps1
@@ -78,9 +78,9 @@ wallpaper) and the dock.
 
 ## Port notes (the non-obvious ones)
 
-- `"bash"` in a Process command resolves to the WSL launcher in System32 (Windows searches it before
-  PATH). Every call uses `C:/Program Files/Git/usr/bin/bash.exe`; so does `find`.
-- A multi-line script passed through argv gets mangled; the plugin scan is `services/scan-plugins.sh`.
+- The shell runs no bash and needs no environment: it reads its folder from `Quickshell.shellDir` and
+  keeps its state in `state\home` (`Commons.Paths`). Menu and bar commands run through `cmd.exe /c`;
+  longer jobs are PowerShell scripts in `tools\`.
 - Paths handed to Qt need `file:///D:/...` (`Util.fileUrl`).
 - The engine's `PopupAnchor` has `item`, `rect`, `edges`, `gravity` only; popups follow `anchor.item`.
 - `OverlayWindow` waited for a Hyprland monitor; it now builds one from the screen.

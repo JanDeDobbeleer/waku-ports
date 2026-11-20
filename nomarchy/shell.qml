@@ -46,10 +46,6 @@ ShellRoot {
   // closely enough to render a usable bar; not authoritative.
   readonly property var builtinShellConfig: ({
     version: 1,
-    idle: {
-      screensaver: 150,
-      lock: 300
-    },
     bar: {
       position: "top",
       background: "opaque",
@@ -999,15 +995,12 @@ ShellRoot {
       let target = entry.target.slice(0, dot)
       let method = entry.target.slice(dot + 1)
       let service = shell.serviceFor(shell.ipcShortcutServices[target] || "")
-      if (!service || !service.runShortcut(method))
-        Util.execArgv(["nomarchy-shell", target, method])
+      if (service) service.runShortcut(method)
     } else if (entry.kind === "brightness") {
-      if (!shell.brightnessKeys.handle(entry.target))
-        Util.execArgv(["nomarchy-brightness-display", entry.target === "raise" ? "+5%" : "5%-"])
+      shell.brightnessKeys.handle(entry.target)
     } else if (entry.kind === "audio") {
       let media = shell.serviceFor("nomarchy.media")
-      if (!media || !media.handleVolumeKey(entry.target))
-        Util.execArgv(["nomarchy-audio-output-volume", entry.target])
+      if (media) media.handleVolumeKey(entry.target)
     } else {
       shell.toggle(entry.target, "{}")
     }

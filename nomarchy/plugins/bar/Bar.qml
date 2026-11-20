@@ -66,7 +66,6 @@ Item {
   property bool glassy: false
   // The look the blur behind the bar was last synced for. A background set by
   // editing shell.json skips the CLI, so the bar syncs Hyprland's blur itself.
-  property string glassSyncedLook: ""
   // One bar surface exists per monitor and each reports into this count, so a
   // pointer crossing from one monitor's bar to another's stays counted however
   // the enter and leave interleave. A single shared bool would be left false by
@@ -714,10 +713,6 @@ Item {
     // background, so a glassy one stays glassy until then rather than
     // flashing opaque. Once clear, transparent wins over a stale glassy.
     if (look !== "none") glassy = look === "glassy"
-    if (look !== glassSyncedLook) {
-      glassSyncedLook = look
-      Util.execDetached("nomarchy-bar sync-glass")
-    }
 
     // Each widget keeps its key while it stays in the layout, wherever it
     // moves and whatever its settings, so a config write builds just the
@@ -892,13 +887,19 @@ Item {
   function run(command: var): void {
     if (!command) return
 
-    Util.execDetached(command)
+    Quickshell.execDetached(["cmd.exe", "/c", String(command)])
   }
 
-  // Steps the bar background from clear to glassy to opaque and around. Through
-  // nomarchy-bar, which keeps Hyprland's blur behind a glassy bar in step.
+  // Steps the bar background from clear to glassy to opaque and around, saved in shell.json.
   function cycleBackground(): var {
-    Util.execDetached("nomarchy-bar background cycle")
+    var order = ["none", "glassy", "opaque"]
+    var look = BarModel.configBackground(BarModel.configObject(barConfig, fallbackBarConfig))
+    var next = order[(order.indexOf(look) + 1) % order.length]
+    if (!shell) return
+    shell.mutateShellConfig(function(config: var): void {
+      if (!Util.isPlainObject(config.bar)) config.bar = {}
+      config.bar.background = next
+    })
   }
 
   function moduleDropAtScene(scenePoint: var, sourceSlot: var): var {
@@ -1231,17 +1232,15 @@ Item {
     transparentForegroundTimer.restart()
   }
 
+  // A clear bar has nothing behind it to sample on Windows, so its text keeps the theme color.
   function refreshTransparentForeground(): var {
-    if (!requestedTransparent || transparentForegroundProc.running) return
+    if (!requestedTransparent) return
 
-    transparentForegroundProc.command = [
-      "nomarchy-bar-text-color",
-      root.position,
-      String(root.barSize),
-      colorHex(root.themeForeground),
-      colorHex(root.themeContrastForeground)
-    ]
-    transparentForegroundProc.running = true
+    foregroundAnimationEnabled = false
+    transparentForeground = themeForeground
+    useTransparentForeground = true
+    transparent = true
+    restoreForegroundAnimation()
   }
 
   onRequestedTransparentChanged: scheduleTransparentForegroundRefresh()
@@ -1254,24 +1253,6 @@ Item {
     interval: 120
     repeat: false
     onTriggered: root.refreshTransparentForeground()
-  }
-
-  Process {
-    id: transparentForegroundProc
-    stdout: SplitParser {
-      onRead: function(line: string): var {
-        var value = String(line || "").trim()
-        if (!/^#[0-9A-Fa-f]{6}$/.test(value)) return
-
-        root.foregroundAnimationEnabled = false
-        root.transparentForeground = value
-        if (root.requestedTransparent) {
-          root.useTransparentForeground = true
-          root.transparent = true
-        }
-        root.restoreForegroundAnimation()
-      }
-    }
   }
 
   Connections {
@@ -2835,7 +2816,7 @@ Item {
 
     Process {
       id: customProc
-      command: ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", String(customRoot.setting("exec", ""))]
+      command: ["cmd.exe", "/c", String(customRoot.setting("exec", ""))]
       stdout: StdioCollector {
         waitForEnd: true
         onStreamFinished: customRoot.update(text)

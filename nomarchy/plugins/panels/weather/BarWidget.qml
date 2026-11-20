@@ -86,8 +86,7 @@ BarWidget {
 
     onPressed: function(b) {
       if (!root.bar) return
-      if (b === Qt.RightButton) BarValues.run(root.bar, "nomarchy-notification-send \"$(nomarchy-weather-status)\"")
-      else if (b === Qt.MiddleButton) root.refresh()
+      if (b === Qt.MiddleButton) root.refresh()
       else root.togglePanel()
     }
   }

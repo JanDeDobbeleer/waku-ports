@@ -213,13 +213,6 @@ Panel {
   function setDefaultAudioSink(sink: var): void {
     if (!sink) return
     Pipewire.preferredDefaultAudioSink = sink
-    if (Model.field(sink, "id") !== undefined && Model.field(sink, "name")) {
-      Quickshell.execDetached([
-        "nomarchy-audio-output-set-default",
-        String(Model.field(sink, "id")),
-        String(Model.field(sink, "name"))
-      ])
-    }
   }
 
   function scheduleAudioOutputSwitch(device: var): void {

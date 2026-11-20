@@ -172,7 +172,7 @@ BarWidget {
 
     onPressed: function(b) {
       if (b === Qt.RightButton) root.cycleFormat()
-      else if (b === Qt.MiddleButton) { if (root.bar) BarValues.run(root.bar, "nomarchy-menu-timezone") }
+      else if (b === Qt.MiddleButton) Quickshell.execDetached(["explorer.exe", "ms-settings:dateandtime"])
       else root.togglePanel()
     }
 
