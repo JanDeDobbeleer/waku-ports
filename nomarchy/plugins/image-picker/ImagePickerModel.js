@@ -1,5 +1,9 @@
 function nameForPath(path) {
-  return String(path || "").split("/").pop().replace(/\.[^/.]+$/, "")
+  var text = String(path || "")
+  // A theme's preview is themes/<name>/preview.png; every other image is named by its file.
+  var theme = text.match(/\/themes\/([^/]+)\/preview\.[^/.]+$/)
+  if (theme) return theme[1]
+  return text.split("/").pop().replace(/\.[^/.]+$/, "")
 }
 
 function labelForPath(path) {

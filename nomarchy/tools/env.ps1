@@ -5,6 +5,3 @@ $env:NOMARCHY_PATH = $PortDir
 $env:QT_FORCE_STDERR_LOGGING = '1'
 # Git for Windows' bash and find first (the shell runs bash scripts).
 $env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH
-# the saved theme (Catppuccin the first time), and the previews the theme switcher lists
-& (Join-Path $PortDir 'tools\theme-apply.ps1') -Prepare
-& (Join-Path $PortDir 'tools\theme-apply.ps1') | Out-Null

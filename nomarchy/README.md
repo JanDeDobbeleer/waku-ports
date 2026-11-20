@@ -39,7 +39,7 @@ uses its own home, `state\home`, not your user profile.
 | System monitor | a bar icon whose panel graphs the last two minutes of CPU and memory load, sampled every two seconds by the engine's `Cpu` and `Memory` services, and GPU load from `Gpu` while the panel is open (its counters are costly), with frequency, temperature, memory and VRAM use, and the drives' free space. Hover for current load; right-click opens Task Manager |
 | Notification center | the bell next to the tray: the last 24 hours of notifications, Do Not Disturb (also on right-click), dismiss one or clear all |
 | Media | the Windows media sessions (GSMTC) through the engine's `Mpris`. Click for cover art, a seek bar, previous/play/next, shuffle and repeat, and the source list; middle-click plays or pauses, the wheel skips |
-| Theme switcher | Nomarchy themes (`themes\`); `tools\theme-apply.ps1 <name>` rewrites the files the shell watches, so colours change live. Style > Wallpaper colors generates a theme from the current wallpaper and updates it when the wallpaper or Windows light/dark mode changes |
+| Theme switcher | Nomarchy themes (`themes\<name>\`, each with `colors.toml` and a generated `shell.toml`). Picking one saves its name and the shell reads that folder, so colours change live. Style > Wallpaper colors generates a theme from the current wallpaper (`tools\wallpaper-theme.ps1`) and updates it when the wallpaper or Windows light/dark mode changes |
 | Background switcher | the images of the current wallpaper's folder (or `NOMARCHY_WALLPAPER_DIR`); a choice calls the engine's `Wallpapers.setWallpaper`, the service Celeste's port uses. It also sets the lock screen picture unless the service is told not to |
 | Emoji, clipboard | Windows' own panels, opened by `tools\winkeys.ps1` (clipboard history must be on in Windows settings) |
 | Wi-Fi | the engine's `Network` service behind `qs.compat.Networking`: networks, signal, saved-network connect, radio switch. A new network or password opens Windows' Wi-Fi settings; disconnect and forget use `netsh` |
@@ -71,7 +71,7 @@ wallpaper) and the dock.
 | `tools\run.ps1 -Seconds 12` | Boots the shell, reports status and log problems, then quits. `-Call 'shell call nomarchy.menu open {"menu":"apps"}'` runs `wakuc call` lines |
 | `tools\menu-state.ps1 -Menu apps -Rows 8` | Opens a menu and prints its state and rows, no screenshot |
 | `tools\winshot.ps1` | Saves each shell window as a PNG (transparency is lost; desktop captures can contain private content) |
-| `tools\theme-apply.ps1 <name>` | Applies a theme (`-Prepare` only refreshes the picker's previews) |
+| `tools\gen-themes.ps1` | Regenerates `themes\<name>\shell.toml` and `themes\ThemeList.js` after a change to a theme's colors or to `default\themed\shell.toml.tpl`; commit the result |
 | `tools\build-menu.py` | Regenerates the Windows menu from the upstream one |
 
 `Menu.qml` and `ImagePicker.qml` have `debugState` helpers (marked `PORTDBG`) that the tools above call.

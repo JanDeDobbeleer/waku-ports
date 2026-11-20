@@ -47,7 +47,7 @@ Item {
       return
     }
     apply.command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-      portPath + "/tools/theme-apply.ps1", "wallpaper", "-PaletteB64", queuedPalette,
+      portPath + "/tools/wallpaper-theme.ps1", "-PaletteB64", queuedPalette,
       "-ExpectedTheme", "@" + queuedTheme]
     queuedPalette = ""
     apply.running = true

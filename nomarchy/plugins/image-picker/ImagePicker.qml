@@ -12,6 +12,7 @@ import qs.Commons as Commons
 import qs.Ui
 import "ImagePickerModel.js" as ImagePickerModel
 import "../bar/I18nModel.js" as I18nModel
+import "../../themes/ThemeList.js" as ThemeList
 
 Item {
   id: root
@@ -19,7 +20,6 @@ Item {
   // Injected by nomarchy-shell; defaults to the session NOMARCHY_PATH.
   property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
   property string stateHome: (Quickshell.env("HOME") || "") + "/.local/state"
-  property string userThemesPath: (Quickshell.env("HOME") || "") + "/.config/nomarchy/themes"
   property string imageDirs: Quickshell.env("NOMARCHY_IMAGE_SELECTOR_DIRS") || Quickshell.env("NOMARCHY_IMAGE_SELECTOR_DIR") || Quickshell.env("NOMARCHY_STOCK_BACKGROUNDS_DIR") || (stateHome + "/nomarchy/current/theme/backgrounds")
   property string imageRows: ""
   property string loadedImageRows: ""
@@ -49,11 +49,7 @@ Item {
   readonly property string gitFind: "C:/Program Files/Git/usr/bin/find.exe"
   readonly property string home: String(Quickshell.env("HOME") || "").replace(/\\/g, "/")
   readonly property string portPath: String(root.nomarchyPath).replace(/\\/g, "/")
-  readonly property string previewsPath: root.home + "/.cache/nomarchy/theme-selector/previews"
   property bool themeOpenPending: false
-  property list<var> extraThemeNames: []
-  property list<var> stockThemeNames: []
-  property bool stockThemesKnown: false
   property bool awaitingDeleteRefresh: false
   property string pendingDeleteTheme: ""
   property string deleteSelectionPath: ""
@@ -379,7 +375,7 @@ Item {
 
 
   function currentThemePreview(): var {
-    var name = String(themeNameFile.text() || "").trim()
+    var name = Commons.Color.themeName
     var images = ImagePickerModel.loadRows(themeRows)
     for (let i = 0; i < images.length; i++) {
       if (nameForPath(images[i].filePath) === name) return images[i].filePath
@@ -387,9 +383,9 @@ Item {
     return ""
   }
 
-  // Windows PowerShell ships with Windows; the script rewrites the files the shell watches.
+  // The saved name is all there is to a theme switch: Commons.Color watches it and reads themes/<name>/.
   function applyTheme(name: var): var {
-    Quickshell.execDetached(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", root.portPath + "/tools/theme-apply.ps1", String(name)])
+    themeNameFile.setText(String(name) + "\n")
   }
 
   // The images of the folder the current wallpaper lives in; the engine's own list stays empty
@@ -500,8 +496,6 @@ Item {
       themeOpenPending = true
     }
     refreshThemeRows()
-    refreshExtraThemes()
-    refreshStockThemes()
   }
 
   function openThemeRows(): var {
@@ -509,20 +503,12 @@ Item {
     themeMode = true
   }
 
-  // A refresh asked mid-refresh (a deletion finishing behind the open-time
-  // one) queues a second pass instead of leaving the list stale.
+  // The themes ship with the port: one preview per name in ThemeList.js.
   function refreshThemeRows(): var {
-    if (themeRowsProc.running) { themeRowsProc.queued = true; return }
-    themeRowsProc.running = true
-  }
-
-  function refreshExtraThemes(): var {
-    if (extraThemesProc.running) { extraThemesProc.queued = true; return }
-    extraThemesProc.running = true
-  }
-
-  function refreshStockThemes(): var {
-    if (!stockThemesProc.running) stockThemesProc.running = true
+    var paths = []
+    for (let i = 0; i < ThemeList.names.length; i++)
+      paths.push(root.portPath + "/themes/" + ThemeList.names[i] + "/preview.png")
+    updateThemeRows(paths.sort().join("\n"))
   }
 
   function selectedThemeName(): var {
@@ -531,10 +517,6 @@ Item {
 
   function canDeleteSelectedTheme(): bool {
     return false // Windows port: nomarchy-theme-remove does not exist
-  }
-
-  function canDeleteSelectedThemeUpstream(): var {
-    return themeMode && !deleteThemeProc.running && !awaitingDeleteRefresh && stockThemesKnown && ImagePickerModel.canDeleteTheme(selectedThemeName(), extraThemeNames, stockThemeNames)
   }
 
   function requestDeleteSelectedTheme(): var {
@@ -584,51 +566,7 @@ Item {
   FileView {
     id: themeNameFile
     path: root.stateHome + "/nomarchy/current/theme.name"
-    watchChanges: true
-    onFileChanged: reload()
-  }
-
-  Process {
-    id: themeRowsProc
-    property bool queued: false
-    command: [root.gitFind, root.previewsPath, "-maxdepth", "1", "-type", "f", "-name", "*.png"]
-    stdout: StdioCollector {
-      onStreamFinished: root.updateThemeRows(ImagePickerModel.normalizedLines(text).join("\n"))
-    }
-    onExited: {
-      if (queued) {
-        queued = false
-        running = true
-      }
-    }
-  }
-
-  // The same listing nomarchy-theme-remove offers interactively: real
-  // directories under the user themes path, never symlinked working copies.
-  Process {
-    id: extraThemesProc
-    property bool queued: false
-    command: [root.gitFind, root.userThemesPath.replace(/\\/g, "/"), "-mindepth", "1", "-maxdepth", "1", "-type", "d", "-printf", "%f\n"]
-    stdout: StdioCollector {
-      onStreamFinished: root.extraThemeNames = ImagePickerModel.parseThemeNames(String(text || ""))
-    }
-    onExited: {
-      if (queued) {
-        queued = false
-        running = true
-      }
-    }
-  }
-
-  Process {
-    id: stockThemesProc
-    command: [root.gitFind, root.portPath + "/themes", "-mindepth", "1", "-maxdepth", "1", "-type", "d", "-printf", "%f\n"]
-    stdout: StdioCollector {
-      onStreamFinished: root.stockThemeNames = ImagePickerModel.parseThemeNames(String(text || ""))
-    }
-    // Until this lands, stockThemeNames is empty and an override would look
-    // deletable: deletion stays disabled unless the listing succeeded.
-    onExited: function(exitCode: int): var { if (exitCode === 0) root.stockThemesKnown = true }
+    printErrors: false
   }
 
   Process {
@@ -636,16 +574,11 @@ Item {
     onExited: function(exitCode: int): var {
       if (exitCode === 0) root.awaitingDeleteRefresh = true
       else root.deleteSelectionPath = ""
-      root.refreshExtraThemes()
       root.refreshThemeRows()
     }
   }
 
-  Component.onCompleted: {
-    refreshThemeRows()
-    refreshExtraThemes()
-    refreshStockThemes()
-  }
+  Component.onCompleted: refreshThemeRows()
 
   function startImageScan(serial: var, dirs: var): var {
     if (loadImagesProc.running) {

@@ -1274,13 +1274,10 @@ Item {
     }
   }
 
-  // FileView also fires for any change in its path's parent directory, so watch
-  // a path inside current/: every plugin writes to ~/.local/state/nomarchy.
-  FileView {
-    path: root.stateHome + "/nomarchy/current/theme"
-    watchChanges: true
-    printErrors: false
-    onFileChanged: root.scheduleTransparentForegroundRefresh()
+  Connections {
+    target: Commons.Color
+    function onThemeNameChanged() { root.scheduleTransparentForegroundRefresh() }
+    function onShellValuesChanged() { root.scheduleTransparentForegroundRefresh() }
   }
 
   function runProcess(process: Process): void {
