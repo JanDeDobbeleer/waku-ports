@@ -17,14 +17,14 @@ import "../../themes/ThemeList.js" as ThemeList
 Item {
   id: root
 
-  // Injected by nomarchy-shell; defaults to the session NOMARCHY_PATH.
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
-  property string stateHome: (Quickshell.env("HOME") || "") + "/.local/state"
-  property string imageDirs: Quickshell.env("NOMARCHY_IMAGE_SELECTOR_DIRS") || Quickshell.env("NOMARCHY_IMAGE_SELECTOR_DIR") || Quickshell.env("NOMARCHY_STOCK_BACKGROUNDS_DIR") || (stateHome + "/nomarchy/current/theme/backgrounds")
+  // The port folder; the shell host also injects it.
+  property string nomarchyPath: Quickshell.shellDir
+  property string stateHome: Paths.home + "/.local/state"
+  property string imageDirs: stateHome + "/nomarchy/current/theme/backgrounds"
   property string imageRows: ""
   property string loadedImageRows: ""
-  property string selectionFile: Quickshell.env("NOMARCHY_IMAGE_SELECTOR_SELECTION_FILE") || (Quickshell.env("NOMARCHY_BACKGROUND_SELECTION_FILE") || "")
-  property string selectedImage: (Quickshell.env("NOMARCHY_IMAGE_SELECTOR_SELECTED") || "")
+  property string selectionFile: ""
+  property string selectedImage: ""
   property int selectedIndex: 0
   property bool imagesLoaded: false
   property bool opened: false
@@ -47,7 +47,7 @@ Item {
   property bool themeMode: false
   property bool wallpaperMode: false
   readonly property string gitFind: "C:/Program Files/Git/usr/bin/find.exe"
-  readonly property string home: String(Quickshell.env("HOME") || "").replace(/\\/g, "/")
+  readonly property string home: Paths.home.replace(/\\/g, "/")
   readonly property string portPath: String(root.nomarchyPath).replace(/\\/g, "/")
   property bool themeOpenPending: false
   property bool awaitingDeleteRefresh: false
@@ -391,8 +391,6 @@ Item {
   // The images of the folder the current wallpaper lives in; the engine's own list stays empty
   // until something configures its folder.
   function wallpaperDir(): var {
-    var env = String(Quickshell.env("NOMARCHY_WALLPAPER_DIR") || "")
-    if (env) return env.replace(/\\/g, "/")
     var current = String(S.Wallpapers.current || "").replace(/\\/g, "/")
     if (current.lastIndexOf("/") > 0) return current.slice(0, current.lastIndexOf("/"))
     return root.home + "/Pictures/Wallpapers"

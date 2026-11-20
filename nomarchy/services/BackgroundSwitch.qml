@@ -15,10 +15,10 @@ Item {
 
   property var intro: null
   readonly property var backgroundService: BackgroundSwitchUtils.field(intro, "backgroundService")
-  readonly property string home: (Quickshell.env("HOME") || "")
+  readonly property string home: Paths.home
   readonly property string backgroundLink: home + "/.local/state/nomarchy/current/background"
   readonly property string transitionCache: home + "/.cache/nomarchy/background-transitions"
-  readonly property string themeSetLock: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/nomarchy-theme-set.lock"
+  readonly property string themeSetLock: "/tmp/nomarchy-theme-set.lock"
 
   // The change in progress, named by its cover's token.
   property string token: ""

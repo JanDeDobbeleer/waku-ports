@@ -4,8 +4,7 @@
 param([string]$Menu = 'root', [int]$Rows = 0, [int]$Wait = 10, [string]$Bin = (Join-Path $PSScriptRoot '..\bin'))
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$env:HOME = Join-Path $root 'state\home'; $env:NOMARCHY_PATH = $root; $env:QT_FORCE_STDERR_LOGGING = '1'
-$env:PATH = 'C:\Program Files\Git\usr\bin;' + $env:PATH
+$env:QT_FORCE_STDERR_LOGGING = '1'
 $logs = Join-Path $root 'logs'; New-Item -ItemType Directory -Force $logs | Out-Null
 $w = Join-Path $Bin 'wakuc.exe'
 $p = Start-Process (Join-Path $Bin 'waku.exe') -PassThru -WindowStyle Hidden `

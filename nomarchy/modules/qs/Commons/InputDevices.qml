@@ -16,7 +16,7 @@ Singleton {
 
   // Tests point this at a fixture root, the way NOMARCHY_PROC_ROOT and
   // NOMARCHY_SYS_ROOT stand in for /proc and /sys.
-  readonly property string fixtureRoot: Quickshell.env("NOMARCHY_INPUT_ROOT") || ""
+  readonly property string fixtureRoot: ""
   readonly property string devDir: fixtureRoot + "/dev"
   readonly property string inputDir: devDir + "/input"
   readonly property string udevDir: fixtureRoot + "/run/udev/data"

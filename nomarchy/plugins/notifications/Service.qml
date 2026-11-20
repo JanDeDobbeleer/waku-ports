@@ -1197,7 +1197,7 @@ Item {
   // screen), history.json and quiet.json, formats in Store.js. Each file is
   // read once at startup and rewritten whole a moment after it changes, so a
   // burst of arrivals writes it once.
-  readonly property string stateDir: (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/notifications"
+  readonly property string stateDir: Paths.home + "/.local/state/nomarchy/notifications"
   property bool storeReady: false
   property bool liveLoaded: false
   property bool historyLoaded: false

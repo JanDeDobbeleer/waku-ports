@@ -196,7 +196,7 @@ Panel {
   // An idle EasyEffects is resolved through its configured output device, which
   // changes without touching the Pipewire graph.
   FileView {
-    path: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/easyeffects/db/easyeffectsrc"
+    path: Paths.configHome + "/easyeffects/db/easyeffectsrc"
     watchChanges: true
     printErrors: false
     onFileChanged: volumeSinkResolveTimer.restart()

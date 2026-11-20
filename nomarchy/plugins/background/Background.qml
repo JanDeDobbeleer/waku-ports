@@ -15,7 +15,7 @@ Item {
 
   property var shell: null
   property bool suspended: false
-  readonly property string home: (Quickshell.env("HOME") || "")
+  readonly property string home: Paths.home
   readonly property string stateHome: home + "/.local/state"
   readonly property string currentBackgroundLink: stateHome + "/nomarchy/current/background"
   readonly property string currentThemeBackgrounds: stateHome + "/nomarchy/current/theme/backgrounds"

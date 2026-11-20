@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import "IdleModel.js" as IdleModel
@@ -12,7 +11,7 @@ Item {
   // Injected by nomarchy-shell (the first-party service loader).
   property var shell: null
 
-  readonly property string home: (Quickshell.env("HOME") || "")
+  readonly property string home: Commons.Paths.home
   readonly property string stayAwakeStateDir: home + "/.local/state/nomarchy/indicators"
   readonly property string stayAwakeStatePath: stayAwakeStateDir + "/stay-awake"
   readonly property int defaultScreensaverSeconds: 150
@@ -30,8 +29,6 @@ Item {
 
   property bool stayAwake: false
   property bool stayAwakeStateLoaded: false
-  property bool hasPendingStayAwakePersist: false
-  property bool pendingStayAwakePersist: false
   property bool idledThisCycle: false
   property bool screensaverStartedThisCycle: false
   property string lastEvent: "starting"
@@ -175,23 +172,13 @@ Item {
     })
   }
 
+  // The flag file holds "yes" or "no"; a missing file reads as "no".
   function persistStayAwake(value: bool): void {
-    var command = value
-      ? "mkdir -p \"$HOME/.local/state/nomarchy/indicators\" && touch \"$HOME/.local/state/nomarchy/indicators/stay-awake\""
-      : "rm -f \"$HOME/.local/state/nomarchy/indicators/stay-awake\""
-
-    if (stayAwakeStateWriter.running) {
-      root.pendingStayAwakePersist = !!value
-      root.hasPendingStayAwakePersist = true
-      return
-    }
-
-    stayAwakeStateWriter.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-lc", command]
-    stayAwakeStateWriter.running = true
+    stayAwakeStateFile.setText(value ? "yes\n" : "no\n")
   }
 
   function refreshStayAwakeState(): void {
-    if (!stayAwakeStateProbe.running) stayAwakeStateProbe.running = true
+    stayAwakeStateFile.reload()
   }
 
   function applyStayAwake(value: bool, persist: bool, reason: string): string {
@@ -278,27 +265,12 @@ Item {
     onExited: function(exitCode, exitStatus) { root.logEvent("process-exit", "wake exitCode=" + exitCode + " status=" + exitStatus) }
   }
 
-  Process {
-    id: stayAwakeStateProbe
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "mkdir -p \"$HOME/.local/state/nomarchy/indicators\"; if [[ -f $HOME/.local/state/nomarchy/indicators/stay-awake ]]; then echo yes; else echo no; fi"]
-    stdout: SplitParser {
-      onRead: function(line) { root.applyStayAwake(String(line).trim() === "yes", false, "state-file") }
-    }
-    onExited: function() { stayAwakeStateDirWatcher.reload() }
-  }
-
-  Process {
-    id: stayAwakeStateWriter
-    onExited: function() {
-      if (root.hasPendingStayAwakePersist) {
-        let pending = root.pendingStayAwakePersist
-        root.hasPendingStayAwakePersist = false
-        root.persistStayAwake(pending)
-        return
-      }
-
-      root.refreshStayAwakeState()
-    }
+  FileView {
+    id: stayAwakeStateFile
+    path: root.stayAwakeStateDir + "/stay-awake"
+    printErrors: false
+    onLoaded: root.applyStayAwake(String(text() || "").trim() === "yes", false, "state-file")
+    onLoadFailed: root.applyStayAwake(false, false, "state-file")
   }
 
   FileView {

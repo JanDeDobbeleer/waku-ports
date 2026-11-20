@@ -2,7 +2,6 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Commons as Commons
-import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import "StyleUtils.js" as StyleUtils
@@ -309,13 +308,8 @@ QtObject {
   }
 
   // The menu, polkit, emojis, and clipboard surfaces honor an
-  // NOMARCHY_MENU_FONT override for users who want a different family on the
-  // summoned popups than on the bar. Resolved once at startup; an empty env
-  // value falls back to the shared fontconfig alias.
-  readonly property string menuFontFamily: {
-    var override = (Quickshell.env("NOMARCHY_MENU_FONT") || "")
-    return (override && override.length > 0) ? override : fontFamily
-  }
+  // The summoned popups use the bar font.
+  readonly property string menuFontFamily: fontFamily
 
   component FontTokens: QtObject {
     final readonly property string family: root.fontFamily
@@ -465,7 +459,7 @@ QtObject {
   }
 
   property FileView fontconfigFile: FileView {
-    path: (Quickshell.env("HOME") || "") + "/.config/fontconfig/fonts.conf"
+    path: Paths.home + "/.config/fontconfig/fonts.conf"
     watchChanges: true
     printErrors: false
     onFileChanged: root.resolveFontFamily()
@@ -488,7 +482,7 @@ QtObject {
   // reloads its config when sourced files change, then hyprctl reflects
   // the new effective value.
   property FileView windowNoGapsToggle: FileView {
-    path: (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/toggles/hypr/window-no-gaps.lua"
+    path: Paths.home + "/.local/state/nomarchy/toggles/hypr/window-no-gaps.lua"
     watchChanges: true
     printErrors: false
     onFileChanged: refreshTimerImpl.restart()

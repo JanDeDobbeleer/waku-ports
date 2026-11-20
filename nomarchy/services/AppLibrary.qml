@@ -12,7 +12,7 @@ import "AppSearch.js" as AppSearch
 Item {
   id: root
 
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  property string nomarchyPath: Quickshell.shellDir
 
   property var configuredHiddenEntryIds: ({})
   property var desktopHiddenEntryIds: ({})
@@ -169,7 +169,7 @@ Item {
   }
 
   function hiddenEntryScanCommand(): string {
-    var desktop = [(Quickshell.env("XDG_CURRENT_DESKTOP") || ""), (Quickshell.env("XDG_SESSION_DESKTOP") || ""), (Quickshell.env("DESKTOP_SESSION") || "")].filter(function(v: var): bool { return String(v || "").length > 0 }).join(":")
+    var desktop = ""
     var script = root.nomarchyPath + "/services/hidden-entries.sh"
     return Util.shellQuote(script) + " " + Util.shellQuote(desktop)
   }

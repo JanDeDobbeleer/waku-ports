@@ -13,7 +13,7 @@ import "BorderGeometry.js" as Geometry
 QtObject {
   id: root
 
-  readonly property string home: (Quickshell.env("HOME") || "")
+  readonly property string home: Paths.home
   readonly property string stateHome: home + "/.local/state"
   // The saved theme's folder name. A named theme is read from the files shipped in themes/<name>/;
   // only the wallpaper theme is computed at run time, into current/theme.

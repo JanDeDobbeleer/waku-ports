@@ -3,13 +3,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import waku.services as S
+import qs.Commons
 import "WallpaperTheme.js" as WallpaperTheme
 
 Item {
   id: root
 
-  readonly property string home: Quickshell.env("HOME") || ""
-  readonly property string portPath: Quickshell.env("NOMARCHY_PATH") || ""
+  readonly property string home: Paths.home
+  readonly property string portPath: Quickshell.shellDir
   property string themeName: ""
   property string pendingPath: ""
   property string requestTheme: ""

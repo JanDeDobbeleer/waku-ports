@@ -15,8 +15,8 @@ import "BarModel.js" as BarModel
 Item {
   id: root
 
-  // The nomarchy-shell host injects nomarchyPath from NOMARCHY_PATH.
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  // The port folder; the shell host also injects it.
+  property string nomarchyPath: Quickshell.shellDir
   // Injected by the host shell so bar slots can resolve enabled widgets.
   property var barWidgetRegistry: fallbackBarWidgetRegistry
   property int barWidgetRegistryRevision: 0
@@ -49,7 +49,7 @@ Item {
   // killing the entire shell. Hidden panels stay mapped but park off-screen
   // without an exclusion zone; updated by the FileView watcher further down.
   property bool barHidden: false
-  property string home: (Quickshell.env("HOME") || "")
+  property string home: Paths.home
   property string stateHome: home + "/.local/state"
   property string nomarchyConfigDir: home + "/.config/nomarchy"
   property var fallbackBarConfig: ({
@@ -1320,19 +1320,19 @@ Item {
   }
 
   // Presence of the `bar-off` flag = bar hidden. Watching the parent toggles
-  // directory because FileView can't observe a file that doesn't exist yet,
-  // and the flag is created/removed by `nomarchy-toggle-bar`.
-  Process {
-    id: barHiddenProbe
-    running: true
-    command: ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "[[ -f $HOME/.local/state/nomarchy/toggles/bar-off ]] && echo yes || echo no"]
-    stdout: SplitParser { onRead: function(line: string): var { root.barHidden = String(line).trim() === "yes" } }
+  // directory because FileView can't observe a file that doesn't exist yet.
+  FileView {
+    id: barHiddenFlag
+    path: root.stateHome + "/nomarchy/toggles/bar-off"
+    printErrors: false
+    onLoaded: root.barHidden = true
+    onLoadFailed: root.barHidden = false
   }
   FileView {
-    path: root.home + "/.local/state/nomarchy/toggles"
+    path: root.stateHome + "/nomarchy/toggles"
     watchChanges: true
     printErrors: false
-    onFileChanged: barHiddenProbe.running = true
+    onFileChanged: barHiddenFlag.reload()
   }
 
   // The directory watch can permanently stop delivering events after flag
@@ -1342,11 +1342,8 @@ Item {
   Commons.ShellIpc {
     target: "nomarchy.bar"
 
-    // Start rather than restart: a probe already in flight was launched by the
-    // directory watch after the flag flipped, so its answer is current, and
-    // killing it here can swallow the result entirely.
     function syncHidden(): void {
-      barHiddenProbe.running = true
+      barHiddenFlag.reload()
     }
   }
 

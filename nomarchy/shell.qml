@@ -33,12 +33,11 @@ ShellRoot {
   property BackgroundIntro bootIntro: BackgroundIntro { host: shell }
   property BackgroundSwitch backgroundSwitch: BackgroundSwitch { intro: shell.bootIntro }
 
-  property string home: (Quickshell.env("HOME") || "")
+  property string home: Paths.home
 
   // The nomarchy-shell host is the long-running entry point. Plugins live in
-  // sibling directories under plugins/. NOMARCHY_PATH is provided by the uwsm
-  // session environment and is the single source of truth for this checkout.
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  // sibling directories under plugins/. The port folder is Quickshell.shellDir.
+  property string nomarchyPath: Quickshell.shellDir
   readonly property string shellPath: nomarchyPath
   readonly property string firstPartyPluginsDir: shellPath + "/plugins"
   readonly property string defaultsPath: nomarchyPath + "/config/nomarchy/shell.json"

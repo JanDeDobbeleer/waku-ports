@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
@@ -104,7 +103,7 @@ Panel {
   }
 
   property FileView locationFile: FileView {
-    path: (Quickshell.env("HOME") || "") + "/.local/state/nomarchy/settings/weather.json"
+    path: Paths.home + "/.local/state/nomarchy/settings/weather.json"
     watchChanges: true
     printErrors: false
     onFileChanged: reload()

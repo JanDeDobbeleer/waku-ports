@@ -9,7 +9,7 @@ Item {
   id: root
 
   property var shell: null
-  property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "")
+  property string nomarchyPath: Quickshell.shellDir
 
   readonly property int batteryThreshold: 10
   property string pendingPowerSource: ""

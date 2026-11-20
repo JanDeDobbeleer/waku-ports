@@ -18,8 +18,8 @@ import "I18nUtils.js" as I18nUtils
 QtObject {
   id: root
 
-  readonly property string nomarchyPath: (Quickshell.env("NOMARCHY_PATH") || "").replace(/\\/g, "/")
-  readonly property string configHome: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")).replace(/\\/g, "/")
+  readonly property string nomarchyPath: Quickshell.shellDir.replace(/\\/g, "/")
+  readonly property string configHome: Paths.configHome.replace(/\\/g, "/")
 
   // Windows port: the engine does not re-run a binding when a FileView finishes loading, so every
   // read below also depends on `rev`, which each FileView bumps when it loads or changes, and on the
@@ -93,7 +93,7 @@ QtObject {
   property FileView languageFile: FileView {
     // NOMARCHY_LANGUAGE_FILE overrides the location, as it does for
     // nomarchy-i18n, so tests can pin a language whatever the machine uses.
-    path: Quickshell.env("NOMARCHY_LANGUAGE_FILE") || (root.configHome + "/nomarchy/language")
+    path: (root.configHome + "/nomarchy/language")
     watchChanges: true
     printErrors: false
     blockLoading: true
