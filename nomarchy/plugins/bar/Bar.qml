@@ -895,11 +895,7 @@ Item {
     var order = ["none", "glassy", "opaque"]
     var look = BarModel.configBackground(BarModel.configObject(barConfig, fallbackBarConfig))
     var next = order[(order.indexOf(look) + 1) % order.length]
-    if (!shell) return
-    shell.mutateShellConfig(function(config: var): void {
-      if (!Util.isPlainObject(config.bar)) config.bar = {}
-      config.bar.background = next
-    })
+    BarModel.setBarBackground(shell, next)
   }
 
   function moduleDropAtScene(scenePoint: var, sourceSlot: var): var {

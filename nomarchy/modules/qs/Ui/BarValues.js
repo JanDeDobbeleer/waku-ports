@@ -55,6 +55,7 @@ function hasUpdateEntryInline(bar) {
 function updateEntryInline(bar, id, entry) { return bar.shell.updateEntryInline(id, entry) }
 function summon(bar, id, payload) { return bar.shell.summon(id, payload) }
 function toggle(bar, id, payload) { return bar.shell.toggle(id, payload) }
+function toggleService(bar, id) { bar?.shell?.toggle(id, "{}") }
 function firstPartyServiceFor(bar, id) { return bar?.shell?.firstPartyServiceFor(id) }
 function stayAwake(bar) { return firstPartyServiceFor(bar, "nomarchy.idle")?.stayAwake === true }
 function setStayAwake(bar, value) {

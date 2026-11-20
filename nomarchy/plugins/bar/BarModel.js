@@ -351,6 +351,14 @@ function registryComponent(registry, name) {
   var entry = widgets ? widgets[name] : null
   return entry ? entry.component : null
 }
+// Saves the bar's background look ("none", "glassy" or "opaque") in shell.json.
+function setBarBackground(shell, look) {
+  if (!shell) return
+  shell.mutateShellConfig(function(config) {
+    if (!config.bar || typeof config.bar !== "object") config.bar = {}
+    config.bar.background = look
+  })
+}
 function pluginShell(shell, key, moduleName, registered) {
   return shell || null
 }

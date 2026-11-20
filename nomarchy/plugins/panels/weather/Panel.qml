@@ -291,7 +291,7 @@ Panel {
       data.latitude = latitude
       data.longitude = longitude
     }
-    root.locationFile.setText(JSON.stringify(data) + "\n")
+    Model.writeText(root.locationFile, JSON.stringify(data) + "\n")
     root.locationSaved()
   }
 
