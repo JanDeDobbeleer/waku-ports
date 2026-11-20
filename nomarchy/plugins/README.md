@@ -15,26 +15,18 @@ User-installed plugins live alongside these conceptually but on disk under
 |---------------|---------------------------|-------------------------|---------------------------------------|
 | Bar           | `nomarchy.bar`             | `bar`                   | `bar/Bar.qml`                         |
 | Image picker  | `nomarchy.image-picker`    | `overlay`               | `image-picker/ImagePicker.qml`        |
-| Emojis        | `nomarchy.emojis`          | `overlay`               | `emojis/Emojis.qml`                   |
-| Clipboard mgr | `nomarchy.clipboard`       | `overlay`               | `clipboard/Clipboard.qml`             |
-| Reminders     | `nomarchy.reminders`       | `overlay`               | `reminders/ReminderFlow.qml`          |
 | Nomarchy menu  | `nomarchy.menu`            | `menu`, `bar-widget`    | `menu/Menu.qml`, `menu/BarWidget.qml` |
 | Notifications | `nomarchy.notifications`   | `service`               | `notifications/Service.qml`           |
 | Audio         | `nomarchy.audio`           | `bar-widget`            | `panels/audio/Panel.qml`              |
 | Bluetooth     | `nomarchy.bluetooth`       | `bar-widget`            | `panels/bluetooth/Panel.qml`          |
 | Clock         | `nomarchy.clock`           | `bar-widget`            | `panels/clock/BarWidget.qml`          |
-| Elsewhen      | `nomarchy.elsewhen`        | `bar-widget`            | `panels/elsewhen/Panel.qml`           |
 | Monitor       | `nomarchy.monitor`         | `bar-widget`            | `panels/monitor/Panel.qml`            |
 | Network       | `nomarchy.network`         | `bar-widget`            | `panels/network/Panel.qml`            |
 | Power         | `nomarchy.power`           | `bar-widget`            | `panels/power/Panel.qml`              |
-| Tailscale     | `nomarchy.tailscale`       | `bar-widget`            | `panels/tailscale/Panel.qml`          |
-| Agents   | `nomarchy.agents`     | `bar-widget`            | `agents/Panel.qml`               |
 | Weather       | `nomarchy.weather`         | `bar-widget`            | `panels/weather/BarWidget.qml`        |
 | Media         | `nomarchy.media`           | `service`, `bar-widget` | `services/media/Service.qml`, `services/media/BarWidget.qml` |
 | Battery       | `nomarchy.battery`         | `service`               | `services/battery/Service.qml`        |
 | Idle          | `nomarchy.idle`            | `service`               | `services/idle/Service.qml`           |
-| Night light   | `nomarchy.nightlight`      | `service`               | `services/nightlight/Service.qml`     |
-| Remote session | `nomarchy.remote-session` | `service`               | `services/remote-session/Service.qml` |
 | Lock screen   | `nomarchy.lock`            | `service`               | `lock/Service.qml`                    |
 | OSD           | `nomarchy.osd`             | `panel`                 | `osd/Osd.qml`                         |
 | Polkit agent  | `nomarchy.polkit`          | `service`               | `polkit/PolkitAgent.qml`              |
