@@ -70,11 +70,6 @@
   },
   "plugins": [],
   "disabledPlugins": [
-    "nomarchy.background",
-    "nomarchy.battery",
-    "nomarchy.indicators",
-    "nomarchy.keyboard-layout",
-    "nomarchy.monitor",
-    "nomarchy.system-update"
+    "nomarchy.background"
   ]
 }

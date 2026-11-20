@@ -20,12 +20,10 @@ User-installed plugins live alongside these conceptually but on disk under
 | Audio         | `nomarchy.audio`           | `bar-widget`            | `panels/audio/Panel.qml`              |
 | Bluetooth     | `nomarchy.bluetooth`       | `bar-widget`            | `panels/bluetooth/Panel.qml`          |
 | Clock         | `nomarchy.clock`           | `bar-widget`            | `panels/clock/BarWidget.qml`          |
-| Monitor       | `nomarchy.monitor`         | `bar-widget`            | `panels/monitor/Panel.qml`            |
 | Network       | `nomarchy.network`         | `bar-widget`            | `panels/network/Panel.qml`            |
 | Power         | `nomarchy.power`           | `bar-widget`            | `panels/power/Panel.qml`              |
 | Weather       | `nomarchy.weather`         | `bar-widget`            | `panels/weather/BarWidget.qml`        |
 | Media         | `nomarchy.media`           | `service`, `bar-widget` | `services/media/Service.qml`, `services/media/BarWidget.qml` |
-| Battery       | `nomarchy.battery`         | `service`               | `services/battery/Service.qml`        |
 | Idle          | `nomarchy.idle`            | `service`               | `services/idle/Service.qml`           |
 | Lock screen   | `nomarchy.lock`            | `service`               | `lock/Service.qml`                    |
 | OSD           | `nomarchy.osd`             | `panel`                 | `osd/Osd.qml`                         |

@@ -1211,12 +1211,6 @@ ShellRoot {
       return "ok"
     }
 
-    // Super+I goes through the bar's reader, which keeps a choice made before
-    // any text field has focus until one does.
-    function cycleInput(direction: string): string {
-      return Commons.InputMethodState.cycle(direction === "back") ? "ok" : "not running"
-    }
-
     function rescanPlugins(): void {
       shell.reloadPlugins()
     }
