@@ -2,15 +2,13 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons
+import "PluginManifests.js" as Manifests
 
 // Instance, not a singleton — see BarWidgetRegistry for rationale.
 QtObject {
   id: registry
 
-  property string home: (Quickshell.env("HOME") || "")
-  property string pluginsDir: home + "/.config/nomarchy/plugins"
-
-  // Set by shell.qml at startup so we can also scan bundled first-party plugins.
+  // Set by shell.qml at startup: the folder the manifests' `dir` entries are relative to.
   property string firstPartyDir: ""
 
   // Wired by shell.qml so the registry can read the canonical shell.json
@@ -29,7 +27,6 @@ QtObject {
   signal pluginsChanged()
   signal scanFinished()
   signal pluginLoadFailed(string id, string error)
-  signal localPluginChanged(string id)
 
   // ---------------------------------------------------------------- helpers
 
@@ -598,201 +595,26 @@ QtObject {
     return true
   }
 
-  // ---------------------------------------------------------------- scanning
 
-  // Output format produced by the rescan script:
-  //   ===<kind>::<absolute-source-dir>===
-  //   ... raw manifest.json content ...
-  //   === EOM ===
-  // (repeating for every manifest found)
-  function parseScanOutput(text) {
-    var lines = String(text || "").split("\n")
-    var firstParty = {}
-    var thirdParty = {}
-    var currentSource = null
-    var currentKind = null
-    var currentJson = []
+  // ---------------------------------------------------------------- manifests
 
-    function flush() {
-      if (!currentSource) return
-      var raw = currentJson.join("\n").trim()
-      try {
-        let manifest = JSON.parse(raw)
-        manifest.__sourceDir = currentSource
-        manifest.__isFirstParty = (currentKind === "firstparty")
-        let validated = validateManifest(manifest, currentSource + "/manifest.json")
-        if (validated) {
-          if (currentKind === "firstparty") firstParty[validated.id] = validated
-          else thirdParty[validated.id] = validated
-        }
-      } catch (e) {
-        console.warn("PluginRegistry: bad manifest at " + currentSource + ": " + e)
-      }
-      currentSource = null
-      currentKind = null
-      currentJson = []
+  // The manifests are generated into PluginManifests.js; nothing is scanned or watched at runtime.
+  // `dir` in each entry is relative to firstPartyDir. Safe to call again: it rebuilds the table.
+  function rescan() {
+    var base = firstPartyDir.replace(/\/$/, "")
+    var list = Manifests.manifests
+    var found = {}
+    for (let i = 0; i < list.length; i++) {
+      let manifest = JSON.parse(JSON.stringify(list[i].manifest))
+      manifest.__sourceDir = base + "/" + list[i].dir
+      manifest.__isFirstParty = true
+      let validated = validateManifest(manifest, list[i].dir)
+      if (validated) found[validated.id] = validated
     }
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i]
-      let startMatch = line.match(/^===([a-z]+)::(.+)===$/)
-      if (startMatch) {
-        flush()
-        currentKind = startMatch[1]
-        currentSource = startMatch[2].replace(/\/$/, "")
-        currentJson = []
-        continue
-      }
-      if (line === "=== EOM ===") {
-        flush()
-        continue
-      }
-      if (currentSource) currentJson.push(line)
-    }
-    flush()
-
-    stampHostCapabilities(firstParty, thirdParty)
-
-    var merged = {}
-    for (let fk in firstParty) merged[fk] = firstParty[fk]
-    // Third-party plugins never shadow first-party ids. The whole
-    // `nomarchy.*` namespace is reserved for built-ins, including bar widgets
-    // registered outside the manifest-based plugin registry.
-    for (let tk in thirdParty) {
-      if (firstParty[tk] || String(tk).indexOf("nomarchy.") === 0) {
-        console.warn("PluginRegistry: plugin " + tk
-          + " rejected: id is reserved for first-party Nomarchy plugins")
-        continue
-      }
-      merged[tk] = thirdParty[tk]
-    }
-
-    installedPlugins = merged
+    stampHostCapabilities(found, {})
+    installedPlugins = found
     registryRevision++
-    scanning = false
     pluginsChanged()
     scanFinished()
   }
-
-  property Process scanProcess: Process {
-    onExited: function(exitCode) {
-      var output = scanStdout.text || ""
-      registry.parseScanOutput(output)
-    }
-    stdout: StdioCollector {
-      id: scanStdout
-      waitForEnd: true
-    }
-  }
-
-  property Process initProcess: Process {
-    onExited: {
-      registry.reapOrphanedPluginWatchers()
-    }
-  }
-
-  // Quickshell does not take its Process children with it when it stops, so
-  // every shell restart leaves this watcher running, reparented to init
-  // (63 of them on one long-lived machine). Before starting our own, stop
-  // any plugin watcher whose parent is no longer a shell; a live shell's
-  // watcher — parented to it — is left alone. The [i] keeps this script's
-  // own command line from matching its search.
-  property Process watcherReaper: Process {
-    onExited: {
-      localPluginWatcher.running = true
-      registry.rescan()
-    }
-  }
-
-  function reapOrphanedPluginWatchers() {
-    watcherReaper.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c",
-      "for p in $(pgrep -f '[i]notifywait -m -r -q -e close_write,create,delete,move' || true); do "
-        + "tr '\\0' '\\n' < \"/proc/$p/cmdline\" 2>/dev/null | grep -Fxq \"$1\" || continue; "
-        + "parent=$(ps -o ppid= -p \"$p\" 2>/dev/null | tr -d ' '); "
-        + "[[ $parent =~ ^[0-9]+$ ]] || continue; "
-        + "case \"$(ps -o comm= -p \"$parent\" 2>/dev/null)\" in quickshell|qs) ;; *) kill \"$p\" 2>/dev/null || true ;; esac; "
-        + "done; true",
-      "watcher-reaper", registry.pluginsDir]
-    watcherReaper.running = true
-  }
-
-  // A graceful stop takes the watcher with it; the reaper above covers the
-  // stops that never run this (a killed or crashed shell).
-  Component.onDestruction: {
-    localPluginWatcherRestart.stop()
-    localPluginWatcher.running = false
-  }
-
-  property Process localPluginWatcher: Process {
-    command: ["cmd.exe", "/c", "rem"]
-    stdout: SplitParser {
-      onRead: function(path) {
-        var pluginId = registry.localPluginIdForPath(path)
-        if (pluginId) registry.localPluginChanged(pluginId)
-      }
-    }
-    onExited: {} // Windows port: no inotifywait
-  }
-
-  property Timer localPluginWatcherRestart: Timer {
-    interval: 1000
-    onTriggered: localPluginWatcher.running = true
-  }
-
-  function rescan() {
-    if (scanning) return
-    scanning = true
-    // $0 = first-party dir, $1 = third-party dir. Some bash versions need the explicit -- separator.
-    // First-party plugins may be grouped one level deeper, e.g. panels/audio
-    // or services/battery.
-    // First-party bar widgets can also carry sibling manifests such as
-    // widgets/Clock.manifest.json so multiple widgets can live in one source
-    // directory without wrapper folders.
-    // Third-party plugins stay at the top level of ~/.config/nomarchy/plugins.
-    var script = ""
-      + "emit_manifest() { local kind=\"$1\"; local manifest=\"$2\"; local sub; "
-      + "  if [[ ${manifest##*/} == \"manifest.json\" ]]; then sub=\"${manifest%/manifest.json}\"; else sub=\"${manifest%/*}\"; fi; "
-      + "  printf '===%s::%s===\\n' \"$kind\" \"$sub\"; "
-      + "  printf '%s\\n' \"$(<\"$manifest\")\"; "
-      + "  printf '\\n=== EOM ===\\n'; "
-      + "}; "
-      + "scan_firstparty() { local dir=\"$1\"; "
-      + "  [[ -d \"$dir\" ]] || return 0; "
-      + "  while IFS= read -r manifest; do emit_manifest firstparty \"$manifest\"; done < <(find \"$dir\" -mindepth 2 -maxdepth 3 -type f \\( -name manifest.json -o -name '*.manifest.json' \\) | sort); "
-      + "}; "
-      + "scan_thirdparty() { local dir=\"$1\"; "
-      + "  [[ -d \"$dir\" ]] || return 0; "
-      + "  for sub in \"$dir\"/*/; do "
-      + "    [[ -f \"$sub/manifest.json\" ]] || continue; "
-      + "    emit_manifest thirdparty \"$sub/manifest.json\"; "
-      + "  done; "
-      + "}; "
-      + "scan_firstparty \"$0\"; "
-      + "scan_thirdparty \"$1\""
-    scanProcess.command = ["C:/Program Files/Git/usr/bin/bash.exe", Quickshell.shellDir + "/services/scan-plugins.sh", registry.firstPartyDir, registry.pluginsDir]
-    scanProcess.running = true
-  }
-
-  function ensureUserDir() {
-    initProcess.command = ["C:/Program Files/Git/usr/bin/bash.exe", "-c", "mkdir -p \"$0\"", registry.pluginsDir]
-    initProcess.running = true
-  }
-
-  function localPluginIdForPath(filePath) {
-    var base = pluginsDir.replace(/\/$/, "") + "/"
-    var path = String(filePath || "").trim()
-    if (path.indexOf(base) !== 0) return ""
-
-    var relative = path.slice(base.length)
-    // Hidden entries are not plugins: clone staging dirs, remove backups.
-    if (relative.indexOf(".") === 0) return ""
-    if (relative.indexOf("/.git/") !== -1 || relative.endsWith("/.git")) return ""
-    // Bytecode a plugin's Python helper writes on import would otherwise reload it, restart the helper, and loop.
-    if (/\/__pycache__(\/|$)/.test(relative)) return ""
-
-    var slash = relative.indexOf("/")
-    return slash === -1 ? relative : relative.slice(0, slash)
-  }
-
-  Component.onCompleted: ensureUserDir()
 }

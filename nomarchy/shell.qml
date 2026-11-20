@@ -76,12 +76,6 @@ ShellRoot {
   property bool pluginReloading: false
   property bool pluginReloadPending: false
 
-  Timer {
-    id: localPluginReloadTimer
-    interval: 150
-    onTriggered: shell.reloadPlugins()
-  }
-
   onShellConfigChanged: {
     if (failedBarId !== "") failedBarId = ""
     pluginRegistry.registryRevision++
@@ -182,9 +176,6 @@ ShellRoot {
     pluginRegistry.firstPartyDir = shell.firstPartyPluginsDir
     pluginRegistry.shellConfigProvider = function() { return shell.shellConfig }
     pluginRegistry.shellConfigMutator = function(mutate) { shell.mutateShellConfig(mutate) }
-    // PluginRegistry.ensureUserDir() runs in its own Component.onCompleted and
-    // chains rescan() once the directory exists. We also kick a scan here in
-    // case the user dir already existed at startup.
     pluginRegistry.rescan()
     shell._syncServices()
     // The built-in waku tiler is the default on every port (keys.conf drives it).
@@ -1567,10 +1558,6 @@ ShellRoot {
 
   Connections {
     target: shell.pluginRegistry
-    function onLocalPluginChanged(pluginId) {
-      console.log("Local plugin changed, reloading:", pluginId)
-      localPluginReloadTimer.restart()
-    }
     function onScanFinished() {
       if (shell.pluginReloadPending) {
         shell.pluginReloadPending = false
