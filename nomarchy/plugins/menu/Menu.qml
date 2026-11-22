@@ -9,6 +9,7 @@ import qs.Ui
 import "MenuModel.js" as MenuModel
 import "WindowsSettings.js" as WindowsSettings
 import "WindowsSearch.js" as WindowsSearch
+import "Favorites.js" as Favorites
 import "../bar/I18nModel.js" as I18nModel
 
 Item {
@@ -130,6 +131,26 @@ Item {
   // Shared application engine (entries, hidden filters, icons, launch,
   // removal), owned by the shell and also used by the standalone launcher.
   readonly property var appLibrary: MenuModel.appLibraryForShell(root.shell)
+  property var favoriteIds: Favorites.defaults()
+  property bool terminalAvailable: false
+
+  function favoriteRows(): var {
+    return Favorites.rows(root.favoriteIds, root.terminalAvailable, {
+      browser: Commons.I18n.t("menu.favoriteBrowser"),
+      explorer: Commons.I18n.t("menu.favoriteExplorer"),
+      terminal: "Windows Terminal",
+      unavailable: Commons.I18n.t("menu.favoriteUnavailable")
+    })
+  }
+
+  function duplicatesFavorite(row: var): bool {
+    return Favorites.duplicatesFavorite(row, root.favoriteIds, root.terminalAvailable)
+  }
+
+  function updateFavorites(raw: string): void {
+    root.favoriteIds = Favorites.parse(raw, root.favoriteIds)
+    if (root.opened && root.activeMenu === "apps") root.rebuildDisplay()
+  }
   property bool deleteConfirmOpen: false
   property var deleteTarget: null
   onOpenedChanged: if (!opened) { deleteConfirmOpen = false; deleteTarget = null }
@@ -244,7 +265,7 @@ Item {
     for (let i = 0; i < displayModel.count; i++) {
       let row = displayModel.get(i)
       if (i > 0) total += root.rowSpacing
-      if (row.section === "drilldown" && previousSection !== "drilldown") total += root.dividerHeight
+      if (row.section !== previousSection && (row.section === "drilldown" || row.section === "favorites" || row.section === "apps")) total += root.dividerHeight
       total += root.rowHeightForDetail(row.detail)
       previousSection = row.section
       totals.push(total)
@@ -697,6 +718,7 @@ Item {
     if (!root.item(id)) id = "root"
     if (pushHistory && id !== root.activeMenu) root.navStack = Array.from(root.navStack).concat([root.activeMenu])
     root.activeMenu = id
+    if (id === "apps" && !terminalCheck.running) terminalCheck.running = true
     root.filterText = ""
     root.selectedIndex = 0
     root.cursorActive = true
@@ -751,6 +773,14 @@ Item {
       opened = false
       filterText = ""
       if (root.appLibrary) root.appLibrary.launch(appId, label)
+    } else if (row.kind === "favorite") {
+      root.cancel()
+      if (row.action === "browser")
+        Quickshell.execDetached(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", root.nomarchyPath + "/tools/open-browser.ps1"])
+      else if (row.action === "explorer")
+        Quickshell.execDetached(["explorer.exe"])
+      else if (row.action === "terminal")
+        Quickshell.execDetached(["wt.exe"])
     } else if (row.kind === "calculator") {
       Quickshell.clipboardText = row.action
       root.cancel()
@@ -820,6 +850,7 @@ Item {
     root.disarmPointer()
     root.evaluateGuards()
     opened = true
+    if (activeMenu === "apps" && !terminalCheck.running) terminalCheck.running = true
     rebuildDisplay()
     invalidateVolatileProvider(activeMenu)
     loadProviderForMenu(activeMenu)
@@ -860,6 +891,29 @@ Item {
     if (!root.rowSelectable(index)) return
     root.cursorActive = true
     root.selectedIndex = index
+  }
+
+  Process {
+    id: terminalCheck
+    command: ["where.exe", "wt.exe"]
+    stdout: StdioCollector { }
+    stderr: StdioCollector { }
+    onExited: function(exitCode: int): void {
+      root.terminalAvailable = exitCode === 0
+      if (root.opened && root.activeMenu === "apps") root.rebuildDisplay()
+    }
+  }
+
+  FileView {
+    path: Paths.configHome + "/nomarchy/launcher-favorites.json"
+    watchChanges: true
+    printErrors: false
+    onLoaded: root.updateFavorites(text())
+    onFileChanged: reload()
+    onLoadFailed: {
+      root.favoriteIds = Favorites.defaults()
+      if (root.opened && root.activeMenu === "apps") root.rebuildDisplay()
+    }
   }
 
   Process {
@@ -1189,13 +1243,15 @@ Item {
             section.property: "section"
             section.criteria: ViewSection.FullString
             section.delegate: Item {
+              id: sectionItem
               required property string section
 
               width: ListView.view.width
-              height: section === "drilldown" ? root.dividerHeight : 0
-              visible: section === "drilldown"
+              height: section === "drilldown" || section === "favorites" || section === "apps" ? root.dividerHeight : 0
+              visible: height > 0
 
               Rectangle {
+                visible: sectionItem.section === "drilldown"
                 anchors.left: parent.left
                 anchors.leftMargin: Style.space(4)
                 anchors.right: parent.right
@@ -1203,6 +1259,18 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 height: Style.spacing.hairline
                 color: Util.alpha(root.foreground, 0.2)
+              }
+
+              Text {
+                visible: sectionItem.section === "favorites" || sectionItem.section === "apps"
+                anchors.left: parent.left
+                anchors.leftMargin: Style.space(8)
+                anchors.verticalCenter: parent.verticalCenter
+                text: sectionItem.section === "favorites" ? Commons.I18n.t("menu.favorites") : Commons.I18n.t("menu.applications")
+                color: root.foreground
+                opacity: 0.58
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
               }
             }
 

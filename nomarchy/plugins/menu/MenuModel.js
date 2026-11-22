@@ -686,6 +686,12 @@ function rebuildDisplay(root, displayModel, callLater) {
         if (aId > bId) return 1
         return 0
       })
+      var favorites = root.favoriteRows()
+      if (favorites.length > 0) {
+        rows = rows.filter(function(row) { return !root.duplicatesFavorite(row) })
+        for (var f = 0; f < rows.length; f++) rows[f].section = "apps"
+        rows = favorites.concat(rows)
+      }
     }
   }
   for (var k = 0; k < rows.length; k++) displayModel.append(rows[k])
