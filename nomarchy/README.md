@@ -53,6 +53,12 @@ set to 0) for its stay-awake toggle. User configuration replaces the default rat
 Add `{"id":"nomarchy.layout-switcher"}` after `nomarchy.workspaces` in a custom bar layout to show
 the layout switcher.
 
+The Apps list starts with favorites for the default browser (a blank page), File Explorer and Windows
+Terminal. To change their order or hide them, create
+`state\home\.config\nomarchy\launcher-favorites.json` with an array such as
+`["terminal", "browser"]`. An empty array hides the section. Windows Terminal is disabled when
+`wt.exe` is not on the PATH.
+
 Left-click a workspace number to switch to it, or the spare number to create a desktop. Right-click
 an existing desktop's indicator to remove that desktop, as in Celeste.
 

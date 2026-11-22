@@ -10,6 +10,46 @@ function load(file) {
   return context
 }
 
+const favorites = load("plugins/menu/Favorites.js")
+const values = value => Array.from(value)
+assert.deepEqual(values(favorites.parse('["terminal","browser","terminal","unknown"]', [])), ["terminal", "browser"])
+assert.deepEqual(values(favorites.parse("[]", ["browser"])), [])
+assert.deepEqual(values(favorites.parse("{", ["browser"])), ["browser"])
+assert.deepEqual(values(favorites.parse("{}", ["browser"])), ["browser"])
+const labels = { browser: "Browser", explorer: "File Explorer", terminal: "Windows Terminal", unavailable: "unavailable" }
+const favoriteRows = favorites.rows(favorites.defaults(), false, labels)
+assert.deepEqual(values(favoriteRows).map(row => row.action), ["browser", "explorer", "terminal"])
+assert.equal(favoriteRows[2].disabled, true)
+assert.equal(favoriteRows[2].label, "Windows Terminal (unavailable)")
+assert.equal(favorites.rows(["terminal"], true, labels)[0].disabled, false)
+assert.equal(favorites.duplicatesFavorite({ kind: "app", label: "Windows Terminal" }, ["terminal"], true), true)
+assert.equal(favorites.duplicatesFavorite({ kind: "app", label: "Windows Terminal" }, ["terminal"], false), false)
+assert.equal(favorites.duplicatesFavorite({ kind: "action", label: "File Explorer" }, ["explorer"], true), false)
+
+const menu = load("plugins/menu/MenuModel.js")
+const items = {
+  apps: { id: "apps", parent: "root", kind: "menu" },
+  explorer: { id: "explorer", parent: "apps", kind: "app", label: "File Explorer", order: 0 },
+  other: { id: "other", parent: "apps", kind: "app", label: "Other", order: 1 }
+}
+const displayed = []
+const launcher = {
+  dmenuActive: false, rowsLoaded: true, activeMenu: "apps", filterText: "",
+  items, itemOrder: ["apps", "explorer", "other"], layoutSerial: 0,
+  isVisible: () => true,
+  displayRow: entry => ({ itemId: entry.id, kind: entry.kind, label: entry.label, section: "" }),
+  favoriteRows: () => favorites.rows(["explorer"], true, labels),
+  duplicatesFavorite: row => favorites.duplicatesFavorite(row, ["explorer"], true),
+  settleCursor() {}, revealCursor() {}
+}
+const display = { clear() { displayed.length = 0 }, append(row) { displayed.push(row) }, get count() { return displayed.length } }
+menu.rebuildDisplay(launcher, display, callback => callback())
+assert.deepEqual(displayed.map(row => row.itemId), ["favorite.explorer", "other"])
+assert.deepEqual(displayed.map(row => row.section), ["favorites", "apps"])
+launcher.favoriteRows = () => []
+menu.rebuildDisplay(launcher, display, callback => callback())
+assert.deepEqual(displayed.map(row => row.itemId), ["explorer", "other"])
+
 const search = load("plugins/menu/WindowsSearch.js")
 for (const [query, expected] of [
   ["2+2", "4"], ["2*(3+4)", "14"], ["-2.5*4", "-10"], [".5+0.25", "0.75"],
