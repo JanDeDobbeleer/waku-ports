@@ -45,6 +45,21 @@ function rowSnapshot(list) {
   return rows
 }
 
+// Project the engine's endpoint list ({ id, name }) to the same primitive rows.
+// An endpoint has no PwNode behind it, so the row carries what the label and
+// glyph helpers read (name, description) and nothing live.
+function deviceRows(list) {
+  var values = list && list.length ? list : []
+  var rows = []
+  for (var i = 0; i < values.length; i++) {
+    var device = values[i]
+    if (!device || !device.id) continue
+    var name = String(device.name || "")
+    rows.push({ id: String(device.id), name: name, description: name })
+  }
+  return rows
+}
+
 // tr is an optional translate(key, english) from the QML side (I18n.t);
 // without it the English text stands, which is what the Node tests assert.
 function outputVolumeName(volume, muted, tr) {
@@ -279,6 +294,7 @@ if (typeof module !== "undefined") {
     isAudioSource: isAudioSource,
     nodeRow: nodeRow,
     rowSnapshot: rowSnapshot,
+    deviceRows: deviceRows,
     outputVolumeName: outputVolumeName,
     parseSinkAvailability: parseSinkAvailability,
     friendlyDeviceLabel: friendlyDeviceLabel,

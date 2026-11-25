@@ -10,6 +10,7 @@ import qs.Commons as Commons
 import "Model.js" as Model
 import "Dynamic.js" as Dynamic
 import qs.compat
+import waku.services as S
 
 Panel {
   id: root
@@ -95,25 +96,13 @@ Panel {
     return Model.isAudioSource(node)
   }
 
-  property var cachedAudioSinks: []
-  property var cachedAudioSources: []
-
-  readonly property var rawAudioSinks: {
-    var list = []
-    for (let i = 0; i < Dynamic.value(candidateSinks, "length"); i++)
-      if (sinkAvailable(candidateSinks[i])) list.push(candidateSinks[i])
-    if (sink && list.indexOf(sink) < 0) list.unshift(sink)
-    return list
-  }
-
-  readonly property var rawAudioSources: {
-    var list = candidateSources.slice()
-    if (source && list.indexOf(source) < 0) list.unshift(source)
-    return list
-  }
-
-  readonly property var audioSinks: Dynamic.value(rawAudioSinks, "length") > 0 ? rawAudioSinks : cachedAudioSinks
-  readonly property var audioSources: Dynamic.value(rawAudioSources, "length") > 0 ? rawAudioSources : cachedAudioSources
+  // Windows has no routing graph, so the Pipewire shim lists only the default
+  // output and input. Every endpoint comes from the engine's audio services, and
+  // setDefaultDevice switches the system default, as the Windows sound settings do.
+  readonly property var outputDevices: S.AudioOutput.devices
+  readonly property var inputDevices: S.AudioInput.devices
+  readonly property string defaultOutputId: S.AudioOutput.defaultDevice
+  readonly property string defaultInputId: S.AudioInput.defaultDevice
 
   readonly property var audioStreams: {
     var list = []
@@ -129,7 +118,7 @@ Panel {
   // and name only; every delegate resolves its own node through nodeFor(). The
   // snapshot timer lets the mutation settle first, and closed panels keep their
   // repeaters detached entirely.
-  property var displayAudioSinks: []
+  property var displayAudioSinks: []   // { id, name, description } endpoints
   property var displayAudioSources: []
   property var displayAudioStreams: []
 
@@ -151,9 +140,6 @@ Panel {
   readonly property var inputPeakNode: inputViaWpctl ? null : source
   // Windows port: PwNodePeakMonitor is a stub, so the meter would only be an empty bar.
   readonly property bool inputLevelShown: false
-
-  onRawAudioSinksChanged: if (Dynamic.value(rawAudioSinks, "length") > 0) cachedAudioSinks = rawAudioSinks
-  onRawAudioSourcesChanged: if (Dynamic.value(rawAudioSources, "length") > 0) cachedAudioSources = rawAudioSources
 
   // Single cursor model shared by keyboard and mouse. Sections:
   //   "output"  — output slider + sink device list
@@ -299,14 +285,12 @@ Panel {
     if (focusSection === "mixer") { openMixer(); return }
     if (focusSection === "output") {
       if (selectedIndex === -1) { toggleOutputMute(); return }
-      let sink = nodeFor(displayAudioSinks[selectedIndex])
-      if (sink) setDefaultSink(sink)
+      setDefaultSink(displayAudioSinks[selectedIndex])
       return
     }
     if (focusSection === "input") {
       if (selectedIndex === -1) { toggleInputMute(); return }
-      let src = nodeFor(displayAudioSources[selectedIndex])
-      if (src) setDefaultSource(src)
+      setDefaultSource(displayAudioSources[selectedIndex])
       return
     }
     if (focusSection === "streams" && selectedIndex >= 0) {
@@ -334,12 +318,16 @@ Panel {
   }
 
   // Clamp / repair the cursor whenever any list refreshes underneath us.
-  onAudioSinksChanged: scheduleDisplayAudioModelRefresh()
-  onAudioSourcesChanged: scheduleDisplayAudioModelRefresh()
+  onOutputDevicesChanged: scheduleDisplayAudioModelRefresh()
+  onInputDevicesChanged: scheduleDisplayAudioModelRefresh()
   onAudioStreamsChanged: scheduleDisplayAudioModelRefresh()
 
   function rowSnapshot(list: var): var {
     return Model.rowSnapshot(list)
+  }
+
+  function deviceRows(list: var): var {
+    return Model.deviceRows(list)
   }
 
   // A row that outlives its node resolves to null, or to a node PipeWire recreated
@@ -356,8 +344,8 @@ Panel {
 
   function refreshDisplayAudioModels(): void {
     if (!opened) return
-    displayAudioSinks = rowSnapshot(audioSinks)
-    displayAudioSources = rowSnapshot(audioSources)
+    displayAudioSinks = deviceRows(outputDevices)
+    displayAudioSources = deviceRows(inputDevices)
     displayAudioStreams = rowSnapshot(audioStreams)
     clampCursor()
   }
@@ -491,14 +479,12 @@ Panel {
     else if (hasInput) Dynamic.set(Dynamic.value(source, "audio"), "muted", mute)
   }
 
-  function setDefaultSink(node: var): void {
-    if (!node) return
-    Pipewire.preferredDefaultAudioSink = node
+  function setDefaultSink(device: var): void {
+    if (device && Dynamic.value(device, "id")) S.AudioOutput.setDefaultDevice(Dynamic.value(device, "id"))
   }
 
-  function setDefaultSource(node: var): void {
-    if (!node) return
-    if (Dynamic.value(node, "audio")) Pipewire.preferredDefaultAudioSource = node
+  function setDefaultSource(device: var): void {
+    if (device && Dynamic.value(device, "id")) S.AudioInput.setDefaultDevice(Dynamic.value(device, "id"))
   }
 
   function sinkAvailable(node: var): bool {
@@ -842,7 +828,7 @@ Panel {
                 required property var modelData
                 required property int index
                 width: panelColumn.width
-                node: root.nodeFor(modelData)
+                node: modelData
                 rowIndex: index
               }
             }
@@ -955,7 +941,7 @@ Panel {
                 required property var modelData
                 required property int index
                 width: panelColumn.width
-                node: root.nodeFor(modelData)
+                node: modelData
                 rowIndex: index
               }
             }
@@ -1018,7 +1004,7 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property bool isActive: !!root.sink && root.sink === node
+    readonly property bool isActive: !!node && Dynamic.value(node, "id") === root.defaultOutputId
     hasCursor: root.cursorActive && root.focusSection === "output" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sinkRow)
     current: isActive
@@ -1079,7 +1065,7 @@ Panel {
     required property var node
     required property int rowIndex
 
-    readonly property bool isActive: !!root.source && root.source === node
+    readonly property bool isActive: !!node && Dynamic.value(node, "id") === root.defaultInputId
     hasCursor: root.cursorActive && root.focusSection === "input" && root.selectedIndex === rowIndex
     onHasCursorChanged: if (hasCursor) root.ensureCursorVisible(sourceRow)
     current: isActive
