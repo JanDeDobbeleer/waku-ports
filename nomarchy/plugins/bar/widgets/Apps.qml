@@ -39,12 +39,12 @@ BarWidget {
     for (let i = 0; i < rows.count; i++) {
       let o = rows.objectAt(i) as TaskbarRow
       if (!o || o.key.indexOf("w:") !== 0) continue
-      let exe = o.exe
-      if (!byExe[exe]) {
-        byExe[exe] = { key: exe, exe: exe, iconUrl: o.iconUrl, windows: [] }
-        order.push(exe)
+      let id = o.groupKey
+      if (!byExe[id]) {
+        byExe[id] = { key: id, exe: o.exe, iconUrl: o.iconUrl, windows: [] }
+        order.push(id)
       }
-      let g = byExe[exe]
+      let g = byExe[id]
       if (!g.iconUrl) g.iconUrl = o.iconUrl
       g.windows.push({ index: i, hwnd: Number(o.key.slice(2)) || 0, title: o.title, active: o.active, minimized: o.minimized, progressState: o.progressState, progress: o.progress })
     }
@@ -133,6 +133,9 @@ BarWidget {
     final required property string progressState
     final required property real progress
     final readonly property string exe: uniqueId.split(/[\\/!]/).pop().replace(/\.exe$/i, "")
+    // The whole id groups: packaged apps share the "!App" tail, so `exe` alone merges them. A window
+    // with no id stays on its own tile.
+    final readonly property string groupKey: uniqueId !== "" ? uniqueId : key
 
     onActiveChanged: Qt.callLater(root.rebuild)
     onMinimizedChanged: Qt.callLater(root.rebuild)
