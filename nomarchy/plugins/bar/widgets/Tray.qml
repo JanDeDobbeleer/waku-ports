@@ -302,7 +302,7 @@ BarWidget {
           width: implicitWidth
           height: implicitHeight
           x: root.fixedAtStart ? root.revealExtent : 0
-          text: "\uf078"
+          text: root.trayPopupOpen ? "\uf077" : "\uf078"
           tooltipText: I18nModel.translate(Commons.I18n, "tray.title")
           Component.onCompleted: root.trayTrigger = expandIcon
           Component.onDestruction: if (root.trayTrigger === expandIcon) root.trayTrigger = null
@@ -377,7 +377,7 @@ BarWidget {
           width: implicitWidth
           height: implicitHeight
           y: root.fixedAtStart ? root.revealExtent : 0
-          text: "\uf078"
+          text: root.trayPopupOpen ? "\uf077" : "\uf078"
           tooltipText: I18nModel.translate(Commons.I18n, "tray.title")
           Component.onCompleted: root.trayTrigger = expandIcon
           Component.onDestruction: if (root.trayTrigger === expandIcon) root.trayTrigger = null
